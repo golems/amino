@@ -119,7 +119,7 @@ void aa_la_cross( const double a[3], const double b[3], double c[3] ) {
 
 /*--- Matrix Ops --- */
 
-int aa_la_invert( size_t m, size_t n, double *A ) {
+int aa_la_inv( size_t m, size_t n, double *A ) {
     int ipiv[m];
     int mi = (int) m;
     int ni = (int) n;
@@ -141,26 +141,26 @@ int aa_la_invert( size_t m, size_t n, double *A ) {
     return info;
 }
 
-void aa_la_dls( size_t m, size_t n, double k, const double *A, double *A_star ) {
-    // A^T (AA^T + kI)^{-1}
-    // A is m*n
-    // x = Aq, x is m, q is n
+/* void aa_la_dls( size_t m, size_t n, double k, const double *A, double *A_star ) { */
+/*     // A^T (AA^T + kI)^{-1} */
+/*     // A is m*n */
+/*     // x = Aq, x is m, q is n */
 
-    // B = A*A^T
-    double B[m*m];
-    int mi = (int)m;
-    int ni = (int)n;
-    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, 1,
-                 1, A, mi, A, ni, 0, B, mi );
-    // B += kI
-    for( size_t i = 0; i < m; i ++ )
-       B[i*m+i] += k;
+/*     // B = A*A^T */
+/*     double B[m*m]; */
+/*     int mi = (int)m; */
+/*     int ni = (int)n; */
+/*     cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, 1, */
+/*                  1, A, mi, A, ni, 0, B, mi ); */
+/*     // B += kI */
+/*     for( size_t i = 0; i < m; i ++ ) */
+/*        B[i*m+i] += k; */
 
-    // B = B^-1
-    aa_la_invert(m,m,B);
+/*     // B = B^-1 */
+/*     aa_la_invert(m,m,B); */
 
-    // A^* = A^T*B
-    cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, mi, ni, 1,
-                 1, A, mi, A, mi, 0, B, mi );
-}
+/*     // A^* = A^T*B */
+/*     cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, mi, ni, 1, */
+/*                  1, A, mi, A, mi, 0, B, mi ); */
+/* }  */
 

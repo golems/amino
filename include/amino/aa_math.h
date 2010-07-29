@@ -40,6 +40,46 @@
  * \file amino/aa_math.h
  */
 
+/***********/
+/* Scalars */
+/***********/
+
+/// Fuzzy equals
+int aa_feq( double a, double b, double tol );
+
+/// Fuzzy equals
+int aa_veq( size_t n, double *a, double *b, double tol );
+
+
+/// Fortran modulo, Ada mod
+int aa_imodulo( int a, int b );
+
+/// Fortran mod, Ada rem
+int aa_irem( int a, int b );
+
+/// Fortran modulo, Ada mod
+double aa_fmodulo( double a, double b );
+
+/// Fortran mod, Ada rem
+double aa_frem( double a, double b );
+
+/**********/
+/* Angles */
+/**********/
+
+/// convert radians to degrees
+double aa_an_rad2deg( double rad );
+
+/// convert radians to degrees
+double aa_an_deg2rad( double deg );
+
+
+/// normalize angle on interval [0,2pi)
+double aa_an_norm_2pi( double an );
+
+/// normalize angle on interval (-pi,pi)
+double aa_an_norm_pi( double an );
+
 /************************/
 /* Dense Linear Algebra */
 /************************/
@@ -123,7 +163,7 @@ void aa_la_cross( const double a[3], const double b[3], double c[3] );
  * \param m rows
  * \param n columns
  */
-int aa_la_invert(size_t m, size_t n, double *A );
+int aa_la_inv(size_t m, size_t n, double *A );
 
 /** Damped Least Squares Inverse of A.
  *  \f[ A^* \leftarrow A^T (AA^T + kI)^{-1} \f]

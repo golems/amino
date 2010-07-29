@@ -1,0 +1,201 @@
+/* -*- mode: C; c-basic-offset: 4  -*- */
+/*
+ * Copyright (c) 2010, Georgia Tech Research Corporation
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *     * Redistributions of source code must retain the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer in the documentation and/or other materials
+ *       provided with the distribution.
+ *     * Neither the name of the Georgia Tech Research Corporation nor
+ *       the names of its contributors may be used to endorse or
+ *       promote products derived from this software without specific
+ *       prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY GEORGIA TECH RESEARCH CORPORATION ''AS
+ * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL GEORGIA
+ * TECH RESEARCH CORPORATION BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+#include "amino.h"
+#include <assert.h>
+#include <stdio.h>
+
+static void afeq( double a, double b, double tol ) {
+    assert( aa_feq(a,b,tol) );
+}
+
+static void aveq( size_t n, double *a, double *b, double tol ) {
+    assert( aa_veq(n, a, b, tol) );
+}
+
+static void aneq( double a, double b, double tol ) {
+    assert( !aa_feq(a,b,tol) );
+}
+
+void scalar() {
+    // eq
+    afeq( M_PI, M_PI, 0 );
+    afeq( 1, 1.001, .01 );
+    aneq( 1, 2, .1 );
+}
+
+void la0() {
+    // dot
+    {
+        double x[] = {1,2,3};
+        double y[] = {4,5,6};
+        afeq( x[0]*y[0]+x[1]*y[1]+x[2]*y[2], aa_la_dot(3, x, y), 0 );
+    }
+    // norm
+    {
+        double x[] = {1,2,3};
+        afeq( sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]), aa_la_norm(3, x), 0 );
+    }
+    // ssd
+    {
+        double x[] = {1,2,3};
+        double y[] = {4,5,6};
+        afeq( pow(x[0]-y[0],2) + pow(x[1]-y[1],2) + pow(x[2]-y[2],2),
+             aa_la_ssd(3, x, y), 0 );
+    }
+    // dist
+    {
+        double x[] = {1,2,3};
+        double y[] = {4,5,6};
+        afeq( sqrt(pow(x[0]-y[0],2) + pow(x[1]-y[1],2) + pow(x[2]-y[2],2)),
+             aa_la_dist(3, x, y), 0 );
+    }
+
+}
+
+void la1() {
+    // sadd
+    {
+        double x[] = {1,2,3};
+        double r[3];
+        double y[] = {2,3,4};
+        aa_la_sadd( 3, 1, x, r );
+        aveq( 3, r, y, 0 );
+    }
+    // ssub
+    {
+        double x[] = {1,2,3};
+        double r[3];
+        double y[] = {-1,-2,-3};
+        aa_la_ssub( 3, 0, x, r );
+        aveq( 3, r, y, 0 );
+    }
+    // smul
+    {
+        double x[] = {1,2,3};
+        double r[3];
+        double y[] = {2,4,6};
+        aa_la_smul( 3, 2, x, r );
+        aveq( 3, r, y, 0 );
+    }
+    // sdiv
+    {
+        double x[] = {1,2,3};
+        double r[3];
+        double y[] = {2./1, 2./2, 2./3};
+        aa_la_sdiv( 3, 2, x, r );
+        aveq( 3, r, y, 0 );
+    }
+
+    // vadd
+    {
+        double x[] = {1, 2, 3};
+        double y[] = {4, 5, 6};
+        double r[3];
+        double p[] = { 5, 7, 9 };
+        aa_la_vadd( 3,  x, y, r );
+        aveq( 3, r, p, 0 );
+    }
+    // vsub
+    {
+        double x[] = {1, 2, 3};
+        double y[] = {4, 5, 6};
+        double r[3];
+        double p[] = { 1-4, 2-5, 3-6 };
+        aa_la_vsub( 3,  x, y, r );
+        aveq( 3, r, p, 0 );
+    }
+    // vmul
+    {
+        double x[] = {1, 2, 3};
+        double y[] = {4, 5, 6};
+        double r[3];
+        double p[] = { 1*4, 2*5, 3*6 };
+        aa_la_vmul( 3,  x, y, r );
+        aveq( 3, r, p, 0 );
+    }
+    // vdiv
+    {
+        double x[] = {1, 2, 3};
+        double y[] = {4, 5, 6};
+        double r[3];
+        double p[] = { 1./4, 2./5, 3./6 };
+        aa_la_vdiv( 3,  x, y, r );
+        aveq( 3, r, p, 0 );
+    }
+
+    // cross
+    {
+        double x[] = {1, 2, 3};
+        double y[] = {4, 5, 6};
+        double r[3];
+        double p[] = { -3, 6, -3 };
+        aa_la_cross(  x, y, r );
+        aveq( 3, r, p, 0 );
+    }
+}
+
+void la2() {
+    // invert
+    {
+        double A[] = {1,2,3,4};
+        double B[] = {-2,1,1.5,-.5};
+        aa_la_inv( 2, 2, A );
+        aveq( 4, A, B, 0 );
+    }
+}
+
+void angle() {
+    // conversion
+    afeq( aa_an_rad2deg(3.1), 3.1*180.0/M_PI, 0 );
+    afeq( aa_an_rad2deg(M_PI), 180, 0 );
+    afeq( aa_an_deg2rad(30), 30*M_PI/180, 0 );
+    afeq( aa_an_deg2rad(180), M_PI, 0 );
+
+    // norming
+    afeq( aa_an_norm_2pi( 3*M_PI ), M_PI, 0 );
+    afeq( aa_an_norm_2pi( -M_PI/2 ), 3*M_PI/2, .001 );
+    afeq( aa_an_norm_pi( 3*M_PI/2 ), -M_PI/2, 0 );
+}
+
+int main( int argc, char **argv ) {
+    (void) argc; (void) argv;
+    scalar();
+    la0();
+    la1();
+    la2();
+    angle();
+}

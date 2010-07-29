@@ -15,12 +15,16 @@ all: default
 include /usr/share/make-common/common.1.mk
 
 #CFLAGS += -O0 -Wno-conversion
-CFLAGS += --std=gnu99
+CFLAGS += --std=gnu99 -O2
 FFLAGS += -I/usr/include
 
-default: $(LIBFILES) $(BINFILES)
+default: $(LIBFILES) $(BINFILES) test
 
-$(call LINKLIB, amino, mem.o la.o tf.o)
+test: build/aa_test
+	./build/aa_test
+
+$(call LINKLIB, amino, mem.o la.o tf.o math.o)
+$(call LINKBIN, aa_test, aa_test.o mem.o la.o tf.o math.o, m blas lapack)
 
 .PHONY: default clean doc
 
