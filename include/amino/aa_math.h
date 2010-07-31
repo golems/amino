@@ -44,12 +44,27 @@
 /* Scalars */
 /***********/
 
+#define AA_MAX(a,b) ( (a)>(b) ? (a) : (b) )
+#define AA_MIN(a,b) ( (a)<(b) ? (a) : (b) )
+
+
+static inline double aa_clamp( double val, double level) {
+    if( val > level )  return level;
+    if( val < -level ) return -level;
+    return val;
+}
+
+static inline double aa_sign( double val ) {
+    if( val > 0 )  return 1;
+    if( val < 0 ) return -1;
+    return 0;
+}
+
 /// Fuzzy equals
 int aa_feq( double a, double b, double tol );
 
 /// Fuzzy equals
 int aa_veq( size_t n, double *a, double *b, double tol );
-
 
 /// Fortran modulo, Ada mod
 int aa_imodulo( int a, int b );
@@ -159,11 +174,10 @@ void aa_la_cross( const double a[3], const double b[3], double c[3] );
  *
  * \f[ A \leftarrow A^{-1} \f]
  *
- * \param A \f$A \in \Re^m \times \Re^n\f$, column major
- * \param m rows
- * \param n columns
+ * \param A \f$A \in \Re^n \times \Re^n\f$, column major
+ * \param n rows and columns
  */
-int aa_la_inv(size_t m, size_t n, double *A );
+int aa_la_inv( size_t n, double *A );
 
 /** Damped Least Squares Inverse of A.
  *  \f[ A^* \leftarrow A^T (AA^T + kI)^{-1} \f]

@@ -173,9 +173,26 @@ void la2() {
     {
         double A[] = {1,2,3,4};
         double B[] = {-2,1,1.5,-.5};
-        aa_la_inv( 2, 2, A );
+        aa_la_inv( 2, A );
         aveq( 4, A, B, 0 );
     }
+
+    //dls
+    {
+        double A[] = {1,2,3,4};
+        double A_star[4];
+        double R[] = {  -1.92649, 0.96746,  1.44818,  -0.47711 };
+        aa_la_dls(2,2, .005, &A[0], &A_star[0]);
+        aveq( 4, A_star, R, .0001 );
+    }
+    {
+        double A[] = {1,2,3,4,5,6};
+        double A_star[6];
+        double R[] =  {-1.30832, -0.32652, 0.65528, 1.06359, 0.32795, -0.40769};
+        aa_la_dls(2,3, .005, &A[0], &A_star[0]);
+        aveq( 6, A_star, R, .0001 );
+    }
+
 }
 
 void angle() {

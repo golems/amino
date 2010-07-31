@@ -41,14 +41,57 @@
  * \file amino/aa_mem.h
  */
 
+/**************/
+/* Allocation */
+/**************/
+
+
+/*----------- Local Allocation ------------------*/
+#define AA_ALLOC_STACK_MAX (4096-64)
+
+/** Allocate a local memory block.
+ * This macro will stack-allocate small memory blocks and heap-allocate large ones.
+ */
+#define AA_ALLOCAL(size) ({ size_t aa_private_size = size; \
+        aa_private_size > AA_ALLOC_STACK_MAX ? \
+        malloc(aa_private_size) : alloca(aa_private_size);   })
+
+/** Free the results of AA_ALLOCAL
+ */
+static inline void aa_frlocal( void *ptr, size_t size ) {
+    if( size > AA_ALLOC_STACK_MAX) free(ptr);
+}
+
+/*----------- Region Allocation ------------------*/
+struct aa_region_node {
+    void *buf;
+    struct aa_region_node *next;
+};
+
+typedef struct {
+    size_t target;
+    size_t size;
+    size_t fill;
+    size_t total;
+    struct aa_region_node node;
+} aa_region_t;
+
+void *aa_region_alloc( aa_region_t *region, size_t size );
+void aa_region_release( aa_region_t *region );
+
 /**********/
 /* Arrays */
 /**********/
 
 /// copy n double floats from src to dst
-void aa_ar_realcpy( double *dst, const double *src, size_t n );
+static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
+    memcpy( dst, src, sizeof( dst[0] ) * n );
+}
 
 /// set n double floats to val
-void aa_ar_realset( double *dst, double val, size_t n );
+static inline void aa_fset( double *dst, double val, size_t n ) {
+    for( size_t i = 0; i < n; i ++ )
+        dst[i] = val;
+}
 
 #endif //AA_MEM_H

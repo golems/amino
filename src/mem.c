@@ -36,11 +36,11 @@
 
 #include "amino.h"
 
-void aa_ar_realcpy( double *dst, const double *src, size_t n ) {
-    memcpy( dst, src, sizeof( dst[0] ) * n );
-}
+/* void aa_ar_realcpy( double *dst, const double *src, size_t n ) { */
+/*     memcpy( dst, src, sizeof( dst[0] ) * n ); */
+/* } */
 
-void aa_ar_realset( double *dst, double val, size_t n ) {
-    for( size_t i = 0; i < n; i ++ )
-        dst[i] = val;
-}
+/* void aa_ar_realset( double *dst, double val, size_t n ) { */
+/*     for( size_t i = 0; i < n; i ++ ) */
+/*         dst[i] = val; */
+/* } */
