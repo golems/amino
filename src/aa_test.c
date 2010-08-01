@@ -87,6 +87,36 @@ void la0() {
 }
 
 void la1() {
+    // scal
+    {
+        double x[] = {1,2,3};
+        double r[] = { 1*2, 2*2, 3*2 };
+        aa_la_scal(3,2,x);
+        aveq( 3, r, x, 0 );
+    }
+    // sinc
+    {
+        double x[] = {1,2,3};
+        double r[] = { 1+2, 2+2, 3+2 };
+        aa_la_sinc(3, 2, x);
+        aveq( 3, r, x, 0 );
+    }
+    // vinc
+    {
+        double x[] = {1,2,3};
+        double y[] = {4,5,6};
+        double r[] = { 1+4, 2+5, 3+6 };
+        aa_la_vinc(3, x, y);
+        aveq( 3, r, y, 0 );
+    }
+    // axpy
+    {
+        double x[] = {1,2,3};
+        double y[] = {4,5,6};
+        double r[] = { 2*1+4, 2*2+5, 2*3+6 };
+        aa_la_axpy(3, 2, x, y);
+        aveq( 3, r, y, 0 );
+    }
     // sadd
     {
         double x[] = {1,2,3};
@@ -166,6 +196,13 @@ void la1() {
         aa_la_cross(  x, y, r );
         aveq( 3, r, p, 0 );
     }
+    // unit
+    {
+        double x[] = {1,2,3};
+        double r[] = {0.26726,   0.53452,   0.80178};
+        aa_la_unit(3,x);
+        aveq( 3, r, x, 0.0001 );
+    }
 }
 
 void la2() {
@@ -208,11 +245,49 @@ void angle() {
     afeq( aa_an_norm_pi( 3*M_PI/2 ), -M_PI/2, 0 );
 }
 
+void quat() {
+    // conj
+    {
+        double p[4] = {1,2,3,4};
+        double q[4];
+        double r[4] = {-1,-2,-3,4};
+        aa_tf_qconj(p,q);
+        aveq( 4, q, r, 0.000 );
+
+    }
+    // inv
+    {
+        double p[4] = {1,2,3,4};
+        double q[4];
+        double r[4] = { -0.0333333, -0.0666666, -0.1, 0.133333 };
+        aa_tf_qinv(p,q);
+        aveq( 4, q, r, 0.0001 );
+    }
+    // mul
+    {
+        double a[4] = {1,2,3,4};
+        double b[4] = {9,8,7,6};
+        double c[4];
+        double r[4] = {32, 64, 36, -22};
+        aa_tf_qmul(a,b,c);
+        aveq( 4, c, r, 0.0000 );
+    }
+    // 2 axis-angle
+    {
+        double a[4] = {1,2,3,4};
+        double b[4];
+        double r[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
+        aa_tf_quat2axang(a,b);
+        aveq( 4, b, r, 0.001 );
+    }
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
     la0();
     la1();
     la2();
+    quat();
     angle();
 }

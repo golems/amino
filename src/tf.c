@@ -40,7 +40,7 @@
 
 
 void aa_tf_qnorm( double q[4] ) {
-    aa_la_smul( 4, 1.0/sqrt(aa_la_dot(4,q,q)), q, q );
+    aa_la_unit( 4, q );
 }
 
 void aa_tf_qconj( const double q[4], double r[4] ) {
@@ -52,16 +52,25 @@ void aa_tf_qconj( const double q[4], double r[4] ) {
 
 void aa_tf_qinv( const double q[4], double r[4] ) {
     aa_tf_qconj(q,r);
-    aa_la_smul( 4, 1.0/aa_la_dot(4,r,r), r, r );
+    aa_la_scal( 4, 1.0/aa_la_dot(4,r,r), r );
+}
+
+void aa_tf_qmul( const double a[4], const double b[4], double c[4] ) {
+    c[3] = a[3]*b[3] - aa_la_dot(3, a, b);
+    aa_la_cross( a, b, c );
+    for( size_t i = 0; i < 3; i ++ )
+        c[i] += a[3]*b[i] + b[3]*a[i];
 }
 
 void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
 
 void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
 
-void aa_tf_qmul( const double a[4], const double b[4], double c[4] );
-
 void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] );
 
-void aa_tf_quat2axang( const double q[4], double axang[4] );
-
+void aa_tf_quat2axang( const double q[4], double axang[4] ) {
+    double a = aa_la_norm(4,q);
+    double w = q[3]/a;
+    aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang );
+    axang[3] = 2 * acos(w);
+}

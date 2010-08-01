@@ -61,39 +61,57 @@ static inline double aa_sign( double val ) {
 }
 
 /// Fuzzy equals
-int aa_feq( double a, double b, double tol );
+static inline int aa_feq( double a, double b, double tol ) {
+    return fabs(a-b) <= tol;
+}
 
 /// Fuzzy equals
 int aa_veq( size_t n, double *a, double *b, double tol );
 
 /// Fortran modulo, Ada mod
-int aa_imodulo( int a, int b );
+static inline int aa_imodulo( int a, int b ) {
+    return ((a % b) + b) % b;
+}
 
 /// Fortran mod, Ada rem
-int aa_irem( int a, int b );
+static inline int aa_irem( int a, int b ) {
+    return a % b;
+}
 
 /// Fortran modulo, Ada mod
-double aa_fmodulo( double a, double b );
+static inline double aa_fmodulo( double a, double b ) {
+    return fmod(fmod(a , b) + b,  b);
+}
 
 /// Fortran mod, Ada rem
-double aa_frem( double a, double b );
+static inline double aa_frem( double a, double b ) {
+    return fmod(a , b);
+}
 
 /**********/
 /* Angles */
 /**********/
 
 /// convert radians to degrees
-double aa_an_rad2deg( double rad );
+static inline double aa_an_rad2deg( double rad ) {
+    return rad*180.0/M_PI;
+}
 
 /// convert radians to degrees
-double aa_an_deg2rad( double deg );
+static inline double aa_an_deg2rad( double deg ) {
+    return deg*M_PI/180;
+}
 
 
 /// normalize angle on interval [0,2pi)
-double aa_an_norm_2pi( double an );
+static inline double aa_an_norm_2pi( double an ) {
+    return aa_fmodulo( an, 2*M_PI );
+}
 
 /// normalize angle on interval (-pi,pi)
-double aa_an_norm_pi( double an );
+static inline double aa_an_norm_pi( double an ) {
+    return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
+}
 
 /************************/
 /* Dense Linear Algebra */
@@ -127,6 +145,29 @@ double aa_la_dist( size_t n, const double *x, const double *y );
  * \f[ r_i \leftarrow \alpha + x_i \f]
  */
 void aa_la_sadd( size_t n, double alpha, const double *x, double *r );
+
+
+/** vector-scalar multiplication.
+ * \f[ x_i \leftarrow \alpha * x_i \f]
+ */
+void aa_la_scal( size_t n, double alpha, double *x  );
+
+
+/** increment by vector.
+ * \f[ y_i \leftarrow x_i + y_i \f]
+ */
+void aa_la_vinc( size_t n, const double *x, double *y  );
+
+/** increment by vector.
+ * \f[ x_i \leftarrow alpha + x_i \f]
+ */
+void aa_la_sinc( size_t n, double alpha, double *x  );
+
+
+/** increment by scale times vector.
+ * \f[ y_i \leftarrow alpha + x_i + y_i \f]
+ */
+void aa_la_axpy( size_t n, double alpha, const double *x, double *y  );
 
 /** vector-scalar multiplication.
  * \f[ r_i \leftarrow \alpha * x_i \f]
@@ -167,6 +208,11 @@ void aa_la_vdiv( size_t n, const double *x, const double *y, double *r );
  * \f[ c \leftarrow a \times b \f]
  */
 void aa_la_cross( const double a[3], const double b[3], double c[3] );
+
+/** Make x unit vector.
+ * \f[ x \leftarrow \frac{x}{\|x\|}\f]
+ */
+void aa_la_unit( size_t n, double *x );
 
 /*--- Matrix Ops --- */
 
@@ -210,7 +256,7 @@ void aa_tf_qinv( const double q[4], double r[4] );
 void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
 
 /** Quaternion subtraction */
-void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
+void aa_tf_qsub( const double a[4], const double b[4], double c[4] );
 
 /** Quaternion multiplication */
 void aa_tf_qmul( const double a[4], const double b[4], double c[4] );

@@ -36,46 +36,10 @@
 
 #include "amino.h"
 
-int aa_feq( double a, double b, double tol ) {
-    return fabs(a-b) <= tol;
-}
-
-
-int aa_imodulo( int a, int b ) {
-    return ((a % b) + b) % b;
-}
-
-int aa_irem( int a, int b ) {
-    return a % b;
-}
-
-double aa_fmodulo( double a, double b ) {
-    return fmod(fmod(a , b) + b,  b);
-}
-
-double aa_frem( double a, double b ) {
-    return fmod(a , b);
-}
 
 int aa_veq(size_t n, double *a, double *b, double tol ) {
     for( size_t i = 0; i < n; i ++ ) {
         if( ! aa_feq( a[i], b[i], tol ) ) return 0;
     }
     return 1;
-}
-
-double aa_an_rad2deg( double rad ) {
-    return rad*180.0/M_PI;
-}
-
-double aa_an_deg2rad( double deg ) {
-    return deg*M_PI/180;
-}
-
-double aa_an_norm_2pi( double an ) {
-    return aa_fmodulo( an, 2*M_PI );
-}
-
-double aa_an_norm_pi( double an ) {
-    return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
 }

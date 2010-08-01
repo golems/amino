@@ -66,6 +66,27 @@ double aa_la_dist( size_t n, const double *x, const double *y ) {
 
 /*--- Vector Ops ---*/
 
+void aa_la_sinc( size_t n, double alpha, double *x  ) {
+    for( size_t i = 0; i < n; i ++ )
+        x[i] += alpha;
+}
+
+void aa_la_vinc( size_t n, const double *x, double *y  ) {
+    for( size_t i = 0; i < n; i ++ )
+        y[i] += x[i];
+
+}
+
+void aa_la_axpy( size_t n, double alpha, const double *x, double *y  ) {
+    for( size_t i = 0; i < n; i ++ )
+        y[i] += alpha*x[i];
+}
+
+void aa_la_scal( size_t n, double alpha, double *x  ) {
+    for( size_t i = 0; i < n; i ++ )
+        x[i] *= alpha;
+}
+
 void aa_la_sadd( size_t n, double alpha, const double *x, double *r ) {
     for( size_t i = 0; i < n; i ++ )
         r[i] = alpha + x[i];
@@ -116,13 +137,16 @@ void aa_la_cross( const double a[3], const double b[3], double c[3] ) {
     c[2] = a[0]*b[1] - a[1]*b[0];
 }
 
+void aa_la_unit( size_t n, double *x ) {
+    aa_la_scal( n, 1.0/aa_la_norm(n,x), x );
+}
 
 /*--- Matrix Ops --- */
 
 int aa_la_inv( size_t n, double *A ) {
     int ipiv[n];
-    int mi = (int) n;
-    int ni = (int) n;
+    const int mi = (int) n;
+    const int ni = (int) n;
     int info;
 
     // LU-factor
@@ -135,8 +159,9 @@ int aa_la_inv( size_t n, double *A ) {
     int lwork = (int) swork[0];
 
     // invert
-    double work[lwork];
+    double *work = (double*)AA_ALLOCAL( (size_t)(swork[0]) );
     dgetri_( &ni, A, &mi, ipiv, work, &lwork, &info );
+    aa_frlocal(work, (size_t)swork[0]);
 
     return info;
 }
@@ -147,9 +172,9 @@ void aa_la_dls( size_t m, size_t n, double k, const double *A, double *A_star ) 
     // x = Aq, x is m, q is n
 
     // B = AA^T
-    int mi = (int)m;
-    int ni = (int)n;
-    double B[m*m];
+    const int mi = (int)m;
+    const int ni = (int)n;
+    double *B = (double*)AA_ALLOCAL(m*m);
     cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni,
                  1, A, mi, A, mi, 0, B, mi );
 
@@ -163,4 +188,5 @@ void aa_la_dls( size_t m, size_t n, double k, const double *A, double *A_star ) 
     // A^* = A^T*B
     cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi,
                  1, A, mi, B, mi, 0, A_star, ni );
+    aa_frlocal(B, m*m);
 }
