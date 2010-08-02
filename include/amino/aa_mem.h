@@ -1,4 +1,5 @@
 /* -*- mode: C; c-basic-offset: 4  -*- */
+/* ex: set shiftwidth=4 expandtab: */
 /*
  * Copyright (c) 2010, Georgia Tech Research Corporation
  * All rights reserved.
@@ -45,39 +46,128 @@
 /* Allocation */
 /**************/
 
+/*----------- General Allocation ------------------*/
+
+/* FIXME: we should do something reasonable when malloc() fails, but
+   since Linux lies about whether it can provide memory, there may be
+   no point. */
+
+/** Malloc and zero initialize size bytes. */
+static inline void *aa_malloc0( size_t size ) {
+    void *p = malloc(size);
+    if(p) memset(p,0,size);
+    return p;
+}
+
+/** Malloc an array[n] of objects of type. */
+#define AA_NEW_AR(type,n) ( (type*) malloc(sizeof(type)*(n)) )
+
+/** Malloc and zero initialize an array[n] of objects of type. */
+#define AA_NEW0_AR(type,n) ( (type*) aa_malloc(sizeof(type)*(n)) )
+
+/** Malloc an object of type. */
+#define AA_NEW(type) AA_NEW_AR(type,1)
+
+/** Malloc and zero initialize an object of type. */
+#define AA_NEW0(type) AA_NEW0_AR(type,1)
 
 /*----------- Local Allocation ------------------*/
+#ifndef AA_ALLOC_STACK_MAX
 #define AA_ALLOC_STACK_MAX (4096-64)
+#endif //AA_ALLOC_STACK_MAX
 
 /** Allocate a local memory block.
- * This macro will stack-allocate small memory blocks and heap-allocate large ones.
- */
-#define AA_ALLOCAL(size) ({ size_t aa_private_size = size; \
-        aa_private_size > AA_ALLOC_STACK_MAX ? \
-        malloc(aa_private_size) : alloca(aa_private_size);   })
+ *
+ * This macro will stack-allocate small memory blocks and
+ * heap-allocate large ones.
 
-/** Free the results of AA_ALLOCAL
+ * This is necessary because GCC does not verify that calls to
+ * alloca() or VLAs can actually fit on the stack.  Exceeding the
+ * stack bounds will usually cause a segfault.
+ *
+ * You can change limit for stack allocations by redefining
+ * AA_ALLOC_STACK_MAX before including this header or amino.h
+ */
+#define AA_ALLOCAL(size) ({ size_t aa_$_allocal_size = (size);          \
+            aa_$_allocal_size > AA_ALLOC_STACK_MAX ?                    \
+                malloc(aa_$_allocal_size) : alloca(aa_$_allocal_size);   })
+
+/** Free the results of AA_ALLOCAL.
+ *
+ * This function should be called once for every call to AA_ALLOCAL in
+ * case the previously requested memory was put in the heap.
  */
 static inline void aa_frlocal( void *ptr, size_t size ) {
     if( size > AA_ALLOC_STACK_MAX) free(ptr);
 }
 
 /*----------- Region Allocation ------------------*/
-struct aa_region_node {
-    void *buf;
-    struct aa_region_node *next;
-};
 
+/** Data Structure for Region-Based memory allocation.
+ *
+ *
+ * Memory regions provide fast allocation of individual objects and
+ * fast deallocation of all objects in the region.  It is not possible
+ * to deallocate only a single object from the region.
+ *
+ * This provides two benefits over malloc/free.  First, as long as the
+ * requested allocation can be fulfilled from the memory available in
+ * the region, allocation and deallocation require only a pointer
+ * increment or decrement.  Second, there is no need to store any
+ * metadata for each individual allocation resulting in some space
+ * savings, expecially for small objects.
+ *
+ * If the request cannot be satisfied from the current region, this
+ * implemention will malloc() another buffer and add it to the region.
+ * When objects are deallocated, all buffers are merged into one,
+ * possibly requiring several calls to free().
+ */
 typedef struct {
-    size_t target;
-    size_t size;
-    size_t fill;
-    size_t total;
-    struct aa_region_node node;
+    size_t size;   ///< size of the first buffer
+    size_t fill;   ///< previously allocated bytes in first buffer
+    size_t total;  ///< allocated bytes in all buffers after the first
+    struct aa_region_node {
+        void *buf;                   ///< the memory buffer to allocate from
+        struct aa_region_node *next; ///< pointer to next buffer node list
+    } node;        ///< linked list of buffers
 } aa_region_t;
 
+/// untested
+void aa_region_init( aa_region_t *region, size_t size );
+/// untested
+void aa_region_destroy( aa_region_t *region );
+/// untested
 void *aa_region_alloc( aa_region_t *region, size_t size );
+/// untested
 void aa_region_release( aa_region_t *region );
+
+/*----------- Pooled Allocation ------------------*/
+
+/** Data Structure for Object pools.
+ *
+ * Memory pools provide fast allocation and deallocation of fixed-size
+ * objects.
+ *
+ * This implimentation uses a memory region to allocation from, which
+ * allows fast deallocation of all objects in the pool.
+ */
+typedef struct {
+    size_t size; ///< size of each element
+    void *top;   ///< top of list of free elements
+    aa_region_t region; ///< memory region to allocate from
+} aa_pool_t;
+
+/// untested
+void aa_pool_init( aa_pool_t *pool, size_t size, size_t count );
+/// untested
+void aa_pool_destroy( aa_pool_t *pool );
+/// untested
+void *aa_pool_alloc( aa_pool_t *pool );
+/// untested
+void aa_pool_free( aa_pool_t *pool, void *ptr );
+/// untested
+void aa_pool_release( aa_pool_t *pool );
+
 
 /**********/
 /* Arrays */

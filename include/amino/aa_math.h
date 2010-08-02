@@ -1,4 +1,5 @@
 /* -*- mode: C; c-basic-offset: 4  -*- */
+/* ex: set shiftwidth=4 expandtab: */
 /*
  * Copyright (c) 2010, Georgia Tech Research Corporation
  * All rights reserved.
@@ -215,6 +216,14 @@ void aa_la_cross( const double a[3], const double b[3], double c[3] );
 void aa_la_unit( size_t n, double *x );
 
 /*--- Matrix Ops --- */
+
+// matrix-vector multiplication
+static inline void
+aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {
+    cblas_dgemv( CblasColMajor, CblasNoTrans, (int)m, (int)n,
+                 1.0, A, (int)m,
+                 x, 1, 0, b, 1 );
+}
 
 /** Inverse of A.
  *

@@ -1,3 +1,5 @@
+/* -*- mode: C; c-basic-offset: 4  -*- */
+/* ex: set shiftwidth=4 expandtab: */
 /*
  * Copyright (c) 2008, Georgia Tech Research Corporation
  * All rights reserved.

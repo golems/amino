@@ -1,4 +1,5 @@
 /* -*- mode: C; c-basic-offset: 4  -*- */
+/* ex: set shiftwidth=4 expandtab: */
 /*
  * Copyright (c) 2010, Georgia Tech Research Corporation
  * All rights reserved.
@@ -36,6 +37,18 @@
 
 #ifndef AMINO_H
 #define AMINO_H
+
+/** \file amino.h
+ *
+ * \mainpage
+ *
+ * Amino is package of utilites for robotics software.  In includes
+ * basic mathematical and linear algebra routines, memory management,
+ * and time-handling (soon).  Design goals are easy integration,
+ * efficiency, and simplicity.
+ *
+ * \author Neil T. Dantam
+ */
 
 // include everything we'll typically need
 #include <stdlib.h>

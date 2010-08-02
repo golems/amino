@@ -1,4 +1,5 @@
 /* -*- mode: C; c-basic-offset: 4  -*- */
+/* ex: set shiftwidth=4 expandtab: */
 /*
  * Copyright (c) 2010, Georgia Tech Research Corporation
  * All rights reserved.
@@ -206,6 +207,15 @@ void la1() {
 }
 
 void la2() {
+    // mvmul
+    {
+        double A[] = {1,2,3,4,5,6};
+        double x[] = {7, 11};
+        double y[3];
+        double r[3] = {51, 69, 87};
+        aa_la_mvmul( 3, 2, A, x, y );
+        aveq(3,y,r,0);
+    }
     // invert
     {
         double A[] = {1,2,3,4};
