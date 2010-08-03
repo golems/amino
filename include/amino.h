@@ -56,10 +56,17 @@
 #include <string.h>
 #include <math.h>
 #include <cblas.h>
+#include <time.h>
+
+
+#define AA_IBILLION 1000000000
+#define AA_IMILLION 1000000
 
 // include our own headers
 #include "amino/aa_mem.h"
 #include "amino/aa_math.h"
 #include "amino/lapack.h"
+#include "amino/time.h"
+
 
 #endif //AMINO_H

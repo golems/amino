@@ -292,6 +292,19 @@ void quat() {
     }
 }
 
+void tm() {
+    struct timespec t;
+
+    t = aa_tm_make_norm( 100, 1e9 + 1 );
+    assert( 101 == t.tv_sec && 1 == t.tv_nsec );
+
+    t = aa_tm_make_norm( 100,  -1 );
+    assert( 99 == t.tv_sec && AA_IBILLION - 1 == t.tv_nsec );
+
+    t = aa_tm_make_norm( 100,  -AA_IBILLION - 1 );
+    assert( 98 == t.tv_sec && AA_IBILLION - 1 == t.tv_nsec );
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
@@ -300,4 +313,5 @@ int main( int argc, char **argv ) {
     la2();
     quat();
     angle();
+    tm();
 }

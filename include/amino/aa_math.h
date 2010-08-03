@@ -74,6 +74,15 @@ static inline int aa_imodulo( int a, int b ) {
     return ((a % b) + b) % b;
 }
 
+static inline long aa_lmodulo( long a, long b ) {
+    return ((a % b) + b) % b;
+}
+
+/// Fortran modulo, Ada mod
+static inline int64_t aa_imodulo64( int64_t a, int64_t b ) {
+    return ((a % b) + b) % b;
+}
+
 /// Fortran mod, Ada rem
 static inline int aa_irem( int a, int b ) {
     return a % b;
