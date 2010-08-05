@@ -63,7 +63,7 @@ AA_CDECL static inline void *aa_malloc0( size_t size ) {
 #define AA_NEW_AR(type,n) ( (type*) malloc(sizeof(type)*(n)) )
 
 /** Malloc and zero initialize an array[n] of objects of type. */
-#define AA_NEW0_AR(type,n) ( (type*) aa_malloc(sizeof(type)*(n)) )
+#define AA_NEW0_AR(type,n) ( (type*) aa_malloc0(sizeof(type)*(n)) )
 
 /** Malloc an object of type. */
 #define AA_NEW(type) AA_NEW_AR(type,1)

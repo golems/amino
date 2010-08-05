@@ -226,6 +226,19 @@ AA_CDECL void aa_la_unit( size_t n, double *x );
 
 /*--- Matrix Ops --- */
 
+/** Set diagonal of A to x. */
+AA_CDECL static inline void
+aa_la_diag( size_t n, double *A, double x ) {
+    for( size_t i = 0; i < n; i ++ )
+        A[i*n+i] = x;
+}
+
+AA_CDECL static inline void
+aa_la_ident( size_t n, double *A ) {
+    aa_fset(A, 0, n*n);
+    aa_la_diag(n,A,1.0);
+}
+
 // matrix-vector multiplication
 AA_CDECL static inline void
 aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {

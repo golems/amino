@@ -167,6 +167,11 @@ int aa_la_inv( size_t n, double *A ) {
     return info;
 }
 
+int aa_la_inv_( int *n, double *A ) {
+    size_t ns = (size_t)*n;
+    return aa_la_inv(ns,A);
+}
+
 void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star ) {
     // A^T (AA^T + kI)^{-1}
     // A is m*n
