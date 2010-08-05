@@ -61,7 +61,8 @@ void aa_region_destroy( aa_region_t *region ) {
 
 // FIXME: maybe we should use mmap instead of malloc()
 void *aa_region_alloc( aa_region_t *region, size_t size ) {
-    if( size > region->size - region->fill ) {
+    // unsigned arithmetic, check for overflow too
+    if(region->fill > region->size || size > region->size - region->fill ) {
         // slow path, malloc another buffer
         struct aa_region_node *n = AA_NEW( struct aa_region_node );
         n->buf = region->node.buf;
@@ -88,6 +89,7 @@ void aa_region_release( aa_region_t *region ) {
         aa_region_destroy_node( region->node.next );
         region->size = region->total + region->fill;
         region->node.buf = malloc(region->size);
+        region->node.next = NULL;
     }
     region->total = 0;
     region->fill = 0;

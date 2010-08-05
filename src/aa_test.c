@@ -216,6 +216,20 @@ void la2() {
         aa_la_mvmul( 3, 2, A, x, y );
         aveq(3,y,r,0);
     }
+    // SVD
+    {
+        double A[] = {1,2,3,4,5,6}; //3x2
+        double U[3*3];
+        double Vt[2*2];
+        double S[2];
+        double Ur[] =  {-0.42867, -0.56631, -0.70395, 0.80596, 0.11238, -0.58120,0.40825, -0.81650, 0.40825};
+        double Sr[] = { 9.50803, 0.77287};
+        double Vtr[] = {-0.38632, -0.92237, -0.92237, 0.38632};
+        aa_la_svd(3,2,A,U,S,Vt);
+        aveq(3*3,U,Ur, 0.0001);
+        aveq(2, S, Sr, 0.001);
+        aveq(2*2, Vt, Vtr, 0.001);
+    }
     // invert
     {
         double A[] = {1,2,3,4};
@@ -224,19 +238,19 @@ void la2() {
         aveq( 4, A, B, 0 );
     }
 
-    //dls
+    //dpinv
     {
         double A[] = {1,2,3,4};
         double A_star[4];
         double R[] = {  -1.92649, 0.96746,  1.44818,  -0.47711 };
-        aa_la_dls(2,2, .005, &A[0], &A_star[0]);
+        aa_la_dpinv(2,2, .005, &A[0], &A_star[0]);
         aveq( 4, A_star, R, .0001 );
     }
     {
         double A[] = {1,2,3,4,5,6};
         double A_star[6];
         double R[] =  {-1.30832, -0.32652, 0.65528, 1.06359, 0.32795, -0.40769};
-        aa_la_dls(2,3, .005, &A[0], &A_star[0]);
+        aa_la_dpinv(2,3, .005, &A[0], &A_star[0]);
         aveq( 6, A_star, R, .0001 );
     }
 
@@ -305,6 +319,84 @@ void tm() {
     assert( 98 == t.tv_sec && AA_IBILLION - 1 == t.tv_nsec );
 }
 
+void mem() {
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 10);
+        void *p = aa_region_alloc(&reg,10);
+        memset(p,0,10);
+        aa_region_destroy(&reg);
+    }
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 2);
+        void *p = aa_region_alloc(&reg,10);
+        memset(p,0,10);
+        aa_region_destroy(&reg);
+    }
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 256);
+        double *p = (double*)aa_region_alloc(&reg,sizeof(double));
+        double *q = (double*)aa_region_alloc(&reg,sizeof(double));
+        *p = 1.0;
+        *q = 2.0;
+        afeq( *p, 1.0, 0 );
+        afeq( *q, 2.0, 0 );
+        *q = 3.0;
+        *p = 4.0;
+        afeq( *p, 4.0, 0 );
+        afeq( *q, 3.0, 0 );
+        aa_region_destroy(&reg);
+    }
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 1);
+        double *p = (double*)aa_region_alloc(&reg,sizeof(double));
+        double *q = (double*)aa_region_alloc(&reg,sizeof(double));
+        *p = 1.0;
+        *q = 2.0;
+        afeq( *p, 1.0, 0 );
+        afeq( *q, 2.0, 0 );
+        *q = 3.0;
+        *p = 4.0;
+        afeq( *p, 4.0, 0 );
+        afeq( *q, 3.0, 0 );
+        aa_region_destroy(&reg);
+    }
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 256);
+
+        char *a = (char*)aa_region_alloc(&reg, 4096);
+        memset(a,10,4096);
+        for(size_t i = 0; i < 4096; i ++ ) assert( 10 == a[i] );
+
+        char *b = (char*)aa_region_alloc(&reg, 4096);
+        memset(b,11,4096);
+        for(size_t i = 0; i < 4096; i ++ ) assert( 10 == a[i] );
+        for(size_t i = 0; i < 4096; i ++ ) assert( 11 == b[i] );
+
+        char *c = (char*)aa_region_alloc(&reg, 4096);
+        memset(c,12,4096);
+        for(size_t i = 0; i < 4096; i ++ ) assert( 10 == a[i] );
+        for(size_t i = 0; i < 4096; i ++ ) assert( 11 == b[i] );
+        for(size_t i = 0; i < 4096; i ++ ) assert( 12 == c[i] );
+
+        aa_region_destroy(&reg);
+    }
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 16);
+        for( size_t i = 0; i < 256; i ++ ) {
+            aa_region_alloc(&reg, 16);
+            aa_region_alloc(&reg, 16);
+            aa_region_release(&reg);
+        }
+        aa_region_destroy(&reg);
+    }
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
@@ -314,4 +406,5 @@ int main( int argc, char **argv ) {
     quat();
     angle();
     tm();
+    mem();
 }

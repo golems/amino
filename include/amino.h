@@ -37,7 +37,7 @@
 
 #ifndef AMINO_H
 #define AMINO_H
-
+/** \file amino.h */
 /** \file amino.h
  *
  * \mainpage
@@ -51,13 +51,37 @@
  */
 
 // include everything we'll typically need
+#ifdef __cplusplus
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
+#include <cstdio>
+#include <cassert>
+#include <ctime>
+#include <stdint.h>
+#include <iostream>
+#include <vector>
+#include <map>
+#include <queue>
+#include <stack>
+#include <string>
+#else
+#include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include <math.h>
 #include <cblas.h>
 #include <time.h>
+#endif //__cplusplus
 
+// for C symbols
+#ifdef __cplusplus
+#define AA_CDECL extern "C"
+#else
+#define AA_CDECL
+#endif //__cplusplus
 
 #define AA_IBILLION 1000000000
 #define AA_IMILLION 1000000

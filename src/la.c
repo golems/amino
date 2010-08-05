@@ -167,7 +167,7 @@ int aa_la_inv( size_t n, double *A ) {
     return info;
 }
 
-void aa_la_dls( size_t m, size_t n, double k, const double *A, double *A_star ) {
+void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star ) {
     // A^T (AA^T + kI)^{-1}
     // A is m*n
     // x = Aq, x is m, q is n
@@ -190,4 +190,35 @@ void aa_la_dls( size_t m, size_t n, double k, const double *A, double *A_star ) 
     cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi,
                  1, A, mi, B, mi, 0, A_star, ni );
     aa_frlocal(B, m*m);
+}
+
+int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt ) {
+    const char *jobu = U ? "A" : "O";
+    const char *jobvt = Vt ? "A" : "O";
+    int mi = (int)m, ni=(int)n;
+    int lwork = -1;
+    int info;
+
+    // calculate work size
+    double qwork[1];
+    dgesvd_( jobu, jobvt, &mi, &ni,
+             A, &mi,
+             S, U, &mi,
+             Vt, &ni,
+             &qwork[0], &lwork, &info );
+
+    // allocate work array
+    lwork = (int) qwork[0];
+    double *work = (double*) AA_ALLOCAL( (size_t)lwork );
+
+    // calculate SVD
+    dgesvd_( jobu, jobvt, &mi, &ni,
+             A, &mi,
+             S, U, &mi,
+             Vt, &ni,
+             &work[0], &lwork, &info );
+
+    //finish
+    aa_frlocal(work, (size_t)lwork );
+    return info;
 }

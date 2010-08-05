@@ -53,7 +53,7 @@
    no point. */
 
 /** Malloc and zero initialize size bytes. */
-static inline void *aa_malloc0( size_t size ) {
+AA_CDECL static inline void *aa_malloc0( size_t size ) {
     void *p = malloc(size);
     if(p) memset(p,0,size);
     return p;
@@ -97,7 +97,7 @@ static inline void *aa_malloc0( size_t size ) {
  * This function should be called once for every call to AA_ALLOCAL in
  * case the previously requested memory was put in the heap.
  */
-static inline void aa_frlocal( void *ptr, size_t size ) {
+AA_CDECL static inline void aa_frlocal( void *ptr, size_t size ) {
     if( size > AA_ALLOC_STACK_MAX) free(ptr);
 }
 
@@ -132,14 +132,20 @@ typedef struct {
     } node;        ///< linked list of buffers
 } aa_region_t;
 
-/// untested
-void aa_region_init( aa_region_t *region, size_t size );
-/// untested
-void aa_region_destroy( aa_region_t *region );
-/// untested
-void *aa_region_alloc( aa_region_t *region, size_t size );
-/// untested
-void aa_region_release( aa_region_t *region );
+/** Initialize memory region with block of size bytes. */
+AA_CDECL void aa_region_init( aa_region_t *region, size_t size );
+
+/** Destroy memory region freeing all block buffers.
+ */
+AA_CDECL void aa_region_destroy( aa_region_t *region );
+
+/** Allocate size bytes from the region.
+ */
+AA_CDECL void *aa_region_alloc( aa_region_t *region, size_t size );
+
+/** Deallocates all allocated chunks from the region.
+ */
+AA_CDECL void aa_region_release( aa_region_t *region );
 
 /*----------- Pooled Allocation ------------------*/
 
@@ -158,15 +164,15 @@ typedef struct {
 } aa_pool_t;
 
 /// untested
-void aa_pool_init( aa_pool_t *pool, size_t size, size_t count );
+AA_CDECL void aa_pool_init( aa_pool_t *pool, size_t size, size_t count );
 /// untested
-void aa_pool_destroy( aa_pool_t *pool );
+AA_CDECL void aa_pool_destroy( aa_pool_t *pool );
 /// untested
-void *aa_pool_alloc( aa_pool_t *pool );
+AA_CDECL void *aa_pool_alloc( aa_pool_t *pool );
 /// untested
-void aa_pool_free( aa_pool_t *pool, void *ptr );
+AA_CDECL void aa_pool_free( aa_pool_t *pool, void *ptr );
 /// untested
-void aa_pool_release( aa_pool_t *pool );
+AA_CDECL void aa_pool_release( aa_pool_t *pool );
 
 
 /**********/
@@ -174,12 +180,12 @@ void aa_pool_release( aa_pool_t *pool );
 /**********/
 
 /// copy n double floats from src to dst
-static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
+AA_CDECL static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
     memcpy( dst, src, sizeof( dst[0] ) * n );
 }
 
 /// set n double floats to val
-static inline void aa_fset( double *dst, double val, size_t n ) {
+AA_CDECL static inline void aa_fset( double *dst, double val, size_t n ) {
     for( size_t i = 0; i < n; i ++ )
         dst[i] = val;
 }
