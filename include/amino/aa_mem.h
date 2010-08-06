@@ -80,7 +80,7 @@ AA_CDECL static inline void *aa_malloc0( size_t size ) {
  *
  * This macro will stack-allocate small memory blocks and
  * heap-allocate large ones.
-
+ *
  * This is necessary because GCC does not verify that calls to
  * alloca() or VLAs can actually fit on the stack.  Exceeding the
  * stack bounds will usually cause a segfault.
@@ -92,6 +92,12 @@ AA_CDECL static inline void *aa_malloc0( size_t size ) {
             aa_$_allocal_size > AA_ALLOC_STACK_MAX ?                    \
                 malloc(aa_$_allocal_size) : alloca(aa_$_allocal_size);   })
 
+/** Allocate a local array of type with n elements.
+ *
+ * Uses AA_ALLOCAL.
+ */
+#define AA_NEW_LOCAL(type, n) ( (type*) AA_ALLOCAL( sizeof(type)*(n) ) )
+
 /** Free the results of AA_ALLOCAL.
  *
  * This function should be called once for every call to AA_ALLOCAL in
@@ -100,6 +106,9 @@ AA_CDECL static inline void *aa_malloc0( size_t size ) {
 AA_CDECL static inline void aa_frlocal( void *ptr, size_t size ) {
     if( size > AA_ALLOC_STACK_MAX) free(ptr);
 }
+
+/** Frees the result of AA_NEW_LOCAL. */
+#define AA_DEL_LOCAL(ptr, type, n) aa_frlocal( ptr, sizeof(type)*(n) )
 
 /*----------- Region Allocation ------------------*/
 

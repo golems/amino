@@ -96,7 +96,7 @@ void aa_region_release( aa_region_t *region ) {
 }
 
 void aa_pool_init( aa_pool_t *pool, size_t size, size_t count ) {
-    pool->size = AA_MAX(size,16);
+    pool->size = AA_MAX(size,(size_t)16);
     pool->top = NULL;
     aa_region_init( &pool->region, pool->size * count );
 }

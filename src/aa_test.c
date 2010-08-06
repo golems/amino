@@ -34,7 +34,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
+//#define AA_ALLOC_STACK_MAX
 #include "amino.h"
 #include <assert.h>
 #include <stdio.h>
@@ -218,17 +218,32 @@ void la2() {
     }
     // SVD
     {
-        double A[] = {1,2,3,4,5,6}; //3x2
         double U[3*3];
         double Vt[2*2];
         double S[2];
         double Ur[] =  {-0.42867, -0.56631, -0.70395, 0.80596, 0.11238, -0.58120,0.40825, -0.81650, 0.40825};
         double Sr[] = { 9.50803, 0.77287};
         double Vtr[] = {-0.38632, -0.92237, -0.92237, 0.38632};
-        aa_la_svd(3,2,A,U,S,Vt);
-        aveq(3*3,U,Ur, 0.0001);
-        aveq(2, S, Sr, 0.001);
-        aveq(2*2, Vt, Vtr, 0.001);
+        {
+            double A[] = {1,2,3,4,5,6}; //3x2
+            aa_la_svd(3,2,A,U,S,NULL);
+            aveq(3*3,U,Ur, 0.0001);
+            aveq(2, S, Sr, 0.001);
+        }
+        {
+            double A[] = {1,2,3,4,5,6}; //3x2
+            aa_la_svd(3,2,A,NULL,S,Vt);
+            aveq(2, S, Sr, 0.001);
+            aveq(2*2, Vt, Vtr, 0.001);
+        }
+
+        {
+            double A[] = {1,2,3,4,5,6}; //3x2
+            aa_la_svd(3,2,A,U,S,Vt);
+            aveq(3*3,U,Ur, 0.0001);
+            aveq(2, S, Sr, 0.001);
+            aveq(2*2, Vt, Vtr, 0.001);
+        }
     }
     // invert
     {

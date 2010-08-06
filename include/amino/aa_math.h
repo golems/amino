@@ -45,8 +45,15 @@
 /* Scalars */
 /***********/
 
-#define AA_MAX(a,b) ( (a)>(b) ? (a) : (b) )
-#define AA_MIN(a,b) ( (a)<(b) ? (a) : (b) )
+#define AA_MAX(a,b) \
+    ({ const typeof(a) aa_$_max_a = (a); \
+       const typeof(b) aa_$_max_b = (b); \
+       (aa_$_max_a > aa_$_max_b) ? aa_$_max_a : aa_$_max_b; })
+
+#define AA_MIN(a,b) \
+    ({ const typeof(a) aa_$_max_a = (a); \
+       const typeof(b) aa_$_max_b = (b); \
+       (aa_$_max_a < aa_$_max_b) ? aa_$_max_a : aa_$_max_b; })
 
 
 AA_CDECL static inline double aa_clamp( double val, double level) {
@@ -276,6 +283,15 @@ AA_CDECL int aa_la_inv( size_t n, double *A );
  */
 AA_CDECL void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double *A_star );
 
+/** Damped Least Squares.
+ * \f[ y = A^* x \f]
+ */
+AA_CDECL void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *x, double *y );
+
+/** Damped Least Squares with Nullspace projection.
+ * \f[ y = A^* x + (I-A^*A)y_p \f]
+ */
+AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const double *x, const double *yp, double *y );
 
 /**************/
 /* Transforms */

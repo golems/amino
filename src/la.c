@@ -35,6 +35,9 @@
  *
  */
 
+// uncomment to check that local allocs actually get freed
+// #define AA_ALLOC_STACK_MAX 0
+
 #include "amino.h"
 
 
@@ -160,9 +163,9 @@ int aa_la_inv( size_t n, double *A ) {
     int lwork = (int) swork[0];
 
     // invert
-    double *work = (double*)AA_ALLOCAL( (size_t)(swork[0]) );
+    double *work = AA_NEW_LOCAL(double, (size_t)swork[0]);
     dgetri_( &ni, A, &mi, ipiv, work, &lwork, &info );
-    aa_frlocal(work, (size_t)swork[0]);
+    AA_DEL_LOCAL(work, double, (size_t)swork[0]);
 
     return info;
 }
@@ -177,10 +180,11 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     // A is m*n
     // x = Aq, x is m, q is n
 
-    // B = AA^T
     const int mi = (int)m;
     const int ni = (int)n;
-    double *B = (double*)AA_ALLOCAL(m*m);
+
+    // B = AA^T
+    /* double *B = (double*)AA_ALLOCAL(sizeof(double)*m*m);
     cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni,
                  1, A, mi, A, mi, 0, B, mi );
 
@@ -194,7 +198,33 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     // A^* = A^T*B
     cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi,
                  1, A, mi, B, mi, 0, A_star, ni );
-    aa_frlocal(B, m*m);
+    aa_frlocal(B, sizeof(double)*m*m);
+    */
+
+    double *Ap = AA_NEW_LOCAL(double, m*n);
+    double *U = AA_NEW_LOCAL(double, m*m);
+    double *Vt = AA_NEW_LOCAL(double, n*n);
+    double *S = AA_NEW_LOCAL(double, AA_MIN(m,n));
+
+    aa_fcpy(Ap,A,m*n);
+    aa_fset(A_star,0,m*n);
+
+    // A = U S V^T
+    aa_la_svd(m,n,Ap,U,S,Vt);
+
+    // \sum s_i/(s_i**2+k) * v_i * u_i^T
+    for( size_t i = 0; i < AA_MIN(m,n); i ++ ) {
+        cblas_dger( CblasColMajor, ni, mi, S[i] / (S[i]*S[i] + k),
+                Vt + i, ni,
+                U + m*i, 1,
+                A_star, ni
+                );
+    }
+
+    AA_DEL_LOCAL(Ap, double, m*n);
+    AA_DEL_LOCAL(U,  double, m*m);
+    AA_DEL_LOCAL(Vt, double, n*n);
+    AA_DEL_LOCAL(S,  double, AA_MIN(m,n));
 }
 
 int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt ) {
@@ -214,7 +244,8 @@ int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt )
 
     // allocate work array
     lwork = (int) qwork[0];
-    double *work = (double*) AA_ALLOCAL( (size_t)lwork );
+    double *work =  AA_NEW_LOCAL( double, (size_t)lwork );
+    //printf("size: %d\n", (int)qwork[0]);
 
     // calculate SVD
     dgesvd_( jobu, jobvt, &mi, &ni,
@@ -224,6 +255,37 @@ int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt )
              &work[0], &lwork, &info );
 
     //finish
-    aa_frlocal(work, (size_t)lwork );
+    AA_DEL_LOCAL(work, double, (size_t)lwork );
     return info;
+}
+
+AA_CDECL void aa_la_dls( size_t m, size_t n, double k, const double *A, const double *x, double *y ) {
+    double *A_star = AA_NEW_LOCAL(double, m*n);
+    aa_la_dpinv(m,n,k,A,A_star);
+    aa_la_mvmul(m,n,A_star,x,y);
+    AA_DEL_LOCAL(A_star, double, m*n);
+}
+
+AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const double *x, const double *yp, double *y ) {
+    double *A_star = AA_NEW_LOCAL(double, m*n);
+    double *B = AA_NEW_LOCAL(double, n*n);
+
+    aa_la_dpinv(m,n,k,A,A_star);
+    aa_la_mvmul(m,n,A_star,x,y);
+
+    // B = -A^* A
+    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans, (int)n, (int)n, (int)m,
+                 -1, A_star, (int)n, A, (int)m, 0, B, (int)n );
+
+    // B = I - A^* A
+    for( size_t i = 0; i < n; i ++ )
+        B[i*n+i] -= 1;
+
+    // y = y + B yp
+    cblas_dgemv( CblasColMajor, CblasNoTrans, (int)m, (int)n,
+            1.0, A, (int)n,
+            yp, 1, 1, y, 1 );
+
+    AA_DEL_LOCAL(A_star, double, m*n);
+    AA_DEL_LOCAL(B, double, n*n);
 }
