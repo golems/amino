@@ -134,6 +134,9 @@ AA_CDECL static inline double aa_an_norm_pi( double an ) {
 /* Dense Linear Algebra */
 /************************/
 
+/** Reference an element in a column-major matrix. */
+#define AA_MATREF(ptr, n, i, j) ((ptr)[(j)*(n)+(i)])
+
 /*--- Scalar Ops ---*/
 
 /** Dot product.
@@ -284,14 +287,14 @@ AA_CDECL int aa_la_inv( size_t n, double *A );
 AA_CDECL void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double *A_star );
 
 /** Damped Least Squares.
- * \f[ y = A^* x \f]
+ * \f[ x = A^* b \f]
  */
-AA_CDECL void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *x, double *y );
+AA_CDECL void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *b, double *x );
 
 /** Damped Least Squares with Nullspace projection.
- * \f[ y = A^* x + (I-A^*A)y_p \f]
+ * \f[ x = A^* b + (I-A^*A)x_p \f]
  */
-AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const double *x, const double *yp, double *y );
+AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const double *b, const double *xp, double *x );
 
 /**************/
 /* Transforms */

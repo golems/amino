@@ -268,6 +268,25 @@ void la2() {
         aa_la_dpinv(2,3, .005, &A[0], &A_star[0]);
         aveq( 6, A_star, R, .0001 );
     }
+    // dls
+    {
+        double A[] = {1,2,3,4,5,6};
+        double b[] = {10,20};
+        double x_r[] =  {8.1885, 3.2938, -1.6009};
+        double x[3];
+        aa_la_dls(2, 3, .005, A, b, x);
+        aveq(3, x_r, x, .0001 );
+    }
+    // dlsnp
+    {
+        double A[] = {1,2,3,4,5,6};
+        double b[] = {10,20};
+        double x_r[] = { 8.1938, 3.2954, -1.6029 };
+        double x_p[] =  {2,4,6};
+        double x[3];
+        aa_la_dlsnp(2, 3, .005, A, b, x_p, x);
+        aveq(3, x_r, x, .0001 );
+    }
 
 }
 

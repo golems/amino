@@ -262,7 +262,7 @@ int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt )
 AA_CDECL void aa_la_dls( size_t m, size_t n, double k, const double *A, const double *x, double *y ) {
     double *A_star = AA_NEW_LOCAL(double, m*n);
     aa_la_dpinv(m,n,k,A,A_star);
-    aa_la_mvmul(m,n,A_star,x,y);
+    aa_la_mvmul(n,m,A_star,x,y);
     AA_DEL_LOCAL(A_star, double, m*n);
 }
 
@@ -271,20 +271,21 @@ AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const 
     double *B = AA_NEW_LOCAL(double, n*n);
 
     aa_la_dpinv(m,n,k,A,A_star);
-    aa_la_mvmul(m,n,A_star,x,y);
+    aa_la_mvmul(n,m,A_star,x,y);
 
-    // B = -A^* A
+    // B = A^* A
     cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans, (int)n, (int)n, (int)m,
-                 -1, A_star, (int)n, A, (int)m, 0, B, (int)n );
+                 1, A_star, (int)n, A, (int)m, 0, B, (int)n );
 
-    // B = I - A^* A
+    // B =  A^* A - I
     for( size_t i = 0; i < n; i ++ )
-        B[i*n+i] -= 1;
+        AA_MATREF(B,n,i,i) -= 1;
 
-    // y = y + B yp
-    cblas_dgemv( CblasColMajor, CblasNoTrans, (int)m, (int)n,
-            1.0, A, (int)n,
-            yp, 1, 1, y, 1 );
+    // y = y + -B yp
+    cblas_dgemv( CblasColMajor, CblasNoTrans, (int)n, (int)n,
+                 -1.0, B, (int)n,
+                 yp, 1,
+                 1, y, 1 );
 
     AA_DEL_LOCAL(A_star, double, m*n);
     AA_DEL_LOCAL(B, double, n*n);
