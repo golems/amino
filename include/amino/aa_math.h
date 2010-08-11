@@ -56,20 +56,20 @@
        (aa_$_min_a < aa_$_min_b) ? aa_$_min_a : aa_$_min_b; })
 
 
-AA_CDECL static inline double aa_clamp( double val, double level) {
+static inline double aa_clamp( double val, double level) {
     if( val > level )  return level;
     if( val < -level ) return -level;
     return val;
 }
 
-AA_CDECL static inline double aa_sign( double val ) {
+static inline double aa_sign( double val ) {
     if( val > 0 )  return 1;
     if( val < 0 ) return -1;
     return 0;
 }
 
 /// Fuzzy equals
-AA_CDECL static inline int aa_feq( double a, double b, double tol ) {
+static inline int aa_feq( double a, double b, double tol ) {
     return fabs(a-b) <= tol;
 }
 
@@ -77,31 +77,31 @@ AA_CDECL static inline int aa_feq( double a, double b, double tol ) {
 AA_CDECL int aa_veq( size_t n, double *a, double *b, double tol );
 
 /// Fortran modulo, Ada mod
-AA_CDECL static inline int aa_imodulo( int a, int b ) {
+static inline int aa_imodulo( int a, int b ) {
     return ((a % b) + b) % b;
 }
 
-AA_CDECL static inline long aa_lmodulo( long a, long b ) {
+static inline long aa_lmodulo( long a, long b ) {
     return ((a % b) + b) % b;
 }
 
 /// Fortran modulo, Ada mod
-AA_CDECL static inline int64_t aa_imodulo64( int64_t a, int64_t b ) {
+static inline int64_t aa_imodulo64( int64_t a, int64_t b ) {
     return ((a % b) + b) % b;
 }
 
 /// Fortran mod, Ada rem
-AA_CDECL static inline int aa_iremainder( int a, int b ) {
+static inline int aa_iremainder( int a, int b ) {
     return a % b;
 }
 
 /// Fortran modulo, Ada mod
-AA_CDECL static inline double aa_fmodulo( double a, double b ) {
+static inline double aa_fmodulo( double a, double b ) {
     return fmod(fmod(a , b) + b,  b);
 }
 
 /// Fortran mod, Ada rem
-AA_CDECL static inline double aa_fremainder( double a, double b ) {
+static inline double aa_fremainder( double a, double b ) {
     return fmod(a , b);
 }
 
@@ -110,23 +110,23 @@ AA_CDECL static inline double aa_fremainder( double a, double b ) {
 /**********/
 
 /// convert radians to degrees
-AA_CDECL static inline double aa_an_rad2deg( double rad ) {
+static inline double aa_an_rad2deg( double rad ) {
     return rad*180.0/M_PI;
 }
 
 /// convert radians to degrees
-AA_CDECL static inline double aa_an_deg2rad( double deg ) {
+static inline double aa_an_deg2rad( double deg ) {
     return deg*M_PI/180;
 }
 
 
 /// normalize angle on interval [0,2pi)
-AA_CDECL static inline double aa_an_norm_2pi( double an ) {
+static inline double aa_an_norm_2pi( double an ) {
     return aa_fmodulo( an, 2*M_PI );
 }
 
 /// normalize angle on interval (-pi,pi)
-AA_CDECL static inline double aa_an_norm_pi( double an ) {
+static inline double aa_an_norm_pi( double an ) {
     return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
 }
 
@@ -237,20 +237,20 @@ AA_CDECL void aa_la_unit( size_t n, double *x );
 /*--- Matrix Ops --- */
 
 /** Set diagonal of A to x. */
-AA_CDECL static inline void
+static inline void
 aa_la_diag( size_t n, double *A, double x ) {
     for( size_t i = 0; i < n; i ++ )
         A[i*n+i] = x;
 }
 
-AA_CDECL static inline void
+static inline void
 aa_la_ident( size_t n, double *A ) {
     aa_fset(A, 0, n*n);
     aa_la_diag(n,A,1.0);
 }
 
 // matrix-vector multiplication
-AA_CDECL static inline void
+static inline void
 aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {
     cblas_dgemv( CblasColMajor, CblasNoTrans, (int)m, (int)n,
                  1.0, A, (int)m,
@@ -346,19 +346,31 @@ AA_CDECL void aa_tf_qconj( const double q[4], double r[4] );
 /** Quaternion inverse */
 AA_CDECL void aa_tf_qinv( const double q[4], double r[4] );
 
-/** Quaternion addition */
+/** Quaternion addition. */
 AA_CDECL void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
 
-/** Quaternion subtraction */
+/** Quaternion subtraction. */
 AA_CDECL void aa_tf_qsub( const double a[4], const double b[4], double c[4] );
 
-/** Quaternion multiplication */
+/** Quaternion multiplication. */
 AA_CDECL void aa_tf_qmul( const double a[4], const double b[4], double c[4] );
 
-/** Quaternion SLERP */
+/** Quaternion SLERP. */
 AA_CDECL void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] );
 
-/** Quaternion to axis-angle */
+/** Quaternion to axis-angle. */
 AA_CDECL void aa_tf_quat2axang( const double q[4], double axang[4] );
+
+
+/** axis-angle to quaternion. */
+AA_CDECL void aa_tf_axang2quat( const double axang[4], double q[4] );
+
+AA_CDECL void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] );
+
+AA_CDECL void aa_tf_axang_permute( const double aa0[4], double aa1[0], double aa2[4], double aa3[4] );
+
+AA_CDECL void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] );
+
+AA_CDECL void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] );
 
 #endif //AA_MATH_H

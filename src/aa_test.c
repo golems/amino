@@ -298,6 +298,30 @@ void la2() {
 
 }
 
+
+
+void axang() {
+    // rotvecs
+    {
+        double aa[4], rv[3], aap[4];
+        aa_tf_axang_make( 1,2,3, M_PI/2.0, aa );
+        afeq( aa_la_norm(3, aa), 1.0, .00001 );
+        aa_tf_axang2rotvec( aa, rv );
+        afeq( aa_la_norm(3, rv), M_PI/2.0, .00001 );
+        aa_tf_rotvec2axang( rv, aap );
+        aveq( 4, aa, aap, .00001 );
+    }
+    // 2 quat
+    {
+        double q_r[4] = {1,2,3,4};
+        aa_tf_qnorm(q_r);
+        double q[4];
+        double a[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
+        aa_tf_axang2quat(a,q);
+        aveq( 4, q, q_r, 0.001 );
+    }
+}
+
 void angle() {
     // conversion
     afeq( aa_an_rad2deg(3.1), 3.1*180.0/M_PI, 0 );
@@ -445,8 +469,9 @@ int main( int argc, char **argv ) {
     la0();
     la1();
     la2();
-    quat();
     angle();
+    quat();
+    axang();
     tm();
     mem();
 }

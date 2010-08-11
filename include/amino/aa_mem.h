@@ -53,7 +53,7 @@
    no point. */
 
 /** Malloc and zero initialize size bytes. */
-AA_CDECL static inline void *aa_malloc0( size_t size ) {
+static inline void *aa_malloc0( size_t size ) {
     void *p = malloc(size);
     if(p) memset(p,0,size);
     return p;
@@ -103,7 +103,7 @@ AA_CDECL static inline void *aa_malloc0( size_t size ) {
  * This function should be called once for every call to AA_ALLOCAL in
  * case the previously requested memory was put in the heap.
  */
-AA_CDECL static inline void aa_frlocal( void *ptr, size_t size ) {
+static inline void aa_frlocal( void *ptr, size_t size ) {
     if( size > AA_ALLOC_STACK_MAX) free(ptr);
 }
 
@@ -189,12 +189,12 @@ AA_CDECL void aa_pool_release( aa_pool_t *pool );
 /**********/
 
 /// copy n double floats from src to dst
-AA_CDECL static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
+static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
     memcpy( dst, src, sizeof( dst[0] ) * n );
 }
 
 /// set n double floats to val
-AA_CDECL static inline void aa_fset( double *dst, double val, size_t n ) {
+static inline void aa_fset( double *dst, double val, size_t n ) {
     for( size_t i = 0; i < n; i ++ )
         dst[i] = val;
 }

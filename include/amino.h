@@ -72,9 +72,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#endif //__cplusplus
+
 #include <cblas.h>
 #include <time.h>
-#endif //__cplusplus
 
 // for C symbols
 #ifdef __cplusplus

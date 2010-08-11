@@ -35,6 +35,7 @@
  *
  */
 
+#define _GNU_SOURCE
 #include "amino.h"
 
 
@@ -75,3 +76,39 @@ void aa_tf_quat2axang( const double q[4], double axang[4] ) {
     aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang );
     axang[3] = 2 * acos(w);
 }
+
+void aa_tf_axang2quat( const double axang[4], double q[4] ) {
+    double s,c;
+    sincos( axang[3]/2, &s, &c );
+    q[3] = c;
+    aa_la_smul( 3, s, axang, q );
+}
+
+void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] ) {
+    double n = sqrt(x*x + y*y + z*z);
+    axang[0] = x/n;
+    axang[1] = y/n;
+    axang[2] = z/n;
+    axang[3] = aa_an_norm_pi(theta);
+}
+
+void aa_tf_axang_permute2( const double aa[4], double aa_plus[4], double aa_minus[4] ) {
+   aa_fcpy( aa_plus, aa, 3 );
+   aa_plus[3] = aa[3] + 2*M_PI;
+   aa_fcpy( aa_minus, aa, 3 );
+   aa_minus[3] = aa[3] - 2*M_PI;
+}
+
+void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] ) {
+    rotvec[0] = axang[0]*axang[3];
+    rotvec[1] = axang[1]*axang[3];
+    rotvec[2] = axang[2]*axang[3];
+}
+
+void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] ) {
+    axang[3] = aa_la_norm(3,rotvec);
+    axang[0] = rotvec[0] / axang[3];
+    axang[1] = rotvec[1] / axang[3];
+    axang[2] = rotvec[2] / axang[3];
+}
+

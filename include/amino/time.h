@@ -43,7 +43,7 @@
 
 
 /// create a struct timespec with given elements
-AA_CDECL static inline struct timespec
+static inline struct timespec
 aa_tm_make( time_t sec, long nsec ) {
     struct timespec t;
     t.tv_sec = sec;
@@ -53,28 +53,28 @@ aa_tm_make( time_t sec, long nsec ) {
 
 /// create a struct timespec with given elements, fixing things up if
 /// nsec is negative or more than a billion
-AA_CDECL static inline struct timespec
+static inline struct timespec
 aa_tm_make_norm( time_t sec, long nsec ) {
     long nsp = aa_lmodulo( nsec, AA_IBILLION );
     return aa_tm_make( sec + (nsec - nsp)/AA_IBILLION, nsp );
 }
 
 /// add two times: a + b
-AA_CDECL static inline struct timespec
+static inline struct timespec
 aa_tm_add( struct timespec t1, struct timespec t0 ) {
     return aa_tm_make_norm( t1.tv_sec + t0.tv_sec,
                             t1.tv_nsec + t0.tv_nsec );
 }
 
 /// subtract two times: a - b
-AA_CDECL static inline struct timespec
+static inline struct timespec
 aa_tm_sub( const struct timespec a, const struct timespec b ) {
     return aa_tm_make_norm( a.tv_sec - b.tv_sec,
                             a.tv_nsec - b.tv_nsec );
 }
 
 /// gets current time via CLOCK_REALTIME
-AA_CDECL static inline struct timespec
+static inline struct timespec
 aa_tm_now() {
     struct timespec t;
     clock_gettime( CLOCK_REALTIME, &t );
@@ -82,13 +82,13 @@ aa_tm_now() {
 }
 
 /** returns reltime + now */
-AA_CDECL static inline struct timespec
+static inline struct timespec
 aa_tm_future( const struct timespec reltime ) {
     return aa_tm_add( reltime, aa_tm_now() );
 }
 
 /** t1 < t2: negative; t1 == t2: 0; t1 > t2: positive */
-AA_CDECL static inline long
+static inline long
 aa_tm_cmp( const struct timespec t1, const struct timespec t2 ) {
     return ( t1.tv_sec != t2.tv_sec ) ?
         (t1.tv_sec - t2.tv_sec) :
@@ -96,25 +96,25 @@ aa_tm_cmp( const struct timespec t1, const struct timespec t2 ) {
 }
 
 /// is the current time later than abstime?
-AA_CDECL static inline int
+static inline int
 aa_tm_isafter( const struct timespec abstime ) {
     return aa_tm_cmp(aa_tm_now(), abstime) > 0;
 }
 
 /// convert timespec t to microseconds
-AA_CDECL static inline int64_t
+static inline int64_t
 aa_tm_timespec2usec( const struct timespec t ) {
     return t.tv_sec*1000000 + t.tv_nsec/1000;
 }
 
 /// convert timespec t to seconds
-AA_CDECL static inline double
+static inline double
 aa_tm_timespec2sec( const struct timespec t ) {
     return (double)t.tv_sec + (double)t.tv_nsec/1e9;
 }
 
 /// convert seconds t to timespec
-AA_CDECL static inline struct timespec
+static inline struct timespec
 aa_tm_sec2timespec( double t ) {
     time_t sec = (time_t) t;
     long nsec = (long) ((t-(double)sec)*AA_IBILLION);
