@@ -51,9 +51,9 @@
        (aa_$_max_a > aa_$_max_b) ? aa_$_max_a : aa_$_max_b; })
 
 #define AA_MIN(a,b) \
-    ({ const typeof(a) aa_$_max_a = (a); \
-       const typeof(b) aa_$_max_b = (b); \
-       (aa_$_max_a < aa_$_max_b) ? aa_$_max_a : aa_$_max_b; })
+    ({ const typeof(a) aa_$_min_a = (a); \
+       const typeof(b) aa_$_min_b = (b); \
+       (aa_$_min_a < aa_$_min_b) ? aa_$_min_a : aa_$_min_b; })
 
 
 AA_CDECL static inline double aa_clamp( double val, double level) {
@@ -179,13 +179,13 @@ AA_CDECL void aa_la_scal( size_t n, double alpha, double *x  );
 AA_CDECL void aa_la_vinc( size_t n, const double *x, double *y  );
 
 /** increment by vector.
- * \f[ x_i \leftarrow alpha + x_i \f]
+ * \f[ x_i \leftarrow \alpha + x_i \f]
  */
 AA_CDECL void aa_la_sinc( size_t n, double alpha, double *x  );
 
 
 /** increment by scale times vector.
- * \f[ y_i \leftarrow alpha + x_i + y_i \f]
+ * \f[ y_i \leftarrow \alpha x_i + y_i \f]
  */
 AA_CDECL void aa_la_axpy( size_t n, double alpha, const double *x, double *y  );
 
@@ -267,10 +267,10 @@ aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {
  * \param U \f$U \in \Re^m \times \Re^m\f$, column major.  If null, U
  * is returned in A.  U and Vt cannot both be null.
  * \param S \f$S \in \Re^m min(m,n)\f$, singular values
- * \param Vt \f$S \in \Re^n \times \Re^n\f$, singular vectors. If
+ * \param Vt \f$V^T \in \Re^n \times \Re^n\f$, singular vectors. If
  * null, Vt is returned in A.  Vt and U cannot both be null.
  */
-AA_CDECL int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt );
+AA_CDECL int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt );
 
 /** Inverse of A.
  *
@@ -282,19 +282,48 @@ AA_CDECL int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, dou
 AA_CDECL int aa_la_inv( size_t n, double *A );
 
 /** Damped Pseudo Inverse of A.
- *  \f[ A^* \leftarrow A^T (AA^T + kI)^{-1} \f]
+ *  \f[ A^\ddagger \leftarrow A^T (AA^T + kI)^{-1} \f]
+ *  \f[ A^\ddagger \leftarrow \sum_{i=0}^r \frac{\sigma_i}{{\sigma_i}^2+k} v_i {u_i}^T \f]
+ *
+ * The above two formulas are equivalent.  This function uses the SVD
+ * method shown in the second formula.
+ * \param m rows of A
+ * \param n cols of A
+ * \param A \f$ A \in \Re^m\times\Re^n\f$
+ * \param A_star \f$ A^\ddagger \in \Re^n\times\Re^m\f$
+ * \param k square of damping factor
  */
 AA_CDECL void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double *A_star );
 
 /** Damped Least Squares.
- * \f[ x = A^* b \f]
+ * \f[ x = A^\ddagger b \f]
+ *
+ * \param m rows in A
+ * \param n cols in A
+ * \param k square of damping factor
+ * \param A \f$ A \in \Re^m\times\Re^n \f$
+ * \param b \f$ b \in \Re^m \f$
+ * \param x \f$ x \in \Re^n \f$
  */
 AA_CDECL void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *b, double *x );
 
 /** Damped Least Squares with Nullspace projection.
- * \f[ x = A^* b + (I-A^*A)x_p \f]
+ * \f[ x = A^\ddagger b + (I-A^\ddagger A)x_p \f]
+ * \param m rows in A
+ * \param n cols in A
+ * \param k square of damping factor
+ * \param A \f$ A \in \Re^m\times\Re^n \f$
+ * \param b \f$ b \in \Re^m \f$
+ * \param xp \f$ x \in \Re^n \f$
+ * \param x \f$ x \in \Re^n \f$
  */
 AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const double *b, const double *xp, double *x );
+
+/** Linear Least Squares.
+ * \f[ b = Ax \f]
+ * Solves for x.
+ */
+AA_CDECL void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
 
 /**************/
 /* Transforms */

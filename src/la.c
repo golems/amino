@@ -40,6 +40,12 @@
 
 #include "amino.h"
 
+static int ilaenv( int ispec, const char *name, const char *opts,
+                   int n1, int n2, int n3, int n4 ) {
+    int nl = (int)strlen(name);
+    int ol = (int)strlen(opts);
+    return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );
+}
 
 /*--- Scalar Ops ---*/
 
@@ -227,9 +233,11 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     AA_DEL_LOCAL(S,  double, AA_MIN(m,n));
 }
 
-int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt ) {
-    const char *jobu = U ? "A" : "O";
-    const char *jobvt = Vt ? "A" : "O";
+int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt ) {
+    double *Ap =  AA_NEW_LOCAL( double, m*n );
+    aa_fcpy( Ap, A, m*n );
+    const char *jobu = U ? "A" : "N";
+    const char *jobvt = Vt ? "A" : "N";
     int mi = (int)m, ni=(int)n;
     int lwork = -1;
     int info;
@@ -237,7 +245,7 @@ int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt )
     // calculate work size
     double qwork[1];
     dgesvd_( jobu, jobvt, &mi, &ni,
-             A, &mi,
+             Ap, &mi,
              S, U, &mi,
              Vt, &ni,
              &qwork[0], &lwork, &info );
@@ -249,13 +257,14 @@ int aa_la_svd( size_t m, size_t n, double *A, double *U, double *S, double *Vt )
 
     // calculate SVD
     dgesvd_( jobu, jobvt, &mi, &ni,
-             A, &mi,
+             Ap, &mi,
              S, U, &mi,
              Vt, &ni,
              &work[0], &lwork, &info );
 
     //finish
     AA_DEL_LOCAL(work, double, (size_t)lwork );
+    AA_DEL_LOCAL(Ap, double, m*n);
     return info;
 }
 
@@ -290,3 +299,49 @@ AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const 
     AA_DEL_LOCAL(A_star, double, m*n);
     AA_DEL_LOCAL(B, double, n*n);
 }
+
+static int dgelsd_smlsiz() {
+    return ilaenv(9, "DGELSD", "", 0, 0, 0, 0 );
+}
+
+static int dgelsd_nlvl( int m, int n ) {
+    return (int)AA_MAX(0, 1 + log2( AA_MIN(m,n) / (1 + dgelsd_smlsiz())));
+}
+static int dgelsd_miniwork(int m, int n) {
+    int minmn = AA_MIN(m,n);
+    return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn);
+}
+
+/* AA_CDECL void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) { */
+/*     int mi=(int)m, ni=(int)n, pi=(int)p; */
+/*     double rcond=0; */
+/*     int rank, info, lwork; */
+/*     size_t liwork = (size_t)dgelsd_miniwork(mi,ni); */
+/*     double *S = AA_NEW_LOCAL(double, AA_MIN(m,n)); */
+/*     int *iwork = AA_NEW_LOCAL(int,liwork); */
+
+/*     // calculate optimal work size */
+/*     double qwork[1]; */
+/*     lwork = -1; */
+/*     dgelsd_( &mi, &ni, &pi,  */
+/*             A, &mi, b, &mi,  */
+/*             S, &rcond, &rank, */
+/*             qwork, &lwork, iwork, &info ); */
+/*     lwork=(int)qwork[0]; */
+
+/*     /\*printf("info: %d, work: %f, iwork: %d\n", info, qwork[0],  dgelsd_miniwork(mi,ni));*\/ */
+/*     // allocate work array */
+/*     double *work = AA_NEW_LOCAL(double,(size_t)lwork); */
+
+/*     // run */
+/*     dgelsd_( &mi, &ni, &pi,  */
+/*             A, &mi, b, &mi,  */
+/*             S, &rcond, &rank, */
+/*             work, &lwork, iwork, &info ); */
+
+/*     // free */
+/*     AA_DEL_LOCAL(S, double, AA_MIN(m,n)); */
+/*     AA_DEL_LOCAL(work, double, (size_t)lwork); */
+/*     AA_DEL_LOCAL(iwork, int, liwork); */
+
+/* } */

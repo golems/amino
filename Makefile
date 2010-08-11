@@ -21,10 +21,13 @@ FFLAGS += -I/usr/include
 default: $(LIBFILES) $(BINFILES) test
 
 test: build/aa_test
-	./build/aa_test
+	LD_LIBRARY_PATH=./build ./build/aa_test
 
-$(call LINKLIB, amino, mem.o la.o tf.o math.o)
-$(call LINKBIN, aa_test, aa_test.o mem.o la.o tf.o math.o, m blas lapack)
+# Link against ATLAS blas/lapack
+$(call LINKLIB, amino, mem.o la.o tf.o math.o, m blas lapack)
+
+build/aa_test: build/aa_test.o build/libamino.so
+	gcc -o $@ build/aa_test.o -Lbuild -lamino
 
 .PHONY: default clean doc
 

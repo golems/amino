@@ -288,6 +288,14 @@ void la2() {
         aveq(3, x_r, x, .0001 );
     }
 
+    // lls
+    {
+        //double A[] = {1,2,3,4};
+        //double b[] = {3,7};
+        //double x[2];
+        //aa_la_lls(2,2,2,A,b,x);
+    }
+
 }
 
 void angle() {
