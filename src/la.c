@@ -49,6 +49,21 @@ static int ilaenv( int ispec, const char *name, const char *opts,
 
 /*--- Scalar Ops ---*/
 
+
+double aa_la_min( size_t n, const double *x ) {
+    double v = HUGE_VAL;
+    for( size_t i = 0; i < n; i++ )
+        v = AA_MIN(v,x[i]);
+    return v;
+}
+
+double aa_la_max( size_t n, const double *x ) {
+    double v = -HUGE_VAL;
+    for( size_t i = 0; i < n; i++ )
+        v = AA_MAX(v,x[i]);
+    return v;
+}
+
 double aa_la_dot( size_t n, const double *x, const double *y ) {
     double a = 0;
     for( size_t i = 0; i < n; i ++ )
