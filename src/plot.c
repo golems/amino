@@ -35,65 +35,45 @@
  *
  */
 
-#ifndef AMINO_H
-#define AMINO_H
-/** \file amino.h */
-/** \file amino.h
- *
- * \mainpage
- *
- * Amino is package of utilites for robotics software.  In includes
- * basic mathematical and linear algebra routines, memory management,
- * and time-handling (soon).  Design goals are easy integration,
- * efficiency, and simplicity.
- *
- * \author Neil T. Dantam
- */
+#include "amino.h"
 
-// include everything we'll typically need
-#ifdef __cplusplus
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <cstdio>
-#include <cassert>
-#include <ctime>
-#include <stdint.h>
-#include <iostream>
-#include <vector>
-#include <map>
-#include <queue>
-#include <stack>
-#include <string>
-#else
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#endif //__cplusplus
+AA_CDECL void
+aa_plot_series( size_t m, size_t n, double *t, double *X,
+                struct aa_plot_opts *opts ) {
 
-#include <cblas.h>
-#include <time.h>
+    int r;
+    FILE *g = popen("gnuplot -persist", "w");
+    //FILE *g = stderr;
 
-// for C symbols
-#ifdef __cplusplus
-#define AA_CDECL extern "C"
-#else
-#define AA_CDECL
-#endif //__cplusplus
+    assert(g);
+    assert( n > 0 );
+    assert( m > 0 );
 
-#define AA_IBILLION 1000000000
-#define AA_IMILLION 1000000
+    if(opts->xlabel) fprintf(g, "set xlabel '%s'\n", opts->xlabel);
+    if(opts->ylabel) fprintf(g, "set ylabel '%s'\n", opts->ylabel);
+    if(opts->title) fprintf(g, "set title '%s'\n", opts->title);
+    if( opts->axis_label ) {
+        fprintf(g, "plot '-' with lines title '%s'", opts->axis_label[0]);
+        for( size_t i = 1; i < m; i ++ ) {
+            fprintf(g, ", '-' with lines title '%s'",opts-> axis_label[i]);
+        }
+    } else {
+        fprintf(g, "plot '-' with lines");
+        for( size_t i = 1; i < m; i ++ ) {
+            fprintf(g, ", '-' with lines");
+        }
+    }
+    fprintf(g, "\n");
 
-// include our own headers
-#include "amino/aa_mem.h"
-#include "amino/aa_math.h"
-#include "amino/tf.h"
-#include "amino/lapack.h"
-#include "amino/time.h"
-#include "amino/plot.h"
+    // print X
+    for( size_t s = 0; s < m; s ++ ) {
+        for( size_t i = 0; i < n; i++ ) {
+            fprintf(g, "%f %f\n", t[i], AA_MATREF(X,m,s,i) );
+        }
+        fprintf(g, "e\n");
+    }
+    fflush(g);
+    r = pclose(g);
+    assert( -1 != r );
+}
 
-
-#endif //AMINO_H

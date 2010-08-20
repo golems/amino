@@ -35,65 +35,26 @@
  *
  */
 
-#ifndef AMINO_H
-#define AMINO_H
-/** \file amino.h */
-/** \file amino.h
- *
- * \mainpage
- *
- * Amino is package of utilites for robotics software.  In includes
- * basic mathematical and linear algebra routines, memory management,
- * and time-handling (soon).  Design goals are easy integration,
- * efficiency, and simplicity.
- *
- * \author Neil T. Dantam
- */
+#include "amino.h"
+#include <stdarg.h>
 
-// include everything we'll typically need
-#ifdef __cplusplus
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <cstdio>
-#include <cassert>
-#include <ctime>
-#include <stdint.h>
-#include <iostream>
-#include <vector>
-#include <map>
-#include <queue>
-#include <stack>
-#include <string>
-#else
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#endif //__cplusplus
+static struct timespec aa_tick_tock_start;
 
-#include <cblas.h>
-#include <time.h>
+// FIXME: should use monotonic clock
 
-// for C symbols
-#ifdef __cplusplus
-#define AA_CDECL extern "C"
-#else
-#define AA_CDECL
-#endif //__cplusplus
+AA_CDECL void
+aa_tick(const char fmt[], ...) {
+    va_list argp;
+    va_start( argp, fmt );
+    vfprintf( stderr, fmt, argp );
+    va_end( argp );
+    aa_tick_tock_start = aa_tm_now();
+}
 
-#define AA_IBILLION 1000000000
-#define AA_IMILLION 1000000
+AA_CDECL struct timespec
+aa_tock(void) {
+   struct timespec t = aa_tm_sub( aa_tm_now(), aa_tick_tock_start );
+   fprintf( stderr, "%.6f ms\n", (double)t.tv_sec*1e3 + (double)t.tv_nsec / 1e6 );
+   return t;
+}
 
-// include our own headers
-#include "amino/aa_mem.h"
-#include "amino/aa_math.h"
-#include "amino/tf.h"
-#include "amino/lapack.h"
-#include "amino/time.h"
-#include "amino/plot.h"
-
-
-#endif //AMINO_H

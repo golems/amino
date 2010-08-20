@@ -24,7 +24,7 @@ test: build/aa_test
 	LD_LIBRARY_PATH=./build ./build/aa_test
 
 # Link against ATLAS blas/lapack
-$(call LINKLIB, amino, mem.o la.o tf.o math.o, m blas lapack)
+$(call LINKLIB, amino, mem.o la.o tf.o math.o plot.o debug.o, m lapack blas rt)
 
 build/aa_test: build/aa_test.o build/libamino.so
 	gcc -o $@ build/aa_test.o -Lbuild -lamino

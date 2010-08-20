@@ -139,6 +139,12 @@ static inline double aa_an_norm_pi( double an ) {
 
 /*--- Scalar Ops ---*/
 
+/** min of vector */
+AA_CDECL double aa_la_min( size_t n, const double *x );
+
+/** max of vector */
+AA_CDECL double aa_la_max( size_t n, const double *x );
+
 /** Dot product.
  * \f[ {\mathbf x}^T  {\mathbf y} \f]
  */
@@ -324,53 +330,5 @@ AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const
  * Solves for x.
  */
 AA_CDECL void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
-
-/**************/
-/* Transforms */
-/**************/
-
-
-/** \brief A transform. */
-typedef struct {
-    double R[9]; ///< Rotation Matrix
-    double t[3]; ///< Translation Vector
-} aa_tf_t;
-
-
-/** Normalize Quaternion */
-AA_CDECL void aa_tf_qnorm( double q[4] );
-
-/** Quaternion conjugate */
-AA_CDECL void aa_tf_qconj( const double q[4], double r[4] );
-
-/** Quaternion inverse */
-AA_CDECL void aa_tf_qinv( const double q[4], double r[4] );
-
-/** Quaternion addition. */
-AA_CDECL void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
-
-/** Quaternion subtraction. */
-AA_CDECL void aa_tf_qsub( const double a[4], const double b[4], double c[4] );
-
-/** Quaternion multiplication. */
-AA_CDECL void aa_tf_qmul( const double a[4], const double b[4], double c[4] );
-
-/** Quaternion SLERP. */
-AA_CDECL void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] );
-
-/** Quaternion to axis-angle. */
-AA_CDECL void aa_tf_quat2axang( const double q[4], double axang[4] );
-
-
-/** axis-angle to quaternion. */
-AA_CDECL void aa_tf_axang2quat( const double axang[4], double q[4] );
-
-AA_CDECL void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] );
-
-AA_CDECL void aa_tf_axang_permute( const double aa0[4], double aa1[0], double aa2[4], double aa3[4] );
-
-AA_CDECL void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] );
-
-AA_CDECL void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] );
 
 #endif //AA_MATH_H

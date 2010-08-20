@@ -34,66 +34,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#ifndef AMINO_PLOT_H
+#define AMINO_PLOT_H
 
-#ifndef AMINO_H
-#define AMINO_H
-/** \file amino.h */
-/** \file amino.h
- *
- * \mainpage
- *
- * Amino is package of utilites for robotics software.  In includes
- * basic mathematical and linear algebra routines, memory management,
- * and time-handling (soon).  Design goals are easy integration,
- * efficiency, and simplicity.
- *
- * \author Neil T. Dantam
+/**
+ * \file amino/plot.h
  */
 
-// include everything we'll typically need
-#ifdef __cplusplus
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <cstdio>
-#include <cassert>
-#include <ctime>
-#include <stdint.h>
-#include <iostream>
-#include <vector>
-#include <map>
-#include <queue>
-#include <stack>
-#include <string>
-#else
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#endif //__cplusplus
+struct aa_plot_opts {
+    const char *title;
+    const char *xlabel;
+    const char *ylabel;
+    const char ** axis_label ;
+};
 
-#include <cblas.h>
-#include <time.h>
+/** Plots Y over t.
+ *
+ * \param m rows in Y
+ * \param n columns in Y, length of t
+ * \param t vector of times for x-axis
+ * \param Y Matrix of y-axis values.  Each column is a data point, rows are the indepedent series.
+ */
+AA_CDECL void
+aa_plot_series( size_t m, size_t n, double *t, double *Y,
+                struct aa_plot_opts *opts);
 
-// for C symbols
-#ifdef __cplusplus
-#define AA_CDECL extern "C"
-#else
-#define AA_CDECL
-#endif //__cplusplus
-
-#define AA_IBILLION 1000000000
-#define AA_IMILLION 1000000
-
-// include our own headers
-#include "amino/aa_mem.h"
-#include "amino/aa_math.h"
-#include "amino/tf.h"
-#include "amino/lapack.h"
-#include "amino/time.h"
-#include "amino/plot.h"
-
-
-#endif //AMINO_H
+#endif //AA_PLOT_H

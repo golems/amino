@@ -99,6 +99,8 @@ void aa_tf_axang_permute2( const double aa[4], double aa_plus[4], double aa_minu
    aa_minus[3] = aa[3] - 2*M_PI;
 }
 
+// FIXME: handle identity rotation better
+
 void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] ) {
     rotvec[0] = axang[0]*axang[3];
     rotvec[1] = axang[1]*axang[3];
@@ -112,3 +114,15 @@ void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] ) {
     axang[2] = rotvec[2] / axang[3];
 }
 
+
+AA_CDECL void aa_tf_rotvec2quat( const double rotvec[3], double q[4] ) {
+    double aa[4];
+    aa_tf_rotvec2axang(rotvec, aa);
+    aa_tf_axang2quat(aa,q);
+}
+
+AA_CDECL void aa_tf_quat2rotvec( const double q[4], double rotvec[3] ) {
+    double aa[4];
+    aa_tf_quat2axang(q,aa);
+    aa_tf_axang2rotvec(aa,rotvec);
+}

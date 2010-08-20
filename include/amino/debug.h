@@ -34,66 +34,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#ifndef AMINO_DEBUG_H
+#define AMINO_DEBUG_H
 
-#ifndef AMINO_H
-#define AMINO_H
-/** \file amino.h */
-/** \file amino.h
- *
- * \mainpage
- *
- * Amino is package of utilites for robotics software.  In includes
- * basic mathematical and linear algebra routines, memory management,
- * and time-handling (soon).  Design goals are easy integration,
- * efficiency, and simplicity.
- *
- * \author Neil T. Dantam
+/**
+ * \file amino/debug.h
  */
 
-// include everything we'll typically need
-#ifdef __cplusplus
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <cstdio>
-#include <cassert>
-#include <ctime>
-#include <stdint.h>
-#include <iostream>
-#include <vector>
-#include <map>
-#include <queue>
-#include <stack>
-#include <string>
-#else
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#endif //__cplusplus
+AA_CDECL void
+aa_hard_assert(int test, const char fmt[], ...);
 
-#include <cblas.h>
-#include <time.h>
-
-// for C symbols
-#ifdef __cplusplus
-#define AA_CDECL extern "C"
-#else
-#define AA_CDECL
-#endif //__cplusplus
-
-#define AA_IBILLION 1000000000
-#define AA_IMILLION 1000000
-
-// include our own headers
-#include "amino/aa_mem.h"
-#include "amino/aa_math.h"
-#include "amino/tf.h"
-#include "amino/lapack.h"
-#include "amino/time.h"
-#include "amino/plot.h"
+AA_CDECL void
+aa_lprintf( int min_level, int level, const char fmt[], ...);
 
 
-#endif //AMINO_H
+
+AA_CDECL void
+aa_tick(const char fmt[], ...);
+
+AA_CDECL struct timespec
+aa_tock(void);
+
+#endif //AA_MATH_H

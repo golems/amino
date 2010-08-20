@@ -59,6 +59,10 @@ void scalar() {
 }
 
 void la0() {
+    // min
+    afeq( 2, aa_la_min( 3, (double[3]) {10, 2, 4} ), 0 );
+    // max
+    afeq( 10, aa_la_max( 3, (double[3]) {10, 2, 4} ), 0 );
     // dot
     {
         double x[] = {1,2,3};
@@ -319,6 +323,26 @@ void axang() {
         double a[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
         aa_tf_axang2quat(a,q);
         aveq( 4, q, q_r, 0.001 );
+    }
+    {
+        double q_r[4] = {1,2,3,4};
+        aa_tf_qnorm(q_r);
+        double q[4];
+        double r[3];
+        double a[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
+        aa_tf_axang2rotvec(a,r);
+        aa_tf_rotvec2quat(r,q);
+        aveq( 4, q, q_r, 0.001 );
+    }
+    {
+        double q[4] = {1,2,3,4};
+        aa_tf_qnorm(q);
+        double r[3];
+        double a[4];
+        double a_r[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
+        aa_tf_quat2rotvec(q,r);
+        aa_tf_rotvec2axang(r,a);
+        aveq( 4, a, a_r, 0.001 );
     }
 }
 
