@@ -1,0 +1,107 @@
+/*
+ * Copyright (c) 2010, Georgia Tech Research Corporation
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *     * Redistributions of source code must retain the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer in the documentation and/or other materials
+ *       provided with the distribution.
+ *     * Neither the name of the Georgia Tech Research Corporation nor
+ *       the names of its contributors may be used to endorse or
+ *       promote products derived from this software without specific
+ *       prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY GEORGIA TECH RESEARCH CORPORATION ''AS
+ * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL GEORGIA
+ * TECH RESEARCH CORPORATION BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+load("vect");
+load("eigen");
+
+/* Element reference in lists or column vectors */
+vref(v,i) := if matrixp(v) then v[i][1] else v[i] ;
+
+/* Cross Product */
+vcross(a,b) := express(
+   [vref(a,1), vref(a,2), vref(a,3)] ~
+   [vref(b,1), vref(b,2), vref(b,3)] );
+
+/* Create the skew-symmetric cross-product matrix */
+cross_mat(x) := matrix(
+  [    0,     -vref(x,3),  vref(x,2)],
+  [ vref(x,3),         0, -vref(x,1)],
+  [-vref(x,2), vref(x,1),         0 ] );
+
+/* DH Param: build transform from DH parameters in Distal convention */
+dh_distal(d,theta,r,alpha) := block(
+  [ct, st, ca, sa],
+  ct : cos(theta), st: sin(theta), ca: cos(alpha), sa: sin(alpha),
+  matrix(
+    [ct, -st*ca, st*sa, r*ct],
+    [st, ct*ca, -ct*sa, r*st],
+    [0, sa, ca, d],
+    [0, 0, 0, 1]));
+
+/* quaternions */
+qconj(q) := [-vref(q,1), -vref(q,2), -vref(q,3), vref(q,4)];
+qinv(q) := qconj(q) / inprod(q,q);
+qxyz(q) := [vref(q,1), vref(q,2), vref(q,3)];
+qmul(q1,q2) := append(
+  (q1[4]*qxyz(q2) + q2[4]*qxyz(q1) + vcross(q1,q2)),
+  [q1[4]*q2[4] - inprod(qxyz(q2), qxyz(q1))] );
+qrot(q,v) := qmul( qmul(q, [vref(v,1), vref(v,2), vref(v,3), 0] ),
+  qconj(q) );
+
+/* Rodrigues' Formula */
+
+rodrigues_mat( axis, theta ) := (
+  ident(3)*cos(theta) +
+  cross_mat(axis)*sin(theta) +
+  (1-cos(theta)) * axis . transpose(axis) );
+
+/* Gives of list of transform from ground to each link in the
+   transform chain tfs */
+tf_pyramid( tfs ) := block([pyr, prev],
+  pyr: [],
+  prev: tf_ident,
+  for tf in tfs do
+  block([x], x: prev . tf,
+    pyr: append( pyr, [x] ), prev : x),
+  pyr);
+
+/* tf_93 */
+tf_93( R, v, p ) := R . p + v;
+
+/* Find a column of the jacobian for a 3-translation, 3-rotation
+   function */
+jacobian_column(pe, a, q) := append(
+  cross_covect(a, pe-q),
+  a);
+
+/* Create a Jacobian from the list of transforms and the list of axes
+   (column vectors). */
+spatial_jacobian(tfs, axes) := block(
+  [pyr, pe],
+  pyr: tf_pyramid(tfs),
+  pe: last(pyr) . [0,0,0,1],
+  apply(addcol,
+    append([matrix()],
+      map(lambda([tf, a], jacobian_column(pe, a, tf . [0,0,0,1])),
+        tfs, axes))));
