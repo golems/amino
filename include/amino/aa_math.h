@@ -242,6 +242,10 @@ AA_CDECL void aa_la_unit( size_t n, double *x );
 
 /*--- Matrix Ops --- */
 
+
+AA_CDECL void aa_la_transpose( size_t n, double *A  );
+AA_CDECL void aa_la_transpose2( size_t m, size_t n, const double *A, double *At  );
+
 /** Set diagonal of A to x. */
 static inline void
 aa_la_diag( size_t n, double *A, double x ) {
@@ -330,5 +334,6 @@ AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const
  * Solves for x.
  */
 AA_CDECL void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
+
 
 #endif //AA_MATH_H

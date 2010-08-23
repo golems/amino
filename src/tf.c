@@ -77,13 +77,6 @@ void aa_tf_quat2axang( const double q[4], double axang[4] ) {
     axang[3] = 2 * acos(w);
 }
 
-void aa_tf_axang2quat( const double axang[4], double q[4] ) {
-    double s,c;
-    sincos( axang[3]/2, &s, &c );
-    q[3] = c;
-    aa_la_smul( 3, s, axang, q );
-}
-
 void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] ) {
     double n = sqrt(x*x + y*y + z*z);
     axang[0] = x/n;
@@ -112,6 +105,12 @@ void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] ) {
     axang[0] = rotvec[0] / axang[3];
     axang[1] = rotvec[1] / axang[3];
     axang[2] = rotvec[2] / axang[3];
+}
+void aa_tf_axang2quat( const double axang[4], double q[4] ) {
+    double s,c;
+    sincos( axang[3]/2, &s, &c );
+    q[3] = c;
+    aa_la_smul( 3, s, axang, q );
 }
 
 

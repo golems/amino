@@ -52,8 +52,8 @@ AA_CDECL void aa_tf_12inv( double T[12] );
 AA_CDECL void aa_tf_93inv( double R[9], double v[3] );
 AA_CDECL void aa_tf_q3inv( double q[4], double v[3] );
 
-AA_CDECL void aa_tf_12chain( const double T1[12], const double T1[12], double T[12] );
-//AA_CDECL void aa_tf_16chain( double T1[16], const double T1[16], double T[16] );
+AA_CDECL void aa_tf_12chain( const double T1[12], const double T2[12], double T[12] );
+//AA_CDECL void aa_tf_16chain( double T1[16], const double T2[16], double T[16] );
 AA_CDECL void aa_tf_93chain( const double R0[9], const double v0[3],
                              const double R1[9], const double v1[3],
                              double R[9], double v[3] );
