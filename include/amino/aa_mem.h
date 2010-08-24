@@ -142,19 +142,19 @@ typedef struct {
 } aa_region_t;
 
 /** Initialize memory region with block of size bytes. */
-AA_CDECL void aa_region_init( aa_region_t *region, size_t size );
+AA_API void aa_region_init( aa_region_t *region, size_t size );
 
 /** Destroy memory region freeing all block buffers.
  */
-AA_CDECL void aa_region_destroy( aa_region_t *region );
+AA_API void aa_region_destroy( aa_region_t *region );
 
 /** Allocate size bytes from the region.
  */
-AA_CDECL void *aa_region_alloc( aa_region_t *region, size_t size );
+AA_API void *aa_region_alloc( aa_region_t *region, size_t size );
 
 /** Deallocates all allocated chunks from the region.
  */
-AA_CDECL void aa_region_release( aa_region_t *region );
+AA_API void aa_region_release( aa_region_t *region );
 
 /*----------- Pooled Allocation ------------------*/
 
@@ -173,15 +173,15 @@ typedef struct {
 } aa_pool_t;
 
 /// untested
-AA_CDECL void aa_pool_init( aa_pool_t *pool, size_t size, size_t count );
+AA_API void aa_pool_init( aa_pool_t *pool, size_t size, size_t count );
 /// untested
-AA_CDECL void aa_pool_destroy( aa_pool_t *pool );
+AA_API void aa_pool_destroy( aa_pool_t *pool );
 /// untested
-AA_CDECL void *aa_pool_alloc( aa_pool_t *pool );
+AA_API void *aa_pool_alloc( aa_pool_t *pool );
 /// untested
-AA_CDECL void aa_pool_free( aa_pool_t *pool, void *ptr );
+AA_API void aa_pool_free( aa_pool_t *pool, void *ptr );
 /// untested
-AA_CDECL void aa_pool_release( aa_pool_t *pool );
+AA_API void aa_pool_release( aa_pool_t *pool );
 
 
 /**********/

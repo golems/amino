@@ -65,12 +65,12 @@
     \param info output.  info==0 for success, info<zero for illegal
       argument, info > 0 for singular matrix
  */
-AA_CDECL void sgetri_( const int *n, float *A, const int *lda,
+AA_API void sgetri_( const int *n, float *A, const int *lda,
               const int *ipiv, float *work, const int *lwork, int *info );
 /** Inverse of matrix using LU factorization by dgetrf.
     \sa sgetri_
 */
-AA_CDECL void dgetri_( const int *n, double *A, const int *lda,
+AA_API void dgetri_( const int *n, double *A, const int *lda,
               const int *ipiv, double *work, const int *lwork, int *info );
 
 
@@ -82,12 +82,12 @@ AA_CDECL void dgetri_( const int *n, double *A, const int *lda,
     \param ipiv of length min(m,n), on exit the pivot indices
     \param info on success: info==0
  */
-AA_CDECL void sgetrf_( const int *m, const int *n, float *A, const int *lda,
+AA_API void sgetrf_( const int *m, const int *n, float *A, const int *lda,
               int *ipiv, int *info );
 
 /** Compute an LU factorization.
  */
-AA_CDECL void dgetrf_( const int *m, const int *n, double *A, const int *lda,
+AA_API void dgetrf_( const int *m, const int *n, double *A, const int *lda,
               int *ipiv, int *info );
 
 
@@ -185,7 +185,7 @@ AA_CDECL void dgetrf_( const int *m, const int *n, double *A, const int *lda,
 *                did not converge to zero. See the description of WORK
 *                above for details.
 */
-AA_CDECL void dgesvd_( const char jobu[1], const char jobvt[1],
+AA_API void dgesvd_( const char jobu[1], const char jobvt[1],
                       const int *m, const int *n,
                       double *A, const int *lda,
                       double *S, double *U,
@@ -243,7 +243,7 @@ AA_CDECL void dgesvd_( const char jobu[1], const char jobvt[1],
  *          Problem dimensions for the subroutine NAME; these may not all
  *          be required.
  */
-AA_CDECL int ilaenv_( const int *ispec, const char *name, const char *opts,
+AA_API int ilaenv_( const int *ispec, const char *name, const char *opts,
                       const int *n1, const int * n2, const int *n3, const int *n4,
                       int name_length, int opts_length );
 
@@ -352,7 +352,7 @@ AA_CDECL int ilaenv_( const int *ispec, const char *name, const char *opts,
  *                if INFO = i, i off-diagonal elements of an intermediate
  *                bidiagonal form did not converge to zero.
  */
- AA_CDECL void dgelsd_( const int *M, const int *N, const int *NRHS,
+ AA_API void dgelsd_( const int *M, const int *N, const int *NRHS,
                         double *A, const int *LDA, double *B, const int *LDB,
                         double *S, const double *RCOND, int *RANK,
                         double *WORK, int *LWORK, int *IWORK, int *INFO );

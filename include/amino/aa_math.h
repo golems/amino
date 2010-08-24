@@ -74,7 +74,7 @@ static inline int aa_feq( double a, double b, double tol ) {
 }
 
 /// Fuzzy equals
-AA_CDECL int aa_veq( size_t n, double *a, double *b, double tol );
+AA_API int aa_veq( size_t n, double *a, double *b, double tol );
 
 /// Fortran modulo, Ada mod
 static inline int aa_imodulo( int a, int b ) {
@@ -140,111 +140,111 @@ static inline double aa_an_norm_pi( double an ) {
 /*--- Scalar Ops ---*/
 
 /** min of vector */
-AA_CDECL double aa_la_min( size_t n, const double *x );
+AA_API double aa_la_min( size_t n, const double *x );
 
 /** max of vector */
-AA_CDECL double aa_la_max( size_t n, const double *x );
+AA_API double aa_la_max( size_t n, const double *x );
 
 /** Dot product.
  * \f[ {\mathbf x}^T  {\mathbf y} \f]
  */
-AA_CDECL double aa_la_dot( size_t n, const double *x, const double *y );
+AA_API double aa_la_dot( size_t n, const double *x, const double *y );
 
 /** Euclidean norm of x.
  * \f[ \sqrt{ {\mathbf x}^T {\mathbf y} } \f]
  */
-AA_CDECL double aa_la_norm( size_t n, const double *x );
+AA_API double aa_la_norm( size_t n, const double *x );
 
 /** Sum of Squared Differences.
  * \f[ \sum_{i=0}^n (x_i-y_i)^2 \f]
  */
-AA_CDECL double aa_la_ssd( size_t n, const double *x, const double *y );
+AA_API double aa_la_ssd( size_t n, const double *x, const double *y );
 
 /** Euclidean Distance.
  * \f[ \sqrt{\sum_{i=0}^n (x_i-y_i)^2} \f]
  */
-AA_CDECL double aa_la_dist( size_t n, const double *x, const double *y );
+AA_API double aa_la_dist( size_t n, const double *x, const double *y );
 
 /*--- Vector Ops ---*/
 
 /** vector-scalar addition.
  * \f[ r_i \leftarrow \alpha + x_i \f]
  */
-AA_CDECL void aa_la_sadd( size_t n, double alpha, const double *x, double *r );
+AA_API void aa_la_sadd( size_t n, double alpha, const double *x, double *r );
 
 
 /** vector-scalar multiplication.
  * \f[ x_i \leftarrow \alpha * x_i \f]
  */
-AA_CDECL void aa_la_scal( size_t n, double alpha, double *x  );
+AA_API void aa_la_scal( size_t n, double alpha, double *x  );
 
 
 /** increment by vector.
  * \f[ y_i \leftarrow x_i + y_i \f]
  */
-AA_CDECL void aa_la_vinc( size_t n, const double *x, double *y  );
+AA_API void aa_la_vinc( size_t n, const double *x, double *y  );
 
 /** increment by vector.
  * \f[ x_i \leftarrow \alpha + x_i \f]
  */
-AA_CDECL void aa_la_sinc( size_t n, double alpha, double *x  );
+AA_API void aa_la_sinc( size_t n, double alpha, double *x  );
 
 
 /** increment by scale times vector.
  * \f[ y_i \leftarrow \alpha x_i + y_i \f]
  */
-AA_CDECL void aa_la_axpy( size_t n, double alpha, const double *x, double *y  );
+AA_API void aa_la_axpy( size_t n, double alpha, const double *x, double *y  );
 
 /** vector-scalar multiplication.
  * \f[ r_i \leftarrow \alpha * x_i \f]
  */
-AA_CDECL void aa_la_smul( size_t n, double alpha, const double *x, double *r );
+AA_API void aa_la_smul( size_t n, double alpha, const double *x, double *r );
 
 /** vector-scalar subtraction.
  * \f[ r_i \leftarrow \alpha - x_i \f]
  */
-AA_CDECL void aa_la_ssub( size_t n, double alpha, const double *x, double *r );
+AA_API void aa_la_ssub( size_t n, double alpha, const double *x, double *r );
 
 /** vector-scalar division.
  * \f[ r_i \leftarrow \alpha / x_i \f]
  */
-AA_CDECL void aa_la_sdiv( size_t n, double alpha, const double *x, double *r );
+AA_API void aa_la_sdiv( size_t n, double alpha, const double *x, double *r );
 
 /** Elementwise addition.
  * \f[ r_i \leftarrow x_i + y_i \f]
  */
-AA_CDECL void aa_la_vadd( size_t n, const double *x, const double *y, double *r );
+AA_API void aa_la_vadd( size_t n, const double *x, const double *y, double *r );
 
 /** Elementwise subtraction.
  * \f[ r_i \leftarrow x_i - y_i \f]
  */
-AA_CDECL void aa_la_vsub( size_t n, const double *x, const double *y, double *r );
+AA_API void aa_la_vsub( size_t n, const double *x, const double *y, double *r );
 
 /** Elementwise multiplication.
  * \f[ r_i \leftarrow x_i * y_i \f]
  */
-AA_CDECL void aa_la_vmul( size_t n, const double *x, const double *y, double *r );
+AA_API void aa_la_vmul( size_t n, const double *x, const double *y, double *r );
 
 /** Elementwise division.
  * \f[ r_i \leftarrow x_i / y_i \f]
  */
-AA_CDECL void aa_la_vdiv( size_t n, const double *x, const double *y, double *r );
+AA_API void aa_la_vdiv( size_t n, const double *x, const double *y, double *r );
 
 /** Cross product.
  * \f[ c \leftarrow a \times b \f]
  */
-AA_CDECL void aa_la_cross( const double a[3], const double b[3], double c[3] );
+AA_API void aa_la_cross( const double a[3], const double b[3], double c[3] );
 
 /** Make x unit vector.
  * \f[ x \leftarrow \frac{x}{\|x\|}\f]
  */
-AA_CDECL void aa_la_unit( size_t n, double *x );
+AA_API void aa_la_unit( size_t n, double *x );
 
 /*--- Matrix Ops --- */
 
 
-AA_CDECL void aa_la_transpose( size_t n, double *A  );
-AA_CDECL void aa_la_transpose2( size_t m, size_t n, const double *A, double *At  );
+AA_API void aa_la_transpose( size_t n, double *A  );
+AA_API void aa_la_transpose2( size_t m, size_t n, const double *A, double *At  );
 
 /** Set diagonal of A to x. */
 static inline void
@@ -280,7 +280,7 @@ aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {
  * \param Vt \f$V^T \in \Re^n \times \Re^n\f$, singular vectors. If
  * null, Vt is returned in A.  Vt and U cannot both be null.
  */
-AA_CDECL int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt );
+AA_API int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt );
 
 /** Inverse of A.
  *
@@ -289,7 +289,7 @@ AA_CDECL int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *
  * \param A \f$A \in \Re^n \times \Re^n\f$, column major
  * \param n rows and columns
  */
-AA_CDECL int aa_la_inv( size_t n, double *A );
+AA_API int aa_la_inv( size_t n, double *A );
 
 /** Damped Pseudo Inverse of A.
  *  \f[ A^\ddagger \leftarrow A^T (AA^T + kI)^{-1} \f]
@@ -303,7 +303,7 @@ AA_CDECL int aa_la_inv( size_t n, double *A );
  * \param A_star \f$ A^\ddagger \in \Re^n\times\Re^m\f$
  * \param k square of damping factor
  */
-AA_CDECL void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double *A_star );
+AA_API void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double *A_star );
 
 /** Damped Least Squares.
  * \f[ x = A^\ddagger b \f]
@@ -315,7 +315,7 @@ AA_CDECL void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, doubl
  * \param b \f$ b \in \Re^m \f$
  * \param x \f$ x \in \Re^n \f$
  */
-AA_CDECL void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *b, double *x );
+AA_API void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *b, double *x );
 
 /** Damped Least Squares with Nullspace projection.
  * \f[ x = A^\ddagger b + (I-A^\ddagger A)x_p \f]
@@ -327,13 +327,13 @@ AA_CDECL void aa_la_dls( size_t m, size_t n, double k,  const double *A, const d
  * \param xp \f$ x \in \Re^n \f$
  * \param x \f$ x \in \Re^n \f$
  */
-AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const double *b, const double *xp, double *x );
+AA_API void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const double *b, const double *xp, double *x );
 
 /** Linear Least Squares.
  * \f[ b = Ax \f]
  * Solves for x.
  */
-AA_CDECL void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
+AA_API void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
 
 
 #endif //AA_MATH_H

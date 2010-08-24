@@ -283,14 +283,14 @@ int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double
     return info;
 }
 
-AA_CDECL void aa_la_dls( size_t m, size_t n, double k, const double *A, const double *x, double *y ) {
+AA_API void aa_la_dls( size_t m, size_t n, double k, const double *A, const double *x, double *y ) {
     double *A_star = AA_NEW_LOCAL(double, m*n);
     aa_la_dpinv(m,n,k,A,A_star);
     aa_la_mvmul(n,m,A_star,x,y);
     AA_DEL_LOCAL(A_star, double, m*n);
 }
 
-AA_CDECL void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const double *x, const double *yp, double *y ) {
+AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const double *x, const double *yp, double *y ) {
     double *A_star = AA_NEW_LOCAL(double, m*n);
     double *B = AA_NEW_LOCAL(double, n*n);
 
@@ -327,7 +327,7 @@ static int dgelsd_miniwork(int m, int n) {
     return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn);
 }
 
-/* AA_CDECL void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) { */
+/* AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) { */
 /*     int mi=(int)m, ni=(int)n, pi=(int)p; */
 /*     double rcond=0; */
 /*     int rank, info, lwork; */

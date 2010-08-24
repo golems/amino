@@ -114,13 +114,13 @@ void aa_tf_axang2quat( const double axang[4], double q[4] ) {
 }
 
 
-AA_CDECL void aa_tf_rotvec2quat( const double rotvec[3], double q[4] ) {
+AA_API void aa_tf_rotvec2quat( const double rotvec[3], double q[4] ) {
     double aa[4];
     aa_tf_rotvec2axang(rotvec, aa);
     aa_tf_axang2quat(aa,q);
 }
 
-AA_CDECL void aa_tf_quat2rotvec( const double q[4], double rotvec[3] ) {
+AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[3] ) {
     double aa[4];
     aa_tf_quat2axang(q,aa);
     aa_tf_axang2rotvec(aa,rotvec);

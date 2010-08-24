@@ -37,7 +37,7 @@
 
 #include "amino.h"
 
-AA_CDECL void
+AA_API void
 aa_plot_series( size_t m, size_t n, double *t, double *X,
                 struct aa_plot_opts *opts ) {
 

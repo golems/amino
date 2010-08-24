@@ -55,7 +55,7 @@ struct aa_plot_opts {
  * \param t vector of times for x-axis
  * \param Y Matrix of y-axis values.  Each column is a data point, rows are the indepedent series.
  */
-AA_CDECL void
+AA_API void
 aa_plot_series( size_t m, size_t n, double *t, double *Y,
                 struct aa_plot_opts *opts);
 

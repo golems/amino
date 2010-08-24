@@ -42,66 +42,66 @@
 /* Transforms */
 /**************/
 
-AA_CDECL void aa_tf_12( const double T[12], const double p0[3], double p1[3] );
-//AA_CDECL void aa_tf_16( const double T[16], const double p0[4], double p1[4] );
-AA_CDECL void aa_tf_93( const double R[9], const double v[3], const double p0[3], double p1[4] );
-AA_CDECL void aa_tf_q3( const double quat[4], const double v[3], const double p0[3], double p1[4] );
+AA_API void aa_tf_12( const double T[12], const double p0[3], double p1[3] );
+//AA_API void aa_tf_16( const double T[16], const double p0[4], double p1[4] );
+AA_API void aa_tf_93( const double R[9], const double v[3], const double p0[3], double p1[4] );
+AA_API void aa_tf_q3( const double quat[4], const double v[3], const double p0[3], double p1[4] );
 
-AA_CDECL void aa_tf_12inv( double T[12] );
-//AA_CDECL void aa_tf_16inv( double T[16] );
-AA_CDECL void aa_tf_93inv( double R[9], double v[3] );
-AA_CDECL void aa_tf_q3inv( double q[4], double v[3] );
+AA_API void aa_tf_12inv( double T[12] );
+//AA_API void aa_tf_16inv( double T[16] );
+AA_API void aa_tf_93inv( double R[9], double v[3] );
+AA_API void aa_tf_q3inv( double q[4], double v[3] );
 
-AA_CDECL void aa_tf_12chain( const double T1[12], const double T2[12], double T[12] );
-//AA_CDECL void aa_tf_16chain( double T1[16], const double T2[16], double T[16] );
-AA_CDECL void aa_tf_93chain( const double R0[9], const double v0[3],
+AA_API void aa_tf_12chain( const double T1[12], const double T2[12], double T[12] );
+//AA_API void aa_tf_16chain( double T1[16], const double T2[16], double T[16] );
+AA_API void aa_tf_93chain( const double R0[9], const double v0[3],
                              const double R1[9], const double v1[3],
                              double R[9], double v[3] );
-AA_CDECL void aa_tf_q3chain( const double q0[4], const double v0[3],
+AA_API void aa_tf_q3chain( const double q0[4], const double v0[3],
                              const double q1[4], const double v1[3],
                              const double q[4], const double v[3] );
 
 /** Normalize Quaternion */
-AA_CDECL void aa_tf_qnorm( double q[4] );
+AA_API void aa_tf_qnorm( double q[4] );
 
 /** Quaternion conjugate */
-AA_CDECL void aa_tf_qconj( const double q[4], double r[4] );
+AA_API void aa_tf_qconj( const double q[4], double r[4] );
 
 /** Quaternion inverse */
-AA_CDECL void aa_tf_qinv( const double q[4], double r[4] );
+AA_API void aa_tf_qinv( const double q[4], double r[4] );
 
 /** Quaternion addition. */
-AA_CDECL void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
+AA_API void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
 
 /** Quaternion subtraction. */
-AA_CDECL void aa_tf_qsub( const double a[4], const double b[4], double c[4] );
+AA_API void aa_tf_qsub( const double a[4], const double b[4], double c[4] );
 
 /** Quaternion multiplication. */
-AA_CDECL void aa_tf_qmul( const double a[4], const double b[4], double c[4] );
+AA_API void aa_tf_qmul( const double a[4], const double b[4], double c[4] );
 
 /** Quaternion SLERP. */
-AA_CDECL void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] );
+AA_API void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] );
 
 /** Quaternion to axis-angle. */
-AA_CDECL void aa_tf_quat2axang( const double q[4], double axang[4] );
+AA_API void aa_tf_quat2axang( const double q[4], double axang[4] );
 
 
 /** axis-angle to quaternion. */
-AA_CDECL void aa_tf_axang2quat( const double axang[4], double q[4] );
+AA_API void aa_tf_axang2quat( const double axang[4], double q[4] );
 
-AA_CDECL void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] );
+AA_API void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] );
 
-AA_CDECL void aa_tf_axang_permute( const double aa0[4], double aa1[0], double aa2[4], double aa3[4] );
+AA_API void aa_tf_axang_permute( const double aa0[4], double aa1[0], double aa2[4], double aa3[4] );
 
-AA_CDECL void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] );
+AA_API void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] );
 
-AA_CDECL void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] );
+AA_API void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] );
 
-AA_CDECL void aa_tf_rotvec2quat( const double rotvec[3], double q[4] );
-AA_CDECL void aa_tf_quat2rotvec( const double q[4], double rotvec[4] );
+AA_API void aa_tf_rotvec2quat( const double rotvec[3], double q[4] );
+AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[4] );
 
 
-AA_CDECL void aa_tf_quat2rotmat( const double quat[4], double rotmat[9] );
-AA_CDECL void aa_tf_rotmat2quat( const double rotmat[9], double quat[4] );
+AA_API void aa_tf_quat2rotmat( const double quat[4], double rotmat[9] );
+AA_API void aa_tf_rotmat2quat( const double rotmat[9], double quat[4] );
 
 #endif //AMINO_TF_H

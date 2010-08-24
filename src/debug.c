@@ -42,7 +42,7 @@ static struct timespec aa_tick_tock_start;
 
 // FIXME: should use monotonic clock
 
-AA_CDECL void
+AA_API void
 aa_tick(const char fmt[], ...) {
     va_list argp;
     va_start( argp, fmt );
@@ -51,7 +51,7 @@ aa_tick(const char fmt[], ...) {
     aa_tick_tock_start = aa_tm_now();
 }
 
-AA_CDECL struct timespec
+AA_API struct timespec
 aa_tock(void) {
    struct timespec t = aa_tm_sub( aa_tm_now(), aa_tick_tock_start );
    fprintf( stderr, "%.6f ms\n", (double)t.tv_sec*1e3 + (double)t.tv_nsec / 1e6 );

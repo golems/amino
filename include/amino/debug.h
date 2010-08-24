@@ -41,18 +41,18 @@
  * \file amino/debug.h
  */
 
-AA_CDECL void
+AA_API void
 aa_hard_assert(int test, const char fmt[], ...);
 
-AA_CDECL void
+AA_API void
 aa_lprintf( int min_level, int level, const char fmt[], ...);
 
 
 
-AA_CDECL void
+AA_API void
 aa_tick(const char fmt[], ...);
 
-AA_CDECL struct timespec
+AA_API struct timespec
 aa_tock(void);
 
 #endif //AA_MATH_H
