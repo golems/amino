@@ -38,6 +38,7 @@
 #include "amino.h"
 #include <assert.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static void afeq( double a, double b, double tol ) {
     assert( aa_feq(a,b,tol) );
@@ -324,15 +325,15 @@ void axang() {
         aa_tf_axang2quat(a,q);
         aveq( 4, q, q_r, 0.001 );
     }
-   {
-      double aa[4], rv[3], aap[4];
-      aa_tf_axang_make( 1,2,3, M_PI/2.0, aa );
-      afeq( aa_la_norm(3, aa), 1.0, .00001 );
-      aa_tf_axang2rotvec( aa, rv );
-      afeq( aa_la_norm(3, rv), M_PI/2.0, .00001 );
-      aa_tf_rotvec2axang( rv, aap );
-      aveq( 4, aa, aap, .00001 );
-   }
+    {
+        double aa[4], rv[3], aap[4];
+        aa_tf_axang_make( 1,2,3, M_PI/2.0, aa );
+        afeq( aa_la_norm(3, aa), 1.0, .00001 );
+        aa_tf_axang2rotvec( aa, rv );
+        afeq( aa_la_norm(3, rv), M_PI/2.0, .00001 );
+        aa_tf_rotvec2axang( rv, aap );
+        aveq( 4, aa, aap, .00001 );
+    }
     {
         double q_r[4] = {1,2,3,4};
         aa_tf_qnorm(q_r);
@@ -402,6 +403,25 @@ void quat() {
         double r[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
         aa_tf_quat2axang(a,b);
         aveq( 4, b, r, 0.001 );
+    }
+    // 2 axis-angle
+    {
+        double ra_r[4] = {0,0,0,0};
+        double ra[4];
+        aa_tf_quat2axang((double[4]) {0,0,0,1}, ra);
+        aveq( 4, ra, ra_r, 0.001 );
+    }
+
+    // from axis-angle
+    {
+        double q_r[4] = {0,0,0,1};
+        double q[4];
+        aa_tf_axang2quat( (double[4]){0,0,0,0}, q);
+        aveq( 4, q, q_r, 0.00001 );
+        aa_tf_axang2quat( (double[4]){1,1,1,0}, q);
+        aveq( 4, q, q_r, 0.00001 );
+        aa_tf_axang2quat( (double[4]){1,2,3,0}, q);
+        aveq( 4, q, q_r, 0.00001 );
     }
 }
 

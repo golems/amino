@@ -73,8 +73,12 @@ void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] )
 void aa_tf_quat2axang( const double q[4], double axang[4] ) {
     double a = aa_la_norm(4,q);
     double w = q[3]/a;
-    aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang );
     axang[3] = 2 * acos(w);
+    if( aa_feq( axang[3], 0, .0001 ) ) {
+        aa_fset( axang, 0, 3 );
+    } else {
+        aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang );
+    }
 }
 
 void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] ) {
