@@ -198,6 +198,16 @@ AA_API void aa_la_sinc( size_t n, double alpha, double *x  );
  */
 AA_API void aa_la_axpy( size_t n, double alpha, const double *x, double *y  );
 
+
+/** increment by scale times vector.
+ *
+ * \f[ z_i \leftarrow \alpha x_i + y_i \f]
+ *
+ * three address version of the regular axpy
+ */
+AA_API void aa_la_axpy3( size_t n, double alpha,
+                         const double *x, const double *y, double *z );
+
 /** vector-scalar multiplication.
  * \f[ r_i \leftarrow \alpha * x_i \f]
  */

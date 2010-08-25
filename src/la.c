@@ -107,6 +107,12 @@ void aa_la_axpy( size_t n, double alpha, const double *x, double *y  ) {
         y[i] += alpha*x[i];
 }
 
+AA_API void aa_la_axpy3( size_t n, double alpha,
+                         const double *x, const double *y, double *z ) {
+    for( size_t i = 0; i < n; i ++ )
+        z[i] = alpha*x[i] + y[i];
+}
+
 void aa_la_scal( size_t n, double alpha, double *x  ) {
     for( size_t i = 0; i < n; i ++ )
         x[i] *= alpha;

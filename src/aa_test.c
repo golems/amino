@@ -123,6 +123,16 @@ void la1() {
         aa_la_axpy(3, 2, x, y);
         aveq( 3, r, y, 0 );
     }
+
+    // axpy3
+    {
+        double x[] = {1,2,3};
+        double y[] = {4,5,6};
+        double z[3];
+        double r[] = { 2*1+4, 2*2+5, 2*3+6 };
+        aa_la_axpy3(3, 2, x, y, z);
+        aveq( 3, r, z, 0 );
+    }
     // sadd
     {
         double x[] = {1,2,3};
