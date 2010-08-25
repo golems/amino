@@ -74,15 +74,21 @@ void aa_tf_quat2axang( const double q[4], double axang[4] ) {
     double a = aa_la_norm(4,q);
     double w = q[3]/a;
     axang[3] = 2 * acos(w);
-    if( aa_feq( axang[3], 0, .0001 ) ) {
-        aa_fset( axang, 0, 3 );
-    } else {
-        aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang );
-    }
+    aa_la_smul( 3,
+                ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /* ident check */ ?
+                  0 : 1.0 / (a*sqrt(1 - w*w)) ),
+                q, axang );
+
+    /* if(  ) { */
+    /*     aa_fset( axang, 0, 3 ); */
+    /* } else { */
+    /*     aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang ); */
+    /* } */
 }
 
 void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] ) {
     double n = sqrt(x*x + y*y + z*z);
+    // FIXME: zeros
     axang[0] = x/n;
     axang[1] = y/n;
     axang[2] = z/n;
@@ -96,20 +102,20 @@ void aa_tf_axang_permute2( const double aa[4], double aa_plus[4], double aa_minu
    aa_minus[3] = aa[3] - 2*M_PI;
 }
 
-// FIXME: handle identity rotation better
 
 void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] ) {
-    rotvec[0] = axang[0]*axang[3];
-    rotvec[1] = axang[1]*axang[3];
-    rotvec[2] = axang[2]*axang[3];
+    aa_la_smul( 3, axang[3], axang, rotvec );
 }
 
 void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] ) {
     axang[3] = aa_la_norm(3,rotvec);
-    axang[0] = rotvec[0] / axang[3];
-    axang[1] = rotvec[1] / axang[3];
-    axang[2] = rotvec[2] / axang[3];
+    aa_la_smul( 3,
+                ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /* ident check */ ?
+                  0 :
+                  1.0 / axang[3] ),
+                rotvec, axang );
 }
+
 void aa_tf_axang2quat( const double axang[4], double q[4] ) {
     double s,c;
     sincos( axang[3]/2, &s, &c );

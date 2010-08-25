@@ -68,6 +68,9 @@ static inline double aa_sign( double val ) {
     return 0;
 }
 
+/// returns one if x is not infinity or NAN
+AA_API int aa_isfok( double x );
+
 /// Fuzzy equals
 static inline int aa_feq( double a, double b, double tol ) {
     return fabs(a-b) <= tol;

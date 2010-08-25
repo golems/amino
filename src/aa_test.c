@@ -423,6 +423,14 @@ void quat() {
         aa_tf_axang2quat( AA_FAR(1,2,3,0), q);
         aveq( 4, q, q_r, 0.00001 );
     }
+    // rotvec identity
+    {
+        double rv[3], q[4];
+        aa_tf_rotvec2quat(AA_TF_ROTVEC_IDENT, q);
+        aveq(4,AA_TF_QUAT_IDENT,q,0.000001);
+        aa_tf_quat2rotvec(AA_TF_QUAT_IDENT, rv);
+        aveq(3,AA_TF_ROTVEC_IDENT,rv,0.000001);
+    }
 }
 
 void tm() {

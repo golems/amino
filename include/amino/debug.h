@@ -47,7 +47,8 @@ aa_hard_assert(int test, const char fmt[], ...);
 AA_API void
 aa_lprintf( int min_level, int level, const char fmt[], ...);
 
-
+AA_API void
+aa_dump_vec( FILE *file, double *v, size_t n );
 
 AA_API void
 aa_tick(const char fmt[], ...);

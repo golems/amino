@@ -44,3 +44,8 @@ int aa_veq(size_t n, double *a, double *b, double tol ) {
     }
     return 1;
 }
+
+AA_API int aa_isfok( double x ) {
+    int i = fpclassify(x);
+    return (i != FP_NAN) && (i != FP_INFINITE );
+}
