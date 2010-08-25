@@ -408,7 +408,7 @@ void quat() {
     {
         double ra_r[4] = {0,0,0,0};
         double ra[4];
-        aa_tf_quat2axang((double[4]) {0,0,0,1}, ra);
+        aa_tf_quat2axang( AA_FAR(0,0,0,1), ra);
         aveq( 4, ra, ra_r, 0.001 );
     }
 
@@ -416,11 +416,11 @@ void quat() {
     {
         double q_r[4] = {0,0,0,1};
         double q[4];
-        aa_tf_axang2quat( (double[4]){0,0,0,0}, q);
+        aa_tf_axang2quat( AA_FAR(0,0,0,0), q);
         aveq( 4, q, q_r, 0.00001 );
-        aa_tf_axang2quat( (double[4]){1,1,1,0}, q);
+        aa_tf_axang2quat( AA_FAR(1,1,1,0), q);
         aveq( 4, q, q_r, 0.00001 );
-        aa_tf_axang2quat( (double[4]){1,2,3,0}, q);
+        aa_tf_axang2quat( AA_FAR(1,2,3,0), q);
         aveq( 4, q, q_r, 0.00001 );
     }
 }
@@ -513,6 +513,19 @@ void mem() {
             aa_region_release(&reg);
         }
         aa_region_destroy(&reg);
+    }
+    // zero_ar
+    {
+        double x[6] = {1,2,3,4,5,6};
+        assert( 6*sizeof(double) == sizeof(x) );
+        AA_ZERO_AR(x);
+        aveq( 6, x, AA_FAR(0,0,0,0,0,0), 0 );
+    }
+    // set_ar
+    {
+        double x[3] = {0};
+        AA_SET_AR(x,1.5);
+        aveq(3, x, AA_FAR(1.5,1.5,1.5), 0 );
     }
 }
 

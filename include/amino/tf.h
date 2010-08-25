@@ -104,4 +104,9 @@ AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[4] );
 AA_API void aa_tf_quat2rotmat( const double quat[4], double rotmat[9] );
 AA_API void aa_tf_rotmat2quat( const double rotmat[9], double quat[4] );
 
+/* AA_API void aa_tf_tfv2tfq( const double vrv[6],  */
+/*                            double x[3], double quat[4] ); */
+/* AA_API void aa_tf_tfq2tfv( const double x[3], const double quat[4],  */
+/*                            double vrv[6] ); */
+
 #endif //AMINO_TF_H

@@ -129,3 +129,16 @@ AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[3] ) {
     aa_tf_quat2axang(q,aa);
     aa_tf_axang2rotvec(aa,rotvec);
 }
+
+/* AA_API void aa_tf_tfv2tfq( const double vrv[6],  */
+/*                            double x[3], double quat[4] ) { */
+/*     aa_fcpy(x,vrv,3); */
+/*     aa_tf_rotvec2quat( vrv+3, quat ); */
+/* } */
+
+/* AA_API void aa_tf_tfq2tfv( const double x[3], const double quat[4],  */
+/*                            double vrv[6] ) { */
+/*     aa_fcpy(vrv,x,3); */
+/*     aa_tf_quat2rotvec( quat, vrv+3 ); */
+/* } */
+

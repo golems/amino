@@ -188,6 +188,8 @@ AA_API void aa_pool_release( aa_pool_t *pool );
 /* Arrays */
 /**********/
 
+#define AA_FAR(...) ((double[]){__VA_ARGS__})
+
 /// copy n double floats from src to dst
 static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
     memcpy( dst, src, sizeof( dst[0] ) * n );
@@ -198,5 +200,20 @@ static inline void aa_fset( double *dst, double val, size_t n ) {
     for( size_t i = 0; i < n; i ++ )
         dst[i] = val;
 }
+
+static inline void aa_zero( void *p, size_t n ) {
+    memset(p,0,n);
+}
+
+static inline void aa_fzero( double *p, size_t n ) {
+    aa_zero(p,n*sizeof(double));
+}
+
+#define AA_ZERO_AR( var ) aa_zero( var, sizeof(var) )
+
+#define AA_SET_AR( var, val )                                   \
+    for( size_t aa_$_set_ar_i = 0;                              \
+         aa_$_set_ar_i < sizeof(var)/sizeof(var[0]);            \
+         aa_$_set_ar_i ++ ) var[aa_$_set_ar_i] = val;
 
 #endif //AA_MEM_H

@@ -38,8 +38,8 @@
 #include "amino.h"
 
 AA_API void
-aa_plot_series( size_t m, size_t n, double *t, double *X,
-                struct aa_plot_opts *opts ) {
+aa_plot_row_series( size_t m, size_t n, double *t, double *X,
+                    struct aa_plot_opts *opts ) {
 
     int r;
     FILE *g = popen("gnuplot -persist", "w");
