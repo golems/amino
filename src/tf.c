@@ -41,8 +41,8 @@
 
 
 
-void aa_tf_qnorm( double q[4] ) {
-    aa_la_unit( 4, q );
+void aa_tf_qnormalize( double q[4] ) {
+    aa_la_normalize( 4, q );
 }
 
 void aa_tf_qconj( const double q[4], double r[4] ) {
@@ -123,6 +123,76 @@ void aa_tf_axang2quat( const double axang[4], double q[4] ) {
     aa_la_smul( 3, s, axang, q );
 }
 
+AA_API void aa_tf_quat2rotmat( const double q[4], double R[9] ) {
+    double w,x,y,z;
+    double d,s,xs,ys,zs;
+    double wx,wy,wz;
+    double xx,xy,xz;
+    double yy,yz,zz;
+
+    w = q[3];
+    x = q[0];
+    y = q[1];
+    z = q[2];
+
+    d = aa_la_dot(4, q, q);
+    s = 2/d;
+    xs = x*s;
+    ys = y*s;
+    zs = z*s;
+    wx = w*xs;
+    wy = w*ys;
+    wz = w*zs;
+    xx = x*xs;
+    xy = x*ys;
+    xz = x*zs;
+    yy = y*ys;
+    yz = y*zs;
+    zz = z*zs;
+
+    AA_MATREF(R,3,0,0) = 1 - yy - zz;
+    AA_MATREF(R,3,1,0) = xy + wz;
+    AA_MATREF(R,3,2,0) = xz - wy;
+    AA_MATREF(R,3,0,1) = xy - wz;
+    AA_MATREF(R,3,1,1) = 1 - xx - zz;
+    AA_MATREF(R,3,2,1) = yz + wx;
+    AA_MATREF(R,3,0,2) = xz + wy;
+    AA_MATREF(R,3,1,2) = yz - wx;
+    AA_MATREF(R,3,2,2) = 1 - xx - yy;
+}
+
+AA_API void aa_tf_rotmat2quat( const double R[9], double q[4] ) {
+
+    double x =  AA_MATREF(R,3,0,0);
+    double y =  AA_MATREF(R,3,1,1);
+    double z =  AA_MATREF(R,3,2,2);
+    /* double trace = x+y+z; */
+    /* if( trace > 0 ) { */
+    /*     double r = sqrt(trace + 1); */
+    /*     q[3] = r / 2; */
+    /*     double s = 0.5 / r; */
+    /*     q[0] = (AA_MATREF(R,3,2,1) - AA_MATREF(R,3,1,2))*s; */
+    /*     q[1] = (AA_MATREF(R,3,0,2) - AA_MATREF(R,3,2,0))*s; */
+    /*     q[2] = (AA_MATREF(R,3,1,0) - AA_MATREF(R,3,0,1))*s; */
+    /* } else  */
+    {
+        size_t u = (x < y) ?
+            (y < z) ? 2 : 1 :
+            (x < z) ? 2 : 0;
+        size_t v = (u + 1) % 3;
+        size_t w = (u + 2) % 3;
+        double r = sqrt( 1 + AA_MATREF(R,3,u,u) - AA_MATREF(R,3,v,v) - AA_MATREF(R,3,w,w) );
+        q[u] = r / 2;
+        double s = 0.5 / r;
+        q[3] = (AA_MATREF(R,3,w,v) - AA_MATREF(R,3,v,w)) * s;
+        q[v] = (AA_MATREF(R,3,u,v) + AA_MATREF(R,3,v,u)) * s;
+        q[w] = (AA_MATREF(R,3,w,u) + AA_MATREF(R,3,u,w)) * s;
+    }
+
+    aa_tf_qnormalize(q);
+
+    fflush(stderr);
+}
 
 AA_API void aa_tf_rotvec2quat( const double rotvec[3], double q[4] ) {
     double aa[4];

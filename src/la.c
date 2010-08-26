@@ -168,7 +168,7 @@ void aa_la_cross( const double a[3], const double b[3], double c[3] ) {
     c[2] = a[0]*b[1] - a[1]*b[0];
 }
 
-void aa_la_unit( size_t n, double *x ) {
+void aa_la_normalize( size_t n, double *x ) {
     aa_la_scal( n, 1.0/aa_la_norm(n,x), x );
 }
 

@@ -43,6 +43,10 @@ vcross(a,b) := express(
    [vref(a,1), vref(a,2), vref(a,3)] ~
    [vref(b,1), vref(b,2), vref(b,3)] );
 
+/* dot products */
+dot3(a,b) := a[1]*b[1]+a[2]*b[2]+a[3]*b[3];
+dot4(a,b) := a[4]*b[4] + dot3(a,b);
+
 /* Create the skew-symmetric cross-product matrix */
 cross_mat(x) := matrix(
   [    0,     -vref(x,3),  vref(x,2)],
@@ -61,13 +65,20 @@ dh_distal(d,theta,r,alpha) := block(
 
 /* quaternions */
 qconj(q) := [-vref(q,1), -vref(q,2), -vref(q,3), vref(q,4)];
-qinv(q) := qconj(q) / inprod(q,q);
+qinv(q) := qconj(q) / dot4(q,q);
 qxyz(q) := [vref(q,1), vref(q,2), vref(q,3)];
+
 qmul(q1,q2) := append(
   (q1[4]*qxyz(q2) + q2[4]*qxyz(q1) + vcross(q1,q2)),
-  [q1[4]*q2[4] - inprod(qxyz(q2), qxyz(q1))] );
+  [q1[4]*q2[4] - dot3(q1,q2)] );
+
 qrot(q,v) := qmul( qmul(q, [vref(v,1), vref(v,2), vref(v,3), 0] ),
-  qconj(q) );
+  qinv(q) );
+
+qnrot(q,v) := qmul( qmul(q, [vref(v,1), vref(v,2), vref(v,3), 0] ),
+  qinv(q) );
+
+
 
 /* Rodrigues' Formula */
 

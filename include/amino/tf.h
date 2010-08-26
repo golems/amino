@@ -68,7 +68,7 @@ AA_API void aa_tf_q3chain( const double q0[4], const double v0[3],
                              const double q[4], const double v[3] );
 
 /** Normalize Quaternion */
-AA_API void aa_tf_qnorm( double q[4] );
+AA_API void aa_tf_qnormalize( double q[4] );
 
 /** Quaternion conjugate */
 AA_API void aa_tf_qconj( const double q[4], double r[4] );
@@ -84,6 +84,14 @@ AA_API void aa_tf_qsub( const double a[4], const double b[4], double c[4] );
 
 /** Quaternion multiplication. */
 AA_API void aa_tf_qmul( const double a[4], const double b[4], double c[4] );
+
+/** Quaternion point rotation. */
+AA_API void aa_tf_qrot_( const double q[4], const double v[3], double p[3] );
+
+/** Quaternion point rotation. */
+static inline void aa_tf_qrot( const double q[4], const double v[3], double p[3] ) {
+    aa_tf_qrot_(q,v,p);
+}
 
 /** Quaternion SLERP. */
 AA_API void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] );

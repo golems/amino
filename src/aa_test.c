@@ -212,11 +212,11 @@ void la1() {
         aa_la_cross(  x, y, r );
         aveq( 3, r, p, 0 );
     }
-    // unit
+    // normalize
     {
         double x[] = {1,2,3};
         double r[] = {0.26726,   0.53452,   0.80178};
-        aa_la_unit(3,x);
+        aa_la_normalize(3,x);
         aveq( 3, r, x, 0.0001 );
     }
 }
@@ -329,7 +329,7 @@ void axang() {
     // 2 quat
     {
         double q_r[4] = {1,2,3,4};
-        aa_tf_qnorm(q_r);
+        aa_tf_qnormalize(q_r);
         double q[4];
         double a[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
         aa_tf_axang2quat(a,q);
@@ -346,7 +346,7 @@ void axang() {
     }
     {
         double q_r[4] = {1,2,3,4};
-        aa_tf_qnorm(q_r);
+        aa_tf_qnormalize(q_r);
         double q[4];
         double r[3];
         double a[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
@@ -356,7 +356,7 @@ void axang() {
     }
     {
         double q[4] = {1,2,3,4};
-        aa_tf_qnorm(q);
+        aa_tf_qnormalize(q);
         double r[3];
         double a[4];
         double a_r[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
@@ -440,6 +440,21 @@ void quat() {
         aveq(4,AA_TF_QUAT_IDENT,q,0.000001);
         aa_tf_quat2rotvec(AA_TF_QUAT_IDENT, rv);
         aveq(3,AA_TF_ROTVEC_IDENT,rv,0.000001);
+    }
+    // rotations
+    {
+        double Rzi[9] = {0,1,0,  -1,0,0,  0,0,1};
+        double v[3] = {1,2,3};
+        double vp_r0[3], vp_q[3], vp_r1[3];
+        double q[4], R[9];
+        aa_tf_rotmat2quat(Rzi,q);
+        aa_tf_quat2rotmat( q, R );
+        aa_la_mvmul(3, 3, Rzi, v, vp_r0);
+        aa_tf_qrot(q,v,vp_q);
+        aa_la_mvmul(3, 3, R, v, vp_r1);
+        aveq(9, R, Rzi, .0001);
+        aveq(3,vp_r0, vp_q, .0001);
+        aveq(3,vp_r0, vp_r1, .0001);
     }
 }
 

@@ -251,7 +251,7 @@ AA_API void aa_la_cross( const double a[3], const double b[3], double c[3] );
 /** Make x unit vector.
  * \f[ x \leftarrow \frac{x}{\|x\|}\f]
  */
-AA_API void aa_la_unit( size_t n, double *x );
+AA_API void aa_la_normalize( size_t n, double *x );
 
 /*--- Matrix Ops --- */
 
