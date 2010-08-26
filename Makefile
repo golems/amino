@@ -26,6 +26,8 @@ test: build/aa_test
 OBJS :=  mem.o la.o tf.o math.o plot.o debug.o mac/mac.o
 BOBJS := $(addprefix build/, $(OBJS))
 
+
+# maxima code generation
 $(SRCDIR)/mac/mac.f: $(SRCDIR)/mac/amino.mac $(SRCDIR)/mac/gen.mac
 	cd $(SRCDIR)/mac && maxima --very-quiet -b gen.mac
 

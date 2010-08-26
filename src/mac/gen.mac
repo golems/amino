@@ -37,11 +37,41 @@
 load("./amino.mac");
 
 with_stdout("mac.f",
+  /* Quaternion Rotation */
   print("      Subroutine aa_tf_qrot (q, v, p)"),
   print("      Double Precision q(4)"),
   print("      Double Precision v(3)"),
   print("      Double Precision p(3,1)"),
   fortran( p = submatrix(4,transpose(qrot([q(1), q(2), q(3), q(4)], [v(1), v(2), v(3)])) )),
   print("      Return"),
+  print("      End"),
+
+  /* 3x3 inverse */
+  print("      Subroutine aa_la_inverse3x3 (R, S)"),
+  print("      Double Precision R(3,3)"),
+  print("      Double Precision S(3,3)"),
+  for i:1 thru 3 do
+  for j:1 thru 3 do
+  printf( true, "      Double Precision R~d~d~%", i, j ),
+  for i:1 thru 3 do
+  for j:1 thru 3 do
+  printf( true, "      R~d~d = R(~d,~d)~%", i, j, i, j ),
+  fortran( S = invert(matrix(
+        [R11,R12,R13],
+        [R21,R22,R23],
+        [R31,R32,R33])) ),
+  print("      Return"),
+  print("      End"),
+
+  /* 3x3 determinant */
+  print("      Subroutine aa_la_det3x3 (R, d)"),
+  print("      Double Precision R(3,3)"),
+  print("      Double Precision d"),
+  fortran( d = determinant(matrix(
+        [R(1,1),R(1,2),R(1,3)],
+        [R(2,1),R(2,2),R(2,3)],
+        [R(3,1),R(3,2),R(3,3)])) ),
+  print("      Return"),
   print("      End")
+
   );

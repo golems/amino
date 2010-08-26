@@ -267,6 +267,24 @@ void la2() {
         aa_la_inv( 2, A );
         aveq( 4, A, B, 0 );
     }
+    // inverse3x3
+    {
+        double R[9] = {0,-1,0, 1,0,0, 0,0,-1};
+        double S[9];
+        aa_la_inverse3x3( R, S );
+        aa_la_inv(3, R );
+        aveq( 9, R, S, 0.00001 );
+    }
+    // det3x3
+    {
+        double R[9] = {0,-1,0, 1,0,0, 0,0,-1};
+        double S[9];
+        aa_la_inverse3x3( R, S );
+        double d = aa_la_det3x3( R );
+        double dt = aa_la_det3x3( S );
+        afeq( -1, d, .000001 );
+        afeq( -1, dt, .000001 );
+    }
 
     //dpinv
     {
@@ -568,6 +586,18 @@ void dbg() {
     aa_tock();
 }
 
+void rotmat() {
+    // isrotmat
+    {
+        double R1[9] = {0,1,0,  -1,0,0,  0,0,1};
+        double R2[9] = {1,0,0,  0,1,0,  0,0,-1};
+        double R3[9] = {0,2,0,  -2,0,0,  0,0,2};
+        assert( aa_tf_isrotmat(R1) );
+        assert( ! aa_tf_isrotmat(R2) );
+        assert( ! aa_tf_isrotmat(R3) );
+    }
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
@@ -576,7 +606,7 @@ int main( int argc, char **argv ) {
     la2();
     angle();
     quat();
-    axang();
+    rotmat();
     axang();
     tm();
     mem();

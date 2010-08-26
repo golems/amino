@@ -174,6 +174,14 @@ void aa_la_normalize( size_t n, double *x ) {
 
 /*--- Matrix Ops --- */
 
+AA_API void aa_la_transpose2( size_t m, size_t n, const double *A, double *At  ) {
+    for( size_t i = 0; i < m; i ++ ) {
+        for( size_t j = 0; j < n; j++ ) {
+            AA_MATREF(At,n,j,i) = AA_MATREF(A,m,i,j);
+        }
+    }
+}
+
 int aa_la_inv( size_t n, double *A ) {
     int ipiv[n];
     const int mi = (int) n;

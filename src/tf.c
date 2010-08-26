@@ -218,3 +218,11 @@ AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[3] ) {
 /*     aa_tf_quat2rotvec( quat, vrv+3 ); */
 /* } */
 
+
+AA_API int aa_tf_isrotmat( const double R[9] ) {
+    double Rt[9], Ri[9], d;
+    aa_la_transpose2( 3, 3, R, Rt );
+    aa_la_inverse3x3( R, Ri );
+    d = aa_la_det3x3( R );
+    return aa_veq( 9, Rt, Ri, .0001 ) && aa_feq( d, 1, .0001 );
+}
