@@ -32,6 +32,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+
 load("vect");
 load("eigen");
 
@@ -89,22 +91,25 @@ rodrigues_mat( axis, theta ) := (
 
 /* Gives of list of transform from ground to each link in the
    transform chain tfs */
-tf_pyramid( tfs ) := block([pyr, prev],
-  pyr: [],
-  prev: tf_ident,
-  for tf in tfs do
-  block([x], x: prev . tf,
-    pyr: append( pyr, [x] ), prev : x),
-  pyr);
+tf_pyramid( tfs ) := block([prev],
+  prev: ident(4),
+  map( lambda([tf],
+      prev : prev . tf,
+      prev),
+    tfs ) );
 
 /* tf_93 */
 tf_93( R, v, p ) := R . p + v;
 
 /* Find a column of the jacobian for a 3-translation, 3-rotation
    function */
-jacobian_column(pe, a, q) := append(
-  cross_covect(a, pe-q),
-  a);
+jacobian_column(a, q, pe) := block(
+  [jp, jr],
+  jp : vcross(a, pe - q ),
+  jr: a,
+  /*print(jr),*/
+  covect([vref(jp,1), vref(jp,2), vref(jp,3), vref(jr,1), vref(jr,2), vref(jr,3) ])
+  );
 
 /* Create a Jacobian from the list of transforms and the list of axes
    (column vectors). */
@@ -114,5 +119,6 @@ spatial_jacobian(tfs, axes) := block(
   pe: last(pyr) . [0,0,0,1],
   apply(addcol,
     append([matrix()],
-      map(lambda([tf, a], jacobian_column(pe, a, tf . [0,0,0,1])),
-        tfs, axes))));
+      map(lambda([tf, a_local], jacobian_column(tf . a_local, tf . [0,0,0,1], pe)),
+        pyr, axes))));
+
