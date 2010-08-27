@@ -182,6 +182,11 @@ AA_API void aa_la_transpose2( size_t m, size_t n, const double *A, double *At  )
     }
 }
 
+
+double aa_la_trace( size_t n, const double *A ) {
+    return cblas_dasum( (int)n, A, (int)(n+1) );
+}
+
 int aa_la_inv( size_t n, double *A ) {
     int ipiv[n];
     const int mi = (int) n;

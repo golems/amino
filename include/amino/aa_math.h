@@ -326,6 +326,7 @@ static inline  void aa_la_inverse3x3( const double R[9], double S[9] ) {
  */
 AA_API void aa_la_det3x3_( const double R[9], double *d );
 
+
 /** Determinant of 3x3 matrix R.
  *
  * wrapper for the maxima-generated function
@@ -336,6 +337,9 @@ static inline double aa_la_det3x3( const double R[9] ) {
     return d;
 }
 
+/** Trace of a matrix.
+ */
+AA_API double aa_la_trace( size_t n, const double *A );
 
 /** Damped Pseudo Inverse of A.
  *  \f[ A^\ddagger \leftarrow A^T (AA^T + kI)^{-1} \f]

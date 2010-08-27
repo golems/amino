@@ -25,17 +25,17 @@ test: build/aa_test
 
 OBJS :=  mem.o la.o tf.o math.o plot.o debug.o mac/mac.o
 BOBJS := $(addprefix build/, $(OBJS))
+LIBS := m lapack-3 blas-3 rt
 
 
 # maxima code generation
 $(SRCDIR)/mac/mac.f: $(SRCDIR)/mac/amino.mac $(SRCDIR)/mac/gen.mac
+	@echo [maxima start]
 	cd $(SRCDIR)/mac && maxima --very-quiet -b gen.mac
+	@echo [maxima end]
 
-# Link against ATLAS blas/lapack
-$(call LINKLIB, amino, $(OBJS), m lapack-3 blas-3 rt)
-
-build/aa_test: build/aa_test.o $(BOBJS)
-	gcc -o $@ $< $(BOBJS)  -lm -llapack-3 -lblas-3 -lrt
+$(call LINKLIB, amino, $(OBJS), $(LIBS))
+$(call LINKBIN, aa_test, aa_test.o $(OBJS), $(LIBS))
 
 .PHONY: default clean doc
 

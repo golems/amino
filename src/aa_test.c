@@ -267,6 +267,16 @@ void la2() {
         aa_la_inv( 2, A );
         aveq( 4, A, B, 0 );
     }
+    // trace
+    {
+        double A[9] = {1,2,3, 4,5,6, 7,8,9};
+        double B[9];
+        double t = aa_la_trace(3,A);
+        aa_la_transpose2( 3, 3, A, B );
+        double t2 = aa_la_trace(3,B);
+        afeq( t, 1+5+9, 0 );
+        afeq( t2, 1+5+9, 0 );
+    }
     // inverse3x3
     {
         double R[9] = {0,-1,0, 1,0,0, 0,0,-1};
@@ -595,6 +605,19 @@ void rotmat() {
         assert( aa_tf_isrotmat(R1) );
         assert( ! aa_tf_isrotmat(R2) );
         assert( ! aa_tf_isrotmat(R3) );
+    }
+
+    // axang
+    {
+        double R[9] = {0,1,0,  -1,0,0,  0,0,1};
+        double a[4];
+        double v[3];
+        double ar[4] = {0,0,1,M_PI/2};
+        double vr[3] = {0,0,M_PI/2};
+        aa_tf_rotmat2axang(R,a);
+        aa_tf_rotmat2rotvec(R,v);
+        aveq( 4, a, ar, .00001 );
+        aveq( 3, v, vr, .00001 );
     }
 }
 

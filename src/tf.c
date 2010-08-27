@@ -73,7 +73,7 @@ void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] )
 void aa_tf_quat2axang( const double q[4], double axang[4] ) {
     double a = aa_la_norm(4,q);
     double w = q[3]/a;
-    axang[3] = 2 * acos(w);
+    axang[3] = aa_an_norm_pi(2 * acos(w));
     aa_la_smul( 3,
                 ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /* ident check */ ?
                   0 : 1.0 / (a*sqrt(1 - w*w)) ),
@@ -190,8 +190,6 @@ AA_API void aa_tf_rotmat2quat( const double R[9], double q[4] ) {
     }
 
     aa_tf_qnormalize(q);
-
-    fflush(stderr);
 }
 
 AA_API void aa_tf_rotvec2quat( const double rotvec[3], double q[4] ) {
@@ -226,3 +224,29 @@ AA_API int aa_tf_isrotmat( const double R[9] ) {
     d = aa_la_det3x3( R );
     return aa_veq( 9, Rt, Ri, .0001 ) && aa_feq( d, 1, .0001 );
 }
+
+
+AA_API void aa_tf_rotmat2axang( const double R[9], double ra[4] ) {
+    double rv[3];
+    aa_tf_rotmat2rotvec(R,rv);
+    aa_tf_rotvec2axang(rv,ra);
+}
+
+AA_API void aa_tf_rotmat2rotvec( const double R[9], double rv[3] ) {
+    rv[0] = 0.5 * (AA_MATREF(R,3,2,1) - AA_MATREF(R,3,1,2));
+    rv[1] = 0.5 * (AA_MATREF(R,3,0,2) - AA_MATREF(R,3,2,0));
+    rv[2] = 0.5 * (AA_MATREF(R,3,1,0) - AA_MATREF(R,3,0,1));
+
+    double s = aa_la_norm( 3, rv );
+    double c = (aa_la_trace(3,R) - 1) / 2 ;
+
+    aa_la_scal( 3, ( (s > AA_TF_EPSILON) ? atan2(s,c)/s : 1 ), rv );
+}
+
+/* AA_API void aa_tf_axang2rotmat( const double ra[4], double R[9] ) { */
+
+/* } */
+
+/* AA_API void aa_tf_rotvec2rotmat( const double rv[3], double R[9] ) { */
+
+/* } */
