@@ -108,6 +108,14 @@ static inline double aa_fremainder( double a, double b ) {
     return fmod(a , b);
 }
 
+/* Returns index of minimum element in array v.
+ */
+AA_API size_t aa_fminloc( size_t n, double *v );
+
+/* Returns index of maximum element in array v.
+ */
+AA_API size_t aa_fmaxloc( size_t n, double *v );
+
 /**********/
 /* Angles */
 /**********/

@@ -108,15 +108,26 @@ AA_API void aa_tf_axang2quat( const double axang[4], double q[4] );
 
 AA_API void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] );
 
-AA_API void aa_tf_axang_permute( const double aa0[4], double aa1[0], double aa2[4], double aa3[4] );
+/** Scales angle by k * 2 * pi.
+ */
+AA_API void aa_tf_axang_permute( const double rv[4], int k, double rv_p[4] );
+
+AA_API void aa_tf_rotvec_permute( const double rv[3], int k, double rv_p[3] );
+
+/** Scales rv by multiple of 2pi to minimized SSD with rv_near.
+ */
+AA_API void aa_tf_rotvec_near( const double rv[3], const double rv_near[3],
+                               double rv_p[3] );
 
 AA_API void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] );
 
 AA_API void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] );
 
 AA_API void aa_tf_rotvec2quat( const double rotvec[3], double q[4] );
-AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[4] );
+AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[3] );
 
+AA_API void aa_tf_quat2rotvec_near( const double q[4], const double rv_near[3],
+                                    double rotvec[3] );
 
 AA_API void aa_tf_quat2rotmat( const double quat[4], double rotmat[9] );
 AA_API void aa_tf_rotmat2quat( const double rotmat[9], double quat[4] );

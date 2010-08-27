@@ -49,3 +49,27 @@ AA_API int aa_isfok( double x ) {
     int i = fpclassify(x);
     return (i != FP_NAN) && (i != FP_INFINITE );
 }
+
+AA_API size_t aa_fminloc( size_t n, double *v ) {
+    size_t i_min = 0;
+    double x_min = v[0];
+    for( size_t i = 0; i < n; i ++ ) {
+        if( v[i] < x_min ) {
+            x_min = v[i];
+            i_min = i;
+        }
+    }
+    return i_min;
+}
+
+AA_API size_t aa_fmaxloc( size_t n, double *v ) {
+    size_t i_max = 0;
+    double x_max = v[0];
+    for( size_t i = 0; i < n; i ++ ) {
+        if( v[i] > x_max ) {
+            x_max = v[i];
+            i_max = i;
+        }
+    }
+    return i_max;
+}

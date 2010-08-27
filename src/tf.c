@@ -74,16 +74,16 @@ void aa_tf_quat2axang( const double q[4], double axang[4] ) {
     double a = aa_la_norm(4,q);
     double w = q[3]/a;
     axang[3] = aa_an_norm_pi(2 * acos(w));
-    aa_la_smul( 3,
-                ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /* ident check */ ?
-                  0 : 1.0 / (a*sqrt(1 - w*w)) ),
-                q, axang );
+    /* aa_la_smul( 3,  */
+    /*             ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /\* ident check *\/ ? */
+    /*               0 : 1.0 / (a*sqrt(1 - w*w)) ),  */
+    /*             q, axang ); */
 
-    /* if(  ) { */
-    /*     aa_fset( axang, 0, 3 ); */
-    /* } else { */
-    /*     aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang ); */
-    /* } */
+    if(  aa_feq( axang[3], 0, AA_TF_EPSILON ) ) {
+        aa_fzero( axang, 3 );
+    } else {
+        aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang );
+    }
 }
 
 void aa_tf_axang_make( double x, double y, double z, double theta, double axang[4] ) {
@@ -103,17 +103,54 @@ void aa_tf_axang_permute2( const double aa[4], double aa_plus[4], double aa_minu
 }
 
 
+AA_API void aa_tf_axang_permute( const double ra[4], int k, double ra_p[4] ) {
+    aa_fcpy( ra_p, ra, 3 );
+    ra_p[3] = ra[3] + k*2*M_PI;
+}
+
+AA_API void aa_tf_rotvec_permute( const double rv[3], int k, double rv_p[3] ) {
+    double ra[4], ra_p[4];
+    aa_tf_rotvec2axang(rv,ra);
+    aa_tf_axang_permute(ra, k, ra_p);
+    aa_tf_axang2rotvec(ra_p, rv_p);
+}
+
+AA_API void aa_tf_rotvec_near( const double rv[3], const double rv_near[3],
+                               double rv_p[3] ) {
+    // FIXME: probably a more efficient solution
+    double ssd[7];
+    double arv[sizeof(ssd)/sizeof(double)][3];
+
+    aa_fcpy(arv[0],rv,3);
+    aa_tf_rotvec_permute( rv, 1, arv[1] );
+    aa_tf_rotvec_permute( rv, 2, arv[2] );
+    aa_tf_rotvec_permute( rv, 3, arv[3] );
+    aa_tf_rotvec_permute( rv, -1, arv[4] );
+    aa_tf_rotvec_permute( rv, -2, arv[5] );
+    aa_tf_rotvec_permute( rv, -3, arv[6] );
+
+    for( size_t i = 0; i < sizeof(ssd)/sizeof(double); i++ ) {
+        ssd[i] = aa_la_ssd( 3, rv_near, arv[i] );
+    }
+    aa_fcpy( rv_p, arv[ aa_fminloc(7, ssd) ], 3 );
+}
+
 void aa_tf_axang2rotvec( const double axang[4], double rotvec[3] ) {
     aa_la_smul( 3, axang[3], axang, rotvec );
 }
 
 void aa_tf_rotvec2axang( const double rotvec[3], double axang[4] ) {
     axang[3] = aa_la_norm(3,rotvec);
-    aa_la_smul( 3,
-                ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /* ident check */ ?
-                  0 :
-                  1.0 / axang[3] ),
-                rotvec, axang );
+    if( aa_feq( axang[3], 0, AA_TF_EPSILON ) ) {
+        aa_fzero( axang, 3 );
+    } else {
+        aa_la_smul( 3, 1.0 / axang[3] , rotvec, axang );
+    }
+    /* aa_la_smul( 3,  */
+    /*             ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /\* ident check *\/ ?  */
+    /*               0 : */
+    /*               1.0 / axang[3] ), */
+    /*             rotvec, axang ); */
 }
 
 void aa_tf_axang2quat( const double axang[4], double q[4] ) {
@@ -202,6 +239,15 @@ AA_API void aa_tf_quat2rotvec( const double q[4], double rotvec[3] ) {
     double aa[4];
     aa_tf_quat2axang(q,aa);
     aa_tf_axang2rotvec(aa,rotvec);
+}
+
+
+AA_API void aa_tf_quat2rotvec_near( const double q[4], const double rv_near[3],
+                                    double rv[3] ) {
+    double aa[4], rv0[3];
+    aa_tf_quat2axang(q,aa);
+    aa_tf_axang2rotvec(aa,rv0);
+    aa_tf_rotvec_near( rv0, rv_near, rv );
 }
 
 /* AA_API void aa_tf_tfv2tfq( const double vrv[6],  */

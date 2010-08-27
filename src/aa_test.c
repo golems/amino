@@ -57,6 +57,12 @@ void scalar() {
     afeq( M_PI, M_PI, 0 );
     afeq( 1, 1.001, .01 );
     aneq( 1, 2, .1 );
+
+    // min/max loc
+    assert( 1 == aa_fminloc( 3, AA_FAR( 1, 0, 10 ) ) );
+    assert( 2 == aa_fminloc( 3, AA_FAR( 1, 0, -10 ) ) );
+    assert( 2 == aa_fmaxloc( 3, AA_FAR( 1, 0, 10 ) ) );
+    assert( 0 == aa_fmaxloc( 3, AA_FAR( 100, 0, 10 ) ) );
 }
 
 void la0() {
@@ -483,6 +489,22 @@ void quat() {
         aveq(9, R, Rzi, .0001);
         aveq(3,vp_r0, vp_q, .0001);
         aveq(3,vp_r0, vp_r1, .0001);
+    }
+
+    // nearby
+    {
+        double q[4] = {1,0,0,1};
+        double q1[4];
+        aa_tf_qnormalize(q);
+        double rv0[3] = {10,20,30};
+        double  rvn[3];
+        double p[3] = {3,2,1};
+        double pr[3], pq[3];
+        aa_tf_quat2rotvec_near(q, rv0, rvn );
+        aa_tf_rotvec2quat( rvn, q1 );
+        aa_tf_qrot(q, p, pq);
+        aa_tf_qrot(q1, p, pr);
+        aveq( 3, pr, pq, .00001 );
     }
 }
 
