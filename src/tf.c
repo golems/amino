@@ -64,6 +64,12 @@ void aa_tf_qmul( const double a[4], const double b[4], double c[4] ) {
         c[i] += a[3]*b[i] + b[3]*a[i];
 }
 
+void aa_tf_qrel(const double q1[4], const double q2[4], double q_rel[4]) {
+    double inv[4];
+    aa_tf_qinv(q2,inv);
+    aa_tf_qmul(q1,inv,q_rel);
+}
+
 void aa_tf_qadd( const double a[4], const double b[4], double c[4] );
 
 void aa_tf_qadd( const double a[4], const double b[4], double c[4] );

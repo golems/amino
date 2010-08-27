@@ -95,6 +95,10 @@ AA_API void aa_tf_qrot_( const double q[4], const double v[3], double p[3] );
 static inline void aa_tf_qrot( const double q[4], const double v[3], double p[3] ) {
     aa_tf_qrot_(q,v,p);
 }
+/** Relative orientation.
+    \f[ q_{\rm rel} = q_1 q_2^{-1} \f]
+ */
+AA_API void aa_tf_qrel(const double q1[4], const double q2[4], double q_rel[4]);
 
 /** Quaternion SLERP. */
 AA_API void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] );
