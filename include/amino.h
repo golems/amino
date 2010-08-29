@@ -86,6 +86,8 @@
 #define AA_EXTERN extern
 #endif //__cplusplus
 
+#define AA_DEPRECATED  __attribute__ ((deprecated))
+
 #define AA_IBILLION 1000000000
 #define AA_IMILLION 1000000
 
