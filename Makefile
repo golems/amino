@@ -20,7 +20,7 @@ FFLAGS += -I/usr/include
 
 default: $(LIBFILES) $(BINFILES) test
 
-test: build/aa_test
+test: build/aa_test build/aa_testpp
 	./build/aa_test
 
 OBJS :=  mem.o la.o tf.o math.o plot.o debug.o mac/mac.o
@@ -29,6 +29,7 @@ LIBS := m lapack-3 blas-3 rt
 
 
 # maxima code generation
+
 $(SRCDIR)/mac/mac.f: $(SRCDIR)/mac/amino.mac $(SRCDIR)/mac/gen.mac
 	@echo [maxima start]
 	cd $(SRCDIR)/mac && maxima --very-quiet -b gen.mac
@@ -36,6 +37,7 @@ $(SRCDIR)/mac/mac.f: $(SRCDIR)/mac/amino.mac $(SRCDIR)/mac/gen.mac
 
 $(call LINKLIB, amino, $(OBJS), $(LIBS))
 $(call LINKBIN, aa_test, aa_test.o $(OBJS), $(LIBS))
+$(call LINKBIN, aa_testpp, aa_testpp.o $(OBJS), $(LIBS) stdc++)
 
 .PHONY: default clean doc
 

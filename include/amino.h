@@ -80,8 +80,10 @@
 // for C symbols
 #ifdef __cplusplus
 #define AA_API extern "C"
+#define AA_EXTERN extern "C"
 #else
 #define AA_API
+#define AA_EXTERN extern
 #endif //__cplusplus
 
 #define AA_IBILLION 1000000000

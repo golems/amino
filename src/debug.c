@@ -65,3 +65,29 @@ aa_dump_vec( FILE *file, double *v, size_t n ) {
         fprintf(file, "%f\t", v[i] );
     fprintf(file, "%f\n", v[n-1]);
 }
+
+
+const char *aa_verbf_prefix = "amino";
+int aa_opt_verbosity = 0;
+
+void aa_verbf( int level, const char fmt[], ... ) {
+    va_list argp;
+    va_start( argp, fmt );
+    if( level <= aa_opt_verbosity ) {
+        fprintf(stderr, "[%s]\t", aa_verbf_prefix);
+        vfprintf( stderr, fmt, argp );
+    }
+    va_end( argp );
+}
+
+void aa_hard_assert( int test, const char fmt[], ... ) {
+    if( ! test ) {
+        va_list argp;
+        va_start( argp, fmt );
+        fprintf(stderr, "ERROR: ");
+        vfprintf( stderr, fmt, argp );
+        va_end( argp );
+        abort();
+        exit(EXIT_FAILURE);
+    }
+}

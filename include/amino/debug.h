@@ -45,7 +45,7 @@ AA_API void
 aa_hard_assert(int test, const char fmt[], ...);
 
 AA_API void
-aa_lprintf( int min_level, int level, const char fmt[], ...);
+aa_verbf( int min_level, const char fmt[], ...);
 
 AA_API void
 aa_dump_vec( FILE *file, double *v, size_t n );
@@ -55,5 +55,9 @@ aa_tick(const char fmt[], ...);
 
 AA_API struct timespec
 aa_tock(void);
+
+
+AA_EXTERN const char *aa_verbf_prefix;
+AA_EXTERN int aa_opt_verbosity;
 
 #endif //AA_MATH_H
