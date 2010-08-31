@@ -317,7 +317,8 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const do
     aa_la_mvmul(n,m,A_star,x,y);
 
     // B = A^* A
-    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans, (int)n, (int)n, (int)m,
+    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans,
+                 (int)n, (int)n, (int)m,
                  1, A_star, (int)n, A, (int)m, 0, B, (int)n );
 
     // B =  A^* A - I
