@@ -42,8 +42,8 @@
  * \f[ x_1 = l_1 \cos(\theta_1) + l_2 \cos(\theta_2) \f]
  * \f[ y_1 = l_1 \sin(\theta_1) + l_2 \sin(\theta_2) \f]
  */
-AA_API void aa_kin_planar2_ik_theta2( const double l[2],
-                                      const double x[2],
-                                      double theta_a[2],
-                                      double theta_b[2] );
+AA_API int aa_kin_planar2_ik_theta2( const double l[2],
+                                     const double x[2],
+                                     double theta_a[2],
+                                     double theta_b[2] );
 #endif// AMINO_KIN_H

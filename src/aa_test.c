@@ -645,7 +645,7 @@ void rotmat() {
 
 void kin() {
     double ta[2], tb[2];
-    aa_kin_planar2_ik_theta2( AA_FAR(1, 2), AA_FAR(2.2, 2), ta, tb );
+    assert( 0 == aa_kin_planar2_ik_theta2( AA_FAR(1, 2), AA_FAR(2.2, 2), ta, tb ) );
 }
 
 int main( int argc, char **argv ) {

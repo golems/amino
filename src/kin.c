@@ -39,10 +39,10 @@
 #include <amino.h>
 
 
-AA_API void aa_kin_planar2_ik_theta2( const double l[2],
-                                      const double x[2],
-                                      double theta_a[2],
-                                      double theta_b[2] ) {
+AA_API int aa_kin_planar2_ik_theta2( const double l[2],
+                                     const double x[2],
+                                     double theta_a[2],
+                                     double theta_b[2] ) {
 
     // help out the optimizer
     const double x1=x[0], x2=x[1], l1=l[0], l2=l[1];
@@ -55,9 +55,9 @@ AA_API void aa_kin_planar2_ik_theta2( const double l[2],
 
       theta_b[1] = atan2((x2*x2*x1*x1+x1*sqrt(-x2*x2*(x2*x2+x1*x1-l1*l1+2.0*l2*l1-l2*l2)*(x2*x2+x1*x1-l1*l1-2.0*l2*l1-l2*l2))+l2*l2*x2*x2+x2*x2*x2*x2-x2*x2*l1*l1)/(x2*x2+x1*x1)/l2/x2, (l2*l2*x1-x1*l1*l1+x2*x2*x1+x1*x1*x1-sqrt(-x2*x2*(x2*x2+x1*x1-l1*l1+2.0*l2*l1-l2*l2)*(x2*x2+x1*x1-l1*l1-2.0*l2*l1-l2*l2)))/(x2*x2+x1*x1)/l2);
 
-      assert( aa_feq( l1*cos(theta_a[0]) + l2*cos(theta_a[1]), x1, .001 ) );
-      assert( aa_feq( l1*sin(theta_a[0]) + l2*sin(theta_a[1]), x2, .001 ) );
-
-      assert( aa_feq( l1*cos(theta_b[0]) + l2*cos(theta_b[1]), x1, .001 ) );
-      assert( aa_feq( l1*sin(theta_b[0]) + l2*sin(theta_b[1]), x2, .001 ) );
+      return
+          !( aa_feq( l1*cos(theta_a[0]) + l2*cos(theta_a[1]), x1, .001 ) &&
+             aa_feq( l1*sin(theta_a[0]) + l2*sin(theta_a[1]), x2, .001 ) &&
+             aa_feq( l1*cos(theta_b[0]) + l2*cos(theta_b[1]), x1, .001 ) &&
+             aa_feq( l1*sin(theta_b[0]) + l2*sin(theta_b[1]), x2, .001 ) );
 }
