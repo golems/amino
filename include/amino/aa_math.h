@@ -121,23 +121,23 @@ AA_API size_t aa_fmaxloc( size_t n, double *v );
 /**********/
 
 /// convert radians to degrees
-static inline double aa_an_rad2deg( double rad ) {
+static inline double aa_ang_rad2deg( double rad ) {
     return rad*180.0/M_PI;
 }
 
 /// convert radians to degrees
-static inline double aa_an_deg2rad( double deg ) {
+static inline double aa_ang_deg2rad( double deg ) {
     return deg*M_PI/180;
 }
 
 
 /// normalize angle on interval [0,2pi)
-static inline double aa_an_norm_2pi( double an ) {
+static inline double aa_ang_norm_2pi( double an ) {
     return aa_fmodulo( an, 2*M_PI );
 }
 
 /// normalize angle on interval (-pi,pi)
-static inline double aa_an_norm_pi( double an ) {
+static inline double aa_ang_norm_pi( double an ) {
     return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
 }
 

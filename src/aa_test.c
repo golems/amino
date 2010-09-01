@@ -402,15 +402,15 @@ void axang() {
 
 void angle() {
     // conversion
-    afeq( aa_an_rad2deg(3.1), 3.1*180.0/M_PI, 0 );
-    afeq( aa_an_rad2deg(M_PI), 180, 0 );
-    afeq( aa_an_deg2rad(30), 30*M_PI/180, 0 );
-    afeq( aa_an_deg2rad(180), M_PI, 0 );
+    afeq( aa_ang_rad2deg(3.1), 3.1*180.0/M_PI, 0 );
+    afeq( aa_ang_rad2deg(M_PI), 180, 0 );
+    afeq( aa_ang_deg2rad(30), 30*M_PI/180, 0 );
+    afeq( aa_ang_deg2rad(180), M_PI, 0 );
 
     // norming
-    afeq( aa_an_norm_2pi( 3*M_PI ), M_PI, 0 );
-    afeq( aa_an_norm_2pi( -M_PI/2 ), 3*M_PI/2, .001 );
-    afeq( aa_an_norm_pi( 3*M_PI/2 ), -M_PI/2, 0 );
+    afeq( aa_ang_norm_2pi( 3*M_PI ), M_PI, 0 );
+    afeq( aa_ang_norm_2pi( -M_PI/2 ), 3*M_PI/2, .001 );
+    afeq( aa_ang_norm_pi( 3*M_PI/2 ), -M_PI/2, 0 );
 }
 
 void quat() {
@@ -643,6 +643,11 @@ void rotmat() {
     }
 }
 
+void kin() {
+    double ta[2], tb[2];
+    aa_kin_planar2_ik_theta2( AA_FAR(1, 2), AA_FAR(2.2, 2), ta, tb );
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
@@ -656,4 +661,5 @@ int main( int argc, char **argv ) {
     tm();
     mem();
     dbg();
+    kin();
 }

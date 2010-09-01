@@ -79,7 +79,7 @@ void aa_tf_qslerp( double t, const double a[4], const double b[4], double c[4] )
 void aa_tf_quat2axang( const double q[4], double axang[4] ) {
     double a = aa_la_norm(4,q);
     double w = q[3]/a;
-    axang[3] = aa_an_norm_pi(2 * acos(w));
+    axang[3] = aa_ang_norm_pi(2 * acos(w));
     /* aa_la_smul( 3,  */
     /*             ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /\* ident check *\/ ? */
     /*               0 : 1.0 / (a*sqrt(1 - w*w)) ),  */
@@ -98,7 +98,7 @@ void aa_tf_axang_make( double x, double y, double z, double theta, double axang[
     axang[0] = x/n;
     axang[1] = y/n;
     axang[2] = z/n;
-    axang[3] = aa_an_norm_pi(theta);
+    axang[3] = aa_ang_norm_pi(theta);
 }
 
 void aa_tf_axang_permute2( const double aa[4], double aa_plus[4], double aa_minus[4] ) {

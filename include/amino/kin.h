@@ -35,71 +35,15 @@
  *
  */
 
-#ifndef AMINO_H
-#define AMINO_H
-/** \file amino.h */
-/** \file amino.h
- *
- * \mainpage
- *
- * Amino is package of utilites for robotics software.  In includes
- * basic mathematical and linear algebra routines, memory management,
- * and time-handling (soon).  Design goals are easy integration,
- * efficiency, and simplicity.
- *
- * \author Neil T. Dantam
+#ifndef AMINO_KIN_H
+#define AMINO_KIN_H
+
+/** IK solution for 2-link planar arm.
+ * \f[ x_1 = l_1 \cos(\theta_1) + l_2 \cos(\theta_2) \f]
+ * \f[ y_1 = l_1 \sin(\theta_1) + l_2 \sin(\theta_2) \f]
  */
-
-// include everything we'll typically need
-#ifdef __cplusplus
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <cstdio>
-#include <cassert>
-#include <ctime>
-#include <stdint.h>
-#include <iostream>
-#include <vector>
-#include <map>
-#include <queue>
-#include <stack>
-#include <string>
-#else
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#endif //__cplusplus
-
-#include <cblas.h>
-#include <time.h>
-
-// for C symbols
-#ifdef __cplusplus
-#define AA_API extern "C"
-#define AA_EXTERN extern "C"
-#else
-#define AA_API
-#define AA_EXTERN extern
-#endif //__cplusplus
-
-#define AA_DEPRECATED  __attribute__ ((deprecated))
-
-#define AA_IBILLION 1000000000
-#define AA_IMILLION 1000000
-
-// include our own headers
-#include "amino/aa_mem.h"
-#include "amino/aa_math.h"
-#include "amino/tf.h"
-#include "amino/lapack.h"
-#include "amino/time.h"
-#include "amino/debug.h"
-#include "amino/plot.h"
-#include "amino/kin.h"
-
-
-#endif //AMINO_H
+AA_API void aa_kin_planar2_ik_theta2( const double l[2],
+                                      const double x[2],
+                                      double theta_a[2],
+                                      double theta_b[2] );
+#endif// AMINO_KIN_H

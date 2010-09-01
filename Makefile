@@ -23,7 +23,7 @@ default: $(LIBFILES) $(BINFILES) test
 test: build/aa_test build/aa_testpp
 	./build/aa_test
 
-OBJS :=  mem.o la.o tf.o math.o plot.o debug.o mac/mac.o
+OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o
 BOBJS := $(addprefix build/, $(OBJS))
 LIBS := m lapack-3 blas-3 rt
 
