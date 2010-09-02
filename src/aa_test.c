@@ -283,6 +283,15 @@ void la2() {
         afeq( t, 1+5+9, 0 );
         afeq( t2, 1+5+9, 0 );
     }
+
+    // transpose
+    {
+        double A[9] = {1,2,3, 4,5,6, 7,8,9};
+        double At[9] =  {1,4,7,  2,5,8,  3,6,9};
+        aa_la_transpose( 3, A );
+        aveq( 9, A, At, 0 );
+
+    }
     // inverse3x3
     {
         double R[9] = {0,-1,0, 1,0,0, 0,0,-1};

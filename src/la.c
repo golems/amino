@@ -183,6 +183,16 @@ AA_API void aa_la_transpose2( size_t m, size_t n, const double *A, double *At  )
 }
 
 
+AA_API void aa_la_transpose( size_t n, double *A  ) {
+    for( size_t i = 0; i < n; i ++ ) {
+        for( size_t j = i+1; j < n; j++ ) {
+            double t = AA_MATREF(A,n,i,j);
+            AA_MATREF(A,n,i,j) = AA_MATREF(A,n,j,i);
+            AA_MATREF(A,n,j,i) = t;
+        }
+    }
+}
+
 double aa_la_trace( size_t n, const double *A ) {
     return cblas_dasum( (int)n, A, (int)(n+1) );
 }
