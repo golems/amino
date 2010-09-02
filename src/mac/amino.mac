@@ -113,10 +113,10 @@ jacobian_column(a, q, pe) := block(
 
 /* Create a Jacobian from the list of transforms and the list of axes
    (column vectors). */
-spatial_jacobian(tfs, axes) := block(
+spatial_jacobian(tfs, axes, tfe) := block(
   [pyr, pe],
   pyr: tf_pyramid(tfs),
-  pe: last(pyr) . [0,0,0,1],
+  pe: last(pyr) . tfe . [0,0,0,1],
   apply(addcol,
     append([matrix()],
       map(lambda([tf, a_local], jacobian_column(tf . a_local, tf . [0,0,0,1], pe)),
