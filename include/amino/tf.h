@@ -40,6 +40,7 @@
 
 #define AA_TF_EPSILON .0001
 
+#define AA_TF_ROTMAT_IDENT AA_FAR(1,0,0, 0,1,0, 0,0,1)
 #define AA_TF_QUAT_IDENT ( (double[4]){0,0,0,1} )
 #define AA_TF_AXANG_IDENT ( (double[4]){0,0,0,0} )
 #define AA_TF_ROTVEC_IDENT ( (double[3]){0,0,0} )
