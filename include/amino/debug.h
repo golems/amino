@@ -45,7 +45,7 @@ AA_API void
 aa_hard_assert(int test, const char fmt[], ...);
 
 AA_API void
-aa_verbf( int min_level, const char fmt[], ...);
+aa_verbf( int min_level, const char fmt[], ...) AA_DEPRECATED;
 
 AA_API void
 aa_dump_vec( FILE *file, double *v, size_t n );
@@ -57,7 +57,7 @@ AA_API struct timespec
 aa_tock(void);
 
 
-AA_EXTERN const char *aa_verbf_prefix;
-AA_EXTERN int aa_opt_verbosity;
+AA_EXTERN const char *aa_verbf_prefix AA_DEPRECATED;
+AA_EXTERN int aa_opt_verbosity AA_DEPRECATED;
 
 #endif //AA_MATH_H
