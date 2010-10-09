@@ -100,6 +100,7 @@
 #include "amino/debug.h"
 #include "amino/plot.h"
 #include "amino/kin.h"
+#include "amino/type.h"
 
 
 #endif //AMINO_H
