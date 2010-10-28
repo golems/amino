@@ -625,6 +625,10 @@ void dbg() {
     aa_tick("usleep(10): ");
     usleep(10);
     aa_tock();
+
+    aa_tick("relsleep(10ms): ");
+    aa_tm_relsleep( aa_tm_sec2timespec(10e-3));
+    aa_tock();
 }
 
 void rotmat() {

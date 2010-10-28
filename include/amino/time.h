@@ -41,7 +41,7 @@
  * \file amino/time.h
  */
 
-
+#include <errno.h>
 /// create a struct timespec with given elements
 static inline struct timespec
 aa_tm_make( time_t sec, long nsec ) {
@@ -121,4 +121,17 @@ aa_tm_sec2timespec( double t ) {
     return aa_tm_make_norm( sec, nsec );
 }
 
+/// sleep for specified time
+static inline int
+aa_tm_relsleep( struct timespec t ) {
+    struct timespec rem;
+    int r;
+    do {
+        r = nanosleep( &t, &rem );
+        assert( 0 == r || EINTR == errno );
+        t.tv_sec = rem.tv_sec;
+        t.tv_nsec = rem.tv_nsec;
+    } while( 0 != r ) ;
+    return 0;
+}
 #endif //AMINO_TIME_H

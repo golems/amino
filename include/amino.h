@@ -72,6 +72,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <errno.h>
 #endif //__cplusplus
 
 #include <cblas.h>
