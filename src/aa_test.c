@@ -656,6 +656,27 @@ void rotmat() {
     }
 }
 
+
+void tf() {
+    {
+        double T[12] = {0,1,0,  -1,0,0,  0,0,1, 1,2,3};
+        double p0[3] = {3, 5, 7};
+        double p1[3];
+        aa_tf_12(T, p0, p1);
+        aveq( 3, p1, AA_FAR(-4,5,10), .001 );
+    }
+    // inv
+    {
+        double T[12] = {0,1,0,  -1,0,0,  0,0,1, 1,2,3};
+        double Ti[12];
+        double p0[3] = {3, 5, 7};
+        double p1[3], p0p[3];
+        aa_tf_12(T, p0, p1);
+        aa_tf_12inv( T, Ti );
+        aa_tf_12(Ti, p1, p0p);
+        aveq( 3, p0, p0p, .001 );
+    }
+}
 void kin() {
     double ta[2], tb[2];
     assert( 0 == aa_kin_planar2_ik_theta2( AA_FAR(1, 2), AA_FAR(2.2, 2), ta, tb ) );
@@ -671,6 +692,7 @@ int main( int argc, char **argv ) {
     quat();
     rotmat();
     axang();
+    tf();
     tm();
     mem();
     dbg();

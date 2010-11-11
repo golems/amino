@@ -54,9 +54,10 @@ AA_API void aa_tf_12( const double T[12], const double p0[3], double p1[3] );
 AA_API void aa_tf_93( const double R[9], const double v[3], const double p0[3], double p1[4] );
 AA_API void aa_tf_q3( const double quat[4], const double v[3], const double p0[3], double p1[4] );
 
-AA_API void aa_tf_12inv( double T[12] );
+AA_API void aa_tf_12inv( const double T[12], double Ti[12] );
 //AA_API void aa_tf_16inv( double T[16] );
-AA_API void aa_tf_93inv( double R[9], double v[3] );
+AA_API void aa_tf_93inv( const double R[9], const double v[3],
+                         double Ri[9], double vi[3] );
 AA_API void aa_tf_q3inv( double q[4], double v[3] );
 
 AA_API void aa_tf_12chain( const double T1[12], const double T2[12], double T[12] );

@@ -38,7 +38,30 @@
 #define _GNU_SOURCE
 #include "amino.h"
 
+AA_API void aa_tf_93inv_( const double R[9], const double v[3],
+                          double Ri[9], double vi[3] );
 
+AA_API void aa_tf_12inv( const double T[12], double Ti[12] ) {
+    aa_tf_93inv_( T, T+9, Ti, Ti+9 );
+}
+
+AA_API void aa_tf_93inv( const double R[9], const double v[3],
+                         double Ri[9], double vi[3] ) {
+    aa_tf_93inv_( R, v, Ri, vi );
+}
+
+
+AA_API void aa_tf_93_( const double R[9], const double v[3],
+                       const double p0[3], double p1[3] );
+
+AA_API void aa_tf_93( const double R[9], const double v[3],
+                      const double p0[3], double p1[3] ) {
+    aa_tf_93_( R, v, p0, p1 );
+}
+
+AA_API void aa_tf_12( const double T[12], const double p0[3], double p1[3] ) {
+    aa_tf_93( T, T+9, p0, p1 );
+}
 
 
 void aa_tf_qnormalize( double q[4] ) {
