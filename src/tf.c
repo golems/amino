@@ -64,6 +64,35 @@ AA_API void aa_tf_12( const double T[12], const double p0[3], double p1[3] ) {
 }
 
 
+AA_API void aa_tf_93chain_( const double R0[9], const double v0[3],
+                            const double R1[9], const double v1[3],
+                            double R[9], double v[3] );
+
+AA_API void aa_tf_93chain( const double R0[9], const double v0[3],
+                           const double R1[9], const double v1[3],
+                           double R[9], double v[3] ) {
+    aa_tf_93chain_( R0, v0, R1, v1, R, v );
+}
+
+AA_API void aa_tf_12chain( const double T1[12], const double T2[12],
+                           double T[12] ) {
+    aa_tf_93chain( T1, T1+9, T2, T2+9, T, T+9 );
+}
+
+
+AA_API void aa_tf_93rel( const double R1[9], const double v1[3],
+                         const double R2[9], const double v2[3],
+                         double Rrel[9], double vrel[3] ) {
+    double R1i[9], v1i[3];
+    aa_tf_93inv( R1, v1, R1i, v1i );
+    aa_tf_93chain( R1i, v1i, R2, v2, Rrel, vrel );
+}
+
+AA_API void aa_tf_12rel( const double T1[12], const double T2[12], double Trel[12] ) {
+    aa_tf_93rel( T1, T1+9, T2, T2+9, Trel, Trel+9 );
+}
+
+
 void aa_tf_qnormalize( double q[4] ) {
     aa_la_normalize( 4, q );
 }

@@ -63,11 +63,17 @@ AA_API void aa_tf_q3inv( double q[4], double v[3] );
 AA_API void aa_tf_12chain( const double T1[12], const double T2[12], double T[12] );
 //AA_API void aa_tf_16chain( double T1[16], const double T2[16], double T[16] );
 AA_API void aa_tf_93chain( const double R0[9], const double v0[3],
-                             const double R1[9], const double v1[3],
-                             double R[9], double v[3] );
+                           const double R1[9], const double v1[3],
+                           double R[9], double v[3] );
 AA_API void aa_tf_q3chain( const double q0[4], const double v0[3],
-                             const double q1[4], const double v1[3],
-                             const double q[4], const double v[3] );
+                           const double q1[4], const double v1[3],
+                           const double q[4], const double v[3] );
+
+AA_API void aa_tf_93rel( const double R1[9], const double v1[3],
+                         const double R2[9], const double v2[3],
+                         double Rrel[9], double vrel[3] );
+
+AA_API void aa_tf_12rel( const double T1[12], const double T2[12], double Trel[12] );
 
 /** Normalize Quaternion */
 AA_API void aa_tf_qnormalize( double q[4] );

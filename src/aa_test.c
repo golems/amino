@@ -658,6 +658,7 @@ void rotmat() {
 
 
 void tf() {
+    // tf
     {
         double T[12] = {0,1,0,  -1,0,0,  0,0,1, 1,2,3};
         double p0[3] = {3, 5, 7};
@@ -675,6 +676,27 @@ void tf() {
         aa_tf_12inv( T, Ti );
         aa_tf_12(Ti, p1, p0p);
         aveq( 3, p0, p0p, .001 );
+    }
+    // chain
+    {
+        double T1[12] = {0,1,0,  -1,0,0,  0,0,1, 1,2,3};
+        double T2[12] = {1,0,0,  0,1,0,  0,0,-1, 5,4,2};
+        double T[12];
+        aa_tf_12chain(T1, T2, T );
+        double p0[3] = { 10, 1, 4 };
+        double p1[3];
+        aa_tf_12( T, p0, p1 );
+        aveq( 3, p1, AA_FAR(-4,17,1), .001 );
+    }
+    // rel
+    {
+        double T1[12] = {0,1,0,  -1,0,0,  0,0,1, 1,2,3};
+        double T2[12] = {1,0,0,  0,1,0,  0,0,-1, 5,4,2};
+        double Trel[12];
+        aa_tf_12rel( T1, T2, Trel );
+        aveq( 12, Trel,
+              AA_FAR( 0,-1,0,  1,0,0,  0,0,-1,  2, -4, -1 ),
+              .001 );
     }
 }
 void kin() {
