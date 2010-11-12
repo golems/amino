@@ -38,10 +38,11 @@
 #include "amino.h"
 
 void aa_region_init( aa_region_t *region, size_t size ) {
-    region->size = size;
+    //region->size = size;
     region->fill = 0;
     region->total = 0;
     region->node.buf = malloc( size );
+    region->node.size = size;
     region->node.next = NULL;
 }
 
@@ -62,15 +63,16 @@ void aa_region_destroy( aa_region_t *region ) {
 // FIXME: maybe we should use mmap instead of malloc()
 void *aa_region_alloc( aa_region_t *region, size_t size ) {
     // unsigned arithmetic, check for overflow too
-    if(region->fill > region->size || size > region->size - region->fill ) {
+    if(region->fill > region->node.size || size > region->node.size - region->fill ) {
         // slow path, malloc another buffer
         struct aa_region_node *n = AA_NEW( struct aa_region_node );
         n->buf = region->node.buf;
         n->next = region->node.next;
+        n->size = region->node.size;
         region->node.next = n;
 
-        region->size = AA_MAX( 2*region->total, size );
-        region->node.buf = malloc(region->size);
+        region->node.size = AA_MAX( 2*region->total, size );
+        region->node.buf = malloc(region->node.size);
         region->total += region->fill;
         region->fill = 0;
 
@@ -87,8 +89,8 @@ void aa_region_release( aa_region_t *region ) {
         // compress buffers
         free( region->node.buf );
         aa_region_destroy_node( region->node.next );
-        region->size = region->total + region->fill;
-        region->node.buf = malloc(region->size);
+        region->node.size = region->total + region->fill;
+        region->node.buf = malloc(region->node.size);
         region->node.next = NULL;
     }
     region->total = 0;

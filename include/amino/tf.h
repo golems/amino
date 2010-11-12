@@ -46,16 +46,16 @@
 
 
 /// A rotation matrix, column major
-typedef double[9] aa_tf_rotmat_t;
+typedef double aa_tf_rotmat_t[9];
 
 /// A quaternion, x,y,z,w order
-typedef double[4] aa_tf_quat_t;
+typedef double aa_tf_quat_t[4];
 
 /** A transformation matrix.
  *  The first 9 elements are a column major rotation matrix.
  *  The last 3 elements are the origin vector.
  */
-typedef double[12] aa_tf_t;
+typedef double aa_tf_t[12];
 
 /// a small number
 #define AA_TF_EPSILON .0001
