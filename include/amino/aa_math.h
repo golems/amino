@@ -45,11 +45,13 @@
 /* Scalars */
 /***********/
 
+/// maximum of a and b
 #define AA_MAX(a,b) \
     ({ const typeof(a) aa_$_max_a = (a); \
        const typeof(b) aa_$_max_b = (b); \
        (aa_$_max_a > aa_$_max_b) ? aa_$_max_a : aa_$_max_b; })
 
+/// minimum of a and b
 #define AA_MIN(a,b) \
     ({ const typeof(a) aa_$_min_a = (a); \
        const typeof(b) aa_$_min_b = (b); \
@@ -78,6 +80,12 @@ static inline int aa_feq( double a, double b, double tol ) {
 
 /// Fuzzy equals
 AA_API int aa_veq( size_t n, double *a, double *b, double tol );
+
+
+/// square
+static inline double aa_fsq( double a ) {
+    return a * a;
+}
 
 /// Fortran modulo, Ada mod
 static inline int aa_imodulo( int a, int b ) {
@@ -108,11 +116,11 @@ static inline double aa_fremainder( double a, double b ) {
     return fmod(a , b);
 }
 
-/* Returns index of minimum element in array v.
+/** Returns index of minimum element in array v.
  */
 AA_API size_t aa_fminloc( size_t n, double *v );
 
-/* Returns index of maximum element in array v.
+/** Returns index of maximum element in array v.
  */
 AA_API size_t aa_fmaxloc( size_t n, double *v );
 
@@ -264,7 +272,9 @@ AA_API void aa_la_normalize( size_t n, double *x );
 /*--- Matrix Ops --- */
 
 
+/// transpose square matrix A in place
 AA_API void aa_la_transpose( size_t n, double *A  );
+/// transpose m*n matrix A into n*m matrix At
 AA_API void aa_la_transpose2( size_t m, size_t n, const double *A, double *At  );
 
 /** Set diagonal of A to x. */
@@ -293,7 +303,7 @@ aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {
  * \f[ A =  U \Sigma V^T \f]
  *
  * \param m rows
- * \param m columns
+ * \param n columns
  * \param A \f$A \in \Re^m \times \Re^n\f$, column major
  * \param U \f$U \in \Re^m \times \Re^m\f$, column major.  If null, U
  * is returned in A.  U and Vt cannot both be null.

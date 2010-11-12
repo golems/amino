@@ -73,6 +73,7 @@ static inline void *aa_malloc0( size_t size ) {
 
 /*----------- Local Allocation ------------------*/
 #ifndef AA_ALLOC_STACK_MAX
+/// maximum size of objects to stack allocate
 #define AA_ALLOC_STACK_MAX (4096-64)
 #endif //AA_ALLOC_STACK_MAX
 
@@ -132,11 +133,13 @@ static inline void aa_frlocal( void *ptr, size_t size ) {
  * possibly requiring several calls to free().
  */
 typedef struct {
-    size_t size;   ///< size of the first buffer
+    //size_t size;   ///< size of the first buffer
     size_t fill;   ///< previously allocated bytes in first buffer
     size_t total;  ///< allocated bytes in all buffers after the first
+    /// struct to hold memory buffers
     struct aa_region_node {
         void *buf;                   ///< the memory buffer to allocate from
+        size_t size;                 ///< size of this buffer
         struct aa_region_node *next; ///< pointer to next buffer node list
     } node;        ///< linked list of buffers
 } aa_region_t;
@@ -188,6 +191,7 @@ AA_API void aa_pool_release( aa_pool_t *pool );
 /* Arrays */
 /**********/
 
+/// make a floating point array literal
 #define AA_FAR(...) ((double[]){__VA_ARGS__})
 
 /// copy n double floats from src to dst
@@ -209,8 +213,10 @@ static inline void aa_fzero( double *p, size_t n ) {
     aa_zero(p,n*sizeof(double));
 }
 
+/// zeros var, must know sizeof(var)
 #define AA_ZERO_AR( var ) aa_zero( var, sizeof(var) )
 
+/// sets each element of var to val, must know sizeof(var)
 #define AA_SET_AR( var, val )                                   \
     for( size_t aa_$_set_ar_i = 0;                              \
          aa_$_set_ar_i < sizeof(var)/sizeof(var[0]);            \

@@ -654,6 +654,24 @@ void rotmat() {
         aveq( 4, a, ar, .00001 );
         aveq( 3, v, vr, .00001 );
     }
+    // euler
+    {
+        double R[9] = {1,0,0,  0,1,0,  0,0,1};
+        double e[3];
+        double R1[9];
+        aa_tf_rotmat2eulerzyx( R, e );
+        aa_tf_eulerzyx2rotmat( e, R1 );
+        aveq( 9, R, R1, .001 );
+    }
+    // euler
+    {
+        double e[3] = { M_PI_2, 0, 0};
+        double R1[9];
+        double R1r[9] = {0,1,0, -1,0,0, 0,0,1};
+        aa_tf_eulerzyx2rotmat( e, R1 );
+        aveq( 9, R1r, R1, .001 );
+    }
+
 }
 
 

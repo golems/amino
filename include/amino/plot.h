@@ -41,11 +41,12 @@
  * \file amino/plot.h
  */
 
+/// options for a plot
 typedef struct aa_plot_opts {
-    const char *title;
-    const char *xlabel;
-    const char *ylabel;
-    const char ** axis_label ;
+    const char *title;         ///< plot title
+    const char *xlabel;        ///< x axis label
+    const char *ylabel;        ///< y axis label
+    const char ** axis_label ; ///< name of each data series
 } aa_plot_opts_t;
 
 /** Plots Y over t.
@@ -55,6 +56,7 @@ typedef struct aa_plot_opts {
  * \param t \f$ t \in \Re^n \f$ vector of times for x-axis
  * \param Y \f$ Y \in \Re^m\times\Re^n \f$ Matrix of y-axis values.
  *  Each column is a data point, rows are the indepedent series.
+ * \param opts plot options
  */
 AA_API void
 aa_plot_row_series( size_t m, size_t n, double *t, double *Y,

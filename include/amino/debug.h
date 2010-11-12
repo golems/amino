@@ -41,23 +41,30 @@
  * \file amino/debug.h
  */
 
+/// bail out if test is false
 AA_API void
 aa_hard_assert(int test, const char fmt[], ...);
 
+/// don't use
 AA_API void
 aa_verbf( int min_level, const char fmt[], ...) AA_DEPRECATED;
 
+/// print a vec to file
 AA_API void
 aa_dump_vec( FILE *file, double *v, size_t n );
 
+/// save time, printf fmt
 AA_API void
 aa_tick(const char fmt[], ...);
 
+/// print and return elapsed time since aa_tick()
 AA_API struct timespec
 aa_tock(void);
 
 
+/// don't use
 AA_EXTERN const char *aa_verbf_prefix AA_DEPRECATED;
+/// don't use
 AA_EXTERN int aa_opt_verbosity AA_DEPRECATED;
 
 #endif //AA_MATH_H

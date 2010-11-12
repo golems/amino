@@ -37,29 +37,38 @@
 
 #ifndef AMINO_HPP
 #define AMINO_HPP
+/**
+ * \file amino.hpp
+ * \author Neil T. Dantam
+ */
 
 #include "amino.h"
 
-
+/// amino namespace
 namespace amino {
 
+    /// Locks mutex on construction, unlocks on destruction
     class ScopedMutex {
     public:
+        /// costruct this and lock m
         ScopedMutex( pthread_mutex_t *m ) :
             mutex(m)
         {
             pthread_mutex_lock(mutex);
         }
+        /// costruct this and lock m
         ScopedMutex( pthread_mutex_t &m ) :
             mutex(&m)
         {
             pthread_mutex_lock(mutex);
         }
+        /// destroy this and unlock m
         ~ScopedMutex() {
             pthread_mutex_unlock(mutex);
         }
 
     private:
+        /// the mutex
         pthread_mutex_t *mutex;
     };
 }

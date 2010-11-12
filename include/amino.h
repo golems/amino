@@ -44,8 +44,8 @@
  *
  * Amino is package of utilites for robotics software.  In includes
  * basic mathematical and linear algebra routines, memory management,
- * and time-handling (soon).  Design goals are easy integration,
- * efficiency, and simplicity.
+ * and time-handling.  Design goals are easy integration, efficiency,
+ * and simplicity.
  *
  * \author Neil T. Dantam
  */
@@ -83,13 +83,18 @@
 #define AA_API extern "C"
 #define AA_EXTERN extern "C"
 #else
+/// calling and name mangling convention for functions
 #define AA_API
+/// name mangling convention external symbols
 #define AA_EXTERN extern
 #endif //__cplusplus
 
+/// deprecated thing
 #define AA_DEPRECATED  __attribute__ ((deprecated))
 
+/// (int) 1e9
 #define AA_IBILLION 1000000000
+/// (int) 1e6
 #define AA_IMILLION 1000000
 
 // include our own headers

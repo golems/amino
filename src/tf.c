@@ -354,3 +354,39 @@ AA_API void aa_tf_rotmat2rotvec( const double R[9], double rv[3] ) {
 /* AA_API void aa_tf_rotvec2rotmat( const double rv[3], double R[9] ) { */
 
 /* } */
+
+// Craig 3rd Ed., p44
+AA_API void aa_tf_eulerzyx2rotmat( const double e[3], double R[9] ) {
+    double ca, cb, cg, sa, sb, sg;
+    sincos( e[0], &sa, &ca );
+    sincos( e[1], &sb, &cb );
+    sincos( e[2], &sg, &cg );
+
+    R[0] = ca*cb;
+    R[1] = sa*cb;
+    R[2] = -sb;
+
+    R[3] = ca*cb*sg - sa*cg;
+    R[4] = sa*sb*sg + ca*cg;
+    R[5] = cb*sg;
+
+    R[6] = ca*sb*cg + sa*sg;
+    R[7] = sa*sb*cg - ca*sg;
+    R[8] = cb*cg;
+}
+
+// Craig 3rd Ed., p43 (same as fixed XYZ)
+AA_API void aa_tf_rotmat2eulerzyx( const double R[9], double e[3] ) {
+    double a, b, g, cb;
+    b = atan2( -AA_MATREF(R,3,2,0),
+               sqrt( aa_fsq( AA_MATREF(R,3,0,0) ) +
+                     aa_fsq( AA_MATREF(R,3,1,0) ) ) );
+    cb = cos(b);
+    a = atan2( AA_MATREF( R,3,1,0) / cb,
+               AA_MATREF( R,3,0,0) / cb );
+    g = atan2( AA_MATREF( R,3,2,1) / cb,
+               AA_MATREF( R,3,2,2) / cb );
+    e[0] = a;
+    e[1] = b;
+    e[2] = g;
+}

@@ -242,6 +242,8 @@ AA_API void dgesvd_( const char jobu[1], const char jobvt[1],
  *  \param n4      (input) INTEGER
  *          Problem dimensions for the subroutine NAME; these may not all
  *          be required.
+ * \param name_length fortran string brain damage, length of name
+ * \param opts_length fortran string brain damage, length of opts
  */
 AA_API int ilaenv_( const int *ispec, const char *name, const char *opts,
                       const int *n1, const int * n2, const int *n3, const int *n4,
