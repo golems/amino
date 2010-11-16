@@ -722,6 +722,50 @@ void kin() {
     assert( 0 == aa_kin_planar2_ik_theta2( AA_FAR(1, 2), AA_FAR(2.2, 2), ta, tb ) );
 }
 
+
+
+
+
+
+void dump( void *bytes, size_t s ) {
+  size_t i;
+  for( i = 0; i < s; i ++ ) {
+    printf("%x:", ((uint8_t*)bytes)[i] );
+  }
+}
+
+int endconv() {
+
+    uint8_t le_i32_1[] = {1,0,0,0};
+    uint8_t be_i32_1[] = {0,0,0,1};
+
+    int32_t be1 = * (int32_t*) be_i32_1;
+    int32_t le1 = * (int32_t*) le_i32_1;
+
+    uint8_t lebuf[4], bebuf[4];
+
+    // ld
+    assert( 1 == aa_endconv_ld_le_i32( le_i32_1 ) );
+    assert( 1 == aa_endconv_ld_be_i32( be_i32_1 ) );
+
+    // xe_to_h
+    assert( 1 == aa_endconv_be_to_h_i32( * (int32_t*) be_i32_1) );
+    assert( 1 == aa_endconv_le_to_h_i32( * (int32_t*) le_i32_1) );
+
+    // h_to_xe
+    assert( aa_endconv_h_to_le_i32(1) == le1 );
+    assert( aa_endconv_h_to_be_i32(1) == be1 );
+
+    // st
+    aa_endconv_st_le_i32( lebuf, 1 );
+    aa_endconv_st_be_i32( bebuf, 1 );
+    assert( 0 == memcmp( lebuf, le_i32_1, 4 ) );
+    assert( 0 == memcmp( bebuf, be_i32_1, 4 ) );
+
+    return 0;
+}
+
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
@@ -737,4 +781,5 @@ int main( int argc, char **argv ) {
     mem();
     dbg();
     kin();
+    endconv();
 }

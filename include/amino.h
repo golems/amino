@@ -107,6 +107,7 @@
 #include "amino/plot.h"
 #include "amino/kin.h"
 #include "amino/type.h"
+#include "amino/endconv.h"
 
 
 #endif //AMINO_H
