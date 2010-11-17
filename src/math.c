@@ -38,7 +38,7 @@
 #include "amino.h"
 
 
-int aa_veq(size_t n, double *a, double *b, double tol ) {
+int aa_veq(size_t n, const double *a, const double *b, double tol ) {
     for( size_t i = 0; i < n; i ++ ) {
         if( ! aa_feq( a[i], b[i], tol ) ) return 0;
     }

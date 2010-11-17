@@ -228,4 +228,11 @@ AA_API void aa_tf_rotvec2rotmat( const double rv[3], double R[9] );
 AA_API void aa_tf_eulerzyx2rotmat( const double e[3], double R[9] );
 /** Convert Rotation Matrix to ZYX Euler Angles */
 AA_API void aa_tf_rotmat2eulerzyx( const double R[9], double e[3] );
+
+/** Angle about x axis */
+AA_API void aa_tf_xangle2rotmat( double theta_x, double R[9] );
+/** Angle about y axis */
+AA_API void aa_tf_yangle2rotmat( double theta_y, double R[9] );
+/** Angle about z axis */
+AA_API void aa_tf_zangle2rotmat( double theta_z, double R[9] );
 #endif //AMINO_TF_H

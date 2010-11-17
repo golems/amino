@@ -45,6 +45,10 @@
 /* Scalars */
 /***********/
 
+#ifndef AA_EPSILON
+#define AA_EPSILON .001
+#endif //AA_EPSILON
+
 /// maximum of a and b
 #define AA_MAX(a,b) \
     ({ const typeof(a) aa_$_max_a = (a); \
@@ -79,7 +83,7 @@ static inline int aa_feq( double a, double b, double tol ) {
 }
 
 /// Fuzzy equals
-AA_API int aa_veq( size_t n, double *a, double *b, double tol );
+AA_API int aa_veq( size_t n, const double *a, const double *b, double tol );
 
 
 /// square

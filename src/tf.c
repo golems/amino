@@ -347,9 +347,11 @@ AA_API void aa_tf_rotmat2rotvec( const double R[9], double rv[3] ) {
     aa_la_scal( 3, ( (s > AA_TF_EPSILON) ? atan2(s,c)/s : 1 ), rv );
 }
 
-/* AA_API void aa_tf_axang2rotmat( const double ra[4], double R[9] ) { */
-
-/* } */
+AA_API void aa_tf_axang2rotmat( const double ra[4], double R[9] ) {
+    double quat[4];
+    aa_tf_axang2quat(ra,quat);
+    aa_tf_quat2rotmat(quat,R);
+}
 
 /* AA_API void aa_tf_rotvec2rotmat( const double rv[3], double R[9] ) { */
 
@@ -389,4 +391,27 @@ AA_API void aa_tf_rotmat2eulerzyx( const double R[9], double e[3] ) {
     e[0] = a;
     e[1] = b;
     e[2] = g;
+}
+
+AA_API void aa_tf_xangle2rotmat( double theta_x, double R[9] ) {
+    double s,c;
+    sincos( theta_x, &s, &c);
+    R[0] = 1;    R[3] = 0;    R[6] = 0;
+    R[1] = 0;    R[4] = c;    R[7] = -s;
+    R[2] = 0;    R[5] = s;    R[8] = c;
+}
+AA_API void aa_tf_yangle2rotmat( double theta_y, double R[9] ) {
+    double s,c;
+    sincos( theta_y, &s, &c);
+    R[0] = c;    R[3] = 0;    R[6] = s;
+    R[1] = 0;    R[4] = 1;    R[7] = 0;
+    R[2] = -s;   R[5] = 0;    R[8] = c;
+
+}
+AA_API void aa_tf_zangle2rotmat( double theta_z, double R[9] ) {
+    double s,c;
+    sincos( theta_z, &s, &c);
+    R[0] = c;    R[3] = -s;   R[6] = 0;
+    R[1] = s;    R[4] = c;    R[7] = 0;
+    R[2] = 0;    R[5] = 0;    R[8] = 1;
 }

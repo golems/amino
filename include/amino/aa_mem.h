@@ -59,6 +59,11 @@ static inline void *aa_malloc0( size_t size ) {
     return p;
 }
 
+/** Frees ptr unless NULL == ptr */
+static inline void aa_free_if_valid( void *ptr ) {
+    if( NULL != ptr ) free(ptr);
+}
+
 /** Malloc an array[n] of objects of type. */
 #define AA_NEW_AR(type,n) ( (type*) malloc(sizeof(type)*(n)) )
 

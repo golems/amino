@@ -44,6 +44,11 @@
 
 #include "amino.h"
 
+
+namespace amino {
+#include "amino/mat.hpp"
+}
+
 /// amino namespace
 namespace amino {
 

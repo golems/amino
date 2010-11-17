@@ -672,6 +672,32 @@ void rotmat() {
         aveq( 9, R1r, R1, .001 );
     }
 
+    //xyzangle
+    {
+        double R_x90[9] = { 1,0,0, 0,0,1, 0,-1,0 };
+        double R_y90[9] = { 0,0,-1, 0,1,0, 1,0,0 };
+        double R_z90[9] = { 0,1,0, -1,0,0, 0,0,1 };
+        double R[9];
+        double Rr[9];
+
+        aa_tf_xangle2rotmat( M_PI_2, R );
+        aa_tf_axang2rotmat( AA_FAR(1,0,0,M_PI_2), Rr );
+        assert( aa_tf_isrotmat(R) );
+        aveq(9, R, R_x90, .001);
+        aveq(9, R, Rr, .001);
+
+        aa_tf_yangle2rotmat( M_PI_2, R );
+        aa_tf_axang2rotmat( AA_FAR(0,1,0,M_PI_2), Rr );
+        assert( aa_tf_isrotmat(R) );
+        aveq(9, R, R_y90, .001);
+        aveq(9, R, Rr, .001);
+
+        aa_tf_zangle2rotmat( M_PI_2, R );
+        assert( aa_tf_isrotmat(R) );
+        aveq(9, R, R_z90, .001);
+        aa_tf_axang2rotmat( AA_FAR(0,0,1,M_PI_2), Rr );
+    }
+
 }
 
 

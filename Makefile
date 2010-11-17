@@ -22,6 +22,7 @@ default: $(LIBFILES) $(BINFILES) test
 
 test: build/aa_test build/aa_testpp
 	./build/aa_test
+	./build/aa_testpp
 
 OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o
 BOBJS := $(addprefix build/, $(OBJS))
@@ -45,6 +46,6 @@ doc:
 	doxygen
 
 clean:
-	rm -fr *.o $(BINFILES) $(LIBFILES) src/mac/*.f $(BUILDDIR)/*.o .dep debian *.deb *.lzma
+	rm -fr *.o $(BINFILES) $(LIBFILES) src/mac/*.f $(BUILDDIR)/*.o .deps debian *.deb *.lzma
 
 
