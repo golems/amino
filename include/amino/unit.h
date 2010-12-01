@@ -100,7 +100,7 @@
 #define AA_UCONV_BTU_PER_MINUTE 1.7573e1
 
 
-
+#define AA_UCONV_DEGREE (M_PI/180.0)
 
 
 

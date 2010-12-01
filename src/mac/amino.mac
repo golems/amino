@@ -65,6 +65,35 @@ dh_distal(d,theta,r,alpha) := block(
     [0, sa, ca, d],
     [0, 0, 0, 1]));
 
+
+
+/* Transform Matrix Rotations */
+tf_rotx( theta ) := matrix(
+  [1,         0,    0,         0],
+  [0, cos(theta), -sin(theta), 0],
+  [0, sin(theta),  cos(theta), 0],
+  [0,          0,           0, 1] );
+
+tf_roty( theta ) := matrix(
+  [cos(theta),   0,    sin(theta),   0],
+  [0,            1,             0,   0],
+  [-sin(theta),  0,    cos(theta),   0],
+  [0,            0,             0,   1] );
+
+tf_rotz( theta ) := matrix(
+  [cos(theta),  -sin(theta),    0,   0],
+  [sin(theta),   cos(theta),    0,   0],
+  [0,            1,             0,   0],
+  [0,            0,             0,   1] );
+
+/* Transform Matrix Translation */
+tf_tran(x,y,z) := matrix(
+  [1,0,0,x],
+  [0,1,0,y],
+  [0,0,1,z],
+  [0,0,0,1] );
+
+
 /* quaternions */
 qconj(q) := [-vref(q,1), -vref(q,2), -vref(q,3), vref(q,4)];
 qinv(q) := qconj(q) / dot4(q,q);

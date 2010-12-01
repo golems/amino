@@ -108,6 +108,7 @@
 #include "amino/kin.h"
 #include "amino/type.h"
 #include "amino/endconv.h"
+#include "amino/unit.h"
 
 
 #endif //AMINO_H
