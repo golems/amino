@@ -62,11 +62,25 @@
        (aa_$_min_a < aa_$_min_b) ? aa_$_min_a : aa_$_min_b; })
 
 
-static inline double aa_clamp( double val, double level) {
+AA_DEPRECATED static inline double aa_clamp( double val, double level) {
     if( val > level )  return level;
     if( val < -level ) return -level;
     return val;
 }
+
+static inline double aa_fclamp( double val, double min, double max) {
+    if( val > max )  return max;
+    if( val < min ) return min;
+    return val;
+}
+
+static inline void aa_vclamp( size_t n, double *v, double min, double max) {
+    for( size_t i = 0; i < n; i++ ) {
+        if( v[i] > max )  v[i] = max;
+        else if( v[i] < min ) v[i] = min;
+    }
+}
+
 
 static inline double aa_sign( double val ) {
     if( val > 0 )  return 1;
