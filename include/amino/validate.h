@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4  -*- */
 /* ex: set shiftwidth=4 expandtab: */
 /*
- * Copyright (c) 2010, Georgia Tech Research Corporation
+ * Copyright (c) 2011, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,81 +35,27 @@
  *
  */
 
-#ifndef AMINO_H
-#define AMINO_H
-/** \file amino.h */
-/** \file amino.h
- *
- * \mainpage
- *
- * Amino is package of utilites for robotics software.  In includes
- * basic mathematical and linear algebra routines, memory management,
- * and time-handling.  Design goals are easy integration, efficiency,
- * and simplicity.
- *
+#ifndef AMINO_VALIDATE_H
+#define AMINO_VALIDATE_H
+
+/** \file validate.h
  * \author Neil T. Dantam
  */
 
-// include everything we'll typically need
-#ifdef __cplusplus
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
-#include <cstdio>
-#include <cassert>
-#include <ctime>
-#include <stdint.h>
-#include <iostream>
-#include <vector>
-#include <map>
-#include <queue>
-#include <stack>
-#include <string>
-#else
-#include <assert.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#include <errno.h>
-#endif //__cplusplus
+/// returns 0 if value >= min and value <= max, else nonzero
+AA_API int aa_valid_f( double value, double min, double max );
 
-#include <cblas.h>
-#include <time.h>
-
-// for C symbols
-#ifdef __cplusplus
-#define AA_API extern "C"
-#define AA_EXTERN extern "C"
-#else
-/// calling and name mangling convention for functions
-#define AA_API
-/// name mangling convention external symbols
-#define AA_EXTERN extern
-#endif //__cplusplus
-
-/// deprecated thing
-#define AA_DEPRECATED  __attribute__ ((deprecated))
-
-/// (int) 1e9
-#define AA_IBILLION 1000000000
-/// (int) 1e6
-#define AA_IMILLION 1000000
-
-// include our own headers
-#include "amino/aa_mem.h"
-#include "amino/aa_math.h"
-#include "amino/tf.h"
-#include "amino/lapack.h"
-#include "amino/time.h"
-#include "amino/debug.h"
-#include "amino/plot.h"
-#include "amino/kin.h"
-#include "amino/type.h"
-#include "amino/endconv.h"
-#include "amino/unit.h"
-#include "amino/validate.h"
+/// returns 0 if values is of desired length and within [min,max]
+AA_API int aa_valid_v( double *values, size_t n, double *min, double *max,
+                       size_t n_desired);
 
 
-#endif //AMINO_H
+/// returns 0 if norm(v) == 1
+AA_API int aa_valid_vunit( double *values, size_t n, double tol );
+
+/// returns 0 if time is within [before,after]
+AA_API int aa_valid_timespec( struct timespec tm, struct timespec before,
+                              struct timespec after );
+
+
+#endif //AMINO_VALIDATE_H

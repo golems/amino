@@ -2,7 +2,7 @@
 PROJECT := amino
 
 # Project Version
-VERSION := 20100917
+VERSION := 20110710
 
 # Binary Files
 #BINFILES :=
@@ -24,7 +24,7 @@ test: build/aa_test build/aa_testpp
 	./build/aa_test
 	./build/aa_testpp
 
-OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o
+OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o
 BOBJS := $(addprefix build/, $(OBJS))
 LIBS := m lapack-3 blas-3 rt
 

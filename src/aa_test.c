@@ -528,6 +528,19 @@ void tm() {
 
     t = aa_tm_make_norm( 100,  -AA_IBILLION - 1 );
     assert( 98 == t.tv_sec && AA_IBILLION - 1 == t.tv_nsec );
+
+    // math/cmp
+    {
+        struct timespec now =  aa_tm_now();
+        struct timespec ms = aa_tm_sec2timespec(1e-3);
+
+        assert( 0 ==  aa_tm_cmp( now, aa_tm_add(aa_tm_sub(now, ms), ms) ) );
+
+        assert( 0 < aa_tm_cmp( now, aa_tm_sub( now, ms ) ) );
+        assert( 0 > aa_tm_cmp( now, aa_tm_add( now, ms ) ) );
+
+
+    }
 }
 
 void mem() {
@@ -622,8 +635,8 @@ void mem() {
 }
 
 void dbg() {
-    aa_tick("usleep(10): ");
-    usleep(10);
+    aa_tick("usleep(1000): ");
+    usleep(1000);
     aa_tock();
 
     aa_tick("relsleep(10ms): ");
@@ -792,6 +805,66 @@ int endconv() {
 }
 
 
+void validate() {
+    //aa_valid_f
+    assert( 0 == aa_valid_f( 1.0, 0.9, 1.1 ) );
+    assert( 0 != aa_valid_f( 0.8, 0.9, 1.1 ) );
+    assert( 0 != aa_valid_f( 1.2, 0.9, 1.1 ) );
+
+    //aa_valid_v
+    assert( 0 == aa_valid_v( AA_FAR(1,2,3), 3,
+                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
+    assert( 0 != aa_valid_v( AA_FAR(1,2,3,4), 4,
+                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
+    assert( 0 != aa_valid_v( AA_FAR(1,2), 2,
+                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
+    assert( 0 != aa_valid_v( AA_FAR(1,2,3), 3,
+                             AA_FAR(0,3,2), AA_FAR(2,3,4), 3 ) );
+    assert( 0 != aa_valid_v( AA_FAR(1,2,3), 3,
+                             AA_FAR(0,1,2), AA_FAR(2,1,4), 3 ) );
+    //aa_valid_vunit
+    {
+        double a[] = {1,2,3};
+        double b[] = {1,2,3};
+        aa_la_normalize(sizeof(a)/sizeof(double),a);
+        assert(0 == aa_valid_vunit(a, sizeof(a)/sizeof(double), 1e-4));
+        assert(0 != aa_valid_vunit(b, sizeof(a)/sizeof(double), 1e-4));
+    }
+
+    // timespec
+    {
+        struct timespec now =  aa_tm_now();
+        struct timespec sec = aa_tm_sec2timespec(1);
+        struct timespec ms = aa_tm_sec2timespec(1e-3);
+        assert( 0 == aa_valid_timespec( now,
+                                        aa_tm_sub(now, ms),
+                                        aa_tm_add(now, ms) ) );
+        assert( 0 != aa_valid_timespec( aa_tm_sub(now, ms),
+                                        now,
+                                        aa_tm_add(now, ms) ) );
+        assert( 0 != aa_valid_timespec( aa_tm_add(now, ms),
+                                        aa_tm_sub(now, ms),
+                                        now ) );
+        assert( 0 == aa_valid_timespec( now,
+                                        aa_tm_sub(now, sec),
+                                        aa_tm_add(now, sec) ) );
+
+        assert( 0 != aa_valid_timespec( aa_tm_sub(now, sec),
+                                        now,
+                                        aa_tm_add(now, sec) ) );
+        assert( 0 != aa_valid_timespec( aa_tm_add(now, sec),
+                                        aa_tm_sub(now, sec),
+                                        now ) );
+        assert( 0 == aa_valid_timespec( now,
+                                        aa_tm_sub(now, ms),
+                                        aa_tm_add(now, sec) ) );
+        assert( 0 == aa_valid_timespec( now,
+                                        aa_tm_sub(now, sec),
+                                        aa_tm_add(now, ms) ) );
+    }
+
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
@@ -808,4 +881,5 @@ int main( int argc, char **argv ) {
     dbg();
     kin();
     endconv();
+    validate();
 }
