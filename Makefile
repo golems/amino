@@ -40,7 +40,10 @@ $(call LINKLIB, amino, $(OBJS), $(LIBS))
 $(call LINKBIN, aa_test, aa_test.o $(OBJS), $(LIBS))
 $(call LINKBIN, aa_testpp, aa_testpp.o $(OBJS), $(LIBS) stdc++)
 
-.PHONY: default clean doc
+.PHONY: default clean doc test valgrind
+
+valgrind: test
+	valgrind ./build/aa_test
 
 doc:
 	doxygen

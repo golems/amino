@@ -39,6 +39,10 @@
 #define AMINO_VALIDATE_H
 
 /** \file validate.h
+ * \brief Validation of data
+ *
+ * All functions here return 0 if the data is valid and nonzero otherwise.
+ *
  * \author Neil T. Dantam
  */
 
