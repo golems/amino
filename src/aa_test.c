@@ -814,14 +814,16 @@ void validate() {
     //aa_valid_v
     assert( 0 == aa_valid_v( AA_FAR(1,2,3), 3,
                              AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
-    assert( 0 != aa_valid_v( AA_FAR(1,2,3,4), 4,
+    assert( 0 > aa_valid_v( AA_FAR(1,2,3,4), 4,
                              AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
-    assert( 0 != aa_valid_v( AA_FAR(1,2), 2,
+    assert( 0 > aa_valid_v( AA_FAR(1,2), 2,
                              AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
-    assert( 0 != aa_valid_v( AA_FAR(1,2,3), 3,
+    assert( 2 == aa_valid_v( AA_FAR(1,2,3), 3,
                              AA_FAR(0,3,2), AA_FAR(2,3,4), 3 ) );
-    assert( 0 != aa_valid_v( AA_FAR(1,2,3), 3,
+    assert( 2 == aa_valid_v( AA_FAR(1,2,3), 3,
                              AA_FAR(0,1,2), AA_FAR(2,1,4), 3 ) );
+    assert( 3 == aa_valid_v( AA_FAR(1,2,0), 3,
+                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
     //aa_valid_vunit
     {
         double a[] = {1,2,3};

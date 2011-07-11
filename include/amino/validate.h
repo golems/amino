@@ -49,7 +49,9 @@
 /// returns 0 if value >= min and value <= max, else nonzero
 AA_API int aa_valid_f( double value, double min, double max );
 
-/// returns 0 if values is of desired length and within [min,max]
+/** Validate a vector
+    \return 0 if values is within [min,max], less than zero if n!=n_desired, 1+i if value[i] is outside of [min,max]
+ */
 AA_API int aa_valid_v( double *values, size_t n, double *min, double *max,
                        size_t n_desired);
 

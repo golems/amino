@@ -43,7 +43,7 @@ $(call LINKBIN, aa_testpp, aa_testpp.o $(OBJS), $(LIBS) stdc++)
 .PHONY: default clean doc test valgrind
 
 valgrind: test
-	valgrind ./build/aa_test
+	valgrind --leak-check=full --track-origins=yes ./build/aa_test
 
 doc:
 	doxygen
