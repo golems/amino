@@ -134,4 +134,13 @@ aa_tm_relsleep( struct timespec t ) {
     } while( 0 != r ) ;
     return 0;
 }
+
+
+#if (defined(__GNUC__) || defined(__ICC)) && (defined(__i386__) || defined(__x86_64__))
+#define AA_FEATURE_RDTSC
+AA_API uint64_t aa_rdtsc(void);
+
+
+#endif
+
 #endif //AMINO_TIME_H
