@@ -2,7 +2,7 @@
 PROJECT := amino
 
 # Project Version
-VERSION := 20110710
+VERSION := 20110719
 
 # Binary Files
 #BINFILES :=
