@@ -40,6 +40,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 static void afeq( double a, double b, double tol ) {
     assert( aa_feq(a,b,tol) );
@@ -249,22 +250,26 @@ void la2() {
         {
             double A[] = {1,2,3,4,5,6}; //3x2
             aa_la_svd(3,2,A,U,S,NULL);
-            aveq(3*3,U,Ur, 0.001);
             aveq(2, S, Sr, 0.001);
+            for( size_t i = 0; i < 3*3; i ++ )
+                assert( fabs( fabs(U[i]) - fabs(Ur[i]) ) < .001 );
         }
         {
             double A[] = {1,2,3,4,5,6}; //3x2
             aa_la_svd(3,2,A,NULL,S,Vt);
             aveq(2, S, Sr, 0.001);
-            aveq(2*2, Vt, Vtr, 0.001);
+            for( size_t i = 0; i < 2*2; i ++ )
+                assert( fabs( fabs(Vt[i]) - fabs(Vtr[i]) ) < .001 );
         }
 
         {
             double A[] = {1,2,3,4,5,6}; //3x2
             aa_la_svd(3,2,A,U,S,Vt);
-            aveq(3*3,U,Ur, 0.0001);
             aveq(2, S, Sr, 0.001);
-            aveq(2*2, Vt, Vtr, 0.001);
+            for( size_t i = 0; i < 3*3; i ++ )
+                assert( fabs( fabs(U[i]) - fabs(Ur[i]) ) < .001 );
+            for( size_t i = 0; i < 2*2; i ++ )
+                assert( fabs( fabs(Vt[i]) - fabs(Vtr[i]) ) < .001 );
         }
     }
     // invert
@@ -549,17 +554,17 @@ void tm() {
         uint64_t a0,a1;
         a0 = aa_rdtsc();
         a1= aa_rdtsc();
-        printf("tickdiff: %llu\n",
+        printf("tickdiff: %" PRIu64 "\n",
                    a1 - a0);
-        size_t k = 1;
-        for( size_t i = 1; i < 12; i ++ ) {
+        int k = 1;
+        for( int i = 1; i < 12; i ++ ) {
             k *= 2;
             a0 = aa_rdtsc();
-            usleep(k);
+            usleep((__useconds_t)k);
             //aa_tm_now();
             a1 = aa_rdtsc();
-            printf("us: %d, tickdiff: %llu, ns/tick: %f\n", k, a1 - a0,
-                   ((double)k)*1000 / (a1-a0)
+            printf("us: %d, tickdiff: %"PRIu64", ns/tick: %f\n", k, a1 - a0,
+                   ((double)k)*1000 / (double)(a1-a0)
                 );
         }
 
@@ -914,8 +919,8 @@ void io() {
         int fd[2];
         int r = pipe(fd);
         assert(0 == r);
-        r = write( fd[1], &data, sizeof(data) );
-        assert(sizeof(data) == r);
+        ssize_t wr = write( fd[1], &data, sizeof(data) );
+        assert(sizeof(data) == wr);
         r = aa_read_realloc( fd[0], &buf, off, &max );
         assert(sizeof(data) == r);
         assert(*(uint64_t*)buf == data);
