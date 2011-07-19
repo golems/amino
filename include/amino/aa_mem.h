@@ -116,6 +116,18 @@ static inline void aa_frlocal( void *ptr, size_t size ) {
 /** Frees the result of AA_NEW_LOCAL. */
 #define AA_DEL_LOCAL(ptr, type, n) aa_frlocal( ptr, sizeof(type)*(n) )
 
+/// A buffer struct
+typedef struct {
+    size_t n;    ///< size of buffer
+    // should 16-byte align this part
+    uint8_t d[]; ///< data
+} aa_flexbuf_t;
+
+/// allocate buffer of n bytes
+AA_API aa_flexbuf_t *aa_flexbuf_alloc(size_t n);
+/// free buffer
+AA_API void aa_flexbuf_free(aa_flexbuf_t *p);
+
 /*----------- Region Allocation ------------------*/
 
 /** Data Structure for Region-Based memory allocation.
@@ -143,8 +155,9 @@ typedef struct {
     size_t total;  ///< allocated bytes in all buffers after the first
     /// struct to hold memory buffers
     struct aa_region_node {
-        void *buf;                   ///< the memory buffer to allocate from
-        size_t size;                 ///< size of this buffer
+        //void *buf;                   ///< the memory buffer to allocate from
+        //size_t size;                 ///< size of this buffer
+        aa_flexbuf_t *fbuf;
         struct aa_region_node *next; ///< pointer to next buffer node list
     } node;        ///< linked list of buffers
 } aa_region_t;
@@ -191,6 +204,25 @@ AA_API void aa_pool_free( aa_pool_t *pool, void *ptr );
 /// untested
 AA_API void aa_pool_release( aa_pool_t *pool );
 
+/*----------- Circular Buffers ------------------*/
+/** Circular buffers use a fixed-size array that acts as if connected
+ * end-to end
+ */
+typedef struct {
+    void *buf;
+    size_t n;
+    size_t start;
+    size_t end;
+} aa_circbuf_t;
+
+AA_API void aa_circbuf_create( aa_circbuf_t *cb, size_t n );
+AA_API void aa_circbuf_destroy( aa_circbuf_t *cb, size_t n );
+AA_API void aa_circbuf_realloc( aa_circbuf_t *cb, size_t n );
+AA_API size_t aa_circbuf_space( aa_circbuf_t *cb );
+AA_API size_t aa_circbuf_used( aa_circbuf_t *cb );
+AA_API void aa_circbuf_put( aa_circbuf_t *cb, void *buf, size_t n );
+AA_API int aa_circbuf_read( aa_circbuf_t *cb, int fd, size_t n );
+AA_API int aa_circbuf_write( aa_circbuf_t *cb, int fd, size_t n );
 
 /**********/
 /* Arrays */

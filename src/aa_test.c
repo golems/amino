@@ -34,6 +34,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 //#define AA_ALLOC_STACK_MAX
 #include "amino.h"
 #include <assert.h>
@@ -541,6 +542,29 @@ void tm() {
 
 
     }
+
+    // rdtsc
+#ifdef AA_FEATURE_RDTSC
+    {
+        uint64_t a0,a1;
+        a0 = aa_rdtsc();
+        a1= aa_rdtsc();
+        printf("tickdiff: %llu\n",
+                   a1 - a0);
+        size_t k = 1;
+        for( size_t i = 1; i < 12; i ++ ) {
+            k *= 2;
+            a0 = aa_rdtsc();
+            usleep(k);
+            //aa_tm_now();
+            a1 = aa_rdtsc();
+            printf("us: %d, tickdiff: %llu, ns/tick: %f\n", k, a1 - a0,
+                   ((double)k)*1000 / (a1-a0)
+                );
+        }
+
+    }
+#endif// AA_FEATURE_RDTSC
 }
 
 void mem() {
@@ -613,8 +637,20 @@ void mem() {
         aa_region_t reg;
         aa_region_init(&reg, 16);
         for( size_t i = 0; i < 256; i ++ ) {
-            aa_region_alloc(&reg, 16);
-            aa_region_alloc(&reg, 16);
+            for( size_t j = 0; j < i + 2; j ++ ) {
+                aa_region_alloc(&reg, 16);
+            }
+            assert( reg.node.next );
+            assert( reg.node.fbuf->n >= 16 );
+            aa_region_release(&reg);
+            assert( reg.node.fbuf->n >= (i+2)*16 );
+            assert( reg.node.fbuf->n < 2*(i+2)*16 + 1 );
+        }
+        for( size_t i = 0; i < 256; i ++ ) {
+            for( size_t j = 0; j < i + 2; j ++ ) {
+                aa_region_alloc(&reg, 16);
+            }
+            assert( NULL == reg.node.next );
             aa_region_release(&reg);
         }
         aa_region_destroy(&reg);
@@ -778,8 +814,10 @@ int endconv() {
     uint8_t le_i32_1[] = {1,0,0,0};
     uint8_t be_i32_1[] = {0,0,0,1};
 
-    int32_t be1 = * (int32_t*) be_i32_1;
-    int32_t le1 = * (int32_t*) le_i32_1;
+    int32_t *pbe1 =  ((int32_t*) be_i32_1);
+    int32_t *ple1 =  ((int32_t*) le_i32_1);
+    int32_t be1 =  *pbe1;
+    int32_t le1 =  *ple1;
 
     uint8_t lebuf[4], bebuf[4];
 
@@ -788,8 +826,8 @@ int endconv() {
     assert( 1 == aa_endconv_ld_be_i32( be_i32_1 ) );
 
     // xe_to_h
-    assert( 1 == aa_endconv_be_to_h_i32( * (int32_t*) be_i32_1) );
-    assert( 1 == aa_endconv_le_to_h_i32( * (int32_t*) le_i32_1) );
+    assert( 1 == aa_endconv_be_to_h_i32( be1 ) );
+    assert( 1 == aa_endconv_le_to_h_i32( le1 ) );
 
     // h_to_xe
     assert( aa_endconv_h_to_le_i32(1) == le1 );
@@ -867,6 +905,25 @@ void validate() {
 
 }
 
+void io() {
+    {
+        void *buf = NULL;
+        size_t max = 0;
+        size_t off = 0;
+        uint64_t data = 42;
+        int fd[2];
+        int r = pipe(fd);
+        assert(0 == r);
+        r = write( fd[1], &data, sizeof(data) );
+        assert(sizeof(data) == r);
+        r = aa_read_realloc( fd[0], &buf, off, &max );
+        assert(sizeof(data) == r);
+        assert(*(uint64_t*)buf == data);
+        assert( max - off >= sizeof(data) );
+        free(buf);
+    }
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     scalar();
@@ -884,4 +941,5 @@ int main( int argc, char **argv ) {
     kin();
     endconv();
     validate();
+    io();
 }

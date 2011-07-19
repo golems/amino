@@ -37,48 +37,55 @@
 
 #include "amino.h"
 
+AA_API aa_flexbuf_t *aa_flexbuf_alloc(size_t n) {
+    aa_flexbuf_t *fb = (aa_flexbuf_t*)aa_malloc0( sizeof(aa_flexbuf_t)+n );
+    fb->n = n;
+    return fb;
+}
+AA_API void aa_flexbuf_free(aa_flexbuf_t *p) {
+    aa_free_if_valid(p);
+}
+
+
 void aa_region_init( aa_region_t *region, size_t size ) {
-    //region->size = size;
     region->fill = 0;
     region->total = 0;
-    region->node.buf = malloc( size );
-    region->node.size = size;
+    region->node.fbuf = aa_flexbuf_alloc(size);
     region->node.next = NULL;
 }
 
 static void aa_region_destroy_node( struct aa_region_node *p ) {
     while( p ) {
         struct aa_region_node *n = p->next;
-        free(p->buf);
+        aa_flexbuf_free(p->fbuf);
         free(p);
         p = n;
     }
 }
 
 void aa_region_destroy( aa_region_t *region ) {
-    free( region->node.buf );
+    aa_flexbuf_free( region->node.fbuf );
     aa_region_destroy_node( region->node.next );
 }
 
 // FIXME: maybe we should use mmap instead of malloc()
 void *aa_region_alloc( aa_region_t *region, size_t size ) {
     // unsigned arithmetic, check for overflow too
-    if(region->fill > region->node.size || size > region->node.size - region->fill ) {
+    if(region->fill > region->node.fbuf->n ||
+       size > region->node.fbuf->n - region->fill ) {
         // slow path, malloc another buffer
         struct aa_region_node *n = AA_NEW( struct aa_region_node );
-        n->buf = region->node.buf;
+        n->fbuf = region->node.fbuf;
         n->next = region->node.next;
-        n->size = region->node.size;
         region->node.next = n;
 
-        region->node.size = AA_MAX( 2*region->total, size );
-        region->node.buf = malloc(region->node.size);
+        region->node.fbuf = aa_flexbuf_alloc( AA_MAX(2*region->total, size) );
         region->total += region->fill;
         region->fill = 0;
 
     }
     // fast path, pointer increment
-    void* p = (char*)region->node.buf + region->fill;
+    void* p = (char*)region->node.fbuf->d + region->fill;
     size_t align = size%16;
     region->fill += size + ( align ? 16 - align : 0 );
     return p;
@@ -87,10 +94,9 @@ void *aa_region_alloc( aa_region_t *region, size_t size ) {
 void aa_region_release( aa_region_t *region ) {
     if( region->node.next ) {
         // compress buffers
-        free( region->node.buf );
+        aa_flexbuf_free( region->node.fbuf );
         aa_region_destroy_node( region->node.next );
-        region->node.size = region->total + region->fill;
-        region->node.buf = malloc(region->node.size);
+        region->node.fbuf = aa_flexbuf_alloc( region->total + region->fill);
         region->node.next = NULL;
     }
     region->total = 0;

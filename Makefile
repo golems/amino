@@ -15,7 +15,7 @@ all: default
 include /usr/share/make-common/common.1.mk
 
 #CFLAGS += -O0 -Wno-conversion
-CFLAGS += --std=gnu99 -O0
+CFLAGS += --std=gnu99 -O2
 FFLAGS += -I/usr/include
 
 default: $(LIBFILES) $(BINFILES) test
@@ -24,7 +24,7 @@ test: build/aa_test build/aa_testpp
 	./build/aa_test
 	./build/aa_testpp
 
-OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o
+OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o time.o io.o
 BOBJS := $(addprefix build/, $(OBJS))
 LIBS := m lapack-3 blas-3 rt
 
