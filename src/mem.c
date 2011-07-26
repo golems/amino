@@ -65,6 +65,7 @@ static void aa_region_destroy_node( struct aa_region_node *p ) {
 
 void aa_region_destroy( aa_region_t *region ) {
     aa_flexbuf_free( region->node.fbuf );
+    // free rest of buffers
     aa_region_destroy_node( region->node.next );
 }
 

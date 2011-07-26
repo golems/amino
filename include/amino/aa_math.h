@@ -421,5 +421,18 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const d
  */
 AA_API void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
 
+/** Linear interpolation.
+    \param n size of the X vectors
+    \param t0 independent variable
+    \param X0 dependent variable at t0
+    \param t1 independent variable
+    \param X1 dependent variable at t1
+    \param ti independent variable, interpolation point
+    \param Xi dependent variable, interpolated values
 
+ */
+AA_API void aa_la_linterp( size_t n,
+                           double t0, const double *X0,
+                           double t1, const double *X1,
+                           double ti, double *Xi );
 #endif //AA_MATH_H

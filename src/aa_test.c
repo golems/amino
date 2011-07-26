@@ -359,7 +359,29 @@ void la2() {
         //double x[2];
         //aa_la_lls(2,2,2,A,b,x);
     }
-
+    // linterp
+    {
+        double t0 = 0, t1 = 1;
+        double X0[] = {0, 1, 2, 3};
+        double X1[] = {0, 2, 4, 8};
+        double Xi[sizeof(X0)/sizeof(double)];
+        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
+                      0.5, Xi );
+        aveq( sizeof(X0)/sizeof(double),
+              Xi, AA_FAR(0, 1.5, 3, (3.0+8.0)/2 ), .00001 );
+        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
+                      0.75, Xi );
+        aveq( sizeof(X0)/sizeof(double),
+              Xi, AA_FAR(0, 1.75, 3.5, 3+(8.0-3.0)*3/4 ), .00001 );
+        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
+                      2, Xi );
+        aveq( sizeof(X0)/sizeof(double),
+              Xi, AA_FAR(0, 3, 6, 13 ), .00001 );
+        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
+                      -1, Xi );
+        aveq( sizeof(X0)/sizeof(double),
+              Xi, AA_FAR(0, 0, 0, -2 ), .00001 );
+    }
 }
 
 
