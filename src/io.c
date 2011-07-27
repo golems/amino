@@ -39,7 +39,7 @@
 #include "amino.h"
 #include <unistd.h>
 
-AA_API int aa_read_realloc(int fd, void **buf,
+AA_API ssize_t aa_read_realloc(int fd, void **buf,
                            size_t off, size_t *max) {
     size_t n = *max - off;
     if( n < 16 ) {

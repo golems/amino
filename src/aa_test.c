@@ -960,10 +960,10 @@ void io() {
         int fd[2];
         int r = pipe(fd);
         assert(0 == r);
-        ssize_t wr = write( fd[1], &data, sizeof(data) );
-        assert(sizeof(data) == wr);
-        r = aa_read_realloc( fd[0], &buf, off, &max );
-        assert(sizeof(data) == r);
+        ssize_t s = write( fd[1], &data, sizeof(data) );
+        assert(sizeof(data) == s);
+        s = aa_read_realloc( fd[0], &buf, off, &max );
+        assert(sizeof(data) == s);
         assert(*(uint64_t*)buf == data);
         assert( max - off >= sizeof(data) );
         free(buf);

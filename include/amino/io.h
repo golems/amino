@@ -40,6 +40,6 @@
 
 /** Reads from fd, reallocating buffer if necessary.
  */
-AA_API int aa_read_realloc(int fd, void **buf, size_t off, size_t *max);
+AA_API ssize_t aa_read_realloc(int fd, void **buf, size_t off, size_t *max);
 
 #endif //AMINO_IO_H
