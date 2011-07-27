@@ -53,6 +53,10 @@ aa_verbf( int min_level, const char fmt[], ...) AA_DEPRECATED;
 AA_API void
 aa_dump_vec( FILE *file, double *v, size_t n );
 
+/// print a matrix to file
+AA_API void
+aa_dump_mat( FILE *file, double *A, size_t m, size_t n );
+
 /// save time, printf fmt
 AA_API void
 aa_tick(const char fmt[], ...);

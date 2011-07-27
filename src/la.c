@@ -357,8 +357,94 @@ static int dgelsd_miniwork(int m, int n) {
     return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn);
 }
 
-AA_API void aa_la_care_laub(size_t n) {
-    double *F, *X, *G, *H;
+static int aa_la_care_laub_select( const double *real, const double *complex ) {
+    (void)complex;
+    return *real < 0;
+}
+
+AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
+                            const double *restrict A, const double *restrict B, const double *restrict C,
+                            double *restrict X, aa_region_t *reg ) {
+    // A: m*m
+    // B: m*n
+    // C: p*m
+    (void)X;
+    // build hamiltonian
+    double *H = (double*)aa_region_alloc(reg, 2*m*2*m*sizeof(double));
+    // copy in A
+    for( size_t i = 0; i < m; i ++ ) {
+        for( size_t j = 0; j < m; j ++ ) {
+            // upper left gets A
+            AA_MATREF(H, 2*m, i, j) = AA_MATREF(A, m, i, j);
+            // lower right gets -A^T
+            AA_MATREF(H, 2*m, m+i, m+j) = -AA_MATREF(A, m, j, i);
+        }
+    }
+    // copy B
+    if( n == m ) {
+        for( size_t i = 0; i < m; i ++ ) {
+            for( size_t j = 0; j < m; j ++ ) {
+                AA_MATREF(H, 2*m, i, m+j) = -AA_MATREF(B, m, i, j);
+            }
+        }
+    } else {
+        cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans,
+                     (int)m, (int)m, (int)n, -1, B, (int)m, B, (int)m,
+                     0, &AA_MATREF(H, 2*m, 0, m), 2*(int)m );
+    }
+    // copy C
+    if( p == m ) {
+        for( size_t i = 0; i < m; i ++ ) {
+            for( size_t j = 0; j < m; j ++ ) {
+                AA_MATREF(H, 2*m, i+m, j) = -AA_MATREF(C, m, i, j);
+            }
+        }
+    } else {
+        cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans,
+                     (int)m, (int)m, (int)p, -1, C, (int)p, C, (int)p,
+                     0, &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
+    }
+    fprintf(stderr, "H:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
+
+
+    // balance in lapack: dgebal
+    int ilo,ihi;
+    double *scale = (double*)aa_region_alloc(reg, 2*m*sizeof(double));
+    int info;
+    int m2 = 2*(int)m;
+    dgebal_("B", &m2, H, &m2, &ilo, &ihi, scale, &info);
+    //dgebal_("B", &m2, H, &m2, &ilo, &ihi, scale, &info);
+    fprintf(stderr, "B:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
+    fprintf(stderr, "S:\n"); aa_dump_vec(stderr, scale, 2*m);
+    fprintf(stderr, "ilo %d, ihi: %d\n", ilo, ihi);
+
+    // shcur in lapack: dgees
+    int sdim, lwork = -1;
+    int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*2*m);
+    double *wr = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
+    double *vs = (double*)aa_region_alloc(reg, sizeof(double)*2*m*2*m);
+    double *wi = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
+    double swork;
+    // get work array size
+    dgees_("N", "N",
+           aa_la_care_laub_select,
+           &m2, H, &m2, &sdim, wr, wi,
+           vs, &m2, &swork, &lwork, bwork, &info );
+    lwork = swork;
+    fprintf(stderr, "info: %d, size: %d\n", info, lwork);
+    double *work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
+    // get work array size
+    dgees_("N", "N",
+           aa_la_care_laub_select,
+           &m2, H, &m2, &sdim, wr, wi,
+           vs, &m2, &work, &lwork, bwork, &info );
+
+    //fprintf(stderr, "size: %u\n", sizeof(double)*(size_t)swork);
+
+
+    aa_region_pop( reg, H );
+
+    return 0;
 }
 
 /* AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) { */

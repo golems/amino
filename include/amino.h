@@ -82,11 +82,13 @@
 #ifdef __cplusplus
 #define AA_API extern "C"
 #define AA_EXTERN extern "C"
+#define AA_RESTRICT
 #else
 /// calling and name mangling convention for functions
 #define AA_API
 /// name mangling convention external symbols
 #define AA_EXTERN extern
+#define AA_RESTRICT restrict
 #endif //__cplusplus
 
 /// deprecated thing

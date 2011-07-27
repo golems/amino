@@ -422,6 +422,11 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const d
 AA_API void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
 
 
+AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
+                            const double *AA_RESTRICT A, const double *AA_RESTRICT B, const double *AA_RESTRICT C,
+                            double *AA_RESTRICT X, aa_region_t *reg );
+
+
 /** Linear interpolation.
     \param n size of the X vectors
     \param t0 independent variable

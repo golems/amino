@@ -66,6 +66,16 @@ aa_dump_vec( FILE *file, double *v, size_t n ) {
     fprintf(file, "%f\n", v[n-1]);
 }
 
+AA_API void
+aa_dump_mat( FILE *file, double *A, size_t m, size_t n  ) {
+    for( size_t i = 0; i < m; i ++ ) {
+        for( size_t j = 0; j < n-1; j ++ ) {
+            fprintf(file, "%f\t", AA_MATREF(A, m,i,j));
+        }
+        fprintf(file, "%f\n", AA_MATREF(A, m, i, n-1) );
+    }
+}
+
 
 const char *aa_verbf_prefix = "amino";
 int aa_opt_verbosity = 0;

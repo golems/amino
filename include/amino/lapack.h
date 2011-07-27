@@ -358,4 +358,179 @@ AA_API int ilaenv_( const int *ispec, const char *name, const char *opts,
                         double *A, const int *LDA, double *B, const int *LDB,
                         double *S, const double *RCOND, int *RANK,
                         double *WORK, int *LWORK, int *IWORK, int *INFO );
+
+/**  DGEBAL balances a general real matrix A.  This involves, first,
+*    permuting A by a similarity transformation to isolate eigenvalues
+*    in the first 1 to ILO-1 and last IHI+1 to N elements on the
+*    diagonal; and second, applying a diagonal similarity
+*    transformation to rows and columns ILO to IHI to make the rows
+*    and columns as close in norm as possible.  Both steps are
+*    optional.
+*
+*  Balancing may reduce the 1-norm of the matrix, and improve the
+*  accuracy of the computed eigenvalues and/or eigenvectors.
+*
+*
+*  \param JOB     (input) CHARACTER*1
+*          Specifies the operations to be performed on A:
+*          = 'N':  none:  simply set ILO = 1, IHI = N, SCALE(I) = 1.0
+*                  for i = 1,...,N;
+*          = 'P':  permute only;
+*          = 'S':  scale only;
+*          = 'B':  both permute and scale.
+*
+*  \param N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  \param A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the input matrix A.
+*          On exit,  A is overwritten by the balanced matrix.
+*          If JOB = 'N', A is not referenced.
+*          See Further Details.
+*
+*  \param LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  \param ILO     (output) INTEGER
+*  \param IHI     (output) INTEGER
+*          ILO and IHI are set to integers such that on exit
+*          A(i,j) = 0 if i > j and j = 1,...,ILO-1 or I = IHI+1,...,N.
+*          If JOB = 'N' or 'S', ILO = 1 and IHI = N.
+*
+*  \param SCALE   (output) DOUBLE PRECISION array, dimension (N)
+*          Details of the permutations and scaling factors applied to
+*          A.  If P(j) is the index of the row and column interchanged
+*          with row and column j and D(j) is the scaling factor
+*          applied to row and column j, then
+*          SCALE(j) = P(j)    for j = 1,...,ILO-1
+*                   = D(j)    for j = ILO,...,IHI
+*                   = P(j)    for j = IHI+1,...,N.
+*          The order in which the interchanges are made is N to IHI+1,
+*          then 1 to ILO-1.
+*
+*  \param INFO    (output) INTEGER
+*          = 0:  successful exit.
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*/
+void dgebal_( const char JOB[1], int *N, double *A, const int *LDA,
+              int *ILO, int *IHI, double *SCALE, int *INFO );
+
+
+/**  DGEES computes for an N-by-N real nonsymmetric matrix A, the
+*    eigenvalues, the real Schur form T, and, optionally, the matrix
+*    of Schur vectors Z.  This gives the Schur factorization A =
+*    Z*T*(Z**T).
+*
+*  Optionally, it also orders the eigenvalues on the diagonal of the
+*  real Schur form so that selected eigenvalues are at the top left.
+*  The leading columns of Z then form an orthonormal basis for the
+*  invariant subspace corresponding to the selected eigenvalues.
+*
+*  A matrix is in real Schur form if it is upper quasi-triangular with
+*  1-by-1 and 2-by-2 blocks. 2-by-2 blocks will be standardized in the
+*  form
+*          [  a  b  ]
+*          [  c  a  ]
+*
+*  where b*c < 0. The eigenvalues of such a block are a +- sqrt(bc).
+*
+*
+*  \param JOBVS   (input) CHARACTER*1
+*          = 'N': Schur vectors are not computed;
+*          = 'V': Schur vectors are computed.
+*
+*  \param SORT    (input) CHARACTER*1
+*          Specifies whether or not to order the eigenvalues on the
+*          diagonal of the Schur form.
+*          = 'N': Eigenvalues are not ordered;
+*          = 'S': Eigenvalues are ordered (see SELECT).
+*
+*  \param SELECT  (external procedure) LOGICAL FUNCTION of two DOUBLE PRECISION arguments
+*          SELECT must be declared EXTERNAL in the calling subroutine.
+*          If SORT = 'S', SELECT is used to select eigenvalues to sort
+*          to the top left of the Schur form.
+*          If SORT = 'N', SELECT is not referenced.
+*          An eigenvalue WR(j)+sqrt(-1)*WI(j) is selected if
+*          SELECT(WR(j),WI(j)) is true; i.e., if either one of a complex
+*          conjugate pair of eigenvalues is selected, then both complex
+*          eigenvalues are selected.
+*          Note that a selected complex eigenvalue may no longer
+*          satisfy SELECT(WR(j),WI(j)) = .TRUE. after ordering, since
+*          ordering may change the value of complex eigenvalues
+*          (especially if the eigenvalue is ill-conditioned); in this
+*          case INFO is set to N+2 (see INFO below).
+*
+*  \param N       (input) INTEGER
+*          The order of the matrix A. N >= 0.
+*
+*  \param A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the N-by-N matrix A.
+*          On exit, A has been overwritten by its real Schur form T.
+*
+*  \param LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  \param SDIM    (output) INTEGER
+*          If SORT = 'N', SDIM = 0.
+*          If SORT = 'S', SDIM = number of eigenvalues (after sorting)
+*                         for which SELECT is true. (Complex conjugate
+*                         pairs for which SELECT is true for either
+*                         eigenvalue count as 2.)
+*
+*  \param WR      (output) DOUBLE PRECISION array, dimension (N)
+*  \param WI      (output) DOUBLE PRECISION array, dimension (N)
+*          WR and WI contain the real and imaginary parts,
+*          respectively, of the computed eigenvalues in the same order
+*          that they appear on the diagonal of the output Schur form T.
+*          Complex conjugate pairs of eigenvalues will appear
+*          consecutively with the eigenvalue having the positive
+*          imaginary part first.
+*
+*  \param VS      (output) DOUBLE PRECISION array, dimension (LDVS,N)
+*          If JOBVS = 'V', VS contains the orthogonal matrix Z of Schur
+*          vectors.
+*          If JOBVS = 'N', VS is not referenced.
+*
+*  \param LDVS    (input) INTEGER
+*          The leading dimension of the array VS.  LDVS >= 1; if
+*          JOBVS = 'V', LDVS >= N.
+*
+*  \param WORK    (workspace/output) DOUBLE PRECISION array, dimension (MAX(1,LWORK))
+*          On exit, if INFO = 0, WORK(1) contains the optimal LWORK.
+*
+*  \param LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,3*N).
+*          For good performance, LWORK must generally be larger.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  \param BWORK   (workspace) LOGICAL array, dimension (N)
+*          Not referenced if SORT = 'N'.
+*
+*  \param INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -i, the i-th argument had an illegal value.
+*          > 0: if INFO = i, and i is
+*             <= N: the QR algorithm failed to compute all the
+*                   eigenvalues; elements 1:ILO-1 and i+1:N of WR and WI
+*                   contain those eigenvalues which have converged; if
+*                   JOBVS = 'V', VS contains the matrix which reduces A
+*                   to its partially converged Schur form.
+*             = N+1: the eigenvalues could not be reordered because some
+*                   eigenvalues were too close to separate (the problem
+*                   is very ill-conditioned);
+*             = N+2: after reordering, roundoff changed values of some
+*                   complex eigenvalues so that leading eigenvalues in
+*                   the Schur form no longer satisfy SELECT=.TRUE.  This
+*                   could also be caused by underflow due to scaling.
+*
+*/
+
+void dgees_( const char JOBVS[1], const char SORT[1],
+             int (*SELECT)(const double*,const double*),
+             const int *N, double *A, const int *LDA, int *SDIM, double *WR, double *WI,
+             double *VS, const int *LDVS, double *WORK, int *LWORK, int *BWORK, int *INFO );
 #endif

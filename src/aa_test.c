@@ -54,6 +54,9 @@ static void aneq( double a, double b, double tol ) {
     assert( !aa_feq(a,b,tol) );
 }
 
+
+aa_region_t g_region;
+
 void scalar() {
     // eq
     afeq( M_PI, M_PI, 0 );
@@ -384,6 +387,13 @@ void la2() {
     }
 }
 
+void la3() {
+    {
+        aa_la_care_laub( 2, 1, 1,
+                         AA_FAR(1, 2, 3, 4), AA_FAR(1,2), AA_FAR(3,4), NULL, &g_region );
+    }
+
+}
 
 
 void axang() {
@@ -972,10 +982,12 @@ void io() {
 
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
+    aa_region_init(&g_region, 1024*64);
     scalar();
     la0();
     la1();
     la2();
+    la3();
     angle();
     quat();
     rotmat();
@@ -988,4 +1000,5 @@ int main( int argc, char **argv ) {
     endconv();
     validate();
     io();
+    aa_region_destroy(&g_region);
 }
