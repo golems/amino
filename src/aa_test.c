@@ -682,6 +682,25 @@ void mem() {
         }
         aa_region_destroy(&reg);
     }
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 256);
+        void *p0 = aa_region_alloc(&reg,4);
+        void *p1 = aa_region_alloc(&reg,4);
+        void *p2 = aa_region_alloc(&reg,4);
+        void *p3 = aa_region_alloc(&reg,4);
+        aa_region_pop(&reg, p2);
+        void *p2a = aa_region_alloc(&reg,4);
+        void *p3a = aa_region_alloc(&reg,4);
+        assert( p2a == p2 );
+        assert( p3a == p3 );
+        aa_region_pop(&reg, p0);
+        assert(0 == reg.fill);
+        void *p0a = aa_region_alloc(&reg,4);
+        void *p1a = aa_region_alloc(&reg,4);
+        assert( p0a == p0 );
+        assert( p1a == p1 );
+    }
     // zero_ar
     {
         double x[6] = {1,2,3,4,5,6};

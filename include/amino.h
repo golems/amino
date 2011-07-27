@@ -98,8 +98,8 @@
 #define AA_IMILLION 1000000
 
 // include our own headers
-#include "amino/aa_mem.h"
-#include "amino/aa_math.h"
+#include "amino/mem.h"
+#include "amino/math.h"
 #include "amino/tf.h"
 #include "amino/lapack.h"
 #include "amino/time.h"

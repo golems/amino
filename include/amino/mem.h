@@ -130,6 +130,13 @@ AA_API void aa_flexbuf_free(aa_flexbuf_t *p);
 
 /*----------- Region Allocation ------------------*/
 
+struct aa_region_node {
+    //void *buf;                   ///< the memory buffer to allocate from
+    //size_t size;                 ///< size of this buffer
+    aa_flexbuf_t *fbuf;
+    struct aa_region_node *next; ///< pointer to next buffer node list
+};
+
 /** Data Structure for Region-Based memory allocation.
  *
  *
@@ -154,12 +161,7 @@ typedef struct {
     size_t fill;   ///< previously allocated bytes in first buffer
     size_t total;  ///< allocated bytes in all buffers after the first
     /// struct to hold memory buffers
-    struct aa_region_node {
-        //void *buf;                   ///< the memory buffer to allocate from
-        //size_t size;                 ///< size of this buffer
-        aa_flexbuf_t *fbuf;
-        struct aa_region_node *next; ///< pointer to next buffer node list
-    } node;        ///< linked list of buffers
+    struct aa_region_node node;        ///< linked list of buffers
 } aa_region_t;
 
 /** Initialize memory region with block of size bytes. */
@@ -172,6 +174,11 @@ AA_API void aa_region_destroy( aa_region_t *region );
 /** Allocate size bytes from the region.
  */
 AA_API void *aa_region_alloc( aa_region_t *region, size_t size );
+
+
+/** Deallocates ptr and all blocks allocated after ptr was allocated.
+ */
+AA_API void aa_region_pop( aa_region_t *region, void *ptr );
 
 /** Deallocates all allocated chunks from the region.
  */

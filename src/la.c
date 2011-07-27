@@ -357,6 +357,10 @@ static int dgelsd_miniwork(int m, int n) {
     return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn);
 }
 
+AA_API void aa_la_care_laub(size_t n) {
+    double *F, *X, *G, *H;
+}
+
 /* AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) { */
 /*     int mi=(int)m, ni=(int)n, pi=(int)p; */
 /*     double rcond=0; */

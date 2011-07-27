@@ -27,6 +27,7 @@ test: build/aa_test build/aa_testpp
 OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o time.o io.o
 BOBJS := $(addprefix build/, $(OBJS))
 LIBS := m lapack-3 blas-3 rt
+LIBS := m lapack blas rt
 
 
 # maxima code generation

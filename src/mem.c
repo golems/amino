@@ -69,6 +69,23 @@ void aa_region_destroy( aa_region_t *region ) {
     aa_region_destroy_node( region->node.next );
 }
 
+
+static int aa_region_pop_in_node( uint8_t *ptr, struct aa_region_node *node ) {
+    return ptr >= node->fbuf->d  && ptr < node->fbuf->d + node->fbuf->n;
+}
+
+AA_API void aa_region_pop( aa_region_t *reg, void *ptr ) {
+    uint8_t *ptr8 = (uint8_t*)ptr;
+    if( aa_region_pop_in_node( ptr8, &reg->node ) ){
+        // simple case, in the top node
+        assert(ptr8 >= reg->node.fbuf->d);
+        reg->fill = (size_t)(ptr8 - reg->node.fbuf->d);
+    } else {
+        // ugly case, iterate through nodes
+        // eh, fuck it, you'll just have to release the buffer later
+    }
+}
+
 // FIXME: maybe we should use mmap instead of malloc()
 void *aa_region_alloc( aa_region_t *region, size_t size ) {
     // unsigned arithmetic, check for overflow too
