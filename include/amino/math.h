@@ -419,7 +419,7 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const d
  * \f[ b = Ax \f]
  * Solves for x.
  */
-AA_API void aa_la_lls( size_t m, size_t n, size_t p, double *A, double *b, double *x );
+AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x );
 
 
 AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
