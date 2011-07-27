@@ -16,7 +16,7 @@ include /usr/share/make-common/common.1.mk
 
 #CFLAGS += -O0 -Wno-conversion
 CFLAGS += --std=gnu99 -O2
-FFLAGS += -I/usr/include
+FFLAGS += -I/usr/include -O2
 
 default: $(LIBFILES) $(BINFILES) test
 
@@ -26,8 +26,8 @@ test: build/aa_test build/aa_testpp
 
 OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o time.o io.o
 BOBJS := $(addprefix build/, $(OBJS))
-LIBS := m lapack-3 blas-3 rt
-LIBS := m lapack blas rt
+# lapack should also link (c)blas and gfortran if needed
+LIBS := m lapack rt
 
 
 # maxima code generation
@@ -43,13 +43,13 @@ $(call LINKBIN, aa_testpp, aa_testpp.o $(OBJS), $(LIBS) stdc++)
 
 .PHONY: default clean doc test valgrind
 
-valgrind: test
+valgrind: $(BUILDDIR)/aa_test
 	valgrind --leak-check=full --track-origins=yes ./build/aa_test
 
 doc:
 	doxygen
 
 clean:
-	rm -fr *.o $(BINFILES) $(LIBFILES) src/mac/*.f $(BUILDDIR)/*.o .deps debian *.deb *.lzma
+	rm -fr $(BINFILES) $(LIBFILES) src/mac/*.f $(BUILDDIR)/*.o $(BUILDDIR)/mac/*.o .deps debian *.deb
 
 
