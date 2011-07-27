@@ -369,6 +369,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     // B: m*n
     // C: p*m
     (void)X;
+    int mi = (int)m;
     // build hamiltonian
     double *H = (double*)aa_region_alloc(reg, 2*m*2*m*sizeof(double));
     // copy in A
@@ -441,26 +442,27 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
             work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
             assert(work);
         } while(1);
+        aa_region_pop( reg, bwork );
     }
 
-    //aa_region_pop( reg, bwork );
     fprintf(stderr, "S:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
     fprintf(stderr, "Vs:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
 
     // compute the resulting thing
     //fprintf(stderr, "size: %u\n", sizeof(double)*(size_t)swork);
     //vs = scal * vs
-    double *u11 = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
-    double *u21 = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
+    double *u11t = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
+    // u21 overwritten with X by lapack solver
+    double *u21t = X;//(double*)aa_region_alloc(reg, sizeof(double)*m*m);
 
     // get u11
     for( size_t j = 0; j < m; j ++) {
         for( size_t i = 0; i < m; i ++) {
             //u11
-            AA_MATREF(u11, m, i, j) =
+            AA_MATREF(u11t, m, j, i) =
                 AA_MATREF(vs, 2*m, i, j) * scale[i];
             //u21
-            AA_MATREF(u21, m, i, j) =
+            AA_MATREF(u21t, m, j, i) =
                 AA_MATREF(vs, 2*m, i+m, j) * scale[i+m];
         }
     }
@@ -472,13 +474,30 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     /*     } */
     /* } */
 
-    //fprintf(stderr, "U:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
-    fprintf(stderr, "u11:\n"); aa_dump_mat(stderr, u11, m,m);
-    fprintf(stderr, "u21:\n"); aa_dump_mat(stderr, u21, m,m);
-
-    //int m1 = (int)m + 1;
-    // extract blocks of vs
-    // solve
+    /* fprintf(stderr, "U:\n"); aa_dump_mat(stderr, vs, 2*m,2*m); */
+    fprintf(stderr, "u11t:\n"); aa_dump_mat(stderr, u11t, m,m);
+    fprintf(stderr, "u21t:\n"); aa_dump_mat(stderr, u21t, m,m);
+    // solve the least squares problem
+    // X * u11 = u21
+    // u11^T X = u21^T
+    // X = u21 * u11^(-1)
+    {
+        int lwork = -1;
+        double swork;
+        double *work = &swork;
+        do {
+            dgels_( "N", &mi, &mi, &mi, u11t, &mi, u21t, &mi, work, &lwork,
+                    &info );
+            fprintf(stderr, "info %d\n", info);
+            if(lwork > 0 ) break;
+            assert( &swork == work );
+            lwork = (int)work[0];
+            fprintf(stderr, "size: %d\n", lwork);
+            work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
+            assert(work);
+        } while(1);
+    }
+    fprintf(stderr, "u21t:\n"); aa_dump_mat(stderr, u21t, m,m);
 
     aa_region_pop( reg, H );
 

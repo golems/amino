@@ -389,8 +389,13 @@ void la2() {
 
 void la3() {
     {
+        double X[4];
+        double Xr[] = {1.1649, 1.4987, 1.4987, 2.6484};
         aa_la_care_laub( 2, 1, 1,
-                         AA_FAR(1, 2, 3, 4), AA_FAR(1,2), AA_FAR(3,4), NULL, &g_region );
+                         AA_FAR(1, 2, 3, 4), AA_FAR(1,2), AA_FAR(3,4), X,
+                         &g_region );
+        aveq( sizeof(X)/sizeof(double),
+              X, Xr, .001 );
     }
 
 }

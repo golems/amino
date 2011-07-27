@@ -733,4 +733,109 @@ void dgees_( const char JOBVS[1], const char SORT[1],
 *                and WI contain eigenvalues which have converged.
 *
 */
+
+/**  DGELS solves overdetermined or underdetermined real linear
+*   systems involving an M-by-N matrix A, or its transpose, using a QR
+*   or LQ factorization of A.  It is assumed that A has full rank.
+*
+*  The following options are provided:
+*
+*  1. If TRANS = 'N' and m >= n:  find the least squares solution of
+*     an overdetermined system, i.e., solve the least squares problem
+*                  minimize || B - A*X ||.
+*
+*  2. If TRANS = 'N' and m < n:  find the minimum norm solution of
+*     an underdetermined system A * X = B.
+*
+*  3. If TRANS = 'T' and m >= n:  find the minimum norm solution of
+*     an undetermined system A**T * X = B.
+*
+*  4. If TRANS = 'T' and m < n:  find the least squares solution of
+*     an overdetermined system, i.e., solve the least squares problem
+*                  minimize || B - A**T * X ||.
+*
+*  Several right hand side vectors b and solution vectors x can be
+*  handled in a single call; they are stored as the columns of the
+*  M-by-NRHS right hand side matrix B and the N-by-NRHS solution
+*  matrix X.
+*
+*
+*  \param TRANS   (input) CHARACTER*1
+*          = 'N': the linear system involves A;
+*          = 'T': the linear system involves A**T.
+*
+*  \param M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  \param N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  \param NRHS    (input) INTEGER
+*          The number of right hand sides, i.e., the number of
+*          columns of the matrices B and X. NRHS >=0.
+*
+*  \param A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the M-by-N matrix A.
+*          On exit,
+*            if M >= N, A is overwritten by details of its QR
+*                       factorization as returned by DGEQRF;
+*            if M <  N, A is overwritten by details of its LQ
+*                       factorization as returned by DGELQF.
+*
+*  \param LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  \param B       (input/output) DOUBLE PRECISION array, dimension (LDB,NRHS)
+*          On entry, the matrix B of right hand side vectors, stored
+*          columnwise; B is M-by-NRHS if TRANS = 'N', or N-by-NRHS
+*          if TRANS = 'T'.
+*          On exit, if INFO = 0, B is overwritten by the solution
+*          vectors, stored columnwise:
+*          if TRANS = 'N' and m >= n, rows 1 to n of B contain the least
+*          squares solution vectors; the residual sum of squares for the
+*          solution in each column is given by the sum of squares of
+*          elements N+1 to M in that column;
+*          if TRANS = 'N' and m < n, rows 1 to N of B contain the
+*          minimum norm solution vectors;
+*          if TRANS = 'T' and m >= n, rows 1 to M of B contain the
+*          minimum norm solution vectors;
+*          if TRANS = 'T' and m < n, rows 1 to M of B contain the
+*          least squares solution vectors; the residual sum of squares
+*          for the solution in each column is given by the sum of
+*          squares of elements M+1 to N in that column.
+*
+*  \param LDB     (input) INTEGER
+*          The leading dimension of the array B. LDB >= MAX(1,M,N).
+*
+*  \param WORK    (workspace/output) DOUBLE PRECISION array, dimension (MAX(1,LWORK))
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  \param LWORK   (input) INTEGER
+*          The dimension of the array WORK.
+*          LWORK >= max( 1, MN + max( MN, NRHS ) ).
+*          For optimal performance,
+*          LWORK >= max( 1, MN + max( MN, NRHS )*NB ).
+*          where MN = min(M,N) and NB is the optimum block size.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  \param INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO =  i, the i-th diagonal element of the
+*                triangular factor of A is zero, so that A does not have
+*                full rank; the least squares solution could not be
+*                computed.
+*
+* SUBROUTINE DGELS( TRANS, M, N, NRHS, A, LDA, B, LDB, WORK, LWORK,
+*     $                  INFO )
+*/
+
+void dgels_ ( const char TRANS[1], const int *M, const int *N, const int *NRHS,
+              double *A, const int *LDA, double *B, const int *LDB, double *WORK,
+              const int *LWORK, int *INFO );
+
 #endif
