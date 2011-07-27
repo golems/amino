@@ -405,9 +405,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
                      (int)m, (int)m, (int)p, -1, C, (int)p, C, (int)p,
                      0, &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
     }
-    fprintf(stderr, "H:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
 
-    printf("m:%d\tn:%d\tp:%d\n", m, n, p);
     // balance in lapack: dgebal
     int ilo,ihi;
     double *scale = (double*)aa_region_alloc(reg, 2*m*sizeof(double));
@@ -415,10 +413,6 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     int n_h = 2*(int)m;
     size_t n_hs = 2*m;
     dgebal_("B", &n_h, H, &n_h, &ilo, &ihi, scale, &info);
-    //dgebal_("B", &m2, H, &m2, &ilo, &ihi, scale, &info);
-    fprintf(stderr, "B:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
-    fprintf(stderr, "D:\n"); aa_dump_vec(stderr, scale, 2*m);
-    fprintf(stderr, "ilo %d, ihi: %d\n", ilo, ihi);
 
     // shcur in lapack: dgees
     double *vs = (double*)aa_region_alloc(reg, sizeof(double)*n_hs*n_hs);
@@ -438,18 +432,14 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
             // got work array size
             assert( &swork == work );
             lwork = (int)work[0];
-            fprintf(stderr, "info: %d, size: %d\n", info, lwork);
             work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
             assert(work);
         } while(1);
         aa_region_pop( reg, bwork );
     }
 
-    fprintf(stderr, "S:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
-    fprintf(stderr, "Vs:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
 
     // compute the resulting thing
-    //fprintf(stderr, "size: %u\n", sizeof(double)*(size_t)swork);
     //vs = scal * vs
     double *u11t = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
     // u21 overwritten with X by lapack solver
@@ -467,16 +457,6 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         }
     }
 
-    // don't need to compute u12, u22
-    /* for( size_t j = 0; j < n_hs; j ++) { */
-    /*     for( size_t i = 0; i < n_hs; i ++) { */
-    /*         AA_MATREF(vs, n_hs, i, j) *= scale[i]; */
-    /*     } */
-    /* } */
-
-    /* fprintf(stderr, "U:\n"); aa_dump_mat(stderr, vs, 2*m,2*m); */
-    fprintf(stderr, "u11t:\n"); aa_dump_mat(stderr, u11t, m,m);
-    fprintf(stderr, "u21t:\n"); aa_dump_mat(stderr, u21t, m,m);
     // solve the least squares problem
     // X * u11 = u21
     // u11^T X = u21^T
@@ -488,16 +468,13 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         do {
             dgels_( "N", &mi, &mi, &mi, u11t, &mi, u21t, &mi, work, &lwork,
                     &info );
-            fprintf(stderr, "info %d\n", info);
             if(lwork > 0 ) break;
             assert( &swork == work );
             lwork = (int)work[0];
-            fprintf(stderr, "size: %d\n", lwork);
             work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
             assert(work);
         } while(1);
     }
-    fprintf(stderr, "u21t:\n"); aa_dump_mat(stderr, u21t, m,m);
 
     aa_region_pop( reg, H );
 
