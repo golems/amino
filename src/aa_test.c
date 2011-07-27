@@ -710,6 +710,7 @@ void mem() {
         void *p1a = aa_region_alloc(&reg,4);
         assert( p0a == p0 );
         assert( p1a == p1 );
+        aa_region_destroy(&reg);
     }
     // zero_ar
     {
@@ -983,6 +984,7 @@ void io() {
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
     aa_region_init(&g_region, 1024*64);
+    mem();
     scalar();
     la0();
     la1();
@@ -994,7 +996,6 @@ int main( int argc, char **argv ) {
     axang();
     tf();
     tm();
-    mem();
     dbg();
     kin();
     endconv();

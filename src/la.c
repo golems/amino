@@ -406,7 +406,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     }
     fprintf(stderr, "H:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
 
-
+    printf("m:%d\tn:%d\tp:%d\n", m, n, p);
     // balance in lapack: dgebal
     int ilo,ihi;
     double *scale = (double*)aa_region_alloc(reg, 2*m*sizeof(double));
@@ -420,42 +420,63 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     fprintf(stderr, "ilo %d, ihi: %d\n", ilo, ihi);
 
     // shcur in lapack: dgees
-    int sdim, lwork = -1;
     double *vs = (double*)aa_region_alloc(reg, sizeof(double)*n_hs*n_hs);
-    int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*n_hs);
-    double *wr = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
-    double *wi = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
-    double swork;
-    // get work array size
-    dgees_("V", "S",
-           aa_la_care_laub_select,
-           &n_h, H, &n_h, &sdim, wr, wi,
-           vs, &n_h, &swork, &lwork, bwork, &info );
-    lwork = (int)swork;
-    fprintf(stderr, "info: %d, size: %d\n", info, lwork);
-    double *work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
-    // do the work
-    dgees_("V", "S",
-           aa_la_care_laub_select,
-           &n_h, H, &n_h, &sdim, wr, wi,
-           vs, &n_h, work, &lwork, bwork, &info );
-    aa_region_pop( reg, bwork );
-    // H now triangular
+    {
+        int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*n_hs);
+        double *wr = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
+        double *wi = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
+        double swork;
+        double *work = &swork;
+        int sdim, lwork = -1;
+        do {
+            dgees_("V", "S",
+                   aa_la_care_laub_select,
+                   &n_h, H, &n_h, &sdim, wr, wi,
+                   vs, &n_h, work, &lwork, bwork, &info );
+            if( lwork > 0 ) break;
+            // got work array size
+            assert( &swork == work );
+            lwork = (int)work[0];
+            fprintf(stderr, "info: %d, size: %d\n", info, lwork);
+            work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
+            assert(work);
+        } while(1);
+    }
+
+    //aa_region_pop( reg, bwork );
     fprintf(stderr, "S:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
     fprintf(stderr, "Vs:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
 
     // compute the resulting thing
     //fprintf(stderr, "size: %u\n", sizeof(double)*(size_t)swork);
     //vs = scal * vs
-    for( size_t j = 0; j < n_hs; j ++) {
-        for( size_t i = 0; i < n_hs; i ++) {
-            AA_MATREF(vs, n_hs, i, j) *= scale[i];
+    double *u11 = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
+    double *u21 = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
+
+    // get u11
+    for( size_t j = 0; j < m; j ++) {
+        for( size_t i = 0; i < m; i ++) {
+            //u11
+            AA_MATREF(u11, m, i, j) =
+                AA_MATREF(vs, 2*m, i, j) * scale[i];
+            //u21
+            AA_MATREF(u21, m, i, j) =
+                AA_MATREF(vs, 2*m, i+m, j) * scale[i+m];
         }
     }
 
-    fprintf(stderr, "u2:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
+    // don't need to compute u12, u22
+    /* for( size_t j = 0; j < n_hs; j ++) { */
+    /*     for( size_t i = 0; i < n_hs; i ++) { */
+    /*         AA_MATREF(vs, n_hs, i, j) *= scale[i]; */
+    /*     } */
+    /* } */
 
-    int m1 = (int)m + 1;
+    //fprintf(stderr, "U:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
+    fprintf(stderr, "u11:\n"); aa_dump_mat(stderr, u11, m,m);
+    fprintf(stderr, "u21:\n"); aa_dump_mat(stderr, u21, m,m);
+
+    //int m1 = (int)m + 1;
     // extract blocks of vs
     // solve
 
