@@ -411,36 +411,53 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     int ilo,ihi;
     double *scale = (double*)aa_region_alloc(reg, 2*m*sizeof(double));
     int info;
-    int m2 = 2*(int)m;
-    dgebal_("B", &m2, H, &m2, &ilo, &ihi, scale, &info);
+    int n_h = 2*(int)m;
+    size_t n_hs = 2*m;
+    dgebal_("B", &n_h, H, &n_h, &ilo, &ihi, scale, &info);
     //dgebal_("B", &m2, H, &m2, &ilo, &ihi, scale, &info);
     fprintf(stderr, "B:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
-    fprintf(stderr, "S:\n"); aa_dump_vec(stderr, scale, 2*m);
+    fprintf(stderr, "D:\n"); aa_dump_vec(stderr, scale, 2*m);
     fprintf(stderr, "ilo %d, ihi: %d\n", ilo, ihi);
 
     // shcur in lapack: dgees
     int sdim, lwork = -1;
-    int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*2*m);
-    double *wr = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
-    double *vs = (double*)aa_region_alloc(reg, sizeof(double)*2*m*2*m);
-    double *wi = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
+    double *vs = (double*)aa_region_alloc(reg, sizeof(double)*n_hs*n_hs);
+    int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*n_hs);
+    double *wr = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
+    double *wi = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
     double swork;
     // get work array size
-    dgees_("N", "N",
+    dgees_("V", "S",
            aa_la_care_laub_select,
-           &m2, H, &m2, &sdim, wr, wi,
-           vs, &m2, &swork, &lwork, bwork, &info );
-    lwork = swork;
+           &n_h, H, &n_h, &sdim, wr, wi,
+           vs, &n_h, &swork, &lwork, bwork, &info );
+    lwork = (int)swork;
     fprintf(stderr, "info: %d, size: %d\n", info, lwork);
     double *work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
-    // get work array size
-    dgees_("N", "N",
+    // do the work
+    dgees_("V", "S",
            aa_la_care_laub_select,
-           &m2, H, &m2, &sdim, wr, wi,
-           vs, &m2, &work, &lwork, bwork, &info );
+           &n_h, H, &n_h, &sdim, wr, wi,
+           vs, &n_h, work, &lwork, bwork, &info );
+    aa_region_pop( reg, bwork );
+    // H now triangular
+    fprintf(stderr, "S:\n"); aa_dump_mat(stderr, H, 2*m,2*m);
+    fprintf(stderr, "Vs:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
 
+    // compute the resulting thing
     //fprintf(stderr, "size: %u\n", sizeof(double)*(size_t)swork);
+    //vs = scal * vs
+    for( size_t j = 0; j < n_hs; j ++) {
+        for( size_t i = 0; i < n_hs; i ++) {
+            AA_MATREF(vs, n_hs, i, j) *= scale[i];
+        }
+    }
 
+    fprintf(stderr, "u2:\n"); aa_dump_mat(stderr, vs, 2*m,2*m);
+
+    int m1 = (int)m + 1;
+    // extract blocks of vs
+    // solve
 
     aa_region_pop( reg, H );
 
