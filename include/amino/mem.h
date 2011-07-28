@@ -39,7 +39,7 @@
 #define AA_MEM_H
 
 /**
- * \file amino/aa_mem.h
+ * \file amino/mem.h
  */
 
 /**************/

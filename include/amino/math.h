@@ -38,7 +38,7 @@
 #define AA_MATH_H
 
 /**
- * \file amino/aa_math.h
+ * \file amino/math.h
  */
 
 /***********/
