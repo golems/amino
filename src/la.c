@@ -363,13 +363,19 @@ static int aa_la_care_laub_select( const double *real, const double *complex ) {
 }
 
 AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
-                            const double *restrict A, const double *restrict B, const double *restrict C,
+                            const double *restrict A,
+                            const double *restrict B,
+                            const double *restrict C,
                             double *restrict X, aa_region_t *reg ) {
+    /* See Laub, Alan. "A Schur Method for Solving Algebraic Riccati
+     *  Equations".  IEEE Transactions on Automatic Control. Dec 1979.
+     */
     // A: m*m
     // B: m*n
     // C: p*m
     (void)X;
     int mi = (int)m;
+    int mi2 = 2*mi;
     // build hamiltonian
     double *H = (double*)aa_region_alloc(reg, 2*m*2*m*sizeof(double));
     // copy in A
@@ -406,28 +412,21 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
                      0, &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
     }
 
-    // balance in lapack: dgebal
-    int ilo,ihi;
-    double *scale = (double*)aa_region_alloc(reg, 2*m*sizeof(double));
+    // shcur in lapack: dgees, (will balance the array itself)
     int info;
-    int n_h = 2*(int)m;
-    size_t n_hs = 2*m;
-    dgebal_("B", &n_h, H, &n_h, &ilo, &ihi, scale, &info);
-
-    // shcur in lapack: dgees
-    double *vs = (double*)aa_region_alloc(reg, sizeof(double)*n_hs*n_hs);
+    double *vs = (double*)aa_region_alloc(reg, sizeof(double)*2*m*2*m);
     {
-        int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*n_hs);
-        double *wr = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
-        double *wi = (double*)aa_region_alloc(reg, sizeof(double)*n_hs);
+        int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*2*m);
+        double *wr = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
+        double *wi = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
         double swork;
         double *work = &swork;
         int sdim, lwork = -1;
         do {
             dgees_("V", "S",
                    aa_la_care_laub_select,
-                   &n_h, H, &n_h, &sdim, wr, wi,
-                   vs, &n_h, work, &lwork, bwork, &info );
+                   &mi2, H, &mi2, &sdim, wr, wi,
+                   vs, &mi2, work, &lwork, bwork, &info );
             if( lwork > 0 ) break;
             // got work array size
             assert( &swork == work );
@@ -443,22 +442,22 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     //vs = scal * vs
     double *u11t = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
     // u21 overwritten with X by lapack solver
-    double *u21t = X;//(double*)aa_region_alloc(reg, sizeof(double)*m*m);
+    double *u21t = X;
 
     // get u11
     for( size_t j = 0; j < m; j ++) {
         for( size_t i = 0; i < m; i ++) {
             //u11
             AA_MATREF(u11t, m, j, i) =
-                AA_MATREF(vs, 2*m, i, j) * scale[i];
+                AA_MATREF(vs, 2*m, i, j);
             //u21
             AA_MATREF(u21t, m, j, i) =
-                AA_MATREF(vs, 2*m, i+m, j) * scale[i+m];
+                AA_MATREF(vs, 2*m, i+m, j);
         }
     }
 
     // solve the least squares problem
-    // X * u11 = u21
+    // X * u11 = u21, but X is symmetric, so
     // u11^T X = u21^T
     // X = u21 * u11^(-1)
     {
@@ -475,6 +474,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
             assert(work);
         } while(1);
     }
+    //aa_dump_mat(stderr, X, m,m);
 
     aa_region_pop( reg, H );
 
