@@ -82,6 +82,9 @@ AA_API void aa_tf_93( const double R[9], const double v[3], const double p0[3], 
 /// apply a euclidean transform
 AA_API void aa_tf_q3( const double quat[4], const double v[3], const double p0[3], double p1[4] );
 
+/// apply a euclidean transform
+AA_API void aa_tf_9( const double R[9], const double p0[3], double p1[4] );
+
 /// invert transform
 AA_API void aa_tf_12inv( const double T[12], double Ti[12] );
 /// invert transform

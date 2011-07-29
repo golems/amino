@@ -842,6 +842,20 @@ void tf() {
         double p1[3];
         aa_tf_12(T, p0, p1);
         aveq( 3, p1, AA_FAR(-4,5,10), .001 );
+        aa_tf_93(T, T+9, p0, p1);
+        aveq( 3, p1, AA_FAR(-4,5,10), .001 );
+    }
+    {
+        double T[12] = {0,1,0,  -1,0,0,  0,0,1, 0,0,0};
+        double p0[3] = {3, 5, 7};
+        double p1_12[3];
+        double p1_93[3];
+        double p1_9[3];
+        aa_tf_12(T, p0, p1_12);
+        aa_tf_93(T, T+9,  p0, p1_93);
+        aa_tf_9(T,  p0, p1_9);
+        aveq( 3, p1_12, p1_93, .001 );
+        aveq( 3, p1_12, p1_9, .001 );
     }
     // inv
     {
