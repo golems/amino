@@ -73,3 +73,12 @@ AA_API size_t aa_fmaxloc( size_t n, double *v ) {
     }
     return i_max;
 }
+
+AA_API double aa_frand() {
+    return (double)rand() / (double)RAND_MAX;
+}
+
+AA_API void aa_vrand(size_t n, double *v) {
+    for( size_t i = 0; i < n; i ++ )
+        v[i] = aa_frand();
+}

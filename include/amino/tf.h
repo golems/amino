@@ -109,9 +109,18 @@ AA_API void aa_tf_93rel( const double R1[9], const double v1[3],
 /// relative transform
 AA_API void aa_tf_12rel( const double T1[12], const double T2[12], double Trel[12] );
 
+/*********************/
+/* Rotation Matrices */
+/*********************/
 
 /// tests if R is a rotation matrix
 AA_API int aa_tf_isrotmat( const double R[9] );
+
+
+/// multiple two rotation matrices
+AA_API void aa_tf_9mul( const double R0[9], const double R1[9], double R[9] );
+/// rotate p0 by R
+AA_API void aa_tf_9rot( const double R[9], const double p0[3], double p1[3] );
 
 /***************/
 /* Quaternions */

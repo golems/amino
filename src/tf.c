@@ -93,6 +93,34 @@ AA_API void aa_tf_12rel( const double T1[12], const double T2[12], double Trel[1
 }
 
 
+// from maxima
+AA_API void aa_tf_9mul_( const double R0[9], const double R1[9],
+                         double R[9] );
+AA_API void aa_tf_9mul( const double R0[9], const double R1[9], double R[9] ) {
+    aa_tf_9mul_(R0, R1, R);
+}
+/*
+    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans,
+                 3, 3, 3,
+                 1.0, R0, 3,
+                 R1, 3,
+                 0.0, R, 3 );
+}
+*/
+/// from maxima
+void aa_tf_9rot_( const double R[9], const double p0[3], double p1[3] );
+AA_API void aa_tf_9rot( const double R[9], const double p0[3],
+                       double p1[3] ) {
+    aa_tf_9rot_(R, p0, p1);
+    /*
+    cblas_dgemv( CblasColMajor, CblasNoTrans,
+                 3, 3,
+                 1.0, R, 3,
+                 p0, 1,
+                 0.0, p1, 1 );
+    */
+}
+
 void aa_tf_qnormalize( double q[4] ) {
     aa_la_normalize( 4, q );
 }

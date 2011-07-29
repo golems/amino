@@ -876,6 +876,56 @@ void tf() {
               .001 );
     }
 }
+
+void tffuzz() {
+    void randtf(double T[12], double q[4], double R[9], double v[3]) {
+        double axa[4];
+        aa_vrand(3,v);
+        aa_vrand(4,axa); axa[3] *= M_PI;
+        aa_tf_axang2quat( axa, q );
+        aa_tf_quat2rotmat( q, T );
+        aa_tf_quat2rotmat( q, R );
+        aa_fcpy( T+9, v, 3 );
+    }
+    for( size_t k = 0; k < 1000; k ++ ) {
+        // tfs
+        double v[3], T[12], q[4], R[9];
+        randtf(T,q,R,v);
+        double v1[3], T1[12], q1[4], R1[9];
+        randtf(T1,q1,R1,v1);
+
+        // point
+        double p0[3];
+        aa_vrand(3,p0);
+
+        // transform
+        double p1a[3], p1b[3];
+        aa_tf_qrot(q, p0, p1a);
+        aa_tf_9rot(R, p0, p1b);
+        aveq( 3, p1a, p1b, .001 );
+        aa_tf_9rot(T, p0, p1b);
+        aveq( 3, p1a, p1b, .001 );
+
+        aa_tf_12(T, p0, p1a);
+        aa_tf_93(R, v, p0, p1b);
+        aveq( 3, p1a, p1b, .001 );
+
+        // mul
+        double qc[4], Rc[9];
+        aa_tf_qmul( q, q1, qc );
+        aa_tf_9mul( R, R1, Rc );
+        aa_tf_qrot(q, p0, p1a);
+        aa_tf_9rot(R, p0, p1b);
+        aveq( 3, p1a, p1b, .001 );
+        // inv
+        aa_tf_qinv( q, qc );
+        aa_la_transpose2( 3, 3, R, Rc );
+        aa_tf_qrot(q, p0, p1a);
+        aa_tf_9rot(R, p0, p1b);
+        aveq( 3, p1a, p1b, .001 );
+    }
+}
+
 void kin() {
     double ta[2], tb[2];
     assert( 0 == aa_kin_planar2_ik_theta2( AA_FAR(1, 2), AA_FAR(2.2, 2), ta, tb ) );
@@ -1022,6 +1072,7 @@ int main( int argc, char **argv ) {
     rotmat();
     axang();
     tf();
+    tffuzz();
     tm();
     dbg();
     kin();
