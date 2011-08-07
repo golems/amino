@@ -206,17 +206,17 @@ int aa_la_inv( size_t n, double *A ) {
     // LU-factor
     dgetrf_( &mi, &ni, A, &mi, ipiv, &info );
 
-    // find optimal size
     double swork[1];
-    int lwork_query = -1;
-    dgetri_( &ni, A, &mi, ipiv, swork, &lwork_query, &info );
-    int lwork = (int) swork[0];
+    double *work = swork;
+    int lwork = -1;
+    while(1) {
+        dgetri_( &ni, A, &mi, ipiv, work, &lwork, &info );
+        if( lwork > 0 ) break;
+        lwork = (int) work[0];
+        work = AA_NEW_LOCAL(double, (size_t)lwork);
+    }
 
-    // invert
-    double *work = AA_NEW_LOCAL(double, (size_t)swork[0]);
-    dgetri_( &ni, A, &mi, ipiv, work, &lwork, &info );
     AA_DEL_LOCAL(work, double, (size_t)swork[0]);
-
     return info;
 }
 
@@ -233,8 +233,9 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     const int mi = (int)m;
     const int ni = (int)n;
 
+    /*  // this method uses an LU factorization
     // B = AA^T
-    /* double *B = (double*)AA_ALLOCAL(sizeof(double)*m*m);
+    double *B = (double*)AA_ALLOCAL(sizeof(double)*m*m);
     cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni,
                  1, A, mi, A, mi, 0, B, mi );
 
@@ -286,25 +287,18 @@ int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double
     int lwork = -1;
     int info;
 
-    // calculate work size
-    double qwork[1];
-    dgesvd_( jobu, jobvt, &mi, &ni,
-             Ap, &mi,
-             S, U, &mi,
-             Vt, &ni,
-             &qwork[0], &lwork, &info );
-
-    // allocate work array
-    lwork = (int) qwork[0];
-    double *work =  AA_NEW_LOCAL( double, (size_t)lwork );
-    //printf("size: %d\n", (int)qwork[0]);
-
-    // calculate SVD
-    dgesvd_( jobu, jobvt, &mi, &ni,
-             Ap, &mi,
-             S, U, &mi,
-             Vt, &ni,
-             &work[0], &lwork, &info );
+    double swork[1];
+    double *work =  swork;
+    while(1) {
+        dgesvd_( jobu, jobvt, &mi, &ni,
+                 Ap, &mi,
+                 S, U, &mi,
+                 Vt, &ni,
+                 &work[0], &lwork, &info );
+        if( lwork >= 0 ) break;
+        lwork = (int) work[0];
+        work =  AA_NEW_LOCAL( double, (size_t)lwork );
+    }
 
     //finish
     AA_DEL_LOCAL(work, double, (size_t)lwork );
@@ -422,7 +416,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         double swork;
         double *work = &swork;
         int sdim, lwork = -1;
-        do {
+        while(1) {
             dgees_("V", "S",
                    aa_la_care_laub_select,
                    &mi2, H, &mi2, &sdim, wr, wi,
@@ -433,7 +427,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
             lwork = (int)work[0];
             work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
             assert(work);
-        } while(1);
+        };
         aa_region_pop( reg, bwork );
     }
 
@@ -465,7 +459,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         int lwork = -1;
         double swork;
         double *work = &swork;
-        do {
+        while(1) {
             dgels_( "N", &mi, &mi, &mi, u11t, &mi, u21t, &mi, work, &lwork,
                     &info );
             if(lwork > 0 ) break;
@@ -473,7 +467,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
             lwork = (int)work[0];
             work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
             assert(work);
-        } while(1);
+        };
     }
 
     aa_region_pop( reg, H );
