@@ -36,6 +36,7 @@
  */
 
 #include "amino.h"
+#include <stdarg.h>
 
 #define AA_REGION_ALIGN 16
 
@@ -183,6 +184,20 @@ void aa_region_release( aa_region_t *region ) {
         region->node = aa_region_node_alloc( n, NULL);
     }
     region->head = region->node->d;
+}
+
+
+char* aa_region_printf(aa_region_t *reg, const char *fmt, ... ) {
+    int r;
+    do {
+        va_list arg;
+        va_start(arg, fmt);
+        r = vsnprintf((char*)aa_region_ptr(reg), aa_region_freesize(reg),
+                      fmt, arg);
+        va_end(arg);
+    }while( (r >= (int)aa_region_freesize(reg) ) &&
+            aa_region_tmpalloc( reg, (size_t)r) );
+    return (char*)aa_region_alloc(reg,(size_t)r);
 }
 
 void aa_pool_init( aa_pool_t *pool, size_t size, size_t count ) {

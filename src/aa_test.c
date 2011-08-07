@@ -834,6 +834,18 @@ void mem() {
         }
         aa_region_destroy(&reg);
     }
+    // region printf
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 5);
+        char *foo = aa_region_printf(&reg, "foo%d",1);
+        assert( 0 == strcmp(foo, "foo1") );
+        assert( ! reg.node->next );
+        char *bar = aa_region_printf(&reg, "bar%d",2);
+        assert( 0 == strcmp(bar, "bar2") );
+        assert( reg.node->next );
+        aa_region_destroy(&reg);
+    }
     // zero_ar
     {
         double x[6] = {1,2,3,4,5,6};
