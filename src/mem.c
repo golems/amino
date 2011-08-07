@@ -186,18 +186,25 @@ void aa_region_release( aa_region_t *region ) {
     region->head = region->node->d;
 }
 
-
-char* aa_region_printf(aa_region_t *reg, const char *fmt, ... ) {
+char* aa_region_vprintf(aa_region_t *reg, const char *fmt, va_list ap ) {
     int r;
     do {
-        va_list arg;
-        va_start(arg, fmt);
+        va_list ap1;
+        va_copy(ap1, ap);
         r = vsnprintf((char*)aa_region_ptr(reg), aa_region_freesize(reg),
-                      fmt, arg);
-        va_end(arg);
+                      fmt, ap1);
+        va_end(ap1);
     }while( (r >= (int)aa_region_freesize(reg) ) &&
             aa_region_tmpalloc( reg, (size_t)r) );
     return (char*)aa_region_alloc(reg,(size_t)r);
+}
+
+char* aa_region_printf(aa_region_t *reg, const char *fmt, ... ) {
+    va_list arg;
+    va_start(arg, fmt);
+    char *s = aa_region_vprintf(reg, fmt, arg);
+    va_end(arg);
+    return s;
 }
 
 void aa_pool_init( aa_pool_t *pool, size_t size, size_t count ) {

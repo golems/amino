@@ -96,6 +96,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <errno.h>
+#include <stdarg.h>
 #endif //__cplusplus
 
 #include <cblas.h>
