@@ -638,6 +638,7 @@ void mem() {
         aa_region_init(&reg, 10);
         void *p = aa_region_alloc(&reg,10);
         memset(p,0,10);
+        assert(! reg.node->next );
         aa_region_destroy(&reg);
     }
     {
@@ -645,6 +646,11 @@ void mem() {
         aa_region_init(&reg, 2);
         void *p = aa_region_alloc(&reg,10);
         memset(p,0,10);
+        assert(! reg.node->next );
+        assert( reg.node->end >= (uint8_t*) p + 10 );
+        p = aa_region_alloc(&reg,30);
+        assert( reg.node->next );
+        memset(p,0,30);
         aa_region_destroy(&reg);
     }
     {

@@ -124,18 +124,19 @@ AA_API void aa_region_pop( aa_region_t *reg, void *ptr ) {
                   (popsize == p->end - p->d) ) );
         reg->node = aa_region_node_alloc( (size_t)(n+popsize),
                                           (!p || ptr8 > p->d) ? p : aa_region_node_free(p) ) ;
-        //reg->fill = 0;
         reg->head = reg->node->d;
     }
 }
 
-static void aa_region_grow( aa_region_t *region, size_t size ) {
-    size_t nsize = AA_MAX(2*(size_t)(region->node->end - region->node->d), size);
+static void aa_region_grow( aa_region_t *reg, size_t size ) {
+    size_t nsize = AA_MAX(2*(size_t)(reg->node->end - reg->node->d), size);
     // this growth strategy creates worst-case O(n) memory waste
-    region->node = aa_region_node_alloc(  nsize, region->node );
-    region->head = region->node->d;
-    assert( aa_region_freesize(region) >= size );
-    assert( ! ((uintptr_t)region->head%16) );
+    reg->node = aa_region_node_alloc( nsize,
+                                      (reg->head == reg->node->d) ?  /* free unused chunk */
+                                      aa_region_node_free(reg->node) : reg->node );
+    reg->head = reg->node->d;
+    assert( aa_region_freesize(reg) >= size );
+    assert( ! ((uintptr_t)reg->head%16) );
 }
 
 void *aa_region_tmpalloc( aa_region_t *region, size_t size ) {
