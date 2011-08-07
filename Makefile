@@ -16,7 +16,7 @@ include /usr/share/make-common/common.1.mk
 
 #CFLAGS += -O0 -Wno-conversion
 CFLAGS += --std=gnu99 -O2
-FFLAGS += -I/usr/include -O2
+FFLAGS += -I/usr/include -O2 -fPIC
 
 default: $(LIBFILES) $(BINFILES) test
 
@@ -24,7 +24,7 @@ test: build/aa_test build/aa_testpp
 	./build/aa_test
 	./build/aa_testpp
 
-OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o time.o io.o
+OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o time.o io.o mac/dyn_bal.o
 BOBJS := $(addprefix build/, $(OBJS))
 # lapack should also link (c)blas and gfortran if needed
 LIBS := m lapack rt
@@ -35,6 +35,11 @@ LIBS := m lapack rt
 $(SRCDIR)/mac/mac.f: $(SRCDIR)/mac/amino.mac $(SRCDIR)/mac/gen.mac
 	@echo [maxima start]
 	cd $(SRCDIR)/mac && maxima --very-quiet -b gen.mac
+	@echo [maxima end]
+
+$(SRCDIR)/mac/dyn_bal.f: $(SRCDIR)/mac/bal.mac
+	@echo [maxima start]
+	cd $(SRCDIR)/mac && maxima --very-quiet -b bal.mac
 	@echo [maxima end]
 
 $(call LINKLIB, amino, $(OBJS), $(LIBS))

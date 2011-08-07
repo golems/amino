@@ -456,6 +456,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         }
     }
 
+    //aa_dump_mat(stderr, X, m,m);
     // solve the least squares problem
     // X * u11 = u21, but X is symmetric, so
     // u11^T X = u21^T
@@ -474,7 +475,6 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
             assert(work);
         } while(1);
     }
-    //aa_dump_mat(stderr, X, m,m);
 
     aa_region_pop( reg, H );
 

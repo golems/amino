@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <sys/resource.h>
 
 static void afeq( double a, double b, double tol ) {
     assert( aa_feq(a,b,tol) );
@@ -608,7 +609,7 @@ void tm() {
     }
 
     // rdtsc
-#ifdef AA_FEATURE_RDTSC
+#ifdef AA_FEATURE_RDTSC_NOT
     {
         uint64_t a0,a1;
         a0 = aa_rdtsc();
@@ -628,7 +629,7 @@ void tm() {
         }
 
     }
-#endif// AA_FEATURE_RDTSC
+#endif// AA_FEATURE_RDTSC_NOT
 }
 
 void mem() {
@@ -697,28 +698,35 @@ void mem() {
 
         aa_region_destroy(&reg);
     }
+    // region growth
     {
         aa_region_t reg;
         aa_region_init(&reg, 16);
-        for( size_t i = 0; i < 256; i ++ ) {
-            for( size_t j = 0; j < i + 2; j ++ ) {
+        for( size_t i = 0; i < 10; i ++ ) {
+            assert( ! reg.node->next );
+            size_t old_n = aa_region_topsize(&reg);
+            size_t n = old_n / 16 + 1;
+            for( size_t j = 0; j < n; j ++ ) {
                 aa_region_alloc(&reg, 16);
             }
-            assert( reg.node.next );
-            assert( reg.node.fbuf->n >= 16 );
+            assert( reg.node->next );
+            assert( ! reg.node->next->next );
+            assert( aa_region_topsize(&reg) > old_n );
             aa_region_release(&reg);
-            assert( reg.node.fbuf->n >= (i+2)*16 );
-            assert( reg.node.fbuf->n < 2*(i+2)*16 + 1 );
+            assert( ! reg.node->next );
+            assert( aa_region_topsize(&reg) >= old_n + 16 );
+            assert( aa_region_topsize(&reg) <= 4*old_n );
         }
         for( size_t i = 0; i < 256; i ++ ) {
             for( size_t j = 0; j < i + 2; j ++ ) {
                 aa_region_alloc(&reg, 16);
             }
-            assert( NULL == reg.node.next );
+            assert( NULL == reg.node->next );
             aa_region_release(&reg);
         }
         aa_region_destroy(&reg);
     }
+    // pop simple
     {
         aa_region_t reg;
         aa_region_init(&reg, 256);
@@ -732,11 +740,92 @@ void mem() {
         assert( p2a == p2 );
         assert( p3a == p3 );
         aa_region_pop(&reg, p0);
-        assert(0 == reg.fill);
+        assert(reg.node->d == reg.head);
         void *p0a = aa_region_alloc(&reg,4);
         void *p1a = aa_region_alloc(&reg,4);
         assert( p0a == p0 );
         assert( p1a == p1 );
+        aa_region_destroy(&reg);
+    }
+    // pop chain
+    {
+        aa_region_t reg;
+        aa_region_init(&reg, 32);
+        assert( 1 == aa_region_chunk_count(&reg) );
+        void *p0 = aa_region_alloc(&reg,2);
+        assert( reg.node->d+16 == reg.head ); // align16
+        void *p1 = aa_region_alloc(&reg,64);
+        (void)p1;
+        assert( reg.node->d+64 == reg.head );
+        //assert( 16 <= reg.total && 32 >= reg.total );
+        assert( 2 == aa_region_chunk_count(&reg) );
+        for( size_t i = 0; i < 5; i++ ) {
+            uint8_t *v1 = (uint8_t*)aa_region_alloc( &reg, 2<<20 );
+            //assert( 64 + 16 <= reg.total && 64 + 32 >= reg.total );
+            uint8_t *v2 = (uint8_t*)aa_region_alloc( &reg, 2<<20 );
+            // check memory reuse
+            if( i > 2 ) assert(*v2 == 2); else *v2 = 2;
+            if( i > 2 ) assert(*v1 == 1); else *v1 = 1;
+            // check chunk counts
+            if( i )  assert( 3 == aa_region_chunk_count(&reg) );
+            else assert( 4 == aa_region_chunk_count(&reg) );
+            aa_region_pop( &reg, v1 );
+            assert( 3 == aa_region_chunk_count(&reg) );
+        }
+        assert( reg.node->d == reg.head );
+        //assert( 64 + 16 <= reg.total && 64 + 32 >= reg.total );
+        aa_region_pop( &reg, p0 );
+        //assert( 0 == reg.fill );
+        //assert( 0 == reg.total );
+        aa_region_destroy(&reg);
+    }
+    { //tmp alloc
+        aa_region_t reg;
+        aa_region_init(&reg, 5 * (2<<20) );
+        for( size_t i = 0; i < 2 << 20; i++ ) {
+            aa_region_tmpalloc(&reg, 2<<20);
+        }
+        assert( NULL == reg.node->next );
+        assert( 5*(2<<20) == aa_region_topsize(&reg) );
+        aa_region_destroy(&reg);
+    }
+    // fuzz
+    {
+#define N_ALLOC 10
+#define N_LOOP 100
+        aa_region_t reg;
+        aa_region_init(&reg, 128 );
+        size_t m =(size_t) rand() % N_LOOP;
+        uint8_t *ptrs[N_ALLOC] = {0};
+        size_t lens[N_ALLOC] = {0};
+        aa_region_t *preg = &reg;
+        size_t j = 0;
+        for( size_t i = 0; i < m; i ++ ) {
+            size_t n = (size_t)rand()%N_ALLOC;
+            // alloc some stuff
+            for( ; j < n ;j ++ ) {
+                assert( &reg == preg );
+                assert( j < N_ALLOC );
+                assert(0 == lens[j]);
+                assert(NULL == ptrs[j]);
+                lens[j] = (size_t)rand()%255 + 1;
+                ptrs[j] = (uint8_t*)aa_region_alloc(&reg, lens[j]);
+                * ptrs[j] = (uint8_t)j;
+                assert( 0 == (uintptr_t)reg.head % 16 );
+                assert(ptrs[j] >= reg.node->d);
+                assert(lens[j] <= (size_t)(reg.head - reg.node->d));
+            }
+            if(j) {
+                for( size_t k = 0; k < j; k++ ) {
+                    assert( *ptrs[k]  == (uint8_t)k );
+                }
+                j = (size_t)rand()%j;
+                aa_region_pop( &reg, ptrs[j] );
+                for( size_t k = j; k < N_ALLOC; k++ ) {
+                    lens[k] = 0; ptrs[k] = NULL;
+                }
+            }
+        }
         aa_region_destroy(&reg);
     }
     // zero_ar
@@ -755,13 +844,13 @@ void mem() {
 }
 
 void dbg() {
-    aa_tick("usleep(1000): ");
-    usleep(1000);
-    aa_tock();
+    //aa_tick("usleep(1000): ");
+    //usleep(1000);
+    //aa_tock();
 
-    aa_tick("relsleep(10ms): ");
-    aa_tm_relsleep( aa_tm_sec2timespec(10e-3));
-    aa_tock();
+    //aa_tick("relsleep(10ms): ");
+    //aa_tm_relsleep( aa_tm_sec2timespec(10e-3));
+    //aa_tock();
 }
 
 void rotmat() {
@@ -1074,11 +1163,32 @@ void io() {
 
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
+
+
+    // init
+    srand((unsigned int)time(NULL)); // might break in 2038
+    // some limits because linux (and sometimes our software) sucks
+    {
+        int r;
+        struct rlimit lim;
+        // address space
+        lim.rlim_cur = (1<<30);
+        lim.rlim_max = (1<<30);
+        r = setrlimit( RLIMIT_AS, &lim );
+        assert(0 == r );
+        // cpu time
+        lim.rlim_cur = 60;
+        lim.rlim_max = 60;
+        r = setrlimit( RLIMIT_CPU, &lim );
+        assert(0 == r );
+    }
+
     aa_region_init(&g_region, 1024*64);
     mem();
     scalar();
     la0();
     la1();
+
     la2();
     la3();
     angle();

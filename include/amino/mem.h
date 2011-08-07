@@ -119,8 +119,10 @@ static inline void aa_frlocal( void *ptr, size_t size ) {
 /// A buffer struct
 typedef struct {
     size_t n;    ///< size of buffer
-    // should 16-byte align this part
-    uint8_t d[]; ///< data
+    union {
+        uint64_t dalign;   ///< dummy element for alignment
+        uint8_t d[1];      ///< data
+    };
 } aa_flexbuf_t;
 
 /// allocate buffer of n bytes
@@ -131,18 +133,21 @@ AA_API void aa_flexbuf_free(aa_flexbuf_t *p);
 /*----------- Region Allocation ------------------*/
 
 struct aa_region_node {
-    //void *buf;                   ///< the memory buffer to allocate from
-    //size_t size;                 ///< size of this buffer
-    aa_flexbuf_t *fbuf;
-    struct aa_region_node *next; ///< pointer to next buffer node list
+    //size_t n;                    ///< size of this chunk
+    uint8_t *end;                ///< pointer to end of this chunk
+    struct aa_region_node *next; ///< pointer to next chunk node
+    union {
+        uint64_t dalign;        ///< dummy element for alignment
+        uint8_t d[1];           ///< data array
+    };
 };
 
 /** Data Structure for Region-Based memory allocation.
  *
- *
  * Memory regions provide fast allocation of individual objects and
- * fast deallocation of all objects in the region.  It is not possible
- * to deallocate only a single object from the region.
+ * fast deallocation of all objects in the region and of all objects
+ * allocated after some given object.  It is not possible to
+ * deallocate only a single arbitrary object from the region.
  *
  * This provides two benefits over malloc/free.  First, as long as the
  * requested allocation can be fulfilled from the memory available in
@@ -151,38 +156,63 @@ struct aa_region_node {
  * metadata for each individual allocation resulting in some space
  * savings, expecially for small objects.
  *
- * If the request cannot be satisfied from the current region, this
- * implemention will malloc() another buffer and add it to the region.
- * When objects are deallocated, all buffers are merged into one,
- * possibly requiring several calls to free().
+ * This implementation pre-allocates chunks of memory and fulfills
+ * individual requests from those chunks.  If the request cannot be
+ * satisfied from the currently available chunk, this implemention
+ * will malloc() another chunk and add it to the region in a linked
+ * list.  When objects are deallocated via a release or a pop, chunks
+ * are merged into one, possibly requiring several calls to free()
+ * followed by a single malloc of a new, larger chunk.
  */
 typedef struct {
-    //size_t size;   ///< size of the first buffer
-    size_t fill;   ///< previously allocated bytes in first buffer
-    size_t total;  ///< allocated bytes in all buffers after the first
-    /// struct to hold memory buffers
-    struct aa_region_node node;        ///< linked list of buffers
+    uint8_t *head;                ///< pointer to first free element of top chunk
+    struct aa_region_node *node;  ///< linked list of chunks
 } aa_region_t;
 
-/** Initialize memory region with block of size bytes. */
+/** Initialize memory region with an initial chunk of size bytes. */
 AA_API void aa_region_init( aa_region_t *region, size_t size );
 
-/** Destroy memory region freeing all block buffers.
+/** Destroy memory region freeing all chunks.
  */
 AA_API void aa_region_destroy( aa_region_t *region );
 
-/** Allocate size bytes from the region.
+/** Pointer to start of free space in region.
+ */
+AA_API void *aa_region_ptr( aa_region_t *region );
+
+/** Number of free contiguous bytes in region.  This is the number of
+ * bytes which may be allocated without creating another chunk.
+ */
+AA_API size_t aa_region_freesize( aa_region_t *region );
+
+/** Temporary allocation.  The next call to aa_region_alloc or
+ * aa_region_tmpalloc will return the same pointer if sufficient space
+ * is available in the top chunk for that subsequent call.
+ */
+AA_API void *aa_region_tmpalloc( aa_region_t *region, size_t size );
+
+/** Allocate size bytes from the region.  The head pointer of the top
+ * chunk will be returned if it has sufficient space for the
+ * allocation.
  */
 AA_API void *aa_region_alloc( aa_region_t *region, size_t size );
-
 
 /** Deallocates ptr and all blocks allocated after ptr was allocated.
  */
 AA_API void aa_region_pop( aa_region_t *region, void *ptr );
 
-/** Deallocates all allocated chunks from the region.
+/** Deallocates all allocated objects from the region.  If the region
+ * contains multiple chunks, they are merged into one.
  */
 AA_API void aa_region_release( aa_region_t *region );
+
+/** Number of chunks in the region
+ */
+AA_API size_t aa_region_chunk_count( aa_region_t *region );
+
+/** Size of top chunk in region
+ */
+AA_API size_t aa_region_topsize( aa_region_t *region );
 
 /*----------- Pooled Allocation ------------------*/
 
