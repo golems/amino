@@ -76,6 +76,11 @@ static inline void aa_free_if_valid( void *ptr ) {
 /** Malloc and zero initialize an object of type. */
 #define AA_NEW0(type) AA_NEW0_AR(type,1)
 
+/** Returns val aligned to some multiple of align.  align must be
+ * a power of 2.  Evaluates arguments multiple times. */
+#define AA_ALIGN2( val, align ) (((val) + (align) - 1) & ~(align-1))
+
+
 /*----------- Local Allocation ------------------*/
 #ifndef AA_ALLOC_STACK_MAX
 /// maximum size of objects to stack allocate
@@ -132,14 +137,13 @@ AA_API void aa_flexbuf_free(aa_flexbuf_t *p);
 
 /*----------- Region Allocation ------------------*/
 
+#define AA_REGION_ALIGN 16
+
 struct aa_region_node {
     //size_t n;                    ///< size of this chunk
     uint8_t *end;                ///< pointer to end of this chunk
     struct aa_region_node *next; ///< pointer to next chunk node
-    union {
-        uint64_t dalign;        ///< dummy element for alignment
-        uint8_t d[1];           ///< data array
-    };
+    uint8_t d[];           ///< data array
 };
 
 /** Data Structure for Region-Based memory allocation.

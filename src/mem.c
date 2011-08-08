@@ -38,7 +38,9 @@
 #include "amino.h"
 #include <stdarg.h>
 
-#define AA_REGION_ALIGN 16
+
+
+
 
 AA_API aa_flexbuf_t *aa_flexbuf_alloc(size_t n) {
     aa_flexbuf_t *fb = (aa_flexbuf_t*)aa_malloc0( sizeof(aa_flexbuf_t) + n - sizeof(fb->dalign) );
@@ -49,11 +51,13 @@ AA_API void aa_flexbuf_free(aa_flexbuf_t *p) {
     aa_free_if_valid(p);
 }
 
-static struct aa_region_node  *aa_region_node_alloc(size_t n, struct aa_region_node *next) {
+static struct aa_region_node  *aa_region_node_alloc(size_t n,
+                                                    struct aa_region_node *next) {
     // FIXME: maybe we should use mmap instead of malloc()
     struct aa_region_node *p =
-        (struct aa_region_node*)aa_malloc0(sizeof(struct aa_region_node) + n - sizeof( p->dalign));
-    p->end = p->d + n;
+        (struct aa_region_node*)malloc(sizeof(struct aa_region_node) + n + AA_REGION_ALIGN);
+    p->end = p->d + n + AA_REGION_ALIGN;
+    p->next = next;
     p->next = next;
     return p;
 }
@@ -66,17 +70,20 @@ static struct aa_region_node  *aa_region_node_free(struct aa_region_node *p)
     return n;
 }
 
-/// set reg->fill to nfill aligned upward to AA_REGION_ALIGN
-static inline void aa_region_align(aa_region_t *reg, uint8_t *nhead) {
+static inline uint8_t *aa_region_alignptr( uint8_t *ptr ) {
     // AA_REGION_ALIGN must be a power of 2
-    const uintptr_t align = AA_REGION_ALIGN - 1;
-    reg->head = (uint8_t*) (((uintptr_t)nhead + align) & ~align);
+    return (uint8_t*)AA_ALIGN2( (uintptr_t)ptr,
+                                (uintptr_t)(AA_REGION_ALIGN) );
+}
+
+static inline void aa_region_align(aa_region_t *reg, uint8_t *nhead) {
+    reg->head = aa_region_alignptr(nhead);
 }
 
 
 void aa_region_init( aa_region_t *region, size_t size ) {
     region->node = aa_region_node_alloc(size, NULL);
-    region->head = region->node->d;
+    aa_region_align( region, region->node->d );
 }
 
 void aa_region_destroy( aa_region_t *region ) {
@@ -123,19 +130,24 @@ AA_API void aa_region_pop( aa_region_t *reg, void *ptr ) {
                 // poppsed start of chunk, realloc it
                 ( (ptr8 == p->d) &&
                   (popsize == p->end - p->d) ) );
-        reg->node = aa_region_node_alloc( (size_t)(n+popsize),
-                                          (!p || ptr8 > p->d) ? p : aa_region_node_free(p) ) ;
-        reg->head = reg->node->d;
+        reg->node =
+            aa_region_node_alloc( (size_t)(n+popsize),
+                                  (p && aa_region_alignptr(p->d) == ptr8) ?
+                                  aa_region_node_free(p) : p );
+        reg->head = aa_region_alignptr(reg->node->d);
     }
 }
 
 static void aa_region_grow( aa_region_t *reg, size_t size ) {
-    size_t nsize = AA_MAX(2*(size_t)(reg->node->end - reg->node->d), size);
+    size_t nsize = AA_MAX(2*(size_t)(reg->node->end - reg->node->d),
+                          size + AA_REGION_ALIGN);
     // this growth strategy creates worst-case O(n) memory waste
-    reg->node = aa_region_node_alloc( nsize,
-                                      (reg->head == reg->node->d) ?  /* free unused chunk */
-                                      aa_region_node_free(reg->node) : reg->node );
-    reg->head = reg->node->d;
+    reg->node =
+        aa_region_node_alloc( nsize,
+                              /* free unused chunk */
+                              (aa_region_alignptr(reg->node->d) == reg->head) ?
+                              aa_region_node_free(reg->node) : reg->node );
+    aa_region_align(reg, reg->node->d);
     assert( aa_region_freesize(reg) >= size );
     assert( ! ((uintptr_t)reg->head%16) );
 }
@@ -191,12 +203,13 @@ char* aa_region_vprintf(aa_region_t *reg, const char *fmt, va_list ap ) {
     do {
         va_list ap1;
         va_copy(ap1, ap);
+        // r is one less than needed buffer size, (doesn't count '\0')
         r = vsnprintf((char*)aa_region_ptr(reg), aa_region_freesize(reg),
                       fmt, ap1);
         va_end(ap1);
     }while( (r >= (int)aa_region_freesize(reg) ) &&
-            aa_region_tmpalloc( reg, (size_t)r) );
-    return (char*)aa_region_alloc(reg,(size_t)r);
+            aa_region_tmpalloc( reg, (size_t)r + 1) );
+    return (char*)aa_region_alloc(reg,(size_t)r + 1);
 }
 
 char* aa_region_printf(aa_region_t *reg, const char *fmt, ... ) {

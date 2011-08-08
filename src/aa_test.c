@@ -721,7 +721,7 @@ void mem() {
             aa_region_release(&reg);
             assert( ! reg.node->next );
             assert( aa_region_topsize(&reg) >= old_n + 16 );
-            assert( aa_region_topsize(&reg) <= 4*old_n );
+            assert( aa_region_topsize(&reg) <= 8*old_n );
         }
         for( size_t i = 0; i < 256; i ++ ) {
             for( size_t j = 0; j < i + 2; j ++ ) {
@@ -746,7 +746,7 @@ void mem() {
         assert( p2a == p2 );
         assert( p3a == p3 );
         aa_region_pop(&reg, p0);
-        assert(reg.node->d == reg.head);
+        assert(AA_ALIGN2((intptr_t)reg.node->d,AA_REGION_ALIGN) == (intptr_t)reg.head);
         void *p0a = aa_region_alloc(&reg,4);
         void *p1a = aa_region_alloc(&reg,4);
         assert( p0a == p0 );
@@ -759,15 +759,15 @@ void mem() {
         aa_region_init(&reg, 32);
         assert( 1 == aa_region_chunk_count(&reg) );
         void *p0 = aa_region_alloc(&reg,2);
-        assert( reg.node->d+16 == reg.head ); // align16
+        assert( AA_ALIGN2((intptr_t)reg.node->d,AA_REGION_ALIGN)+16 ==
+                (intptr_t)reg.head ); // align16
         void *p1 = aa_region_alloc(&reg,64);
         (void)p1;
-        assert( reg.node->d+64 == reg.head );
-        //assert( 16 <= reg.total && 32 >= reg.total );
+        assert( AA_ALIGN2((intptr_t)reg.node->d,AA_REGION_ALIGN)+64 ==
+                (intptr_t)reg.head );
         assert( 2 == aa_region_chunk_count(&reg) );
         for( size_t i = 0; i < 5; i++ ) {
             uint8_t *v1 = (uint8_t*)aa_region_alloc( &reg, 2<<20 );
-            //assert( 64 + 16 <= reg.total && 64 + 32 >= reg.total );
             uint8_t *v2 = (uint8_t*)aa_region_alloc( &reg, 2<<20 );
             // check memory reuse
             if( i > 2 ) assert(*v2 == 2); else *v2 = 2;
@@ -778,11 +778,8 @@ void mem() {
             aa_region_pop( &reg, v1 );
             assert( 3 == aa_region_chunk_count(&reg) );
         }
-        assert( reg.node->d == reg.head );
-        //assert( 64 + 16 <= reg.total && 64 + 32 >= reg.total );
+        assert( reg.node->d <= reg.head );
         aa_region_pop( &reg, p0 );
-        //assert( 0 == reg.fill );
-        //assert( 0 == reg.total );
         aa_region_destroy(&reg);
     }
     { //tmp alloc
@@ -792,7 +789,7 @@ void mem() {
             aa_region_tmpalloc(&reg, 2<<20);
         }
         assert( NULL == reg.node->next );
-        assert( 5*(2<<20) == aa_region_topsize(&reg) );
+        assert( 5*(2<<20) + AA_REGION_ALIGN == aa_region_topsize(&reg) );
         aa_region_destroy(&reg);
     }
     // fuzz
@@ -843,7 +840,17 @@ void mem() {
         assert( ! reg.node->next );
         char *bar = aa_region_printf(&reg, "bar%d",2);
         assert( 0 == strcmp(bar, "bar2") );
+        assert( 0 == strcmp(foo, "foo1") );
         assert( reg.node->next );
+        const char *a = "0123456789abcdef";
+        const char *b = "0123456789ABCDEF";
+        assert(16 == strlen(a));
+        assert(16 == strlen(b));
+        char *fa = aa_region_printf(&reg, "%s", a);
+        assert(0 == strcmp(a, fa));
+        char *fb = aa_region_printf(&reg, "%s", b);
+        assert(0 == strcmp(b, fb));
+        assert(0 == strcmp(a, fa));
         aa_region_destroy(&reg);
     }
     // zero_ar
