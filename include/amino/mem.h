@@ -214,9 +214,15 @@ AA_API size_t aa_region_chunk_count( aa_region_t *region );
  */
 AA_API size_t aa_region_topsize( aa_region_t *region );
 
+
+
 /** printf's into a buffer allocated from region
  */
 AA_API char *aa_region_printf( aa_region_t *region, const char *fmt, ... );
+
+/** printf's into a buffer allocated from region
+ */
+AA_API char* aa_region_vprintf(aa_region_t *reg, const char *fmt, va_list ap );
 
 /*----------- Pooled Allocation ------------------*/
 
