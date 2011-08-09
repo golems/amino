@@ -792,37 +792,42 @@ void mem() {
         assert( 5*(2<<20) + AA_REGION_ALIGN == aa_region_topsize(&reg) );
         aa_region_destroy(&reg);
     }
-    // fuzz
+    // fuzz test, random allocations and pops
     {
-#define N_ALLOC 10
-#define N_LOOP 100
+#define N_ALLOC 33
+#define N_LOOP 83
         aa_region_t reg;
-        aa_region_init(&reg, 128 );
-        size_t m =(size_t) rand() % N_LOOP;
-        uint8_t *ptrs[N_ALLOC] = {0};
-        size_t lens[N_ALLOC] = {0};
-        aa_region_t *preg = &reg;
-        size_t j = 0;
+        aa_region_init(&reg, (size_t)(rand() % 128) );
+        size_t m =(size_t) rand() % N_LOOP; // total iterations
+        uint8_t *ptrs[N_ALLOC] = {0}; // region allocated buffers
+        size_t lens[N_ALLOC] = {0};   // region buffer lengths
+        uint8_t data[N_ALLOC][256]; // static buffer to hold test data
+        size_t j = 0; // ofset into ptrs, lens, data arrays
         for( size_t i = 0; i < m; i ++ ) {
-            size_t n = (size_t)rand()%N_ALLOC;
+            size_t n = (size_t)rand()%N_ALLOC; // number of allocations this round
             // alloc some stuff
             for( ; j < n ;j ++ ) {
-                assert( &reg == preg );
                 assert( j < N_ALLOC );
                 assert(0 == lens[j]);
                 assert(NULL == ptrs[j]);
                 lens[j] = (size_t)rand()%255 + 1;
                 ptrs[j] = (uint8_t*)aa_region_alloc(&reg, lens[j]);
-                * ptrs[j] = (uint8_t)j;
+                // fill with random data
+                for( size_t p = 0; p < lens[j]; p++ ) {
+                    data[j][p] = ptrs[j][p] = (uint8_t) (rand()%256);
+                }
                 assert( 0 == (uintptr_t)reg.head % 16 );
                 assert(ptrs[j] >= reg.node->d);
                 assert(lens[j] <= (size_t)(reg.head - reg.node->d));
             }
+            // check that everything still has the proper data
             if(j) {
                 for( size_t k = 0; k < j; k++ ) {
-                    assert( *ptrs[k]  == (uint8_t)k );
+                    for( size_t p = 0; p < lens[k]; p++ ) {
+                        assert(ptrs[k][p] != data[k][p]);
+                    }
                 }
-                j = (size_t)rand()%j;
+                j = (size_t)rand()%j; // buffer to pop from region
                 aa_region_pop( &reg, ptrs[j] );
                 for( size_t k = j; k < N_ALLOC; k++ ) {
                     lens[k] = 0; ptrs[k] = NULL;
@@ -841,12 +846,12 @@ void mem() {
         char *bar = aa_region_printf(&reg, "bar%d",2);
         assert( 0 == strcmp(bar, "bar2") );
         assert( 0 == strcmp(foo, "foo1") );
-        assert( reg.node->next );
         const char *a = "0123456789abcdef";
         const char *b = "0123456789ABCDEF";
         assert(16 == strlen(a));
         assert(16 == strlen(b));
         char *fa = aa_region_printf(&reg, "%s", a);
+        assert(reg.node->next);
         assert(0 == strcmp(a, fa));
         char *fb = aa_region_printf(&reg, "%s", b);
         assert(0 == strcmp(b, fb));
@@ -1206,6 +1211,13 @@ int main( int argc, char **argv ) {
         lim.rlim_max = 60;
         r = setrlimit( RLIMIT_CPU, &lim );
         assert(0 == r );
+        // drop a core
+        r = getrlimit( RLIMIT_CORE, &lim );
+        assert(0==r);
+        lim.rlim_cur = 100*1<<20;
+        r = setrlimit( RLIMIT_CORE, &lim );
+        assert(0==r);
+
     }
 
     aa_region_init(&g_region, 1024*64);

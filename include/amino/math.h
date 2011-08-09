@@ -449,4 +449,9 @@ AA_API void aa_la_linterp( size_t n,
                            double ti, double *Xi );
 
 
+
+/*--- GCC Vector Extensions --- */
+
+//typedef doulbe aa_v2df_t __attribute__ (( vector_size(2*sizeof(double)) ));
+
 #endif //AA_MATH_H
