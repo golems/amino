@@ -824,7 +824,7 @@ void mem() {
             if(j) {
                 for( size_t k = 0; k < j; k++ ) {
                     for( size_t p = 0; p < lens[k]; p++ ) {
-                        assert(ptrs[k][p] != data[k][p]);
+                        assert(ptrs[k][p] == data[k][p]);
                     }
                 }
                 j = (size_t)rand()%j; // buffer to pop from region
