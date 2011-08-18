@@ -95,6 +95,16 @@ aa_tm_cmp( const struct timespec t1, const struct timespec t2 ) {
         (t1.tv_nsec - t2.tv_nsec);
 }
 
+static inline struct timespec
+aa_tm_min( const struct timespec t1, const struct timespec t2 ) {
+    return (aa_tm_cmp(t1,t2)<0) ? t1 : t2;
+}
+
+static inline struct timespec
+aa_tm_max( const struct timespec t1, const struct timespec t2 ) {
+    return (aa_tm_cmp(t1,t2)>0) ? t1 : t2;
+}
+
 /// is the current time later than abstime?
 static inline int
 aa_tm_isafter( const struct timespec abstime ) {
