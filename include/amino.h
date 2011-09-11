@@ -79,7 +79,7 @@
  * \author Under Direction of Professor Mike Stilman
  *
  * \copyright
- * Copyright (c) 2008-2011, Georgia Tech Research Corporation.
+ * Copyright (c) 2010-2011, Georgia Tech Research Corporation.
  * All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or
