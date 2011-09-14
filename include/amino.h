@@ -160,6 +160,12 @@
 /// (int) 1e6
 #define AA_IMILLION 1000000
 
+
+#define AA_QUOTE(X) (#X)
+
+#define AA_ENUM_SYM_CASE( res, sym )  case sym: (res) = #sym; break;
+
+
 // include our own headers
 #include "amino/mem.h"
 #include "amino/math.h"
