@@ -1,6 +1,5 @@
 /src/mac/mac.f
 /.deps
-/debian
 /build/aa_test
 /build/aa_testpp
 /Makefile.in
@@ -26,3 +25,10 @@
 /.libs
 *.la
 *.lo
+/debian/files
+/debian/tmp
+/debian/libamino0
+/debian/libamino-dev
+/debian/*.debhelper
+/debian/*.log
+/debian/*.substvars

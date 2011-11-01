@@ -1,0 +1,27 @@
+Source: amino
+Priority: extra
+Maintainer: Neil Dantam <ntd@gatech.edu>
+Build-Depends: debhelper (>= 7), autotools-dev, gfortran, maxima
+Standards-Version: 3.9.1
+Section: libs
+Homepage: http://github.com/golems/amino
+
+Package: libamino-dev
+Section: libdevel
+Architecture: any
+Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  In
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  In
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.

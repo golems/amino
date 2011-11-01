@@ -1,6 +1,20 @@
 INCLUDES = -I$(top_srcdir)/include
 
-include_HEADERS = include
+include_HEADERS = 	                \
+	include/amino/debug.h           \
+	include/amino/endconv.h         \
+	include/amino.h                 \
+	include/amino/io.h              \
+	include/amino/kin.h             \
+	include/amino/lapack.h          \
+	include/amino/math.h            \
+	include/amino/mem.h             \
+	include/amino/plot.h            \
+	include/amino/tf.h              \
+	include/amino/time.h            \
+	include/amino/type.h            \
+	include/amino/unit.h            \
+	include/amino/validate.h
 
 TESTS = aa_test
 
