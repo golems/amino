@@ -47,7 +47,7 @@
  *
  * \mainpage
  *
- * Amino is package of basic utilites for robotics software.  In
+ * Amino is package of basic utilites for robotics software.  It
  * includes mathematical and linear algebra routines, memory
  * management, and time-handling.  Design goals are easy integration,
  * efficiency, and simplicity.

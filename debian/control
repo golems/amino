@@ -11,7 +11,7 @@ Section: libdevel
 Architecture: any
 Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
 Description: Robotics utility library
- Amino is package of basic utilities for robotics software.  In
+ Amino is package of basic utilities for robotics software.  It
  includes mathematical and linear algebra routines, memory management,
  and time-handling.  Design goals are easy integration, efficiency,
  and simplicity.
@@ -21,7 +21,7 @@ Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Robotics utility library
- Amino is package of basic utilities for robotics software.  In
+ Amino is package of basic utilities for robotics software.  It
  includes mathematical and linear algebra routines, memory management,
  and time-handling.  Design goals are easy integration, efficiency,
  and simplicity.
