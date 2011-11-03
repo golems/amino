@@ -32,3 +32,5 @@
 /debian/*.debhelper
 /debian/*.log
 /debian/*.substvars
+/doxygen-doc
+/texput.log

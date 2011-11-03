@@ -33,3 +33,5 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 
 aa_test_SOURCES = src/aa_test.c
 aa_test_LDADD = libamino.la
+
+include aminclude.am

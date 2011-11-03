@@ -3,6 +3,7 @@
 AC_PREREQ([2.65])
 AC_INIT([amino], [0.20110914], [ntd@gatech.edu])
 AM_INIT_AUTOMAKE
+
 AC_CONFIG_SRCDIR([include/amino.h])
 AC_CONFIG_HEADERS([config.h])
 
@@ -43,6 +44,10 @@ AC_CHECK_FUNCS([clock_gettime memset pow sqrt])
 AC_SEARCH_LIBS([cblas_dgemm],[blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])
 AC_SEARCH_LIBS([clock_gettime],[rt])
+
+# Doxygen
+DX_HTML_FEATURE(ON)
+DX_INIT_DOXYGEN(amino)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
