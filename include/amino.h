@@ -149,6 +149,7 @@
 #define AA_API
 /// name mangling convention external symbols
 #define AA_EXTERN extern
+/// Defined restrict keyword based on language flavor
 #define AA_RESTRICT restrict
 #endif //__cplusplus
 
@@ -160,9 +161,10 @@
 /// (int) 1e6
 #define AA_IMILLION 1000000
 
-
+/// Stringify X
 #define AA_QUOTE(X) (#X)
 
+/// Enum case sym that stores stringified sym in res
 #define AA_ENUM_SYM_CASE( res, sym )  case sym: (res) = #sym; break;
 
 

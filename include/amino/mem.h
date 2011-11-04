@@ -142,8 +142,13 @@ AA_API void aa_flexbuf_free(aa_flexbuf_t *p);
 
 /*----------- Region Allocation ------------------*/
 
+/// Alignment of each pointer allocated out of a memory region
 #define AA_REGION_ALIGN 16
 
+/** A single block of memory to be parceled out by the region allocator.
+ *
+ * Library users don't need to handle this directly.
+ */
 struct aa_region_node {
     //size_t n;                    ///< size of this chunk
     uint8_t *end;                ///< pointer to end of this chunk
@@ -265,19 +270,27 @@ AA_API void aa_pool_release( aa_pool_t *pool );
  * end-to end
  */
 typedef struct {
-    void *buf;
-    size_t n;
-    size_t start;
-    size_t end;
+    void *buf;      ///< memory
+    size_t n;       ///< size of the circbuf
+    size_t start;   ///< start of filled data
+    size_t end;     ///< end of filled data
 } aa_circbuf_t;
 
+/// untested
 AA_API void aa_circbuf_create( aa_circbuf_t *cb, size_t n );
+/// untested
 AA_API void aa_circbuf_destroy( aa_circbuf_t *cb, size_t n );
+/// untested
 AA_API void aa_circbuf_realloc( aa_circbuf_t *cb, size_t n );
+/// untested
 AA_API size_t aa_circbuf_space( aa_circbuf_t *cb );
+/// untested
 AA_API size_t aa_circbuf_used( aa_circbuf_t *cb );
+/// untested
 AA_API void aa_circbuf_put( aa_circbuf_t *cb, void *buf, size_t n );
+/// untested
 AA_API int aa_circbuf_read( aa_circbuf_t *cb, int fd, size_t n );
+/// untested
 AA_API int aa_circbuf_write( aa_circbuf_t *cb, int fd, size_t n );
 
 /**********/
@@ -298,10 +311,12 @@ static inline void aa_fset( double *dst, double val, size_t n ) {
         dst[i] = val;
 }
 
+/// set n bytes of p to zero
 static inline void aa_zero( void *p, size_t n ) {
     memset(p,0,n);
 }
 
+/// zero array p of length n
 static inline void aa_fzero( double *p, size_t n ) {
     aa_zero(p,n*sizeof(double));
 }

@@ -66,19 +66,21 @@
        const typeof(b) aa_$_min_b = (b); \
        (aa_$_min_a < aa_$_min_b) ? aa_$_min_a : aa_$_min_b; })
 
-
+/// force value to be within +/- level
 AA_DEPRECATED static inline double aa_clamp( double val, double level) {
     if( val > level )  return level;
     if( val < -level ) return -level;
     return val;
 }
 
+/// return val within range (min,max)
 static inline double aa_fclamp( double val, double min, double max) {
     if( val > max )  return max;
     if( val < min ) return min;
     return val;
 }
 
+/// modify each element of v to be within range (min,max)
 static inline void aa_vclamp( size_t n, double *v, double min, double max) {
     for( size_t i = 0; i < n; i++ ) {
         if( v[i] > max )  v[i] = max;
@@ -87,6 +89,7 @@ static inline void aa_vclamp( size_t n, double *v, double min, double max) {
 }
 
 
+/// return the sign of val, one of {-1,0,1}
 static inline double aa_sign( double val ) {
     if( val > 0 )  return 1;
     if( val < 0 ) return -1;
@@ -111,10 +114,12 @@ static inline double aa_fsq( double a ) {
 }
 
 /// Fortran modulo, Ada mod
+/// Fortran modulo, Ada mod
 static inline int aa_imodulo( int a, int b ) {
     return ((a % b) + b) % b;
 }
 
+/// Fortran modulo, Ada mod
 static inline long aa_lmodulo( long a, long b ) {
     return ((a % b) + b) % b;
 }
@@ -313,13 +318,14 @@ aa_la_diag( size_t n, double *A, double x ) {
         A[i*n+i] = x;
 }
 
+/** Set A to the identity matrix */
 static inline void
 aa_la_ident( size_t n, double *A ) {
     aa_fset(A, 0, n*n);
     aa_la_diag(n,A,1.0);
 }
 
-// matrix-vector multiplication
+/// matrix-vector multiplication
 static inline void
 aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {
     cblas_dgemv( CblasColMajor, CblasNoTrans, (int)m, (int)n,
@@ -432,7 +438,12 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const d
  */
 AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x );
 
-
+/** Solve the continuous-time Riccati equation.
+ *
+ *  See Laub, Alan. "A Schur Method for Solving Algebraic Riccati
+ *  Equations".  IEEE Transactions on Automatic Control. Dec 1979.
+ *
+ */
 AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
                             const double *AA_RESTRICT A, const double *AA_RESTRICT B, const double *AA_RESTRICT C,
                             double *AA_RESTRICT X, aa_region_t *reg );
