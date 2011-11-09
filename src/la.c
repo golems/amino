@@ -211,17 +211,15 @@ int aa_la_inv( size_t n, double *A ) {
     // LU-factor
     dgetrf_( &mi, &ni, A, &mi, ipiv, &info );
 
-    double swork[1];
-    double *work = swork;
     int lwork = -1;
     while(1) {
+        double work[ lwork < 0 ? 1 : lwork ];
         dgetri_( &ni, A, &mi, ipiv, work, &lwork, &info );
         if( lwork > 0 ) break;
-        lwork = (int) work[0];
-        work = AA_NEW_LOCAL(double, (size_t)lwork);
+        assert( -1 == lwork && sizeof(work) == sizeof(double) );
+        lwork = (int)work[0];
     }
 
-    AA_DEL_LOCAL(work, double, (size_t)swork[0]);
     return info;
 }
 
@@ -238,36 +236,32 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     const int mi = (int)m;
     const int ni = (int)n;
 
-    /*  // this method uses an LU factorization
-    // B = AA^T
-    double *B = (double*)AA_ALLOCAL(sizeof(double)*m*m);
-    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni,
-                 1, A, mi, A, mi, 0, B, mi );
+    // this method uses an LU factorization
+    /* // B = AA^T */
+    /* double B[m*m]; */
+    /* cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni, */
+    /*              1, A, mi, A, mi, 0, B, mi ); */
 
-    // B += kI
-    for( size_t i = 0; i < m; i ++ )
-       B[i*m+i] += k;
+    /* // B += kI */
+    /* for( size_t i = 0; i < m; i ++ ) */
+    /*    B[i*m+i] += k; */
 
-    // B = B^-1
-    aa_la_inv(m,B);
+    /* // B = B^-1 */
+    /* aa_la_inv(m,B); */
 
-    // A^* = A^T*B
-    cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi,
-                 1, A, mi, B, mi, 0, A_star, ni );
-    aa_frlocal(B, sizeof(double)*m*m);
-    */
+    /* // A^* = A^T*B */
+    /* cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi, */
+    /*              1, A, mi, B, mi, 0, A_star, ni ); */
 
-    double *Ap = AA_NEW_LOCAL(double, m*n);
-    double *U = AA_NEW_LOCAL(double, m*m);
-    double *Vt = AA_NEW_LOCAL(double, n*n);
-    double *S = AA_NEW_LOCAL(double, AA_MIN(m,n));
-
-    aa_fcpy(Ap,A,m*n);
-    aa_fset(A_star,0,m*n);
+    // This method uses the SVD
+    double U[m*m];
+    double Vt[n*n];
+    double S[AA_MIN(m,n)];
 
     // A = U S V^T
-    aa_la_svd(m,n,Ap,U,S,Vt);
+    aa_la_svd(m,n,A,U,S,Vt);
 
+    memset( A_star, 0, sizeof(double)*m*n );
     // \sum s_i/(s_i**2+k) * v_i * u_i^T
     for( size_t i = 0; i < AA_MIN(m,n); i ++ ) {
         cblas_dger( CblasColMajor, ni, mi, S[i] / (S[i]*S[i] + k),
@@ -276,51 +270,43 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
                 A_star, ni
                 );
     }
-
-    AA_DEL_LOCAL(Ap, double, m*n);
-    AA_DEL_LOCAL(U,  double, m*m);
-    AA_DEL_LOCAL(Vt, double, n*n);
-    AA_DEL_LOCAL(S,  double, AA_MIN(m,n));
 }
 
 int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt ) {
-    double *Ap =  AA_NEW_LOCAL( double, m*n );
+    double Ap[m*n];
     aa_fcpy( Ap, A, m*n );
+
     const char *jobu = U ? "A" : "N";
     const char *jobvt = Vt ? "A" : "N";
     int mi = (int)m, ni=(int)n;
     int lwork = -1;
     int info;
 
-    double swork[1];
-    double *work =  swork;
     while(1) {
+        double work[ lwork < 0 ? 1 : lwork ];
         dgesvd_( jobu, jobvt, &mi, &ni,
                  Ap, &mi,
                  S, U, &mi,
                  Vt, &ni,
                  &work[0], &lwork, &info );
         if( lwork >= 0 ) break;
+        assert( -1 == lwork && sizeof(work) == sizeof(double) );
         lwork = (int) work[0];
-        work =  AA_NEW_LOCAL( double, (size_t)lwork );
     }
 
     //finish
-    AA_DEL_LOCAL(work, double, (size_t)lwork );
-    AA_DEL_LOCAL(Ap, double, m*n);
     return info;
 }
 
 AA_API void aa_la_dls( size_t m, size_t n, double k, const double *A, const double *x, double *y ) {
-    double *A_star = AA_NEW_LOCAL(double, m*n);
+    double A_star[m*n];
     aa_la_dpinv(m,n,k,A,A_star);
     aa_la_mvmul(n,m,A_star,x,y);
-    AA_DEL_LOCAL(A_star, double, m*n);
 }
 
 AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const double *x, const double *yp, double *y ) {
-    double *A_star = AA_NEW_LOCAL(double, m*n);
-    double *B = AA_NEW_LOCAL(double, n*n);
+    double A_star[m*n];
+    double B[n*n];
 
     aa_la_dpinv(m,n,k,A,A_star);
     aa_la_mvmul(n,m,A_star,x,y);
@@ -339,9 +325,6 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const do
                  -1.0, B, (int)n,
                  yp, 1,
                  1, y, 1 );
-
-    AA_DEL_LOCAL(A_star, double, m*n);
-    AA_DEL_LOCAL(B, double, n*n);
 }
 
 static int dgelsd_smlsiz() {
@@ -354,130 +337,6 @@ static int dgelsd_nlvl( int m, int n ) {
 static int dgelsd_miniwork(int m, int n) {
     int minmn = AA_MIN(m,n);
     return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn);
-}
-
-static int aa_la_care_laub_select( const double *real, const double *complex ) {
-    (void)complex;
-    return *real < 0;
-}
-
-AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
-                            const double *restrict A,
-                            const double *restrict B,
-                            const double *restrict C,
-                            double *restrict X, aa_region_t *reg ) {
-    /* See Laub, Alan. "A Schur Method for Solving Algebraic Riccati
-     *  Equations".  IEEE Transactions on Automatic Control. Dec 1979.
-     */
-    // A: m*m
-    // B: m*n
-    // C: p*m
-    (void)X;
-    int mi = (int)m;
-    int mi2 = 2*mi;
-    // build hamiltonian
-    double *H = (double*)aa_region_alloc(reg, 2*m*2*m*sizeof(double));
-    // copy in A
-    for( size_t i = 0; i < m; i ++ ) {
-        for( size_t j = 0; j < m; j ++ ) {
-            // upper left gets A
-            AA_MATREF(H, 2*m, i, j) = AA_MATREF(A, m, i, j);
-            // lower right gets -A^T
-            AA_MATREF(H, 2*m, m+i, m+j) = -AA_MATREF(A, m, j, i);
-        }
-    }
-    // copy B
-    if( n == m ) {
-        for( size_t i = 0; i < m; i ++ ) {
-            for( size_t j = 0; j < m; j ++ ) {
-                AA_MATREF(H, 2*m, i, m+j) = -AA_MATREF(B, m, i, j);
-            }
-        }
-    } else {
-        cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans,
-                     (int)m, (int)m, (int)n, -1, B, (int)m, B, (int)m,
-                     0, &AA_MATREF(H, 2*m, 0, m), 2*(int)m );
-    }
-    // copy C
-    if( p == m ) {
-        for( size_t i = 0; i < m; i ++ ) {
-            for( size_t j = 0; j < m; j ++ ) {
-                AA_MATREF(H, 2*m, i+m, j) = -AA_MATREF(C, m, i, j);
-            }
-        }
-    } else {
-        cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans,
-                     (int)m, (int)m, (int)p, -1, C, (int)p, C, (int)p,
-                     0, &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
-    }
-
-    // shcur in lapack: dgees, (will balance the array itself)
-    int info;
-    double *vs = (double*)aa_region_alloc(reg, sizeof(double)*2*m*2*m);
-    {
-        int *bwork = (int*)aa_region_alloc(reg, sizeof(int)*2*m);
-        double *wr = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
-        double *wi = (double*)aa_region_alloc(reg, sizeof(double)*2*m);
-        double swork;
-        double *work = &swork;
-        int sdim, lwork = -1;
-        while(1) {
-            dgees_("V", "S",
-                   aa_la_care_laub_select,
-                   &mi2, H, &mi2, &sdim, wr, wi,
-                   vs, &mi2, work, &lwork, bwork, &info );
-            if( lwork > 0 ) break;
-            // got work array size
-            assert( &swork == work );
-            lwork = (int)work[0];
-            work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
-            assert(work);
-        };
-        aa_region_pop( reg, bwork );
-    }
-
-
-    // compute the resulting thing
-    //vs = scal * vs
-    double *u11t = (double*)aa_region_alloc(reg, sizeof(double)*m*m);
-    // u21 overwritten with X by lapack solver
-    double *u21t = X;
-
-    // get u11
-    for( size_t j = 0; j < m; j ++) {
-        for( size_t i = 0; i < m; i ++) {
-            //u11
-            AA_MATREF(u11t, m, j, i) =
-                AA_MATREF(vs, 2*m, i, j);
-            //u21
-            AA_MATREF(u21t, m, j, i) =
-                AA_MATREF(vs, 2*m, i+m, j);
-        }
-    }
-
-    //aa_dump_mat(stderr, X, m,m);
-    // solve the least squares problem
-    // X * u11 = u21, but X is symmetric, so
-    // u11^T X = u21^T
-    // X = u21 * u11^(-1)
-    {
-        int lwork = -1;
-        double swork;
-        double *work = &swork;
-        while(1) {
-            dgels_( "N", &mi, &mi, &mi, u11t, &mi, u21t, &mi, work, &lwork,
-                    &info );
-            if(lwork > 0 ) break;
-            assert( &swork == work );
-            lwork = (int)work[0];
-            work = (double*)aa_region_alloc(reg,sizeof(double)*(size_t)lwork);
-            assert(work);
-        };
-    }
-
-    aa_region_pop( reg, H );
-
-    return 0;
 }
 
 /* AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) { */

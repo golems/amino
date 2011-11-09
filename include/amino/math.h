@@ -237,7 +237,7 @@ AA_API void aa_la_scal( size_t n, double alpha, double *x  );
  */
 AA_API void aa_la_vinc( size_t n, const double *x, double *y  );
 
-/** increment by vector.
+/** increment by scalar.
  * \f[ x_i \leftarrow \alpha + x_i \f]
  */
 AA_API void aa_la_sinc( size_t n, double alpha, double *x  );
@@ -446,7 +446,7 @@ AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const doub
  */
 AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
                             const double *AA_RESTRICT A, const double *AA_RESTRICT B, const double *AA_RESTRICT C,
-                            double *AA_RESTRICT X, aa_region_t *reg );
+                            double *AA_RESTRICT X );
 
 
 /** Linear interpolation.
