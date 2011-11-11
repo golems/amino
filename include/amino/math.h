@@ -465,6 +465,48 @@ AA_API void aa_la_linterp( size_t n,
                            double ti, double *Xi );
 
 
+/*--- Systems and Signals --- */
+
+/** Linear simulation step in discrete time
+ *
+ * \f[ x_1 \leftarrow Ax_0 + Bu \f]
+ *
+ * \param m state size
+ * \param n input size
+ * \param A process model, m*m matrix
+ * \param B input model, m*n matrix
+ * \param u input, n length vector
+ * \param x0 initial state, m length vector
+ * \param x1 resulting state, m length vector
+ */
+AA_API void aa_lsim_dstep( size_t m, size_t n,
+                           const double *AA_RESTRICT A,
+                           const double *AA_RESTRICT B,
+                           const double *AA_RESTRICT x0,
+                           const double *AA_RESTRICT u,
+                           double *AA_RESTRICT x1 );
+
+/** Linear simulation step with euler integration
+ *
+ * \f[ \dot{x} = Ax_0 + Bu \f]
+ * \f[ x_1 \leftarrow x_0 + \Delta t \dot{x} \f]
+ *
+ * \param m state size
+ * \param n input size
+ * \param dt time step
+ * \param A process model, m*m matrix
+ * \param B input model, m*n matrix
+ * \param u input, n length vector
+ * \param x0 initial state, m length vector
+ * \param x1 resulting state, m length vector
+ */
+AA_API void aa_lsim_estep( size_t m, size_t n,
+                           double dt,
+                           const double *AA_RESTRICT A,
+                           const double *AA_RESTRICT B,
+                           const double *AA_RESTRICT x0,
+                           const double *AA_RESTRICT u,
+                           double *AA_RESTRICT x1 );
 
 /*--- GCC Vector Extensions --- */
 

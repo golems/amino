@@ -1196,6 +1196,33 @@ void io() {
     }
 }
 
+void sigsys() {
+    // lsim_dstep
+    {
+        double A[] = {1,2,3,4};
+        double B[] = {5,6};
+        double x0[] = {1,2};
+        double u[] = {3};
+
+        double x1[2];
+
+        aa_lsim_dstep( 2, 1,
+                       A,B,
+                       x0, u, x1  );
+        aveq( 2, x1, (double[]){22,28}, 0 );
+
+        struct timespec ts;
+        aa_tick("estep: ", &ts);
+        for( size_t i = 0; i < 1000000; i++ ) {
+            aa_lsim_estep( 2, 1, .01,
+                           A,B,
+                           x0, u, x1  );
+        }
+        aa_tock();
+        aveq( 2, x1, (double[]){1.22,2.28}, 0.001 );
+    }
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
 
@@ -1245,5 +1272,6 @@ int main( int argc, char **argv ) {
     endconv();
     validate();
     io();
+    sigsys();
     aa_region_destroy(&g_region);
 }

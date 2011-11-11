@@ -22,7 +22,7 @@ lib_LTLIBRARIES = libamino.la
 
 bin_PROGRAMS = aa_test
 
-libamino_la_SOURCES = src/mem.c src/la.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c
+libamino_la_SOURCES = src/mem.c src/la.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/are.c
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]
