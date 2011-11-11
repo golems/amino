@@ -1,10 +1,11 @@
 INCLUDES = -I$(top_srcdir)/include
 EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac
 
-include_HEADERS = 	                \
+include_HEADERS = include/amino.h
+
+pkginclude_HEADERS = 	                \
 	include/amino/debug.h           \
 	include/amino/endconv.h         \
-	include/amino.h                 \
 	include/amino/io.h              \
 	include/amino/kin.h             \
 	include/amino/lapack.h          \
