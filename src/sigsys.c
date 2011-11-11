@@ -94,3 +94,60 @@ AA_API void aa_lsim_estep( size_t m, size_t n,
     /*              1, x1, 1 ); */
 
 }
+
+
+
+void aa_rk1_step( size_t n, double dt,
+                  const double *restrict dx,
+                  const double *restrict x0,
+                  double *restrict x1 ) {
+    // x1 = x0 + dt*dx
+    cblas_dcopy( n, x0, 1, x1, 1 );
+    cblas_daxpy( n, dt, dx, 1, x1, 1 );
+}
+
+void aa_rk4_step( size_t n, aa_sys_fun sys, const void *cx,
+                  double t0, double dt,
+                  const double *restrict x0, double *restrict x1 ) {
+    double dt6 = dt/6;
+    double k1[n], k2[n], k3[n], k4[n];
+
+    // k1
+    sys( cx, t0, x0, k1 );
+
+    // k2
+    aa_rk1_step( n, dt/2, k1, x0, x1 );
+    sys( cx, t0+dt/2, x1, k2 );
+
+    // k3
+    aa_rk1_step( n, dt/2, k2, x0, x1 );
+    sys( cx, t0+dt/2, x1, k3 );
+
+    // k4
+    aa_rk1_step( n, dt, k3, x0, x1 );
+    sys( cx, t0+dt, x1, k4 );
+
+    for( size_t i = 0; i < n; i ++ ) {
+        x1[i] = x0[i] + (dt/6) * (k1[i] + k4[i] + 2 * (k2[i]+k3[i]));
+    }
+
+    /* cblas_dcopy( (int) n, x0, 1, x1, 1 ); */
+    /* cblas_daxpy( n, 1, k3, 1, k2, 1 ); */
+    /* cblas_daxpy( n, 2, k2, 1, k4, 1 ); */
+    /* cblas_daxpy( n, 1, k4, 1, k1, 1 ); */
+    /* cblas_daxpy( n, dt/6, k1, 1, x1, 1 ); */
+}
+
+void aa_sys_affine( const aa_sys_affine_t *cx,
+                    double t, const double *restrict x,
+                    double *restrict dx ) {
+    (void)t;
+    // x1 = Ax + D
+    cblas_dcopy( (int) cx->n, cx->D, 1, dx, 1 );
+    cblas_dgemv( CblasColMajor, CblasNoTrans,
+                 (int)cx->n, (int)cx->n,
+                 1, cx->A, (int)cx->n,
+                 x, 1,
+                 1, dx, 1 );
+
+}

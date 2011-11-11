@@ -1212,15 +1212,47 @@ void sigsys() {
         aveq( 2, x1, (double[]){22,28}, 0 );
 
         struct timespec ts;
-        aa_tick("estep: ", &ts);
-        for( size_t i = 0; i < 1000000; i++ ) {
-            aa_lsim_estep( 2, 1, .01,
-                           A,B,
-                           x0, u, x1  );
-        }
-        aa_tock();
+        aa_lsim_estep( 2, 1, .01,
+                       A,B,
+                       x0, u, x1  );
         aveq( 2, x1, (double[]){1.22,2.28}, 0.001 );
     }
+    // rk1
+    {
+        double x0[] = {1,2};
+        double dx[] = {3,4};
+        double dt = .1;
+        double x1[2];
+
+        aa_rk1_step( 2, .1, dx, x0, x1 );
+
+        aveq( 2, x1, (double[]){x0[0]+dt*dx[0], x0[1]+dt*dx[1]}, 0.001 );
+    }
+
+    // aa_sys_affine
+    {
+        double x[] = {1,2};
+        double dx[2];
+        aa_sys_affine_t sys = { .n = 2,
+                                .A = (double[]){1,2,3,4},
+                                .D = (double[]){5,6}
+        };
+        aa_sys_affine( &sys, 0, x, dx );
+        aveq( 2, dx, (double[]){12,16}, 0 );
+    }
+    // rk4
+    {
+        double x0[] = {1,2};
+        double x1[2];
+        aa_sys_affine_t sys = { .n = 2,
+                                .A = (double[]){1,2,3,4},
+                                .D = (double[]){5,6}
+        };
+        aa_rk4_step( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
+                     x0, x1 );
+        aveq( 2, x1, (double[]){1.123055,2.16448}, .001 );
+    }
+
 }
 
 int main( int argc, char **argv ) {

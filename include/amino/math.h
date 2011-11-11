@@ -508,6 +508,56 @@ AA_API void aa_lsim_estep( size_t m, size_t n,
                            const double *AA_RESTRICT u,
                            double *AA_RESTRICT x1 );
 
+/** Euler / Runge-Kutta-1 integration.
+ *
+ * \f[ x_1 \leftarrow dt*dx + x_0 \f]
+ *
+ */
+AA_API void aa_rk1_step( size_t n, double dt,
+                         const double *AA_RESTRICT dx,
+                         const double *AA_RESTRICT x0,
+                         double *AA_RESTRICT x1 );
+
+
+/** A "Signal" function.
+ *
+ * \f[ y = f(cx, x) \f]
+ */
+typedef void aa_sys_fun( const void *cx,
+                         double t, const double *AA_RESTRICT x,
+                         double *AA_RESTRICT y );
+
+/** Runge-Kutta-4 integration.
+ *
+ * \param n state size
+ * \param sys function to integrate
+ * \param cx Context struct for sys
+ * \param t0 time
+ * \param dt time step
+ * \param x0 initial state
+ * \param x1 integrated state
+ */
+AA_API void aa_rk4_step( size_t n, aa_sys_fun sys, const void *cx,
+                         double t0, double dt,
+                         const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
+
+/** Context-struct for function aa_sys_affine.
+ */
+typedef struct {
+    size_t n;   ///< state size
+    double *A;  ///< state transition
+    double *D;  ///< additive constant
+} aa_sys_affine_t;
+
+/** Affine system model function.
+ *
+ * \f[ \dot{x} = Ax + D \f]
+ */
+AA_API void aa_sys_affine( const aa_sys_affine_t *cx,
+                           double t, const double *AA_RESTRICT x,
+                           double *AA_RESTRICT dx );
+
+
 /*--- GCC Vector Extensions --- */
 
 //typedef doulbe aa_v2df_t __attribute__ (( vector_size(2*sizeof(double)) ));
