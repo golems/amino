@@ -1211,7 +1211,6 @@ void sigsys() {
                        x0, u, x1  );
         aveq( 2, x1, (double[]){22,28}, 0 );
 
-        struct timespec ts;
         aa_lsim_estep( 2, 1, .01,
                        A,B,
                        x0, u, x1  );

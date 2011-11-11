@@ -49,5 +49,21 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 DX_HTML_FEATURE(ON)
 DX_INIT_DOXYGEN(amino)
 
+# Enable maximum warnings
+AX_CFLAGS_WARN_ALL
+
+dnl APPEND_FLAG( [FLAG] )
+dnl Check if FLAG is supported, and if so, add it
+AC_DEFUN([APPEND_FLAG],
+         [AX_CHECK_COMPILER_FLAGS([$1], [CFLAGS="$1 $CFLAGS"])])
+
+APPEND_FLAG([-Wextra])
+APPEND_FLAG([-Wconversion])
+APPEND_FLAG([-Wpointer-arith])
+APPEND_FLAG([-Wfloat-equal])
+APPEND_FLAG([-Wshadow])
+APPEND_FLAG([-Wwrite-strings])
+APPEND_FLAG([-Wc++-compat])
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

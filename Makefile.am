@@ -30,7 +30,11 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	cd src/mac && maxima --very-quiet -b gen.mac
 	@echo [maxima end]
 
+clean-local:
+	-rm -rf debian/tmp debian/files debian/libamino? debian/libamino-dev debian/*.log debian/*.substvars texput.log debian/*.debhelper
 
+distclean-local:
+	-rm -rf doxygen-doc
 
 aa_test_SOURCES = src/aa_test.c
 aa_test_LDADD = libamino.la

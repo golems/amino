@@ -45,12 +45,12 @@
 
 #include "amino.h"
 
-static int ilaenv( int ispec, const char *name, const char *opts,
-                   int n1, int n2, int n3, int n4 ) {
-    int nl = (int)strlen(name);
-    int ol = (int)strlen(opts);
-    return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );
-}
+/* static int ilaenv( int ispec, const char *name, const char *opts, */
+/*                    int n1, int n2, int n3, int n4 ) { */
+/*     int nl = (int)strlen(name); */
+/*     int ol = (int)strlen(opts); */
+/*     return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol ); */
+/* } */
 
 /*--- Scalar Ops ---*/
 
@@ -327,17 +327,18 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const do
                  1, y, 1 );
 }
 
-static int dgelsd_smlsiz() {
-    return ilaenv(9, "DGELSD", "", 0, 0, 0, 0 );
-}
+/* static int dgelsd_smlsiz() { */
+/*     return ilaenv(9, "DGELSD", "", 0, 0, 0, 0 ); */
+/* } */
 
-static int dgelsd_nlvl( int m, int n ) {
-    return (int)AA_MAX(0, 1 + log2( AA_MIN(m,n) / (1 + dgelsd_smlsiz())));
-}
-static int dgelsd_miniwork(int m, int n) {
-    int minmn = AA_MIN(m,n);
-    return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn);
-}
+/* static int dgelsd_nlvl( int m, int n ) { */
+/*     return (int)AA_MAX(0, 1 + log2( AA_MIN(m,n) / (1 + dgelsd_smlsiz()))); */
+/* } */
+/* static int dgelsd_miniwork(int m, int n) { */
+/*     int minmn = AA_MIN(m,n); */
+/*     return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn); */
+/* } */
+
 
 /* AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) { */
 /*     int mi=(int)m, ni=(int)n, pi=(int)p; */
