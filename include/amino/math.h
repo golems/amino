@@ -158,6 +158,25 @@ AA_API double aa_frand();
 /// fills v with random numbers in [0,1.0]
 AA_API void aa_vrand(size_t n, double *v);
 
+
+/********/
+/* Stat */
+/********/
+
+/** Generate 2 gaussian random numbers with stddev=1 from two uniform random numbers in interval (0,1].
+ *
+ * See Box, G. E. P. and Muller, M. E. "A Note on the Generation of
+ * Random Normal Deviates." Ann. Math. Stat. 29, 610-611, 1958.
+ */
+AA_API void aa_box_muller(double x1, double x2, double *z1, double *z2);
+
+/** Convert z-score to x-score a normal distribution.
+ */
+static inline double aa_z2x(double z, double mu, double sigma) {
+    return (z * sigma) + mu;
+}
+
+
 /**********/
 /* Angles */
 /**********/

@@ -24,7 +24,7 @@ test: build/aa_test build/aa_testpp
 	./build/aa_test
 	./build/aa_testpp
 
-OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o time.o io.o are.o
+OBJS :=  mem.o la.o tf.o math.o plot.o debug.o kin.o mac/mac.o validate.o time.o io.o are.o sigsys.o
 BOBJS := $(addprefix build/, $(OBJS))
 # lapack should also link (c)blas and gfortran if needed
 LIBS := m lapack rt

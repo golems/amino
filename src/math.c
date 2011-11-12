@@ -87,3 +87,19 @@ AA_API void aa_vrand(size_t n, double *v) {
     for( size_t i = 0; i < n; i ++ )
         v[i] = aa_frand();
 }
+
+AA_API void aa_box_muller(double x1, double x2, double *z1, double *z2) {
+    // z1 = sqrt( -2 * ln(x1) ) * cos( 2 * pi * x2 )
+    // z1 = sqrt( -2 * ln(x1) ) * sin( 2 * pi * x2 )
+    const double a = sqrt( -2.0 * log(x1) );
+    double s,c;
+    const double b = 2 * M_PI * x2;
+#ifdef _GNU_SOURCE
+    sincos(b, &s, &c );
+#else
+    s = sin(b);
+    c = cos(b);
+#endif //_GNU_SOURCE
+    *z1 = a*c;
+    *z2 = a*s;
+}
