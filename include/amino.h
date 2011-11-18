@@ -78,7 +78,6 @@
  * \author Developed at the Georgia Tech Humanoid Robotics Lab
  * \author Under Direction of Professor Mike Stilman
  *
- * \copyright
  * Copyright (c) 2010-2011, Georgia Tech Research Corporation.
  * All rights reserved.
  *

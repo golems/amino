@@ -47,6 +47,8 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 
 # Doxygen
 DX_HTML_FEATURE(ON)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN(amino)
 
 # Enable maximum warnings

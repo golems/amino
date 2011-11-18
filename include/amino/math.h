@@ -414,11 +414,16 @@ static inline double aa_la_det3x3( const double R[9] ) {
 AA_API double aa_la_trace( size_t n, const double *A );
 
 /** Damped Pseudo Inverse of A.
+ *
  *  \f[ A^\ddagger \leftarrow A^T (AA^T + kI)^{-1} \f]
  *  \f[ A^\ddagger \leftarrow \sum_{i=0}^r \frac{\sigma_i}{{\sigma_i}^2+k} v_i {u_i}^T \f]
  *
  * The above two formulas are equivalent.  This function uses the SVD
  * method shown in the second formula.
+ *
+ * See "Introduction to inverse kinematics with jacobian transpose,
+ * pseudoinverse and damped least squares methods". Buss, S.R. 2004
+ *
  * \param m rows of A
  * \param n cols of A
  * \param A \f$ A \in \Re^m\times\Re^n\f$
@@ -430,6 +435,9 @@ AA_API void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double 
 /** Damped Least Squares.
  * \f[ x = A^\ddagger b \f]
  *
+ * See "Introduction to inverse kinematics with jacobian transpose,
+ * pseudoinverse and damped least squares methods". Buss, S.R. 2004
+ *
  * \param m rows in A
  * \param n cols in A
  * \param k square of damping factor
@@ -440,7 +448,12 @@ AA_API void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double 
 AA_API void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *b, double *x );
 
 /** Damped Least Squares with Nullspace projection.
+ *
  * \f[ x = A^\ddagger b + (I-A^\ddagger A)x_p \f]
+ *
+ * See "Introduction to inverse kinematics with jacobian transpose,
+ * pseudoinverse and damped least squares methods". Buss, S.R. 2004
+ *
  * \param m rows in A
  * \param n cols in A
  * \param k square of damping factor
@@ -459,12 +472,16 @@ AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const doub
 
 /** Solve the continuous-time Riccati equation.
  *
+ *  \f[ A^TX + XA - XBX + C = 0 \f]
+ *
  *  See Laub, Alan. "A Schur Method for Solving Algebraic Riccati
  *  Equations".  IEEE Transactions on Automatic Control. Dec 1979.
  *
  */
 AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
-                            const double *AA_RESTRICT A, const double *AA_RESTRICT B, const double *AA_RESTRICT C,
+                            const double *AA_RESTRICT A,
+                            const double *AA_RESTRICT B,
+                            const double *AA_RESTRICT C,
                             double *AA_RESTRICT X );
 
 
