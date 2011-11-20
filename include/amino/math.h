@@ -114,19 +114,22 @@ static inline double aa_fsq( double a ) {
 }
 
 /// Fortran modulo, Ada mod
+#define AA_MODULO(a,b) (((a) % (b)) + (b)) % (b);
+
 /// Fortran modulo, Ada mod
 static inline int aa_imodulo( int a, int b ) {
-    return ((a % b) + b) % b;
+    //return ((a % b) + b) % b;
+    return AA_MODULO(a,b);
 }
 
 /// Fortran modulo, Ada mod
 static inline long aa_lmodulo( long a, long b ) {
-    return ((a % b) + b) % b;
+    return AA_MODULO(a,b);
 }
 
 /// Fortran modulo, Ada mod
 static inline int64_t aa_imodulo64( int64_t a, int64_t b ) {
-    return ((a % b) + b) % b;
+    return AA_MODULO(a,b);
 }
 
 /// Fortran mod, Ada rem
@@ -136,7 +139,7 @@ static inline int aa_iremainder( int a, int b ) {
 
 /// Fortran modulo, Ada mod
 static inline double aa_fmodulo( double a, double b ) {
-    return fmod(fmod(a , b) + b,  b);
+    return fmod(fmod(a, b) + b,  b);
 }
 
 /// Fortran mod, Ada rem
@@ -544,16 +547,6 @@ AA_API void aa_lsim_estep( size_t m, size_t n,
                            const double *AA_RESTRICT u,
                            double *AA_RESTRICT x1 );
 
-/** Euler / Runge-Kutta-1 integration.
- *
- * \f[ x_1 \leftarrow dt*dx + x_0 \f]
- *
- */
-AA_API void aa_rk1_step( size_t n, double dt,
-                         const double *AA_RESTRICT dx,
-                         const double *AA_RESTRICT x0,
-                         double *AA_RESTRICT x1 );
-
 
 /** A "Signal" function.
  *
@@ -562,6 +555,31 @@ AA_API void aa_rk1_step( size_t n, double dt,
 typedef void aa_sys_fun( const void *cx,
                          double t, const double *AA_RESTRICT x,
                          double *AA_RESTRICT y );
+
+/** Euler / Runge-Kutta-1 integration.
+ *
+ * \f[ x_1 \leftarrow dt*dx + x_0 \f]
+ *
+ */
+AA_API void aa_odestep_rk1( size_t n, double dt,
+                            const double *AA_RESTRICT dx,
+                            const double *AA_RESTRICT x0,
+                            double *AA_RESTRICT x1 );
+
+
+/** Runge-Kutta-2 (Heun's Method) integration.
+ *
+ * \param n state size
+ * \param sys function to integrate
+ * \param cx Context struct for sys
+ * \param t0 time
+ * \param dt time step
+ * \param x0 initial state
+ * \param x1 integrated state
+ */
+AA_API void aa_odestep_rk2( size_t n, aa_sys_fun sys, const void *cx,
+                            double t0, double dt,
+                            const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
 
 /** Runge-Kutta-4 integration.
  *
@@ -573,9 +591,152 @@ typedef void aa_sys_fun( const void *cx,
  * \param x0 initial state
  * \param x1 integrated state
  */
-AA_API void aa_rk4_step( size_t n, aa_sys_fun sys, const void *cx,
-                         double t0, double dt,
-                         const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
+AA_API void aa_odestep_rk4( size_t n, aa_sys_fun sys, const void *cx,
+                            double t0, double dt,
+                            const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
+
+
+/** Runge-Kutta-4-5 (Fehlberg Method) integration.
+ *
+ * See Erwin Fehlberg (1969). Low-order classical Runge-Kutta formulas
+ * with step size control and their application to some heat transfer
+ * problems. NASA Technical Report 315.
+ *
+ *
+ * \param n state size
+ * \param sys function to integrate
+ * \param cx Context struct for sys
+ * \param t0 time
+ * \param dt time step
+ * \param x0 initial state
+ * \param k derivitive matix,size n*5, initially first column contains sys evaluated at x0
+ * \param x4 fourth-order step
+ * \param x5 fifth-order step
+ *
+ * \pre
+ *   - First (initial) column of n*5 matrix k contains sys evalutated at x0
+ * \post
+ *   - First (initial) column of n*5 matrix k unmodified
+ */
+AA_API void aa_odestep_rkf45( size_t n, aa_sys_fun sys, const void *cx,
+                              double t0, double dt,
+                              const double *AA_RESTRICT x0,
+                              double *AA_RESTRICT k,
+                              double *AA_RESTRICT x4,
+                              double *AA_RESTRICT x5 );
+
+/** Runge-Kutta-4-5 (Cash-Karp Method) integration.
+ *
+ * See J. R. Cash, A. H. Karp. "A variable order Runge-Kutta method for
+ * initial value problems with rapidly varying right-hand sides", ACM
+ * Transactions on Mathematical Software 16: 201-222,
+ * 1990.
+ *
+ * \param n state size
+ * \param sys function to integrate
+ * \param cx Context struct for sys
+ * \param t0 time
+ * \param dt time step
+ * \param x0 initial state
+ * \param k derivitive matix,size n*5, initially first column contains sys evaluated at x0
+ * \param x4 fourth-order step
+ * \param x5 fifth-order step
+ *
+ * \pre
+ *   - First (initial) column of n*5 matrix k contains sys evalutated at x0
+ * \post
+ *   - First (initial) column of n*5 matrix k unmodified
+ */
+AA_API void aa_odestep_rkck45( size_t n, aa_sys_fun sys, const void *cx,
+                               double t0, double dt,
+                               const double *AA_RESTRICT x0,
+                               double *AA_RESTRICT k,
+                               double *AA_RESTRICT x4,
+                               double *AA_RESTRICT x5 );
+
+
+/** Runge-Kutta-4-5 (Dormand-Price Method) integration.
+ *
+ * See Dormand, J. R.; Prince, P. J. (1980), "A family of embedded
+ * Runge-Kutta formulae", Journal of Computational and Applied
+ * Mathematics 6 (1): 19–26,
+ *
+ * \param n state size
+ * \param sys function to integrate
+ * \param cx Context struct for sys
+ * \param t0 time
+ * \param dt time step
+ * \param x0 initial state
+ * \param k derivitive matix,size n*6, initially first column contains sys evaluated at x0,
+ * overwritten with sys evalutated at x4
+ * \param x4 fourth-order step
+ * \param x5 fifth-order step
+ *
+ * \pre
+ *   - First (initial) column of n*6 matrix k contains sys evalutated at x0
+ * \post
+ *   - First (initial) column of n*6 matrix k unmodified
+ *   - Sixth (last) column of n*6 matrix k contains sys evalutated at x4
+ */
+AA_API void aa_odestep_dorpri45( size_t n, aa_sys_fun sys, const void *cx,
+                                 double t0, double dt,
+                                 const double *AA_RESTRICT x0,
+                                 double *AA_RESTRICT k,
+                                 double *AA_RESTRICT x4,
+                                 double *AA_RESTRICT x5 );
+
+
+/** Runge-Kutta-2-3 (Bogacki-Shampine Method) integration.
+ *
+ * See Bogacki, Przemyslaw; Shampine, Lawrence F. (1989), "A 3(2) pair
+ * of Runge–Kutta formulas", Applied Mathematics Letters 2 (4)
+ *
+ * \param n state size
+ * \param sys function to integrate
+ * \param cx Context struct for sys
+ * \param t0 time
+ * \param dt time step
+ * \param x0 initial state
+ * \param k derivitive matix,size n*4, initially first column contains sys evaluated at x0,
+ * overwritten with sys evalutated at x4
+ * \param x4 fourth-order step
+ * \param x5 fifth-order step
+ *
+ * \pre
+ *   - First (initial) column of n*4 matrix k contains sys evalutated at x0
+ * \post
+ *   - First (initial) column of n*4 matrix k unmodified
+ *   - Fourth (last) column of n*4 matrix k contains sys evalutated at x4
+ */
+AA_API void aa_odestep_rkbs23( size_t n, aa_sys_fun sys, const void *cx,
+                               double t0, double dt,
+                               const double *AA_RESTRICT x0,
+                               double *AA_RESTRICT k,
+                               double *AA_RESTRICT x4,
+                               double *AA_RESTRICT x5 );
+
+
+/** Linear simulation step with Runge-Kutta-4 integration
+ *
+ * \f[ \dot{x} = Ax_0 + Bu \f]
+ *
+ * \param m state size
+ * \param n input size
+ * \param dt time step
+ * \param A process model, m*m matrix
+ * \param B input model, m*n matrix
+ * \param u input, n length vector
+ * \param x0 initial state, m length vector
+ * \param x1 resulting state, m length vector
+ */
+AA_API void aa_lsim_rk4step( size_t m, size_t n,
+                             double dt,
+                             const double *AA_RESTRICT A,
+                             const double *AA_RESTRICT B,
+                             const double *AA_RESTRICT x0,
+                             const double *AA_RESTRICT u,
+                             double *AA_RESTRICT x1 );
+
 
 /** Context-struct for function aa_sys_affine.
  */

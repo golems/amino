@@ -307,6 +307,16 @@ void la2() {
         aveq( 9, A, At, 0 );
 
     }
+    {
+
+        double A[2*4];
+        double Ar[] = {1,0, 0,0, 0,1, 0,0};
+        aa_la_transpose2( 4, 2,
+                          AA_FAR( 1, 0, 0, 0,
+                                  0, 0, 1, 0),
+                          A );
+        aveq( 2*4, A, Ar, 0 );
+    }
     // inverse3x3
     {
         double R[9] = {0,-1,0, 1,0,0, 0,0,-1};
@@ -1223,7 +1233,7 @@ void sigsys() {
         double dt = .1;
         double x1[2];
 
-        aa_rk1_step( 2, .1, dx, x0, x1 );
+        aa_odestep_rk1( 2, .1, dx, x0, x1 );
 
         aveq( 2, x1, (double[]){x0[0]+dt*dx[0], x0[1]+dt*dx[1]}, 0.001 );
     }
@@ -1239,17 +1249,81 @@ void sigsys() {
         aa_sys_affine( &sys, 0, x, dx );
         aveq( 2, dx, (double[]){12,16}, 0 );
     }
-    // rk4
+    // rk2/4/23/45
     {
         double x0[] = {1,2};
         double x1[2];
+        double x4[2];
+        double x5[2];
         aa_sys_affine_t sys = { .n = 2,
                                 .A = (double[]){1,2,3,4},
                                 .D = (double[]){5,6}
         };
-        aa_rk4_step( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
-                     x0, x1 );
+
+        // rk2
+        aa_odestep_rk2( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
+                        x0, x1 );
         aveq( 2, x1, (double[]){1.123055,2.16448}, .001 );
+
+        // rk4
+        aa_odestep_rk4( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
+                        x0, x1 );
+        aveq( 2, x1, (double[]){1.123055,2.16448}, .001 );
+
+        // rkf45
+        {
+            double k[5][2];
+            double dx0[2];
+            aa_sys_affine( &sys, 0, x0, dx0 );
+            memcpy(k[0],dx0,sizeof(dx0));
+            aa_odestep_rkf45( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
+                              x0, k[0], x4, x5 );
+            aveq( 2, x4, (double[]){1.123055,2.16448}, .001 );
+            aveq( 2, x5, (double[]){1.123055,2.16448}, .001 );
+        }
+
+        // rkck45
+        {
+            double k[5][2];
+            double dx0[2];
+            aa_sys_affine( &sys, 0, x0, dx0 );
+            memcpy(k[0],dx0,sizeof(dx0));
+            aa_odestep_rkck45( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
+                               x0, k[0], x4, x5 );
+            aveq( 2, dx0, k[0], 0 );
+            aveq( 2, x4, (double[]){1.123055,2.16448}, .001 );
+            aveq( 2, x5, (double[]){1.123055,2.16448}, .001 );
+        }
+
+        // dorpri45
+        {
+            double k[6][2];
+            double dx0[2], dx4[2];
+            aa_sys_affine( &sys, 0, x0, dx0 );
+            memcpy(k[0],dx0,sizeof(dx0));
+            aa_odestep_dorpri45( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
+                                 x0, k[0], x4, x5 );
+            aa_sys_affine( &sys, 0, x4, dx4 );
+            aveq( 2, dx0, k[0], 0 );
+            aveq( 2, dx4, k[5], 0 );
+            aveq( 2, x4, (double[]){1.123055,2.16448}, .001 );
+            aveq( 2, x5, (double[]){1.123055,2.16448}, .001 );
+        }
+
+        // rkbs23
+        {
+            double k[4][2];
+            double dx0[2], dx2[2], x2[2], x3[2];
+            aa_sys_affine( &sys, 0, x0, dx0 );
+            memcpy(k[0],dx0,sizeof(dx0));
+            aa_odestep_rkbs23( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
+                               x0, k[0], x2, x3 );
+            aa_sys_affine( &sys, 0, x2, dx2 );
+            aveq( 2, dx0, k[0], 0 );
+            aveq( 2, dx2, k[3], 0 );
+            aveq( 2, x2, (double[]){1.123055,2.16448}, .001 );
+            aveq( 2, x3, (double[]){1.123055,2.16448}, .001 );
+        }
     }
 
 }
