@@ -399,7 +399,7 @@ static inline  void aa_la_inverse3x3( const double R[9], double S[9] ) {
 /** Determinant of 3x3 matrix R.
  *
  */
-double aa_la_det3x3( const double R[9] );
+double aa_la_det3x3( const double R[AA_RESTRICT 9] );
 
 /** Trace of a matrix.
  */
