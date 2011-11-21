@@ -388,3 +388,18 @@ AA_API void aa_la_linterp( size_t n,
         Xi[i] = X0[i] + alpha*(X1[i]-X0[i]);
     }
 }
+
+
+
+double aa_la_det3x3( const double R[restrict 9] ) {
+
+    double d;
+    d = AA_MATREF(R,3,0,0) *
+        ( AA_MATREF(R,3,1,1) * AA_MATREF(R,3,2,2) -
+          AA_MATREF(R,3,1,2) * AA_MATREF(R,3,2,1) ) -
+        AA_MATREF(R,3,0,1) * ( AA_MATREF(R,3,1,0) * AA_MATREF(R,3,2,2) -
+                               AA_MATREF(R,3,1,2) * AA_MATREF(R,3,2,0)) +
+        AA_MATREF(R,3,0,2) * ( AA_MATREF(R,3,1,0) * AA_MATREF(R,3,2,1) -
+                               AA_MATREF(R,3,1,1) * AA_MATREF(R,3,2,0) );
+    return d;
+}

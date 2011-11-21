@@ -68,49 +68,6 @@ with_stdout("mac.f",
   print("      Return"),
   print("      End"),
 
-  /* 3x3 determinant */
-  print("      Subroutine aa_la_det3x3 (R, d)"),
-  print("      Double Precision R(3,3)"),
-  print("      Double Precision d"),
-  fortran( d = determinant(matrix(
-        [R(1,1),R(1,2),R(1,3)],
-        [R(2,1),R(2,2),R(2,3)],
-        [R(3,1),R(3,2),R(3,3)])) ),
-  print("      Return"),
-  print("      End"),
-
-  /* 93 tf */
-  print("      Subroutine aa_tf_93 (R, v, p0, p1)"),
-  print("      Double Precision R(3,3)"),
-  print("      Double Precision v(3)"),
-  print("      Double Precision p0(3)"),
-  print("      Double Precision p1(3,1)"),
-  fortran( p1 =
-    matrix([R(1,1),R(1,2),R(1,3)],
-      [R(2,1),R(2,2),R(2,3)],
-      [R(3,1),R(3,2),R(3,3)])
-      . [p0(1),p0(2), p0(3)]
-      + [v(1), v(2), v(3)]),
-  print("      Return"),
-  print("      End"),
-
-  /* 93 inverse */
-  print("      Subroutine aa_tf_93inv (R, v, Ri, vi)"),
-  print("      Double Precision R(3,3)"),
-  print("      Double Precision v(3)"),
-  print("      Double Precision Ri(3,3)"),
-  print("      Double Precision vi(3,1)"),
-  fortran( Ri = transpose(matrix(
-        [R(1,1),R(1,2),R(1,3)],
-        [R(2,1),R(2,2),R(2,3)],
-        [R(3,1),R(3,2),R(3,3)])) ),
-  fortran( vi = transpose(matrix(
-        [R(1,1),R(1,2),R(1,3)],
-        [R(2,1),R(2,2),R(2,3)],
-        [R(3,1),R(3,2),R(3,3)]))
-    . -[v(1), v(2), v(3)] ),
-  print("      Return"),
-  print("      End"),
 
   /* 93 chain */
   print("      Subroutine aa_tf_93chain(R1, v1, R2, v2, R3, v3)"),
@@ -154,21 +111,6 @@ with_stdout("mac.f",
       [R2(1,1),R2(1,2),R2(1,3)],
       [R2(2,1),R2(2,2),R2(2,3)],
       [R2(3,1),R2(3,2),R2(3,3)]) ),
-  print("      Return"),
-  print("      End"),
-
-  /* 9rot */
-  print("      Subroutine aa_tf_9rot(R, p0, p1)"),
-  print("      Double Precision R(3,3)"),
-  print("      Double Precision p0(3)"),
-  print("      Double Precision p1(3,1)"),
-  fortran( p1 =
-    matrix(
-      [R(1,1),R(1,2),R(1,3)],
-      [R(2,1),R(2,2),R(2,3)],
-      [R(3,1),R(3,2),R(3,3)])
-    .
-    matrix( [p0(1)], [p0(2)], [p0(3)]) ),
   print("      Return"),
   print("      End")
 );

@@ -43,25 +43,37 @@
 #define _GNU_SOURCE
 #include "amino.h"
 
-AA_API void aa_tf_93inv_( const double R[9], const double v[3],
-                          double Ri[9], double vi[3] );
+void aa_tf_93inv_( const double R[restrict 9],
 
 AA_API void aa_tf_12inv( const double T[12], double Ti[12] ) {
-    aa_tf_93inv_( T, T+9, Ti, Ti+9 );
+    aa_tf_93inv( T, T+9, Ti, Ti+9 );
 }
 
 AA_API void aa_tf_93inv( const double R[9], const double v[3],
                          double Ri[9], double vi[3] ) {
-    aa_tf_93inv_( R, v, Ri, vi );
+void aa_tf_93inv( const double R[restrict 9], const double v[restrict 3],
+                  double Ri[restrict 9], double vi[restrict 3] ) {
+    aa_la_transpose2( 3, 3, R, Ri );
+    aa_tf_9rot( Ri, (double[]){-v[0],-v[1],-v[2]}, vi );
 }
 
 
-AA_API void aa_tf_93_( const double R[9], const double v[3],
-                       const double p0[3], double p1[3] );
 
 AA_API void aa_tf_93( const double R[9], const double v[3],
                       const double p0[3], double p1[3] ) {
     aa_tf_93_( R, v, p0, p1 );
+    pp[0] = v[0] +
+        p0[0] * AA_MATREF(R,3,0,0) +
+        p0[1] * AA_MATREF(R,3,0,1) +
+        p0[2] * AA_MATREF(R,3,0,2);
+    pp[1] = v[1] +
+        p0[0] * AA_MATREF(R,3,1,0) +
+        p0[1] * AA_MATREF(R,3,1,1) +
+        p0[2] * AA_MATREF(R,3,1,2);
+    pp[2] = v[2] +
+        p0[0] * AA_MATREF(R,3,2,0) +
+        p0[1] * AA_MATREF(R,3,2,1) +
+        p0[2] * AA_MATREF(R,3,2,2);
 }
 
 AA_API void aa_tf_12( const double T[12], const double p0[3], double p1[3] ) {
@@ -108,26 +120,21 @@ AA_API void aa_tf_9mul_( const double R0[9], const double R1[9],
 AA_API void aa_tf_9mul( const double R0[9], const double R1[9], double R[9] ) {
     aa_tf_9mul_(R0, R1, R);
 }
-/*
-    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans,
-                 3, 3, 3,
-                 1.0, R0, 3,
-                 R1, 3,
-                 0.0, R, 3 );
-}
-*/
-/// from maxima
-void aa_tf_9rot_( const double R[9], const double p0[3], double p1[3] );
 AA_API void aa_tf_9rot( const double R[9], const double p0[3],
                        double p1[3] ) {
-    aa_tf_9rot_(R, p0, p1);
-    /*
-    cblas_dgemv( CblasColMajor, CblasNoTrans,
-                 3, 3,
-                 1.0, R, 3,
-                 p0, 1,
-                 0.0, p1, 1 );
-    */
+
+    pp[0] =
+        p0[0] * AA_MATREF(R,3,0,0) +
+        p0[1] * AA_MATREF(R,3,0,1) +
+        p0[2] * AA_MATREF(R,3,0,2);
+    pp[1] =
+        p0[0] * AA_MATREF(R,3,1,0) +
+        p0[1] * AA_MATREF(R,3,1,1) +
+        p0[2] * AA_MATREF(R,3,1,2);
+    pp[2] =
+        p0[0] * AA_MATREF(R,3,2,0) +
+        p0[1] * AA_MATREF(R,3,2,1) +
+        p0[2] * AA_MATREF(R,3,2,2);
 }
 
 void aa_tf_qnormalize( double q[4] ) {
