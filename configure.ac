@@ -13,11 +13,13 @@ AC_PROG_CC
 AC_PROG_F77
 AC_PROG_LIBTOOL
 AC_PROG_CC_C99
+AC_CHECK_PROGS([MAXIMA], [maxima])
 
 # Checks for libraries.
 
 # Checks for header files.
 AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -41,8 +43,8 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime memset pow sqrt])
 
 
-AC_SEARCH_LIBS([cblas_dgemm],[blas])
-AC_SEARCH_LIBS([dgesvd_],[lapack])
+AC_SEARCH_LIBS([cblas_dgemm],[blas], [true], [echo "Failed: need BLAS library" && exit 1])
+AC_SEARCH_LIBS([dgesvd_],[lapack], [true], [echo "Failed: need LAPACK library" && exit 1])
 AC_SEARCH_LIBS([clock_gettime],[rt])
 
 # Doxygen
