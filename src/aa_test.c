@@ -1328,6 +1328,33 @@ void sigsys() {
 
 }
 
+void vision() {
+    double r[3];
+
+    {
+        double rgb[3] = {1,0,0};
+        double hsv[3] = {0,1,1};
+        aa_cv_rgb2hsv(rgb, r);
+        aveq( 3, r, hsv, .001);
+    }
+
+    {
+        double rgb[3] = {.5,1,1};
+        double hsv[3] = {M_PI,.5,1};
+        aa_cv_rgb2hsv(rgb, r);
+        aveq( 3, r, hsv, .001);
+    }
+
+    {
+        double rgb[3] = {.5, .5, 1};
+        double hsv[3] = {aa_ang_norm_pi(240*M_PI/180), .5, 1};
+        aa_cv_rgb2hsv(rgb, r);
+        aveq( 3, r, hsv, .001);
+    }
+
+}
+
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
 
@@ -1378,5 +1405,6 @@ int main( int argc, char **argv ) {
     validate();
     io();
     sigsys();
+    vision();
     aa_region_destroy(&g_region);
 }

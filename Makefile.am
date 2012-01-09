@@ -16,6 +16,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/time.h            \
 	include/amino/type.h            \
 	include/amino/unit.h            \
+	include/amino/cv.h              \
 	include/amino/validate.h
 
 TESTS = aa_test
@@ -24,7 +25,7 @@ lib_LTLIBRARIES = libamino.la
 
 bin_PROGRAMS = aa_test
 
-libamino_la_SOURCES = src/mem.c src/la.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/sigsys.c
+libamino_la_SOURCES = src/mem.c src/la.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/sigsys.c src/cv.c
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]
@@ -32,7 +33,7 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima end]
 
 clean-local:
-	-rm -rf debian/tmp debian/files debian/libamino? debian/libamino-dev debian/*.log debian/*.substvars texput.log debian/*.debhelper
+	-rm -rf debian/tmp debian/files debian/libamino? debian/libamino-dev debian/*.log debian/*.substvars texput.log debian/*.debhelper debian/usr/* debian/DEBIAN/*
 
 distclean-local:
 	-rm -rf doxygen-doc

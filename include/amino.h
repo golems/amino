@@ -181,6 +181,7 @@
 #include "amino/unit.h"
 #include "amino/validate.h"
 #include "amino/io.h"
+#include "amino/cv.h"
 
 
 #endif //AMINO_H
