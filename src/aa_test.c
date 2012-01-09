@@ -1355,6 +1355,14 @@ void vision() {
 }
 
 
+void stat() {
+    double x[] = {1,2,3,4,5,4,3,2,1};
+    double s = aa_stddev(sizeof(x)/sizeof(double), x);
+
+    afeq(s, 1.3944, .001);
+}
+
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
 
@@ -1406,5 +1414,6 @@ int main( int argc, char **argv ) {
     io();
     sigsys();
     vision();
+    stat();
     aa_region_destroy(&g_region);
 }

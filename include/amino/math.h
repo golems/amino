@@ -179,6 +179,11 @@ static inline double aa_z2x(double z, double mu, double sigma) {
     return (z * sigma) + mu;
 }
 
+/* Compute mean of vector x */
+AA_API double aa_mean( size_t n, const double *x);
+
+/* Compute standard deviation of vector x */
+AA_API double aa_stddev( size_t n, const double *x);
 
 /**********/
 /* Angles */

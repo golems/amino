@@ -103,3 +103,19 @@ AA_API void aa_box_muller(double x1, double x2, double *z1, double *z2) {
     *z1 = a*c;
     *z2 = a*s;
 }
+
+
+AA_API double aa_mean( size_t n, const double *x) {
+    return cblas_dasum( (int)n, x, 1 ) / (double)n;
+}
+
+
+AA_API double aa_stddev( size_t n, const double *x) {
+    double mu = aa_mean(n,x);
+    double a = 0;
+    for( size_t i = 0; i < n; i++ ) {
+        double t = x[i] - mu;
+        a += t*t;
+    }
+    return sqrt( a / (double)(n-1) );
+}
