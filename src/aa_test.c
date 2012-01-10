@@ -1363,6 +1363,13 @@ void stat() {
 }
 
 
+void ang() {
+    afeq( 0, aa_ang_mean(3, (double[]){M_PI/2, 0, 3*M_PI/2}), .001 );
+    afeq( M_PI, aa_ang_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2}), .001 );
+    afeq( M_PI, aa_ang_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2 + 2*M_PI}),
+          .001 );
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
 
@@ -1415,5 +1422,6 @@ int main( int argc, char **argv ) {
     sigsys();
     vision();
     stat();
+    ang();
     aa_region_destroy(&g_region);
 }

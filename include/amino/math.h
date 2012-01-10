@@ -210,6 +210,9 @@ static inline double aa_ang_norm_pi( double an ) {
     return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
 }
 
+/** Compute mean of angles */
+AA_API double aa_ang_mean( size_t n, const double *x);
+
 /************************/
 /* Dense Linear Algebra */
 /************************/

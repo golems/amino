@@ -124,3 +124,14 @@ AA_API double aa_stddev( size_t n, const double *x) {
     }
     return sqrt( a / (double)(n-1) );
 }
+
+AA_API double aa_ang_mean( size_t n, const double *x) {
+    double as = 0, ac = 0;
+    for( size_t i = 0; i < n; i ++ ) {
+        double s, c;
+        sincos(x[i], &s, &c);
+        as += s;
+        ac += c;
+    }
+    return atan2( as/(double)n, ac/(double)n );
+}
