@@ -40,7 +40,17 @@
  *
  */
 
+#include "config.h"
+#include <math.h>
 #include "amino.h"
+
+
+#ifndef HAVE_SINCOS
+void sincos(double b, double *s,  double *c ) {
+    *s = sin(b);
+    *c = cos(b);
+}
+#endif
 
 
 int aa_veq(size_t n, const double *a, const double *b, double tol ) {
@@ -94,12 +104,7 @@ AA_API void aa_box_muller(double x1, double x2, double *z1, double *z2) {
     const double a = sqrt( -2.0 * log(x1) );
     double s,c;
     const double b = 2 * M_PI * x2;
-#ifdef _GNU_SOURCE
     sincos(b, &s, &c );
-#else
-    s = sin(b);
-    c = cos(b);
-#endif //_GNU_SOURCE
     *z1 = a*c;
     *z2 = a*s;
 }

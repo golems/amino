@@ -7,6 +7,8 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([include/amino.h])
 AC_CONFIG_HEADERS([config.h])
 
+AC_GNU_SOURCE
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -18,7 +20,7 @@ AC_CHECK_PROGS([MAXIMA], [maxima])
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h unistd.h math.h])
 AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -40,12 +42,13 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_FUNC_ALLOCA
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([clock_gettime memset pow sqrt])
 
-
+AC_CHECK_LIB([m],[sqrt])
 AC_SEARCH_LIBS([cblas_dgemm],[blas], [true], [echo "Failed: need BLAS library" && exit 1])
 AC_SEARCH_LIBS([dgesvd_],[lapack], [true], [echo "Failed: need LAPACK library" && exit 1])
 AC_SEARCH_LIBS([clock_gettime],[rt])
+
+AC_CHECK_FUNCS([clock_gettime memset pow sqrt sincos])
 
 # Doxygen
 DX_HTML_FEATURE(ON)
