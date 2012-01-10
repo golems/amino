@@ -179,6 +179,13 @@ static inline double aa_z2x(double z, double mu, double sigma) {
     return (z * sigma) + mu;
 }
 
+/** Convert x-score to z-score a normal distribution.
+ */
+static inline double aa_x2z(double x, double mu, double sigma) {
+    return (x-mu)/sigma;
+}
+
+
 /* Compute mean of vector x */
 AA_API double aa_mean( size_t n, const double *x);
 
@@ -212,6 +219,17 @@ static inline double aa_ang_norm_pi( double an ) {
 
 /** Compute mean of angles */
 AA_API double aa_ang_mean( size_t n, const double *x);
+
+/** Compute mean and standard deviation, excluding outliers.
+ *
+ *  \param zmin exclude all outliers below zmin standard deviations
+ *  \param zmax exclude all outliers above zmax standard deviations
+ */
+AA_API size_t aa_excluded_mean_stdev( size_t n, const double *x,
+                                      double *pmu, double *psigma,
+                                      double zmin, double zmax,
+                                      size_t max_iterations );
+
 
 /************************/
 /* Dense Linear Algebra */

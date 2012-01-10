@@ -1356,10 +1356,24 @@ void vision() {
 
 
 void stat() {
-    double x[] = {1,2,3,4,5,4,3,2,1};
-    double s = aa_stddev(sizeof(x)/sizeof(double), x);
+    {
+        double x[] = {1,2,3,4,5,4,3,2,1};
+        double s = aa_stddev(sizeof(x)/sizeof(double), x);
 
-    afeq(s, 1.3944, .001);
+        afeq(s, 1.3944, .001);
+    }
+    {
+        double x[] = {1,2,3,4,5,6,7,8,9,10,1000000};
+        double s,m,m0,s0;
+        aa_excluded_mean_stdev( sizeof(x)/sizeof(x[0]), x,
+                                &m, &s,
+                                -2, 2,
+                                10 );
+        m0 = aa_mean( sizeof(x)/sizeof(x[0]) - 1, x );
+        s0 = aa_stddev( sizeof(x)/sizeof(x[0]) - 1, x );
+        afeq( s, s0, .001 );
+        afeq( m, m0, .001 );
+    }
 }
 
 

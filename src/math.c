@@ -125,6 +125,37 @@ AA_API double aa_stddev( size_t n, const double *x) {
     return sqrt( a / (double)(n-1) );
 }
 
+
+AA_API size_t aa_excluded_mean_stdev( size_t n, const double *x,
+                                      double *pmu, double *psigma,
+                                      double zmin, double zmax,
+                                      size_t max_iterations ) {
+    double mu = aa_mean(n,x);
+    double sigma = aa_stddev(n,x);
+    size_t iter = 0;
+    while( iter++ < max_iterations ) {
+        double am = 0;
+        double as = 0;
+        size_t j = 0;
+        double xmax = aa_z2x( zmax, mu, sigma );
+        double xmin = aa_z2x( zmin, mu, sigma );
+        for( size_t i = 0; i < n; i++ ) {
+            if( x[i] >= xmin && x[i] <= xmax ) {
+                j++;
+                double t = x[i] - mu;
+                as += t*t;
+                am += x[i];
+            }
+        }
+        assert(j > 0);
+        mu = am / j;
+        sigma = sqrt(as / (j-1));
+    }
+    *pmu = mu;
+    *psigma = sigma;
+    return iter;
+}
+
 AA_API double aa_ang_mean( size_t n, const double *x) {
     double as = 0, ac = 0;
     for( size_t i = 0; i < n; i ++ ) {
