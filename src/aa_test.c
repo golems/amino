@@ -501,6 +501,32 @@ void angle() {
     afeq( aa_ang_norm_2pi( 3*M_PI ), M_PI, 0 );
     afeq( aa_ang_norm_2pi( -M_PI/2 ), 3*M_PI/2, .001 );
     afeq( aa_ang_norm_pi( 3*M_PI/2 ), -M_PI/2, 0 );
+
+    // delta
+    afeq( aa_ang_delta( aa_ang_deg2rad(128),
+                        aa_ang_deg2rad(128) ),
+          aa_ang_deg2rad(0),
+          .001 );
+    afeq( aa_ang_delta( aa_ang_deg2rad(128),
+                        aa_ang_deg2rad(127) ),
+          aa_ang_deg2rad(1),
+          .001 );
+    afeq( aa_ang_delta( aa_ang_deg2rad(128),
+                        aa_ang_deg2rad(129) ),
+          aa_ang_deg2rad(-1),
+          .001 );
+   afeq( aa_ang_delta( aa_ang_deg2rad(90),
+                       aa_ang_deg2rad(269) ),
+          aa_ang_deg2rad(-179),
+          .001 );
+   afeq( aa_ang_delta( aa_ang_deg2rad(269),
+                       aa_ang_deg2rad(90) ),
+          aa_ang_deg2rad(179),
+          .001 );
+   afeq( aa_ang_delta( aa_ang_deg2rad(269 - 360),
+                       aa_ang_deg2rad(90+720) ),
+          aa_ang_deg2rad(179),
+          .001 );
 }
 
 void quat() {

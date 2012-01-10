@@ -217,6 +217,12 @@ static inline double aa_ang_norm_pi( double an ) {
     return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
 }
 
+
+/// Difference between two angles, interval (-pi,pi)
+static inline double aa_ang_delta( double a, double b) {
+    return aa_ang_norm_pi( aa_ang_norm_pi(a) - aa_ang_norm_pi(b) );
+}
+
 /** Compute mean of angles */
 AA_API double aa_ang_mean( size_t n, const double *x);
 
