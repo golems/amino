@@ -29,6 +29,17 @@ tarball which already contains the autoconf-generated configure script.
 `$ sudo ./make install'
 
 
+Alternatively, if you want to build a debian package.
+1) Install debuild:
+
+`sudo apt-get install devscripts'
+
+2) Build amino and the debian packages:
+
+`debuild -us -uc'
+
+
+
 ***************************************
 * GNU Autotools Standard Instructions *
 ***************************************
