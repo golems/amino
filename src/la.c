@@ -403,3 +403,9 @@ double aa_la_det3x3( const double R[restrict 9] ) {
                                AA_MATREF(R,3,1,1) * AA_MATREF(R,3,2,0) );
     return d;
 }
+
+
+double aa_la_point_plane( size_t n, const double *point, const double *plane ) {
+    double d = cblas_ddot( (int)n, point, 1, plane, 1 ) + plane[n];
+    return d / cblas_dnrm2( (int)(n), plane, 1 );
+}

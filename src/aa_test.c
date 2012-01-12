@@ -236,6 +236,18 @@ void la1() {
         aa_la_normalize(3,x);
         aveq( 3, r, x, 0.0001 );
     }
+
+    // point_plane
+    {
+        afeq( aa_la_point_plane( 3, (double[]){1,1,1},
+                                 (double[]){1,1,1,1} ),
+              2.3094,
+              .001 );
+        afeq( aa_la_point_plane( 3, (double[]){1,2,3},
+                                 (double[]){1,1,1,0} ),
+              3.4641,
+              .01 );
+    }
 }
 
 void la2() {

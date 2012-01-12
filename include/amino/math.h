@@ -358,6 +358,16 @@ AA_API void aa_la_cross( const double a[3], const double b[3], double c[3] );
  */
 AA_API void aa_la_normalize( size_t n, double *x );
 
+
+/** Point Plane Distance
+ *
+ * \param n size of space
+ * \param point vector of length n
+ * \param plane vector of length n+1
+ */
+AA_API double aa_la_point_plane( size_t n,
+                                 const double *point, const double *plane );
+
 /*--- Matrix Ops --- */
 
 
