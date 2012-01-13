@@ -502,6 +502,11 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const d
 /** Linear Least Squares.
  * \f[ b = Ax \f]
  * Solves for x.
+ * \param m rows in A
+ * \param n cols in A
+ * \param A matrix
+ * \param b offset matrix
+ * \param x solution matrix
  */
 AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x );
 

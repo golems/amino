@@ -447,6 +447,16 @@ void la3() {
         aveq( sizeof(X)/sizeof(double),
               X, Xr, .01 );
     }
+    // lls
+    {
+        double A[] = {1,2,
+                      3,4};
+        aa_la_transpose( 2, A );
+        double x[2];
+        aa_la_lls( 2, 2, 1, A, (double[]){1,2}, x );
+        aveq( sizeof(x)/sizeof(double),
+              x, (double[]){0,0.5}, 0.001 );
+    }
 
 }
 
