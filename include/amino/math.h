@@ -541,6 +541,16 @@ AA_API void aa_la_linterp( size_t n,
                            double ti, double *Xi );
 
 
+/** Fit a plane to a set of points.
+ *
+ * \param m size of space
+ * \param n number of points
+ * \param m*n matrix of points, point per column, column major
+ * \param vector length m+1 to hold plane coefficients in hessian-normal form
+ */
+AA_API void aa_la_plane_fit( size_t m, size_t n,
+                             const double *points, double *plane );
+
 /*--- Systems and Signals --- */
 
 /** Linear simulation step in discrete time

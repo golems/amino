@@ -382,14 +382,6 @@ void la2() {
         aa_la_dlsnp(2, 3, .005, A, b, x_p, x);
         aveq(3, x_r, x, .0001 );
     }
-
-    // lls
-    {
-        //double A[] = {1,2,3,4};
-        //double b[] = {3,7};
-        //double x[2];
-        //aa_la_lls(2,2,2,A,b,x);
-    }
     // linterp
     {
         double t0 = 0, t1 = 1;
@@ -1432,6 +1424,22 @@ void ang() {
           .001 );
 }
 
+void plane() {
+    double P[] = {0,2,
+                  1,0};
+    double pl[3];
+    double pl_r[3] = {-2, -1, 2};
+    aa_la_plane_fit( 2, 2, P, pl );
+    aa_la_plane_hessian( 3, pl_r);
+    aveq( 3, pl, pl_r, .001);
+
+    double P2[] = {0,2,
+                   .5,1,
+                   1,0};
+    aa_la_plane_fit( 2, 3, P2, pl );
+    aveq( 3, pl, pl_r, .001);
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
 
@@ -1485,5 +1493,6 @@ int main( int argc, char **argv ) {
     vision();
     stat();
     ang();
+    plane();
     aa_region_destroy(&g_region);
 }

@@ -342,12 +342,13 @@ static int dgelsd_miniwork(int m, int n) {
 
 
 AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) {
+
     int mi=(int)m, ni=(int)n, pi=(int)p;
     double rcond=-1;
 
     double Ap[m*n];
     memcpy(Ap,A,sizeof(Ap));
-    memcpy(x,b,sizeof(x[0])*p*n);
+    memcpy(x,b,sizeof(x[0])*p*m);
 
     int rank, info;
     size_t liwork = (size_t)dgelsd_miniwork(mi,ni);
@@ -404,4 +405,26 @@ double aa_la_det3x3( const double R[restrict 9] ) {
 double aa_la_point_plane( size_t n, const double *point, const double *plane ) {
     double d = cblas_ddot( (int)n, point, 1, plane, 1 ) + plane[n];
     return d / cblas_dnrm2( (int)(n), plane, 1 );
+}
+
+void aa_la_plane_hessian( size_t n, double *plane ) {
+    double a = cblas_dnrm2( (int)n-1, plane, 1 );
+    cblas_dscal( (int)n, 1/a, plane, 1 );
+}
+
+void aa_la_plane_fit( size_t m, size_t n, const double *points, double *plane ) {
+    double b[n];
+    double A[m*n];
+
+    // make each (column-major) row a data point
+    // space-size m
+    // data points n
+    for( size_t i = 0; i < n; i ++ ) b[i] = -1;
+    aa_la_transpose2( m, n, points, A );
+
+
+    aa_la_lls( n, m, 1, A, b, plane );
+
+    plane[m] = 1;
+    aa_la_plane_hessian( m+1, plane );
 }
