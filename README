@@ -7,12 +7,16 @@ includes mathematical and linear algebra routines, memory management,
 and time-handling.  Design goals are easy integration, efficiency, and
 simplicity.
 
-**********************
-* BUILD DEPENDENCIES *
-**********************
-Some other packages are required to build this package. The dependencies
-can be met by installing the following packages:
-sudo apt-get install libblas3gf libblas-dev liblapack3gf liblapack-dev maxima
+****************
+* DEPENDENCIES *
+****************
+
+- BLAS / LAPACK
+- Maxima (build-time dependency only)
+
+On Debian/Ubuntu:
+
+`sudo apt-get install libblas3gf libblas-dev liblapack3gf liblapack-dev maxima`
 
 ****************
 * INSTALLATION *

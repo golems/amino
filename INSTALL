@@ -2,6 +2,9 @@
 * Overview *
 ************
 
+Generic Instructions
+--------------------
+
 0) If you have obtained amino from the git repo, you need to
 initialize the autotools build scripts.  This requires the autotools
 and the autoconf macro archive. To install these on Debian or Ubuntu
@@ -29,15 +32,27 @@ tarball which already contains the autoconf-generated configure script.
 `$ sudo ./make install'
 
 
-Alternatively, if you want to build a debian package.
-1) Install debuild:
+Debian/Ubuntu Instructions
+--------------------------
 
-`sudo apt-get install devscripts'
+Alternatively, if you want to build a debian package:
+
+0) Install debuild (if not already installed):
+
+`$ sudo apt-get install devscripts'
+
+1) If you've have obtained the packaged from Git, initialize autotools
+with:
+
+`$ autoreconf -i'
 
 2) Build amino and the debian packages:
 
-`debuild -us -uc'
+`$ debuild -us -uc'
 
+3) (Optionally) Install the debian packages:
+
+`$ sudo dpkg -i ../libamino*.deb'
 
 
 ***************************************
