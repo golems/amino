@@ -115,9 +115,14 @@ AA_API double aa_stat_mean( size_t n, const double *x) {
 }
 
 
-AA_API double aa_stat_stddev( size_t n, const double *x) {
-    double mu = aa_stat_mean(n,x);
-    double a = 0;
+AA_API double aa_stat_std( size_t n, const double *x) {
+    double dn = (double)n;
+    double mu = cblas_dasum( (int)n, x, 1 ) / dn;
+    double a2 = cblas_ddot( (int)n, x, 1, x, 1 );
+    return sqrt( (a2 - dn*mu*mu) / (dn-1) );
+}
+
+
     for( size_t i = 0; i < n; i++ ) {
         double t = x[i] - mu;
         a += t*t;
@@ -126,31 +131,33 @@ AA_API double aa_stat_stddev( size_t n, const double *x) {
 }
 
 
-AA_API size_t aa_stat_excluded_mean_stdev( size_t n, const double *x,
+AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
                                       double *pmu, double *psigma,
                                       double zmin, double zmax,
                                       size_t max_iterations ) {
     double mu = aa_stat_mean(n,x);
-    double sigma = aa_stat_stddev(n,x);
+    double sigma = aa_stat_std(n,x);
     size_t iter = 0;
-    while( iter++ < max_iterations ) {
+    size_t jj,j=0;
+    do {
+        jj = j;
+        j = 0;
         double am = 0;
         double as = 0;
-        size_t j = 0;
-        double xmax = aa_stat_z2x( zmax, mu, sigma );
-        double xmin = aa_stat_z2x( zmin, mu, sigma );
+        double dxmax = zmax*sigma;
+        double dxmin = zmin*sigma;
         for( size_t i = 0; i < n; i++ ) {
-            if( x[i] >= xmin && x[i] <= xmax ) {
+            double dx = x[i] - mu;
+            if( dx >= dxmin && dx <= dxmax ) {
                 j++;
-                double t = x[i] - mu;
-                as += t*t;
+                as += dx*dx;
                 am += x[i];
             }
         }
         assert(j > 0);
         mu = am / j;
         sigma = sqrt(as / (j-1));
-    }
+    } while( jj != j &&  ++iter < max_iterations ) ;
     *pmu = mu;
     *psigma = sigma;
     return iter;

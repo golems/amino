@@ -189,17 +189,17 @@ static inline double aa_stat_x2z(double x, double mu, double sigma) {
 AA_API double aa_stat_mean( size_t n, const double *x);
 
 /* Compute standard deviation of vector x */
-AA_API double aa_stat_stddev( size_t n, const double *x);
+AA_API double aa_stat_std( size_t n, const double *x);
 
 /** Compute mean and standard deviation, excluding outliers.
  *
  *  \param zmin exclude all outliers below zmin standard deviations
  *  \param zmax exclude all outliers above zmax standard deviations
  */
-AA_API size_t aa_stat_excluded_mean_stdev( size_t n, const double *x,
-                                           double *pmu, double *psigma,
-                                           double zmin, double zmax,
-                                           size_t max_iterations );
+AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
+                                         double *pmu, double *psigma,
+                                         double zmin, double zmax,
+                                         size_t max_iterations );
 
 
 
@@ -540,6 +540,13 @@ AA_API void aa_la_linterp( size_t n,
                            double t1, const double *X1,
                            double ti, double *Xi );
 
+
+/** Convert plane to hessian normal form
+ *
+ * \param plane Coefficients for plane
+ * \param n length of plane vector, size of plane space is n-1
+ */
+AA_API void aa_la_plane_hessian( size_t n, double *plane );
 
 /** Fit a plane to a set of points.
  *
