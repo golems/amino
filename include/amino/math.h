@@ -221,6 +221,28 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
                                               double zmin, double zmax,
                                               size_t max_iterations );
 
+
+/** Compute mean of vectors.
+ *
+ * \param m size of space
+ * \param n number of samples
+ * \param X matrix of samples, one per column
+ * \param mean vector, length m
+ */
+AA_API void aa_stat_vmean( size_t m, size_t n, const double *X,
+                           double *mu);
+
+/** Compute sample covariance of vectors.
+ *
+ * \param m size of space
+ * \param n number of samples
+ * \param X matrix of samples, one per column
+ * \param mean vector, length m
+ * \param covariance matrix, m*m
+ */
+AA_API void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
+                               double *mu, double *E);
+
 /**********/
 /* Angles */
 /**********/

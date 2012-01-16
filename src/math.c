@@ -217,3 +217,35 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
     *psigma = sigma;
     return iter;
 }
+
+void aa_stat_vmean( size_t m, size_t n, const double *X, double *mu) {
+    memset(mu, 0, sizeof(mu[0]) * m);
+    for( size_t i = 0; i < m; i++ ) {
+        mu[i] = cblas_dasum((int)n, X+i, (int)m);
+    }
+    cblas_dscal((int)m, 1.0/(double)n, mu, 1);
+}
+
+void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
+                        double *mu, double *E) {
+    aa_stat_vmean(m,n,X,mu);
+    double t[m];
+    memset(E,0,sizeof(E[0])*m*m);
+    for(size_t i = 0; i < n; i++) {
+        // t := - mu + x_i
+        memcpy( t, &X[i*m], sizeof(t[0])*m );
+        cblas_daxpy( (int)m, -1, mu, 1, t, 1 );
+        // E += t * t'
+        cblas_dsyr( CblasColMajor, CblasUpper,
+                    (int)m, 1.0, t, 1,
+                    E, (int)m );
+    }
+    cblas_dscal( (int)(m*m), 1.0/(double)(n-1),
+                 E, 1 );
+    // fill lower half
+    for( size_t i = 0; i < m; i ++ ) {
+        for( size_t j = i+1; j < m; j ++ ) {
+            AA_MATREF(E, m, j, i) = AA_MATREF(E, m, i, j);
+        }
+    }
+}
