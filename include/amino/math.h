@@ -203,6 +203,24 @@ AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
 
 
 
+
+
+/** Compute mean of angles */
+AA_API double aa_stat_circ_mean( size_t n, const double *x);
+
+/* Compute standard deviation of vector x */
+AA_API double aa_stat_circ_std( size_t n, const double *x);
+
+/** Compute mean and standard deviation, excluding outliers.
+ *
+ *  \param zmin exclude all outliers below zmin standard deviations
+ *  \param zmax exclude all outliers above zmax standard deviations
+ */
+AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
+                                              double *pmu, double *psigma,
+                                              double zmin, double zmax,
+                                              size_t max_iterations );
+
 /**********/
 /* Angles */
 /**********/
@@ -234,8 +252,6 @@ static inline double aa_ang_delta( double a, double b) {
     return aa_ang_norm_pi( aa_ang_norm_pi(a) - aa_ang_norm_pi(b) );
 }
 
-/** Compute mean of angles */
-AA_API double aa_ang_mean( size_t n, const double *x);
 
 
 /************************/

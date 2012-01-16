@@ -1414,19 +1414,31 @@ void stat() {
         afeq( s, s0, .001 );
         afeq( m, m0, .001 );
     }
-                                &m, &s,
-                                -2, 2,
-                                10 );
+    {
+        double x[] = {1,2,3,4,5,6,7,8,9,10,1000000};
+        for( size_t i = 0; i <  sizeof(x)/sizeof(x[0]); i ++ ) {
+            x[i] = aa_ang_deg2rad(x[i]);
+        }
+        double s,m,m0,s0, ms;
+        aa_stat_excluded_circ_mean_std( sizeof(x)/sizeof(x[0]), x,
+                                        &m, &s,
+                                        -2, 2,
+                                        10 );
+        m0 = aa_stat_circ_mean( sizeof(x)/sizeof(x[0]) - 1, x );
+        s0 = aa_stat_circ_std( sizeof(x)/sizeof(x[0]) - 1, x );
+        ms = aa_stat_mean( sizeof(x)/sizeof(x[0]) - 1, x );
         afeq( s, s0, .001 );
         afeq( m, m0, .001 );
+        afeq( m, ms, .001 );
     }
 }
 
 
 void ang() {
-    afeq( 0, aa_ang_mean(3, (double[]){M_PI/2, 0, 3*M_PI/2}), .001 );
-    afeq( M_PI, aa_ang_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2}), .001 );
-    afeq( M_PI, aa_ang_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2 + 2*M_PI}),
+    afeq( 0, aa_stat_circ_mean(3, (double[]){M_PI/2, 0, 3*M_PI/2}), .001 );
+    afeq( M_PI, aa_stat_circ_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2}), .001 );
+    afeq( M_PI,
+          aa_stat_circ_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2 + 2*M_PI}),
           .001 );
 }
 

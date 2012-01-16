@@ -123,11 +123,29 @@ AA_API double aa_stat_std( size_t n, const double *x) {
 }
 
 
-    for( size_t i = 0; i < n; i++ ) {
-        double t = x[i] - mu;
-        a += t*t;
+AA_API double aa_stat_circ_mean( size_t n, const double *x) {
+    double as = 0, ac = 0;
+    for( size_t i = 0; i < n; i ++ ) {
+        double s, c;
+        sincos(x[i], &s, &c);
+        as += s;
+        ac += c;
     }
-    return sqrt( a / (double)(n-1) );
+    return atan2( as/(double)n, ac/(double)n );
+}
+
+AA_API double aa_stat_circ_std( size_t n, const double *x) {
+    double as = 0, ac = 0;
+    for( size_t i = 0; i < n; i++ ) {
+        double s,c;
+        sincos( x[i], &s, &c );
+        as += s;
+        ac += c;
+    }
+    as = as / (n);
+    ac = ac / (n);
+    double r = (as*as + ac*ac);
+    return sqrt( -2 * log(r) );
 }
 
 
@@ -154,7 +172,7 @@ AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
                 am += x[i];
             }
         }
-        assert(j > 0);
+        assert(j > 1);
         mu = am / j;
         sigma = sqrt(as / (j-1));
     } while( jj != j &&  ++iter < max_iterations ) ;
@@ -163,13 +181,39 @@ AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
     return iter;
 }
 
-AA_API double aa_ang_mean( size_t n, const double *x) {
-    double as = 0, ac = 0;
-    for( size_t i = 0; i < n; i ++ ) {
-        double s, c;
-        sincos(x[i], &s, &c);
-        as += s;
-        ac += c;
-    }
-    return atan2( as/(double)n, ac/(double)n );
+AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
+                                              double *pmu, double *psigma,
+                                              double zmin, double zmax,
+                                              size_t max_iterations ) {
+    double mu = aa_stat_circ_mean(n,x);
+    double sigma = aa_stat_circ_std(n,x);
+    size_t iter = 0;
+    size_t jj,j=0;
+    do {
+        jj = j;
+        j = 0;
+        double as = 0;
+        double ac = 0;
+        double dxmax = zmax*sigma;
+        double dxmin = zmin*sigma;
+        for( size_t i = 0; i < n; i++ ) {
+            double dx = aa_ang_delta( x[i], mu );
+            if( dx >= dxmin && dx <= dxmax ) {
+                j++;
+                double s, c;
+                sincos(x[i], &s, &c);
+                as += s;
+                ac += c;
+            }
+        }
+        assert(j > 1);
+        as /= (j);
+        ac /= (j);
+        mu = atan2(as,ac);
+        double r = (as*as + ac*ac);
+        sigma = sqrt( -2 * log(r) );
+    } while(jj != j && ++iter < max_iterations ) ;
+    *pmu = mu;
+    *psigma = sigma;
+    return iter;
 }
