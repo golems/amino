@@ -202,6 +202,16 @@ double aa_la_trace( size_t n, const double *A ) {
     return cblas_dasum( (int)n, A, (int)(n+1) );
 }
 
+double aa_la_wdot( size_t n,
+                   const double *x, const double *A, const double *y ) {
+
+    double a = 0;
+    for( size_t i = 0; i < n; i++ ) {
+        a += y[i] * cblas_ddot( (int)n, &A[i*n], 1, x, 1 );
+    }
+    return a;
+}
+
 int aa_la_inv( size_t n, double *A ) {
     int ipiv[n];
     const int mi = (int) n;

@@ -1446,6 +1446,10 @@ void stat() {
         aa_stat_vmean_cov(3, 4, X, mu, E );
         aveq( 3, mu, mu_r, .001);
         aveq( 3*3, E, E_r, .001);
+
+        aa_la_inv(3, E);
+        afeq( 24.75, aa_stat_mahalanobis( 3, (double[]){0,0,0}, mu, E ),
+              .001 );
     }
 }
 

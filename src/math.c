@@ -249,3 +249,14 @@ void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
         }
     }
 }
+
+double aa_stat_mahalanobis( size_t m, const double *x,
+                            const double *mu, const double *E_inv) {
+    double t[m];
+    // t := - mu + x_i
+    memcpy( t, x, sizeof(t[0])*m );
+    cblas_daxpy( (int)m, -1, mu, 1, t, 1 );
+
+    // sqrt( t' A t )
+    return sqrt( aa_la_wdot( m, t, E_inv, t ) );
+}

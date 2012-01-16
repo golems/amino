@@ -243,6 +243,11 @@ AA_API void aa_stat_vmean( size_t m, size_t n, const double *X,
 AA_API void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
                                double *mu, double *E);
 
+
+/** Mahalanobis distance. */
+double aa_stat_mahalanobis( size_t m, const double *x,
+                            const double *mu, const double *E_inv);
+
 /**********/
 /* Angles */
 /**********/
@@ -435,6 +440,14 @@ aa_la_mvmul( size_t m, size_t n, const double *A, const double *x, double *b ) {
                  1.0, A, (int)m,
                  x, 1, 0, b, 1 );
 }
+
+/** Weighted inner product.
+ *
+ * \f[ x^T A y \f]
+ */
+AA_API double aa_la_wdot( size_t n,
+                          const double *x, const double *A, const double *y );
+
 
 /** Singular Value Decomposition of A.
  *
