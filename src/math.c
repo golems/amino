@@ -111,13 +111,15 @@ AA_API void aa_stat_box_muller(double x1, double x2, double *z1, double *z2) {
 
 
 AA_API double aa_stat_mean( size_t n, const double *x) {
-    return cblas_dasum( (int)n, x, 1 ) / (double)n;
+    double a = 0;
+    for( size_t i = 0; i < n; i ++ ) a += x[i];
+    return a / (double)n;
 }
 
 
 AA_API double aa_stat_std( size_t n, const double *x) {
     double dn = (double)n;
-    double mu = cblas_dasum( (int)n, x, 1 ) / dn;
+    double mu = aa_stat_mean(n,x);
     double a2 = cblas_ddot( (int)n, x, 1, x, 1 );
     return sqrt( (a2 - dn*mu*mu) / (dn-1) );
 }
@@ -220,8 +222,8 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
 
 void aa_stat_vmean( size_t m, size_t n, const double *X, double *mu) {
     memset(mu, 0, sizeof(mu[0]) * m);
-    for( size_t i = 0; i < m; i++ ) {
-        mu[i] = cblas_dasum((int)n, X+i, (int)m);
+    for( size_t i = 0; i < n; i ++ ) {
+        aa_la_vinc( m, &X[i*m], mu );
     }
     cblas_dscal((int)m, 1.0/(double)n, mu, 1);
 }
