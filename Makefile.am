@@ -9,7 +9,9 @@ pkginclude_HEADERS = 	                \
 	include/amino/io.h              \
 	include/amino/kin.h             \
 	include/amino/lapack.h          \
+	include/amino/clapack.h         \
 	include/amino/math.h            \
+	include/amino/la.h              \
 	include/amino/mem.h             \
 	include/amino/plot.h            \
 	include/amino/tf.h              \
@@ -25,7 +27,7 @@ lib_LTLIBRARIES = libamino.la
 
 bin_PROGRAMS = aa_test
 
-libamino_la_SOURCES = src/mem.c src/la.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/sigsys.c src/cv.c
+libamino_la_SOURCES = src/mem.c src/la.c src/la2.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/sigsys.c src/cv.c src/clapack.c
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]

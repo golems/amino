@@ -1,7 +1,7 @@
-/* -*- mode: C++; c-basic-offset: 4  -*- */
+/* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2011, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,48 +40,23 @@
  *
  */
 
-#ifndef AMINO_HPP
-#define AMINO_HPP
 /**
- * \file amino.hpp
- * \author Neil T. Dantam
+ * \file amino/la2.c
  */
 
 #include "amino.h"
-#include "amino/la.hpp"
+
+#define AA_LA_DEF( TYPE, prefix )                                       \
+    void AA_LA_NAME(transpose, prefix) ( size_t m, size_t n,            \
+                                         const TYPE *A, size_t lda,     \
+                                         TYPE *B, size_t ldb ) {        \
+        for( size_t i=0, ia=0; i < n; i++, ia+=lda ) {                  \
+            for( size_t j=0, ib=0; j < m; j++, ib+=ldb ) {              \
+                B[ib+i] = A[ia+j];                                      \
+            }                                                           \
+        }                                                               \
+    }                                                                   \
 
 
-//namespace amino {
-//#include "amino/mat.hpp"
-//}
-
-/// amino namespace
-namespace amino {
-
-    /// Locks mutex on construction, unlocks on destruction
-    class ScopedMutex {
-    public:
-        /// costruct this and lock m
-        ScopedMutex( pthread_mutex_t *m ) :
-            mutex(m)
-        {
-            pthread_mutex_lock(mutex);
-        }
-        /// costruct this and lock m
-        ScopedMutex( pthread_mutex_t &m ) :
-            mutex(&m)
-        {
-            pthread_mutex_lock(mutex);
-        }
-        /// destroy this and unlock m
-        ~ScopedMutex() {
-            pthread_mutex_unlock(mutex);
-        }
-
-    private:
-        /// the mutex
-        pthread_mutex_t *mutex;
-    };
-}
-
-#endif //AMINO_HPP
+AA_LA_DEF( double, d )
+AA_LA_DEF( float, s )

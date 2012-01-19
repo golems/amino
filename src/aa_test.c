@@ -504,6 +504,37 @@ void axang() {
     }
 }
 
+void la2_0() {
+    // mcopy
+    {
+        double X[3*2] = { 1,2,3, 4,5,6};
+        double Y32[3*2] = {0};
+        double Y42[4*2] = {0};
+        double Y22[2*2] = {0};
+        aa_clapack_dlacpy(0, 3, 2, X, 3, Y32, 3 );
+        aa_clapack_dlacpy(0, 3, 2, X, 3, Y42, 4 );
+        aa_clapack_dlacpy(0, 2, 2, X, 3, Y22, 2 );
+
+        aveq( 6, Y32, X, 0.001 );
+        aveq( 8, Y42, (double[]){1,2,3,0,4,5,6,0}, 0.001 );
+        aveq( 4, Y22, (double[]){1,2, 4,5}, 0.001 );
+    }
+    // transpose
+    {
+        double X[3*2] = { 1,2,3, 4,5,6};
+        double Y32[3*2] = {0};
+        double Y33[3*3] = {0};
+        double Y22[2*2] = {0};
+        aa_la_dtranspose( 3, 2, X, 3, Y32, 2 );
+        aa_la_dtranspose( 3, 2, X, 3, Y33, 3 );
+        aa_la_dtranspose( 2, 2, X, 3, Y22, 2 );
+
+        aveq( 6, Y32, (double[]){1,4, 2,5, 3,6}, 0.001 );
+        aveq( 9, Y33, (double[]){1,4,0, 2,5,0, 3,6,0}, 0.001 );
+        aveq( 4, Y22, (double[]){1,4, 2,5}, 0.001 );
+    }
+}
+
 void angle() {
     // conversion
     afeq( aa_ang_rad2deg(3.1), 3.1*180.0/M_PI, 0 );
@@ -1515,6 +1546,9 @@ int main( int argc, char **argv ) {
 
     la2();
     la3();
+
+    la2_0();
+
     angle();
     quat();
     rotmat();

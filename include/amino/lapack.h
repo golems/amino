@@ -71,7 +71,7 @@
       argument, info > 0 for singular matrix
  */
 AA_API void sgetri_( const int *n, float *A, const int *lda,
-              const int *ipiv, float *work, const int *lwork, int *info );
+                     const int *ipiv, float *work, const int *lwork, int *info );
 /** Inverse of matrix using LU factorization by dgetrf.
     \sa sgetri_
 */
@@ -363,6 +363,12 @@ AA_API int ilaenv_( const int *ispec, const char *name, const char *opts,
                         double *A, const int *LDA, double *B, const int *LDB,
                         double *S, const double *RCOND, int *RANK,
                         double *WORK, int *LWORK, int *IWORK, int *INFO );
+
+ AA_API void sgelsd_( const int *M, const int *N, const int *NRHS,
+                      float *A, const int *LDA, float *B, const int *LDB,
+                      float *S, const float *RCOND, int *RANK,
+                      float *WORK, int *LWORK, int *IWORK, int *INFO );
+
 
 /**  DGEBAL balances a general real matrix A.  This involves, first,
 *    permuting A by a similarity transformation to isolate eigenvalues
@@ -876,4 +882,6 @@ void dgels_ ( const char TRANS[1], const int *M, const int *N, const int *NRHS,
 
 void dlacpy_( const char UPLO[1], const int *M, const int *N,
               double *A, const int *LDA, double *B, const int *LDB );
+void slacpy_( const char UPLO[1], const int *M, const int *N,
+              float *A, const int *LDA, float *B, const int *LDB );
 #endif

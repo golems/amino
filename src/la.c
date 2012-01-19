@@ -45,12 +45,6 @@
 
 #include "amino.h"
 
-static int ilaenv( int ispec, const char *name, const char *opts,
-                   int n1, int n2, int n3, int n4 ) {
-    int nl = (int)strlen(name);
-    int ol = (int)strlen(opts);
-    return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );
-}
 
 /*--- Scalar Ops ---*/
 
@@ -219,12 +213,12 @@ int aa_la_inv( size_t n, double *A ) {
     int info;
 
     // LU-factor
-    dgetrf_( &mi, &ni, A, &mi, ipiv, &info );
+    info = aa_clapack_dgetrf( mi, ni, A, mi, ipiv );
 
     int lwork = -1;
     while(1) {
         double work[ lwork < 0 ? 1 : lwork ];
-        dgetri_( &ni, A, &mi, ipiv, work, &lwork, &info );
+        aa_clapack_dgetri( ni, A, mi, ipiv, work, lwork );
         if( lwork > 0 ) break;
         assert( -1 == lwork && sizeof(work) == sizeof(double) );
         lwork = (int)work[0];
@@ -337,19 +331,6 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const do
                  1, y, 1 );
 }
 
-static int dgelsd_smlsiz() {
-    return ilaenv(9, "DGELSD", "", 0, 0, 0, 0 );
-}
-
-static int dgelsd_nlvl( int m, int n ) {
-    int minmn = AA_MIN(m,n);
-    return (int)AA_MAX(0, 1 + log2( minmn / (1 + dgelsd_smlsiz())));
-}
-static int dgelsd_miniwork(int m, int n) {
-    int minmn = AA_MIN(m,n);
-    return AA_MAX(1, 3 * minmn * dgelsd_nlvl(m,n) + 11 * minmn);
-}
-
 
 AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const double *b, double *x ) {
 
@@ -361,7 +342,7 @@ AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const doub
     memcpy(x,b,sizeof(x[0])*p*m);
 
     int rank, info;
-    size_t liwork = (size_t)dgelsd_miniwork(mi,ni);
+    size_t liwork = (size_t)aa_clapack_dgelsd_miniwork(mi,ni);
     size_t ls = AA_MIN(m,n);
     double S[ls];
     int iwork[liwork];
@@ -370,10 +351,10 @@ AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const doub
     while(1) {
         double work[ lwork < 0 ? 1 : lwork ];
 
-        dgelsd_( &mi, &ni, &pi,
-                 Ap, &mi, x, &mi,
-                 S, &rcond, &rank,
-                 work, &lwork, iwork, &info );
+        info = aa_clapack_dgelsd( mi, ni, pi,
+                                   Ap, mi, x, mi,
+                                   S, &rcond, &rank,
+                                   work, lwork, iwork );
 
         if( lwork >= 0 ) break;
         assert( -1 == lwork && sizeof(work) == sizeof(double) );
