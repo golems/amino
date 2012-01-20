@@ -69,6 +69,36 @@
         AA_CBLAS_NAME(scal, prefix)((int)m, ((TYPE)1.0)/(TYPE)n,        \
                                     x, 1);                              \
     }                                                                   \
+    AA_API void AA_LA_NAME(ccov, prefix)                                \
+    ( size_t m, size_t n,                                               \
+      const TYPE *A, size_t lda,                                        \
+      const TYPE *x,                                                    \
+      TYPE *E, size_t lde ) {                                           \
+        for( size_t j = 0; j < m*lde; j+=lde ) {                        \
+            memset( E+j, 0, sizeof(E[0])*m );                           \
+        }                                                               \
+        for( size_t j = 0; j < n*lda; j+=lda )                          \
+        {                                                               \
+            /* t := - mu + A_i */                                       \
+            TYPE t[m];                                                  \
+            memcpy( t, A+j, sizeof(t[0])*m );                           \
+            AA_CBLAS_NAME(axpy, prefix) ((int)m, -1.0, x, (int)1,       \
+                                         t, 1 );                        \
+            /* E += t * t' */                                           \
+            AA_CBLAS_NAME(syr,prefix)( CblasColMajor, CblasUpper,       \
+                                       (int)m, 1.0, t, 1,               \
+                                       E, (int)lde );                   \
+        }                                                               \
+        AA_CBLAS_NAME(scal, prefix) ( (int)(m*m),                       \
+                                      (TYPE)1.0/(TYPE)(n-1),            \
+                                      E, 1 );                           \
+        /* fill lower half */                                           \
+        for( size_t i = 0; i < m; i ++ ) {                              \
+            for( size_t j = i+1; j < m; j ++ ) {                        \
+                AA_MATREF(E, m, j, i) = AA_MATREF(E, m, i, j);          \
+            }                                                           \
+        }                                                               \
+    }                                                                   \
 
 AA_LA_DEF( double, d )
 AA_LA_DEF( float, s )

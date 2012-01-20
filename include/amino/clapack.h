@@ -79,6 +79,14 @@
     static inline TYPE AA_CLAPACK_NAME(lapy3, prefix)                   \
     (TYPE x, TYPE y, TYPE z) {                                          \
         return AA_LAPACK_NAME(lapy3, prefix)(&x, &y, &z);               \
+    }                                                                   \
+    static inline void AA_CLAPACK_NAME(laruv, prefix)                   \
+    (int iseed[4], int n, TYPE *X) {                                    \
+        AA_LAPACK_NAME(laruv, prefix) (iseed, &n, X);                   \
+    }                                                                   \
+    static inline void AA_CLAPACK_NAME(larnv, prefix)                   \
+    (int idist, int iseed[4], int n, TYPE *X) {                         \
+        AA_LAPACK_NAME(larnv, prefix) (&idist, iseed, &n, X);           \
     }
 
 /// lapacks defs for double float

@@ -227,25 +227,7 @@ void aa_stat_vmean( size_t m, size_t n, const double *X, double *mu) {
 void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
                         double *mu, double *E) {
     aa_stat_vmean(m,n,X,mu);
-    double t[m];
-    memset(E,0,sizeof(E[0])*m*m);
-    for(size_t i = 0; i < n; i++) {
-        // t := - mu + x_i
-        memcpy( t, &X[i*m], sizeof(t[0])*m );
-        cblas_daxpy( (int)m, -1, mu, 1, t, 1 );
-        // E += t * t'
-        cblas_dsyr( CblasColMajor, CblasUpper,
-                    (int)m, 1.0, t, 1,
-                    E, (int)m );
-    }
-    cblas_dscal( (int)(m*m), 1.0/(double)(n-1),
-                 E, 1 );
-    // fill lower half
-    for( size_t i = 0; i < m; i ++ ) {
-        for( size_t j = i+1; j < m; j ++ ) {
-            AA_MATREF(E, m, j, i) = AA_MATREF(E, m, i, j);
-        }
-    }
+    aa_la_dccov( m, n, X, m, mu, E, m );
 }
 
 double aa_stat_mahalanobis( size_t m, const double *x,

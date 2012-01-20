@@ -892,4 +892,80 @@ AA_API float slapy2_( const float *x, const float *y );
 AA_API double dlapy3_( const double *x, const double *y, const double *z );
 AA_API float slapy3_( const float *x, const float *y, const float *z );
 
+
+/** Returns a vector of n random real numbers from a uniform (0,1)
+ *  distribution (n <= 128).
+ *
+ * This is an auxiliary routine called by DLARNV and ZLARNV.
+ *
+ *
+ * \param[in,out] ISEED
+ *          ISEED is INTEGER array, dimension (4)
+ *          On entry, the seed of the random number generator; the array
+ *          elements must be between 0 and 4095, and ISEED(4) must be
+ *          odd.
+ *          On exit, the seed is updated.
+ *
+ * \param[in] N
+ *          N is INTEGER
+ *          The number of random numbers to be generated. N <= 128.
+ *
+ * \param[out] X
+ *          X is DOUBLE PRECISION array, dimension (N)
+ *          The generated random numbers.
+ *
+ * \author Univ. of Tennessee
+ * \author Univ. of California Berkeley
+ * \author Univ. of Colorado Denver
+ * \author NAG Ltd.
+ *
+ * \date November 2011
+ *
+ *  This routine uses a multiplicative congruential method with modulus
+ *  2**48 and multiplier 33952834046453 (see G.S.Fishman,
+ *  'Multiplicative congruential random number generators with modulus
+ *  2**b: an exhaustive analysis for b = 32 and a partial analysis for
+ *  b = 48', Math. Comp. 189, pp 331-344, 1990).
+ *
+ *  48-bit integers are stored in 4 integer array elements with 12 bits
+ *  per element. Hence the routine is portable across machines with
+ *  integers of 32 bits or more.
+ *
+ *
+ */
+AA_API void dlaruv_( int iseed[4], const int *n, double *X );
+AA_API void slaruv_( int iseed[4], const int *n, float *X );
+
+/** Returns a vector of n random real numbers from a uniform or
+*   normal distribution.
+*
+*  \param[in] idist  INTEGER
+*          Specifies the distribution of the random numbers:
+*          = 1:  uniform (0,1)
+*          = 2:  uniform (-1,1)
+*          = 3:  normal (0,1)
+*
+*  \param iseed[in,out]
+*          On entry, the seed of the random number generator; the array
+*          elements must be between 0 and 4095, and ISEED(4) must be
+*          odd.
+*          On exit, the seed is updated.
+*
+*  \param[in] N
+*          The number of random numbers to be generated.
+*
+*  \param[out] X
+*          The generated random numbers.
+*
+*  This routine calls the auxiliary routine DLARUV to generate random
+*  real numbers from a uniform (0,1) distribution, in batches of up to
+*  128 using vectorisable code. The Box-Muller method is used to
+*  transform numbers from a uniform to a normal distribution.
+*/
+
+AA_API void dlarnv_( const int *idist, int iseed[4],
+                     const int *n, double *x );
+AA_API void slarnv_( const int *idist, int iseed[4],
+                     const int *n, float *x );
+
 #endif

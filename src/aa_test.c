@@ -520,8 +520,25 @@ void clapack() {
         aveq( 4, Y22, (double[]){1,2, 4,5}, 0.001 );
     }
 
+    // lapy2/3
     afeq( sqrt( 3*3 + 4*4 ), aa_clapack_dlapy2(3, 4), .001 );
     afeq( sqrt( 3*3 + 4*4 + 5*5 ), aa_clapack_dlapy3(3, 4, 5), .001 );
+
+    //rand
+    {
+        int iseed[4] = {1,10,20,30};
+        double X[10];
+        int n = sizeof(X)/sizeof(X[0]);
+
+        aa_clapack_dlaruv( iseed, n, X );
+        for( int i = 0; i < n; i++ ) assert( X[i] <= 1 && X[i] >= 0 );
+
+        aa_clapack_dlarnv(1, iseed, n, X );
+        for( int i = 0; i < n; i++ ) assert( X[i] <= 1 && X[i] >= 0 );
+
+        aa_clapack_dlarnv(2, iseed, n, X );
+        for( int i = 0; i < n; i++ ) assert( X[i] <= 1 && X[i] >= -1 );
+    }
 }
 
 void la2_0() {

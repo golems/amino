@@ -58,6 +58,11 @@
     ( size_t m, size_t n,                                               \
       const TYPE *A, size_t lda,                                        \
       TYPE *x );                                                        \
+    AA_API void AA_LA_NAME(ccov, prefix)                                \
+    ( size_t m, size_t n,                                               \
+      const TYPE *A, size_t lda,                                        \
+      const TYPE *x,                                                    \
+      TYPE *E, size_t lde );                                            \
 
 AA_LA_DEC( double, d )
 AA_LA_DEC( float, s )
