@@ -42,60 +42,26 @@
 #ifndef AA_CLAPACK_H
 #define AA_CLAPACK_H
 
-/// produce token for a lapack function
-#define AA_LAPACK_NAME( name, prefix ) prefix ## name ## _
 
 
-/// produce token for a lapack function
-#define AA_CBLAS_NAME( name, prefix ) cblas_ ## prefix ## name
 
-/// produce token for a lapack function
-#define AA_CLAPACK_NAME( name, prefix ) aa_clapack_ ## prefix ## name
+#define AA_LA_TYPE double
+#define AA_CLAPACK_NAME( name ) aa_clapack_d ## name
+#define AA_LAPACK_NAME( name ) d ## name ## _
+#define AA_CBLAS_NAME( name ) cblas_d ## name
+#include "clapack_impl.h"
 
 
-/// create lapack definitions for some type
-#define AA_LAPACK_DEC( TYPE, prefix, PREFIX )                           \
-    AA_API int AA_CLAPACK_NAME(getrf, prefix)                           \
-    ( int m, int n, TYPE *A, int lda, int *ipiv );                      \
-    AA_API int AA_CLAPACK_NAME(getri, prefix)                           \
-    ( int n, TYPE *A, int lda, int *ipiv, TYPE *work, int lwork );      \
-    AA_API int AA_CLAPACK_NAME(gelsd_smlsiz, prefix) (void);            \
-    AA_API int AA_CLAPACK_NAME(gelsd_nlvl, prefix) ( int m, int n );    \
-    AA_API int AA_CLAPACK_NAME(gelsd_miniwork, prefix) (int m, int n);  \
-    AA_API int AA_CLAPACK_NAME(gelsd, prefix)                           \
-    ( int m, int n, int nrhs,                                           \
-      TYPE *A, int lda,                                                 \
-      TYPE *B, int ldb,                                                 \
-      TYPE *S, TYPE *rcond, int *rank,                                  \
-      TYPE *work, int lwork, int *iwork ) ;                             \
-    AA_API void AA_CLAPACK_NAME(lacpy, prefix)                          \
-    ( char uplo, int m, int n,                                          \
-      TYPE *A, int lda,                                                 \
-      TYPE *B, int ldb );                                               \
-    static inline TYPE AA_CLAPACK_NAME(lapy2, prefix)                   \
-    (TYPE x, TYPE y) {                                                  \
-        return AA_LAPACK_NAME(lapy2, prefix)(&x, &y);                   \
-    }                                                                   \
-    static inline TYPE AA_CLAPACK_NAME(lapy3, prefix)                   \
-    (TYPE x, TYPE y, TYPE z) {                                          \
-        return AA_LAPACK_NAME(lapy3, prefix)(&x, &y, &z);               \
-    }                                                                   \
-    static inline void AA_CLAPACK_NAME(laruv, prefix)                   \
-    (int iseed[4], int n, TYPE *X) {                                    \
-        AA_LAPACK_NAME(laruv, prefix) (iseed, &n, X);                   \
-    }                                                                   \
-    static inline void AA_CLAPACK_NAME(larnv, prefix)                   \
-    (int idist, int iseed[4], int n, TYPE *X) {                         \
-        AA_LAPACK_NAME(larnv, prefix) (&idist, iseed, &n, X);           \
-    }
+#define AA_LA_TYPE float
+#define AA_CLAPACK_NAME( name ) aa_clapack_s ## name
+#define AA_LAPACK_NAME( name ) s ## name ## _
+#define AA_CBLAS_NAME( name ) cblas_s ## name
+#include "clapack_impl.h"
 
-/// lapacks defs for double float
-AA_LAPACK_DEC( double, d, D );
-/// lapacks defs for single float
-AA_LAPACK_DEC( float, s, S );
 
 
 AA_API int aa_clapack_ilaenv( int ispec, const char *name, const char *opts,
                               int n1, int n2, int n3, int n4 );
+
 
 #endif // AA_CLAPACK_H

@@ -44,59 +44,23 @@
 
 #include <amino.h>
 
-/// create lapack definitions for some type
-#define AA_LAPACK_DEF( TYPE, prefix, PREFIX )                           \
-    int AA_CLAPACK_NAME(getrf, prefix)                                  \
-    ( int m, int n, TYPE *A, int lda, int *ipiv ) {                     \
-        int info;                                                       \
-        AA_LAPACK_NAME( getrf, prefix)                                  \
-            (&m, &n, A, &lda, ipiv, &info );                            \
-        return info;                                                    \
-    }                                                                   \
-    int AA_CLAPACK_NAME(getri, prefix)                                  \
-    ( int n, TYPE *A, int lda, int *ipiv, TYPE *work, int lwork ) {     \
-            int info;                                                   \
-            AA_LAPACK_NAME( getri, prefix )                             \
-                ( &n, A, &lda, ipiv, work, &lwork, &info );             \
-            return info;                                                \
-    }                                                                   \
-    int AA_CLAPACK_NAME(gelsd_smlsiz, prefix) () {                      \
-        return aa_clapack_ilaenv(9, #PREFIX "GELSD", "", 0, 0, 0, 0 );  \
-        }                                                               \
-    int AA_CLAPACK_NAME(gelsd_nlvl, prefix) ( int m, int n ) {          \
-            int minmn = AA_MIN(m,n);                                    \
-            int smlsiz = AA_CLAPACK_NAME(gelsd_smlsiz,prefix)();        \
-                return (int)AA_MAX(0, 1 + log2( minmn / (1 + smlsiz))); \
-    }                                                                   \
-    int AA_CLAPACK_NAME(gelsd_miniwork, prefix) ( int m, int n ) {      \
-            int minmn = AA_MIN(m,n);                                    \
-            int nlvl = AA_CLAPACK_NAME(gelsd_nlvl,prefix)(m,n);         \
-            return AA_MAX(1,                                            \
-                          3 * minmn * nlvl + 11 * minmn);               \
-    }                                                                   \
-    int AA_CLAPACK_NAME(gelsd, prefix)                                  \
-    ( int m, int n, int nrhs,                                           \
-      TYPE *A, int lda,                                                 \
-      TYPE *B, int ldb,                                                 \
-      TYPE *S, TYPE *rcond, int *rank,                                  \
-      TYPE *work, int lwork, int *iwork ) {                             \
-        int info;                                                       \
-        AA_LAPACK_NAME( gelsd, prefix )                                 \
-            ( &m, &n, &nrhs, A, &lda, B, &ldb,                          \
-              S, rcond, rank, work, &lwork, iwork, &info );             \
-        return info;                                                    \
-    }                                                                   \
-    void AA_CLAPACK_NAME(lacpy, prefix) ( char uplo, int m, int n,      \
-                                          TYPE *A, int lda,             \
-                                          TYPE *B, int ldb ) {          \
-        AA_LAPACK_NAME(lacpy, prefix) (&uplo, &m, &n,                   \
-                                       A, &lda, B, &ldb );              \
-    }                                                                   \
 
-/// lapacks defs for double float
-AA_LAPACK_DEF( double, d, D );
-/// lapacks defs for single float
-AA_LAPACK_DEF( float, s, S );
+
+#define AA_LA_TYPE double
+#define AA_CLAPACK_NAME( name ) aa_clapack_d ## name
+#define AA_LAPACK_NAME( name ) d ## name ## _
+#define AA_CBLAS_NAME( name ) cblas_d ## name
+#define AA_LAPACK_PREFIX_STR "D"
+#include "clapack_impl.c"
+
+
+#define AA_LA_TYPE float
+#define AA_CLAPACK_NAME( name ) aa_clapack_s ## name
+#define AA_LAPACK_NAME( name ) s ## name ## _
+#define AA_CBLAS_NAME( name ) cblas_s ## name
+#define AA_LAPACK_PREFIX_STR "S"
+#include "clapack_impl.c"
+
 
 int aa_clapack_ilaenv( int ispec, const char *name, const char *opts,
                int n1, int n2, int n3, int n4 ) {

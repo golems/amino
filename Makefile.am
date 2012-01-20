@@ -1,5 +1,5 @@
 INCLUDES = -I$(top_srcdir)/include
-EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac
+EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/clapack_impl.c src/la_impl.c
 
 include_HEADERS = include/amino.h
 
@@ -9,9 +9,12 @@ pkginclude_HEADERS = 	                \
 	include/amino/io.h              \
 	include/amino/kin.h             \
 	include/amino/lapack.h          \
+	include/amino/lapack_impl.h     \
 	include/amino/clapack.h         \
+	include/amino/clapack_impl.h    \
 	include/amino/math.h            \
 	include/amino/la.h              \
+	include/amino/la_impl.h         \
 	include/amino/mem.h             \
 	include/amino/plot.h            \
 	include/amino/tf.h              \

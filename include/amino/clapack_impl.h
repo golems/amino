@@ -40,19 +40,59 @@
  *
  */
 
-/**
- * \file amino/la2.c
- */
+AA_API int AA_CLAPACK_NAME(getrf)
+( int m, int n, AA_LA_TYPE *A, int lda, int *ipiv );
 
-#include "amino.h"
+AA_API int AA_CLAPACK_NAME(getri)
+( int n, AA_LA_TYPE *A, int lda, int *ipiv, AA_LA_TYPE *work, int lwork );
 
-#define AA_LA_TYPE double
-#define AA_LA_NAME( name ) aa_la_d ## name
-#define AA_CBLAS_NAME( name ) cblas_d ## name
-#include "la_impl.c"
+AA_API int AA_CLAPACK_NAME(gelsd_smlsiz)
+();
 
+AA_API int AA_CLAPACK_NAME(gelsd_nlvl)
+( int m, int n );
 
-#define AA_LA_TYPE float
-#define AA_LA_NAME( name ) aa_la_s ## name
-#define AA_CBLAS_NAME( name ) cblas_s ## name
-#include "la_impl.c"
+AA_API int AA_CLAPACK_NAME(gelsd_miniwork)
+( int m, int n );
+
+AA_API int AA_CLAPACK_NAME(gelsd)
+( int m, int n, int nrhs,
+  AA_LA_TYPE *A, int lda,
+  AA_LA_TYPE *B, int ldb,
+  AA_LA_TYPE *S, AA_LA_TYPE *rcond, int *rank,
+  AA_LA_TYPE *work, int lwork, int *iwork ) ;
+
+AA_API void AA_CLAPACK_NAME(lacpy)
+( char uplo, int m, int n,
+  AA_LA_TYPE *A, int lda,
+  AA_LA_TYPE *B, int ldb );
+
+static inline AA_LA_TYPE AA_CLAPACK_NAME(lapy2)
+( AA_LA_TYPE x, AA_LA_TYPE y )
+{
+    return AA_LAPACK_NAME(lapy2)(&x, &y);
+}
+
+static inline AA_LA_TYPE AA_CLAPACK_NAME(lapy3)
+( AA_LA_TYPE x, AA_LA_TYPE y, AA_LA_TYPE z )
+{
+    return AA_LAPACK_NAME(lapy3)(&x, &y, &z);
+}
+
+static inline void AA_CLAPACK_NAME(laruv)
+( int iseed[4], int n, AA_LA_TYPE *X )
+{
+    AA_LAPACK_NAME(laruv) (iseed, &n, X);
+}
+
+static inline void AA_CLAPACK_NAME(larnv)
+( int idist, int iseed[4], int n, AA_LA_TYPE *X )
+{
+    AA_LAPACK_NAME(larnv) (&idist, iseed, &n, X);
+}
+
+#undef AA_LA_TYPE
+#undef AA_CLAPACK_NAME
+#undef AA_LAPACK_NAME
+#undef AA_CBLAS_NAME
+#undef AA_CLAPACK_NAME

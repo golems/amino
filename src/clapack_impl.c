@@ -40,19 +40,55 @@
  *
  */
 
-/**
- * \file amino/la2.c
- */
+int AA_CLAPACK_NAME(getrf)
+( int m, int n, AA_LA_TYPE *A, int lda, int *ipiv ) {
+    int info;
+    AA_LAPACK_NAME( getrf)
+        (&m, &n, A, &lda, ipiv, &info );
+    return info;
+}
+int AA_CLAPACK_NAME(getri)
+( int n, AA_LA_TYPE *A, int lda, int *ipiv, AA_LA_TYPE *work, int lwork ) {
+    int info;
+    AA_LAPACK_NAME( getri )
+        ( &n, A, &lda, ipiv, work, &lwork, &info );
+    return info;
+}
+int AA_CLAPACK_NAME(gelsd_smlsiz) () {
+    return aa_clapack_ilaenv(9, AA_LAPACK_PREFIX_STR "GELSD", "", 0, 0, 0, 0 );
+}
+int AA_CLAPACK_NAME(gelsd_nlvl) ( int m, int n ) {
+    int minmn = AA_MIN(m,n);
+    int smlsiz = AA_CLAPACK_NAME(gelsd_smlsiz)();
+    return (int)AA_MAX(0, 1 + log2( minmn / (1 + smlsiz)));
+}
+int AA_CLAPACK_NAME(gelsd_miniwork) ( int m, int n ) {
+    int minmn = AA_MIN(m,n);
+    int nlvl = AA_CLAPACK_NAME(gelsd_nlvl)(m,n);
+    return AA_MAX(1,
+                  3 * minmn * nlvl + 11 * minmn);
+}
+int AA_CLAPACK_NAME(gelsd)
+( int m, int n, int nrhs,
+  AA_LA_TYPE *A, int lda,
+  AA_LA_TYPE *B, int ldb,
+  AA_LA_TYPE *S, AA_LA_TYPE *rcond, int *rank,
+  AA_LA_TYPE *work, int lwork, int *iwork ) {
+    int info;
+    AA_LAPACK_NAME( gelsd )
+        ( &m, &n, &nrhs, A, &lda, B, &ldb,
+          S, rcond, rank, work, &lwork, iwork, &info );
+    return info;
+}
+void AA_CLAPACK_NAME(lacpy) ( char uplo, int m, int n,
+                              AA_LA_TYPE *A, int lda,
+                              AA_LA_TYPE *B, int ldb ) {
+    AA_LAPACK_NAME(lacpy) (&uplo, &m, &n,
+                           A, &lda, B, &ldb );
+}
 
-#include "amino.h"
-
-#define AA_LA_TYPE double
-#define AA_LA_NAME( name ) aa_la_d ## name
-#define AA_CBLAS_NAME( name ) cblas_d ## name
-#include "la_impl.c"
-
-
-#define AA_LA_TYPE float
-#define AA_LA_NAME( name ) aa_la_s ## name
-#define AA_CBLAS_NAME( name ) cblas_s ## name
-#include "la_impl.c"
+#undef AA_LA_TYPE
+#undef AA_CLAPACK_NAME
+#undef AA_LAPACK_NAME
+#undef AA_CBLAS_NAME
+#undef AA_LAPACK_PREFIX_STR

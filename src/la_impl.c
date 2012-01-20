@@ -40,19 +40,62 @@
  *
  */
 
-/**
- * \file amino/la2.c
- */
 
-#include "amino.h"
+void AA_LA_NAME(transpose) ( size_t m, size_t n,
+                             const AA_LA_TYPE *A, size_t lda,
+                             AA_LA_TYPE *B, size_t ldb ) {
+    for( size_t i=0, ia=0; i < n; i++, ia+=lda ) {
+        for( size_t j=0, ib=0; j < m; j++, ib+=ldb ) {
+            B[ib+i] = A[ia+j];
+        }
+    }
+}
 
-#define AA_LA_TYPE double
-#define AA_LA_NAME( name ) aa_la_d ## name
-#define AA_CBLAS_NAME( name ) cblas_d ## name
-#include "la_impl.c"
+void AA_LA_NAME(cmean)
+( size_t m, size_t n,
+  const AA_LA_TYPE *A, size_t lda,
+  AA_LA_TYPE *x)
+{
+    memset( x, 0, sizeof(x[0])*m );
+    for( size_t i=0, j=0; i < n; i++, j+=lda ) {
+        AA_CBLAS_NAME(axpy)( (int)m, 1.0, A+j, (int)1,
+                             x, 1 );
+    }
+    AA_CBLAS_NAME(scal)((int)m, ((AA_LA_TYPE)1.0)/(AA_LA_TYPE)n,
+                        x, 1);
+}
 
+void AA_LA_NAME(ccov)
+( size_t m, size_t n,
+  const AA_LA_TYPE *A, size_t lda,
+  const AA_LA_TYPE *x,
+  AA_LA_TYPE *E, size_t lde ) {
+    for( size_t j = 0; j < m*lde; j+=lde ) {
+        memset( E+j, 0, sizeof(E[0])*m );
+    }
+    for( size_t j = 0; j < n*lda; j+=lda )
+    {
+        /* t := - mu + A_i */
+        AA_LA_TYPE t[m];
+        memcpy( t, A+j, sizeof(t[0])*m );
+        AA_CBLAS_NAME(axpy) ((int)m, -1.0, x, (int)1,
+                             t, 1 );
+        /* E += t * t' */
+        AA_CBLAS_NAME(syr)( CblasColMajor, CblasUpper,
+                            (int)m, 1.0, t, 1,
+                            E, (int)lde );
+    }
+    AA_CBLAS_NAME(scal) ( (int)(m*m),
+                          (AA_LA_TYPE)1.0/(AA_LA_TYPE)(n-1),
+                          E, 1 );
+    /* fill lower half */
+    for( size_t i = 0; i < m; i ++ ) {
+        for( size_t j = i+1; j < m; j ++ ) {
+            AA_MATREF(E, m, j, i) = AA_MATREF(E, m, i, j);
+        }
+    }
+}
 
-#define AA_LA_TYPE float
-#define AA_LA_NAME( name ) aa_la_s ## name
-#define AA_CBLAS_NAME( name ) cblas_s ## name
-#include "la_impl.c"
+#undef AA_LA_NAME
+#undef AA_LA_TYPE
+#undef AA_CBLAS_NAME

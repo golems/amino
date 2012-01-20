@@ -46,25 +46,14 @@
  * \file amino/la.h
  */
 
-/// produce token for a lapack function
-#define AA_LA_NAME( name, prefix ) aa_la_ ## prefix ## name
 
-#define AA_LA_DEC( TYPE, prefix )                                       \
-    AA_API void AA_LA_NAME(transpose, prefix)                           \
-    ( size_t m, size_t n,                                               \
-      const TYPE *A, size_t lda,                                        \
-      TYPE *B, size_t ldb );                                            \
-    AA_API void AA_LA_NAME(cmean, prefix)                               \
-    ( size_t m, size_t n,                                               \
-      const TYPE *A, size_t lda,                                        \
-      TYPE *x );                                                        \
-    AA_API void AA_LA_NAME(ccov, prefix)                                \
-    ( size_t m, size_t n,                                               \
-      const TYPE *A, size_t lda,                                        \
-      const TYPE *x,                                                    \
-      TYPE *E, size_t lde );                                            \
+#define AA_LA_TYPE double
+#define AA_LA_NAME( name ) aa_la_d ## name
+#include "la_impl.h"
 
-AA_LA_DEC( double, d )
-AA_LA_DEC( float, s )
+
+#define AA_LA_TYPE float
+#define AA_LA_NAME( name ) aa_la_s ## name
+#include "la_impl.h"
 
 #endif //AA_MATH_H

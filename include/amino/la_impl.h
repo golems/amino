@@ -40,19 +40,22 @@
  *
  */
 
-/**
- * \file amino/la2.c
- */
 
-#include "amino.h"
+AA_API void AA_LA_NAME(transpose)
+( size_t m, size_t n,
+  const AA_LA_TYPE *A, size_t lda,
+  AA_LA_TYPE *B, size_t ldb );
 
-#define AA_LA_TYPE double
-#define AA_LA_NAME( name ) aa_la_d ## name
-#define AA_CBLAS_NAME( name ) cblas_d ## name
-#include "la_impl.c"
+AA_API void AA_LA_NAME(cmean)
+( size_t m, size_t n,
+  const AA_LA_TYPE *A, size_t lda,
+  AA_LA_TYPE *x );
 
+AA_API void AA_LA_NAME(ccov)
+( size_t m, size_t n,
+  const AA_LA_TYPE *A, size_t lda,
+  const AA_LA_TYPE *x,
+  AA_LA_TYPE *E, size_t lde );
 
-#define AA_LA_TYPE float
-#define AA_LA_NAME( name ) aa_la_s ## name
-#define AA_CBLAS_NAME( name ) cblas_s ## name
-#include "la_impl.c"
+#undef AA_LA_NAME
+#undef AA_LA_TYPE
