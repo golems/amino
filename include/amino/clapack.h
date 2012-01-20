@@ -44,6 +44,11 @@
 
 /// produce token for a lapack function
 #define AA_LAPACK_NAME( name, prefix ) prefix ## name ## _
+
+
+/// produce token for a lapack function
+#define AA_CBLAS_NAME( name, prefix ) cblas_ ## prefix ## name
+
 /// produce token for a lapack function
 #define AA_CLAPACK_NAME( name, prefix ) aa_clapack_ ## prefix ## name
 

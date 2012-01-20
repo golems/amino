@@ -221,11 +221,7 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
 }
 
 void aa_stat_vmean( size_t m, size_t n, const double *X, double *mu) {
-    memset(mu, 0, sizeof(mu[0]) * m);
-    for( size_t i = 0; i < n; i ++ ) {
-        aa_la_vinc( m, &X[i*m], mu );
-    }
-    cblas_dscal((int)m, 1.0/(double)n, mu, 1);
+    aa_la_dcmean( m, n, X, m, mu, 1 );
 }
 
 void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
