@@ -57,7 +57,7 @@
     AA_API void AA_LA_NAME(cmean, prefix)                               \
     ( size_t m, size_t n,                                               \
       const TYPE *A, size_t lda,                                        \
-      TYPE *x, size_t incx );                                           \
+      TYPE *x );                                                        \
 
 AA_LA_DEC( double, d )
 AA_LA_DEC( float, s )

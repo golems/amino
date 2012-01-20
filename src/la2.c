@@ -59,19 +59,16 @@
     void AA_LA_NAME(cmean, prefix)                                      \
     ( size_t m, size_t n,                                               \
       const TYPE *A, size_t lda,                                        \
-      TYPE *x, size_t incx )                                            \
+      TYPE *x)                                                          \
     {                                                                   \
-        for( size_t i = 0; i < m*incx; i+=incx ) {                      \
-            x[i] = 0;                                                   \
-        }                                                               \
+        memset( x, 0, sizeof(x[0])*m );                                 \
         for( size_t i=0, j=0; i < n; i++, j+=lda ) {                    \
             AA_CBLAS_NAME(axpy, prefix)( (int)m, 1.0, A+j, (int)1,      \
-                                         x, (int)incx );                \
+                                         x, 1 );                        \
         }                                                               \
         AA_CBLAS_NAME(scal, prefix)((int)m, ((TYPE)1.0)/(TYPE)n,        \
-                                    x, (int)incx);                      \
-    }
-
+                                    x, 1);                              \
+    }                                                                   \
 
 AA_LA_DEF( double, d )
 AA_LA_DEF( float, s )
