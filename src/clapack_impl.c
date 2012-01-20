@@ -80,12 +80,6 @@ int AA_CLAPACK_NAME(gelsd)
           S, rcond, rank, work, &lwork, iwork, &info );
     return info;
 }
-void AA_CLAPACK_NAME(lacpy) ( char uplo, int m, int n,
-                              AA_LA_TYPE *A, int lda,
-                              AA_LA_TYPE *B, int ldb ) {
-    AA_LAPACK_NAME(lacpy) (&uplo, &m, &n,
-                           A, &lda, B, &ldb );
-}
 
 #undef AA_LA_TYPE
 #undef AA_CLAPACK_NAME

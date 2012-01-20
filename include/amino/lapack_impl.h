@@ -608,7 +608,7 @@ AA_API void AA_LAPACK_NAME(gels)
 
 AA_API void AA_LAPACK_NAME(lacpy)
 ( const char UPLO[1], const int *M, const int *N,
-  AA_LA_TYPE *A, const int *LDA, AA_LA_TYPE *B, const int *LDB );
+  const AA_LA_TYPE *A, const int *LDA, AA_LA_TYPE *B, int *LDB );
 
 
 AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy2)
@@ -691,6 +691,150 @@ AA_API void AA_LAPACK_NAME(laruv)
 AA_API void AA_LAPACK_NAME(larnv)
 ( const int *idist, int iseed[4],
   const int *n, AA_LA_TYPE *x );
+
+/**  Multiplies the M by N real matrix A by the real scalar CTO/CFROM.
+ *
+ *    k This is done without over/underflow as long as the final
+ *    result CTO*A(I,J)/CFROM does not over/underflow. TYPE specifies
+ *    that A may be full, upper triangular, lower triangular, upper
+ *    Hessenberg, or banded.
+ *
+ *
+ *  \param[in] TYPE
+ *          TYPE indices the storage type of the input matrix.
+ *          - = 'G':  A is a full matrix.
+ *          - = 'L':  A is a lower triangular matrix.
+ *          - = 'U':  A is an upper triangular matrix.
+ *          - = 'H':  A is an upper Hessenberg matrix.
+ *          - = 'B':  A is a symmetric band matrix with lower bandwidth KL
+ *                  and upper bandwidth KU and with the only the lower
+ *                  half stored.
+ *          - = 'Q':  A is a symmetric band matrix with lower bandwidth KL
+ *                  and upper bandwidth KU and with the only the upper
+ *                  half stored.
+ *          - = 'Z':  A is a band matrix with lower bandwidth KL and upper
+ *                  bandwidth KU.
+ *
+ *  \param[in] KL
+ *          The lower bandwidth of A.  Referenced only if TYPE = 'B',
+ *          'Q' or 'Z'.
+ *
+ *  \param[in] KU
+ *          The upper bandwidth of A.  Referenced only if TYPE = 'B',
+ *          'Q' or 'Z'.
+ *
+ *  \param[in] CFROM
+ *  \param[in] CT
+ *          The matrix A is multiplied by CTO/CFROM. A(I,J) is computed
+ *          without over/underflow if the final result CTO*A(I,J)/CFROM
+ *          can be represented without over/underflow.  CFROM must be
+ *          nonzero.
+ *
+ *  \param[in] M
+ *          The number of rows of the matrix A.  M >= 0.
+ *
+ *  \param[in] N
+ *          The number of columns of the matrix A.  N >= 0.
+ *
+ *  \param[in,out] A
+ *          The matrix to be multiplied by CTO/CFROM.  See TYPE for the
+ *          storage type.
+ *
+ *  \param[in] LDA
+ *          The leading dimension of the array A.  LDA >= max(1,M).
+ *
+ *  \param[out] INFO    (output) INTEGER
+ *          - 0  - successful exit
+ *          - <0 - if INFO = -i, the i-th argument had an illegal value.
+ */
+AA_API void AA_LAPACK_NAME(lascl)
+( const char TYPE[1], const int *KL, const int *KU,
+  const AA_LA_TYPE *CFROM, const AA_LA_TYPE *CTO,
+  const int *M, const int *N, AA_LA_TYPE *A, const int *LDA,
+  int *INFO );
+
+
+#if AA_LA_TYPE == double
+/** Converts a DOUBLE PRECISION matrix, SA, to a SINGLE PRECISION
+ *  matrix, A.
+ *
+ *  This is a helper routine so there is no argument checking.
+ *
+ * \param[in] M
+ *          The number of lines of the matrix A.  M >= 0.
+ *
+ *  \param[in] N
+ *          The number of columns of the matrix A.  N >= 0.
+ *
+ *  \param[in] A
+ *          On entry, the M-by-N coefficient matrix A.
+ *
+ *  \param[in] LDA
+ *          The leading dimension of the array A.  LDA >= max(1,M).
+ *
+ *  \param[out] SA
+ *          On exit, if INFO=0, the M-by-N coefficient matrix SA.
+ *
+ *  \param[in] LDSA
+ *          The leading dimension of the array SA.  LDSA >= max(1,M).
+ *
+ *  \param[out] INFO
+ *          - = 0:  successful exit
+ *          - > 0:  if INFO = k, the (i,j) entry of the matrix A has
+ *                overflowed when moving from DOUBLE PRECISION to SINGLE
+ *                k is given by k = (i-1)*LDA+j
+ */
+
+AA_API void dlag2s_ ( const int *M, const int *N,
+                      double *A, const int *LDA,
+                      float *SA, const int *LDSA,
+                      const int *INFO );
+
+#endif // AA_LA_TYPE == double
+
+
+#if AA_LA_TYPE == float
+/** Converts a SINGLE PRECISION matrix, SA, to a DOUBLE PRECISION
+ *  matrix, A.
+ *
+ *  RMAX is the overflow for the SINGLE PRECISION arithmetic
+ *  DLAG2S checks that all the entries of A are between -RMAX and
+ *  RMAX. If not the convertion is aborted and a flag is raised.
+ *
+ *  This is a helper routine so there is no argument checking.
+ *
+ *
+ * \param[in] M
+ *          The number of lines of the matrix A.  M >= 0.
+ *
+ *  \param[in] N
+ *          The number of columns of the matrix A.  N >= 0.
+ *
+ *  \param[out] A
+ *          On exit, if INFO=0, the M-by-N coefficient matrix A.
+ *
+ *  \param[in] LDA
+ *          The leading dimension of the array A.  LDA >= max(1,M).
+ *
+ *  \param[in] SA
+ *          On entry, the M-by-N coefficient matrix SA.
+ *
+ *  \param[in] LDSA
+ *          The leading dimension of the array SA.  LDSA >= max(1,M).
+ *
+ *  \param[out] INFO
+ *          - = 0:  successful exit
+ *          - > 0:  if INFO = k, the (i,j) entry of the matrix A has
+ *                overflowed when moving from DOUBLE PRECISION to SINGLE
+ *                k is given by k = (i-1)*LDA+j
+ */
+
+AA_API void slag2d_ ( const int *M, const int *N,
+                      float *SA, const int *LDSA,
+                      double *A, const int *LDA,
+                      const int *INFO );
+
+#endif // AA_LA_TYPE == float
 
 #undef AA_LA_TYPE
 #undef AA_LAPACK_NAME

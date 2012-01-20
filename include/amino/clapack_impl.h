@@ -62,10 +62,14 @@ AA_API int AA_CLAPACK_NAME(gelsd)
   AA_LA_TYPE *S, AA_LA_TYPE *rcond, int *rank,
   AA_LA_TYPE *work, int lwork, int *iwork ) ;
 
-AA_API void AA_CLAPACK_NAME(lacpy)
+static inline void AA_CLAPACK_NAME(lacpy)
 ( char uplo, int m, int n,
-  AA_LA_TYPE *A, int lda,
-  AA_LA_TYPE *B, int ldb );
+  const AA_LA_TYPE *A, int lda,
+  AA_LA_TYPE *B, int ldb ) {
+    AA_LAPACK_NAME(lacpy) (&uplo, &m, &n,
+                           A, &lda, B, &ldb );
+
+}
 
 static inline AA_LA_TYPE AA_CLAPACK_NAME(lapy2)
 ( AA_LA_TYPE x, AA_LA_TYPE y )
@@ -90,6 +94,42 @@ static inline void AA_CLAPACK_NAME(larnv)
 {
     AA_LAPACK_NAME(larnv) (&idist, iseed, &n, X);
 }
+
+static inline int AA_CLAPACK_NAME(lascl)
+( char TYPE, int KL, int KU,
+  AA_LA_TYPE CFROM, AA_LA_TYPE CTO,
+  int M, int N, AA_LA_TYPE *A, int LDA ) {
+    int info;
+    AA_LAPACK_NAME( lascl )
+        ( &TYPE, &KL, &KU, &CFROM, &CTO,
+          &M, &N, A, &LDA, &info );
+    return info;
+}
+
+#if AA_LA_TYPE == double
+static inline int AA_CLAPACK_NAME(lag2s)
+( int M, int N,
+  double *A, int LDA,
+  float *SA, int LDSA ) {
+    int info;
+    dlag2s_( &M, &N, A, &LDA, SA, &LDSA, &info);
+    return info;
+}
+
+#endif // AA_LA_TYPE == double
+
+#if AA_LA_TYPE == float
+static inline int AA_CLAPACK_NAME(lag2d)
+( int M, int N,
+  float * SA, int LDSA,
+  double *A, int LDA ) {
+    int info;
+    slag2d_( &M, &N, SA, &LDSA, A, &LDA, &info );
+    return info;
+}
+
+#endif // AA_LA_TYPE == float
+
 
 #undef AA_LA_TYPE
 #undef AA_CLAPACK_NAME
