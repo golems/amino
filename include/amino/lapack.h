@@ -886,4 +886,10 @@ AA_API void dlacpy_( const char UPLO[1], const int *M, const int *N,
                      double *A, const int *LDA, double *B, const int *LDB );
 AA_API void slacpy_( const char UPLO[1], const int *M, const int *N,
                      float *A, const int *LDA, float *B, const int *LDB );
+
+AA_API double dlapy2_( const double *x, const double *y );
+AA_API float slapy2_( const float *x, const float *y );
+AA_API double dlapy3_( const double *x, const double *y, const double *z );
+AA_API float slapy3_( const float *x, const float *y, const float *z );
+
 #endif

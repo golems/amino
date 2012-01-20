@@ -68,6 +68,18 @@
       TYPE *B, int ldb,                                                 \
       TYPE *S, TYPE *rcond, int *rank,                                  \
       TYPE *work, int lwork, int *iwork ) ;                             \
+    AA_API void AA_CLAPACK_NAME(lacpy, prefix)                          \
+    ( char uplo, int m, int n,                                          \
+      TYPE *A, int lda,                                                 \
+      TYPE *B, int ldb );                                               \
+    static inline TYPE AA_CLAPACK_NAME(lapy2, prefix)                   \
+    (TYPE x, TYPE y) {                                                  \
+        return AA_LAPACK_NAME(lapy2, prefix)(&x, &y);                   \
+    }                                                                   \
+    static inline TYPE AA_CLAPACK_NAME(lapy3, prefix)                   \
+    (TYPE x, TYPE y, TYPE z) {                                          \
+        return AA_LAPACK_NAME(lapy3, prefix)(&x, &y, &z);               \
+    }
 
 /// lapacks defs for double float
 AA_LAPACK_DEC( double, d, D );

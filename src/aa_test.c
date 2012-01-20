@@ -504,7 +504,7 @@ void axang() {
     }
 }
 
-void la2_0() {
+void clapack() {
     // mcopy
     {
         double X[3*2] = { 1,2,3, 4,5,6};
@@ -519,6 +519,12 @@ void la2_0() {
         aveq( 8, Y42, (double[]){1,2,3,0,4,5,6,0}, 0.001 );
         aveq( 4, Y22, (double[]){1,2, 4,5}, 0.001 );
     }
+
+    afeq( sqrt( 3*3 + 4*4 ), aa_clapack_dlapy2(3, 4), .001 );
+    afeq( sqrt( 3*3 + 4*4 + 5*5 ), aa_clapack_dlapy3(3, 4, 5), .001 );
+}
+
+void la2_0() {
     // transpose
     {
         double X[3*2] = { 1,2,3, 4,5,6};
@@ -1549,6 +1555,7 @@ int main( int argc, char **argv ) {
 
     la2_0();
 
+    clapack();
     angle();
     quat();
     rotmat();
