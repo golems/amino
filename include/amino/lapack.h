@@ -364,10 +364,10 @@ AA_API int ilaenv_( const int *ispec, const char *name, const char *opts,
                         double *S, const double *RCOND, int *RANK,
                         double *WORK, int *LWORK, int *IWORK, int *INFO );
 
- AA_API void sgelsd_( const int *M, const int *N, const int *NRHS,
-                      float *A, const int *LDA, float *B, const int *LDB,
-                      float *S, const float *RCOND, int *RANK,
-                      float *WORK, int *LWORK, int *IWORK, int *INFO );
+AA_API void sgelsd_( const int *M, const int *N, const int *NRHS,
+                     float *A, const int *LDA, float *B, const int *LDB,
+                     float *S, const float *RCOND, int *RANK,
+                     float *WORK, int *LWORK, int *IWORK, int *INFO );
 
 
 /**  DGEBAL balances a general real matrix A.  This involves, first,
@@ -423,8 +423,8 @@ AA_API int ilaenv_( const int *ispec, const char *name, const char *opts,
 *          = 0:  successful exit.
 *          < 0:  if INFO = -i, the i-th argument had an illegal value.
 */
-void dgebal_( const char JOB[1], int *N, double *A, const int *LDA,
-              int *ILO, int *IHI, double *SCALE, int *INFO );
+AA_API void dgebal_( const char JOB[1], int *N, double *A, const int *LDA,
+                     int *ILO, int *IHI, double *SCALE, int *INFO );
 
 
 /**  DGEES computes for an N-by-N real nonsymmetric matrix A, the
@@ -540,10 +540,12 @@ void dgebal_( const char JOB[1], int *N, double *A, const int *LDA,
 *
 */
 
-void dgees_( const char JOBVS[1], const char SORT[1],
-             int (*SELECT)(const double*,const double*),
-             const int *N, double *A, const int *LDA, int *SDIM, double *WR, double *WI,
-             double *VS, const int *LDVS, double *WORK, int *LWORK, int *BWORK, int *INFO );
+AA_API void dgees_( const char JOBVS[1], const char SORT[1],
+                    int (*SELECT)(const double*,const double*),
+                    const int *N, double *A, const int *LDA, int *SDIM,
+                    double *WR, double *WI,
+                    double *VS, const int *LDVS,
+                    double *WORK, int *LWORK, int *BWORK, int *INFO );
 /*
    SUBROUTINE DGEEVX( BALANC, JOBVL, JOBVR, SENSE, N, A, LDA, WR, WI,
      $                   VL, LDVL, VR, LDVR, ILO, IHI, SCALE, ABNRM,
@@ -880,8 +882,8 @@ void dgels_ ( const char TRANS[1], const int *M, const int *N, const int *NRHS,
 *          The leading dimension of the array B.  LDB >= max(1,M).
 */
 
-void dlacpy_( const char UPLO[1], const int *M, const int *N,
-              double *A, const int *LDA, double *B, const int *LDB );
-void slacpy_( const char UPLO[1], const int *M, const int *N,
-              float *A, const int *LDA, float *B, const int *LDB );
+AA_API void dlacpy_( const char UPLO[1], const int *M, const int *N,
+                     double *A, const int *LDA, double *B, const int *LDB );
+AA_API void slacpy_( const char UPLO[1], const int *M, const int *N,
+                     float *A, const int *LDA, float *B, const int *LDB );
 #endif
