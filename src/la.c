@@ -213,12 +213,12 @@ int aa_la_inv( size_t n, double *A ) {
     int info;
 
     // LU-factor
-    info = aa_clapack_dgetrf( mi, ni, A, mi, ipiv );
+    info = aa_cla_dgetrf( mi, ni, A, mi, ipiv );
 
     int lwork = -1;
     while(1) {
         double work[ lwork < 0 ? 1 : lwork ];
-        aa_clapack_dgetri( ni, A, mi, ipiv, work, lwork );
+        aa_cla_dgetri( ni, A, mi, ipiv, work, lwork );
         if( lwork > 0 ) break;
         assert( -1 == lwork && sizeof(work) == sizeof(double) );
         lwork = (int)work[0];
@@ -342,7 +342,7 @@ AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const doub
     memcpy(x,b,sizeof(x[0])*p*m);
 
     int rank, info;
-    size_t liwork = (size_t)aa_clapack_dgelsd_miniwork(mi,ni);
+    size_t liwork = (size_t)aa_cla_dgelsd_miniwork(mi,ni);
     size_t ls = AA_MIN(m,n);
     double S[ls];
     int iwork[liwork];
@@ -351,10 +351,10 @@ AA_API void aa_la_lls( size_t m, size_t n, size_t p, const double *A, const doub
     while(1) {
         double work[ lwork < 0 ? 1 : lwork ];
 
-        info = aa_clapack_dgelsd( mi, ni, pi,
-                                   Ap, mi, x, mi,
-                                   S, &rcond, &rank,
-                                   work, lwork, iwork );
+        info = aa_cla_dgelsd( mi, ni, pi,
+                              Ap, mi, x, mi,
+                              S, &rcond, &rank,
+                              work, lwork, iwork );
 
         if( lwork >= 0 ) break;
         assert( -1 == lwork && sizeof(work) == sizeof(double) );

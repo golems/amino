@@ -40,29 +40,57 @@
  *
  */
 
-AA_API int AA_CLAPACK_NAME(getrf)
-( int m, int n, AA_LA_TYPE *A, int lda, int *ipiv );
+static inline int AA_CLA_NAME(getrf)
+( int m, int n, AA_LA_TYPE *A, int lda, int *ipiv ) {
+    int info;
+    AA_LAPACK_NAME( getrf)
+        (&m, &n, A, &lda, ipiv, &info );
+    return info;
+}
 
-AA_API int AA_CLAPACK_NAME(getri)
-( int n, AA_LA_TYPE *A, int lda, int *ipiv, AA_LA_TYPE *work, int lwork );
 
-AA_API int AA_CLAPACK_NAME(gelsd_smlsiz)
-();
+static inline int AA_CLA_NAME(getri)
+( int n, AA_LA_TYPE *A, int lda, int *ipiv, AA_LA_TYPE *work, int lwork ) {
+    int info;
+    AA_LAPACK_NAME( getri )
+        ( &n, A, &lda, ipiv, work, &lwork, &info );
+    return info;
+}
 
-AA_API int AA_CLAPACK_NAME(gelsd_nlvl)
-( int m, int n );
+static inline int AA_CLA_NAME(gelsd_smlsiz) () {
+    return aa_la_ilaenv( 9, AA_LAPACK_PREFIX_STR
+                              "GELSD", "", 0, 0, 0, 0 );
+}
 
-AA_API int AA_CLAPACK_NAME(gelsd_miniwork)
-( int m, int n );
+static inline int AA_CLA_NAME(gelsd_nlvl)
+( int m, int n ) {
+    int minmn = AA_MIN(m,n);
+    int smlsiz = AA_CLA_NAME(gelsd_smlsiz)();
+    return (int)AA_MAX(0, 1 + log2( minmn / (1 + smlsiz)));
+}
 
-AA_API int AA_CLAPACK_NAME(gelsd)
+static inline int AA_CLA_NAME(gelsd_miniwork)
+( int m, int n ) {
+    int minmn = AA_MIN(m,n);
+    int nlvl = AA_CLA_NAME(gelsd_nlvl)(m,n);
+    return AA_MAX(1,
+                  3 * minmn * nlvl + 11 * minmn);
+}
+
+static inline int AA_CLA_NAME(gelsd)
 ( int m, int n, int nrhs,
   AA_LA_TYPE *A, int lda,
   AA_LA_TYPE *B, int ldb,
   AA_LA_TYPE *S, AA_LA_TYPE *rcond, int *rank,
-  AA_LA_TYPE *work, int lwork, int *iwork ) ;
+  AA_LA_TYPE *work, int lwork, int *iwork ) {
+    int info;
+    AA_LAPACK_NAME( gelsd )
+        ( &m, &n, &nrhs, A, &lda, B, &ldb,
+          S, rcond, rank, work, &lwork, iwork, &info );
+    return info;
+}
 
-static inline void AA_CLAPACK_NAME(lacpy)
+static inline void AA_CLA_NAME(lacpy)
 ( char uplo, int m, int n,
   const AA_LA_TYPE *A, int lda,
   AA_LA_TYPE *B, int ldb ) {
@@ -71,31 +99,31 @@ static inline void AA_CLAPACK_NAME(lacpy)
 
 }
 
-static inline AA_LA_TYPE AA_CLAPACK_NAME(lapy2)
+static inline AA_LA_TYPE AA_CLA_NAME(lapy2)
 ( AA_LA_TYPE x, AA_LA_TYPE y )
 {
     return AA_LAPACK_NAME(lapy2)(&x, &y);
 }
 
-static inline AA_LA_TYPE AA_CLAPACK_NAME(lapy3)
+static inline AA_LA_TYPE AA_CLA_NAME(lapy3)
 ( AA_LA_TYPE x, AA_LA_TYPE y, AA_LA_TYPE z )
 {
     return AA_LAPACK_NAME(lapy3)(&x, &y, &z);
 }
 
-static inline void AA_CLAPACK_NAME(laruv)
+static inline void AA_CLA_NAME(laruv)
 ( int iseed[4], int n, AA_LA_TYPE *X )
 {
     AA_LAPACK_NAME(laruv) (iseed, &n, X);
 }
 
-static inline void AA_CLAPACK_NAME(larnv)
+static inline void AA_CLA_NAME(larnv)
 ( int idist, int iseed[4], int n, AA_LA_TYPE *X )
 {
     AA_LAPACK_NAME(larnv) (&idist, iseed, &n, X);
 }
 
-static inline int AA_CLAPACK_NAME(lascl)
+static inline int AA_CLA_NAME(lascl)
 ( char TYPE, int KL, int KU,
   AA_LA_TYPE CFROM, AA_LA_TYPE CTO,
   int M, int N, AA_LA_TYPE *A, int LDA ) {
@@ -107,7 +135,7 @@ static inline int AA_CLAPACK_NAME(lascl)
 }
 
 #if AA_LA_TYPE == double
-static inline int AA_CLAPACK_NAME(lag2s)
+static inline int AA_CLA_NAME(lag2s)
 ( int M, int N,
   double *A, int LDA,
   float *SA, int LDSA ) {
@@ -119,7 +147,7 @@ static inline int AA_CLAPACK_NAME(lag2s)
 #endif // AA_LA_TYPE == double
 
 #if AA_LA_TYPE == float
-static inline int AA_CLAPACK_NAME(lag2d)
+static inline int AA_CLA_NAME(lag2d)
 ( int M, int N,
   float * SA, int LDSA,
   double *A, int LDA ) {
@@ -132,7 +160,7 @@ static inline int AA_CLAPACK_NAME(lag2d)
 
 
 #undef AA_LA_TYPE
-#undef AA_CLAPACK_NAME
+#undef AA_CLA_NAME
 #undef AA_LAPACK_NAME
 #undef AA_CBLAS_NAME
-#undef AA_CLAPACK_NAME
+#undef AA_LAPACK_PREFIX_STR

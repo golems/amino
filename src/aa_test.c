@@ -511,9 +511,9 @@ void clapack() {
         double Y32[3*2] = {0};
         double Y42[4*2] = {0};
         double Y22[2*2] = {0};
-        aa_clapack_dlacpy(0, 3, 2, X, 3, Y32, 3 );
-        aa_clapack_dlacpy(0, 3, 2, X, 3, Y42, 4 );
-        aa_clapack_dlacpy(0, 2, 2, X, 3, Y22, 2 );
+        aa_cla_dlacpy(0, 3, 2, X, 3, Y32, 3 );
+        aa_cla_dlacpy(0, 3, 2, X, 3, Y42, 4 );
+        aa_cla_dlacpy(0, 2, 2, X, 3, Y22, 2 );
 
         aveq( 6, Y32, X, 0.001 );
         aveq( 8, Y42, (double[]){1,2,3,0,4,5,6,0}, 0.001 );
@@ -521,8 +521,8 @@ void clapack() {
     }
 
     // lapy2/3
-    afeq( sqrt( 3*3 + 4*4 ), aa_clapack_dlapy2(3, 4), .001 );
-    afeq( sqrt( 3*3 + 4*4 + 5*5 ), aa_clapack_dlapy3(3, 4, 5), .001 );
+    afeq( sqrt( 3*3 + 4*4 ), aa_cla_dlapy2(3, 4), .001 );
+    afeq( sqrt( 3*3 + 4*4 + 5*5 ), aa_cla_dlapy3(3, 4, 5), .001 );
 
     //rand
     {
@@ -530,13 +530,13 @@ void clapack() {
         double X[10];
         int n = sizeof(X)/sizeof(X[0]);
 
-        aa_clapack_dlaruv( iseed, n, X );
+        aa_cla_dlaruv( iseed, n, X );
         for( int i = 0; i < n; i++ ) assert( X[i] <= 1 && X[i] >= 0 );
 
-        aa_clapack_dlarnv(1, iseed, n, X );
+        aa_cla_dlarnv(1, iseed, n, X );
         for( int i = 0; i < n; i++ ) assert( X[i] <= 1 && X[i] >= 0 );
 
-        aa_clapack_dlarnv(2, iseed, n, X );
+        aa_cla_dlarnv(2, iseed, n, X );
         for( int i = 0; i < n; i++ ) assert( X[i] <= 1 && X[i] >= -1 );
     }
 }
@@ -548,9 +548,9 @@ void la2_0() {
         double Y32[3*2] = {0};
         double Y33[3*3] = {0};
         double Y22[2*2] = {0};
-        aa_la_dtranspose( 3, 2, X, 3, Y32, 2 );
-        aa_la_dtranspose( 3, 2, X, 3, Y33, 3 );
-        aa_la_dtranspose( 2, 2, X, 3, Y22, 2 );
+        aa_la_d_transpose( 3, 2, X, 3, Y32, 2 );
+        aa_la_d_transpose( 3, 2, X, 3, Y33, 3 );
+        aa_la_d_transpose( 2, 2, X, 3, Y22, 2 );
 
         aveq( 6, Y32, (double[]){1,4, 2,5, 3,6}, 0.001 );
         aveq( 9, Y33, (double[]){1,4,0, 2,5,0, 3,6,0}, 0.001 );

@@ -41,9 +41,9 @@
  */
 
 
-void AA_LA_NAME(transpose) ( size_t m, size_t n,
-                             const AA_LA_TYPE *A, size_t lda,
-                             AA_LA_TYPE *B, size_t ldb ) {
+void AA_LA_NAME(_transpose) ( size_t m, size_t n,
+                              const AA_LA_TYPE *A, size_t lda,
+                              AA_LA_TYPE *B, size_t ldb ) {
     for( size_t i=0, ia=0; i < n; i++, ia+=lda ) {
         for( size_t j=0, ib=0; j < m; j++, ib+=ldb ) {
             B[ib+i] = A[ia+j];
@@ -51,7 +51,7 @@ void AA_LA_NAME(transpose) ( size_t m, size_t n,
     }
 }
 
-void AA_LA_NAME(cmean)
+void AA_LA_NAME(_cmean)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   AA_LA_TYPE *x)
@@ -65,7 +65,7 @@ void AA_LA_NAME(cmean)
                         x, 1);
 }
 
-void AA_LA_NAME(ccov)
+void AA_LA_NAME(_ccov)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   const AA_LA_TYPE *x,

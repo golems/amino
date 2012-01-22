@@ -55,23 +55,23 @@ static void aa_la_care_laub_hamiltonian( size_t m, size_t n, size_t p,
                                          double *restrict H ) {
     // copy in A
     // upper left gets A
-    aa_clapack_dlacpy( 0, (int)m, (int)m, A, (int)m, H, 2*(int)m );
+    aa_cla_dlacpy( 0, (int)m, (int)m, A, (int)m, H, 2*(int)m );
     // lower right gets -A^T
-    aa_la_dtranspose( m, m, A, m,
-                      &AA_MATREF(H, 2*m, m, m), 2*m );
-    aa_clapack_dlascl( 'G', 0, 0,
-                       -1.0, 1.0,
-                       (int)m, (int)m,
-                       &AA_MATREF(H, 2*m, m, m), 2*(int)m );
+    aa_la_d_transpose( m, m, A, m,
+                       &AA_MATREF(H, 2*m, m, m), 2*m );
+    aa_cla_dlascl( 'G', 0, 0,
+                  -1.0, 1.0,
+                   (int)m, (int)m,
+                   &AA_MATREF(H, 2*m, m, m), 2*(int)m );
 
     // copy B
     if( n == m ) {
-        aa_clapack_dlacpy( 0, (int)m, (int)m, B, (int)m,
-                           &AA_MATREF(H, 2*m, 0, m), 2*(int)m );
-        aa_clapack_dlascl( 'G', 0, 0,
-                           -1.0, 1.0,
-                           (int)m, (int)m,
-                           &AA_MATREF(H, 2*m, 0, m), 2*(int)m );
+        aa_cla_dlacpy( 0, (int)m, (int)m, B, (int)m,
+                       &AA_MATREF(H, 2*m, 0, m), 2*(int)m );
+        aa_cla_dlascl( 'G', 0, 0,
+                       -1.0, 1.0,
+                       (int)m, (int)m,
+                       &AA_MATREF(H, 2*m, 0, m), 2*(int)m );
     } else {
         cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans,
                      (int)m, (int)m, (int)n, -1, B, (int)m, B, (int)m,
@@ -80,12 +80,12 @@ static void aa_la_care_laub_hamiltonian( size_t m, size_t n, size_t p,
 
     // copy C
     if( p == m ) {
-        aa_clapack_dlacpy( 0, (int)m, (int)m, C, (int)m,
-                           &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
-        aa_clapack_dlascl( 'G', 0, 0,
-                           -1.0, 1.0,
-                           (int)m, (int)m,
-                           &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
+        aa_cla_dlacpy( 0, (int)m, (int)m, C, (int)m,
+                      &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
+        aa_cla_dlascl( 'G', 0, 0,
+                       -1.0, 1.0,
+                       (int)m, (int)m,
+                       &AA_MATREF(H, 2*m, m, 0), 2*(int)m );
     } else {
         cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans,
                      (int)m, (int)m, (int)p, -1, C, (int)p, C, (int)p,
@@ -139,8 +139,8 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     // u11^T X^T = u11^T X = u21^T
 
     // copy u21' to X for dgels
-    aa_la_dtranspose( m, m,
-                      &AA_MATREF(vs, 2*m, m, 0), 2*m, X, m );
+    aa_la_d_transpose( m, m,
+                       &AA_MATREF(vs, 2*m, m, 0), 2*m, X, m );
     {
         int lwork = -1;
         int info;

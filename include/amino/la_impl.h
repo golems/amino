@@ -41,17 +41,18 @@
  */
 
 
-AA_API void AA_LA_NAME(transpose)
+
+AA_API void AA_LA_NAME(_transpose)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   AA_LA_TYPE *B, size_t ldb );
 
-AA_API void AA_LA_NAME(cmean)
+AA_API void AA_LA_NAME(_cmean)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   AA_LA_TYPE *x );
 
-AA_API void AA_LA_NAME(ccov)
+AA_API void AA_LA_NAME(_ccov)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   const AA_LA_TYPE *x,

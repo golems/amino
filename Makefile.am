@@ -1,5 +1,5 @@
 INCLUDES = -I$(top_srcdir)/include
-EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/clapack_impl.c src/la_impl.c
+EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/la_impl.c
 
 include_HEADERS = include/amino.h
 
@@ -30,7 +30,7 @@ lib_LTLIBRARIES = libamino.la
 
 bin_PROGRAMS = aa_test
 
-libamino_la_SOURCES = src/mem.c src/la.c src/la2.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/sigsys.c src/cv.c src/clapack.c
+libamino_la_SOURCES = src/mem.c src/la.c src/la2.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/sigsys.c src/cv.c
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]

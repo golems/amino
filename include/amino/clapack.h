@@ -43,25 +43,29 @@
 #define AA_CLAPACK_H
 
 
-
+static inline int aa_la_ilaenv( int ispec,
+                                const char *name, const char *opts,
+                                int n1, int n2, int n3, int n4 ) {
+    int nl = (int)strlen(name);
+    int ol = (int)strlen(opts);
+    return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );
+}
 
 #define AA_LA_TYPE double
-#define AA_CLAPACK_NAME( name ) aa_clapack_d ## name
 #define AA_LAPACK_NAME( name ) d ## name ## _
+#define AA_CLA_NAME( name ) aa_cla_d ## name
 #define AA_CBLAS_NAME( name ) cblas_d ## name
+#define AA_LAPACK_PREFIX_STR "D"
 #include "clapack_impl.h"
 
 
 #define AA_LA_TYPE float
-#define AA_CLAPACK_NAME( name ) aa_clapack_s ## name
+#define AA_CLA_NAME( name ) aa_cla_s ## name
 #define AA_LAPACK_NAME( name ) s ## name ## _
 #define AA_CBLAS_NAME( name ) cblas_s ## name
+#define AA_LAPACK_PREFIX_STR "S"
 #include "clapack_impl.h"
 
-
-
-AA_API int aa_clapack_ilaenv( int ispec, const char *name, const char *opts,
-                              int n1, int n2, int n3, int n4 );
 
 
 #endif // AA_CLAPACK_H
