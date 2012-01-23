@@ -37,13 +37,23 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	cd src/mac && maxima --very-quiet -b gen.mac
 	@echo [maxima end]
 
-clean-local:
-	-rm -rf debian/tmp debian/files debian/libamino? debian/libamino-dev debian/*.log debian/*.substvars texput.log debian/*.debhelper debian/usr/* debian/DEBIAN/*
 
 distclean-local:
 	-rm -rf doxygen-doc
 
 aa_test_SOURCES = src/aa_test.c
 aa_test_LDADD = libamino.la
+
+clapack-doc.c: doc/clapack-doc.c
+	$(CPP) $(INCLUDES) -CC $< -o $@
+lapack-doc.c: doc/lapack-doc.c
+	$(CPP) $(INCLUDES) -CC $< -o $@
+la-doc.c: doc/la-doc.c
+	$(CPP) $(INCLUDES) -CC $< -o $@
+
+EXTRA_DX = clapack-doc.c lapack-doc.c la-doc.c
+
+clean-local:
+	-rm -rf debian/tmp debian/files debian/libamino? debian/libamino-dev debian/*.log debian/*.substvars texput.log debian/*.debhelper debian/usr/* debian/DEBIAN/* $(EXTRA_DX)
 
 include aminclude.am

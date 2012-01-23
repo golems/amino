@@ -34,3 +34,6 @@
 /debian/*.substvars
 /doxygen-doc
 /texput.log
+/clapack-doc.c
+/la-doc.c
+/lapack-doc.c

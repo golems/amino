@@ -40,6 +40,8 @@
  *
  */
 
+
+/** Row Factor */
 static inline int AA_CLA_NAME(getrf)
 ( int m, int n, AA_LA_TYPE *A, int lda, int *ipiv ) {
     int info;

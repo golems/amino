@@ -56,12 +56,16 @@
 #define LAPACK_H_
 
 
+/// type for operations
 #define AA_LA_TYPE double
+/// name mangling
 #define AA_LAPACK_NAME( name ) d ## name ## _
 #include "lapack_impl.h"
 
 
+/// type for operations
 #define AA_LA_TYPE float
+/// name mangling
 #define AA_LAPACK_NAME( name ) s ## name ## _
 #include "lapack_impl.h"
 

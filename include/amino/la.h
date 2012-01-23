@@ -42,17 +42,16 @@
 #ifndef AA_LA_H
 #define AA_LA_H
 
-/**
- * \file amino/la.h
- */
-
-
+/// type for operations
 #define AA_LA_TYPE double
+/// name mangling
 #define AA_LA_NAME( name ) aa_la_d ## name
 #include "la_impl.h"
 
 
+/// type for operations
 #define AA_LA_TYPE float
+/// name mangling
 #define AA_LA_NAME( name ) aa_la_s ## name
 #include "la_impl.h"
 

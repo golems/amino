@@ -42,16 +42,42 @@
 
 
 
+
+/** Transpose A into B.
+ *
+ * \param m rows of A, cols of B
+ * \param n cols of A, rows of B
+ * \param[in] A source matrix, m*n
+ * \param[in] B destination matrix, n*m
+ * \param lda leading dimension of A
+ * \param ldb leading dimension of B
+ */
 AA_API void AA_LA_NAME(_transpose)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   AA_LA_TYPE *B, size_t ldb );
 
+/** Mean of columns of A.
+ * \param m rows of A
+ * \param n cols of A
+ * \param lda leading dimension of A
+ * \param[in] A source matrix, m*n
+ * \param[out] x destination vector for mean, length m
+ */
 AA_API void AA_LA_NAME(_cmean)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   AA_LA_TYPE *x );
 
+/** Covariance of columns of A.
+ * \param m rows of A
+ * \param n cols of A
+ * \param lda leading dimension of A
+ * \param[in] A source matrix, m*n
+ * \param[in] x mean of columns of A, length m
+ * \param[out] E covariance of columns of A, m*m
+ * \param lde leading dimension of E
+ */
 AA_API void AA_LA_NAME(_ccov)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,

@@ -51,6 +51,7 @@
 /***********/
 
 #ifndef AA_EPSILON
+/// a small number
 #define AA_EPSILON .001
 #endif //AA_EPSILON
 
@@ -185,16 +186,23 @@ static inline double aa_stat_x2z(double x, double mu, double sigma) {
     return (x-mu)/sigma;
 }
 
-/* Compute mean of vector x */
+/** Compute mean of vector x */
 AA_API double aa_stat_mean( size_t n, const double *x);
 
-/* Compute standard deviation of vector x */
+/** Compute standard deviation of vector x */
 AA_API double aa_stat_std( size_t n, const double *x);
 
 /** Compute mean and standard deviation, excluding outliers.
  *
+ *  \param n length of x
+ *  \param x vector of data
+ *  \param[out] pmu mean
+ *  \param[out] psigma standard deviation
  *  \param zmin exclude all outliers below zmin standard deviations
  *  \param zmax exclude all outliers above zmax standard deviations
+ *  \param zmin exclude all outliers below zmin standard deviations
+ *  \param zmax exclude all outliers above zmax standard deviations
+ *  \param max_iterations maximum number of iterations
  */
 AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
                                          double *pmu, double *psigma,
@@ -208,13 +216,18 @@ AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
 /** Compute mean of angles */
 AA_API double aa_stat_circ_mean( size_t n, const double *x);
 
-/* Compute standard deviation of vector x */
+/** Compute standard deviation of vector x */
 AA_API double aa_stat_circ_std( size_t n, const double *x);
 
 /** Compute mean and standard deviation, excluding outliers.
  *
+ *  \param n length of x
+ *  \param x vector of angles in radians
+ *  \param[out] pmu mean
+ *  \param[out] psigma standard deviation
  *  \param zmin exclude all outliers below zmin standard deviations
  *  \param zmax exclude all outliers above zmax standard deviations
+ *  \param max_iterations maximum number of iterations
  */
 AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
                                               double *pmu, double *psigma,
@@ -227,7 +240,7 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
  * \param m size of space
  * \param n number of samples
  * \param X matrix of samples, one per column
- * \param mean vector, length m
+ * \param[out] mu vector, length m
  */
 AA_API void aa_stat_vmean( size_t m, size_t n, const double *X,
                            double *mu);
@@ -237,8 +250,8 @@ AA_API void aa_stat_vmean( size_t m, size_t n, const double *X,
  * \param m size of space
  * \param n number of samples
  * \param X matrix of samples, one per column
- * \param mean vector, length m
- * \param covariance matrix, m*m
+ * \param mu vector, length m
+ * \param E matrix, m*m
  */
 AA_API void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
                                double *mu, double *E);
@@ -555,6 +568,7 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k,  const double *A, const d
  * Solves for x.
  * \param m rows in A
  * \param n cols in A
+ * \param p cols in b and x
  * \param A matrix
  * \param b offset matrix
  * \param x solution matrix
@@ -603,8 +617,8 @@ AA_API void aa_la_plane_hessian( size_t n, double *plane );
  *
  * \param m size of space
  * \param n number of points
- * \param m*n matrix of points, point per column, column major
- * \param vector length m+1 to hold plane coefficients in hessian-normal form
+ * \param points m*n matrix of points, point per column, column major
+ * \param plane vector length m+1 to hold plane coefficients in hessian-normal form
  */
 AA_API void aa_la_plane_fit( size_t m, size_t n,
                              const double *points, double *plane );

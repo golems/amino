@@ -43,7 +43,7 @@
 #define AMINO_CV_H
 
 /**
- * \file amino/cf.h
+ * \file amino/cv.h
  */
 
 /** Convert RGB to HSV color.

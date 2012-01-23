@@ -53,28 +53,65 @@
  */
 
 /** Inverse of matrix using LU factorization by *getrf.
-
-    You must call *getrf before you call *getri.
-
-    \param n Order of the matrix A
-    \param A on entry the L and U factors from *getrf,
-      on exit the inverse of the original A
-    \param lda number of rows in A
-    \param ipiv pivot indices from sgetrf
-    \param work workspace array
-    \param lwork length of work, optimally > n*nb where nb is the
-      optimal blocksize return by ilaenv_
-    \param info output.  info==0 for success, info<zero for illegal
-      argument, info > 0 for singular matrix
+ *
+ * You must call *getrf before you call *getri.
+ *
+ * \param n Order of the matrix A
+ * \param A on entry the L and U factors from *getrf,
+ *        on exit the inverse of the original A
+ * \param lda number of rows in A
+ * \param ipiv pivot indices from sgetrf
+ * \param work workspace array
+ * \param lwork length of work, optimally > n*nb where nb is the
+ *        optimal blocksize return by ilaenv_
+ * \param info output.  info==0 for success, info<zero for illegal
+ *        argument, info > 0 for singular matrix
  */
 AA_API void AA_LAPACK_NAME(getri)
 ( const int *n, AA_LA_TYPE *A, const int *lda,
   const int *ipiv, AA_LA_TYPE *work, const int *lwork, int *info );
 
-
+/** Computes an LU factorization of a general M-by-N matrix A
+ *  using partial pivoting with row interchanges.
+ *
+ *  The factorization has the form
+ *     \f[ A = P * L * U \f]
+ *  where P is a permutation matrix, L is lower triangular with unit
+ *  diagonal elements (lower trapezoidal if m > n), and U is upper
+ *  triangular (upper trapezoidal if m < n).
+ *
+ *  This is the right-looking Level 3 BLAS version of the algorithm.
+ *
+ *  \param[in] M
+ *          The number of rows of the matrix A.  M >= 0.
+ *
+ *  \param[in] N
+ *          The number of columns of the matrix A.  N >= 0.
+ *
+ *  \param[in,out] A
+ *          On entry, the M-by-N matrix to be factored.
+ *          On exit, the factors L and U from the factorization
+ *          A = P*L*U; the unit diagonal elements of L are not stored.
+ *
+ *  \param[in] LDA
+ *          The leading dimension of the array A.  LDA >= max(1,M).
+ *
+ *  \param[out] IPIV
+ *          array, dimension (min(M,N))
+ *          The pivot indices; for 1 <= i <= min(M,N), row i of the
+ *          matrix was interchanged with row IPIV(i).
+ *
+ *  \param[out] INFO
+ *         - = 0:  successful exit
+ *         - < 0:  if INFO = -i, the i-th argument had an illegal value
+ *         - > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+ *                has been completed, but the factor U is exactly
+ *                singular, and division by zero will occur if it is used
+ *                to solve a system of equations.
+ */
 AA_API void AA_LAPACK_NAME(getrf)
-( const int *m, const int *n, AA_LA_TYPE *A, const int *lda,
-  int *ipiv, int *info );
+( const int *M, const int *N, AA_LA_TYPE *A, const int *LDA,
+  int *IPIV, int *INFO );
 
 
 /** Compute SVD.
@@ -611,9 +648,15 @@ AA_API void AA_LAPACK_NAME(lacpy)
   const AA_LA_TYPE *A, const int *LDA, AA_LA_TYPE *B, int *LDB );
 
 
+/** Returns sqrt(x**2+y**2), taking care not to cause unnecessary
+ *  overflow.
+ */
 AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy2)
 ( const AA_LA_TYPE *x, const AA_LA_TYPE *y );
 
+/** Returns sqrt(x**2+y**2+z**2), taking care not to cause unnecessary
+ *  overflow.
+ */
 AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy3)
 ( const AA_LA_TYPE *x, const AA_LA_TYPE *y, const AA_LA_TYPE *z );
 
@@ -659,18 +702,18 @@ AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy3)
  *
  */
 AA_API void AA_LAPACK_NAME(laruv)
-( int iseed[4], const int *n, AA_LA_TYPE *X );
+( int ISEED[4], const int *N, AA_LA_TYPE *X );
 
 /** Returns a vector of n random real numbers from a uniform or
 *   normal distribution.
 *
-*  \param[in] idist  INTEGER
+*  \param[in] IDIST
 *          Specifies the distribution of the random numbers:
 *          = 1:  uniform (0,1)
 *          = 2:  uniform (-1,1)
 *          = 3:  normal (0,1)
 *
-*  \param iseed[in,out]
+*  \param[in,out] ISEED
 *          On entry, the seed of the random number generator; the array
 *          elements must be between 0 and 4095, and ISEED(4) must be
 *          odd.
@@ -689,8 +732,8 @@ AA_API void AA_LAPACK_NAME(laruv)
 */
 
 AA_API void AA_LAPACK_NAME(larnv)
-( const int *idist, int iseed[4],
-  const int *n, AA_LA_TYPE *x );
+( const int *IDIST, int ISEED[4],
+  const int *N, AA_LA_TYPE *X );
 
 /**  Multiplies the M by N real matrix A by the real scalar CTO/CFROM.
  *
@@ -724,7 +767,7 @@ AA_API void AA_LAPACK_NAME(larnv)
  *          'Q' or 'Z'.
  *
  *  \param[in] CFROM
- *  \param[in] CT
+ *  \param[in] CTO
  *          The matrix A is multiplied by CTO/CFROM. A(I,J) is computed
  *          without over/underflow if the final result CTO*A(I,J)/CFROM
  *          can be represented without over/underflow.  CFROM must be
