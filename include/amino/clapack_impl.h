@@ -41,7 +41,10 @@
  */
 
 
-/** Row Factor */
+/** Row Factor.
+ *
+ * \sa dgetrf_
+ */
 static inline int AA_CLA_NAME(getrf)
 ( int m, int n, AA_LA_TYPE *A, int lda, int *ipiv ) {
     int info;
@@ -50,7 +53,10 @@ static inline int AA_CLA_NAME(getrf)
     return info;
 }
 
-
+/** Invert matrix.
+ *
+ * \sa dgetrf_
+ */
 static inline int AA_CLA_NAME(getri)
 ( int n, AA_LA_TYPE *A, int lda, int *ipiv, AA_LA_TYPE *work, int lwork ) {
     int info;
@@ -79,6 +85,10 @@ static inline int AA_CLA_NAME(gelsd_miniwork)
                   3 * minmn * nlvl + 11 * minmn);
 }
 
+/** Linear least squares.
+ *
+ * \sa dgelsd_
+ */
 static inline int AA_CLA_NAME(gelsd)
 ( int m, int n, int nrhs,
   AA_LA_TYPE *A, int lda,
@@ -92,6 +102,10 @@ static inline int AA_CLA_NAME(gelsd)
     return info;
 }
 
+/** Matrix copy.
+ *
+ * \sa dlacpy_
+ */
 static inline void AA_CLA_NAME(lacpy)
 ( char uplo, int m, int n,
   const AA_LA_TYPE *A, int lda,
@@ -101,30 +115,50 @@ static inline void AA_CLA_NAME(lacpy)
 
 }
 
+/** Norm-2
+ *
+ * \sa dlapy2_
+ */
 static inline AA_LA_TYPE AA_CLA_NAME(lapy2)
 ( AA_LA_TYPE x, AA_LA_TYPE y )
 {
     return AA_LAPACK_NAME(lapy2)(&x, &y);
 }
 
+/** Norm-2
+ *
+ * \sa dlapy3_
+ */
 static inline AA_LA_TYPE AA_CLA_NAME(lapy3)
 ( AA_LA_TYPE x, AA_LA_TYPE y, AA_LA_TYPE z )
 {
     return AA_LAPACK_NAME(lapy3)(&x, &y, &z);
 }
 
+/** Uniform random vector
+ *
+ * \sa dlaruv_
+ */
 static inline void AA_CLA_NAME(laruv)
 ( int iseed[4], int n, AA_LA_TYPE *X )
 {
     AA_LAPACK_NAME(laruv) (iseed, &n, X);
 }
 
+/** Normal random vector
+ *
+ * \sa dlarnv_
+ */
 static inline void AA_CLA_NAME(larnv)
 ( int idist, int iseed[4], int n, AA_LA_TYPE *X )
 {
     AA_LAPACK_NAME(larnv) (&idist, iseed, &n, X);
 }
 
+/** Scale matrix.
+ *
+ * \sa dlascl_
+ */
 static inline int AA_CLA_NAME(lascl)
 ( char TYPE, int KL, int KU,
   AA_LA_TYPE CFROM, AA_LA_TYPE CTO,
@@ -137,6 +171,10 @@ static inline int AA_CLA_NAME(lascl)
 }
 
 #if AA_LA_TYPE == double
+/** Convert double to single float
+ *
+ * \sa dlag2s_
+ */
 static inline int AA_CLA_NAME(lag2s)
 ( int M, int N,
   double *A, int LDA,
@@ -149,6 +187,10 @@ static inline int AA_CLA_NAME(lag2s)
 #endif // AA_LA_TYPE == double
 
 #if AA_LA_TYPE == float
+/** Convert single to double float
+ *
+ * \sa dlag2d_
+ */
 static inline int AA_CLA_NAME(lag2d)
 ( int M, int N,
   float * SA, int LDSA,
