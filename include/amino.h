@@ -166,6 +166,15 @@
 /// Enum case sym that stores stringified sym in res
 #define AA_ENUM_SYM_CASE( res, sym )  case sym: (res) = #sym; break;
 
+/// SWAP a and b
+#define AA_SWAP(a,b) \
+    {                                                              \
+        const typeof(a) aa_$_tmpa = (a);                           \
+        const typeof(b) aa_$_tmpb = (b);                           \
+        (a) = aa_$_tmpb;                                           \
+        (b) = aa_$_tmpa;                                           \
+    }
+
 
 // include our own headers
 #include "amino/mem.h"

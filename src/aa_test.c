@@ -1532,6 +1532,14 @@ void plane() {
     aveq( 3, pl, pl_r, .001);
 }
 
+void misc() {
+    int a = 1;
+    int b = 2;
+    AA_SWAP(a,b);
+    assert( 1 == b );
+    assert( 2 == a );
+}
+
 int main( int argc, char **argv ) {
     (void) argc; (void) argv;
 
@@ -1562,6 +1570,9 @@ int main( int argc, char **argv ) {
     }
 
     aa_region_init(&g_region, 1024*64);
+
+    misc();
+
     mem();
     scalar();
     la0();
