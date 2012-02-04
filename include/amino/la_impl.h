@@ -85,6 +85,29 @@ AA_API void AA_LA_NAME(_ccov)
   AA_LA_TYPE *E, size_t lde );
 
 
+
+/** Hungarian algorithm to solve min assignment problem
+ * \param n rows and cols of A
+ * \param A cost matrix, column major, destroyed on exit
+ * \param lda leading dimension of A
+ * \param row_assign array of column assigned to row at index i
+ * \param iwork array of size 3*n*n+n
+ */
+AA_API void AA_LA_NAME(_opt_hungarian)
+( size_t n, AA_LA_TYPE *A, size_t lda,
+  ssize_t *row_assign,
+  ssize_t *iwork);
+
+
+/** Converts max assignment to min assignment for Hungarian algorithm.
+ * \param n rows and cols of A
+ * \param A cost matrix for max problem,
+ *        converted to matrix for min proble on exit
+ * \param lda leading dimension of A
+ */
+AA_API void AA_LA_NAME(_opt_hungarian_max2min)
+( size_t n, AA_LA_TYPE *A, size_t lda );
+
 /** Minimum location of vector x */
 static inline size_t AA_LA_NAME(_minloc)
 ( size_t n, AA_LA_TYPE *x, size_t incx ) {
