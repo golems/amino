@@ -138,12 +138,12 @@ static inline int aa_iremainder( int a, int b ) {
     return a % b;
 }
 
-/// Fortran modulo, Ada mod
+/// Mathematical modulo, Fortran modulo, Ada mod
 static inline double aa_fmodulo( double a, double b ) {
     return fmod(fmod(a, b) + b,  b);
 }
 
-/// Fortran mod, Ada rem
+/// Mathematical remainder, Fortran mod, Ada rem
 static inline double aa_fremainder( double a, double b ) {
     return fmod(a , b);
 }
@@ -283,7 +283,8 @@ static inline double aa_ang_norm_2pi( double an ) {
 
 /// normalize angle on interval (-pi,pi)
 static inline double aa_ang_norm_pi( double an ) {
-    return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
+    //return aa_fmodulo( an + M_PI, 2*M_PI ) - M_PI;
+    return remainder( an, 2*M_PI );
 }
 
 

@@ -247,6 +247,18 @@ void la1() {
                                  (double[]){1,1,1,0} ),
               3.4641,
               .01 );
+       afeq( aa_la_point_plane( 3, (double[]){2,0,0},
+                                 (double[]){1,0,0,0} ),
+              2,
+              .01 );
+        afeq( aa_la_point_plane( 3, (double[]){1,0,0},
+                                 (double[]){1,0,0,1} ),
+              2,
+              .01 );
+        afeq( aa_la_point_plane( 3, (double[]){1,0,0},
+                                 (double[]){1,0,0,-1} ),
+              0,
+              .01 );
     }
 }
 
@@ -568,7 +580,12 @@ void angle() {
     // norming
     afeq( aa_ang_norm_2pi( 3*M_PI ), M_PI, 0 );
     afeq( aa_ang_norm_2pi( -M_PI/2 ), 3*M_PI/2, .001 );
+    afeq( aa_ang_norm_2pi(2*M_PI + 3*M_PI ), M_PI, 0 );
+    afeq( aa_ang_norm_2pi(-2*M_PI + -M_PI/2 ), 3*M_PI/2, .001 );
+
     afeq( aa_ang_norm_pi( 3*M_PI/2 ), -M_PI/2, 0 );
+    afeq( aa_ang_norm_pi(2*M_PI + 3*M_PI/2 ), -M_PI/2, 0 );
+    afeq( aa_ang_norm_pi(-2*M_PI + 3*M_PI/2 ), -M_PI/2, 0 );
 
     // delta
     afeq( aa_ang_delta( aa_ang_deg2rad(128),
@@ -1538,6 +1555,27 @@ void misc() {
     AA_SWAP(a,b);
     assert( 1 == b );
     assert( 2 == a );
+
+    // modulo
+    afeq( aa_fremainder(90, 360), 90, 0 );
+    afeq( aa_fremainder(180, 360), 180, 0 );
+    afeq( aa_fremainder(270, 360), 270, 0 );
+    afeq( aa_fremainder(90 + 360, 360), 90, 0 );
+    afeq( aa_fremainder(180 + 360, 360), 180, 0 );
+    afeq( aa_fremainder(270 + 360, 360), 270, 0 );
+    afeq( aa_fremainder(90 - 360, 360), -270, 0 );
+    afeq( aa_fremainder(180 - 360, 360), -180, 0 );
+    afeq( aa_fremainder(270 - 360, 360), -90, 0 );
+
+    afeq( aa_fmodulo(90, 360), 90, 0 );
+    afeq( aa_fmodulo(180, 360), 180, 0 );
+    afeq( aa_fmodulo(270, 360), 270, 0 );
+    afeq( aa_fmodulo(90 + 360, 360), 90, 0 );
+    afeq( aa_fmodulo(180 + 360, 360), 180, 0 );
+    afeq( aa_fmodulo(270 + 360, 360), 270, 0 );
+    afeq( aa_fmodulo(90 - 360, 360), 90, 0 );
+    afeq( aa_fmodulo(180 - 360, 360), 180, 0 );
+    afeq( aa_fmodulo(270 - 360, 360), 270, 0 );
 }
 
 int main( int argc, char **argv ) {
