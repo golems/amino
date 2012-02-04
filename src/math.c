@@ -66,27 +66,11 @@ AA_API int aa_isfok( double x ) {
 }
 
 AA_API size_t aa_fminloc( size_t n, double *v ) {
-    size_t i_min = 0;
-    double x_min = v[0];
-    for( size_t i = 0; i < n; i ++ ) {
-        if( v[i] < x_min ) {
-            x_min = v[i];
-            i_min = i;
-        }
-    }
-    return i_min;
+    return aa_la_d_minloc( n, v, 1 );
 }
 
 AA_API size_t aa_fmaxloc( size_t n, double *v ) {
-    size_t i_max = 0;
-    double x_max = v[0];
-    for( size_t i = 0; i < n; i ++ ) {
-        if( v[i] > x_max ) {
-            x_max = v[i];
-            i_max = i;
-        }
-    }
-    return i_max;
+    return aa_la_d_maxloc( n, v, 1 );
 }
 
 AA_API double aa_frand() {

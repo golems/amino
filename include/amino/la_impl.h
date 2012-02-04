@@ -84,5 +84,57 @@ AA_API void AA_LA_NAME(_ccov)
   const AA_LA_TYPE *x,
   AA_LA_TYPE *E, size_t lde );
 
+
+/** Minimum location of vector x */
+static inline size_t AA_LA_NAME(_minloc)
+( size_t n, AA_LA_TYPE *x, size_t incx ) {
+    size_t imin = 0;
+    AA_LA_TYPE xmin = *x;
+    for( size_t i = 1; i < n; i ++ ) {
+        if( x[i*incx] < xmin ) {
+            imin = i;
+            xmin = x[i*incx];
+        }
+    }
+    return imin;
+}
+
+/** Minimum location of vector x */
+static inline AA_LA_TYPE AA_LA_NAME(_mat_max)
+( size_t m, size_t n, AA_LA_TYPE *A, size_t lda,
+  size_t *pi, size_t *pj ) {
+    size_t im = 0;
+    size_t jm = 0;
+    AA_LA_TYPE xm = *A;
+    for( size_t i = 0; i < m; i++) {
+        for( size_t j = 0; j < n; j++) {
+            if( AA_MATREF(A, lda, i, j ) > xm ) {
+                im = i;
+                jm = j;
+                xm =  AA_MATREF(A, lda, i, j );
+            }
+        }
+    }
+    if( pi ) *pi = im;
+    if( pj ) *pj = jm;
+    return xm;
+}
+
+
+/** Maximum location of vector x */
+static inline size_t AA_LA_NAME(_maxloc)
+( size_t n, AA_LA_TYPE *x, size_t incx ) {
+    size_t imax = 0;
+    AA_LA_TYPE xmax = *x;
+    for( size_t i = 1; i < n; i ++ ) {
+        if( x[i*incx] > xmax ) {
+            imax = i;
+            xmax = x[i*incx];
+        }
+    }
+    return imax;
+}
+
+
 #undef AA_LA_NAME
 #undef AA_LA_TYPE
