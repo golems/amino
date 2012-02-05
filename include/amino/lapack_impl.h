@@ -809,6 +809,61 @@ AA_API void AA_LAPACK_NAME(lascl)
   const int *M, const int *N, AA_LA_TYPE *A, const int *LDA,
   int *INFO );
 
+/**
+*
+* initializes an m-by-n matrix A to BETA on the diagonal and
+* ALPHA on the offdiagonals.
+*
+*
+* \param[in] UPLO
+*          UPLO is CHARACTER*1.
+*          Specifies the part of the matrix A to be set.
+*          - = 'U':      Upper triangular part is set; the strictly lower
+*                      triangular part of A is not changed.
+*          - = 'L':      Lower triangular part is set; the strictly upper
+*                      triangular part of A is not changed.
+*          - Otherwise:  All of the matrix A is set.
+*
+* \param[in] M
+*          M is INTEGER.
+*          The number of rows of the matrix A.  M >= 0.
+*
+* \param[in] N
+*          N is INTEGER.
+*          The number of columns of the matrix A.  N >= 0.
+*
+* \param[in] ALPHA
+*          ALPHA is DOUBLE PRECISION.
+*          The constant to which the offdiagonal elements are to be set.
+*
+* \param[in] BETA
+*          BETA is DOUBLE PRECISION.
+*          The constant to which the diagonal elements are to be set.
+*
+* \param[in,out] A
+*          A is DOUBLE PRECISION array, dimension (LDA,N).
+*          On exit, the leading m-by-n submatrix of A is set as follows:
+*          - if UPLO = 'U', A(i,j) = ALPHA, 1<=i<=j-1, 1<=j<=n,
+*          - if UPLO = 'L', A(i,j) = ALPHA, j+1<=i<=m, 1<=j<=n,
+*          - otherwise,     A(i,j) = ALPHA, 1<=i<=m, 1<=j<=n, i.ne.j,
+*          and, for all UPLO, A(i,i) = BETA, 1<=i<=min(m,n).
+*
+* \param[in] LDA
+*          LDA is INTEGER.
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+* \author Univ. of Tennessee
+* \author Univ. of California Berkeley
+* \author Univ. of Colorado Denver
+* \author NAG Ltd.
+*
+* \date November 2011
+*/
+AA_API void AA_LAPACK_NAME(laset)
+( const char UPLO[1], const int *M, const int *N,
+  const AA_LA_TYPE *ALPHA,
+  const AA_LA_TYPE *BETA,
+  AA_LA_TYPE *A, const int *LDA );
 
 #if AA_LA_TYPE == double
 /** Converts a DOUBLE PRECISION matrix, SA, to a SINGLE PRECISION
@@ -845,6 +900,7 @@ AA_API void dlag2s_ ( const int *M, const int *N,
                       double *A, const int *LDA,
                       float *SA, const int *LDSA,
                       const int *INFO );
+
 
 #endif // AA_LA_TYPE == double
 

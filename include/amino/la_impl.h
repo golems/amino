@@ -98,6 +98,23 @@ AA_API void AA_LA_NAME(_opt_hungarian)
   ssize_t *row_assign,
   ssize_t *iwork);
 
+/** Hungarian algorithm for rectangular distance matrix by padding with zeros.
+ *
+ * \param m rows of A
+ * \param n cols of A
+ * \param A distance matrix for minimization problem
+ * \param lda leading dimension of A
+ * \param[out] row_assign array of column assigned to row at index i,
+ *             length m. Unmatched elements have the value of -1.
+ * \param work work array of length max(m,n)**2
+ * \param iwork integer work array of length (3*max(m,n)**2 + 2*max(m,n))
+ */
+AA_API void AA_LA_NAME(_opt_hungarian_pad)
+( size_t m, size_t n, const AA_LA_TYPE *A, size_t lda,
+  ssize_t *row_assign,
+  AA_LA_TYPE *work, ssize_t *iwork);
+
+
 
 /** Converts max assignment to min assignment for Hungarian algorithm.
  * \param n rows and cols of A

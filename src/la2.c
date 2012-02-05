@@ -49,10 +49,12 @@
 #define AA_LA_TYPE double
 #define AA_LA_NAME( name ) aa_la_d ## name
 #define AA_CBLAS_NAME( name ) cblas_d ## name
+#define AA_CLA_NAME( name ) aa_cla_d ## name
 #include "la_impl.c"
 
 
 #define AA_LA_TYPE float
 #define AA_LA_NAME( name ) aa_la_s ## name
+#define AA_CLA_NAME( name ) aa_cla_s ## name
 #define AA_CBLAS_NAME( name ) cblas_s ## name
 #include "la_impl.c"

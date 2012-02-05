@@ -112,7 +112,18 @@ static inline void AA_CLA_NAME(lacpy)
   AA_LA_TYPE *B, int ldb ) {
     AA_LAPACK_NAME(lacpy) (&uplo, &m, &n,
                            A, &lda, B, &ldb );
+}
 
+
+static inline void AA_CLA_NAME(laset)
+( char UPLO, int M, int N,
+  AA_LA_TYPE ALPHA,
+  AA_LA_TYPE BETA,
+  AA_LA_TYPE *A, int LDA )
+{
+    AA_LAPACK_NAME(laset) (&UPLO, &M, &N,
+                           &ALPHA, &BETA,
+                           A, &LDA);
 }
 
 /** Norm-2

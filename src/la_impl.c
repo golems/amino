@@ -334,6 +334,36 @@ AA_API void AA_LA_NAME(_opt_hungarian_max2min)
     }
 }
 
+AA_API void AA_LA_NAME(_opt_hungarian_pad)
+( size_t m, size_t n, const AA_LA_TYPE *A, size_t lda,
+  ssize_t *row_assign,
+  AA_LA_TYPE *work, ssize_t *iwork)
+{
+    size_t p = AA_MAX(m,n);
+    size_t q = AA_MIN(m,n);
+
+    // copy A into work
+    AA_CLA_NAME(lacpy)( 0, (int)m, (int)n, A, (int)lda, work, (int)p );
+
+    // zero pad work
+    if( m > n ) {
+        AA_CLA_NAME(laset)(0, (int)p, (int)(p-q), 0, 0,
+                           work+p*m, (int)p );
+    } else if( m < n ) {
+        AA_CLA_NAME(laset)(0, (int)(p-q), (int)p, 0, 0,
+                           work+m, (int)p );
+    }
+
+    // run hungarian
+    AA_LA_NAME(_opt_hungarian)( p, work, p, iwork, iwork+p );
+
+    // mark invalid assignments with -1
+    for( size_t i = 0; i < m; i++ ) {
+        row_assign[i] = (iwork[i] < (int)n) ? iwork[i] : -1;
+    }
+}
+
 #undef AA_LA_NAME
 #undef AA_LA_TYPE
 #undef AA_CBLAS_NAME
+#undef AA_CLA_NAME
