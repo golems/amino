@@ -102,10 +102,12 @@ void AA_LA_NAME(_ccov)
 AA_API void AA_LA_NAME(_opt_hungarian)
 ( size_t n, AA_LA_TYPE *A, size_t lda,
   ssize_t *row_assign,
+  ssize_t *col_assign,
   ssize_t *iwork)
 {
-    ssize_t *col_assign = iwork;
-    ssize_t *mask = col_assign + n;
+    ssize_t *row_cover = iwork;
+    ssize_t *col_cover = row_cover + n;
+    ssize_t *mask = col_cover + n;
     ssize_t *path = mask + n*n;
 
     const AA_LA_TYPE max_cost =
@@ -113,8 +115,8 @@ AA_API void AA_LA_NAME(_opt_hungarian)
     //int mask[n*n];
     size_t zerorc[2] = {0};
     memset(mask,0,n*n*(sizeof(mask[0])));
-    memset(row_assign,0,n*sizeof(row_assign[0]));
-    memset(col_assign,0,n*sizeof(col_assign[0]));
+    memset(row_cover,0,n*sizeof(row_cover[0]));
+    memset(col_cover,0,n*sizeof(col_cover[0]));
 
 
     // -- Step 1 ----
@@ -143,18 +145,18 @@ AA_API void AA_LA_NAME(_opt_hungarian)
     for( size_t j = 0; j < n; j ++ ) {
         for( size_t i = 0; i < n; i++ ) {
             if( 0 >= AA_MATREF(A,lda,i,j) &&
-                0 == row_assign[i] &&
-                0 == col_assign[j] )
+                0 == row_cover[i] &&
+                0 == col_cover[j] )
             {
-                row_assign[i] = col_assign[j] = 1;
+                row_cover[i] = col_cover[j] = 1;
                 AA_MATREF(mask,n,i,j) = 1;
                 break;
             }
         }
     }
 
-    memset(row_assign,0,n*sizeof(row_assign[0]));
-    memset(col_assign,0,n*sizeof(col_assign[0]));
+    memset(row_cover,0,n*sizeof(row_cover[0]));
+    memset(col_cover,0,n*sizeof(col_cover[0]));
 
     int step = 3;
     do {
@@ -166,14 +168,14 @@ AA_API void AA_LA_NAME(_opt_hungarian)
                 for( size_t i = 0; i < n; i ++ ) {
                     if( 1 == AA_MATREF(mask,n,i,j) ) {
                         assert( 0 >= AA_MATREF(A,lda,i,j) );
-                        col_assign[j] = 1;
+                        col_cover[j] = 1;
                     }
                 }
             }
             { //check if all columns covered
                 size_t count = 0;
                 for (size_t j = 0; j < n; j++ ) {
-                    if( col_assign[j] ) count++;
+                    if( col_cover[j] ) count++;
                 }
                 if( count >= n )
                     step = 7;
@@ -192,15 +194,15 @@ AA_API void AA_LA_NAME(_opt_hungarian)
                 for( size_t j = 0; j < n; j++ ) {
                     for( size_t i = 0;  i < n; i++ ) {
                         if( 0 >= AA_MATREF(A, lda, i, j) &&
-                            0 == row_assign[i] &&
-                            0 == col_assign[j] )
+                            0 == row_cover[i] &&
+                            0 == col_cover[j] )
                         {
                             // prime the found uncovered zero
                             AA_MATREF(mask,n,i,j) = 2;
                             for( size_t k = 0; k < n; k ++ ) {
                                 if( 1 == AA_MATREF( mask, n, i, k ) ) {
-                                    row_assign[i] = 1; // cover star's row
-                                    col_assign[k] = 0; // uncover star's column
+                                    row_cover[i] = 1; // cover star's row
+                                    col_cover[k] = 0; // uncover star's column
                                     goto STEP4_BREAK2; // break from nested loop
                                 }
                             }
@@ -274,8 +276,8 @@ AA_API void AA_LA_NAME(_opt_hungarian)
                 //dump_imat( mask, n, n );
             }
             // clear covers
-            memset(row_assign,0,n*sizeof(row_assign[0]));
-            memset(col_assign,0,n*sizeof(col_assign[0]));
+            memset(row_cover,0,n*sizeof(row_cover[0]));
+            memset(col_cover,0,n*sizeof(col_cover[0]));
             // erase primes
             for( size_t j = 0; j < n; j ++ ) {
                 for( size_t i = 0; i < n; i ++ ) {
@@ -291,8 +293,8 @@ AA_API void AA_LA_NAME(_opt_hungarian)
             AA_LA_TYPE minval = max_cost;
             for( size_t j = 0; j < n; j ++ ) {
                 for( size_t i = 0; i < n; i ++ ) {
-                    if( 0 == row_assign[i] &&
-                        0 == col_assign[j] &&
+                    if( 0 == row_cover[i] &&
+                        0 == col_cover[j] &&
                         AA_MATREF(A,lda,i,j) < minval ) {
                         minval = AA_MATREF(A,lda,i,j);
                     }
@@ -302,9 +304,9 @@ AA_API void AA_LA_NAME(_opt_hungarian)
             // subtract from every elemented of uncovered columns
             for( size_t j = 0; j < n; j ++ ) {
                 for( size_t i = 0; i < n; i ++ ) {
-                    if( 1 == row_assign[i] )
+                    if( 1 == row_cover[i] )
                         AA_MATREF(A,lda,i,j) += minval;
-                    if( 0 == col_assign[j] )
+                    if( 0 == col_cover[j] )
                         AA_MATREF(A,lda,i,j) -= minval;
                 }
             }
@@ -317,18 +319,20 @@ AA_API void AA_LA_NAME(_opt_hungarian)
     for( size_t j = 0; j < n; j ++ ) {
         for( size_t i = 0; i < n; i ++ ) {
             if( 1 == AA_MATREF(mask,n,i,j) ) {
-                row_assign[i] = (int)j;
-                col_assign[j] = (int)i;
+                if( row_assign )
+                    row_assign[i] = (int)j;
+                if( col_assign )
+                    col_assign[j] = (int)i;
             }
         }
     }
 }
 
 AA_API void AA_LA_NAME(_opt_hungarian_max2min)
-( size_t n, AA_LA_TYPE *A, size_t lda ) {
-    AA_LA_TYPE max = AA_LA_NAME(_mat_max)(n,n,A,lda,NULL,NULL);
-    for( size_t i = 0; i < n; i ++ ) {
-        for( size_t j = 0; j < n; j ++ ) {
+( size_t m, size_t n, AA_LA_TYPE *A, size_t lda ) {
+    AA_LA_TYPE max = AA_LA_NAME(_mat_max)(m,n,A,lda,NULL,NULL);
+    for( size_t j = 0; j < n; j ++ ) {
+        for( size_t i = 0; i < m; i ++ ) {
             AA_MATREF(A,lda,i,j) = max - AA_MATREF(A,lda,i,j);
         }
     }
@@ -337,6 +341,7 @@ AA_API void AA_LA_NAME(_opt_hungarian_max2min)
 AA_API void AA_LA_NAME(_opt_hungarian_pad)
 ( size_t m, size_t n, const AA_LA_TYPE *A, size_t lda,
   ssize_t *row_assign,
+  ssize_t *col_assign,
   AA_LA_TYPE *work, ssize_t *iwork)
 {
     size_t p = AA_MAX(m,n);
@@ -355,11 +360,14 @@ AA_API void AA_LA_NAME(_opt_hungarian_pad)
     }
 
     // run hungarian
-    AA_LA_NAME(_opt_hungarian)( p, work, p, iwork, iwork+p );
+    AA_LA_NAME(_opt_hungarian)( p, work, p, iwork, iwork+p, iwork+2*p );
 
     // mark invalid assignments with -1
-    for( size_t i = 0; i < m; i++ ) {
-        row_assign[i] = (iwork[i] < (int)n) ? iwork[i] : -1;
+    for( size_t i = 0; i < p; i++ ) {
+        if( row_assign && i < m )
+            row_assign[i] = (iwork[i] < (int)n) ? iwork[i] : -1;
+        if( col_assign && i < n )
+            col_assign[i] = ((iwork+p)[i] < (int)m) ? (iwork+p)[i] : -1;
     }
 }
 

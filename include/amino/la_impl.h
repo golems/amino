@@ -91,11 +91,12 @@ AA_API void AA_LA_NAME(_ccov)
  * \param A cost matrix, column major, destroyed on exit
  * \param lda leading dimension of A
  * \param row_assign array of column assigned to row at index i
- * \param iwork array of size 3*n*n+n
+ * \param iwork array of size 3*n*n +2*n
  */
 AA_API void AA_LA_NAME(_opt_hungarian)
 ( size_t n, AA_LA_TYPE *A, size_t lda,
   ssize_t *row_assign,
+  ssize_t *col_assign,
   ssize_t *iwork);
 
 /** Hungarian algorithm for rectangular distance matrix by padding with zeros.
@@ -107,11 +108,12 @@ AA_API void AA_LA_NAME(_opt_hungarian)
  * \param[out] row_assign array of column assigned to row at index i,
  *             length m. Unmatched elements have the value of -1.
  * \param work work array of length max(m,n)**2
- * \param iwork integer work array of length (3*max(m,n)**2 + 2*max(m,n))
+ * \param iwork integer work array of length (3*max(m,n)**2 + 4*max(m,n))
  */
 AA_API void AA_LA_NAME(_opt_hungarian_pad)
 ( size_t m, size_t n, const AA_LA_TYPE *A, size_t lda,
   ssize_t *row_assign,
+  ssize_t *col_assign,
   AA_LA_TYPE *work, ssize_t *iwork);
 
 
@@ -123,7 +125,7 @@ AA_API void AA_LA_NAME(_opt_hungarian_pad)
  * \param lda leading dimension of A
  */
 AA_API void AA_LA_NAME(_opt_hungarian_max2min)
-( size_t n, AA_LA_TYPE *A, size_t lda );
+( size_t m, size_t n, AA_LA_TYPE *A, size_t lda );
 
 /** Minimum location of vector x */
 static inline size_t AA_LA_NAME(_minloc)

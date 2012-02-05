@@ -571,69 +571,72 @@ void la2_0() {
 
 }
 
+
+void la2_hungarian_helper(size_t m, size_t n, double *A, size_t lda,
+                          double *C, size_t ldc,
+                          double expected ) {
+    size_t p = AA_MAX(m,n);
+
+    ssize_t ir[m], jr[n];
+
+    double A_tmp[m*n];
+
+    for( size_t k = 0; k < 4; k++ ) {
+        int use_ir = k&1;
+        int use_jr = k&2;
+        if( n == m ) {
+            ssize_t iwork[3*p*p + 2*p];
+            aa_cla_dlacpy( 0, (int)m, (int)n, A, (int)lda, A_tmp, (int)m );
+            aa_la_d_opt_hungarian( p, A_tmp, m,
+                                   use_ir ? ir : NULL,
+                                   use_jr ? jr : NULL,
+                                   iwork );
+        } else {
+            ssize_t iwork[3*p*p + 4*p];
+            double work[p*p];
+            aa_la_d_opt_hungarian_pad( m, n, A, lda,
+                                       use_ir ? ir : NULL,
+                                       use_jr ? jr : NULL,
+                                       work,
+                                       iwork );
+        }
+
+        double accum[2] = {0,0};
+        for( size_t i = 0; i < p; i ++ ) {
+            if( use_ir && i < m && ir[i] >= 0 )
+                accum[0] += AA_MATREF(C,ldc,i,(size_t)ir[i]);
+            if( use_jr && i < n && jr[i] >= 0)
+                accum[1] += AA_MATREF(C,ldc,(size_t)jr[i], i);
+        }
+        if( use_ir )
+            afeq(accum[0],expected,0);
+        if( use_jr )
+            afeq(accum[1],expected,0);
+    }
+}
+
 void la2_hungarian() {
-    ssize_t iwork[3*10*10+2*10];
-    double work[10*10];
     {
         double A[] = {4,4,3, 2,3,1, 8,7,6};
-        double Ap[9];
-        memcpy(Ap, A, sizeof(Ap));
-        ssize_t ir[3];
-        aa_la_d_opt_hungarian( 3, A, 3, ir, iwork );
-        double accum = 0;
-        for( size_t i = 0; i < 3; i ++ ) {
-            accum += AA_MATREF(Ap,3,i,(size_t)ir[i]);
-        }
-        afeq( accum, 12, 0 );
+        la2_hungarian_helper( 3, 3, A, 3,
+                              A, 3,
+                              12 );
 
     }
     {
         // test with padding
         double A[] = {4,4,3,0, 10,18,12,0,  2,3,1,0, 8,7,6,0};
         double B[] = {4,4,3, 10,18,12,  2,3,1, 8,7,6};
-        double Ap[16];
-        memcpy(Ap, A, sizeof(Ap));
-        ssize_t ir[4];
-        aa_la_d_opt_hungarian( 4, A, 4, ir, iwork );
-        double accum = 0;
-        for( size_t i = 0; i < 4; i ++ ) {
-            accum += AA_MATREF(Ap,4,i,(size_t)ir[i]);
-        }
-        afeq( accum, 12, 0 );
 
-        // pad function and LDA
-        for( size_t i = 0; i < sizeof(work)/sizeof(work[0]); i++) {
-            work[i]=i;
-        }
-        aa_la_d_opt_hungarian_pad( 3, 4, A, 4, ir, work, iwork );
-        accum = 0;
-        for( size_t i = 0; i < 3; i ++ ) {
-            accum += AA_MATREF(Ap,4,i,(size_t)ir[i]);
-        }
-        afeq( accum, 12, 0 );
-
-        // pad function and no LDA
-        aa_la_d_opt_hungarian_pad( 3, 4, B, 3, ir, work, iwork );
-        accum = 0;
-        for( size_t i = 0; i < 3; i ++ ) {
-            accum += AA_MATREF(Ap,4,i,(size_t)ir[i]);
-        }
-        afeq( accum, 12, 0 );
+        la2_hungarian_helper( 4, 4, A, 4, A, 4, 12 );
+        la2_hungarian_helper( 3, 4, A, 4, A, 4, 12 );
+        la2_hungarian_helper( 3, 4, B, 3, B, 3, 12 );
 
     }
 
-
     {
         double A[] = {1,2,3, 2,4,6, 3,6,9};
-        double Ap[9];
-        memcpy(Ap, A, sizeof(Ap));
-        ssize_t ir[3];
-        aa_la_d_opt_hungarian( 3, A, 3, ir, iwork );
-        double accum = 0;
-        for( size_t i = 0; i < 3; i ++ ) {
-            accum += AA_MATREF(Ap,3,i,(size_t)ir[i]);
-        }
-        afeq( accum, 3+3+4, 0 );
+        la2_hungarian_helper( 3, 3, A, 3, A, 3, 3+3+4 );
 
     }
     {
@@ -642,38 +645,25 @@ void la2_hungarian() {
                       42,5,88,14,34,
                       55,77,89,1,41,
                       97,22,7,63,92};
-        double Ap[25];
-        memcpy(Ap, A, sizeof(Ap));
-        ssize_t ir[5];
-        aa_la_d_opt_hungarian( 5, A, 5, ir, iwork );
-        double accum = 0;
-        for( size_t i = 0; i < 5; i ++ ) {
-            accum += AA_MATREF(Ap,5,i,(size_t)ir[i]);
-        }
-        afeq( accum, 83, 0 );
+        la2_hungarian_helper( 5, 5, A, 5, A, 5, 83 );
 
     }
     {
         double A[] = {62, 75, 80, 78, 90, 65,
                       75, 80, 75, 82, 85, 75,
                       80, 82, 81, 84, 85, 80,
+                      0,   0,  0,  0,  0,  0,
                       93, 85, 98, 80, 80, 75,
                       95, 71, 90, 50, 85, 68,
                       97, 97, 97, 98, 99, 96};
 
-        double Ap[6*6];
+        double Ap[6*7];
         memcpy(Ap, A, sizeof(Ap));
-        aa_la_d_opt_hungarian_max2min( 6, A, 6 );
-        ssize_t ir[6];
-        aa_la_d_opt_hungarian( 6, A, 6, ir, iwork );
-        double accum = 0;
-        for( size_t i = 0; i < 6; i ++ ) {
-            accum += AA_MATREF(Ap,6,i,(size_t)ir[i]);
-        }
-        afeq( accum, 543, 0 );
+        aa_la_d_opt_hungarian_max2min( 6, 7, Ap, 6 );
+        la2_hungarian_helper( 6, 7, Ap, 6,
+                              A, 6, 543 );
 
     }
-
 }
 
 void angle() {
