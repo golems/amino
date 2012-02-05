@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2011, Georgia Tech Research Corporation
+ * Copyright (c) 2011-2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,6 +40,7 @@
  *
  */
 
+#include "amino/def.h"
 
 /** Row Factor.
  *
@@ -213,9 +214,4 @@ static inline int AA_CLA_NAME(lag2d)
 
 #endif // AA_LA_TYPE == float
 
-
-#undef AA_LA_TYPE
-#undef AA_CLA_NAME
-#undef AA_LAPACK_NAME
-#undef AA_CBLAS_NAME
-#undef AA_LAPACK_PREFIX_STR
+#include "amino/undef.h"

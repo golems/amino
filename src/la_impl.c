@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2011, Georgia Tech Research Corporation
+ * Copyright (c) 2011-2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,6 +40,7 @@
  *
  */
 
+#include "amino/def.h"
 
 void AA_LA_NAME(_transpose) ( size_t m, size_t n,
                               const AA_LA_TYPE *A, size_t lda,
@@ -371,7 +372,4 @@ AA_API void AA_LA_NAME(_opt_hungarian_pad)
     }
 }
 
-#undef AA_LA_NAME
-#undef AA_LA_TYPE
-#undef AA_CBLAS_NAME
-#undef AA_CLA_NAME
+#include "amino/undef.h"

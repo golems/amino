@@ -1,7 +1,5 @@
-/* -*- mode: C; c-basic-offset: 4 -*- */
-/* ex: set shiftwidth=4 tabstop=4 expandtab: */
-/*
- * Copyright (c) 2011-2012, Georgia Tech Research Corporation
+#if 0
+/* Copyright (c) 2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -39,25 +37,15 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef AA_CLAPACK_H
-#define AA_CLAPACK_H
+#endif
 
+#undef AA_LA_TYPE
+#undef AA_LA_TYPE_DOUBLE
+#undef AA_LA_TYPE_FLOAT
+#undef AA_CBLAS_NAME
+#undef AA_LAPACK_NAME
+#undef AA_LAPACK_PREFIX_STR
+#undef AA_CLA_NAME
+#undef AA_LA_NAME
+#undef AA_LA_FDEC
 
-static inline int aa_la_ilaenv( int ispec,
-                                const char *name, const char *opts,
-                                int n1, int n2, int n3, int n4 ) {
-    int nl = (int)strlen(name);
-    int ol = (int)strlen(opts);
-    return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );
-}
-
-#define AA_LA_TYPE_DOUBLE
-#include "clapack_impl.h"
-
-
-#define AA_LA_TYPE_FLOAT
-#include "clapack_impl.h"
-
-
-
-#endif // AA_CLAPACK_H

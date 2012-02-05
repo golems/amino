@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2011, Georgia Tech Research Corporation
+ * Copyright (c) 2011-2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -41,7 +41,7 @@
  */
 
 
-
+#include "amino/def.h"
 
 /** Transpose A into B.
  *
@@ -178,5 +178,6 @@ static inline size_t AA_LA_NAME(_maxloc)
 }
 
 
-#undef AA_LA_NAME
-#undef AA_LA_TYPE
+
+
+#include "amino/undef.h"

@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2008-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2008-2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -57,16 +57,12 @@
 
 
 /// type for operations
-#define AA_LA_TYPE double
-/// name mangling
-#define AA_LAPACK_NAME( name ) d ## name ## _
+#define AA_LA_TYPE_DOUBLE
 #include "lapack_impl.h"
 
 
 /// type for operations
-#define AA_LA_TYPE float
-/// name mangling
-#define AA_LAPACK_NAME( name ) s ## name ## _
+#define AA_LA_TYPE_FLOAT
 #include "lapack_impl.h"
 
 

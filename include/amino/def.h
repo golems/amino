@@ -1,7 +1,5 @@
-/* -*- mode: C; c-basic-offset: 4 -*- */
-/* ex: set shiftwidth=4 tabstop=4 expandtab: */
-/*
- * Copyright (c) 2011-2012, Georgia Tech Research Corporation
+#if 0
+/* Copyright (c) 2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -39,25 +37,34 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef AA_CLAPACK_H
-#define AA_CLAPACK_H
+#endif
 
+#if defined AA_LA_TYPE_DOUBLE
 
-static inline int aa_la_ilaenv( int ispec,
-                                const char *name, const char *opts,
-                                int n1, int n2, int n3, int n4 ) {
-    int nl = (int)strlen(name);
-    int ol = (int)strlen(opts);
-    return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );
-}
+#define AA_LA_TYPE double
+#define AA_CBLAS_NAME( name ) cblas_d ## name
+#define AA_LAPACK_NAME( name ) d ## name ## _
+#define AA_LAPACK_PREFIX_STR "D"
+#define AA_CLA_NAME( name ) aa_cla_d ## name
+#define AA_LA_NAME( name ) aa_la_d ## name
+#define AA_LA_FDEC( rettype, name, ... )                                \
+    AA_API rettype aa_la_d ## name ## _( __VA_ARGS__ );                 \
+    static rettype (* const aa_la_d ## name)( __VA_ARGS__ ) = aa_la_d ## name ## _;
 
-#define AA_LA_TYPE_DOUBLE
-#include "clapack_impl.h"
+#elif defined AA_LA_TYPE_FLOAT
 
+#define AA_LA_TYPE float
+#define AA_CBLAS_NAME( name ) cblas_s ## name
+#define AA_LAPACK_NAME( name ) s ## name ## _
+#define AA_LAPACK_PREFIX_STR "S"
+#define AA_CLA_NAME( name ) aa_cla_s ## name
+#define AA_LA_NAME( name ) aa_la_s ## name
+#define AA_LA_FDEC( rettype, name, ... )                                \
+    AA_API rettype aa_la_s ## name ## _( __VA_ARGS__ );                 \
+    static rettype (* const aa_la_s ## name)( __VA_ARGS__ ) = aa_la_s ## name ## _;
 
-#define AA_LA_TYPE_FLOAT
-#include "clapack_impl.h"
+#else
 
+#error "Need to define AA_LA_TYPE_?"
 
-
-#endif // AA_CLAPACK_H
+#endif
