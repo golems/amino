@@ -42,6 +42,9 @@
 #ifndef AA_LA_H
 #define AA_LA_H
 
+#define AA_FORT_MANGLE( sym ) sym ## _
+#define AA_FORT_MOD_MANGLE( mod, sym )  __ ## mod ## _MOD_ ## sym
+
 /// type for operations
 #define AA_LA_TYPE_DOUBLE
 /// name mangling

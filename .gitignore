@@ -38,3 +38,6 @@
 /la-doc.c
 /lapack-doc.c
 /Makefile
+/amino_la.mod
+/core
+/la_mod.f90

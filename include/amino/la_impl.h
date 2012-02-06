@@ -52,7 +52,7 @@
  * \param lda leading dimension of A
  * \param ldb leading dimension of B
  */
-AA_API void AA_LA_NAME(_transpose)
+AA_API void AA_LA_NAME(transpose)
 ( size_t m, size_t n,
   const AA_LA_TYPE *A, size_t lda,
   AA_LA_TYPE *B, size_t ldb );
@@ -64,10 +64,13 @@ AA_API void AA_LA_NAME(_transpose)
  * \param[in] A source matrix, m*n
  * \param[out] x destination vector for mean, length m
  */
-AA_API void AA_LA_NAME(_cmean)
-( size_t m, size_t n,
-  const AA_LA_TYPE *A, size_t lda,
-  AA_LA_TYPE *x );
+AA_LA_FDEC(AA_LA_TYPE, colmean, size_t m, size_t n,
+           const AA_LA_TYPE *A, size_t lda,
+           AA_LA_TYPE *x);
+/* AA_API void AA_LA_NAME(_cmean) */
+/* ( size_t m, size_t n, */
+/*   const AA_LA_TYPE *A, size_t lda, */
+/*   AA_LA_TYPE *x ); */
 
 /** Covariance of columns of A.
  * \param m rows of A
@@ -78,11 +81,17 @@ AA_API void AA_LA_NAME(_cmean)
  * \param[out] E covariance of columns of A, m*m
  * \param lde leading dimension of E
  */
-AA_API void AA_LA_NAME(_ccov)
-( size_t m, size_t n,
-  const AA_LA_TYPE *A, size_t lda,
-  const AA_LA_TYPE *x,
-  AA_LA_TYPE *E, size_t lde );
+
+AA_LA_FDEC(AA_LA_TYPE, colcov, size_t m, size_t n,
+           const AA_LA_TYPE *A, size_t lda,
+           const AA_LA_TYPE *x,
+           AA_LA_TYPE *E, size_t lde);
+
+/* AA_API void AA_LA_NAME(_ccov) */
+/* ( size_t m, size_t n, */
+/*   const AA_LA_TYPE *A, size_t lda, */
+/*   const AA_LA_TYPE *x, */
+/*   AA_LA_TYPE *E, size_t lde ); */
 
 
 
@@ -93,7 +102,7 @@ AA_API void AA_LA_NAME(_ccov)
  * \param row_assign array of column assigned to row at index i
  * \param iwork array of size 3*n*n +2*n
  */
-AA_API void AA_LA_NAME(_opt_hungarian)
+AA_API void AA_LA_NAME(opt_hungarian)
 ( size_t n, AA_LA_TYPE *A, size_t lda,
   ssize_t *row_assign,
   ssize_t *col_assign,
@@ -110,7 +119,7 @@ AA_API void AA_LA_NAME(_opt_hungarian)
  * \param work work array of length max(m,n)**2
  * \param iwork integer work array of length (3*max(m,n)**2 + 4*max(m,n))
  */
-AA_API void AA_LA_NAME(_opt_hungarian_pad)
+AA_API void AA_LA_NAME(opt_hungarian_pad)
 ( size_t m, size_t n, const AA_LA_TYPE *A, size_t lda,
   ssize_t *row_assign,
   ssize_t *col_assign,
@@ -124,11 +133,11 @@ AA_API void AA_LA_NAME(_opt_hungarian_pad)
  *        converted to matrix for min proble on exit
  * \param lda leading dimension of A
  */
-AA_API void AA_LA_NAME(_opt_hungarian_max2min)
+AA_API void AA_LA_NAME(opt_hungarian_max2min)
 ( size_t m, size_t n, AA_LA_TYPE *A, size_t lda );
 
 /** Minimum location of vector x */
-static inline size_t AA_LA_NAME(_minloc)
+static inline size_t AA_LA_NAME(minloc)
 ( size_t n, AA_LA_TYPE *x, size_t incx ) {
     size_t imin = 0;
     AA_LA_TYPE xmin = *x;
@@ -142,7 +151,7 @@ static inline size_t AA_LA_NAME(_minloc)
 }
 
 /** Minimum location of vector x */
-static inline AA_LA_TYPE AA_LA_NAME(_mat_max)
+static inline AA_LA_TYPE AA_LA_NAME(mat_max)
 ( size_t m, size_t n, AA_LA_TYPE *A, size_t lda,
   size_t *pi, size_t *pj ) {
     size_t im = 0;
@@ -164,7 +173,7 @@ static inline AA_LA_TYPE AA_LA_NAME(_mat_max)
 
 
 /** Maximum location of vector x */
-static inline size_t AA_LA_NAME(_maxloc)
+static inline size_t AA_LA_NAME(maxloc)
 ( size_t n, AA_LA_TYPE *x, size_t incx ) {
     size_t imax = 0;
     AA_LA_TYPE xmax = *x;
@@ -177,6 +186,7 @@ static inline size_t AA_LA_NAME(_maxloc)
     return imax;
 }
 
+AA_LA_FDEC(AA_LA_TYPE, angle, size_t n, const AA_LA_TYPE *p, const AA_LA_TYPE *q)
 
 
 

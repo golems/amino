@@ -205,13 +205,13 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
 }
 
 void aa_stat_vmean( size_t m, size_t n, const double *X, double *mu) {
-    aa_la_d_cmean( m, n, X, m, mu );
+    aa_la_d_colmean( m, n, X, m, mu );
 }
 
 void aa_stat_vmean_cov( size_t m, size_t n, const double *X,
                         double *mu, double *E) {
     aa_stat_vmean(m,n,X,mu);
-    aa_la_d_ccov( m, n, X, m, mu, E, m );
+    aa_la_d_colcov( m, n, X, m, mu, E, m );
 }
 
 double aa_stat_mahalanobis( size_t m, const double *x,

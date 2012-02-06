@@ -46,10 +46,12 @@
 #define AA_LAPACK_NAME( name ) d ## name ## _
 #define AA_LAPACK_PREFIX_STR "D"
 #define AA_CLA_NAME( name ) aa_cla_d ## name
-#define AA_LA_NAME( name ) aa_la_d ## name
-#define AA_LA_FDEC( rettype, name, ... )                                \
-    AA_API rettype aa_la_d ## name ## _( __VA_ARGS__ );                 \
-    static rettype (* const aa_la_d ## name)( __VA_ARGS__ ) = aa_la_d ## name ## _;
+#define AA_LA_NAME( name ) aa_la_d_ ## name
+
+#define AA_LA_FTYPE Real(8)
+#define AA_LA_FMOD(name) aa_la_mod_d_ ## name
+#define AA_LA_FMOD_C(name) AA_LA_FMOD( name ## _c )
+#define AA_LA_FMOD_F(name) AA_FORT_MOD_MANGLE(amino_la, aa_la_mod_d_ ## name ## _c)
 
 #elif defined AA_LA_TYPE_FLOAT
 
@@ -58,13 +60,37 @@
 #define AA_LAPACK_NAME( name ) s ## name ## _
 #define AA_LAPACK_PREFIX_STR "S"
 #define AA_CLA_NAME( name ) aa_cla_s ## name
-#define AA_LA_NAME( name ) aa_la_s ## name
-#define AA_LA_FDEC( rettype, name, ... )                                \
-    AA_API rettype aa_la_s ## name ## _( __VA_ARGS__ );                 \
-    static rettype (* const aa_la_s ## name)( __VA_ARGS__ ) = aa_la_s ## name ## _;
+#define AA_LA_NAME( name ) aa_la_s_ ## name
+
+#define AA_LA_FTYPE Real(4)
+#define AA_LA_FMOD(name) aa_la_mod_s_ ## name
+#define AA_LA_FMOD_C(name)  AA_LA_FMOD( name ## _c )
+#define AA_LA_FMOD_F(name) AA_FORT_MOD_MANGLE(amino_la, aa_la_mod_s_ ## name ## _c)
 
 #else
 
 #error "Need to define AA_LA_TYPE_?"
 
 #endif
+
+
+#if 0
+/* Do some magical name mangling to bind the fortran module function
+ * to a C symbol.  First, we declare a C function of the mangled
+ * fortran name.  Then we declare a C static const function pointer
+ * with a slightly less mangled name and assign it the value of the
+ * fortran function.  C callers can then use this const function
+ * pointer rather than the ugly(er) fortran name.
+ */
+#endif
+
+#define AA_LA_FDEC( rettype, name, ... )                            \
+    /* first the fortran function */                                \
+    AA_API rettype                                                  \
+    AA_LA_FMOD_F(name)                                              \
+    ( __VA_ARGS__ );                                                \
+    /* now the C function pointer that aliases it */                \
+    static rettype (* const AA_LA_NAME(name) )( __VA_ARGS__ ) =     \
+        AA_LA_FMOD_F(name);
+
+

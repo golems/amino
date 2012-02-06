@@ -1,5 +1,6 @@
 INCLUDES = -I$(top_srcdir)/include
-EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/la_impl.c
+EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/la_impl.c       \
+             src/la_mod.F90 src/la_float.F90
 
 include_HEADERS = include/amino.h
 
@@ -22,7 +23,9 @@ pkginclude_HEADERS = 	                \
 	include/amino/type.h            \
 	include/amino/unit.h            \
 	include/amino/cv.h              \
-	include/amino/validate.h
+	include/amino/validate.h        \
+	include/amino/def.h             \
+	include/amino/undef.h
 
 TESTS = aa_test
 
@@ -30,7 +33,23 @@ lib_LTLIBRARIES = libamino.la
 
 bin_PROGRAMS = aa_test
 
-libamino_la_SOURCES = src/mem.c src/la.c src/la2.c src/tf.c src/math.c src/plot.c src/debug.c src/kin.c src/mac/mac.f src/validate.c src/time.c src/io.c src/are.c src/sigsys.c src/cv.c
+libamino_la_SOURCES =                  \
+	src/mem.c                      \
+	src/la.c                       \
+	src/la2.c                      \
+	src/tf.c                       \
+	src/math.c                     \
+	src/plot.c                     \
+	src/debug.c                    \
+	src/kin.c                      \
+	src/mac/mac.f                  \
+	src/validate.c                 \
+	src/time.c                     \
+	src/io.c                       \
+	src/are.c                      \
+	src/sigsys.c                   \
+	src/cv.c                       \
+	la_mod.f90
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]
@@ -51,9 +70,23 @@ lapack-doc.c: doc/lapack-doc.c
 la-doc.c: doc/la-doc.c
 	$(CPP) $(INCLUDES) -CC $< -o $@
 
+la_mod.f90: src/la_mod.F90 src/la_float.F90 include/amino/def.h include/amino/undef.h
+	$(CPP) $(INCLUDES) -x c -CC $< -o $@
+
 EXTRA_DX = clapack-doc.c lapack-doc.c la-doc.c
 
 clean-local:
-	-rm -rf debian/tmp debian/files debian/libamino? debian/libamino-dev debian/*.log debian/*.substvars texput.log debian/*.debhelper debian/usr/* debian/DEBIAN/* $(EXTRA_DX)
+	-rm -rf debian/tmp                  \
+		debian/files                \
+		debian/libamino?            \
+		debian/libamino-dev         \
+		debian/*.log                \
+		debian/*.substvars          \
+		debian/*.debhelper          \
+		debian/usr/*                \
+		debian/DEBIAN/*             \
+		texput.log                  \
+		$(EXTRA_DX)                 \
+		*.mod
 
 include aminclude.am
