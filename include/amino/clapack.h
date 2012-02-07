@@ -51,11 +51,11 @@ static inline int aa_la_ilaenv( int ispec,
     return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );
 }
 
-#define AA_LA_TYPE_DOUBLE
+#define AA_TYPE_DOUBLE
 #include "clapack_impl.h"
 
 
-#define AA_LA_TYPE_FLOAT
+#define AA_TYPE_FLOAT
 #include "clapack_impl.h"
 
 

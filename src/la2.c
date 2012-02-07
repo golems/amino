@@ -46,9 +46,9 @@
 
 #include "amino.h"
 
-#define AA_LA_TYPE_DOUBLE
+#define AA_TYPE_DOUBLE
 #include "la_impl.c"
 
 
-#define AA_LA_TYPE_FLOAT
+#define AA_TYPE_FLOAT
 #include "la_impl.c"

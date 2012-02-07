@@ -42,17 +42,13 @@
 #ifndef AA_LA_H
 #define AA_LA_H
 
-#define AA_FORT_MANGLE( sym ) sym ## _
-#define AA_FORT_MOD_MANGLE( mod, sym )  __ ## mod ## _MOD_ ## sym
-
 /// type for operations
-#define AA_LA_TYPE_DOUBLE
+#define AA_TYPE_DOUBLE
 /// name mangling
 #include "la_impl.h"
 
-
 /// type for operations
-#define AA_LA_TYPE_FLOAT
+#define AA_TYPE_FLOAT
 /// name mangling
 #include "la_impl.h"
 

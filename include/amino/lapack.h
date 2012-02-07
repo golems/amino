@@ -57,12 +57,12 @@
 
 
 /// type for operations
-#define AA_LA_TYPE_DOUBLE
+#define AA_TYPE_DOUBLE
 #include "lapack_impl.h"
 
 
 /// type for operations
-#define AA_LA_TYPE_FLOAT
+#define AA_TYPE_FLOAT
 #include "lapack_impl.h"
 
 

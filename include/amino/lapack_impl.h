@@ -69,8 +69,8 @@
  *             argument, info > 0 for singular matrix
  */
 AA_API void AA_LAPACK_NAME(getri)
-( const int *N, AA_LA_TYPE *A, const int *LDA,
-  const int *IPIV, AA_LA_TYPE *WORK, const int *LWORK, int *INFO );
+( const int *N, AA_TYPE *A, const int *LDA,
+  const int *IPIV, AA_TYPE *WORK, const int *LWORK, int *INFO );
 
 /** Computes an LU factorization of a general M-by-N matrix A
  *  using partial pivoting with row interchanges.
@@ -111,7 +111,7 @@ AA_API void AA_LAPACK_NAME(getri)
  *                to solve a system of equations.
  */
 AA_API void AA_LAPACK_NAME(getrf)
-( const int *M, const int *N, AA_LA_TYPE *A, const int *LDA,
+( const int *M, const int *N, AA_TYPE *A, const int *LDA,
   int *IPIV, int *INFO );
 
 
@@ -215,10 +215,10 @@ AA_API void AA_LAPACK_NAME(getrf)
 AA_API void AA_LAPACK_NAME(gesvd)
 ( const char jobu[1], const char jobvt[1],
   const int *m, const int *n,
-  AA_LA_TYPE *A, const int *lda,
-  AA_LA_TYPE *S, AA_LA_TYPE *U,
-  const int *ldu, AA_LA_TYPE *Vt, const int *ldvt,
-  AA_LA_TYPE *work, const int *lwork, int *info );
+  AA_TYPE *A, const int *lda,
+  AA_TYPE *S, AA_TYPE *U,
+  const int *ldu, AA_TYPE *Vt, const int *ldvt,
+  AA_TYPE *work, const int *lwork, int *info );
 
 
 /** DGELSD computes the minimum-norm solution to a real linear least
@@ -332,9 +332,9 @@ AA_API void AA_LAPACK_NAME(gesvd)
  */
 AA_API void AA_LAPACK_NAME(gelsd)
 ( const int *M, const int *N, const int *NRHS,
-  AA_LA_TYPE *A, const int *LDA, AA_LA_TYPE *B, const int *LDB,
-  AA_LA_TYPE *S, const AA_LA_TYPE *RCOND, int *RANK,
-  AA_LA_TYPE *WORK, int *LWORK, int *IWORK, int *INFO );
+  AA_TYPE *A, const int *LDA, AA_TYPE *B, const int *LDB,
+  AA_TYPE *S, const AA_TYPE *RCOND, int *RANK,
+  AA_TYPE *WORK, int *LWORK, int *IWORK, int *INFO );
 
 
 /**  Balances a general real matrix A.
@@ -394,8 +394,8 @@ AA_API void AA_LAPACK_NAME(gelsd)
  *          - < 0:  if INFO = -i, the i-th argument had an illegal value.
  */
 AA_API void AA_LAPACK_NAME(gebal)
-( const char JOB[1], int *N, AA_LA_TYPE *A, const int *LDA,
-  int *ILO, int *IHI, AA_LA_TYPE *SCALE, int *INFO );
+( const char JOB[1], int *N, AA_TYPE *A, const int *LDA,
+  int *ILO, int *IHI, AA_TYPE *SCALE, int *INFO );
 
 
 /** Computes for an N-by-N real nonsymmetric matrix A, the
@@ -516,11 +516,11 @@ AA_API void AA_LAPACK_NAME(gebal)
  */
 AA_API void AA_LAPACK_NAME(gees)
 ( const char JOBVS[1], const char SORT[1],
-  int (*SELECT)(const AA_LA_TYPE*,const AA_LA_TYPE*),
-  const int *N, AA_LA_TYPE *A, const int *LDA, int *SDIM,
-  AA_LA_TYPE *WR, AA_LA_TYPE *WI,
-  AA_LA_TYPE *VS, const int *LDVS,
-  AA_LA_TYPE *WORK, const int *LWORK, int *BWORK, int *INFO );
+  int (*SELECT)(const AA_TYPE*,const AA_TYPE*),
+  const int *N, AA_TYPE *A, const int *LDA, int *SDIM,
+  AA_TYPE *WR, AA_TYPE *WI,
+  AA_TYPE *VS, const int *LDVS,
+  AA_TYPE *WORK, const int *LWORK, int *BWORK, int *INFO );
 
 /** Solves overdetermined or underdetermined real linear systems
  *   involving an M-by-N matrix A, or its transpose, using a QR or LQ
@@ -622,7 +622,7 @@ AA_API void AA_LAPACK_NAME(gees)
 
 AA_API void AA_LAPACK_NAME(gels)
 ( const char TRANS[1], const int *M, const int *N, const int *NRHS,
-  AA_LA_TYPE *A, const int *LDA, AA_LA_TYPE *B, const int *LDB, AA_LA_TYPE *WORK,
+  AA_TYPE *A, const int *LDA, AA_TYPE *B, const int *LDB, AA_TYPE *WORK,
   const int *LWORK, int *INFO );
 
 /** Copies all or part of a two-dimensional matrix A to another
@@ -659,20 +659,20 @@ AA_API void AA_LAPACK_NAME(gels)
 
 AA_API void AA_LAPACK_NAME(lacpy)
 ( const char UPLO[1], const int *M, const int *N,
-  const AA_LA_TYPE *A, const int *LDA, AA_LA_TYPE *B, const int *LDB );
+  const AA_TYPE *A, const int *LDA, AA_TYPE *B, const int *LDB );
 
 
 /** Returns sqrt(x**2+y**2), taking care not to cause unnecessary
  *  overflow.
  */
-AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy2)
-( const AA_LA_TYPE *x, const AA_LA_TYPE *y );
+AA_API AA_TYPE AA_LAPACK_NAME(lapy2)
+( const AA_TYPE *x, const AA_TYPE *y );
 
 /** Returns sqrt(x**2+y**2+z**2), taking care not to cause unnecessary
  *  overflow.
  */
-AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy3)
-( const AA_LA_TYPE *x, const AA_LA_TYPE *y, const AA_LA_TYPE *z );
+AA_API AA_TYPE AA_LAPACK_NAME(lapy3)
+( const AA_TYPE *x, const AA_TYPE *y, const AA_TYPE *z );
 
 
 /** Returns a vector of n random real numbers from a uniform (0,1)
@@ -693,7 +693,7 @@ AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy3)
  *          The number of random numbers to be generated. N <= 128.
  *
  * \param[out] X
- *          X is AA_LA_TYPE PRECISION array, dimension (N)
+ *          X is AA_TYPE PRECISION array, dimension (N)
  *          The generated random numbers.
  *
  * \author Univ. of Tennessee
@@ -716,7 +716,7 @@ AA_API AA_LA_TYPE AA_LAPACK_NAME(lapy3)
  *
  */
 AA_API void AA_LAPACK_NAME(laruv)
-( int ISEED[4], const int *N, AA_LA_TYPE *X );
+( int ISEED[4], const int *N, AA_TYPE *X );
 
 /** Returns a vector of n random real numbers from a uniform or
 *   normal distribution.
@@ -747,7 +747,7 @@ AA_API void AA_LAPACK_NAME(laruv)
 
 AA_API void AA_LAPACK_NAME(larnv)
 ( const int *IDIST, int ISEED[4],
-  const int *N, AA_LA_TYPE *X );
+  const int *N, AA_TYPE *X );
 
 /**  Multiplies the M by N real matrix A by the real scalar CTO/CFROM.
  *
@@ -806,8 +806,8 @@ AA_API void AA_LAPACK_NAME(larnv)
  */
 AA_API void AA_LAPACK_NAME(lascl)
 ( const char TYPE[1], const int *KL, const int *KU,
-  const AA_LA_TYPE *CFROM, const AA_LA_TYPE *CTO,
-  const int *M, const int *N, AA_LA_TYPE *A, const int *LDA,
+  const AA_TYPE *CFROM, const AA_TYPE *CTO,
+  const int *M, const int *N, AA_TYPE *A, const int *LDA,
   int *INFO );
 
 /**
@@ -862,15 +862,15 @@ AA_API void AA_LAPACK_NAME(lascl)
 */
 AA_API void AA_LAPACK_NAME(laset)
 ( const char UPLO[1], const int *M, const int *N,
-  const AA_LA_TYPE *ALPHA,
-  const AA_LA_TYPE *BETA,
-  AA_LA_TYPE *A, const int *LDA );
+  const AA_TYPE *ALPHA,
+  const AA_TYPE *BETA,
+  AA_TYPE *A, const int *LDA );
 
 
 
 #include "amino/undef.h"
 
-#if AA_LA_TYPE == double
+#if AA_TYPE == double
 /** Converts a DOUBLE PRECISION matrix, SA, to a SINGLE PRECISION
  *  matrix, A.
  *
@@ -907,10 +907,10 @@ AA_API void dlag2s_ ( const int *M, const int *N,
                       const int *INFO );
 
 
-#endif // AA_LA_TYPE == double
+#endif // AA_TYPE == double
 
 
-#if AA_LA_TYPE == float
+#if AA_TYPE == float
 /** Converts a SINGLE PRECISION matrix, SA, to a DOUBLE PRECISION
  *  matrix, A.
  *
@@ -951,5 +951,5 @@ AA_API void slag2d_ ( const int *M, const int *N,
                       double *A, const int *LDA,
                       const int *INFO );
 
-#endif // AA_LA_TYPE == float
+#endif // AA_TYPE == float
 

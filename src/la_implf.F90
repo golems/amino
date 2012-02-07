@@ -52,93 +52,93 @@
 !!------------------!!
 
 
-pure subroutine AA_LA_FMOD(cross)( a, b, r)
+pure subroutine AA_FMOD(la,cross)( a, b, r)
   AA_FTYPE(AA_FSIZE), intent(out) :: r(:)
   AA_FTYPE(AA_FSIZE), intent(in) :: a(:),b(:)
   integer, dimension(3), parameter :: yzx = [2,3,1], zxy = [3,1,2]
   r = a(yzx)*b(zxy) - a(zxy)*b(yzx)
-end subroutine AA_LA_FMOD(cross)
+end subroutine AA_FMOD(la,cross)
 
-pure subroutine AA_LA_FMOD_C(cross)( a, b, r)
+pure subroutine AA_FMOD_C(la,cross)( a, b, r)
   AA_FTYPE(AA_FSIZE), intent(out) :: r(3)
   AA_FTYPE(AA_FSIZE), intent(in) :: a(3), b(3)
-  call AA_LA_FMOD(cross)(a,b,r)
-end subroutine AA_LA_FMOD_C(cross)
+  call AA_FMOD(la,cross)(a,b,r)
+end subroutine AA_FMOD_C(la,cross)
 
 !! SSD
 
-pure function AA_LA_FMOD(ssd)(x, y) result(a)
+pure function AA_FMOD(la,ssd)(x, y) result(a)
   AA_FTYPE(AA_FSIZE), intent(in) :: x(:), y(:)
   AA_FTYPE(AA_FSIZE) :: a
   a = dot_product(x-y,x-y)
-end function AA_LA_FMOD(ssd)
+end function AA_FMOD(la,ssd)
 
-pure function AA_LA_FMOD_C(ssd)(n, x, incx, y, incy) result(a)
+pure function AA_FMOD_C(la,ssd)(n, x, incx, y, incy) result(a)
   integer (c_size_t), intent(in), value :: n, incx, incy
   AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx), y(n*incy)
   AA_FTYPE(AA_FSIZE) :: a
-  a = AA_LA_FMOD(ssd)(x(1:n*incx:incx),y(1:n*incy:incy))
-end function AA_LA_FMOD_C(ssd)
+  a = AA_FMOD(la,ssd)(x(1:n*incx:incx),y(1:n*incy:incy))
+end function AA_FMOD_C(la,ssd)
 
-pure subroutine AA_LA_FMOD(colssd)(A, B, C)
+pure subroutine AA_FMOD(la,colssd)(A, B, C)
   AA_FTYPE(AA_FSIZE), intent(in) :: A(:,:), B(:,:)
   AA_FTYPE(AA_FSIZE), intent(out) :: C(:,:)
   integer :: i,j
   forall (i=1:size(C,1))
      forall (j=1:size(C,2))
-        C(i,j) = AA_LA_FMOD(ssd)(A(:,i), B(:,j))
+        C(i,j) = AA_FMOD(la,ssd)(A(:,i), B(:,j))
      end forall
   end forall
-end subroutine AA_LA_FMOD(colssd)
+end subroutine AA_FMOD(la,colssd)
 
-pure subroutine AA_LA_FMOD(colssd_c)(m,n,A,lda,B,ldb,C,ldc)
+pure subroutine AA_FMOD(la,colssd_c)(m,n,A,lda,B,ldb,C,ldc)
   integer(c_size_t),intent(in),value :: m,n,lda,ldb,ldc
   AA_FTYPE(AA_FSIZE), intent(in) :: A(lda,m),B(ldb,n)
   AA_FTYPE(AA_FSIZE), intent(out) :: C(ldc,n)
-  call AA_LA_FMOD(colssd)(A,B,C)
-end subroutine AA_LA_FMOD(colssd_c)
+  call AA_FMOD(la,colssd)(A,B,C)
+end subroutine AA_FMOD(la,colssd_c)
 
 
 !!---------------------!!
 !! FLOATING POINT ONLY !!
 !!---------------------!!
 
-#if defined AA_LA_TYPE_DOUBLE || defined AA_LA_TYPE_FLOAT
+#if defined AA_TYPE_DOUBLE || defined AA_TYPE_FLOAT
 !! Angle
 
-function AA_LA_FMOD(angle)( p, q ) result(a)
+function AA_FMOD(la,angle)( p, q ) result(a)
   real(AA_FSIZE), intent(in) :: p(:),q(:)
   real(AA_FSIZE) :: a
   a = acos( dot_product(p, q) )
-end function AA_LA_FMOD(angle)
+end function AA_FMOD(la,angle)
 
-function AA_LA_FMOD_C(angle)( n, p, q ) result(a)
+function AA_FMOD_C(la,angle)( n, p, q ) result(a)
   integer(C_SIZE_T), value   :: n
   real(AA_FSIZE), intent(in) :: p(n),q(n)
   real(AA_FSIZE) :: a
-  a = AA_LA_FMOD(angle)(p,q)
-end function AA_LA_FMOD_C(angle)
+  a = AA_FMOD(la,angle)(p,q)
+end function AA_FMOD_C(la,angle)
 
 !! Proj
 
-pure subroutine AA_LA_FMOD(proj)( a, b, r )
+pure subroutine AA_FMOD(la,proj)( a, b, r )
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE), intent(out) :: r(:)
   r = (dot_product(a,b) * b) / dot_product(b,b)
-end subroutine AA_LA_FMOD(proj)
+end subroutine AA_FMOD(la,proj)
 
 !! Orth
 
-pure subroutine AA_LA_FMOD(orth)( a, b, r )
+pure subroutine AA_FMOD(la,orth)( a, b, r )
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE), intent(out) :: r(:)
   r = a - (dot_product(a,b) * b) / dot_product(b,b)
-end subroutine AA_LA_FMOD(orth)
+end subroutine AA_FMOD(la,orth)
 
 
 !! Colmean
 
-pure subroutine AA_LA_FMOD(colmean)( A, x )
+pure subroutine AA_FMOD(la,colmean)( A, x )
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(out) :: x(:)
   integer :: i
@@ -150,35 +150,35 @@ pure subroutine AA_LA_FMOD(colmean)( A, x )
   forall (i = 1:size(x))
      x(i) = sum(A(i,:)) / TOREAL(size(A,2))
   end forall
-end subroutine AA_LA_FMOD(colmean)
+end subroutine AA_FMOD(la,colmean)
 
-subroutine AA_LA_FMOD_C(colmean)( m, n, A, lda, x )
+subroutine AA_FMOD_C(la,colmean)( m, n, A, lda, x )
   integer(C_SIZE_T), value :: m,n,lda
   real(AA_FSIZE), intent(in) :: A(lda,n)
   real(AA_FSIZE), intent(out) :: x(m)
-  call AA_LA_FMOD(colmean)(A,x)
-end subroutine AA_LA_FMOD_C(colmean)
+  call AA_FMOD(la,colmean)(A,x)
+end subroutine AA_FMOD_C(la,colmean)
 
 
-pure subroutine AA_LA_FMOD(rowmean)( A, x )
+pure subroutine AA_FMOD(la,rowmean)( A, x )
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(out) :: x(:)
   integer :: i
   forall (i = 1:size(x))
      x(i) = sum(A(:,i)) / TOREAL(size(A,1))
   end forall
-end subroutine AA_LA_FMOD(rowmean)
+end subroutine AA_FMOD(la,rowmean)
 
-subroutine AA_LA_FMOD_C(rowmean)( m, n, A, lda, x )
+subroutine AA_FMOD_C(la,rowmean)( m, n, A, lda, x )
   integer(C_SIZE_T), value :: m,n,lda
   real(AA_FSIZE), intent(in) :: A(lda,n)
   real(AA_FSIZE), intent(out) :: x(m)
-  call AA_LA_FMOD(rowmean)(A,x)
-end subroutine AA_LA_FMOD_C(rowmean)
+  call AA_FMOD(la,rowmean)(A,x)
+end subroutine AA_FMOD_C(la,rowmean)
 
 !! Colcov
 
-pure subroutine AA_LA_FMOD(colcov)( A, x, E )
+pure subroutine AA_FMOD(la,colcov)( A, x, E )
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(in) :: x(:)
   real(AA_FSIZE), intent(out) :: E(:,:)
@@ -193,16 +193,16 @@ pure subroutine AA_LA_FMOD(colcov)( A, x, E )
      end forall
   end do
   E = E / TOREAL(size(A,2)-1)
-end subroutine AA_LA_FMOD(colcov)
+end subroutine AA_FMOD(la,colcov)
 
 
-subroutine AA_LA_FMOD_C(colcov)( m, n, A, lda, x, E, lde )
+subroutine AA_FMOD_C(la,colcov)( m, n, A, lda, x, E, lde )
   integer(C_SIZE_T), value :: m,n,lda,lde
   real(AA_FSIZE), intent(in) :: A(lda,n)
   real(AA_FSIZE), intent(in) :: x(m)
   real(AA_FSIZE), intent(out) :: E(lde,m)
-  call AA_LA_FMOD(colcov)(A,x,E)
-end subroutine AA_LA_FMOD_C(colcov)
+  call AA_FMOD(la,colcov)(A,x,E)
+end subroutine AA_FMOD_C(la,colcov)
 
 #endif
 #if 0

@@ -39,39 +39,37 @@
  */
 #endif
 
-#if defined AA_LA_TYPE_DOUBLE
+#include "amino/mangle.h"
 
-#define AA_LA_TYPE double
-#define AA_CBLAS_NAME( name ) cblas_d ## name
-#define AA_LAPACK_NAME( name ) d ## name ## _
+#if defined AA_TYPE_DOUBLE
+
+#define AA_TYPE double
+#define AA_CBLAS_NAME( name ) AA_MANGLE_CBLAS_NAME( d, name )
+#define AA_LAPACK_NAME( name ) AA_MANGLE_LAPACK_NAME( d, name )
+#define AA_CLA_NAME( name ) AA_MANGLE_CLA_NAME( d, name )
 #define AA_LAPACK_PREFIX_STR "D"
-#define AA_CLA_NAME( name ) aa_cla_d ## name
-#define AA_LA_NAME( name ) aa_la_d_ ## name
 
-#define AA_LA_FMOD(name) aa_la_mod_d_ ## name
-#define AA_LA_FMOD_C(name) AA_LA_FMOD( name ## _c )
-#define AA_LA_FMOD_F(name) AA_FORT_MOD_MANGLE(amino_la, aa_la_mod_d_ ## name ## _c)
+#define AA_NAME( prefix, name ) AA_MANGLE_NAME( d, prefix, name )
+#define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( d, prefix, name )
+#define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( d, prefix, name )
+#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( d, prefix, name )
 
-#define AA_TF_FMOD(name) aa_tf_mod_d_ ## name
+#elif defined AA_TYPE_FLOAT
 
-#elif defined AA_LA_TYPE_FLOAT
-
-#define AA_LA_TYPE float
-#define AA_CBLAS_NAME( name ) cblas_s ## name
-#define AA_LAPACK_NAME( name ) s ## name ## _
+#define AA_TYPE float
+#define AA_CBLAS_NAME( name ) AA_MANGLE_CBLAS_NAME( s, name )
+#define AA_LAPACK_NAME( name ) AA_MANGLE_LAPACK_NAME( s, name )
+#define AA_CLA_NAME( name ) AA_MANGLE_CLA_NAME( s, name )
 #define AA_LAPACK_PREFIX_STR "S"
-#define AA_CLA_NAME( name ) aa_cla_s ## name
-#define AA_LA_NAME( name ) aa_la_s_ ## name
 
-#define AA_LA_FMOD(name) aa_la_mod_s_ ## name
-#define AA_LA_FMOD_C(name)  AA_LA_FMOD( name ## _c )
-#define AA_LA_FMOD_F(name) AA_FORT_MOD_MANGLE(amino_la, aa_la_mod_s_ ## name ## _c)
-
-#define AA_TF_FMOD(name) aa_tf_mod_s_ ## name
+#define AA_NAME( prefix, name ) AA_MANGLE_NAME( s, prefix, name )
+#define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( s, prefix, name )
+#define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( s, prefix, name )
+#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( s, prefix, name )
 
 #else
 
-#error "Need to define AA_LA_TYPE_?"
+#error "Need to define AA_TYPE_?"
 
 #endif
 
@@ -86,13 +84,11 @@
  */
 #endif
 
-#define AA_LA_FDEC( rettype, name, ... )                            \
-    /* first the fortran function */                                \
-    AA_API rettype                                                  \
-    AA_LA_FMOD_F(name)                                              \
-    ( __VA_ARGS__ );                                                \
-    /* now the C function pointer that aliases it */                \
-    static rettype (* const AA_LA_NAME(name) )( __VA_ARGS__ ) =     \
-        AA_LA_FMOD_F(name);
-
-
+#define AA_FDEC( rettype, prefix, name, ... )                           \
+    /* first the fortran function */                                    \
+    AA_API rettype                                                      \
+    AA_FMOD_F( prefix, name )                                           \
+    ( __VA_ARGS__ );                                                    \
+    /* now the C function pointer that aliases it */                    \
+    static rettype (* const AA_NAME(prefix, name) )( __VA_ARGS__ ) =    \
+        AA_FMOD_F(prefix,name);

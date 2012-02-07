@@ -39,17 +39,18 @@
  */
 #endif
 
-#undef AA_LA_TYPE
-#undef AA_LA_TYPE_DOUBLE
-#undef AA_LA_TYPE_FLOAT
+#undef AA_TYPE
+#undef AA_TYPE_DOUBLE
+#undef AA_TYPE_FLOAT
+
 #undef AA_CBLAS_NAME
 #undef AA_LAPACK_NAME
 #undef AA_LAPACK_PREFIX_STR
 #undef AA_CLA_NAME
-#undef AA_LA_NAME
-#undef AA_LA_FMOD
-#undef AA_LA_FMOD_C
-#undef AA_LA_FMOD_F
-#undef AA_LA_FDEC
-#undef AA_TF_FMOD
 
+#undef AA_NAME
+#undef AA_FMOD
+#undef AA_FMOD_F
+#undef AA_FMOD_C
+
+#undef AA_FDEC

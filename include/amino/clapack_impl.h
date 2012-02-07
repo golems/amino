@@ -47,7 +47,7 @@
  * \sa dgetrf_
  */
 static inline int AA_CLA_NAME(getrf)
-( int m, int n, AA_LA_TYPE *A, int lda, int *ipiv ) {
+( int m, int n, AA_TYPE *A, int lda, int *ipiv ) {
     int info;
     AA_LAPACK_NAME( getrf)
         (&m, &n, A, &lda, ipiv, &info );
@@ -59,7 +59,7 @@ static inline int AA_CLA_NAME(getrf)
  * \sa dgetrf_
  */
 static inline int AA_CLA_NAME(getri)
-( int n, AA_LA_TYPE *A, int lda, int *ipiv, AA_LA_TYPE *work, int lwork ) {
+( int n, AA_TYPE *A, int lda, int *ipiv, AA_TYPE *work, int lwork ) {
     int info;
     AA_LAPACK_NAME( getri )
         ( &n, A, &lda, ipiv, work, &lwork, &info );
@@ -92,10 +92,10 @@ static inline int AA_CLA_NAME(gelsd_miniwork)
  */
 static inline int AA_CLA_NAME(gelsd)
 ( int m, int n, int nrhs,
-  AA_LA_TYPE *A, int lda,
-  AA_LA_TYPE *B, int ldb,
-  AA_LA_TYPE *S, AA_LA_TYPE *rcond, int *rank,
-  AA_LA_TYPE *work, int lwork, int *iwork ) {
+  AA_TYPE *A, int lda,
+  AA_TYPE *B, int ldb,
+  AA_TYPE *S, AA_TYPE *rcond, int *rank,
+  AA_TYPE *work, int lwork, int *iwork ) {
     int info;
     AA_LAPACK_NAME( gelsd )
         ( &m, &n, &nrhs, A, &lda, B, &ldb,
@@ -109,8 +109,8 @@ static inline int AA_CLA_NAME(gelsd)
  */
 static inline void AA_CLA_NAME(lacpy)
 ( char uplo, int m, int n,
-  const AA_LA_TYPE *A, int lda,
-  AA_LA_TYPE *B, int ldb ) {
+  const AA_TYPE *A, int lda,
+  AA_TYPE *B, int ldb ) {
     AA_LAPACK_NAME(lacpy) (&uplo, &m, &n,
                            A, &lda, B, &ldb );
 }
@@ -118,9 +118,9 @@ static inline void AA_CLA_NAME(lacpy)
 
 static inline void AA_CLA_NAME(laset)
 ( char UPLO, int M, int N,
-  AA_LA_TYPE ALPHA,
-  AA_LA_TYPE BETA,
-  AA_LA_TYPE *A, int LDA )
+  AA_TYPE ALPHA,
+  AA_TYPE BETA,
+  AA_TYPE *A, int LDA )
 {
     AA_LAPACK_NAME(laset) (&UPLO, &M, &N,
                            &ALPHA, &BETA,
@@ -131,8 +131,8 @@ static inline void AA_CLA_NAME(laset)
  *
  * \sa dlapy2_
  */
-static inline AA_LA_TYPE AA_CLA_NAME(lapy2)
-( AA_LA_TYPE x, AA_LA_TYPE y )
+static inline AA_TYPE AA_CLA_NAME(lapy2)
+( AA_TYPE x, AA_TYPE y )
 {
     return AA_LAPACK_NAME(lapy2)(&x, &y);
 }
@@ -141,8 +141,8 @@ static inline AA_LA_TYPE AA_CLA_NAME(lapy2)
  *
  * \sa dlapy3_
  */
-static inline AA_LA_TYPE AA_CLA_NAME(lapy3)
-( AA_LA_TYPE x, AA_LA_TYPE y, AA_LA_TYPE z )
+static inline AA_TYPE AA_CLA_NAME(lapy3)
+( AA_TYPE x, AA_TYPE y, AA_TYPE z )
 {
     return AA_LAPACK_NAME(lapy3)(&x, &y, &z);
 }
@@ -152,7 +152,7 @@ static inline AA_LA_TYPE AA_CLA_NAME(lapy3)
  * \sa dlaruv_
  */
 static inline void AA_CLA_NAME(laruv)
-( int iseed[4], int n, AA_LA_TYPE *X )
+( int iseed[4], int n, AA_TYPE *X )
 {
     AA_LAPACK_NAME(laruv) (iseed, &n, X);
 }
@@ -162,7 +162,7 @@ static inline void AA_CLA_NAME(laruv)
  * \sa dlarnv_
  */
 static inline void AA_CLA_NAME(larnv)
-( int idist, int iseed[4], int n, AA_LA_TYPE *X )
+( int idist, int iseed[4], int n, AA_TYPE *X )
 {
     AA_LAPACK_NAME(larnv) (&idist, iseed, &n, X);
 }
@@ -173,8 +173,8 @@ static inline void AA_CLA_NAME(larnv)
  */
 static inline int AA_CLA_NAME(lascl)
 ( char TYPE, int KL, int KU,
-  AA_LA_TYPE CFROM, AA_LA_TYPE CTO,
-  int M, int N, AA_LA_TYPE *A, int LDA ) {
+  AA_TYPE CFROM, AA_TYPE CTO,
+  int M, int N, AA_TYPE *A, int LDA ) {
     int info;
     AA_LAPACK_NAME( lascl )
         ( &TYPE, &KL, &KU, &CFROM, &CTO,
@@ -182,7 +182,7 @@ static inline int AA_CLA_NAME(lascl)
     return info;
 }
 
-#if AA_LA_TYPE == double
+#if AA_TYPE == double
 /** Convert double to single float
  *
  * \sa dlag2s_
@@ -196,9 +196,9 @@ static inline int AA_CLA_NAME(lag2s)
     return info;
 }
 
-#endif // AA_LA_TYPE == double
+#endif // AA_TYPE == double
 
-#if AA_LA_TYPE == float
+#if AA_TYPE == float
 /** Convert single to double float
  *
  * \sa dlag2d_
@@ -212,6 +212,6 @@ static inline int AA_CLA_NAME(lag2d)
     return info;
 }
 
-#endif // AA_LA_TYPE == float
+#endif // AA_TYPE == float
 
 #include "amino/undef.h"

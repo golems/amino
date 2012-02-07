@@ -42,9 +42,9 @@
 
 #include "amino/def.h"
 
-void AA_LA_NAME(transpose) ( size_t m, size_t n,
-                             const AA_LA_TYPE *A, size_t lda,
-                             AA_LA_TYPE *B, size_t ldb ) {
+void AA_NAME(la,transpose) ( size_t m, size_t n,
+                             const AA_TYPE *A, size_t lda,
+                             AA_TYPE *B, size_t ldb ) {
     for( size_t i=0, ia=0; i < n; i++, ia+=lda ) {
         for( size_t j=0, ib=0; j < m; j++, ib+=ldb ) {
             B[ib+i] = A[ia+j];
@@ -52,32 +52,32 @@ void AA_LA_NAME(transpose) ( size_t m, size_t n,
     }
 }
 
-/* void AA_LA_NAME(_cmean) */
+/* void AA_NAME(la,_cmean) */
 /* ( size_t m, size_t n, */
-/*   const AA_LA_TYPE *A, size_t lda, */
-/*   AA_LA_TYPE *x) */
+/*   const AA_TYPE *A, size_t lda, */
+/*   AA_TYPE *x) */
 /* { */
 /*     memset( x, 0, sizeof(x[0])*m ); */
 /*     for( size_t i=0, j=0; i < n; i++, j+=lda ) { */
 /*         AA_CBLAS_NAME(axpy)( (int)m, 1.0, A+j, (int)1, */
 /*                              x, 1 ); */
 /*     } */
-/*     AA_CBLAS_NAME(scal)((int)m, ((AA_LA_TYPE)1.0)/(AA_LA_TYPE)n, */
+/*     AA_CBLAS_NAME(scal)((int)m, ((AA_TYPE)1.0)/(AA_TYPE)n, */
 /*                         x, 1); */
 /* } */
 
-/* void AA_LA_NAME(_ccov) */
+/* void AA_NAME(la,_ccov) */
 /* ( size_t m, size_t n, */
-/*   const AA_LA_TYPE *A, size_t lda, */
-/*   const AA_LA_TYPE *x, */
-/*   AA_LA_TYPE *E, size_t lde ) { */
+/*   const AA_TYPE *A, size_t lda, */
+/*   const AA_TYPE *x, */
+/*   AA_TYPE *E, size_t lde ) { */
 /*     for( size_t j = 0; j < m*lde; j+=lde ) { */
 /*         memset( E+j, 0, sizeof(E[0])*m ); */
 /*     } */
 /*     for( size_t j = 0; j < n*lda; j+=lda ) */
 /*     { */
 /*         /\* t := - mu + A_i *\/ */
-/*         AA_LA_TYPE t[m]; */
+/*         AA_TYPE t[m]; */
 /*         memcpy( t, A+j, sizeof(t[0])*m ); */
 /*         AA_CBLAS_NAME(axpy) ((int)m, -1.0, x, (int)1, */
 /*                              t, 1 ); */
@@ -87,7 +87,7 @@ void AA_LA_NAME(transpose) ( size_t m, size_t n,
 /*                             E, (int)lde ); */
 /*     } */
 /*     AA_CBLAS_NAME(scal) ( (int)(m*m), */
-/*                           (AA_LA_TYPE)1.0/(AA_LA_TYPE)(n-1), */
+/*                           (AA_TYPE)1.0/(AA_TYPE)(n-1), */
 /*                           E, 1 ); */
 /*     /\* fill lower half *\/ */
 /*     for( size_t i = 0; i < m; i ++ ) { */
@@ -100,8 +100,8 @@ void AA_LA_NAME(transpose) ( size_t m, size_t n,
 
 
 
-AA_API void AA_LA_NAME(opt_hungarian)
-( size_t n, AA_LA_TYPE *A, size_t lda,
+AA_API void AA_NAME(la,opt_hungarian)
+( size_t n, AA_TYPE *A, size_t lda,
   ssize_t *row_assign,
   ssize_t *col_assign,
   ssize_t *iwork)
@@ -111,8 +111,8 @@ AA_API void AA_LA_NAME(opt_hungarian)
     ssize_t *mask = col_cover + n;
     ssize_t *path = mask + n*n;
 
-    const AA_LA_TYPE max_cost =
-        AA_LA_NAME(mat_max)(n,n,A,lda,NULL,NULL);
+    const AA_TYPE max_cost =
+        AA_NAME(la,mat_max)(n,n,A,lda,NULL,NULL);
     //int mask[n*n];
     size_t zerorc[2] = {0};
     memset(mask,0,n*n*sizeof(mask[0]));
@@ -122,9 +122,9 @@ AA_API void AA_LA_NAME(opt_hungarian)
     // for each column
     for( size_t j = 0; j < n; j ++ ) {
         // find smallest element
-        AA_LA_TYPE xmin =
+        AA_TYPE xmin =
             AA_MATREF( A, lda,
-                       AA_LA_NAME(minloc)(n, &AA_MATREF(A, lda, 0, j), 1),
+                       AA_NAME(la,minloc)(n, &AA_MATREF(A, lda, 0, j), 1),
                        j );
         // subtract from all entries in the column
         for( size_t i = 0; i < n; i++ ) AA_MATREF(A,lda,i,j) -= xmin;
@@ -132,9 +132,9 @@ AA_API void AA_LA_NAME(opt_hungarian)
     // for each row
     for( size_t i = 0; i < n; i ++ ) {
         // find smallest element
-        size_t jmin = AA_LA_NAME(minloc)(n, &AA_MATREF(A, lda, i, 0),
+        size_t jmin = AA_NAME(la,minloc)(n, &AA_MATREF(A, lda, i, 0),
                                          lda);
-        AA_LA_TYPE xmin = AA_MATREF( A, lda, i, jmin );
+        AA_TYPE xmin = AA_MATREF( A, lda, i, jmin );
         // subtract from all entries in the row
         for( size_t j = 0; j < n; j++ ) AA_MATREF(A,lda,i,j) -= xmin;
     }
@@ -288,7 +288,7 @@ AA_API void AA_LA_NAME(opt_hungarian)
         case 6: ;
             assert( 6 == step );
             // find smallest uncovered value in cost
-            AA_LA_TYPE minval = max_cost;
+            AA_TYPE minval = max_cost;
             for( size_t j = 0; j < n; j ++ ) {
                 for( size_t i = 0; i < n; i ++ ) {
                     if( 0 == row_cover[i] &&
@@ -326,9 +326,9 @@ AA_API void AA_LA_NAME(opt_hungarian)
     }
 }
 
-AA_API void AA_LA_NAME(opt_hungarian_max2min)
-( size_t m, size_t n, AA_LA_TYPE *A, size_t lda ) {
-    AA_LA_TYPE max = AA_LA_NAME(mat_max)(m,n,A,lda,NULL,NULL);
+AA_API void AA_NAME(la,opt_hungarian_max2min)
+( size_t m, size_t n, AA_TYPE *A, size_t lda ) {
+    AA_TYPE max = AA_NAME(la,mat_max)(m,n,A,lda,NULL,NULL);
     for( size_t j = 0; j < n; j ++ ) {
         for( size_t i = 0; i < m; i ++ ) {
             AA_MATREF(A,lda,i,j) = max - AA_MATREF(A,lda,i,j);
@@ -336,11 +336,11 @@ AA_API void AA_LA_NAME(opt_hungarian_max2min)
     }
 }
 
-AA_API void AA_LA_NAME(opt_hungarian_pad)
-( size_t m, size_t n, const AA_LA_TYPE *A, size_t lda,
+AA_API void AA_NAME(la,opt_hungarian_pad)
+( size_t m, size_t n, const AA_TYPE *A, size_t lda,
   ssize_t *row_assign,
   ssize_t *col_assign,
-  AA_LA_TYPE *work, ssize_t *iwork)
+  AA_TYPE *work, ssize_t *iwork)
 {
     size_t p = AA_MAX(m,n);
     size_t q = AA_MIN(m,n);
@@ -358,7 +358,7 @@ AA_API void AA_LA_NAME(opt_hungarian_pad)
     }
 
     // run hungarian
-    AA_LA_NAME(opt_hungarian)( p, work, p, iwork, iwork+p, iwork+2*p );
+    AA_NAME(la,opt_hungarian)( p, work, p, iwork, iwork+p, iwork+2*p );
 
     // mark invalid assignments with -1
     for( size_t i = 0; i < p; i++ ) {

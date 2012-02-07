@@ -52,15 +52,16 @@
  * \param lda leading dimension of A
  * \param ldb leading dimension of B
  */
-AA_API void AA_LA_NAME(transpose)
+AA_API void AA_NAME(la,transpose)
 ( size_t m, size_t n,
-  const AA_LA_TYPE *A, size_t lda,
-  AA_LA_TYPE *B, size_t ldb );
+  const AA_TYPE *A, size_t lda,
+  AA_TYPE *B, size_t ldb );
 
 /** Sum-square differences of x and y. */
-AA_LA_FDEC(AA_LA_TYPE, ssd, size_t n,
-           const AA_LA_TYPE *x, size_t incx,
-           const AA_LA_TYPE *y, size_t incy )
+AA_FDEC(AA_TYPE, la, ssd,
+        size_t n,
+        const AA_TYPE *x, size_t incx,
+        const AA_TYPE *y, size_t incy )
 
 /** Mean of columns of A.
  * \param m rows of A
@@ -69,13 +70,14 @@ AA_LA_FDEC(AA_LA_TYPE, ssd, size_t n,
  * \param[in] A source matrix, m*n
  * \param[out] x destination vector for mean, length m
  */
-AA_LA_FDEC(AA_LA_TYPE, colmean, size_t m, size_t n,
-           const AA_LA_TYPE *A, size_t lda,
-           AA_LA_TYPE *x);
-/* AA_API void AA_LA_NAME(_cmean) */
+AA_FDEC(AA_TYPE, la, colmean,
+        size_t m, size_t n,
+        const AA_TYPE *A, size_t lda,
+        AA_TYPE *x);
+/* AA_API void AA_NAME(la,_cmean) */
 /* ( size_t m, size_t n, */
-/*   const AA_LA_TYPE *A, size_t lda, */
-/*   AA_LA_TYPE *x ); */
+/*   const AA_TYPE *A, size_t lda, */
+/*   AA_TYPE *x ); */
 
 /** Covariance of columns of A.
  * \param m rows of A
@@ -87,16 +89,17 @@ AA_LA_FDEC(AA_LA_TYPE, colmean, size_t m, size_t n,
  * \param lde leading dimension of E
  */
 
-AA_LA_FDEC(AA_LA_TYPE, colcov, size_t m, size_t n,
-           const AA_LA_TYPE *A, size_t lda,
-           const AA_LA_TYPE *x,
-           AA_LA_TYPE *E, size_t lde);
+AA_FDEC(AA_TYPE, la, colcov,
+        size_t m, size_t n,
+        const AA_TYPE *A, size_t lda,
+        const AA_TYPE *x,
+        AA_TYPE *E, size_t lde);
 
-/* AA_API void AA_LA_NAME(_ccov) */
+/* AA_API void AA_NAME(la,_ccov) */
 /* ( size_t m, size_t n, */
-/*   const AA_LA_TYPE *A, size_t lda, */
-/*   const AA_LA_TYPE *x, */
-/*   AA_LA_TYPE *E, size_t lde ); */
+/*   const AA_TYPE *A, size_t lda, */
+/*   const AA_TYPE *x, */
+/*   AA_TYPE *E, size_t lde ); */
 
 
 
@@ -107,8 +110,8 @@ AA_LA_FDEC(AA_LA_TYPE, colcov, size_t m, size_t n,
  * \param row_assign array of column assigned to row at index i
  * \param iwork array of size 3*n*n +2*n
  */
-AA_API void AA_LA_NAME(opt_hungarian)
-( size_t n, AA_LA_TYPE *A, size_t lda,
+AA_API void AA_NAME(la,opt_hungarian)
+( size_t n, AA_TYPE *A, size_t lda,
   ssize_t *row_assign,
   ssize_t *col_assign,
   ssize_t *iwork);
@@ -124,11 +127,11 @@ AA_API void AA_LA_NAME(opt_hungarian)
  * \param work work array of length max(m,n)**2
  * \param iwork integer work array of length (3*max(m,n)**2 + 4*max(m,n))
  */
-AA_API void AA_LA_NAME(opt_hungarian_pad)
-( size_t m, size_t n, const AA_LA_TYPE *A, size_t lda,
+AA_API void AA_NAME(la,opt_hungarian_pad)
+( size_t m, size_t n, const AA_TYPE *A, size_t lda,
   ssize_t *row_assign,
   ssize_t *col_assign,
-  AA_LA_TYPE *work, ssize_t *iwork);
+  AA_TYPE *work, ssize_t *iwork);
 
 
 
@@ -138,14 +141,14 @@ AA_API void AA_LA_NAME(opt_hungarian_pad)
  *        converted to matrix for min proble on exit
  * \param lda leading dimension of A
  */
-AA_API void AA_LA_NAME(opt_hungarian_max2min)
-( size_t m, size_t n, AA_LA_TYPE *A, size_t lda );
+AA_API void AA_NAME(la,opt_hungarian_max2min)
+( size_t m, size_t n, AA_TYPE *A, size_t lda );
 
 /** Minimum location of vector x */
-static inline size_t AA_LA_NAME(minloc)
-( size_t n, AA_LA_TYPE *x, size_t incx ) {
+static inline size_t AA_NAME(la,minloc)
+( size_t n, AA_TYPE *x, size_t incx ) {
     size_t imin = 0;
-    AA_LA_TYPE xmin = *x;
+    AA_TYPE xmin = *x;
     for( size_t i = 1; i < n; i ++ ) {
         if( x[i*incx] < xmin ) {
             imin = i;
@@ -156,12 +159,12 @@ static inline size_t AA_LA_NAME(minloc)
 }
 
 /** Minimum location of vector x */
-static inline AA_LA_TYPE AA_LA_NAME(mat_max)
-( size_t m, size_t n, AA_LA_TYPE *A, size_t lda,
+static inline AA_TYPE AA_NAME(la,mat_max)
+( size_t m, size_t n, AA_TYPE *A, size_t lda,
   size_t *pi, size_t *pj ) {
     size_t im = 0;
     size_t jm = 0;
-    AA_LA_TYPE xm = *A;
+    AA_TYPE xm = *A;
     for( size_t i = 0; i < m; i++) {
         for( size_t j = 0; j < n; j++) {
             if( AA_MATREF(A, lda, i, j ) > xm ) {
@@ -178,10 +181,10 @@ static inline AA_LA_TYPE AA_LA_NAME(mat_max)
 
 
 /** Maximum location of vector x */
-static inline size_t AA_LA_NAME(maxloc)
-( size_t n, AA_LA_TYPE *x, size_t incx ) {
+static inline size_t AA_NAME(la,maxloc)
+( size_t n, AA_TYPE *x, size_t incx ) {
     size_t imax = 0;
-    AA_LA_TYPE xmax = *x;
+    AA_TYPE xmax = *x;
     for( size_t i = 1; i < n; i ++ ) {
         if( x[i*incx] > xmax ) {
             imax = i;
@@ -191,7 +194,8 @@ static inline size_t AA_LA_NAME(maxloc)
     return imax;
 }
 
-AA_LA_FDEC(AA_LA_TYPE, angle, size_t n, const AA_LA_TYPE *p, const AA_LA_TYPE *q)
+AA_FDEC(AA_TYPE, la, angle,
+        size_t n, const AA_TYPE *p, const AA_TYPE *q)
 
 
 

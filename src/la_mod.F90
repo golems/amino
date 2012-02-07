@@ -74,10 +74,10 @@ contains
 
   !! Preprocessor type generics hack
 
-#define AA_LA_TYPE_DOUBLE
+#define AA_TYPE_DOUBLE
 #include "la_implf.F90"
 
-#define AA_LA_TYPE_FLOAT
+#define AA_TYPE_FLOAT
 #include "la_implf.F90"
 
 end module amino_la
