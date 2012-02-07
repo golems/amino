@@ -4,6 +4,8 @@ EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/la_impl.c       \
 
 include_HEADERS = include/amino.h
 
+nodist_include_HEADERS = amino_la.mod
+
 pkginclude_HEADERS = 	                \
 	include/amino/debug.h           \
 	include/amino/endconv.h         \

@@ -45,6 +45,13 @@
 !! different types
 
 
+#ifdef AA_LA_TYPE_DOUBLE
+#define TOREAL DBLE
+#endif
+#ifdef AA_LA_TYPE_FLOAT
+#define TOREAL REAL
+#endif
+
 #include "amino/def.h"
 
 !! Angle
@@ -84,11 +91,11 @@ pure subroutine AA_LA_FMOD(colmean)( A, x )
   AA_LA_FTYPE, dimension(:,:), intent(in) :: A
   AA_LA_FTYPE, dimension(:), intent(out) :: x
   integer :: i
-  x = 0
+  x = TOREAL(0)
   do i = 1,size(A,2)
      x = x + A(:,i)
   end do
-  x = x / size(A,2)
+  x = x /TOREAL(size(A,2))
 end subroutine AA_LA_FMOD(colmean)
 
 subroutine AA_LA_FMOD_C(colmean)( m, n, A, lda, x )
@@ -106,7 +113,7 @@ pure subroutine AA_LA_FMOD(colcov)( A, x, E )
   AA_LA_FTYPE, dimension(:,:), intent(out) :: E
 
   integer :: k,i,j
-  E = 0
+  E = TOREAL(0)
   do k = 1,size(A,2)
      forall (i=1:size(x))
         forall (j=1:size(x))
@@ -114,7 +121,7 @@ pure subroutine AA_LA_FMOD(colcov)( A, x, E )
         end forall
      end forall
   end do
-  E = E / (size(A,2)-1)
+  E = E / TOREAL(size(A,2)-1)
 end subroutine AA_LA_FMOD(colcov)
 
 subroutine AA_LA_FMOD_C(colcov)( m, n, A, lda, x, E, lde )
@@ -126,3 +133,5 @@ subroutine AA_LA_FMOD_C(colcov)( m, n, A, lda, x, E, lde )
 end subroutine AA_LA_FMOD_C(colcov)
 
 #include "amino/undef.h"
+
+#undef TOREAL
