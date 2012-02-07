@@ -57,6 +57,11 @@ AA_API void AA_LA_NAME(transpose)
   const AA_LA_TYPE *A, size_t lda,
   AA_LA_TYPE *B, size_t ldb );
 
+/** Sum-square differences of x and y. */
+AA_LA_FDEC(AA_LA_TYPE, ssd, size_t n,
+           const AA_LA_TYPE *x, size_t incx,
+           const AA_LA_TYPE *y, size_t incy )
+
 /** Mean of columns of A.
  * \param m rows of A
  * \param n cols of A

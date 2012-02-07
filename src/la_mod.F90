@@ -65,6 +65,7 @@ module amino_la
        use ISO_C_BINDING
        integer(C_SIZE_T), intent(in) :: n
        real(C_DOUBLE), intent(in), dimension(n) :: m, y
+       real(C_DOUBLE) :: s
      end function aa_la_ssd
 
   end interface
@@ -74,9 +75,9 @@ contains
   !! Preprocessor type generics hack
 
 #define AA_LA_TYPE_DOUBLE
-#include "la_float.F90"
+#include "la_implf.F90"
 
 #define AA_LA_TYPE_FLOAT
-#include "la_float.F90"
+#include "la_implf.F90"
 
 end module amino_la

@@ -48,10 +48,11 @@
 #define AA_CLA_NAME( name ) aa_cla_d ## name
 #define AA_LA_NAME( name ) aa_la_d_ ## name
 
-#define AA_LA_FTYPE Real(8)
 #define AA_LA_FMOD(name) aa_la_mod_d_ ## name
 #define AA_LA_FMOD_C(name) AA_LA_FMOD( name ## _c )
 #define AA_LA_FMOD_F(name) AA_FORT_MOD_MANGLE(amino_la, aa_la_mod_d_ ## name ## _c)
+
+#define AA_TF_FMOD(name) aa_tf_mod_d_ ## name
 
 #elif defined AA_LA_TYPE_FLOAT
 
@@ -62,10 +63,11 @@
 #define AA_CLA_NAME( name ) aa_cla_s ## name
 #define AA_LA_NAME( name ) aa_la_s_ ## name
 
-#define AA_LA_FTYPE Real(4)
 #define AA_LA_FMOD(name) aa_la_mod_s_ ## name
 #define AA_LA_FMOD_C(name)  AA_LA_FMOD( name ## _c )
 #define AA_LA_FMOD_F(name) AA_FORT_MOD_MANGLE(amino_la, aa_la_mod_s_ ## name ## _c)
+
+#define AA_TF_FMOD(name) aa_tf_mod_s_ ## name
 
 #else
 

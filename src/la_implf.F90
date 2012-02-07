@@ -1,0 +1,213 @@
+!! -*- mode: F90; -*-
+!!
+!! Copyright (c) 2012, Georgia Tech Research Corporation
+!! All rights reserved.
+!!
+!! Author(s): Neil T. Dantam <ntd@gatech.edu>
+!! Georgia Tech Humanoid Robotics Lab
+!! Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
+!!
+!!
+!! This file is provided under the following "BSD-style" License:
+!!
+!!
+!!   Redistribution and use in source and binary forms, with or
+!!   without modification, are permitted provided that the following
+!!   conditions are met:
+!!
+!!   * Redistributions of source code must retain the above copyright
+!!     notice, this list of conditions and the following disclaimer.
+!!
+!!   * Redistributions in binary form must reproduce the above
+!!     copyright notice, this list of conditions and the following
+!!     disclaimer in the documentation and/or other materials provided
+!!     with the distribution.
+!!
+!!   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+!!   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+!!   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+!!   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+!!   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+!!   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+!!   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+!!   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+!!   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+!!   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+!!   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+!!   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+!!   POSSIBILITY OF SUCH DAMAGE.
+
+!! FILE: la_float.F90
+!! BRIEF: Linear Algebra Functions
+!! AUTHOR: Neil T. Dantam
+!!
+!! This file is included multiple times with macros defined for
+!! different types
+
+
+#include "amino/def.F90"
+
+!!------------------!!
+!! FLOATING and INT !!
+!!------------------!!
+
+
+pure subroutine AA_LA_FMOD(cross)( a, b, r)
+  AA_FTYPE(AA_FSIZE), intent(out) :: r(:)
+  AA_FTYPE(AA_FSIZE), intent(in) :: a(:),b(:)
+  integer, dimension(3), parameter :: yzx = [2,3,1], zxy = [3,1,2]
+  r = a(yzx)*b(zxy) - a(zxy)*b(yzx)
+end subroutine AA_LA_FMOD(cross)
+
+pure subroutine AA_LA_FMOD_C(cross)( a, b, r)
+  AA_FTYPE(AA_FSIZE), intent(out) :: r(3)
+  AA_FTYPE(AA_FSIZE), intent(in) :: a(3), b(3)
+  call AA_LA_FMOD(cross)(a,b,r)
+end subroutine AA_LA_FMOD_C(cross)
+
+!! SSD
+
+pure function AA_LA_FMOD(ssd)(x, y) result(a)
+  AA_FTYPE(AA_FSIZE), intent(in) :: x(:), y(:)
+  AA_FTYPE(AA_FSIZE) :: a
+  a = dot_product(x-y,x-y)
+end function AA_LA_FMOD(ssd)
+
+pure function AA_LA_FMOD_C(ssd)(n, x, incx, y, incy) result(a)
+  integer (c_size_t), intent(in), value :: n, incx, incy
+  AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx), y(n*incy)
+  AA_FTYPE(AA_FSIZE) :: a
+  a = AA_LA_FMOD(ssd)(x(1:n*incx:incx),y(1:n*incy:incy))
+end function AA_LA_FMOD_C(ssd)
+
+pure subroutine AA_LA_FMOD(colssd)(A, B, C)
+  AA_FTYPE(AA_FSIZE), intent(in) :: A(:,:), B(:,:)
+  AA_FTYPE(AA_FSIZE), intent(out) :: C(:,:)
+  integer :: i,j
+  forall (i=1:size(C,1))
+     forall (j=1:size(C,2))
+        C(i,j) = AA_LA_FMOD(ssd)(A(:,i), B(:,j))
+     end forall
+  end forall
+end subroutine AA_LA_FMOD(colssd)
+
+pure subroutine AA_LA_FMOD(colssd_c)(m,n,A,lda,B,ldb,C,ldc)
+  integer(c_size_t),intent(in),value :: m,n,lda,ldb,ldc
+  AA_FTYPE(AA_FSIZE), intent(in) :: A(lda,m),B(ldb,n)
+  AA_FTYPE(AA_FSIZE), intent(out) :: C(ldc,n)
+  call AA_LA_FMOD(colssd)(A,B,C)
+end subroutine AA_LA_FMOD(colssd_c)
+
+
+!!---------------------!!
+!! FLOATING POINT ONLY !!
+!!---------------------!!
+
+#if defined AA_LA_TYPE_DOUBLE || defined AA_LA_TYPE_FLOAT
+!! Angle
+
+function AA_LA_FMOD(angle)( p, q ) result(a)
+  real(AA_FSIZE), intent(in) :: p(:),q(:)
+  real(AA_FSIZE) :: a
+  a = acos( dot_product(p, q) )
+end function AA_LA_FMOD(angle)
+
+function AA_LA_FMOD_C(angle)( n, p, q ) result(a)
+  integer(C_SIZE_T), value   :: n
+  real(AA_FSIZE), intent(in) :: p(n),q(n)
+  real(AA_FSIZE) :: a
+  a = AA_LA_FMOD(angle)(p,q)
+end function AA_LA_FMOD_C(angle)
+
+!! Proj
+
+pure subroutine AA_LA_FMOD(proj)( a, b, r )
+  real(AA_FSIZE), intent(in)  :: a(:),b(:)
+  real(AA_FSIZE), intent(out) :: r(:)
+  r = (dot_product(a,b) * b) / dot_product(b,b)
+end subroutine AA_LA_FMOD(proj)
+
+!! Orth
+
+pure subroutine AA_LA_FMOD(orth)( a, b, r )
+  real(AA_FSIZE), intent(in)  :: a(:),b(:)
+  real(AA_FSIZE), intent(out) :: r(:)
+  r = a - (dot_product(a,b) * b) / dot_product(b,b)
+end subroutine AA_LA_FMOD(orth)
+
+
+!! Colmean
+
+pure subroutine AA_LA_FMOD(colmean)( A, x )
+  real(AA_FSIZE), intent(in) :: A(:,:)
+  real(AA_FSIZE), intent(out) :: x(:)
+  integer :: i
+  !x = TOREAL(0)
+  !do i = 1,size(A,2)
+     !x = x + A(:,i)
+  !end do
+  !x = x / TOREAL(size(A,2))
+  forall (i = 1:size(x))
+     x(i) = sum(A(i,:)) / TOREAL(size(A,2))
+  end forall
+end subroutine AA_LA_FMOD(colmean)
+
+subroutine AA_LA_FMOD_C(colmean)( m, n, A, lda, x )
+  integer(C_SIZE_T), value :: m,n,lda
+  real(AA_FSIZE), intent(in) :: A(lda,n)
+  real(AA_FSIZE), intent(out) :: x(m)
+  call AA_LA_FMOD(colmean)(A,x)
+end subroutine AA_LA_FMOD_C(colmean)
+
+
+pure subroutine AA_LA_FMOD(rowmean)( A, x )
+  real(AA_FSIZE), intent(in) :: A(:,:)
+  real(AA_FSIZE), intent(out) :: x(:)
+  integer :: i
+  forall (i = 1:size(x))
+     x(i) = sum(A(:,i)) / TOREAL(size(A,1))
+  end forall
+end subroutine AA_LA_FMOD(rowmean)
+
+subroutine AA_LA_FMOD_C(rowmean)( m, n, A, lda, x )
+  integer(C_SIZE_T), value :: m,n,lda
+  real(AA_FSIZE), intent(in) :: A(lda,n)
+  real(AA_FSIZE), intent(out) :: x(m)
+  call AA_LA_FMOD(rowmean)(A,x)
+end subroutine AA_LA_FMOD_C(rowmean)
+
+!! Colcov
+
+pure subroutine AA_LA_FMOD(colcov)( A, x, E )
+  real(AA_FSIZE), intent(in) :: A(:,:)
+  real(AA_FSIZE), intent(in) :: x(:)
+  real(AA_FSIZE), intent(out) :: E(:,:)
+
+  integer :: k,i,j
+  E = TOREAL(0)
+  do k = 1,size(A,2)
+     forall (i=1:size(x))
+        forall (j=1:size(x))
+           E(i,j) = E(i,j) + (A(i,k)-x(i)) * (A(j,k)-x(j))
+        end forall
+     end forall
+  end do
+  E = E / TOREAL(size(A,2)-1)
+end subroutine AA_LA_FMOD(colcov)
+
+
+subroutine AA_LA_FMOD_C(colcov)( m, n, A, lda, x, E, lde )
+  integer(C_SIZE_T), value :: m,n,lda,lde
+  real(AA_FSIZE), intent(in) :: A(lda,n)
+  real(AA_FSIZE), intent(in) :: x(m)
+  real(AA_FSIZE), intent(out) :: E(lde,m)
+  call AA_LA_FMOD(colcov)(A,x,E)
+end subroutine AA_LA_FMOD_C(colcov)
+
+#endif
+#if 0
+!! Float
+#endif
+
+
+#include "amino/undef.F90"

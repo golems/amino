@@ -1,6 +1,6 @@
 INCLUDES = -I$(top_srcdir)/include
 EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/la_impl.c       \
-             src/la_mod.F90 src/la_float.F90
+             src/la_mod.F90 src/la_implf.F90
 
 include_HEADERS = include/amino.h
 
@@ -27,7 +27,9 @@ pkginclude_HEADERS = 	                \
 	include/amino/cv.h              \
 	include/amino/validate.h        \
 	include/amino/def.h             \
-	include/amino/undef.h
+	include/amino/undef.h           \
+	include/amino/def.F90           \
+	include/amino/undef.F90
 
 TESTS = aa_test
 
@@ -72,7 +74,8 @@ lapack-doc.c: doc/lapack-doc.c
 la-doc.c: doc/la-doc.c
 	$(CPP) $(INCLUDES) -CC $< -o $@
 
-la_mod.f90: src/la_mod.F90 src/la_float.F90 include/amino/def.h include/amino/undef.h
+la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90
+	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 
 EXTRA_DX = clapack-doc.c lapack-doc.c la-doc.c

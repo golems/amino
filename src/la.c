@@ -75,13 +75,7 @@ double aa_la_norm( size_t n, const double *x ) {
 }
 
 double aa_la_ssd( size_t n, const double *x, const double *y ) {
-    double a = 0;
-    double t = 0;
-    for( size_t i = 0; i < n; i ++ ) {
-        t = x[i] - y[i];
-        a += t*t;
-    }
-    return a;
+    return aa_la_d_ssd(n,x,1,y,1);
 }
 
 double aa_la_dist( size_t n, const double *x, const double *y ) {

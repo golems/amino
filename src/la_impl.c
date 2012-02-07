@@ -115,11 +115,9 @@ AA_API void AA_LA_NAME(opt_hungarian)
         AA_LA_NAME(mat_max)(n,n,A,lda,NULL,NULL);
     //int mask[n*n];
     size_t zerorc[2] = {0};
-    memset(mask,0,n*n*(sizeof(mask[0])));
+    memset(mask,0,n*n*sizeof(mask[0]));
     memset(row_cover,0,n*sizeof(row_cover[0]));
     memset(col_cover,0,n*sizeof(col_cover[0]));
-
-
     // -- Step 1 ----
     // for each column
     for( size_t j = 0; j < n; j ++ ) {
@@ -146,8 +144,7 @@ AA_API void AA_LA_NAME(opt_hungarian)
     for( size_t j = 0; j < n; j ++ ) {
         for( size_t i = 0; i < n; i++ ) {
             if( 0 >= AA_MATREF(A,lda,i,j) &&
-                0 == row_cover[i] &&
-                0 == col_cover[j] )
+                0 == row_cover[i] )
             {
                 row_cover[i] = col_cover[j] = 1;
                 AA_MATREF(mask,n,i,j) = 1;

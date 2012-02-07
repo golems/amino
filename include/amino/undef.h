@@ -47,9 +47,9 @@
 #undef AA_LAPACK_PREFIX_STR
 #undef AA_CLA_NAME
 #undef AA_LA_NAME
-#undef AA_LA_FTYPE
 #undef AA_LA_FMOD
 #undef AA_LA_FMOD_C
 #undef AA_LA_FMOD_F
 #undef AA_LA_FDEC
+#undef AA_TF_FMOD
 
