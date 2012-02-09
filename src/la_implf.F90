@@ -104,6 +104,7 @@ end subroutine AA_FMOD(la,colssd_c)
 !!---------------------!!
 
 #if defined AA_TYPE_DOUBLE || defined AA_TYPE_FLOAT
+
 !! Angle
 
 function AA_FMOD(la,angle)( p, q ) result(a)
@@ -118,6 +119,32 @@ function AA_FMOD_C(la,angle)( n, p, q ) result(a)
   real(AA_FSIZE) :: a
   a = AA_FMOD(la,angle)(p,q)
 end function AA_FMOD_C(la,angle)
+
+
+!! Norm2
+
+function AA_FMOD(la,norm2)( p ) result(a)
+  real(AA_FSIZE), intent(in) :: p(:)
+  real(AA_FSIZE) :: a
+  a = sqrt(dot_product(p,p))
+end function AA_FMOD(la,norm2)
+
+subroutine AA_FMOD(la,unit_sub1)( p )
+  real(AA_FSIZE), intent(inout) :: p(:)
+  p = p / AA_FMOD(la,norm2)(p)
+end subroutine AA_FMOD(la,unit_sub1)
+
+subroutine AA_FMOD(la,unit_sub2)( p, u )
+  real(AA_FSIZE), intent(in) :: p(:)
+  real(AA_FSIZE), intent(out) :: u(:)
+  u = p / AA_FMOD(la,norm2)(p)
+end subroutine AA_FMOD(la,unit_sub2)
+
+function AA_FMOD(la,unit_fun)( p ) result(u)
+  real(AA_FSIZE), intent(in) :: p(:)
+  real(AA_FSIZE)  :: u(size(p))
+  call AA_FMOD(la,unit_sub2)(p,u)
+end function AA_FMOD(la,unit_fun)
 
 !! Proj
 
