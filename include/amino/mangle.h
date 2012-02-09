@@ -18,5 +18,7 @@
 #define AA_MANGLE_FMOD_C( type, prefix, name )  \
     AA_MANGLE_FMOD( type, prefix, name ## _c )
 
+#define AA_MANGLE_FIFACE( prefix, name ) \
+    AA_MANGLE_FMOD(d,prefix,name), AA_MANGLE_FMOD(s,prefix,name)
 
 #endif

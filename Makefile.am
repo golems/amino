@@ -28,6 +28,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/validate.h        \
 	include/amino/def.h             \
 	include/amino/undef.h           \
+	include/amino/mangle.h          \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
@@ -74,7 +75,7 @@ lapack-doc.c: doc/lapack-doc.c
 la-doc.c: doc/la-doc.c
 	$(CPP) $(INCLUDES) -CC $< -o $@
 
-la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90
+la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 

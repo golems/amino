@@ -55,19 +55,57 @@
 !!   - A fortran wrapper function using the C calling convention
 !!   - A C header file to declare the wrapper function to cc
 
+#include "amino/mangle.h"
+
 module amino_la
   use ISO_C_BINDING
   implicit none
 
-  interface
-     !! bind some C functions for fortran
-     function aa_la_ssd(n, m, y) result(s)
-       use ISO_C_BINDING
-       integer(C_SIZE_T), intent(in) :: n
-       real(C_DOUBLE), intent(in), dimension(n) :: m, y
-       real(C_DOUBLE) :: s
-     end function aa_la_ssd
 
+  interface aa_la_cross
+     module procedure AA_MANGLE_FIFACE(la,cross)
+  end interface
+
+  interface aa_la_ssd
+     module procedure AA_MANGLE_FIFACE(la,ssd)
+  end interface
+
+  interface aa_la_colssd
+     module procedure AA_MANGLE_FIFACE(la,colssd)
+  end interface
+
+  interface aa_la_angle
+     module procedure AA_MANGLE_FIFACE(la,angle)
+  end interface
+
+  interface aa_la_norm2
+     module procedure AA_MANGLE_FIFACE(la,norm2)
+  end interface
+
+  interface aa_la_unit
+     module procedure AA_MANGLE_FIFACE(la,unit_sub1), &
+          AA_MANGLE_FIFACE(la,unit_sub2), &
+          AA_MANGLE_FIFACE(la,unit_fun)
+  end interface
+
+  interface aa_la_proj
+     module procedure AA_MANGLE_FIFACE(la,proj)
+  end interface
+
+  interface aa_la_orth
+     module procedure AA_MANGLE_FIFACE(la,orth)
+  end interface
+
+  interface aa_la_colmean
+     module procedure AA_MANGLE_FIFACE(la,colmean)
+  end interface
+
+  interface aa_la_rowmean
+     module procedure AA_MANGLE_FIFACE(la,rowmean)
+  end interface
+
+  interface aa_la_colcov
+     module procedure AA_MANGLE_FIFACE(la,colcov)
   end interface
 
 contains
