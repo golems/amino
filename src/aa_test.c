@@ -585,20 +585,26 @@ void la2_hungarian_helper(size_t m, size_t n, double *A, size_t lda,
         int use_ir = k&1;
         int use_jr = k&2;
         if( n == m ) {
-            ssize_t iwork[3*p*p + 2*p];
+            ssize_t iwork[aa_la_d_opt_hungarian_iworksize(p)+1];
+            iwork[aa_la_d_opt_hungarian_iworksize(p)] = 42;
             aa_cla_dlacpy( 0, (int)m, (int)n, A, (int)lda, A_tmp, (int)m );
             aa_la_d_opt_hungarian( p, A_tmp, m,
                                    use_ir ? ir : NULL,
                                    use_jr ? jr : NULL,
                                    iwork );
+            assert( 42 == iwork[aa_la_d_opt_hungarian_iworksize(p)] );
         } else {
-            ssize_t iwork[3*p*p + 4*p];
-            double work[p*p];
+            ssize_t iwork[aa_la_d_opt_hungarian_pad_iworksize(m,n)+1];
+            iwork[aa_la_d_opt_hungarian_pad_iworksize(m,n)] = 42;
+            double work[aa_la_d_opt_hungarian_pad_worksize(m,n)+1];
+            work[aa_la_d_opt_hungarian_pad_worksize(m,n)] = 42.42;
             aa_la_d_opt_hungarian_pad( m, n, A, lda,
                                        use_ir ? ir : NULL,
                                        use_jr ? jr : NULL,
                                        work,
                                        iwork );
+            assert( 42 == iwork[aa_la_d_opt_hungarian_pad_iworksize(m,n)] );
+            afeq(work[aa_la_d_opt_hungarian_pad_worksize(m,n)], 42.42, 0.0);
         }
 
         double accum[2] = {0,0};

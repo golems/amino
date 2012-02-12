@@ -116,6 +116,11 @@ AA_API void AA_NAME(la,opt_hungarian)
   ssize_t *col_assign,
   ssize_t *iwork);
 
+static inline size_t AA_NAME(la,opt_hungarian_iworksize)
+( size_t n ) {
+    return 3*n*n + 2*n;
+}
+
 /** Hungarian algorithm for rectangular distance matrix by padding with zeros.
  *
  * \param m rows of A
@@ -133,6 +138,16 @@ AA_API void AA_NAME(la,opt_hungarian_pad)
   ssize_t *col_assign,
   AA_TYPE *work, ssize_t *iwork);
 
+static inline size_t AA_NAME(la,opt_hungarian_pad_iworksize)
+(size_t m,size_t n) {
+    size_t p = AA_MAX(m,n);
+    return 3*p*p + 4*p;
+}
+static inline size_t AA_NAME(la,opt_hungarian_pad_worksize)
+(size_t m,size_t n) {
+    size_t p = AA_MAX(m,n);
+    return p*p;
+}
 
 
 /** Converts max assignment to min assignment for Hungarian algorithm.
