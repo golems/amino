@@ -231,6 +231,37 @@ pure subroutine AA_FMOD_C(la,colcov)( m, n, A, lda, x, E, lde )
   call AA_FMOD(la,colcov)(A,x,E)
 end subroutine AA_FMOD_C(la,colcov)
 
+!! Fits
+pure subroutine AA_FMOD(la,colfit)( A, x )
+  real(AA_FSIZE), intent(in) :: A(:,:)
+  real(AA_FSIZE), intent(out) :: x(:)
+
+  real(AA_FSIZE) :: At(size(A,2),size(A,1))
+  real(AA_FSIZE) :: b(size(A,2)), xout(size(A,1))
+  integer :: m,n,i
+  real(AA_FSIZE) :: d
+  m = size(A,1) ! space size
+  n = size(A,2) ! data points
+
+  ! construct normed A,b matrix
+  forall (i=1:n)
+     At(i,:) = A(:,i) / aa_la_norm2(A(:,i))
+     b(i) = TOREAL(-1) / aa_la_norm2(A(:,i))
+  end forall
+  ! solve
+  call AA_NAME(la,lls)( n, m, 1, At, n, b, n, xout, m)
+  ! normalize
+  d = aa_la_norm2(xout)
+  x(1:m) = xout/d
+  x(m+1) = TOREAL(1)/d
+end subroutine AA_FMOD(la,colfit)
+
+pure subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
+  integer(c_size_t), intent(in), value :: m,n,lda
+  real(AA_FSIZE), intent(out) :: A(lda,n), x(m)
+  call AA_FMOD(la,colfit)( A, x )
+end subroutine AA_FMOD_C(la,colfit)
+
 #endif
 #if 0
 !! Float

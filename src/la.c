@@ -374,18 +374,5 @@ void aa_la_plane_hessian( size_t n, double *plane ) {
 }
 
 void aa_la_plane_fit( size_t m, size_t n, const double *points, double *plane ) {
-    double b[n];
-    double A[m*n];
-
-    // make each (column-major) row a data point
-    // space-size m
-    // data points n
-    for( size_t i = 0; i < n; i ++ ) b[i] = -1;
-    aa_la_transpose2( m, n, points, A );
-
-
-    aa_la_lls( n, m, 1, A, b, plane );
-
-    plane[m] = 1;
-    aa_la_plane_hessian( m+1, plane );
+    aa_la_d_colfit( m, n, points, m, plane );
 }
