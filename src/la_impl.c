@@ -351,7 +351,7 @@ AA_API void AA_NAME(la,opt_hungarian_pad)
     // zero pad work
     if( m > n ) {
         AA_CLA_NAME(laset)(0, (int)p, (int)(p-q), 0, 0,
-                           work+p*m, (int)p );
+                           work+p*n, (int)p );
     } else if( m < n ) {
         AA_CLA_NAME(laset)(0, (int)(p-q), (int)p, 0, 0,
                            work+m, (int)p );
