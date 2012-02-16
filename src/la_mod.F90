@@ -61,6 +61,20 @@ module amino_la
   use ISO_C_BINDING
   implicit none
 
+  interface aa_la_lls
+     subroutine aa_la_d_lls(m,n,p,A,lda,b,ldb,x,ldx)
+       use ISO_C_BINDING
+       integer(c_size_t), intent(in) :: m,n,p,lda,ldb,ldx
+       real(c_double), intent(in) :: A(lda,n), b(ldb,p)
+       real(c_double), intent(out) :: x(ldx,p)
+     end subroutine aa_la_d_lls
+     subroutine aa_la_s_lls(m,n,p,A,lda,b,ldb,x,ldx)
+       use ISO_C_BINDING
+       integer(c_size_t), intent(in) :: m,n,p,lda,ldb,ldx
+       real(c_float), intent(in) :: A(lda,n), b(ldb,p)
+       real(c_float), intent(out) :: x(ldx,p)
+     end subroutine aa_la_s_lls
+  end interface
 
   interface aa_la_cross
      module procedure AA_MANGLE_FIFACE(la,cross)

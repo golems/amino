@@ -369,4 +369,51 @@ AA_API void AA_NAME(la,opt_hungarian_pad)
     }
 }
 
+AA_API void AA_NAME(la,lls_)
+( const size_t *m, const size_t *n, const size_t *p,
+  const AA_TYPE *A, const size_t *lda,
+  const AA_TYPE *b, const size_t *ldb,
+  AA_TYPE *x, const size_t *ldx ) {
+    AA_NAME(la,lls)(*m, *n, *p, A, *lda, b, *ldb, x, *ldx);
+}
+
+AA_API void AA_NAME(la,lls)
+( size_t m, size_t n, size_t p,
+  const AA_TYPE *A, size_t lda,
+  const AA_TYPE *b, size_t ldb,
+  AA_TYPE *x, size_t ldx ) {
+
+    int mi=(int)m, ni=(int)n, pi=(int)p;
+    AA_TYPE rcond=-1;
+
+    size_t ldbp = AA_MAX(m,n);
+    AA_TYPE Ap[m*n];
+    AA_TYPE bp[ldbp*p];
+    AA_CLA_NAME(lacpy)(0, (int)m,(int)n, A, (int)lda, Ap, (int)m);
+    AA_CLA_NAME(lacpy)(0, (int)m,(int)p, b, (int)ldb, bp, (int)ldbp);
+
+    int rank, info;
+    size_t liwork = (size_t)AA_CLA_NAME(gelsd_miniwork)(mi,ni);
+    size_t ls = AA_MIN(m,n);
+    AA_TYPE S[ls];
+    int iwork[liwork];
+
+    int lwork=-1;
+    while(1) {
+        AA_TYPE work[ lwork < 0 ? 1 : lwork ];
+
+        info = AA_CLA_NAME(gelsd)( mi, ni, pi,
+                                   Ap, mi, bp, (int)ldbp,
+                                   S, &rcond, &rank,
+                                   work, lwork, iwork );
+
+        if( lwork >= 0 ) break;
+        assert( -1 == lwork && sizeof(work) == sizeof(AA_TYPE) );
+        lwork = (int) work[0];
+    }
+
+    AA_CLA_NAME(lacpy)(0, (int)n,(int)p, bp, (int)ldbp, x, (int)ldx);
+}
+
+
 #include "amino/undef.h"

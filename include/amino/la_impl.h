@@ -214,4 +214,25 @@ AA_FDEC(AA_TYPE, la, angle,
 
 
 
+/** Linear Least Squares.
+ * \f[ b = Ax \f]
+ * Solves for x.
+ * \param m rows in A
+ * \param n cols in A
+ * \param p cols in b and x
+ * \param A matrix
+ * \param lda leading dimension of A
+ * \param b offset matrix
+ * \param ldb leading dimension of b
+ * \param x solution matrix
+ * \param ldx leading dimension of x
+ */
+AA_API void AA_NAME(la,lls)
+( size_t m, size_t n, size_t p,
+  const AA_TYPE *A, size_t lda,
+  const AA_TYPE *b, size_t ldb,
+  AA_TYPE *x, size_t ldx );
+
+
+
 #include "amino/undef.h"
