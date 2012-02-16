@@ -62,18 +62,37 @@ module amino_la
   implicit none
 
   interface aa_la_lls
-     pure subroutine aa_la_d_lls(m,n,p,A,lda,b,ldb,x,ldx)
+     pure subroutine aa_la_d_lls(m,n,p,A,lda,b,ldb,x,ldx) &
+          bind(C,name="aa_la_d_lls")
        use ISO_C_BINDING
-       integer(c_size_t), intent(in) :: m,n,p,lda,ldb,ldx
+       integer(c_size_t), intent(in), value :: m,n,p,lda,ldb,ldx
        real(c_double), intent(in) :: A(lda,n), b(ldb,p)
        real(c_double), intent(out) :: x(ldx,p)
      end subroutine aa_la_d_lls
-     pure subroutine aa_la_s_lls(m,n,p,A,lda,b,ldb,x,ldx)
+     pure subroutine aa_la_s_lls(m,n,p,A,lda,b,ldb,x,ldx) &
+          bind(C,name="aa_la_s_lls")
        use ISO_C_BINDING
-       integer(c_size_t), intent(in) :: m,n,p,lda,ldb,ldx
+       integer(c_size_t), intent(in), value :: m,n,p,lda,ldb,ldx
        real(c_float), intent(in) :: A(lda,n), b(ldb,p)
        real(c_float), intent(out) :: x(ldx,p)
      end subroutine aa_la_s_lls
+  end interface
+
+  interface aa_la_svd
+     pure subroutine aa_la_d_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
+          bind(C,name="aa_la_d_svd")
+       use ISO_C_BINDING
+       integer(c_size_t), intent(in), value :: m,n,lda,ldu,ldvt
+       real(c_double), intent(in) :: A(lda,n)
+       real(c_double), intent(out) :: U(ldu,m), S(min(m,n)), Vt(ldvt,n)
+     end subroutine aa_la_d_svd
+     pure subroutine aa_la_s_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
+          bind(C,name="aa_la_s_svd")
+       use ISO_C_BINDING
+       integer(c_size_t), intent(in), value :: m,n,lda,ldu,ldvt
+       real(c_float), intent(in) :: A(lda,n)
+       real(c_float), intent(out) :: U(ldu,m), S(min(m,n)), Vt(ldvt,n)
+     end subroutine aa_la_s_svd
   end interface
 
   interface aa_la_cross

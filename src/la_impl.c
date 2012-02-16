@@ -369,14 +369,6 @@ AA_API void AA_NAME(la,opt_hungarian_pad)
     }
 }
 
-AA_API void AA_NAME(la,lls_)
-( const size_t *m, const size_t *n, const size_t *p,
-  const AA_TYPE *A, const size_t *lda,
-  const AA_TYPE *b, const size_t *ldb,
-  AA_TYPE *x, const size_t *ldx ) {
-    AA_NAME(la,lls)(*m, *n, *p, A, *lda, b, *ldb, x, *ldx);
-}
-
 AA_API void AA_NAME(la,lls)
 ( size_t m, size_t n, size_t p,
   const AA_TYPE *A, size_t lda,
@@ -415,5 +407,39 @@ AA_API void AA_NAME(la,lls)
     AA_CLA_NAME(lacpy)(0, (int)n,(int)p, bp, (int)ldbp, x, (int)ldx);
 }
 
+
+
+AA_API int AA_NAME(la,svd)
+( size_t m, size_t n, const AA_TYPE *A, size_t lda,
+  AA_TYPE *U, size_t ldu,
+  AA_TYPE *S,
+  AA_TYPE *Vt, size_t ldvt ) {
+
+    int mi = (int)m, ni=(int)n;
+
+    AA_TYPE Ap[m*n];
+    AA_CLA_NAME(lacpy)(0, mi, ni, A, (int)lda,
+                       Ap, mi);
+
+    const char *jobu = (U && ldu > 0) ? "A" : "N";
+    const char *jobvt = (Vt && ldvt > 0) ? "A" : "N";
+    int lwork = -1;
+    int info;
+
+    while(1) {
+        AA_TYPE work[ lwork < 0 ? 1 : lwork ];
+        AA_LAPACK_NAME(gesvd)( jobu, jobvt, &mi, &ni,
+                               Ap, &mi,
+                               S, U, &mi,
+                               Vt, &ni,
+                               &work[0], &lwork, &info );
+        if( lwork >= 0 ) break;
+        assert( -1 == lwork && sizeof(work) == sizeof(work[0]) );
+        lwork = (int) work[0];
+    }
+
+    //finish
+    return info;
+}
 
 #include "amino/undef.h"

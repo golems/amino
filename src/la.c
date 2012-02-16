@@ -271,29 +271,7 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
 }
 
 int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt ) {
-    double Ap[m*n];
-    memcpy(Ap, A, sizeof(Ap));
-
-    const char *jobu = U ? "A" : "N";
-    const char *jobvt = Vt ? "A" : "N";
-    int mi = (int)m, ni=(int)n;
-    int lwork = -1;
-    int info;
-
-    while(1) {
-        double work[ lwork < 0 ? 1 : lwork ];
-        dgesvd_( jobu, jobvt, &mi, &ni,
-                 Ap, &mi,
-                 S, U, &mi,
-                 Vt, &ni,
-                 &work[0], &lwork, &info );
-        if( lwork >= 0 ) break;
-        assert( -1 == lwork && sizeof(work) == sizeof(double) );
-        lwork = (int) work[0];
-    }
-
-    //finish
-    return info;
+    return aa_la_d_svd(m,n,A,m,U,m,S,Vt,n);
 }
 
 AA_API void aa_la_dls( size_t m, size_t n, double k, const double *A, const double *x, double *y ) {

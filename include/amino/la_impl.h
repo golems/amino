@@ -234,5 +234,42 @@ AA_API void AA_NAME(la,lls)
   AA_TYPE *x, size_t ldx );
 
 
+/** Singular Value Decomposition of A.
+ *
+ * \f[ A =  U \Sigma V^T \f]
+ *
+ * \param m rows
+ * \param n columns
+ * \param A \f$A \in \Re^m \times \Re^n\f$, column major
+ * \param lda leading dimension of A
+ * \param U \f$U \in \Re^m \times \Re^m\f$, column major.
+ *    If null or ldu==0, U is returned in A.  U and Vt cannot both be null.
+ * \param ldu leading dimension of U
+ * \param S \f$S \in \Re^m min(m,n)\f$, singular values
+ * \param Vt \f$V^T \in \Re^n \times \Re^n\f$, singular vectors. If
+ *   null or ldvt==0, Vt is returned in A.  Vt and U cannot both be null.
+ * \param ldvt leading dimension of Vt
+ */
+AA_API int AA_NAME(la,svd)
+( size_t m, size_t n, const AA_TYPE *A, size_t lda,
+  AA_TYPE *U, size_t ldu,
+  AA_TYPE *S,
+  AA_TYPE *Vt, size_t ldvt );
+
+
+/** Fit a least-squares hyperplane to columns of A.
+ *
+ * Normalizes data first.
+ *
+ * \param m rows of A, size of space
+ * \param n cols of A, number of points
+ * \param A data points
+ * \param lda leading dimension of A
+ * \param x output hyperplance in hessian normal form
+ *
+ */
+AA_FDEC( void, la, colfit,
+         size_t m, size_t n,
+         const AA_TYPE *A, size_t lda, AA_TYPE *x );
 
 #include "amino/undef.h"
