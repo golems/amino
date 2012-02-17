@@ -61,7 +61,21 @@ aa_dump_vec( FILE *file, double *v, size_t n );
 
 /// print a matrix to file
 AA_API void
-aa_dump_mat( FILE *file, double *A, size_t m, size_t n );
+aa_dump_mat( FILE *file, const double *A, size_t m, size_t n );
+
+#define AA_DUMP_MAT( file, fmt, A, m, n)                                \
+    {                                                                   \
+        for( size_t aa_debug_$_i = 0; aa_debug_$_i < m;                 \
+             aa_debug_$_i ++ ) {                                        \
+            for( size_t aa_debug_$_j = 0; aa_debug_$_j < n-1;           \
+                 aa_debug_$_j ++ ) {                                    \
+                fprintf(file, fmt"\t",                                  \
+                        AA_MATREF(A, m, aa_debug_$_i,aa_debug_$_j));    \
+            }                                                           \
+            fprintf(file, fmt"\n",                                      \
+                    AA_MATREF(A, m, aa_debug_$_i, n-1) );               \
+        }                                                               \
+    }                                                                   \
 
 /// save time, printf fmt
 AA_API void
