@@ -96,7 +96,9 @@ module amino_la
   end interface
 
   interface aa_la_cross
-     module procedure AA_MANGLE_FIFACE(la,cross)
+     module procedure &
+          AA_MANGLE_FIFACE(la,cross_sub), &
+          AA_MANGLE_FIFACE(la,cross_fun)
   end interface
 
   interface aa_la_ssd

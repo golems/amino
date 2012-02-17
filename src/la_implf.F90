@@ -52,17 +52,23 @@
 !!------------------!!
 
 
-pure subroutine AA_FMOD(la,cross)( a, b, r)
+pure subroutine AA_FMOD(la,cross_sub)(a, b, r)
   AA_FTYPE(AA_FSIZE), intent(out) :: r(:)
   AA_FTYPE(AA_FSIZE), intent(in) :: a(:),b(:)
   integer, dimension(3), parameter :: yzx = [2,3,1], zxy = [3,1,2]
   r = a(yzx)*b(zxy) - a(zxy)*b(yzx)
-end subroutine AA_FMOD(la,cross)
+end subroutine AA_FMOD(la,cross_sub)
+
+pure function AA_FMOD(la,cross_fun)(a, b) result(r)
+  AA_FTYPE(AA_FSIZE), intent(in) :: a(:),b(:)
+  AA_FTYPE(AA_FSIZE) :: r(3)
+  call AA_FMOD(la,cross_sub)(a,b,r)
+end function AA_FMOD(la,cross_fun)
 
 pure subroutine AA_FMOD_C(la,cross)( a, b, r)
   AA_FTYPE(AA_FSIZE), intent(out) :: r(3)
   AA_FTYPE(AA_FSIZE), intent(in) :: a(3), b(3)
-  call AA_FMOD(la,cross)(a,b,r)
+  call AA_FMOD(la,cross_sub)(a,b,r)
 end subroutine AA_FMOD_C(la,cross)
 
 !! SSD
