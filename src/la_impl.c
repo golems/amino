@@ -266,9 +266,9 @@ AA_API void AA_NAME(la,opt_hungarian)
                 //printf("convert path: %d\n", count);
                 //dump_imat( path, 2, 1+count);
                 for( size_t i = 0; i <= count; i ++ ) {
-                    int *ptr = &AA_MATREF(mask, n,
-                                          (size_t)AA_MATREF(path,n*n,i,0),
-                                          (size_t)AA_MATREF(path,n*n,i,1));
+                    ssize_t *ptr = &AA_MATREF(mask, n,
+                                              (size_t)AA_MATREF(path,n*n,i,0),
+                                              (size_t)AA_MATREF(path,n*n,i,1));
                     *ptr = (1==*ptr) ? 0 : 1;
                 }
                 //dump_imat( mask, n, n );
@@ -279,7 +279,7 @@ AA_API void AA_NAME(la,opt_hungarian)
             // erase primes
             for( size_t j = 0; j < n; j ++ ) {
                 for( size_t i = 0; i < n; i ++ ) {
-                    int *ptr = &AA_MATREF(mask,n,i,j);
+                    ssize_t *ptr = &AA_MATREF(mask,n,i,j);
                     if( 2 ==  *ptr ) *ptr = 0;
                 }
             }

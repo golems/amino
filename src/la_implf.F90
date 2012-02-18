@@ -255,7 +255,8 @@ pure subroutine AA_FMOD(la,colfit)( A, x )
      b(i) = TOREAL(-1) / aa_la_norm2(A(:,i))
   end forall
   ! solve
-  call AA_NAME(la,lls)( n, m, 1, At, n, b, n, xout, m)
+  call AA_NAME(la,lls)( int(n,c_size_t), int(m,c_size_t), int(1,c_size_t), &
+       At, int(n,c_size_t), b, int(n,c_size_t), xout, int(m,c_size_t) )
   ! normalize
   d = aa_la_norm2(xout)
   x(1:m) = xout/d

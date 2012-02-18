@@ -128,8 +128,8 @@ AA_API double aa_stat_circ_std( size_t n, const double *x) {
         as += s;
         ac += c;
     }
-    as = as / (n);
-    ac = ac / (n);
+    as = as / (double)n;
+    ac = ac / (double)n;
     double r = (as*as + ac*ac);
     return sqrt( -2 * log(r) );
 }
@@ -159,8 +159,8 @@ AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
             }
         }
         assert(j > 1);
-        mu = am / j;
-        sigma = sqrt(as / (j-1));
+        mu = am / (double)j;
+        sigma = sqrt(as / (double)(j-1));
     } while( jj != j &&  ++iter < max_iterations ) ;
     *pmu = mu;
     *psigma = sigma;
@@ -193,8 +193,8 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
             }
         }
         assert(j > 1);
-        as /= (j);
-        ac /= (j);
+        as /= (double)j;
+        ac /= (double)j;
         mu = atan2(as,ac);
         double r = (as*as + ac*ac);
         sigma = sqrt( -2 * log(r) );
