@@ -124,11 +124,15 @@ module amino_la
   end interface
 
   interface aa_la_proj
-     module procedure AA_MANGLE_FIFACE(la,proj)
+     module procedure &
+     AA_MANGLE_FIFACE(la,proj_sub), &
+     AA_MANGLE_FIFACE(la,proj_fun)
   end interface
 
   interface aa_la_orth
-     module procedure AA_MANGLE_FIFACE(la,orth)
+     module procedure &
+          AA_MANGLE_FIFACE(la,orth_sub), &
+          AA_MANGLE_FIFACE(la,orth_fun)
   end interface
 
   interface aa_la_colmean

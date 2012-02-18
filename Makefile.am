@@ -32,11 +32,11 @@ pkginclude_HEADERS = 	                \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
-TESTS = aa_test
+TESTS = aa_test la_test
 
 lib_LTLIBRARIES = libamino.la
 
-bin_PROGRAMS = aa_test
+bin_PROGRAMS = aa_test la_test
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
@@ -65,8 +65,11 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 distclean-local:
 	-rm -rf doxygen-doc
 
-aa_test_SOURCES = src/aa_test.c
+aa_test_SOURCES = src/test/aa_test.c
 aa_test_LDADD = libamino.la
+
+la_test_SOURCES = src/test/la_test.F90
+la_test_LDADD = libamino.la
 
 clapack-doc.c: doc/clapack-doc.c
 	$(CPP) $(INCLUDES) -CC $< -o $@

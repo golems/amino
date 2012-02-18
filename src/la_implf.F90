@@ -113,10 +113,10 @@ end subroutine AA_FMOD(la,colssd_c)
 
 !! Angle
 
-pure function AA_FMOD(la,angle)( p, q ) result(a)
+pure function AA_FMOD(la,angle)( p, q ) result(r)
   real(AA_FSIZE), intent(in) :: p(:),q(:)
-  real(AA_FSIZE) :: a
-  a = acos( dot_product(p, q) )
+  real(AA_FSIZE) :: r
+  r = acos( dot_product(p, q) / sqrt( dot_product(p,p)*dot_product(q,q) ) )
 end function AA_FMOD(la,angle)
 
 pure function AA_FMOD_C(la,angle)( n, p, q ) result(a)
@@ -154,19 +154,31 @@ end function AA_FMOD(la,unit_fun)
 
 !! Proj
 
-pure subroutine AA_FMOD(la,proj)( a, b, r )
+pure subroutine AA_FMOD(la,proj_sub)( a, b, r )
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE), intent(out) :: r(:)
   r = (dot_product(a,b) * b) / dot_product(b,b)
-end subroutine AA_FMOD(la,proj)
+end subroutine AA_FMOD(la,proj_sub)
+
+pure function AA_FMOD(la,proj_fun)( a, b ) result(r)
+  real(AA_FSIZE), intent(in)  :: a(:),b(:)
+  real(AA_FSIZE) :: r(size(a))
+  call AA_FMOD(la,proj_sub)(a,b,r)
+end function AA_FMOD(la,proj_fun)
 
 !! Orth
 
-pure subroutine AA_FMOD(la,orth)( a, b, r )
+pure subroutine AA_FMOD(la,orth_sub)( a, b, r )
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE), intent(out) :: r(:)
   r = a - (dot_product(a,b) * b) / dot_product(b,b)
-end subroutine AA_FMOD(la,orth)
+end subroutine AA_FMOD(la,orth_sub)
+
+pure function AA_FMOD(la,orth_fun)( a, b ) result(r)
+  real(AA_FSIZE), intent(in)  :: a(:),b(:)
+  real(AA_FSIZE) :: r(size(a))
+  call AA_FMOD(la,orth_sub)(a,b,r)
+end function AA_FMOD(la,orth_fun)
 
 
 !! Colmean
