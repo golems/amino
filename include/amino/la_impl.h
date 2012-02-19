@@ -71,6 +71,18 @@ AA_FDEC(AA_TYPE, la, ssd,
         const AA_TYPE *x, size_t incx,
         const AA_TYPE *y, size_t incy )
 
+
+/** Standard deviation of vector.
+ * \param n length of d
+ * \param x vector
+ * \param incx increment of x
+ * \param mu mean
+ */
+AA_FDEC(AA_TYPE, la, vecstd,
+        size_t n,
+        const AA_TYPE *x, size_t incx,
+        AA_TYPE mu);
+
 /** Mean of columns of A.
  * \param m rows of A
  * \param n cols of A

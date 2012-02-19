@@ -253,6 +253,21 @@ pure function AA_FMOD(la,orth_fun)( a, b ) result(r)
 end function AA_FMOD(la,orth_fun)
 
 
+!! Mean/STD
+pure function AA_FMOD(la,vecstd)(x,mu) result(sigma)
+  AA_FTYPE(AA_FSIZE), intent(in) :: x(:), mu
+  AA_FTYPE(AA_FSIZE) :: sigma
+  sigma = sqrt( TOREAL(1)/(TOREAL(size(x)-1)) * sum( (x-mu)**2 ) )
+end function AA_FMOD(la,vecstd)
+
+pure function AA_FMOD_C(la,vecstd)(n,x,incx,mu) result(sigma)
+  integer(c_size_t), intent(in), value :: n,incx
+  AA_FTYPE(AA_FSIZE), intent(in), value :: mu
+  AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx)
+  AA_FTYPE(AA_FSIZE) :: sigma
+  sigma = aa_la_std(x(1:n:incx),mu)
+end function AA_FMOD_C(la,vecstd)
+
 !! Colmean
 
 !> Mean of columns

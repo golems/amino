@@ -149,6 +149,11 @@ module amino_la
           AA_MANGLE_FIFACE(la,orth_fun)
   end interface
 
+  !> Standard deviation
+  interface aa_la_std
+     module procedure AA_MANGLE_FIFACE(la,vecstd)
+  end interface
+
   !> Mean of matrix columns
   interface aa_la_colmean
      module procedure AA_MANGLE_FIFACE(la,colmean)

@@ -102,10 +102,8 @@ AA_API double aa_stat_mean( size_t n, const double *x) {
 
 
 AA_API double aa_stat_std( size_t n, const double *x) {
-    double dn = (double)n;
     double mu = aa_stat_mean(n,x);
-    double a2 = cblas_ddot( (int)n, x, 1, x, 1 );
-    return sqrt( (a2 - dn*mu*mu) / (dn-1) );
+    return aa_la_d_vecstd(n, x, 1, mu );
 }
 
 

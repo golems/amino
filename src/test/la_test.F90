@@ -53,6 +53,7 @@ program la_test
   call test_cross1()
   call test_cross2()
   call test_proj_orth()
+  call test_std()
   call test_meancov()
 
   print *,"la_test completed."
@@ -188,6 +189,15 @@ contains
        end do
     end do
   end subroutine test_proj_orth
+
+
+  subroutine test_std()
+    real :: a(10) = [1.,2.,3.,4.,5.,6.,7.,8.,9.,10.]
+    real :: x,s
+    x = sum(a)/real(size(a))
+    s = aa_la_std(a,x)
+    call ftest( "std", 3.0277, s, .001 )
+  end subroutine test_std
 
   subroutine test_meancov()
     real :: a(2,3) = reshape( [1.,2., 3.,3., 8.,12.], [2,3] )
