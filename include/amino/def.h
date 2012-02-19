@@ -89,6 +89,6 @@
     AA_API rettype                                                      \
     AA_FMOD_F( prefix, name )                                           \
     ( __VA_ARGS__ );                                                    \
-    /* now the C function pointer that aliases it */                    \
+    /** C function pointer that aliases fortran symbol*/                \
     static rettype (* const AA_NAME(prefix, name) )( __VA_ARGS__ ) =    \
         AA_FMOD_F(prefix,name);

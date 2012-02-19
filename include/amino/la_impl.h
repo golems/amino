@@ -57,7 +57,15 @@ AA_API void AA_NAME(la,transpose)
   const AA_TYPE *A, size_t lda,
   AA_TYPE *B, size_t ldb );
 
-/** Sum-square differences of x and y. */
+/** Sum-square differences of x and y.
+ * \param n length of vectors
+ * \param x first vector
+ * \param y second vector
+ * \param incx stepsize of x
+ * \param incy stepsize of y
+ *
+ * \sa aa_la_d_ssd
+*/
 AA_FDEC(AA_TYPE, la, ssd,
         size_t n,
         const AA_TYPE *x, size_t incx,
@@ -69,6 +77,8 @@ AA_FDEC(AA_TYPE, la, ssd,
  * \param lda leading dimension of A
  * \param[in] A source matrix, m*n
  * \param[out] x destination vector for mean, length m
+ *
+ * \sa aa_la_d_colmean
  */
 AA_FDEC(AA_TYPE, la, colmean,
         size_t m, size_t n,
@@ -87,6 +97,8 @@ AA_FDEC(AA_TYPE, la, colmean,
  * \param[in] x mean of columns of A, length m
  * \param[out] E covariance of columns of A, m*m
  * \param lde leading dimension of E
+ *
+ * \sa aa_la_d_colcov
  */
 
 AA_FDEC(AA_TYPE, la, colcov,
@@ -106,6 +118,9 @@ AA_FDEC(AA_TYPE, la, colcov,
 /** Hungarian algorithm to solve min assignment problem
  * \param n rows and cols of A
  * \param A cost matrix, column major, destroyed on exit
+ * \param[out] row_assign array of column assigned to row at index i,
+ *             length m. Unmatched elements have the value of -1.
+ * \param col_assign mapping from col to matched row
  * \param lda leading dimension of A
  * \param row_assign array of column assigned to row at index i
  * \param iwork array of size 3*n*n +2*n
@@ -116,6 +131,10 @@ AA_API void AA_NAME(la,opt_hungarian)
   ssize_t *col_assign,
   ssize_t *iwork);
 
+/** Compute minimum iwork size for hungarian algorithm
+ *
+ * \sa aa_la_d_opt_hungarian
+ */
 static inline size_t AA_NAME(la,opt_hungarian_iworksize)
 ( size_t n ) {
     return 3*n*n + 2*n;
@@ -129,6 +148,7 @@ static inline size_t AA_NAME(la,opt_hungarian_iworksize)
  * \param lda leading dimension of A
  * \param[out] row_assign array of column assigned to row at index i,
  *             length m. Unmatched elements have the value of -1.
+ * \param[out] col_assign mapping from col to matched row
  * \param work work array of length max(m,n)**2
  * \param iwork integer work array of length (3*max(m,n)**2 + 4*max(m,n))
  */
@@ -138,11 +158,20 @@ AA_API void AA_NAME(la,opt_hungarian_pad)
   ssize_t *col_assign,
   AA_TYPE *work, ssize_t *iwork);
 
+/** Compute minimum iwork size for padded hungarian algorithm
+ *
+ * \sa aa_la_d_opt_hungarian_pad
+ */
 static inline size_t AA_NAME(la,opt_hungarian_pad_iworksize)
 (size_t m,size_t n) {
     size_t p = AA_MAX(m,n);
     return 3*p*p + 4*p;
 }
+
+/** Compute minimum work size for padded hungarian algorithm
+ *
+ * \sa aa_la_d_opt_hungarian_pad
+ */
 static inline size_t AA_NAME(la,opt_hungarian_pad_worksize)
 (size_t m,size_t n) {
     size_t p = AA_MAX(m,n);
@@ -151,7 +180,8 @@ static inline size_t AA_NAME(la,opt_hungarian_pad_worksize)
 
 
 /** Converts max assignment to min assignment for Hungarian algorithm.
- * \param n rows and cols of A
+ * \param m rows of A
+ * \param n cols of A
  * \param A cost matrix for max problem,
  *        converted to matrix for min proble on exit
  * \param lda leading dimension of A
@@ -209,8 +239,19 @@ static inline size_t AA_NAME(la,maxloc)
     return imax;
 }
 
+/** Angle between vectors.
+ *
+ * \param n length of vectors
+ * \param x first vector
+ * \param incx stepsize of x
+ * \param y second vector
+ * \param incy stepsize of y
+ *
+ * \sa aa_la_d_angle
+ */
 AA_FDEC(AA_TYPE, la, angle,
-        size_t n, const AA_TYPE *p, const AA_TYPE *q)
+        size_t n, const AA_TYPE *x, size_t incx,
+        const AA_TYPE *y, size_t incy)
 
 
 
@@ -267,6 +308,7 @@ AA_API int AA_NAME(la,svd)
  * \param lda leading dimension of A
  * \param x output hyperplance in hessian normal form
  *
+ * \sa aa_la_d_colfit
  */
 AA_FDEC( void, la, colfit,
          size_t m, size_t n,

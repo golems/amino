@@ -38,7 +38,7 @@
 !!   POSSIBILITY OF SUCH DAMAGE.
 
 
-!> \file mod_la.F90
+!> \file la_mod.f90
 !! \brief Linear Algebra Module
 !! \author Neil T. Dantam
 !!
@@ -61,7 +61,9 @@ module amino_la
   use ISO_C_BINDING
   implicit none
 
+  !> Linear Least Squares
   interface aa_la_lls
+     !> Double float linear least squares
      pure subroutine aa_la_d_lls(m,n,p,A,lda,b,ldb,x,ldx) &
           bind(C,name="aa_la_d_lls")
        use ISO_C_BINDING
@@ -69,6 +71,7 @@ module amino_la
        real(c_double), intent(in) :: A(lda,n), b(ldb,p)
        real(c_double), intent(out) :: x(ldx,p)
      end subroutine aa_la_d_lls
+     !> Single float linear least squares
      pure subroutine aa_la_s_lls(m,n,p,A,lda,b,ldb,x,ldx) &
           bind(C,name="aa_la_s_lls")
        use ISO_C_BINDING
@@ -78,7 +81,9 @@ module amino_la
      end subroutine aa_la_s_lls
   end interface
 
+  !> Singular Value Decomposition
   interface aa_la_svd
+     !> Double float SVD
      pure subroutine aa_la_d_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
           bind(C,name="aa_la_d_svd")
        use ISO_C_BINDING
@@ -86,6 +91,7 @@ module amino_la
        real(c_double), intent(in) :: A(lda,n)
        real(c_double), intent(out) :: U(ldu,m), S(min(m,n)), Vt(ldvt,n)
      end subroutine aa_la_d_svd
+     !> Single float SVD
      pure subroutine aa_la_s_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
           bind(C,name="aa_la_s_svd")
        use ISO_C_BINDING
@@ -95,58 +101,70 @@ module amino_la
      end subroutine aa_la_s_svd
   end interface
 
+  !> Cross product
   interface aa_la_cross
      module procedure &
           AA_MANGLE_FIFACE(la,cross_sub), &
           AA_MANGLE_FIFACE(la,cross_fun)
   end interface
 
+  !> Sum Squared Differences
   interface aa_la_ssd
      module procedure AA_MANGLE_FIFACE(la,ssd)
   end interface
 
+  !> Sum Squared Differences of matrix columns
   interface aa_la_colssd
      module procedure AA_MANGLE_FIFACE(la,colssd)
   end interface
 
+  !> Angle between vectors
   interface aa_la_angle
      module procedure AA_MANGLE_FIFACE(la,angle)
   end interface
 
+  !> Norm-2 of a vector
   interface aa_la_norm2
      module procedure AA_MANGLE_FIFACE(la,norm2)
   end interface
 
+  !> Make a unit vector
   interface aa_la_unit
      module procedure AA_MANGLE_FIFACE(la,unit_sub1), &
           AA_MANGLE_FIFACE(la,unit_sub2), &
           AA_MANGLE_FIFACE(la,unit_fun)
   end interface
 
+  !> Vector projection
   interface aa_la_proj
      module procedure &
      AA_MANGLE_FIFACE(la,proj_sub), &
      AA_MANGLE_FIFACE(la,proj_fun)
   end interface
 
+  !> Vector orthogonal projection
   interface aa_la_orth
      module procedure &
           AA_MANGLE_FIFACE(la,orth_sub), &
           AA_MANGLE_FIFACE(la,orth_fun)
   end interface
 
+  !> Mean of matrix columns
   interface aa_la_colmean
      module procedure AA_MANGLE_FIFACE(la,colmean)
   end interface
 
+  !> Mean of matrix rows
   interface aa_la_rowmean
      module procedure AA_MANGLE_FIFACE(la,rowmean)
   end interface
 
+  !> Covariance of matrix columns
   interface aa_la_colcov
      module procedure AA_MANGLE_FIFACE(la,colcov)
   end interface
 
+  !> Fit hyperplane to matrix columns
   interface aa_la_colfit
      module procedure AA_MANGLE_FIFACE(la,colfit)
   end interface

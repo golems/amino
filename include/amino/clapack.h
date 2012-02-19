@@ -43,9 +43,13 @@
 #define AA_CLAPACK_H
 
 
-static inline int aa_la_ilaenv( int ispec,
-                                const char *name, const char *opts,
-                                int n1, int n2, int n3, int n4 ) {
+/** ILAENV is called from the LAPACK routines to choose problem-dependent
+ *  parameters for the local environment.
+ * \sa ilaenv_
+ */
+static inline int aa_cla_ilaenv( int ispec,
+                                 const char *name, const char *opts,
+                                 int n1, int n2, int n3, int n4 ) {
     int nl = (int)strlen(name);
     int ol = (int)strlen(opts);
     return ilaenv_(&ispec, name, opts, &n1, &n2, &n3, &n4, nl, ol );

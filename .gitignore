@@ -42,3 +42,6 @@
 /core
 /la_mod.f90
 /la_test
+/clapack_doc.c
+/la_doc.c
+/lapack_doc.c

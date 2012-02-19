@@ -66,11 +66,13 @@ static inline int AA_CLA_NAME(getri)
     return info;
 }
 
+/// part of worksize computation for xgelsd
 static inline int AA_CLA_NAME(gelsd_smlsiz) () {
-    return aa_la_ilaenv( 9, AA_LAPACK_PREFIX_STR
-                              "GELSD", "", 0, 0, 0, 0 );
+    return aa_cla_ilaenv( 9, AA_LAPACK_PREFIX_STR
+                          "GELSD", "", 0, 0, 0, 0 );
 }
 
+/// part of worksize computation for xgelsd
 static inline int AA_CLA_NAME(gelsd_nlvl)
 ( int m, int n ) {
     int minmn = AA_MIN(m,n);
@@ -78,6 +80,7 @@ static inline int AA_CLA_NAME(gelsd_nlvl)
     return (int)AA_MAX(0, 1 + log2( minmn / (1 + smlsiz)));
 }
 
+/// Minimum iwork for xgelsd
 static inline int AA_CLA_NAME(gelsd_miniwork)
 ( int m, int n ) {
     int minmn = AA_MIN(m,n);
@@ -115,7 +118,10 @@ static inline void AA_CLA_NAME(lacpy)
                            A, &lda, B, &ldb );
 }
 
-
+/** Set values in a matrix.
+ *
+ * \sa dlaset_
+ */
 static inline void AA_CLA_NAME(laset)
 ( char UPLO, int M, int N,
   AA_TYPE ALPHA,

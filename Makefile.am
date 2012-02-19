@@ -71,18 +71,17 @@ aa_test_LDADD = libamino.la
 la_test_SOURCES = src/test/la_test.F90
 la_test_LDADD = libamino.la
 
-clapack-doc.c: doc/clapack-doc.c
+clapack_doc.c: doc/clapack_doc.c include/amino/clapack.h include/amino/clapack_impl.h
 	$(CPP) $(INCLUDES) -CC $< -o $@
-lapack-doc.c: doc/lapack-doc.c
+lapack_doc.c: doc/lapack_doc.c include/amino/lapack.h include/amino/lapack_impl.h
 	$(CPP) $(INCLUDES) -CC $< -o $@
-la-doc.c: doc/la-doc.c
+la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
 	$(CPP) $(INCLUDES) -CC $< -o $@
 
 la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
-	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 
-EXTRA_DX = clapack-doc.c lapack-doc.c la-doc.c
+EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 
 clean-local:
 	-rm -rf debian/tmp                  \

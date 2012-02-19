@@ -51,34 +51,58 @@
 !! FLOATING and INT !!
 !!------------------!!
 
-
-pure subroutine AA_FMOD(la,cross_sub)(a, b, r)
-  AA_FTYPE(AA_FSIZE), intent(out) :: r(:)
-  AA_FTYPE(AA_FSIZE), intent(in) :: a(:),b(:)
+!> Cross product
+!!
+!! \param[in] x first vector
+!! \param[in] y second vector
+!! \param[out] z result
+pure subroutine AA_FMOD(la,cross_sub)(x, y, z)
+  AA_FTYPE(AA_FSIZE), intent(out) :: z(:)
+  AA_FTYPE(AA_FSIZE), intent(in) :: x(:),y(:)
   integer, dimension(3), parameter :: yzx = [2,3,1], zxy = [3,1,2]
-  r = a(yzx)*b(zxy) - a(zxy)*b(yzx)
+  z = x(yzx)*y(zxy) - x(zxy)*y(yzx)
 end subroutine AA_FMOD(la,cross_sub)
 
-pure function AA_FMOD(la,cross_fun)(a, b) result(r)
-  AA_FTYPE(AA_FSIZE), intent(in) :: a(:),b(:)
-  AA_FTYPE(AA_FSIZE) :: r(3)
-  call AA_FMOD(la,cross_sub)(a,b,r)
+!> Cross product
+!!
+!! \param[in] x first vector
+!! \param[in] y second vector
+pure function AA_FMOD(la,cross_fun)(x, y) result(z)
+  AA_FTYPE(AA_FSIZE), intent(in) :: x(:),y(:)
+  AA_FTYPE(AA_FSIZE) :: z(3)
+  call AA_FMOD(la,cross_sub)(x,y,z)
 end function AA_FMOD(la,cross_fun)
 
-pure subroutine AA_FMOD_C(la,cross)( a, b, r)
-  AA_FTYPE(AA_FSIZE), intent(out) :: r(3)
-  AA_FTYPE(AA_FSIZE), intent(in) :: a(3), b(3)
-  call AA_FMOD(la,cross_sub)(a,b,r)
+!> Cross product, C interface
+!!
+!! \param[in] x first vector
+!! \param[in] y second vector
+!! \param[out] z result
+pure subroutine AA_FMOD_C(la,cross)( x, y, z)
+  AA_FTYPE(AA_FSIZE), intent(out) :: z(3)
+  AA_FTYPE(AA_FSIZE), intent(in) :: x(3), y(3)
+  call AA_FMOD(la,cross_sub)(x,y,z)
 end subroutine AA_FMOD_C(la,cross)
 
 !! SSD
 
+!> Sum of squared differences
+!!
+!! \param[in] x first vector
+!! \param[in] y second vector
 pure function AA_FMOD(la,ssd)(x, y) result(a)
   AA_FTYPE(AA_FSIZE), intent(in) :: x(:), y(:)
   AA_FTYPE(AA_FSIZE) :: a
   a = dot_product(x-y,x-y)
 end function AA_FMOD(la,ssd)
 
+!> Sum of squared differences, C interface
+!!
+!! \param[in] n vector sizes
+!! \param[in] x first vector
+!! \param[in] incx stepsize of x
+!! \param[in] y second vector
+!! \param[in] incy stepsize of y
 pure function AA_FMOD_C(la,ssd)(n, x, incx, y, incy) result(a)
   integer (c_size_t), intent(in), value :: n, incx, incy
   AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx), y(n*incy)
@@ -86,6 +110,13 @@ pure function AA_FMOD_C(la,ssd)(n, x, incx, y, incy) result(a)
   a = AA_FMOD(la,ssd)(x(1:n*incx:incx),y(1:n*incy:incy))
 end function AA_FMOD_C(la,ssd)
 
+!> Sum of squared differences of columns
+!!
+!! \param[in] A first data matrix
+!! \param[in] B second data matrix
+!! \param[out] C SSD between colums of A and B,
+!!      row of C is index to col of A and
+!!      col of C is index to col of B
 pure subroutine AA_FMOD(la,colssd)(A, B, C)
   AA_FTYPE(AA_FSIZE), intent(in) :: A(:,:), B(:,:)
   AA_FTYPE(AA_FSIZE), intent(out) :: C(:,:)
@@ -97,11 +128,24 @@ pure subroutine AA_FMOD(la,colssd)(A, B, C)
   end forall
 end subroutine AA_FMOD(la,colssd)
 
-pure subroutine AA_FMOD(la,colssd_c)(m,n,A,lda,B,ldb,C,ldc)
-  integer(c_size_t),intent(in),value :: m,n,lda,ldb,ldc
-  AA_FTYPE(AA_FSIZE), intent(in) :: A(lda,m),B(ldb,n)
-  AA_FTYPE(AA_FSIZE), intent(out) :: C(ldc,n)
-  call AA_FMOD(la,colssd)(A,B,C)
+!> Sum of squared differences of columns, C interface
+!!
+!! \param[in] m rows of A and B
+!! \param[in] n cols of A and rows of C
+!! \param[in] p cols of B and cols of C
+!! \param[in] A first data matrix
+!! \param[in] lda leading dimension of A
+!! \param[in] B second data matrix
+!! \param[in] ldb leading dimension of B
+!! \param[out] C SSD between colums of A and B,
+!!      row of C is index to col of A and
+!!      col of C is index to col of B
+!! \param[in] ldc leading dimension of C
+pure subroutine AA_FMOD(la,colssd_c)(m,n,p,A,lda,B,ldb,C,ldc)
+  integer(c_size_t),intent(in),value :: m,n,p,lda,ldb,ldc
+  AA_FTYPE(AA_FSIZE), intent(in) :: A(lda,n),B(ldb,n)
+  AA_FTYPE(AA_FSIZE), intent(out) :: C(ldc,p)
+  call AA_FMOD(la,colssd)( A(1:m,:), B(1:m,:), C(1:n,:) )
 end subroutine AA_FMOD(la,colssd_c)
 
 
@@ -113,53 +157,79 @@ end subroutine AA_FMOD(la,colssd_c)
 
 !! Angle
 
-pure function AA_FMOD(la,angle)( p, q ) result(r)
-  real(AA_FSIZE), intent(in) :: p(:),q(:)
+!> Angle between vectors
+!!
+!! \param[in] x first vector
+!! \param[in] y second vector
+pure function AA_FMOD(la,angle)( x, y ) result(r)
+  real(AA_FSIZE), intent(in) :: x(:),y(:)
   real(AA_FSIZE) :: r
-  r = acos( dot_product(p, q) / sqrt( dot_product(p,p)*dot_product(q,q) ) )
+  r = acos( dot_product(x, y) / sqrt( dot_product(x,x)*dot_product(y,y) ) )
 end function AA_FMOD(la,angle)
 
-pure function AA_FMOD_C(la,angle)( n, p, q ) result(a)
-  integer(C_SIZE_T), intent(in), value   :: n
-  real(AA_FSIZE), intent(in) :: p(n),q(n)
+!> Angle between vectors, C interface
+!!
+!! \param[in] n length of vectors
+!! \param[in] x first vector
+!! \param[in] incx stepsize of x
+!! \param[in] y second vector
+!! \param[in] incy stepsize of y
+pure function AA_FMOD_C(la,angle)( n, x, incx, y, incy ) result(a)
+  integer(C_SIZE_T), intent(in), value   :: n, incx, incy
+  real(AA_FSIZE), intent(in) :: x(n*incx),y(n*incy)
   real(AA_FSIZE) :: a
-  a = AA_FMOD(la,angle)(p,q)
+  a = AA_FMOD(la,angle)( x(1:n:incx), y(1:n:incy) )
 end function AA_FMOD_C(la,angle)
 
 
 !! Norm2
 
-pure function AA_FMOD(la,norm2)( p ) result(a)
-  real(AA_FSIZE), intent(in) :: p(:)
+!> Norm-2 of vector
+!!
+!! \param[in] x input vector
+pure function AA_FMOD(la,norm2)( x ) result(a)
+  real(AA_FSIZE), intent(in) :: x(:)
   real(AA_FSIZE) :: a
-  a = sqrt(dot_product(p,p))
+  a = sqrt(dot_product(x,x))
 end function AA_FMOD(la,norm2)
 
-pure subroutine AA_FMOD(la,unit_sub1)( p )
-  real(AA_FSIZE), intent(inout) :: p(:)
-  p = p / AA_FMOD(la,norm2)(p)
+!> Make unit vector
+!!
+!! \param[inout] y vector to make unit
+pure subroutine AA_FMOD(la,unit_sub1)( y )
+  real(AA_FSIZE), intent(inout) :: y(:)
+  y = y / AA_FMOD(la,norm2)(y)
 end subroutine AA_FMOD(la,unit_sub1)
 
-pure subroutine AA_FMOD(la,unit_sub2)( p, u )
-  real(AA_FSIZE), intent(in) :: p(:)
-  real(AA_FSIZE), intent(out) :: u(:)
-  u = p / AA_FMOD(la,norm2)(p)
+!> Make unit vector
+!!
+!! \param[in] x input vector
+!! \param[out] y unit vector with same direction as x
+pure subroutine AA_FMOD(la,unit_sub2)( x, y )
+  real(AA_FSIZE), intent(in) :: x(:)
+  real(AA_FSIZE), intent(out) :: y(:)
+  y = x / AA_FMOD(la,norm2)(x)
 end subroutine AA_FMOD(la,unit_sub2)
 
-pure function AA_FMOD(la,unit_fun)( p ) result(u)
-  real(AA_FSIZE), intent(in) :: p(:)
-  real(AA_FSIZE)  :: u(size(p))
-  call AA_FMOD(la,unit_sub2)(p,u)
+!> Make unit vector
+!!
+!! \param[in] x input vector
+pure function AA_FMOD(la,unit_fun)( x ) result(y)
+  real(AA_FSIZE), intent(in) :: x(:)
+  real(AA_FSIZE)  :: y(size(x))
+  call AA_FMOD(la,unit_sub2)(x,y)
 end function AA_FMOD(la,unit_fun)
 
 !! Proj
 
+!> Vector projection
 pure subroutine AA_FMOD(la,proj_sub)( a, b, r )
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE), intent(out) :: r(:)
   r = (dot_product(a,b) * b) / dot_product(b,b)
 end subroutine AA_FMOD(la,proj_sub)
 
+!> Vector projection
 pure function AA_FMOD(la,proj_fun)( a, b ) result(r)
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE) :: r(size(a))
@@ -168,12 +238,14 @@ end function AA_FMOD(la,proj_fun)
 
 !! Orth
 
+!> Vector orthogonal projection
 pure subroutine AA_FMOD(la,orth_sub)( a, b, r )
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE), intent(out) :: r(:)
   r = a - (dot_product(a,b) * b) / dot_product(b,b)
 end subroutine AA_FMOD(la,orth_sub)
 
+!> Vector orthogonal projection
 pure function AA_FMOD(la,orth_fun)( a, b ) result(r)
   real(AA_FSIZE), intent(in)  :: a(:),b(:)
   real(AA_FSIZE) :: r(size(a))
@@ -183,6 +255,7 @@ end function AA_FMOD(la,orth_fun)
 
 !! Colmean
 
+!> Mean of columns
 pure subroutine AA_FMOD(la,colmean)( A, x )
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(out) :: x(:)
@@ -197,6 +270,7 @@ pure subroutine AA_FMOD(la,colmean)( A, x )
   end forall
 end subroutine AA_FMOD(la,colmean)
 
+!> Mean of columns, C interface
 pure subroutine AA_FMOD_C(la,colmean)( m, n, A, lda, x )
   integer(C_SIZE_T), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(in) :: A(lda,n)
@@ -205,6 +279,7 @@ pure subroutine AA_FMOD_C(la,colmean)( m, n, A, lda, x )
 end subroutine AA_FMOD_C(la,colmean)
 
 
+!> Mean of rows
 pure subroutine AA_FMOD(la,rowmean)( A, x )
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(out) :: x(:)
@@ -214,6 +289,7 @@ pure subroutine AA_FMOD(la,rowmean)( A, x )
   end forall
 end subroutine AA_FMOD(la,rowmean)
 
+!> Mean of rows, C interface
 pure subroutine AA_FMOD_C(la,rowmean)( m, n, A, lda, x )
   integer(C_SIZE_T), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(in) :: A(lda,n)
@@ -223,6 +299,7 @@ end subroutine AA_FMOD_C(la,rowmean)
 
 !! Colcov
 
+!> Covariance of columns
 pure subroutine AA_FMOD(la,colcov)( A, x, E )
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(in) :: x(:)
@@ -241,6 +318,7 @@ pure subroutine AA_FMOD(la,colcov)( A, x, E )
 end subroutine AA_FMOD(la,colcov)
 
 
+!> Covariance of columns, C interface
 pure subroutine AA_FMOD_C(la,colcov)( m, n, A, lda, x, E, lde )
   integer(C_SIZE_T), intent(in), value :: m,n,lda,lde
   real(AA_FSIZE), intent(in) :: A(lda,n)
@@ -250,6 +328,8 @@ pure subroutine AA_FMOD_C(la,colcov)( m, n, A, lda, x, E, lde )
 end subroutine AA_FMOD_C(la,colcov)
 
 !! Fits
+
+!> Fit hyperplane to columns
 pure subroutine AA_FMOD(la,colfit)( A, x )
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(out) :: x(:)
@@ -275,6 +355,7 @@ pure subroutine AA_FMOD(la,colfit)( A, x )
   x(m+1) = TOREAL(1)/d
 end subroutine AA_FMOD(la,colfit)
 
+!> Fit hyperplane to columns, C interface
 pure subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
   integer(c_size_t), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(out) :: A(lda,n), x(m)

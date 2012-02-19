@@ -63,6 +63,14 @@ aa_dump_vec( FILE *file, double *v, size_t n );
 AA_API void
 aa_dump_mat( FILE *file, const double *A, size_t m, size_t n );
 
+/** Print a matrix.
+ *
+ * \param file FILE pointer to print to
+ * \param fmt format specifier for matrix element, ie. "%f" or "%d"
+ * \param A pointer to matrix, column major
+ * \param m matrix rows
+ * \param n matrix cols
+ */
 #define AA_DUMP_MAT( file, fmt, A, m, n)                                \
     {                                                                   \
         for( size_t aa_debug_$_i = 0; aa_debug_$_i < m;                 \
