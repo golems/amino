@@ -89,12 +89,12 @@ contains
     integer :: i,j
     forall (i=1:size(a,1))
        forall (j=1:size(a,2))
-          va(j*size(a,1)+i) = a(i,j)
+          va((j-1)*size(a,1)+i) = a(i,j)
        end forall
     end forall
     forall (i=1:size(b,1))
        forall (j=1:size(b,2))
-          vb(j*size(b,1)+i) = b(i,j)
+          vb((j-1)*size(b,1)+i) = b(i,j)
        end forall
     end forall
     call vtest( name, va, vb, tol )
