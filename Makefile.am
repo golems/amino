@@ -80,6 +80,7 @@ la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
 
 la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
+amino_la.mod: la_mod.$(OBJEXT)
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 

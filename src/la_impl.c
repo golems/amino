@@ -106,10 +106,10 @@ AA_API void AA_NAME(la,opt_hungarian)
   ssize_t *col_assign,
   ssize_t *iwork)
 {
-    ssize_t *row_cover = iwork;
-    ssize_t *col_cover = row_cover + n;
-    ssize_t *mask = col_cover + n;
-    ssize_t *path = mask + n*n;
+    ssize_t *row_cover = iwork;         // length n
+    ssize_t *col_cover = row_cover + n; // length n
+    ssize_t *mask = col_cover + n;      // length n*n
+    ssize_t *path = mask + n*n;         // length 2*n*n
 
     const AA_TYPE max_cost =
         AA_NAME(la,mat_max)(n,n,A,lda,NULL,NULL);

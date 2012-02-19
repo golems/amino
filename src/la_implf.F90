@@ -93,7 +93,8 @@ end subroutine AA_FMOD_C(la,cross)
 pure function AA_FMOD(la,ssd)(x, y) result(a)
   AA_FTYPE(AA_FSIZE), intent(in) :: x(:), y(:)
   AA_FTYPE(AA_FSIZE) :: a
-  a = dot_product(x-y,x-y)
+  !a = dot_product(x-y,x-y)
+  a = sum( (x-y)**2 )
 end function AA_FMOD(la,ssd)
 
 !> Sum of squared differences, C interface

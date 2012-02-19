@@ -96,6 +96,7 @@ AA_FDEC(AA_TYPE, la, colmean,
         size_t m, size_t n,
         const AA_TYPE *A, size_t lda,
         AA_TYPE *x);
+
 /* AA_API void AA_NAME(la,_cmean) */
 /* ( size_t m, size_t n, */
 /*   const AA_TYPE *A, size_t lda, */
@@ -177,7 +178,7 @@ AA_API void AA_NAME(la,opt_hungarian_pad)
 static inline size_t AA_NAME(la,opt_hungarian_pad_iworksize)
 (size_t m,size_t n) {
     size_t p = AA_MAX(m,n);
-    return 3*p*p + 4*p;
+    return AA_NAME(la,opt_hungarian_iworksize)(p) + 2*p;
 }
 
 /** Compute minimum work size for padded hungarian algorithm
