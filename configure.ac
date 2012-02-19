@@ -93,6 +93,16 @@ APPEND_FCFLAG([-Wtabs])
 APPEND_FCFLAG([-Wunused-parameter])
 APPEND_FCFLAG([-Wintrinsic-shadow])
 
+AC_ARG_ENABLE([debug],
+        AS_HELP_STRING([--enable-debug], [Build for debugging]))
+
+AS_IF([test "x$enable_debug" = "xyes"],[
+    AC_LANG([Fortran])
+    APPEND_FCFLAG([-fbounds-check])
+    APPEND_FCFLAG([-fstack-check])
+    AC_LANG([C])
+    APPEND_CFLAG([-fstack-check])
+])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

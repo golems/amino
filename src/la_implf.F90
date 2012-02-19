@@ -374,7 +374,7 @@ end subroutine AA_FMOD(la,colfit)
 !> Fit hyperplane to columns, C interface
 pure subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
   integer(c_size_t), intent(in), value :: m,n,lda
-  real(AA_FSIZE), intent(out) :: A(lda,n), x(m)
+  real(AA_FSIZE), intent(out) :: A(lda,n), x(m+1)
   call AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD_C(la,colfit)
 
