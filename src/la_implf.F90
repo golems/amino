@@ -378,18 +378,59 @@ pure subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
   call AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD_C(la,colfit)
 
-subroutine AA_FMOD_C(la,assign_hungarian)( n, A, lda, row, col )
-  integer(c_size_t), intent(in), value :: n,lda
-  real(AA_FSIZE),intent(inout) :: A(lda,n)
-  integer,intent(out) :: row(n),col(n)
-  call AA_FMOD(la,assign_hungarian)(A(1:n,1:n),row,col)
+subroutine AA_FMOD_C(la,assign_hungarian)( m, n, A, lda, row, col )
+  integer(c_size_t), intent(in), value :: m,n,lda
+  real(AA_FSIZE),intent(in) :: A(lda,n)
+  integer(c_size_t),intent(out) :: row(m),col(n)
+  integer :: rowi(m), coli(n)
+  call AA_FMOD(la,assign_hungarian)(A(1:m,1:n),rowi,coli)
   ! convert to C indices
-  row = row-1
-  col = col-1
+  row = rowi-1
+  col = coli-1
 end subroutine AA_FMOD_C(la,assign_hungarian)
 
-!> Solve assignment problem via Hungarian algorithm
+
+!> Solve assignment problem via Hungarian algorithm, padding if necessary
 subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
+  real(AA_FSIZE), intent(in) :: A(:,:)
+  integer, intent(out) :: row_assign(:),col_assign(:)
+
+  integer :: m,n,i,j
+  integer :: alt_assign( max(size(A,1), size(A,2)) )
+  real(AA_FSIZE) :: B( max(size(A,1), size(A,2)), max(size(A,1), size(A,2)) )
+  m = size(A,1)
+  n = size(A,2)
+
+  B = real(0,AA_FSIZE)
+  B(1:m,1:n) = A
+
+  if ( m > n ) then
+     ! more rows
+     call AA_FMOD(la,assign_hungarian_square)(B,row_assign,alt_assign)
+     forall(j=1:n)
+        col_assign(j) = alt_assign(j)
+     end forall
+     where (row_assign > n)
+        row_assign = -1
+     end where
+  elseif ( m < n ) then
+     ! more cols
+     call AA_FMOD(la,assign_hungarian_square)(B,alt_assign,col_assign)
+     forall (i=1:m)
+        row_assign(i) = alt_assign(i)
+     end forall
+     where (col_assign > m)
+        col_assign = -1
+     end where
+  else
+     ! equal rows / cols
+     call AA_FMOD(la,assign_hungarian_square)(B,row_assign,col_assign)
+  end if
+
+end subroutine AA_FMOD(la,assign_hungarian)
+
+!> Solve square assignment problem via Hungarian algorithm
+subroutine AA_FMOD(la,assign_hungarian_square)(A,row_assign,col_assign)
   real(AA_FSIZE), intent(inout) :: A(:,:)
   integer, intent(out) :: row_assign(:),col_assign(:)
 
@@ -495,8 +536,7 @@ subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
      end do  step4
   end do step3
 
-
-  ! --- Step 7 ---
+  ! --- Step 7 (The End) ---
   ! Compute assignments
   do j=1,n
      do i=1,n
@@ -540,7 +580,18 @@ subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
               .not. star( path(1,k), path(2,k) )
       end forall
     end subroutine make_path
-end subroutine AA_FMOD(la,assign_hungarian)
+end subroutine AA_FMOD(la,assign_hungarian_square)
+
+subroutine AA_FMOD(la,assign_hungarian_max2min)(A)
+  real(AA_FSIZE), intent(inout) :: A(:,:)
+  A = maxval(A) - A
+end subroutine AA_FMOD(la,assign_hungarian_max2min)
+
+subroutine AA_FMOD_C(la,assign_hungarian_max2min)( m, n, A, lda )
+  integer(c_size_t), intent(in), value :: m,n,lda
+  real(AA_FSIZE),intent(inout) :: A(lda,n)
+  call AA_FMOD(la,assign_hungarian_max2min)( A(1:m,1:n) )
+end subroutine AA_FMOD_C(la,assign_hungarian_max2min)
 
 #endif
 #if 0

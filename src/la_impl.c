@@ -100,21 +100,16 @@ void AA_NAME(la,transpose) ( size_t m, size_t n,
 
 
 
-AA_API void AA_NAME(la,opt_hungarian)
-( size_t n, AA_TYPE *A, size_t lda,
-  ssize_t *row_assign,
-  ssize_t *col_assign,
-  ssize_t *iwork)
-{
+/* AA_API void AA_NAME(la,opt_hungarian) */
+/* ( size_t n, AA_TYPE *A, size_t lda, */
+/*   ssize_t *row_assign, */
+/*   ssize_t *col_assign, */
+/*   ssize_t *iwork) */
+/* { */
 
-    (void) iwork;
-    int row[n], col[n];
-    AA_NAME(la,assign_hungarian)(n, A, lda, row, col);
-    for( size_t i = 0; i < n; i++ ) {
-        if( row_assign) row_assign[i] = row[i];
-        if( col_assign) col_assign[i] = col[i];
-    }
-    return;
+/*     (void) iwork; */
+/*     AA_NAME(la,assign_hungarian)(n, n, A, lda, row_assign, col_assign); */
+/*     return; */
 
     /* ssize_t *row_cover = iwork;         // length n */
     /* ssize_t *col_cover = row_cover + n; // length n */
@@ -336,50 +331,56 @@ AA_API void AA_NAME(la,opt_hungarian)
     /*         } */
     /*     } */
     /* } */
-}
+/* } */
 
-AA_API void AA_NAME(la,opt_hungarian_max2min)
-( size_t m, size_t n, AA_TYPE *A, size_t lda ) {
-    AA_TYPE max = AA_NAME(la,mat_max)(m,n,A,lda,NULL,NULL);
-    for( size_t j = 0; j < n; j ++ ) {
-        for( size_t i = 0; i < m; i ++ ) {
-            AA_MATREF(A,lda,i,j) = max - AA_MATREF(A,lda,i,j);
-        }
-    }
-}
+/* AA_API void AA_NAME(la,opt_hungarian_max2min) */
+/* ( size_t m, size_t n, AA_TYPE *A, size_t lda ) { */
+/*     AA_TYPE max = AA_NAME(la,mat_max)(m,n,A,lda,NULL,NULL); */
+/*     for( size_t j = 0; j < n; j ++ ) { */
+/*         for( size_t i = 0; i < m; i ++ ) { */
+/*             AA_MATREF(A,lda,i,j) = max - AA_MATREF(A,lda,i,j); */
+/*         } */
+/*     } */
+/* } */
 
-AA_API void AA_NAME(la,opt_hungarian_pad)
-( size_t m, size_t n, const AA_TYPE *A, size_t lda,
-  ssize_t *row_assign,
-  ssize_t *col_assign,
-  AA_TYPE *work, ssize_t *iwork)
-{
-    size_t p = AA_MAX(m,n);
-    size_t q = AA_MIN(m,n);
+/* AA_API void AA_NAME(la,opt_hungarian_pad) */
+/* ( size_t m, size_t n, const AA_TYPE *A, size_t lda, */
+/*   ssize_t *row_assign, */
+/*   ssize_t *col_assign, */
+/*   AA_TYPE *work, ssize_t *iwork) */
+/* { */
 
-    // copy A into work
-    AA_CLA_NAME(lacpy)( 0, (int)m, (int)n, A, (int)lda, work, (int)p );
+/*     (void) iwork; */
+/*     (void) work; */
+/*     AA_NAME(la,assign_hungarian)(m, n, A, lda, row_assign, col_assign); */
+/*     return; */
 
-    // zero pad work
-    if( m > n ) {
-        AA_CLA_NAME(laset)(0, (int)p, (int)(p-q), 0, 0,
-                           work+p*n, (int)p );
-    } else if( m < n ) {
-        AA_CLA_NAME(laset)(0, (int)(p-q), (int)p, 0, 0,
-                           work+m, (int)p );
-    }
+/*     size_t p = AA_MAX(m,n); */
+/*     size_t q = AA_MIN(m,n); */
 
-    // run hungarian
-    AA_NAME(la,opt_hungarian)( p, work, p, iwork, iwork+p, iwork+2*p );
+/*     // copy A into work */
+/*     AA_CLA_NAME(lacpy)( 0, (int)m, (int)n, A, (int)lda, work, (int)p ); */
 
-    // mark invalid assignments with -1
-    for( size_t i = 0; i < p; i++ ) {
-        if( row_assign && i < m )
-            row_assign[i] = (iwork[i] < (int)n) ? iwork[i] : -1;
-        if( col_assign && i < n )
-            col_assign[i] = ((iwork+p)[i] < (int)m) ? (iwork+p)[i] : -1;
-    }
-}
+/*     // zero pad work */
+/*     if( m > n ) { */
+/*         AA_CLA_NAME(laset)(0, (int)p, (int)(p-q), 0, 0, */
+/*                            work+p*n, (int)p ); */
+/*     } else if( m < n ) { */
+/*         AA_CLA_NAME(laset)(0, (int)(p-q), (int)p, 0, 0, */
+/*                            work+m, (int)p ); */
+/*     } */
+
+/*     // run hungarian */
+/*     AA_NAME(la,opt_hungarian)( p, work, p, iwork, iwork+p, iwork+2*p ); */
+
+/*     // mark invalid assignments with -1 */
+/*     for( size_t i = 0; i < p; i++ ) { */
+/*         if( row_assign && i < m ) */
+/*             row_assign[i] = (iwork[i] < (int)n) ? iwork[i] : -1; */
+/*         if( col_assign && i < n ) */
+/*             col_assign[i] = ((iwork+p)[i] < (int)m) ? (iwork+p)[i] : -1; */
+/*     } */
+/* } */
 
 AA_API void AA_NAME(la,lls)
 ( size_t m, size_t n, size_t p,

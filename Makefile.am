@@ -70,6 +70,7 @@ aa_test_LDADD = libamino.la
 
 la_test_SOURCES = src/test/la_test.F90
 la_test_LDADD = libamino.la
+$(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 
 clapack_doc.c: doc/clapack_doc.c include/amino/clapack.h include/amino/clapack_impl.h
 	$(CPP) $(INCLUDES) -CC $< -o $@

@@ -128,7 +128,7 @@ AA_FDEC(AA_TYPE, la, colcov,
 
 
 
-/** Hungarian algorithm to solve min assignment problem
+/* Hungarian algorithm to solve min assignment problem
  * \param n rows and cols of A
  * \param A cost matrix, column major, destroyed on exit
  * \param[out] row_assign array of column assigned to row at index i,
@@ -138,22 +138,23 @@ AA_FDEC(AA_TYPE, la, colcov,
  * \param row_assign array of column assigned to row at index i
  * \param iwork array of size 3*n*n +2*n
  */
-AA_API void AA_NAME(la,opt_hungarian)
-( size_t n, AA_TYPE *A, size_t lda,
-  ssize_t *row_assign,
-  ssize_t *col_assign,
-  ssize_t *iwork);
+/* AA_API void AA_NAME(la,opt_hungarian) */
+/* ( size_t n, AA_TYPE *A, size_t lda, */
+/*   ssize_t *row_assign, */
+/*   ssize_t *col_assign, */
+/*   ssize_t *iwork); */
 
-/** Compute minimum iwork size for hungarian algorithm
+
+/* Compute minimum iwork size for hungarian algorithm
  *
  * \sa aa_la_d_opt_hungarian
  */
-static inline size_t AA_NAME(la,opt_hungarian_iworksize)
-( size_t n ) {
-    return 3*n*n + 2*n;
-}
+/* static inline size_t AA_NAME(la,opt_hungarian_iworksize) */
+/* ( size_t n ) { */
+/*     return 3*n*n + 2*n; */
+/* } */
 
-/** Hungarian algorithm for rectangular distance matrix by padding with zeros.
+/* Hungarian algorithm for rectangular distance matrix by padding with zeros.
  *
  * \param m rows of A
  * \param n cols of A
@@ -165,32 +166,58 @@ static inline size_t AA_NAME(la,opt_hungarian_iworksize)
  * \param work work array of length max(m,n)**2
  * \param iwork integer work array of length (3*max(m,n)**2 + 4*max(m,n))
  */
-AA_API void AA_NAME(la,opt_hungarian_pad)
-( size_t m, size_t n, const AA_TYPE *A, size_t lda,
-  ssize_t *row_assign,
-  ssize_t *col_assign,
-  AA_TYPE *work, ssize_t *iwork);
+/* AA_API void AA_NAME(la,opt_hungarian_pad) */
+/* ( size_t m, size_t n, const AA_TYPE *A, size_t lda, */
+/*   ssize_t *row_assign, */
+/*   ssize_t *col_assign, */
+/*   AA_TYPE *work, ssize_t *iwork); */
 
-/** Compute minimum iwork size for padded hungarian algorithm
+/* Compute minimum iwork size for padded hungarian algorithm
  *
  * \sa aa_la_d_opt_hungarian_pad
  */
-static inline size_t AA_NAME(la,opt_hungarian_pad_iworksize)
-(size_t m,size_t n) {
-    size_t p = AA_MAX(m,n);
-    return AA_NAME(la,opt_hungarian_iworksize)(p) + 2*p;
-}
+/* static inline size_t AA_NAME(la,opt_hungarian_pad_iworksize) */
+/* (size_t m,size_t n) { */
+/*     size_t p = AA_MAX(m,n); */
+/*     return AA_NAME(la,opt_hungarian_iworksize)(p) + 2*p; */
+/* } */
 
-/** Compute minimum work size for padded hungarian algorithm
+
+/* Compute minimum work size for padded hungarian algorithm
  *
  * \sa aa_la_d_opt_hungarian_pad
  */
-static inline size_t AA_NAME(la,opt_hungarian_pad_worksize)
-(size_t m,size_t n) {
-    size_t p = AA_MAX(m,n);
-    return p*p;
-}
+/* static inline size_t AA_NAME(la,opt_hungarian_pad_worksize) */
+/* (size_t m,size_t n) { */
+/*     size_t p = AA_MAX(m,n); */
+/*     return p*p; */
+/* } */
 
+
+/* Converts max assignment to min assignment for Hungarian algorithm.
+ * \param m rows of A
+ * \param n cols of A
+ * \param A cost matrix for max problem,
+ *        converted to matrix for min proble on exit
+ * \param lda leading dimension of A
+ */
+/* AA_API void AA_NAME(la,opt_hungarian_max2min) */
+/* ( size_t m, size_t n, AA_TYPE *A, size_t lda ); */
+
+
+/** Hungarian algorithm to solve min assignment problem
+ * \param m rows of A
+ * \param n cols of A
+ * \param[in] A cost matrix, column major, destroyed on exit
+ * \param lda leading dimension of A
+ * \param[out] row_assign array of column assigned to row at index i,
+ *             length m. Unmatched elements have the value of -1.
+ * \param[out] col_assign mapping from col to matched row
+ */
+AA_FDEC( void, la, assign_hungarian,
+         size_t m, size_t n,
+         const AA_TYPE *A, size_t lda,
+         ssize_t *row_assign, ssize_t *col_assign );
 
 /** Converts max assignment to min assignment for Hungarian algorithm.
  * \param m rows of A
@@ -199,8 +226,11 @@ static inline size_t AA_NAME(la,opt_hungarian_pad_worksize)
  *        converted to matrix for min proble on exit
  * \param lda leading dimension of A
  */
-AA_API void AA_NAME(la,opt_hungarian_max2min)
-( size_t m, size_t n, AA_TYPE *A, size_t lda );
+
+AA_FDEC( void, la, assign_hungarian_max2min,
+         size_t m, size_t n,
+         const AA_TYPE *A, size_t lda );
+
 
 /** Minimum location of vector x */
 static inline size_t AA_NAME(la,minloc)
@@ -327,8 +357,4 @@ AA_FDEC( void, la, colfit,
          size_t m, size_t n,
          const AA_TYPE *A, size_t lda, AA_TYPE *x );
 
-AA_FDEC( void, la, assign_hungarian,
-         size_t n,
-         AA_TYPE *A, size_t lda,
-         int *row, int *col );
 #include "amino/undef.h"

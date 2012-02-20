@@ -174,6 +174,11 @@ module amino_la
      module procedure AA_MANGLE_FIFACE(la,colfit)
   end interface
 
+  !> Solve assignment problem
+  interface aa_la_assign_hungarian
+     module procedure AA_MANGLE_FIFACE(la,assign_hungarian)
+  end interface
+
 contains
 
   !! Preprocessor type generics hack
