@@ -423,7 +423,7 @@ void aa_odestep_dorpri45( size_t n, aa_sys_fun sys, const void *cx,
                           const double *restrict x0,
                           double *restrict k,
                           double *restrict x4,
-                                 double *restrict x5 ) {
+                          double *restrict x5 ) {
 
     // a is slightly reordered from actual butcher tableau to exploit the zeros
     static const double a[6][5] = {
@@ -463,7 +463,7 @@ void aa_odestep_dorpri45( size_t n, aa_sys_fun sys, const void *cx,
     // sixth column of k gets k6
     butcher( n, sys, cx,
              t0, dt, x0,
-             c[5], 5+1, a[5],
+             c[5], 5+1-1, a[5],
              k, k + 5*n, x4 );
 
     // output (already have x4 from last butcher step)
