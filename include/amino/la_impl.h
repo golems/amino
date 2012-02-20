@@ -327,4 +327,8 @@ AA_FDEC( void, la, colfit,
          size_t m, size_t n,
          const AA_TYPE *A, size_t lda, AA_TYPE *x );
 
+AA_FDEC( void, la, assign_hungarian,
+         size_t n,
+         AA_TYPE *A, size_t lda,
+         int *row, int *col );
 #include "amino/undef.h"

@@ -378,6 +378,170 @@ pure subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
   call AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD_C(la,colfit)
 
+subroutine AA_FMOD_C(la,assign_hungarian)( n, A, lda, row, col )
+  integer(c_size_t), intent(in), value :: n,lda
+  real(AA_FSIZE),intent(inout) :: A(lda,n)
+  integer,intent(out) :: row(n),col(n)
+  call AA_FMOD(la,assign_hungarian)(A(1:n,1:n),row,col)
+  ! convert to C indices
+  row = row-1
+  col = col-1
+end subroutine AA_FMOD_C(la,assign_hungarian)
+
+!> Solve assignment problem via Hungarian algorithm
+subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
+  real(AA_FSIZE), intent(inout) :: A(:,:)
+  integer, intent(out) :: row_assign(:),col_assign(:)
+
+  integer :: path(2,size(A,1)**2)
+  logical :: star(size(A,1),size(A,1))
+  logical :: prime(size(A,1),size(A,1))
+  logical :: row(size(A,1)),col(size(A,1))
+
+  integer :: i,j,k,n
+  real(AA_FSIZE) :: mv
+
+  n = size(A,1)
+
+  ! --- Step 1 ---
+  ! subtract smallest from each col
+  forall (j=1:n)
+     A(:,j) = A(:,j) - minval(A(:,j))
+  end forall
+  ! subtract smallest from each row
+  forall (i=1:n)
+     A(i,:) = A(i,:) - minval(A(i,:))
+  end forall
+
+  ! --- Step 2 ---
+  ! Star each zero in A
+  star = .false.
+  row = .false.
+  do j=1,n
+     do i=1,n
+        if ( real(0,AA_FSIZE) >= A(i,j) .and. &
+             .not. row(i) ) then
+           row(i) = .true.
+           star(i,j) = .true.
+           exit ! one mark per column
+        end if
+     end do
+  end do
+
+  ! --- Step 3 ---
+  ! Cover starred columns
+  step3: do
+     forall (j=1:n)
+       col(j) = any(star(:,j))
+    end forall
+     ! check if all covered
+     if ( count(col) == n ) then
+        exit step3
+     end if
+
+     ! --- Step 4 ---
+     ! Find uncovered zero and prime it or goto 6.
+     ! If star in row, cover row, uncover stars column,
+     ! repeat for all uncovered zeros.  Otherwise, goto 5.
+     prime = .false.
+     row = .false.
+     step4: do
+        do j=1,n
+           if ( .not. col(j) ) then
+              do i=1,n
+                 if ( real(0,AA_FSIZE) >= A(i,j) .and. &
+                      .not. row(i) ) then
+                    ! prime the uncovered zero
+                    prime(i,j) = .true.
+                    do k=1,n
+                       if ( star(i,k) ) then
+                          row(i) = .true.  ! cover star row
+                          col(k) = .false. ! uncover stars column
+                          cycle step4
+                       end if
+                    end do
+                    ! nothing starred in row
+                    path(1,1) = i
+                    path(2,1) = j
+                    call make_path() ! step5
+                    cycle step3
+                 end if
+              end do
+           end if
+        end do
+
+        ! no uncovered zeros
+
+        ! --- Step 6 ---
+        mv = HUGE(A(1,1))
+        ! find smallest uncovered value in A
+        row = .not. row
+        do j=1,n
+           if ( .not. col(j) ) then
+              mv = min( mv, minval( A(:,j), row ) )
+           end if
+        end do
+        row = .not. row
+
+        ! add minval to covered rows
+        ! subtract minval from uncovered cols
+        do j=1,n
+           if( col(j) ) then
+              where (row) A(:,j) = A(:,j) + mv
+           else
+              where (.not. row) A(:,j) = A(:,j) - mv
+           end if
+        end do
+     end do  step4
+  end do step3
+
+
+  ! --- Step 7 ---
+  ! Compute assignments
+  do j=1,n
+     do i=1,n
+        if ( star(i,j) ) then
+           row_assign(i) = j
+           col_assign(j) = i
+           exit ! one assignment per row/col
+        end if
+     end do
+  end do
+
+  contains
+
+    ! --- Step 5 ---
+    !! construct series of alternating primes and stars
+    subroutine make_path()
+      integer :: k,i,j,c
+      c = 1
+      ! loop till no starred column
+      do k=1,n
+         ! find starred column
+         do i=1,n
+            if ( star(i, path(2,c)) ) then
+               c = c+1
+               path(1,c) = i ! row of starred zero
+               path(2,c) = path(2,c-1) ! col of starred zero
+               do j=1,n
+                  if ( prime( path(1,c), j ) ) then
+                     c = c+1
+                     path(1,c) = path(1,c-1) ! row of primed zero
+                     path(2,c) = j ! col of primed zero
+                     exit
+                  end if
+               end do
+            end if
+         end do
+      end do
+      ! convert path
+      forall (k=1:c)
+         star( path(1,k), path(2,k) ) = &
+              .not. star( path(1,k), path(2,k) )
+      end forall
+    end subroutine make_path
+end subroutine AA_FMOD(la,assign_hungarian)
+
 #endif
 #if 0
 !! Float
