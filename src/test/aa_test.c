@@ -772,7 +772,11 @@ void quat() {
         aveq( "tf rotations", 3,vp_r0, vp_q, .0001 );
         aveq( "tf rotations", 3,vp_r0, vp_r1, .0001 );
     }
-
+    {
+        double q[4];
+        aa_tf_rotmat2quat(AA_TF_IDENT,q);
+        aveq( "tf_rotmat2quat", 4, q, AA_TF_QUAT_IDENT, .001 );
+    }
     // nearby
     {
         double q[4] = {1,0,0,1};

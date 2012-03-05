@@ -319,25 +319,31 @@ void aa_tf_quat2rotmat( const double q[restrict 4],
 void aa_tf_rotmat2quat( const double R[restrict 9],
                         double q[restrict 4] ) {
 
+    // Ken Shoemake. "Quaternion Calculus and Fast Animation".
+    // SIGGRAPH course notes. 1987.
+    //
+    // as implemeted in Bullet and Eigen
+
     double x =  AA_MATREF(R,3,0,0);
     double y =  AA_MATREF(R,3,1,1);
     double z =  AA_MATREF(R,3,2,2);
-    /* double trace = x+y+z; */
-    /* if( trace > 0 ) { */
-    /*     double r = sqrt(trace + 1); */
-    /*     q[3] = r / 2; */
-    /*     double s = 0.5 / r; */
-    /*     q[0] = (AA_MATREF(R,3,2,1) - AA_MATREF(R,3,1,2))*s; */
-    /*     q[1] = (AA_MATREF(R,3,0,2) - AA_MATREF(R,3,2,0))*s; */
-    /*     q[2] = (AA_MATREF(R,3,1,0) - AA_MATREF(R,3,0,1))*s; */
-    /* } else  */
-    {
+    double trace = x+y+z;
+    if( trace > 0 ) {
+        double r = sqrt(trace + 1);
+        q[3] = r / 2;
+        double s = 0.5 / r;
+        q[0] = (AA_MATREF(R,3,2,1) - AA_MATREF(R,3,1,2))*s;
+        q[1] = (AA_MATREF(R,3,0,2) - AA_MATREF(R,3,2,0))*s;
+        q[2] = (AA_MATREF(R,3,1,0) - AA_MATREF(R,3,0,1))*s;
+    } else {
         size_t u = (x < y) ?
-            (y < z) ? 2 : 1 :
-            (x < z) ? 2 : 0;
+            ( (y < z) ? 2 : 1 ) :
+            ( (x < z) ? 2 : 0 );
         size_t v = (u + 1) % 3;
         size_t w = (u + 2) % 3;
-        double r = sqrt( 1 + AA_MATREF(R,3,u,u) - AA_MATREF(R,3,v,v) - AA_MATREF(R,3,w,w) );
+        double r = sqrt( 1 + AA_MATREF(R,3,u,u) -
+                         AA_MATREF(R,3,v,v) -
+                         AA_MATREF(R,3,w,w) );
         q[u] = r / 2;
         double s = 0.5 / r;
         q[3] = (AA_MATREF(R,3,w,v) - AA_MATREF(R,3,v,w)) * s;
