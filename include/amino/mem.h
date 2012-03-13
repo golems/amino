@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2010-2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -143,16 +143,16 @@ AA_API void aa_flexbuf_free(aa_flexbuf_t *p);
 /*----------- Region Allocation ------------------*/
 
 /// Alignment of each pointer allocated out of a memory region
-#define AA_REGION_ALIGN 16
+#define AA_MEMREG_ALIGN 16
 
 /** A single block of memory to be parceled out by the region allocator.
  *
  * Library users don't need to handle this directly.
  */
-struct aa_region_node {
+struct aa_memreg_node {
     //size_t n;                    ///< size of this chunk
     uint8_t *end;                ///< pointer to end of this chunk
-    struct aa_region_node *next; ///< pointer to next chunk node
+    struct aa_memreg_node *next; ///< pointer to next chunk node
     uint8_t d[];           ///< data array
 };
 
@@ -180,63 +180,103 @@ struct aa_region_node {
  */
 typedef struct {
     uint8_t *head;                ///< pointer to first free element of top chunk
-    struct aa_region_node *node;  ///< linked list of chunks
-} aa_region_t;
+    struct aa_memreg_node *node;  ///< linked list of chunks
+} aa_memreg_t;
 
 /** Initialize memory region with an initial chunk of size bytes. */
-AA_API void aa_region_init( aa_region_t *region, size_t size );
+AA_API void aa_memreg_init( aa_memreg_t *region, size_t size );
 
 /** Destroy memory region freeing all chunks.
  */
-AA_API void aa_region_destroy( aa_region_t *region );
+AA_API void aa_memreg_destroy( aa_memreg_t *region );
 
-/** Pointer to start of free space in region.
- */
-AA_API void *aa_region_ptr( aa_region_t *region );
 
 /** Number of free contiguous bytes in region.  This is the number of
  * bytes which may be allocated without creating another chunk.
  */
-AA_API size_t aa_region_freesize( aa_region_t *region );
+AA_API size_t aa_memreg_freesize( aa_memreg_t *region );
 
-/** Temporary allocation.  The next call to aa_region_alloc or
- * aa_region_tmpalloc will return the same pointer if sufficient space
+/** Temporary allocation.  The next call to aa_memreg_alloc or
+ * aa_memreg_tmpalloc will return the same pointer if sufficient space
  * is available in the top chunk for that subsequent call.
  */
-AA_API void *aa_region_tmpalloc( aa_region_t *region, size_t size );
+AA_API void *aa_memreg_tmpalloc( aa_memreg_t *region, size_t size );
 
 /** Allocate size bytes from the region.  The head pointer of the top
  * chunk will be returned if it has sufficient space for the
  * allocation.
  */
-AA_API void *aa_region_alloc( aa_region_t *region, size_t size );
-
-/** Deallocates ptr and all blocks allocated after ptr was allocated.
- */
-AA_API void aa_region_pop( aa_region_t *region, void *ptr );
+AA_API void *aa_memreg_alloc( aa_memreg_t *region, size_t size );
 
 /** Deallocates all allocated objects from the region.  If the region
  * contains multiple chunks, they are merged into one.
  */
-AA_API void aa_region_release( aa_region_t *region );
-
-/** Number of chunks in the region
- */
-AA_API size_t aa_region_chunk_count( aa_region_t *region );
-
-/** Size of top chunk in region
- */
-AA_API size_t aa_region_topsize( aa_region_t *region );
-
-
+AA_API void aa_memreg_release( aa_memreg_t *region );
 
 /** printf's into a buffer allocated from region
  */
-AA_API char *aa_region_printf( aa_region_t *region, const char *fmt, ... );
+AA_API char *aa_memreg_printf( aa_memreg_t *region, const char *fmt, ... );
 
 /** printf's into a buffer allocated from region
  */
-AA_API char* aa_region_vprintf(aa_region_t *reg, const char *fmt, va_list ap );
+AA_API char* aa_memreg_vprintf(aa_memreg_t *reg, const char *fmt, va_list ap );
+
+/** Deallocates ptr and all blocks allocated after ptr was allocated.
+ */
+AA_API void aa_memreg_pop( aa_memreg_t *region, void *ptr );
+
+
+/** Pointer to start of free space in region.
+ */
+AA_API void *aa_memreg_ptr( aa_memreg_t *region );
+/** Number of chunks in the region.
+ */
+AA_API size_t aa_memreg_chunk_count( aa_memreg_t *region );
+/** Size of top chunk in region.
+ */
+AA_API size_t aa_memreg_topsize( aa_memreg_t *region );
+
+
+/** Initialize the thread-local memory region.
+ *
+ *  \sa aa_memreg_init
+ */
+AA_API void aa_memreg_local_init( size_t size );
+
+/** Destroy the thread-local memory region.
+ *
+ *  \sa aa_memreg_destroy
+ */
+AA_API void aa_memreg_local_destroy( void );
+
+/** Return pointer to a thread-local memory region.
+ */
+AA_API aa_memreg_t *aa_memreg_local_get( void );
+
+/** Allocate from thread-local memory region*
+ *
+ *  \sa aa_memreg_alloc
+ */
+AA_API void *aa_memreg_local_alloc( size_t size );
+
+/** Temporary allocate from thread-local memory region*
+ *
+ *  \sa aa_memreg_tmpalloc
+ */
+AA_API void *aa_memreg_local_tmpalloc( size_t size );
+
+/** Pop ptr from thread-local memory region.
+ *
+ *  \sa aa_memreg_pop
+ */
+AA_API void aa_memreg_local_pop( void *ptr );
+
+/** Release all objects allocated from thread-local memory region
+ *
+ *  \sa aa_memreg_release
+ */
+AA_API void aa_memreg_local_release( void );
+
 
 /*----------- Pooled Allocation ------------------*/
 
@@ -251,7 +291,7 @@ AA_API char* aa_region_vprintf(aa_region_t *reg, const char *fmt, va_list ap );
 typedef struct {
     size_t size; ///< size of each element
     void *top;   ///< top of list of free elements
-    aa_region_t region; ///< memory region to allocate from
+    aa_memreg_t region; ///< memory region to allocate from
 } aa_pool_t;
 
 /// untested

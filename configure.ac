@@ -7,9 +7,9 @@ AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([include/amino.h])
 AC_CONFIG_HEADERS([config.h])
 
-AC_GNU_SOURCE
 
 # Checks for programs.
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_F77
@@ -21,7 +21,7 @@ AC_CHECK_PROGS([MAXIMA], [maxima])
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h unistd.h math.h])
+AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h unistd.h math.h threads.h])
 AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -50,6 +50,9 @@ AC_SEARCH_LIBS([dgesvd_],[lapack], [true], [echo "Failed: need LAPACK library" &
 AC_SEARCH_LIBS([clock_gettime],[rt])
 
 AC_CHECK_FUNCS([clock_gettime memset pow sqrt sincos])
+
+# Check for thread local storage
+AX_TLS
 
 # Doxygen
 DX_HTML_FEATURE(ON)
