@@ -201,22 +201,28 @@ double aa_la_wdot( size_t n,
 }
 
 int aa_la_inv( size_t n, double *A ) {
-    int ipiv[n];
     const int mi = (int) n;
     const int ni = (int) n;
     int info;
+
+    int *ipiv = (int*)
+        aa_memreg_local_alloc(sizeof(int)*n);
 
     // LU-factor
     info = aa_cla_dgetrf( mi, ni, A, mi, ipiv );
 
     int lwork = -1;
     while(1) {
-        double work[ lwork < 0 ? 1 : lwork ];
+        double *work = (double*)
+            aa_memreg_local_tmpalloc( sizeof(double)*
+                                      (size_t)(lwork < 0 ? 1 : lwork) );
         aa_cla_dgetri( ni, A, mi, ipiv, work, lwork );
         if( lwork > 0 ) break;
-        assert( -1 == lwork && sizeof(work) == sizeof(double) );
+        assert( -1 == lwork );
         lwork = (int)work[0];
     }
+
+    aa_memreg_local_pop(ipiv);
 
     return info;
 }
@@ -252,9 +258,11 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     /*              1, A, mi, B, mi, 0, A_star, ni ); */
 
     // This method uses the SVD
-    double U[m*m];
-    double Vt[n*n];
-    double S[AA_MIN(m,n)];
+    double *W = (double*)aa_memreg_local_alloc( sizeof(double) *
+                                                (m*m + n*n + AA_MIN(m,n)) );
+    double *U = W;        // size m*m
+    double *Vt = U + m*m; // size n*n
+    double *S = Vt + n*n; // size min(m,n)
 
     // A = U S V^T
     aa_la_svd(m,n,A,U,S,Vt);
@@ -268,21 +276,32 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
                 A_star, ni
                 );
     }
+    aa_memreg_local_pop( W );
 }
 
 int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt ) {
     return aa_la_d_svd(m,n,A,m,U,m,S,Vt,n);
 }
 
-AA_API void aa_la_dls( size_t m, size_t n, double k, const double *A, const double *x, double *y ) {
-    double A_star[m*n];
+AA_API void aa_la_dls( size_t m, size_t n,
+                       double k, const double *A,
+                       const double *x, double *y ) {
+    double *A_star = (double*)aa_memreg_local_alloc( sizeof(double) *
+                                                     (m*n) );
     aa_la_dpinv(m,n,k,A,A_star);
     aa_la_mvmul(n,m,A_star,x,y);
+
+    aa_memreg_local_pop( A_star );
 }
 
-AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const double *x, const double *yp, double *y ) {
-    double A_star[m*n];
-    double B[n*n];
+AA_API void aa_la_dlsnp( size_t m, size_t n,
+                         double k, const double *A, const double *x,
+                         const double *yp, double *y ) {
+
+    double *W = (double*)aa_memreg_local_alloc( sizeof(double) *
+                                                (m*n + n*n) );
+    double *A_star = W;       // size m*n
+    double *B = A_star + m*n; // size n*n
 
     aa_la_dpinv(m,n,k,A,A_star);
     aa_la_mvmul(n,m,A_star,x,y);
@@ -301,6 +320,8 @@ AA_API void aa_la_dlsnp( size_t m, size_t n, double k, const double *A, const do
                  -1.0, B, (int)n,
                  yp, 1,
                  1, y, 1 );
+
+    aa_memreg_local_pop( W );
 }
 
 

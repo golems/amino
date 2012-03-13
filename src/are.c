@@ -108,30 +108,41 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     int mi = (int)m;
     int mi2 = 2*mi;
 
-    double vs[2*m*2*m];
+    double *vs = (double*)
+        aa_memreg_local_alloc(sizeof(double)*2*m*2*m);
+
     {
         // shcur in lapack: dgees, (will balance the array itself)
         // build hamiltonian
-        double H[2*m*2*m];
+
+        double *W = (double*)
+            aa_memreg_local_alloc( sizeof(double)*
+                                   (2*m*2*m + 2*m + 2*m) );
+        double *H = W;
+        double *wi = H + 2*m*2*m;
+        double *wr = wi + 2*m;
+        int *bwork = (int*)
+            aa_memreg_local_alloc( sizeof(int)* 2*m );
+
         aa_la_care_laub_hamiltonian(m,n,p,A,B,C,H);
 
         int info;
         int lwork = -1;
         while(1) {
             int sdim;
-            int bwork[2*m];
-            double wr[2*m];
-            double wi[2*m];
-            double work [ lwork < 0 ? 1 : lwork ];
+            double *work = (double*)
+                aa_memreg_local_tmpalloc( sizeof(double)*
+                                          (size_t)(lwork < 0 ? 1 : lwork) );
             dgees_("V", "S",
                    aa_la_care_laub_select,
                    &mi2, H, &mi2, &sdim, wr, wi,
                    vs, &mi2, work, &lwork, bwork, &info );
             if( lwork > 0 ) break;
             // got work array size
-            assert( -1 == lwork && sizeof(work) == sizeof(double) );
+            assert( -1 == lwork );
             lwork = (int)work[0];
         };
+        aa_memreg_local_pop(W);
     }
 
     // solve the least squares problem
@@ -145,17 +156,21 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         int lwork = -1;
         int info;
         while(1) {
-            double work [ lwork < 0 ? 1 : lwork ];
+            double *work = (double*)
+                aa_memreg_local_tmpalloc( sizeof(double)*
+                                          (size_t)(lwork < 0 ? 1 : lwork) );
             dgels_( "T", &mi, &mi, &mi,
                     vs, &mi2, /* u11' */
                     X, &mi,   /* u21' */
                     work, &lwork,
                     &info );
             if(lwork > 0) break;
-            assert( -1 == lwork && sizeof(work) == sizeof(double) );
+            assert( -1 == lwork );
             lwork = (int)work[0];
         };
     }
+
+    aa_memreg_local_pop(vs);
 
     return 0;
 }

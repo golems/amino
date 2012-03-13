@@ -392,20 +392,28 @@ AA_API void AA_NAME(la,lls)
     AA_TYPE rcond=-1;
 
     size_t ldbp = AA_MAX(m,n);
-    AA_TYPE Ap[m*n];
-    AA_TYPE bp[ldbp*p];
+    AA_TYPE *Ap = (AA_TYPE*)
+        aa_memreg_local_alloc(sizeof(AA_TYPE)*m*n);
+    AA_TYPE *bp = (AA_TYPE*)
+        aa_memreg_local_alloc(sizeof(AA_TYPE)*ldbp*p);
+
+
     AA_CLA_NAME(lacpy)(0, (int)m,(int)n, A, (int)lda, Ap, (int)m);
     AA_CLA_NAME(lacpy)(0, (int)m,(int)p, b, (int)ldb, bp, (int)ldbp);
 
     int rank, info;
     size_t liwork = (size_t)AA_CLA_NAME(gelsd_miniwork)(mi,ni);
     size_t ls = AA_MIN(m,n);
-    AA_TYPE S[ls];
-    int iwork[liwork];
+    AA_TYPE *S = (AA_TYPE*)
+        aa_memreg_local_alloc(sizeof(AA_TYPE)*ls);
+    int *iwork = (int*)
+        aa_memreg_local_alloc(sizeof(int)*liwork);
 
     int lwork=-1;
     while(1) {
-        AA_TYPE work[ lwork < 0 ? 1 : lwork ];
+        AA_TYPE *work =
+            (AA_TYPE*)aa_memreg_local_tmpalloc( sizeof(AA_TYPE)*
+                                                (size_t)(lwork < 0 ? 1 : lwork) );
 
         info = AA_CLA_NAME(gelsd)( mi, ni, pi,
                                    Ap, mi, bp, (int)ldbp,
@@ -413,11 +421,12 @@ AA_API void AA_NAME(la,lls)
                                    work, lwork, iwork );
 
         if( lwork >= 0 ) break;
-        assert( -1 == lwork && sizeof(work) == sizeof(AA_TYPE) );
+        assert( -1 == lwork );
         lwork = (int) work[0];
     }
 
     AA_CLA_NAME(lacpy)(0, (int)n,(int)p, bp, (int)ldbp, x, (int)ldx);
+    aa_memreg_local_pop(Ap);
 }
 
 
@@ -430,7 +439,7 @@ AA_API int AA_NAME(la,svd)
 
     int mi = (int)m, ni=(int)n;
 
-    AA_TYPE Ap[m*n];
+    AA_TYPE *Ap = (AA_TYPE*)aa_memreg_local_alloc( m*n*sizeof(AA_TYPE) );
     AA_CLA_NAME(lacpy)(0, mi, ni, A, (int)lda,
                        Ap, mi);
 
@@ -440,16 +449,20 @@ AA_API int AA_NAME(la,svd)
     int info;
 
     while(1) {
-        AA_TYPE work[ lwork < 0 ? 1 : lwork ];
+        AA_TYPE *work =
+            (AA_TYPE*)aa_memreg_local_tmpalloc( sizeof(AA_TYPE)*
+                                                (size_t)(lwork < 0 ? 1 : lwork) );
         AA_LAPACK_NAME(gesvd)( jobu, jobvt, &mi, &ni,
                                Ap, &mi,
                                S, U, &mi,
                                Vt, &ni,
                                &work[0], &lwork, &info );
         if( lwork >= 0 ) break;
-        assert( -1 == lwork && sizeof(work) == sizeof(work[0]) );
+        assert( -1 == lwork );
         lwork = (int) work[0];
     }
+
+    aa_memreg_local_pop(Ap);
 
     //finish
     return info;
