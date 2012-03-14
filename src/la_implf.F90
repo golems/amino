@@ -346,7 +346,8 @@ end subroutine AA_FMOD_C(la,colcov)
 !! Fits
 
 !> Fit hyperplane to columns
-pure subroutine AA_FMOD(la,colfit)( A, x )
+subroutine AA_FMOD(la,colfit)( A, x )
+  use amino_mem
   real(AA_FSIZE), intent(in) :: A(:,:)
   real(AA_FSIZE), intent(out) :: x(:)
 
@@ -372,53 +373,62 @@ pure subroutine AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD(la,colfit)
 
 !> Fit hyperplane to columns, C interface
-pure subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
+subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
   integer(c_size_t), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(out) :: A(lda,n), x(m+1)
   call AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD_C(la,colfit)
 
 subroutine AA_FMOD_C(la,assign_hungarian)( m, n, A, lda, row, col )
+  use amino_mem
   integer(c_size_t), intent(in), value :: m,n,lda
   real(AA_FSIZE),intent(in) :: A(lda,n)
   integer(c_size_t),intent(out) :: row(m),col(n)
-  integer :: rowi(m), coli(n)
+
+  integer, pointer :: rowi(:), coli(:)
+  call aa_memreg_alloc( m, rowi)
+  call aa_memreg_alloc( m, coli)
+
   call AA_FMOD(la,assign_hungarian)(A(1:m,1:n),rowi,coli)
   ! convert to C indices
   row = rowi-1
   col = coli-1
+
+  call aa_memreg_pop( rowi )
 end subroutine AA_FMOD_C(la,assign_hungarian)
 
 
 !> Solve assignment problem via Hungarian algorithm, padding if necessary
 subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
+  use amino_mem
   real(AA_FSIZE), intent(in) :: A(:,:)
   integer, intent(out) :: row_assign(:),col_assign(:)
 
-  integer :: m,n,i,j
-  integer :: alt_assign( max(size(A,1), size(A,2)) )
-  real(AA_FSIZE) :: B( max(size(A,1), size(A,2)), max(size(A,1), size(A,2)) )
+  integer :: m,n,p
+  integer, pointer :: alt_assign( : )
+  real(AA_FSIZE), pointer :: B(:,:)
+
   m = size(A,1)
   n = size(A,2)
+  p = max(m,n)
 
+  call aa_memreg_alloc( p, p, b)
   B = real(0,AA_FSIZE)
   B(1:m,1:n) = A
 
   if ( m > n ) then
      ! more rows
+     call aa_memreg_alloc( p, alt_assign )
      call AA_FMOD(la,assign_hungarian_square)(B,row_assign,alt_assign)
-     forall(j=1:n)
-        col_assign(j) = alt_assign(j)
-     end forall
+     col_assign = alt_assign(1:n)
      where (row_assign > n)
         row_assign = -1
      end where
   elseif ( m < n ) then
      ! more cols
+     call aa_memreg_alloc( p, alt_assign )
      call AA_FMOD(la,assign_hungarian_square)(B,alt_assign,col_assign)
-     forall (i=1:m)
-        row_assign(i) = alt_assign(i)
-     end forall
+     row_assign = alt_assign(1:m)
      where (col_assign > m)
         col_assign = -1
      end where
@@ -427,22 +437,30 @@ subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
      call AA_FMOD(la,assign_hungarian_square)(B,row_assign,col_assign)
   end if
 
+  call aa_memreg_pop(B)
+
 end subroutine AA_FMOD(la,assign_hungarian)
 
 !> Solve square assignment problem via Hungarian algorithm
 subroutine AA_FMOD(la,assign_hungarian_square)(A,row_assign,col_assign)
+  use amino_mem
   real(AA_FSIZE), intent(inout) :: A(:,:)
   integer, intent(out) :: row_assign(:),col_assign(:)
 
-  integer :: path(2,size(A,1)**2)
-  logical :: star(size(A,1),size(A,1))
-  logical :: prime(size(A,1),size(A,1))
-  logical :: row(size(A,1)),col(size(A,1))
+  integer, pointer :: path(:,:)
+  logical(4), pointer :: star(:,:)
+  logical(4), pointer :: prime(:,:)
+  logical(4), pointer :: row(:),col(:)
 
   integer :: i,j,k,n
   real(AA_FSIZE) :: mv
 
   n = size(A,1)
+  call aa_memreg_alloc(2,n**2,path)
+  call aa_memreg_alloc(n,n,star)
+  call aa_memreg_alloc(n,n,prime)
+  call aa_memreg_alloc(n,row)
+  call aa_memreg_alloc(n,col)
 
   ! --- Step 1 ---
   ! subtract smallest from each col
@@ -548,6 +566,9 @@ subroutine AA_FMOD(la,assign_hungarian_square)(A,row_assign,col_assign)
      end do
   end do
 
+  ! deallocate
+  call aa_memreg_pop(path)
+
   contains
 
     ! --- Step 5 ---
@@ -571,14 +592,19 @@ subroutine AA_FMOD(la,assign_hungarian_square)(A,row_assign,col_assign)
                      exit
                   end if
                end do
+               exit
             end if
          end do
       end do
       ! convert path
-      forall (k=1:c)
+      ! forall (k=1:c)
+      !    star( path(1,k), path(2,k) ) = &
+      !         .not. star( path(1,k), path(2,k) )
+      ! end forall
+      do k=1,c
          star( path(1,k), path(2,k) ) = &
               .not. star( path(1,k), path(2,k) )
-      end forall
+      end do
     end subroutine make_path
 end subroutine AA_FMOD(la,assign_hungarian_square)
 

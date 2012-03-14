@@ -1,10 +1,11 @@
 INCLUDES = -I$(top_srcdir)/include
 EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/la_impl.c       \
-             src/la_mod.F90 src/la_implf.F90
+             src/la_mod.F90 src/la_implf.F90                       \
+             src/mem_mod.F90 src/mem_impl.F90
 
 include_HEADERS = include/amino.h
 
-nodist_include_HEADERS = amino_la.mod
+nodist_include_HEADERS = amino_la.mod amino_mem.mod
 
 pkginclude_HEADERS = 	                \
 	include/amino/debug.h           \
@@ -54,6 +55,7 @@ libamino_la_SOURCES =                  \
 	src/are.c                      \
 	src/sigsys.c                   \
 	src/cv.c                       \
+	mem_mod.f90                    \
 	la_mod.f90
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
@@ -82,6 +84,12 @@ la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
 la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 amino_la.mod: la_mod.$(OBJEXT)
+
+mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
+	$(CPP) $(INCLUDES) -x c -CC $< -o $@
+amino_mem.mod: mem_mod.$(OBJEXT)
+
+la_mod.$(OBJEXT): amino_mem.mod
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 

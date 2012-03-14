@@ -67,6 +67,40 @@
 #define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( s, prefix, name )
 #define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( s, prefix, name )
 
+#elif defined AA_TYPE_INT
+
+#define AA_TYPE int32_t
+#define AA_NAME( prefix, name ) AA_MANGLE_NAME( i32, prefix, name )
+#define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( i32, prefix, name )
+#define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( i32, prefix, name )
+#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( i32, prefix, name )
+
+#elif defined AA_TYPE_LONG
+
+#define AA_TYPE int64_t
+#define AA_NAME( prefix, name ) AA_MANGLE_NAME( i64, prefix, name )
+#define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( i64, prefix, name )
+#define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( i64, prefix, name )
+#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( i64, prefix, name )
+
+
+#elif defined AA_TYPE_FLOGICAL1
+
+#define AA_TYPE bool
+#define AA_NAME( prefix, name ) AA_MANGLE_NAME( l8, prefix, name )
+#define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( l8, prefix, name )
+#define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( l8, prefix, name )
+#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( l8, prefix, name )
+
+#elif defined AA_TYPE_FLOGICAL4
+
+#define AA_TYPE bool
+#define AA_NAME( prefix, name ) AA_MANGLE_NAME( l32, prefix, name )
+#define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( l32, prefix, name )
+#define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( l32, prefix, name )
+#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( l32, prefix, name )
+
+
 #else
 
 #error "Need to define AA_TYPE_?"

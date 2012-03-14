@@ -42,6 +42,10 @@
 #undef AA_TYPE
 #undef AA_TYPE_DOUBLE
 #undef AA_TYPE_FLOAT
+#undef AA_TYPE_INT
+#undef AA_TYPE_LONG
+#undef AA_TYPE_FLOGICAL1
+#undef AA_TYPE_FLOGICAL4
 
 #undef AA_CBLAS_NAME
 #undef AA_LAPACK_NAME

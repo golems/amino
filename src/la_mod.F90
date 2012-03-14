@@ -64,7 +64,7 @@ module amino_la
   !> Linear Least Squares
   interface aa_la_lls
      !> Double float linear least squares
-     pure subroutine aa_la_d_lls(m,n,p,A,lda,b,ldb,x,ldx) &
+     subroutine aa_la_d_lls(m,n,p,A,lda,b,ldb,x,ldx) &
           bind(C,name="aa_la_d_lls")
        use ISO_C_BINDING
        integer(c_size_t), intent(in), value :: m,n,p,lda,ldb,ldx
@@ -72,7 +72,7 @@ module amino_la
        real(c_double), intent(out) :: x(ldx,p)
      end subroutine aa_la_d_lls
      !> Single float linear least squares
-     pure subroutine aa_la_s_lls(m,n,p,A,lda,b,ldb,x,ldx) &
+     subroutine aa_la_s_lls(m,n,p,A,lda,b,ldb,x,ldx) &
           bind(C,name="aa_la_s_lls")
        use ISO_C_BINDING
        integer(c_size_t), intent(in), value :: m,n,p,lda,ldb,ldx
@@ -84,7 +84,7 @@ module amino_la
   !> Singular Value Decomposition
   interface aa_la_svd
      !> Double float SVD
-     pure subroutine aa_la_d_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
+     subroutine aa_la_d_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
           bind(C,name="aa_la_d_svd")
        use ISO_C_BINDING
        integer(c_size_t), intent(in), value :: m,n,lda,ldu,ldvt
@@ -92,7 +92,7 @@ module amino_la
        real(c_double), intent(out) :: U(ldu,m), S(min(m,n)), Vt(ldvt,n)
      end subroutine aa_la_d_svd
      !> Single float SVD
-     pure subroutine aa_la_s_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
+     subroutine aa_la_s_svd(m,n,A,lda,U,ldu,S,Vt,ldvt) &
           bind(C,name="aa_la_s_svd")
        use ISO_C_BINDING
        integer(c_size_t), intent(in), value :: m,n,lda,ldu,ldvt
