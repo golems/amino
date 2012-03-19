@@ -41,22 +41,47 @@
 #include "amino/def.F90"
 
 
-subroutine AA_FMOD(mem,array1)(n,a)
-  integer, intent(in) :: n
+subroutine AA_FMOD(mem,array1_4)(n,a)
+  integer(4), intent(in) :: n
   AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:)
-  integer :: s(1)
+  integer(4) :: s(1)
+  type(c_ptr) :: p
+  p = aa_memreg_local_alloc_c(int(n*AA_FSIZE,c_size_t))
   s(1) = n
-  call c_f_pointer( aa_memreg_local_alloc_c(n*AA_FSIZE), a, s )
-end subroutine AA_FMOD(mem,array1)
+  call c_f_pointer( p, a, s )
+end subroutine AA_FMOD(mem,array1_4)
 
-subroutine AA_FMOD(mem,array2)(m,n,a)
-  integer, intent(in) :: m,n
+subroutine AA_FMOD(mem,array2_4)(m,n,a)
+  integer(4), intent(in) :: m,n
   AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:,:)
-  integer :: s(2)
+  type(c_ptr) :: p
+  integer(4) :: s(2)
+  p = aa_memreg_local_alloc_c(int(m*n*AA_FSIZE,c_size_t))
   s(1) = m
   s(2) = n
-  call c_f_pointer( aa_memreg_local_alloc_c(m*n*AA_FSIZE), a, s )
-end subroutine AA_FMOD(mem,array2)
+  call c_f_pointer( p, a, s )
+end subroutine AA_FMOD(mem,array2_4)
+
+subroutine AA_FMOD(mem,array1_8)(n,a)
+  integer(8), intent(in) :: n
+  AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:)
+  type(c_ptr) :: p
+  integer(8) :: s(1)
+  p = aa_memreg_local_alloc_c(int(n*int(AA_FSIZE,8),c_size_t))
+  s(1) = n
+  call c_f_pointer( p, a, s )
+end subroutine AA_FMOD(mem,array1_8)
+
+subroutine AA_FMOD(mem,array2_8)(m,n,a)
+  integer(8), intent(in) :: m,n
+  AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:,:)
+  type(c_ptr) :: p
+  integer(8) :: s(2)
+  p = aa_memreg_local_alloc_c(int(m*n*int(AA_FSIZE,8),c_size_t))
+  s(1) = m
+  s(2) = n
+  call c_f_pointer( p, a, s )
+end subroutine AA_FMOD(mem,array2_8)
 
 subroutine AA_FMOD(mem,pop1)(a)
   AA_FTYPE(AA_FSIZE), intent(in), pointer :: a(:)

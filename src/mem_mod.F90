@@ -62,18 +62,30 @@ module amino_mem
 
   interface aa_memreg_alloc
      module procedure &
-          AA_MANGLE_FMOD(d,mem,array1), &
-          AA_MANGLE_FMOD(s,mem,array1), &
-          AA_MANGLE_FMOD(i32,mem,array1), &
-          AA_MANGLE_FMOD(i64,mem,array1), &
-          AA_MANGLE_FMOD(l8,mem,array1), &
-          AA_MANGLE_FMOD(l32,mem,array1), &
-          AA_MANGLE_FMOD(d,mem,array2), &
-          AA_MANGLE_FMOD(s,mem,array2), &
-          AA_MANGLE_FMOD(i64,mem,array2), &
-          AA_MANGLE_FMOD(i32,mem,array2), &
-          AA_MANGLE_FMOD(l8,mem,array2), &
-          AA_MANGLE_FMOD(l32,mem,array2)
+          AA_MANGLE_FMOD(d,mem,array1_4), &
+          AA_MANGLE_FMOD(s,mem,array1_4), &
+          AA_MANGLE_FMOD(i32,mem,array1_4), &
+          AA_MANGLE_FMOD(i64,mem,array1_4), &
+          AA_MANGLE_FMOD(l8,mem,array1_4), &
+          AA_MANGLE_FMOD(l32,mem,array1_4), &
+          AA_MANGLE_FMOD(d,mem,array2_4), &
+          AA_MANGLE_FMOD(s,mem,array2_4), &
+          AA_MANGLE_FMOD(i64,mem,array2_4), &
+          AA_MANGLE_FMOD(i32,mem,array2_4), &
+          AA_MANGLE_FMOD(l8,mem,array2_4), &
+          AA_MANGLE_FMOD(l32,mem,array2_4), &
+          AA_MANGLE_FMOD(d,mem,array1_8), &
+          AA_MANGLE_FMOD(s,mem,array1_8), &
+          AA_MANGLE_FMOD(i32,mem,array1_8), &
+          AA_MANGLE_FMOD(i64,mem,array1_8), &
+          AA_MANGLE_FMOD(l8,mem,array1_8), &
+          AA_MANGLE_FMOD(l32,mem,array1_8), &
+          AA_MANGLE_FMOD(d,mem,array2_8), &
+          AA_MANGLE_FMOD(s,mem,array2_8), &
+          AA_MANGLE_FMOD(i64,mem,array2_8), &
+          AA_MANGLE_FMOD(i32,mem,array2_8), &
+          AA_MANGLE_FMOD(l8,mem,array2_8), &
+          AA_MANGLE_FMOD(l32,mem,array2_8)
   end interface
 
   interface aa_memreg_pop

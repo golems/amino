@@ -375,7 +375,7 @@ end subroutine AA_FMOD(la,colfit)
 !> Fit hyperplane to columns, C interface
 subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
   integer(c_size_t), intent(in), value :: m,n,lda
-  real(AA_FSIZE), intent(out) :: A(lda,n), x(m+1)
+  real(AA_FSIZE), intent(out) :: A(lda,n), x(int(m)+1)
   call AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD_C(la,colfit)
 
@@ -386,13 +386,13 @@ subroutine AA_FMOD_C(la,assign_hungarian)( m, n, A, lda, row, col )
   integer(c_size_t),intent(out) :: row(m),col(n)
 
   integer, pointer :: rowi(:), coli(:)
-  call aa_memreg_alloc( m, rowi)
-  call aa_memreg_alloc( m, coli)
+  call aa_memreg_alloc( m, rowi )
+  call aa_memreg_alloc( m, coli )
 
   call AA_FMOD(la,assign_hungarian)(A(1:m,1:n),rowi,coli)
   ! convert to C indices
-  row = rowi-1
-  col = coli-1
+  row = int(rowi-1,c_size_t)
+  col = int(coli-1,c_size_t)
 
   call aa_memreg_pop( rowi )
 end subroutine AA_FMOD_C(la,assign_hungarian)
