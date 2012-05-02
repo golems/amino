@@ -55,6 +55,7 @@
 #undef AA_NAME
 #undef AA_FMOD
 #undef AA_FMOD_F
-#undef AA_FMOD_C
+#undef AA_FMOD_C_BEGIN
+#undef AA_FMOD_C_END
 
 #undef AA_FDEC

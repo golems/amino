@@ -52,7 +52,8 @@
 #define AA_NAME( prefix, name ) AA_MANGLE_NAME( d, prefix, name )
 #define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( d, prefix, name )
 #define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( d, prefix, name )
-#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( d, prefix, name )
+#define AA_FMOD_C_BEGIN( prefix, name, ... ) AA_MANGLE_FMOD_BIND_C( d, prefix, name, __VA_ARGS__ )
+#define AA_FMOD_C_END( prefix, name ) AA_MANGLE_FMOD_C( d, prefix, name )
 
 #elif defined AA_TYPE_FLOAT
 
@@ -65,7 +66,8 @@
 #define AA_NAME( prefix, name ) AA_MANGLE_NAME( s, prefix, name )
 #define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( s, prefix, name )
 #define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( s, prefix, name )
-#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( s, prefix, name )
+#define AA_FMOD_C_BEGIN( prefix, name, ... ) AA_MANGLE_FMOD_BIND_C( s, prefix, name, __VA_ARGS__ )
+#define AA_FMOD_C_END( prefix, name ) AA_MANGLE_FMOD_C( s, prefix, name )
 
 #elif defined AA_TYPE_INT
 
@@ -73,7 +75,8 @@
 #define AA_NAME( prefix, name ) AA_MANGLE_NAME( i32, prefix, name )
 #define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( i32, prefix, name )
 #define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( i32, prefix, name )
-#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( i32, prefix, name )
+#define AA_FMOD_C_BEGIN( prefix, name, ... ) AA_MANGLE_FMOD_BIND_C( i32, prefix, name, __VA_ARGS__ )
+#define AA_FMOD_C_END( prefix, name ) AA_MANGLE_FMOD_C( i32, prefix, name )
 
 #elif defined AA_TYPE_LONG
 
@@ -81,7 +84,8 @@
 #define AA_NAME( prefix, name ) AA_MANGLE_NAME( i64, prefix, name )
 #define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( i64, prefix, name )
 #define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( i64, prefix, name )
-#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( i64, prefix, name )
+#define AA_FMOD_C_BEGIN( prefix, name, ... ) AA_MANGLE_FMOD_BIND_C( i64, prefix, name, __VA_ARGS__ )
+#define AA_FMOD_C_END( prefix, name ) AA_MANGLE_FMOD_C( i64, prefix, name )
 
 
 #elif defined AA_TYPE_FLOGICAL1
@@ -90,7 +94,8 @@
 #define AA_NAME( prefix, name ) AA_MANGLE_NAME( l8, prefix, name )
 #define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( l8, prefix, name )
 #define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( l8, prefix, name )
-#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( l8, prefix, name )
+#define AA_FMOD_C_BEGIN( prefix, name, ... ) AA_MANGLE_FMOD_BIND_C( l8, prefix, name, __VA_ARGS__ )
+#define AA_FMOD_C_END( prefix, name ) AA_MANGLE_FMOD_C( l8, prefix, name )
 
 #elif defined AA_TYPE_FLOGICAL4
 
@@ -98,7 +103,8 @@
 #define AA_NAME( prefix, name ) AA_MANGLE_NAME( l32, prefix, name )
 #define AA_FMOD( prefix, name ) AA_MANGLE_FMOD( l32, prefix, name )
 #define AA_FMOD_F( prefix, name ) AA_MANGLE_FMOD_F( l32, prefix, name )
-#define AA_FMOD_C( prefix, name ) AA_MANGLE_FMOD_C( l32, prefix, name )
+#define AA_FMOD_C_BEGIN( prefix, name, ... ) AA_MANGLE_FMOD_BIND_C( l32, prefix, name, __VA_ARGS__ )
+#define AA_FMOD_C_END( prefix, name ) AA_MANGLE_FMOD_C( l32, prefix, name )
 
 
 #else
@@ -109,20 +115,9 @@
 
 
 #if 0
-/* Do some magical name mangling to bind the fortran module function
- * to a C symbol.  First, we declare a C function of the mangled
- * fortran name.  Then we declare a C static const function pointer
- * with a slightly less mangled name and assign it the value of the
- * fortran function.  C callers can then use this const function
- * pointer rather than the ugly(er) fortran name.
+/* Declarations for fortran-defined functions.
  */
 #endif
 
 #define AA_FDEC( rettype, prefix, name, ... )                           \
-    /* first the fortran function */                                    \
-    AA_API rettype                                                      \
-    AA_FMOD_F( prefix, name )                                           \
-    ( __VA_ARGS__ );                                                    \
-    /** C function pointer that aliases fortran symbol*/                \
-    static rettype (* const AA_NAME(prefix, name) )( __VA_ARGS__ ) =    \
-        AA_FMOD_F(prefix,name);
+    AA_API rettype AA_NAME( prefix, name ) ( __VA_ARGS__ );

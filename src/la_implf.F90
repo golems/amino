@@ -78,11 +78,11 @@ end function AA_FMOD(la,cross_fun)
 !! \param[in] x first vector
 !! \param[in] y second vector
 !! \param[out] z result
-pure subroutine AA_FMOD_C(la,cross)( x, y, z)
+pure subroutine AA_FMOD_C_BEGIN(la, cross, x, y, z)
   AA_FTYPE(AA_FSIZE), intent(out) :: z(3)
   AA_FTYPE(AA_FSIZE), intent(in) :: x(3), y(3)
   call AA_FMOD(la,cross_sub)(x,y,z)
-end subroutine AA_FMOD_C(la,cross)
+end subroutine AA_FMOD_C_END(la,cross)
 
 !! SSD
 
@@ -104,12 +104,12 @@ end function AA_FMOD(la,ssd)
 !! \param[in] incx stepsize of x
 !! \param[in] y second vector
 !! \param[in] incy stepsize of y
-pure function AA_FMOD_C(la,ssd)(n, x, incx, y, incy) result(a)
+pure function AA_FMOD_C_BEGIN(la, ssd, n, x, incx, y, incy) result(a)
   integer (c_size_t), intent(in), value :: n, incx, incy
   AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx), y(n*incy)
   AA_FTYPE(AA_FSIZE) :: a
   a = AA_FMOD(la,ssd)(x(1:n*incx:incx),y(1:n*incy:incy))
-end function AA_FMOD_C(la,ssd)
+end function AA_FMOD_C_END(la,ssd)
 
 !> Sum of squared differences of columns
 !!
@@ -175,12 +175,12 @@ end function AA_FMOD(la,angle)
 !! \param[in] incx stepsize of x
 !! \param[in] y second vector
 !! \param[in] incy stepsize of y
-pure function AA_FMOD_C(la,angle)( n, x, incx, y, incy ) result(a)
+pure function AA_FMOD_C_BEGIN(la, angle, n, x, incx, y, incy ) result(a)
   integer(C_SIZE_T), intent(in), value   :: n, incx, incy
   real(AA_FSIZE), intent(in) :: x(n*incx),y(n*incy)
   real(AA_FSIZE) :: a
   a = AA_FMOD(la,angle)( x(1:n:incx), y(1:n:incy) )
-end function AA_FMOD_C(la,angle)
+end function AA_FMOD_C_END(la,angle)
 
 
 !! Norm2
@@ -261,13 +261,13 @@ pure function AA_FMOD(la,vecstd)(x,mu) result(sigma)
   sigma = sqrt( TOREAL(1)/(TOREAL(size(x)-1)) * sum( (x-mu)**2 ) )
 end function AA_FMOD(la,vecstd)
 
-pure function AA_FMOD_C(la,vecstd)(n,x,incx,mu) result(sigma)
+pure function AA_FMOD_C_BEGIN(la, vecstd, n,x,incx,mu) result(sigma)
   integer(c_size_t), intent(in), value :: n,incx
   AA_FTYPE(AA_FSIZE), intent(in), value :: mu
   AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx)
   AA_FTYPE(AA_FSIZE) :: sigma
   sigma = aa_la_std(x(1:n:incx),mu)
-end function AA_FMOD_C(la,vecstd)
+end function AA_FMOD_C_END(la,vecstd)
 
 !! Colmean
 
@@ -287,12 +287,12 @@ pure subroutine AA_FMOD(la,colmean)( A, x )
 end subroutine AA_FMOD(la,colmean)
 
 !> Mean of columns, C interface
-pure subroutine AA_FMOD_C(la,colmean)( m, n, A, lda, x )
+pure subroutine AA_FMOD_C_BEGIN(la, colmean, m, n, A, lda, x )
   integer(C_SIZE_T), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(in) :: A(lda,n)
   real(AA_FSIZE), intent(out) :: x(m)
   call AA_FMOD(la,colmean)(A,x)
-end subroutine AA_FMOD_C(la,colmean)
+end subroutine AA_FMOD_C_END(la,colmean)
 
 
 !> Mean of rows
@@ -306,12 +306,12 @@ pure subroutine AA_FMOD(la,rowmean)( A, x )
 end subroutine AA_FMOD(la,rowmean)
 
 !> Mean of rows, C interface
-pure subroutine AA_FMOD_C(la,rowmean)( m, n, A, lda, x )
+pure subroutine AA_FMOD_C_BEGIN(la, rowmean, m, n, A, lda, x )
   integer(C_SIZE_T), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(in) :: A(lda,n)
   real(AA_FSIZE), intent(out) :: x(m)
   call AA_FMOD(la,rowmean)(A,x)
-end subroutine AA_FMOD_C(la,rowmean)
+end subroutine AA_FMOD_C_END(la,rowmean)
 
 !! Colcov
 
@@ -335,13 +335,13 @@ end subroutine AA_FMOD(la,colcov)
 
 
 !> Covariance of columns, C interface
-pure subroutine AA_FMOD_C(la,colcov)( m, n, A, lda, x, E, lde )
+pure subroutine AA_FMOD_C_BEGIN(la, colcov, m, n, A, lda, x, E, lde )
   integer(C_SIZE_T), intent(in), value :: m,n,lda,lde
   real(AA_FSIZE), intent(in) :: A(lda,n)
   real(AA_FSIZE), intent(in) :: x(m)
   real(AA_FSIZE), intent(out) :: E(lde,m)
   call AA_FMOD(la,colcov)(A,x,E)
-end subroutine AA_FMOD_C(la,colcov)
+end subroutine AA_FMOD_C_END(la,colcov)
 
 !! Fits
 
@@ -373,13 +373,13 @@ subroutine AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD(la,colfit)
 
 !> Fit hyperplane to columns, C interface
-subroutine AA_FMOD_C(la,colfit)( m, n, A, lda, x  )
+subroutine AA_FMOD_C_BEGIN(la, colfit, m, n, A, lda, x)
   integer(c_size_t), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(out) :: A(lda,n), x(int(m)+1)
   call AA_FMOD(la,colfit)( A, x )
-end subroutine AA_FMOD_C(la,colfit)
+end subroutine AA_FMOD_C_END(la,colfit)
 
-subroutine AA_FMOD_C(la,assign_hungarian)( m, n, A, lda, row, col )
+subroutine AA_FMOD_C_BEGIN(la, assign_hungarian, m, n, A, lda, row, col)
   use amino_mem
   integer(c_size_t), intent(in), value :: m,n,lda
   real(AA_FSIZE),intent(in) :: A(lda,n)
@@ -395,7 +395,7 @@ subroutine AA_FMOD_C(la,assign_hungarian)( m, n, A, lda, row, col )
   col = int(coli-1,c_size_t)
 
   call aa_memreg_pop( rowi )
-end subroutine AA_FMOD_C(la,assign_hungarian)
+end subroutine AA_FMOD_C_END(la,assign_hungarian)
 
 
 !> Solve assignment problem via Hungarian algorithm, padding if necessary
@@ -613,11 +613,11 @@ subroutine AA_FMOD(la,assign_hungarian_max2min)(A)
   A = maxval(A) - A
 end subroutine AA_FMOD(la,assign_hungarian_max2min)
 
-subroutine AA_FMOD_C(la,assign_hungarian_max2min)( m, n, A, lda )
+subroutine AA_FMOD_C_BEGIN(la, assign_hungarian_max2min, m, n, A, lda)
   integer(c_size_t), intent(in), value :: m,n,lda
   real(AA_FSIZE),intent(inout) :: A(lda,n)
   call AA_FMOD(la,assign_hungarian_max2min)( A(1:m,1:n) )
-end subroutine AA_FMOD_C(la,assign_hungarian_max2min)
+end subroutine AA_FMOD_C_END(la,assign_hungarian_max2min)
 
 #endif
 #if 0
