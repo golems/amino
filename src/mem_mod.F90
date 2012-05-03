@@ -44,23 +44,23 @@ module amino_mem
   implicit none
 
   interface
-     function aa_memreg_local_alloc_c( n )  result(p) &
-          bind(C,name="aa_memreg_local_alloc")
+     function aa_mem_region_local_alloc_c( n )  result(p) &
+          bind(C,name="aa_mem_region_local_alloc")
        use ISO_C_BINDING
        integer(c_size_t), intent(in), value :: n
        type(c_ptr) :: p
-     end function aa_memreg_local_alloc_c
+     end function aa_mem_region_local_alloc_c
   end interface
 
   interface
-     subroutine aa_memreg_local_pop_c( p ) &
-          bind(C,name="aa_memreg_local_pop")
+     subroutine aa_mem_region_local_pop_c( p ) &
+          bind(C,name="aa_mem_region_local_pop")
        use ISO_C_BINDING
        type(c_ptr), intent(in), value :: p
-     end subroutine aa_memreg_local_pop_c
+     end subroutine aa_mem_region_local_pop_c
   end interface
 
-  interface aa_memreg_alloc
+  interface aa_mem_region_alloc
      module procedure &
           AA_MANGLE_FMOD(d,mem,array1_4), &
           AA_MANGLE_FMOD(s,mem,array1_4), &
@@ -88,7 +88,7 @@ module amino_mem
           AA_MANGLE_FMOD(l32,mem,array2_8)
   end interface
 
-  interface aa_memreg_pop
+  interface aa_mem_region_pop
      module procedure &
           AA_MANGLE_FMOD(d,mem,pop1), &
           AA_MANGLE_FMOD(s,mem,pop1), &

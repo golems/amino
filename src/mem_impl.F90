@@ -46,7 +46,7 @@ subroutine AA_FMOD(mem,array1_4)(n,a)
   AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:)
   integer(4) :: s(1)
   type(c_ptr) :: p
-  p = aa_memreg_local_alloc_c(int(n*AA_FSIZE,c_size_t))
+  p = aa_mem_region_local_alloc_c(int(n*AA_FSIZE,c_size_t))
   s(1) = n
   call c_f_pointer( p, a, s )
 end subroutine AA_FMOD(mem,array1_4)
@@ -56,7 +56,7 @@ subroutine AA_FMOD(mem,array2_4)(m,n,a)
   AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:,:)
   type(c_ptr) :: p
   integer(4) :: s(2)
-  p = aa_memreg_local_alloc_c(int(m*n*AA_FSIZE,c_size_t))
+  p = aa_mem_region_local_alloc_c(int(m*n*AA_FSIZE,c_size_t))
   s(1) = m
   s(2) = n
   call c_f_pointer( p, a, s )
@@ -67,7 +67,7 @@ subroutine AA_FMOD(mem,array1_8)(n,a)
   AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:)
   type(c_ptr) :: p
   integer(8) :: s(1)
-  p = aa_memreg_local_alloc_c(int(n*int(AA_FSIZE,8),c_size_t))
+  p = aa_mem_region_local_alloc_c(int(n*int(AA_FSIZE,8),c_size_t))
   s(1) = n
   call c_f_pointer( p, a, s )
 end subroutine AA_FMOD(mem,array1_8)
@@ -77,7 +77,7 @@ subroutine AA_FMOD(mem,array2_8)(m,n,a)
   AA_FTYPE(AA_FSIZE), intent(out), pointer :: a(:,:)
   type(c_ptr) :: p
   integer(8) :: s(2)
-  p = aa_memreg_local_alloc_c(int(m*n*int(AA_FSIZE,8),c_size_t))
+  p = aa_mem_region_local_alloc_c(int(m*n*int(AA_FSIZE,8),c_size_t))
   s(1) = m
   s(2) = n
   call c_f_pointer( p, a, s )
@@ -85,13 +85,13 @@ end subroutine AA_FMOD(mem,array2_8)
 
 subroutine AA_FMOD(mem,pop1)(a)
   AA_FTYPE(AA_FSIZE), intent(in), pointer :: a(:)
-  call aa_memreg_local_pop_c( c_loc(a(1)) )
+  call aa_mem_region_local_pop_c( c_loc(a(1)) )
   nullify(a)
 end subroutine AA_FMOD(mem,pop1)
 
 subroutine AA_FMOD(mem,pop2)(a)
   AA_FTYPE(AA_FSIZE), intent(in), pointer :: a(:,:)
-  call aa_memreg_local_pop_c( c_loc(a(1,1)) )
+  call aa_mem_region_local_pop_c( c_loc(a(1,1)) )
   nullify(a)
 end subroutine AA_FMOD(mem,pop2)
 

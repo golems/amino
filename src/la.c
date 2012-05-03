@@ -206,7 +206,7 @@ int aa_la_inv( size_t n, double *A ) {
     int info;
 
     int *ipiv = (int*)
-        aa_memreg_local_alloc(sizeof(int)*n);
+        aa_mem_region_local_alloc(sizeof(int)*n);
 
     // LU-factor
     info = aa_cla_dgetrf( mi, ni, A, mi, ipiv );
@@ -214,7 +214,7 @@ int aa_la_inv( size_t n, double *A ) {
     int lwork = -1;
     while(1) {
         double *work = (double*)
-            aa_memreg_local_tmpalloc( sizeof(double)*
+            aa_mem_region_local_tmpalloc( sizeof(double)*
                                       (size_t)(lwork < 0 ? 1 : lwork) );
         aa_cla_dgetri( ni, A, mi, ipiv, work, lwork );
         if( lwork > 0 ) break;
@@ -222,7 +222,7 @@ int aa_la_inv( size_t n, double *A ) {
         lwork = (int)work[0];
     }
 
-    aa_memreg_local_pop(ipiv);
+    aa_mem_region_local_pop(ipiv);
 
     return info;
 }
@@ -258,7 +258,7 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     /*              1, A, mi, B, mi, 0, A_star, ni ); */
 
     // This method uses the SVD
-    double *W = (double*)aa_memreg_local_alloc( sizeof(double) *
+    double *W = (double*)aa_mem_region_local_alloc( sizeof(double) *
                                                 (m*m + n*n + AA_MIN(m,n)) );
     double *U = W;        // size m*m
     double *Vt = U + m*m; // size n*n
@@ -276,7 +276,7 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
                 A_star, ni
                 );
     }
-    aa_memreg_local_pop( W );
+    aa_mem_region_local_pop( W );
 }
 
 int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double *Vt ) {
@@ -286,19 +286,19 @@ int aa_la_svd( size_t m, size_t n, const double *A, double *U, double *S, double
 AA_API void aa_la_dls( size_t m, size_t n,
                        double k, const double *A,
                        const double *x, double *y ) {
-    double *A_star = (double*)aa_memreg_local_alloc( sizeof(double) *
+    double *A_star = (double*)aa_mem_region_local_alloc( sizeof(double) *
                                                      (m*n) );
     aa_la_dpinv(m,n,k,A,A_star);
     aa_la_mvmul(n,m,A_star,x,y);
 
-    aa_memreg_local_pop( A_star );
+    aa_mem_region_local_pop( A_star );
 }
 
 AA_API void aa_la_dlsnp( size_t m, size_t n,
                          double k, const double *A, const double *x,
                          const double *yp, double *y ) {
 
-    double *W = (double*)aa_memreg_local_alloc( sizeof(double) *
+    double *W = (double*)aa_mem_region_local_alloc( sizeof(double) *
                                                 (m*n + n*n) );
     double *A_star = W;       // size m*n
     double *B = A_star + m*n; // size n*n
@@ -321,7 +321,7 @@ AA_API void aa_la_dlsnp( size_t m, size_t n,
                  yp, 1,
                  1, y, 1 );
 
-    aa_memreg_local_pop( W );
+    aa_mem_region_local_pop( W );
 }
 
 

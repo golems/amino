@@ -109,20 +109,20 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
     int mi2 = 2*mi;
 
     double *vs = (double*)
-        aa_memreg_local_alloc(sizeof(double)*2*m*2*m);
+        aa_mem_region_local_alloc(sizeof(double)*2*m*2*m);
 
     {
         // shcur in lapack: dgees, (will balance the array itself)
         // build hamiltonian
 
         double *W = (double*)
-            aa_memreg_local_alloc( sizeof(double)*
+            aa_mem_region_local_alloc( sizeof(double)*
                                    (2*m*2*m + 2*m + 2*m) );
         double *H = W;
         double *wi = H + 2*m*2*m;
         double *wr = wi + 2*m;
         int *bwork = (int*)
-            aa_memreg_local_alloc( sizeof(int)* 2*m );
+            aa_mem_region_local_alloc( sizeof(int)* 2*m );
 
         aa_la_care_laub_hamiltonian(m,n,p,A,B,C,H);
 
@@ -131,7 +131,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         while(1) {
             int sdim;
             double *work = (double*)
-                aa_memreg_local_tmpalloc( sizeof(double)*
+                aa_mem_region_local_tmpalloc( sizeof(double)*
                                           (size_t)(lwork < 0 ? 1 : lwork) );
             dgees_("V", "S",
                    aa_la_care_laub_select,
@@ -142,7 +142,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
             assert( -1 == lwork );
             lwork = (int)work[0];
         };
-        aa_memreg_local_pop(W);
+        aa_mem_region_local_pop(W);
     }
 
     // solve the least squares problem
@@ -157,7 +157,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         int info;
         while(1) {
             double *work = (double*)
-                aa_memreg_local_tmpalloc( sizeof(double)*
+                aa_mem_region_local_tmpalloc( sizeof(double)*
                                           (size_t)(lwork < 0 ? 1 : lwork) );
             dgels_( "T", &mi, &mi, &mi,
                     vs, &mi2, /* u11' */
@@ -170,7 +170,7 @@ AA_API int aa_la_care_laub( size_t m, size_t n, size_t p,
         };
     }
 
-    aa_memreg_local_pop(vs);
+    aa_mem_region_local_pop(vs);
 
     return 0;
 }

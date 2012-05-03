@@ -386,15 +386,15 @@ subroutine AA_FMOD_C_BEGIN(la, assign_hungarian, m, n, A, lda, row, col)
   integer(c_size_t),intent(out) :: row(m),col(n)
 
   integer, pointer :: rowi(:), coli(:)
-  call aa_memreg_alloc( m, rowi )
-  call aa_memreg_alloc( m, coli )
+  call aa_mem_region_alloc( m, rowi )
+  call aa_mem_region_alloc( m, coli )
 
   call AA_FMOD(la,assign_hungarian)(A(1:m,1:n),rowi,coli)
   ! convert to C indices
   row = int(rowi-1,c_size_t)
   col = int(coli-1,c_size_t)
 
-  call aa_memreg_pop( rowi )
+  call aa_mem_region_pop( rowi )
 end subroutine AA_FMOD_C_END(la,assign_hungarian)
 
 
@@ -412,13 +412,13 @@ subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
   n = size(A,2)
   p = max(m,n)
 
-  call aa_memreg_alloc( p, p, b)
+  call aa_mem_region_alloc( p, p, b)
   B = real(0,AA_FSIZE)
   B(1:m,1:n) = A
 
   if ( m > n ) then
      ! more rows
-     call aa_memreg_alloc( p, alt_assign )
+     call aa_mem_region_alloc( p, alt_assign )
      call AA_FMOD(la,assign_hungarian_square)(B,row_assign,alt_assign)
      col_assign = alt_assign(1:n)
      where (row_assign > n)
@@ -426,7 +426,7 @@ subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
      end where
   elseif ( m < n ) then
      ! more cols
-     call aa_memreg_alloc( p, alt_assign )
+     call aa_mem_region_alloc( p, alt_assign )
      call AA_FMOD(la,assign_hungarian_square)(B,alt_assign,col_assign)
      row_assign = alt_assign(1:m)
      where (col_assign > m)
@@ -437,7 +437,7 @@ subroutine AA_FMOD(la,assign_hungarian)(A,row_assign,col_assign)
      call AA_FMOD(la,assign_hungarian_square)(B,row_assign,col_assign)
   end if
 
-  call aa_memreg_pop(B)
+  call aa_mem_region_pop(B)
 
 end subroutine AA_FMOD(la,assign_hungarian)
 
@@ -456,11 +456,11 @@ subroutine AA_FMOD(la,assign_hungarian_square)(A,row_assign,col_assign)
   real(AA_FSIZE) :: mv
 
   n = size(A,1)
-  call aa_memreg_alloc(2,n**2,path)
-  call aa_memreg_alloc(n,n,star)
-  call aa_memreg_alloc(n,n,prime)
-  call aa_memreg_alloc(n,row)
-  call aa_memreg_alloc(n,col)
+  call aa_mem_region_alloc(2,n**2,path)
+  call aa_mem_region_alloc(n,n,star)
+  call aa_mem_region_alloc(n,n,prime)
+  call aa_mem_region_alloc(n,row)
+  call aa_mem_region_alloc(n,col)
 
   ! --- Step 1 ---
   ! subtract smallest from each col
@@ -567,7 +567,7 @@ subroutine AA_FMOD(la,assign_hungarian_square)(A,row_assign,col_assign)
   end do
 
   ! deallocate
-  call aa_memreg_pop(path)
+  call aa_mem_region_pop(path)
 
   contains
 

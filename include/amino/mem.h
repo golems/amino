@@ -149,10 +149,10 @@ AA_API void aa_flexbuf_free(aa_flexbuf_t *p);
  *
  * Library users don't need to handle this directly.
  */
-struct aa_memreg_node {
+struct aa_mem_region_node {
     //size_t n;                    ///< size of this chunk
     uint8_t *end;                ///< pointer to end of this chunk
-    struct aa_memreg_node *next; ///< pointer to next chunk node
+    struct aa_mem_region_node *next; ///< pointer to next chunk node
     uint8_t d[];           ///< data array
 };
 
@@ -180,102 +180,102 @@ struct aa_memreg_node {
  */
 typedef struct {
     uint8_t *head;                ///< pointer to first free element of top chunk
-    struct aa_memreg_node *node;  ///< linked list of chunks
-} aa_memreg_t;
+    struct aa_mem_region_node *node;  ///< linked list of chunks
+} aa_mem_region_t;
 
 /** Initialize memory region with an initial chunk of size bytes. */
-AA_API void aa_memreg_init( aa_memreg_t *region, size_t size );
+AA_API void aa_mem_region_init( aa_mem_region_t *region, size_t size );
 
 /** Destroy memory region freeing all chunks.
  */
-AA_API void aa_memreg_destroy( aa_memreg_t *region );
+AA_API void aa_mem_region_destroy( aa_mem_region_t *region );
 
 
 /** Number of free contiguous bytes in region.  This is the number of
  * bytes which may be allocated without creating another chunk.
  */
-AA_API size_t aa_memreg_freesize( aa_memreg_t *region );
+AA_API size_t aa_mem_region_freesize( aa_mem_region_t *region );
 
-/** Temporary allocation.  The next call to aa_memreg_alloc or
- * aa_memreg_tmpalloc will return the same pointer if sufficient space
+/** Temporary allocation.  The next call to aa_mem_region_alloc or
+ * aa_mem_region_tmpalloc will return the same pointer if sufficient space
  * is available in the top chunk for that subsequent call.
  */
-AA_API void *aa_memreg_tmpalloc( aa_memreg_t *region, size_t size );
+AA_API void *aa_mem_region_tmpalloc( aa_mem_region_t *region, size_t size );
 
 /** Allocate size bytes from the region.  The head pointer of the top
  * chunk will be returned if it has sufficient space for the
  * allocation.
  */
-AA_API void *aa_memreg_alloc( aa_memreg_t *region, size_t size );
+AA_API void *aa_mem_region_alloc( aa_mem_region_t *region, size_t size );
 
 /** Deallocates all allocated objects from the region.  If the region
  * contains multiple chunks, they are merged into one.
  */
-AA_API void aa_memreg_release( aa_memreg_t *region );
+AA_API void aa_mem_region_release( aa_mem_region_t *region );
 
 /** printf's into a buffer allocated from region
  */
-AA_API char *aa_memreg_printf( aa_memreg_t *region, const char *fmt, ... );
+AA_API char *aa_mem_region_printf( aa_mem_region_t *region, const char *fmt, ... );
 
 /** printf's into a buffer allocated from region
  */
-AA_API char* aa_memreg_vprintf(aa_memreg_t *reg, const char *fmt, va_list ap );
+AA_API char* aa_mem_region_vprintf(aa_mem_region_t *reg, const char *fmt, va_list ap );
 
 /** Deallocates ptr and all blocks allocated after ptr was allocated.
  */
-AA_API void aa_memreg_pop( aa_memreg_t *region, void *ptr );
+AA_API void aa_mem_region_pop( aa_mem_region_t *region, void *ptr );
 
 
 /** Pointer to start of free space in region.
  */
-AA_API void *aa_memreg_ptr( aa_memreg_t *region );
+AA_API void *aa_mem_region_ptr( aa_mem_region_t *region );
 /** Number of chunks in the region.
  */
-AA_API size_t aa_memreg_chunk_count( aa_memreg_t *region );
+AA_API size_t aa_mem_region_chunk_count( aa_mem_region_t *region );
 /** Size of top chunk in region.
  */
-AA_API size_t aa_memreg_topsize( aa_memreg_t *region );
+AA_API size_t aa_mem_region_topsize( aa_mem_region_t *region );
 
 
 /** Initialize the thread-local memory region.
  *
- *  \sa aa_memreg_init
+ *  \sa aa_mem_region_init
  */
-AA_API void aa_memreg_local_init( size_t size );
+AA_API void aa_mem_region_local_init( size_t size );
 
 /** Destroy the thread-local memory region.
  *
- *  \sa aa_memreg_destroy
+ *  \sa aa_mem_region_destroy
  */
-AA_API void aa_memreg_local_destroy( void );
+AA_API void aa_mem_region_local_destroy( void );
 
 /** Return pointer to a thread-local memory region.
  */
-AA_API aa_memreg_t *aa_memreg_local_get( void );
+AA_API aa_mem_region_t *aa_mem_region_local_get( void );
 
-/** Allocate from thread-local memory region*
+/** Allocate from thread-local memory region.
  *
- *  \sa aa_memreg_alloc
+ *  \sa aa_mem_region_alloc
  */
-AA_API void *aa_memreg_local_alloc( size_t size );
+AA_API void *aa_mem_region_local_alloc( size_t size );
 
-/** Temporary allocate from thread-local memory region*
+/** Temporary allocate from thread-local memory region.
  *
- *  \sa aa_memreg_tmpalloc
+ *  \sa aa_mem_region_tmpalloc
  */
-AA_API void *aa_memreg_local_tmpalloc( size_t size );
+AA_API void *aa_mem_region_local_tmpalloc( size_t size );
 
 /** Pop ptr from thread-local memory region.
  *
- *  \sa aa_memreg_pop
+ *  \sa aa_mem_region_pop
  */
-AA_API void aa_memreg_local_pop( void *ptr );
+AA_API void aa_mem_region_local_pop( void *ptr );
 
-/** Release all objects allocated from thread-local memory region
+/** Release all objects allocated from thread-local memory region.
  *
- *  \sa aa_memreg_release
+ *  \sa aa_mem_region_release
  */
-AA_API void aa_memreg_local_release( void );
+AA_API void aa_mem_region_local_release( void );
 
 
 /*----------- Pooled Allocation ------------------*/
@@ -291,19 +291,19 @@ AA_API void aa_memreg_local_release( void );
 typedef struct {
     size_t size; ///< size of each element
     void *top;   ///< top of list of free elements
-    aa_memreg_t region; ///< memory region to allocate from
-} aa_pool_t;
+    aa_mem_region_t region; ///< memory region to allocate from
+} aa_mem_pool_t;
 
 /// untested
-AA_API void aa_pool_init( aa_pool_t *pool, size_t size, size_t count );
+AA_API void aa_mem_pool_init( aa_mem_pool_t *pool, size_t size, size_t count );
 /// untested
-AA_API void aa_pool_destroy( aa_pool_t *pool );
+AA_API void aa_mem_pool_destroy( aa_mem_pool_t *pool );
 /// untested
-AA_API void *aa_pool_alloc( aa_pool_t *pool );
+AA_API void *aa_mem_pool_alloc( aa_mem_pool_t *pool );
 /// untested
-AA_API void aa_pool_free( aa_pool_t *pool, void *ptr );
+AA_API void aa_mem_pool_free( aa_mem_pool_t *pool, void *ptr );
 /// untested
-AA_API void aa_pool_release( aa_pool_t *pool );
+AA_API void aa_mem_pool_release( aa_mem_pool_t *pool );
 
 /*----------- Circular Buffers ------------------*/
 /** Circular buffers use a fixed-size array that acts as if connected
