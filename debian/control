@@ -1,7 +1,7 @@
 Source: amino
 Priority: extra
 Maintainer: Neil Dantam <ntd@gatech.edu>
-Build-Depends: debhelper (>= 7), autotools-dev, gfortran, maxima
+Build-Depends: debhelper (>= 7), autotools-dev, gfortran, libblas-dev, liblapack-dev
 Standards-Version: 3.9.1
 Section: libs
 Homepage: http://github.com/golems/amino

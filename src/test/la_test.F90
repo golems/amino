@@ -109,7 +109,7 @@ contains
 
   subroutine test_cross2()
     real :: tmp(3)
-    call aa_la_cross( [-1.,2.,-3.], [2.,4.,8.], tmp)
+    call aa_la_cross_sub( [-1.,2.,-3.], [2.,4.,8.], tmp)
     call vtest( "cross2", [28., 2., -8.], tmp, 0.)
   end subroutine test_cross2
 
@@ -176,8 +176,8 @@ contains
           o=a
           o(1) = 0.
           p(2) = 0.
-          call aa_la_proj(a, [1.,0.], rp)
-          call aa_la_orth(a, [1.,0.], ro)
+          call aa_la_proj_sub(a, [1.,0.], rp)
+          call aa_la_orth_sub(a, [1.,0.], ro)
           call vtest("proj_sub", p, rp, .001 )
           call vtest("orth_sub", o, ro, .001 )
           rp = aa_la_proj(a, [1.,0.])

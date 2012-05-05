@@ -102,9 +102,14 @@ module amino_la
   end interface
 
   !> Cross product
+  interface aa_la_cross_sub
+     module procedure &
+          AA_MANGLE_FIFACE(la,cross_sub)
+  end interface
+
+  !> Cross product
   interface aa_la_cross
      module procedure &
-          AA_MANGLE_FIFACE(la,cross_sub), &
           AA_MANGLE_FIFACE(la,cross_fun)
   end interface
 
@@ -129,24 +134,34 @@ module amino_la
   end interface
 
   !> Make a unit vector
-  interface aa_la_unit
+  interface aa_la_unit_sub
      module procedure AA_MANGLE_FIFACE(la,unit_sub1), &
-          AA_MANGLE_FIFACE(la,unit_sub2), &
-          AA_MANGLE_FIFACE(la,unit_fun)
+          AA_MANGLE_FIFACE(la,unit_sub2)
+  end interface
+
+  !> Make a unit vector
+  interface aa_la_unit
+     module procedure AA_MANGLE_FIFACE(la,unit_fun)
+  end interface
+
+  !> Vector projection
+  interface aa_la_proj_sub
+     module procedure AA_MANGLE_FIFACE(la,proj_sub)
   end interface
 
   !> Vector projection
   interface aa_la_proj
-     module procedure &
-     AA_MANGLE_FIFACE(la,proj_sub), &
-     AA_MANGLE_FIFACE(la,proj_fun)
+     module procedure AA_MANGLE_FIFACE(la,proj_fun)
+  end interface
+
+  !> Vector orthogonal projection
+  interface aa_la_orth_sub
+     module procedure AA_MANGLE_FIFACE(la,orth_sub)
   end interface
 
   !> Vector orthogonal projection
   interface aa_la_orth
-     module procedure &
-          AA_MANGLE_FIFACE(la,orth_sub), &
-          AA_MANGLE_FIFACE(la,orth_fun)
+     module procedure AA_MANGLE_FIFACE(la,orth_fun)
   end interface
 
   !> Standard deviation
