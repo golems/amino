@@ -797,7 +797,7 @@ void quat() {
 void tm() {
     struct timespec t;
 
-    t = aa_tm_make_norm( 100, 1e9 + 1 );
+    t = aa_tm_make_norm( 100, AA_IBILLION + 1 );
     assert( 101 == t.tv_sec && 1 == t.tv_nsec );
 
     t = aa_tm_make_norm( 100,  -1 );
@@ -1234,16 +1234,17 @@ void tf() {
     }
 }
 
+void randtf(double T[12], double q[4], double R[9], double v[3]) {
+    double axa[4];
+    aa_vrand(3,v);
+    aa_vrand(4,axa); axa[3] *= M_PI;
+    aa_tf_axang2quat( axa, q );
+    aa_tf_quat2rotmat( q, T );
+    aa_tf_quat2rotmat( q, R );
+    aa_fcpy( T+9, v, 3 );
+}
+
 void tffuzz() {
-    void randtf(double T[12], double q[4], double R[9], double v[3]) {
-        double axa[4];
-        aa_vrand(3,v);
-        aa_vrand(4,axa); axa[3] *= M_PI;
-        aa_tf_axang2quat( axa, q );
-        aa_tf_quat2rotmat( q, T );
-        aa_tf_quat2rotmat( q, R );
-        aa_fcpy( T+9, v, 3 );
-    }
     for( size_t k = 0; k < 1000; k ++ ) {
         // tfs
         double v[3], T[12], q[4], R[9];
