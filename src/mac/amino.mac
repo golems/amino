@@ -42,7 +42,7 @@ load("vect");
 load("eigen");
 
 /* Element reference in lists or column vectors */
-vref(v,i) := if matrixp(v) then v[i][1] else v[i] ;
+vref(v,i) := if matrixp(v) then v[i][1] elseif zeromatrixp(v) then 0 else v[i] ;
 
 /* Cross Product */
 vcross(a,b) := express(
@@ -87,7 +87,7 @@ tf_roty( theta ) := matrix(
 tf_rotz( theta ) := matrix(
   [cos(theta),  -sin(theta),    0,   0],
   [sin(theta),   cos(theta),    0,   0],
-  [0,            1,             0,   0],
+  [0,            0,             1,   0],
   [0,            0,             0,   1] );
 
 /* Transform Matrix Translation */

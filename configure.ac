@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
-AC_INIT([amino], [0.20120503], [ntd@gatech.edu])
+AC_INIT([amino], [0.20120808], [ntd@gatech.edu])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_SRCDIR([include/amino.h])

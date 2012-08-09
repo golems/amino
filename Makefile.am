@@ -1,7 +1,10 @@
 INCLUDES = -I$(top_srcdir)/include
-EXTRA_DIST = src/mac/amino.mac src/mac/gen.mac src/la_impl.c       \
-             src/la_mod.F90 src/la_implf.F90                       \
+EXTRA_DIST = src/mac/gen.mac src/mac/mac.f       \
+             src/la_impl.c                       \
+             src/la_mod.F90 src/la_implf.F90     \
              src/mem_mod.F90 src/mem_impl.F90
+
+dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h
 
