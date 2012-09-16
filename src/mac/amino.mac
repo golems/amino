@@ -38,16 +38,19 @@
  */
 
 
-load("vect");
-load("eigen");
+/* These would be helpful, but break the GCL-compiled maxima in debian */
+/*load("vect");*/
+/*load("eigen");*/
 
 /* Element reference in lists or column vectors */
 vref(v,i) := if matrixp(v) then v[i][1] elseif zeromatrixp(v) then 0 else v[i] ;
 
 /* Cross Product */
-vcross(a,b) := express(
-   [vref(a,1), vref(a,2), vref(a,3)] ~
-   [vref(b,1), vref(b,2), vref(b,3)] );
+vcross(a,b) := [
+  vref(a,2)*vref(b,3) - vref(a,3)*vref(b,2),
+  vref(a,3)*vref(b,1) - vref(a,1)*vref(b,3),
+  vref(a,1)*vref(b,2) - vref(a,2)*vref(b,1)
+  ];
 
 /* dot products */
 dot3(a,b) := a[1]*b[1]+a[2]*b[2]+a[3]*b[3];
@@ -97,6 +100,7 @@ tf_tran(x,y,z) := matrix(
   [0,0,1,z],
   [0,0,0,1] );
 
+tf_get_tran(tf) := matrix([tf[1,4]],[tf[2,4]],[tf[3,4]]);
 
 /* quaternions */
 qconj(q) := [-vref(q,1), -vref(q,2), -vref(q,3), vref(q,4)];
@@ -141,7 +145,7 @@ jacobian_column(a, q, pe) := block(
   jp : vcross(a, pe - q ),
   jr: a,
   /*print(jr),*/
-  covect([vref(jp,1), vref(jp,2), vref(jp,3), vref(jr,1), vref(jr,2), vref(jr,3) ])
+  matrix([vref(jp,1)], [vref(jp,2)], [vref(jp,3)], [vref(jr,1)], [vref(jr,2)], [vref(jr,3)])
   );
 
 /* Create a Jacobian from the list of transforms and the list of axes
@@ -149,9 +153,9 @@ jacobian_column(a, q, pe) := block(
 spatial_jacobian(tfs, axes, tfe) := block(
   [pyr, pe],
   pyr: tf_pyramid(tfs),
-  pe: last(pyr) . tfe . [0,0,0,1],
+  pe: tf_get_tran(last(pyr) . tfe),
   apply(addcol,
     append([matrix()],
-      map(lambda([tf, a_local], jacobian_column(tf . a_local, tf . [0,0,0,1], pe)),
+      map(lambda([tf, a_local], jacobian_column(tf . a_local, tf_get_tran(tf), pe)),
         pyr, axes))));
 
