@@ -1,3 +1,8 @@
+amino (0.20120916) unstable; urgency=low
+
+  * Port amino.mac to GCL maxima
+
+ -- Neil Dantam <ntd@gatech.edu>  Sun, 16 Sep 2012 21:29:00 -0400
 amino (0.20120808) unstable; urgency=low
 
   * Fix and install amino.mac
