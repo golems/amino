@@ -2,20 +2,20 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
 AC_INIT([amino], [0.20120916], [ntd@gatech.edu])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_CONFIG_SRCDIR([include/amino.h])
 AC_CONFIG_HEADERS([config.h])
 
+AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
 AC_USE_SYSTEM_EXTENSIONS
-AC_PROG_CXX
-AC_PROG_CC
+AC_PROG_CC_C99
+AM_PROG_CC_C_O
 AC_PROG_F77
 AC_PROG_FC
 AC_PROG_LIBTOOL
-AC_PROG_CC_C99
 AC_CHECK_PROGS([MAXIMA], [maxima])
 
 # Checks for libraries.
@@ -65,11 +65,22 @@ AX_CFLAGS_WARN_ALL
 
 dnl APPEND_FLAG( [FLAG] )
 dnl Check if FLAG is supported, and if so, add it
-AC_DEFUN([APPEND_CFLAG],
-         [AX_CHECK_COMPILER_FLAGS([$1], [CFLAGS="$1 $CFLAGS"])])
 
-AC_DEFUN([APPEND_FCFLAG],
-         [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])
+m4_ifdef([AX_CHECK_COMPILE_FLAG],
+         [AC_DEFUN([APPEND_CFLAG],
+                   [AX_CHECK_COMPILE_FLAG([$1], [CFLAGS="$1 $CFLAGS"])])
+          AC_DEFUN([APPEND_FCFLAG],
+                   [AX_CHECK_COMPILE_FLAG([$1], [FCFLAGS="$1 $FCFLAGS"])])])
+
+m4_ifdef([AX_CHECK_COMPILER_FLAGS],
+         [AC_DEFUN([APPEND_CFLAG],
+                   [AX_CHECK_COMPILER_FLAGS([$1], [CFLAGS="$1 $CFLAGS"])])
+          AC_DEFUN([APPEND_FCFLAG],
+                   [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])])
+
+
+
+
 
 AC_LANG([C])
 APPEND_CFLAG([-Wextra])

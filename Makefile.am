@@ -1,3 +1,4 @@
+ACLOCAL_AMFLAGS = -I m4
 INCLUDES = -I$(top_srcdir)/include
 EXTRA_DIST = src/mac/gen.mac src/mac/mac.f       \
              src/la_impl.c                       \
@@ -38,7 +39,7 @@ pkginclude_HEADERS = 	                \
 
 TESTS = aa_test la_test
 
-lib_LTLIBRARIES = libamino.la
+lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
 bin_PROGRAMS = aa_test la_test
 
@@ -60,6 +61,8 @@ libamino_la_SOURCES =                  \
 	src/cv.c                       \
 	mem_mod.f90                    \
 	la_mod.f90
+
+libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.f
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]

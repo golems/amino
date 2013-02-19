@@ -49,3 +49,15 @@ amino*.tar.gz
 /mem_mod.f90
 /la_mod.s
 /mem_mod.s
+/src/test/.dirstamp
+/src/test/.deps/.dirstamp
+/src/mac/.dirstamp
+/src/mac/.deps/.dirstamp
+/src/.dirstamp
+/src/.deps/.dirstamp
+/m4/lt~obsolete.m4
+/m4/ltversion.m4
+/m4/ltsugar.m4
+/m4/ltoptions.m4
+/m4/libtool.m4
+/compile
