@@ -88,8 +88,8 @@
      (prefix-gensym "LD" var))))
 
 
-(defmacro def-la-cfun (name result-type &rest args)
-  `(defcfun ,name ,result-type
+(defmacro def-la-cfun ((c-name lisp-name) result-type &rest args)
+  `(defcfun (,c-name ,lisp-name) ,result-type
      ,@(loop for (name type &rest checks) in args
           append (case type
                    ((:vector :matrix)
@@ -97,11 +97,19 @@
                       (,(extra-arg-symbol name type) size-t)))
                    (otherwise (list (list name type)))))))
 
+;; TODO:
+;;   - output and in/out parameters
+;;   -
+
 (defmacro def-la-wrapper ((c-name lisp-name) result-type &rest args)
   (declare (ignore result-type)) ;; todo: optimize with declarations
   (let ((normal-arglist (loop for (name type . params) in args
-                           when (null params)
+                           when (or (null params)
+                                    (equal '(:inout) params))
                            collect name))
+        (inout-args (loop for (name type . params) in args
+                         when (find :inout params)
+                         collect name))
         (matrix-args (loop for (name type) in args
                         when (or (eq type :vector) (eq type :matrix))
                         collect name))
@@ -115,7 +123,6 @@
                                       (cons (cons name :offset) (prefix-gensym "OFFSET" name))
                                       (cons (cons name :cols) (prefix-gensym "COLS" name))
                                       (cons (cons name :data) (prefix-gensym "DATA" name))
-                                      (cons (cons name :data-length) (prefix-gensym "DATA-LENGTH" name))
                                       (cons (cons name :stride) (prefix-gensym "STRIDE" name))))))))
     (labels ((var-symbol (name type)
                (cdr (assoc (cons name type) var-alist :test #'equal)))
@@ -128,7 +135,6 @@
                    (destructuring-bind (name type &rest params) (car args)
                      (declare (ignore params))
                      (let ((data (var-symbol name :data))
-                           (data-length (var-symbol name :data-length))
                            (offset (var-symbol name :offset))
                            (stride (var-symbol name :stride))
                            (rows (var-symbol name :rows))
@@ -143,14 +149,12 @@
                                    ,(bind-count name :offset 'matrix-offset)
                                    (,data (matrix-data ,name)))
                               (declare (type fixnum ,offset ,stride ,rows ,cols))
-                              (let ((,(var-symbol name :data-length) (length ,data)))
-                                (declare (type fixnum ,data-length))
-                                ;; check overflow
-                                (unless (matrix-counts-in-bounds-p
-                                         ,data-length ,offset ,stride ,rows ,cols)
-                                  (matrix-storage-error "Argument ~A is out of bounds" ',name))
-                                (cffi-sys:with-pointer-to-vector-data (,name ,data)
-                                  ,@(expand-bind-counts (cdr args) body))))))
+                              ;; check overflow
+                              (unless (matrix-counts-in-bounds-p
+                                       (length ,data) ,offset ,stride ,rows ,cols)
+                                (matrix-storage-error "Argument ~A is out of bounds" ',name))
+                              (cffi-sys:with-pointer-to-vector-data (,name ,data)
+                                ,@(expand-bind-counts (cdr args) body)))))
                          (:vector
                           (expand-bind-counts
                            `((,name :matrix))
@@ -167,7 +171,7 @@
                   (list name (var-symbol name :stride)))
                  (params
                   (dolist (p params)
-                    (when (find (first p) '(:rows :length :cols))
+                    (when (and (consp p) (find (first p) '(:rows :length :cols)))
                       (return-from true-arg (list (var-symbol (second p) (first p))))))
                   (list name))
                  (t (list name)))))
@@ -181,34 +185,38 @@
               ,@(loop
                    for (name type . params) in args
                    for length-checks = (loop for param in params
-                                          when (find (first param) '(:length :rows :cols))
+                                          when (and (consp param) (find (first param) '(:length :rows :cols)))
                                           collect (var-symbol (second param) (first param)))
                    when (cdr length-checks)
                    collect `(assert (= ,@length-checks)))
                 ;; make the damn call
                 (,c-name ,@(loop for (name type . params) in args
-                              append (true-arg name type params)))))))))
+                              append (true-arg name type params)))))
+         ;;output
 
-(def-la-wrapper (aa-la-d-angle d-angle) :double
+
+
+         ,@(cond
+            ((null inout-args) nil)
+            ((= 1 (length inout-args)) inout-args)
+            (t (list (cons 'values inout-args))))))))
+
+(defmacro def-la ((c-name lisp-name) result-type &rest args)
+  (let ((c-lisp-name (gensym (string lisp-name))))
+    `(progn (def-la-cfun (,c-name ,c-lisp-name) ,result-type
+              ,@args)
+            (def-la-wrapper (,c-lisp-name ,lisp-name) ,result-type
+              ,@args))))
+
+(def-la ("aa_la_d_angle" d-angle) :double
   (n size-t (:length x) (:length y))
   (x :vector)
   (y :vector))
 
-(def-la-cfun "cblas_dscal" :void
-  (n cblas-size-t)
-  (alpha :double)
-  (x :vector))
-
-(def-la-wrapper (cblas-dscal dscal) :void
+(def-la ("cblas_dscal" dscal) :void
   (n cblas-size-t (:length x))
   (alpha :double)
-  (x :vector))
-
-(def-la-cfun "aa_la_d_angle" :double
-  (n size-t)
-  (x :vector)
-  (y :vector))
-
+  (x :vector :inout))
 
 
 ;; (defcfun "aa_la_d_angle" :double

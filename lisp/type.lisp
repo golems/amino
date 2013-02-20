@@ -73,10 +73,10 @@
                       (simple-array (signed-byte 32) (*))
                       (simple-array (signed-byte 64) (*))
                       (simple-array t (*))))
-  (offset 0 :type fixnum)
-  (stride 0 :type fixnum)
-  (cols 0 :type fixnum)
-  (rows 0 :type fixnum))
+  (offset 0 :type (integer 0 #.most-positive-fixnum))
+  (stride 0 :type (integer 1 #.most-positive-fixnum))
+  (cols 0 :type (integer 1 #.most-positive-fixnum))
+  (rows 0 :type (integer 1 #.most-positive-fixnum)))
 
 (defun make-matrix (m n)
   "Make a new matrix with M rows and N cols."
@@ -176,9 +176,7 @@
 (defun matrix-counts-in-bounds-p (data-length offset stride rows cols)
   "Check if given counts are within array bounds."
   (declare (type fixnum data-length offset stride rows cols))
-  (and (>= data-length 0)
-       (>= offset 0)
-       (>= stride rows)
+  (and (>= stride rows)
        (<= (+ offset
               (* stride cols))
            data-length)))
@@ -270,6 +268,11 @@ N: cols in the block."
                                   (matrix-cols matrix)
                                   (matrix-stride matrix)))
 
+(defun make-row-vector (n)
+  (make-matrix 1 n))
+
+(defun make-col-vector (n)
+  (make-matrix n 1))
 
 (defun row-vector (&rest args)
   (declare (dynamic-extent args))

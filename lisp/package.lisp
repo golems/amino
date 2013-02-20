@@ -38,5 +38,5 @@
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
 (defpackage :amino
-  (:use :cl :cffi)
+  (:use :cl :cffi :alexandria)
   (:nicknames :aa))
