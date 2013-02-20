@@ -48,6 +48,22 @@
 ;;;   - Stride
 ;;;   - Rows
 ;;;   - Cols
+(in-package :amino)
+
+
+(define-condition matrix-storage (error)
+  ((message
+    :initarg :message)))
+
+(defmethod print-object ((object matrix-storage) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (format stream ": ~A"
+            (slot-value object 'message))))
+
+(defun matrix-storage-error (format &rest args)
+  (error 'matrix-storage
+         :message (apply #'format nil format args)))
+
 
 (defstruct (matrix (:constructor %make-matrix))
   "Descriptor for a matrix following LAPACK conventions."
@@ -91,6 +107,16 @@
     (+ offset
        (* j stride)
         i)))
+
+;; (defun matrix-view-array (array)
+;;   (ecase (array-rank array)
+;;     (1
+;;      (%make-matrix :data array
+;;                    :offset 0
+;;                    :stride (length array)
+;;                    :rows (length array)
+;;                    :cols 1))
+;;     (2)))
 
 (defun matref (matrix i j)
   "Return element at row i, col j."
@@ -146,6 +172,26 @@
                 (matref matrix i j))))
       matrix-1)))
 
+
+(defun matrix-counts-in-bounds-p (data-length offset stride rows cols)
+  "Check if given counts are within array bounds."
+  (declare (type fixnum data-length offset stride rows cols))
+  (and (>= data-length 0)
+       (>= offset 0)
+       (>= stride rows)
+       (<= (+ offset
+              (* stride cols))
+           data-length)))
+
+(defun matrix-in-bounds-p (matrix)
+  (matrix-counts-in-bounds-p (length (matrix-data matrix))
+                             (matrix-offset matrix)
+                             (matrix-stride matrix)
+                             (matrix-rows matrix)
+                             (matrix-cols matrix)))
+
+
+(declaim (inline matrix-block))
 (defun matrix-block (matrix i j m n)
   "Make a new descriptor for a sub-block of MATRIX.
 MATRIX: original matrix.
@@ -153,6 +199,7 @@ I: first row in MATRIX of the block.
 J: first col in MATRIX of the block.
 M: rows in the block.
 N: cols in the block."
+  ;; TODO: Check bounds
   (%make-matrix :data (matrix-data matrix)
                 :offset (matrix-index matrix i j)
                 :stride (matrix-stride matrix)
@@ -167,12 +214,6 @@ N: cols in the block."
   "Block for col J"
   (matrix-block matrix 0 j (matrix-rows matrix) 1))
 
-(defun matrix-vector-store-p (matrix)
-  "Is the matrix stored in a way that looks like a vector?"
-  (or (= (matrix-stride matrix)
-         (matrix-rows matrix))
-      (= 1 (matrix-rows matrix))
-      (= 1 (matrix-cols matrix))))
 
 (defun matrix-contiguous-p (matrix)
   "Is the matrix stored contiguously?"
@@ -196,3 +237,44 @@ N: cols in the block."
     (unless (= (1+ i) (matrix-rows object))
       (terpri stream)))
   (format stream ")"))
+
+
+;;;;;;;;;;;;;;;
+;;; VECTORS ;;;
+;;;;;;;;;;;;;;;
+
+(defun matrix-vector-store-p (matrix)
+  "Is the matrix stored in a way that looks like a vector?"
+  (or (= (matrix-stride matrix)
+         (matrix-rows matrix))
+      (= 1 (matrix-rows matrix))
+      (= 1 (matrix-cols matrix))))
+
+(defmacro check-vector-storage (place)
+  `(progn
+     (check-type ,place matrix)
+     (unless (matrix-vector-store-p ,place)
+       (matrix-storage-error "~A is not stored as a vector" ,place))))
+
+(defun matrix-counts-vector-increment (rows cols stride)
+  (cond
+    ((or (= 1 cols)
+         (= rows stride))
+     1)
+    ((= 1 rows) stride)
+    (t (matrix-storage-error "stored as a vector"))))
+
+(defun matrix-vector-increment (matrix)
+  (declare (type matrix matrix))
+  (matrix-counts-vector-increment (matrix-rows matrix)
+                                  (matrix-cols matrix)
+                                  (matrix-stride matrix)))
+
+
+(defun row-vector (&rest args)
+  (declare (dynamic-extent args))
+  (row-matrix args))
+
+(defun col-vector (&rest args)
+  (declare (dynamic-extent args))
+  (col-matrix args))
