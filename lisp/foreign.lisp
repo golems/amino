@@ -249,3 +249,32 @@
               ,@args)
             (def-la-wrapper (,c-lisp-name ,lisp-name :by-reference ,by-reference) ,result-type
               ,@args))))
+
+
+
+(defmacro def-blas (name result-type &body args)
+  (cons
+   'progn
+   (loop
+      with strname = (string name)
+      for prefix in '(f d)
+      for strprefix = (string-downcase (string prefix))
+      for prefix-type = (ecase prefix
+                          (d :double)
+                          (f :float))
+      for typed-args = (loop for (name type . params) in args
+                          collect `(,name ,(case type
+                                                 ((:float :double)
+                                                  prefix-type)
+                                                 (otherwise type))
+                                          ,@params))
+      collect
+        `(def-la (,(string-downcase (concatenate 'string strprefix strname "_"))
+                   ,(intern (string-upcase (concatenate 'string strprefix strname))
+                            (find-package (symbol-package name)))
+                   :by-reference t)
+             ,(case result-type
+                    ((:float :double)
+                     prefix-type)
+                    (otherwise result-type))
+           ,@typed-args))))

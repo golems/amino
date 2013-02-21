@@ -44,21 +44,29 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 1 BLAS ;;;
 ;;;;;;;;;;;;;;;;;;;;
-(def-la ("dscal_" dscal :by-reference t)
-    :void
+(def-blas scal :void
   (n blas-size-t (:length x))
-  (alpha :double)
+  (alpha :float)
   (x :vector :inout))
 
-(def-la ("daxpy_" daxpy :by-reference t) :void
+(def-blas axpy :void
   (n blas-size-t (:length x) (:length y))
-  (alpha :double)
+  (alpha :float)
   (x :vector)
   (y :vector :inout))
 
-;; (def-la ("cblas_daxpy" daxpy) :void
-;;   (n cblas-size-t (:length x))
-;;   (alpha :double)
+(def-blas dot :float
+  (n blas-size-t (:length x) (:length y))
+  (x :vector)
+  (y :vector))
+
+(def-blas nrm2 :float
+  (n blas-size-t (:length x))
+  (x :vector))
+
+(def-blas asum :float
+  (n blas-size-t (:length x))
+  (x :vector))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 2 BLAS ;;;
