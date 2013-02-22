@@ -53,6 +53,7 @@
   (t (:default "libblas")))
 
 (defctype blas-size-t :int)
+(defctype transpose-t :uint8)
 
 (use-foreign-library libamino-xerbla)
 (use-foreign-library libamino)
@@ -68,6 +69,10 @@
   (with-foreign-object (pposition :int)
     (setf (mem-ref pposition :int) position)
     (xerbla-  name pposition (length name))))
+
+
+(defconstant +transpose+ (char-code #\T))
+(defconstant +no-transpose+ (char-code #\N))
 
 ;; Wrapper macros
 ;; - args: (name type &rest SIZES)
@@ -94,9 +99,9 @@
                    ((:vector :matrix)
                     `((,name :pointer)
                       (,(extra-arg-symbol name type) ,(if by-reference
-                                                         :pointer 'size-t))))
+                                                          :pointer 'size-t))))
                    (otherwise (list (list name (if by-reference
-                                                         :pointer type))))))))
+                                                   :pointer type))))))))
 
 (defmacro with-pointer-to ((var value type) &body body)
   (with-gensyms (ptr)
@@ -105,8 +110,6 @@
          (setf (cffi:mem-ref ,var ',type) ,ptr)
          ,@body))))
 
-(defun make-var-sym (name thing)
-  (cons (cons name thing) (prefix-gensym (string thing) name)))
 
 (defun var-sym (alist name thing)
   (cdr (assoc (cons name thing) alist :test #'equal)))
@@ -160,12 +163,16 @@
         (data (var-sym var-alist var :data)))
     (cond
       ((find type '(:matrix :vector))
+       (assert thing)
        (append-body
         `(cffi-sys:with-pointer-to-vector-data (,var ,data))
         (if by-reference
             (append-body `(with-pointer-to (,thing ,thing :int))
                          body)
             body)))
+      ((eq type 'transpose-t)
+       `((with-pointer-to (,var (if ,var ,+transpose+ ,+no-transpose+) :uint8)
+           ,@body)))
       (by-reference
        (let ((var (or (count-source-var var-alist type params)
                       var)))
@@ -173,29 +180,73 @@
              ,@body))))
       (t body))))
 
+(defun make-var-sym (name thing)
+  (cons (cons name thing) (prefix-gensym (string thing) name)))
+
+
+(defun length-check (alist var type params)
+  (let ((checks))
+    (labels ((new-check (a b)
+               (push `(assert (= ,a ,b)) checks))
+             (swap-rowcol (a)
+               (ecase a (:rows :cols) (:cols :rows)))
+             (get-var (param)
+               (destructuring-bind (thing var) param
+                 (ecase thing
+                   (:length (var-sym alist var thing))
+                   ((:rows :cols)
+                    `(if ,(var-sym alist var :transpose)
+                         ,(var-sym alist var (swap-rowcol thing))
+                         ,(var-sym alist var thing))))))
+             (collect (first rest)
+               (loop for param in rest
+                  when (and (consp param) (find (first param) '(:length :rows :cols)))
+                  collect (if (listp (second param))
+                              (new-check (var-sym alist var (first param)) (get-var (second param)))
+                              (new-check (get-var first) (get-var param))))))
+      (case type
+        ((:vector :matrix) (collect nil params))
+        (otherwise (collect (car params) (cdr params)))))
+    checks))
+
+
+;; Checks
+;;  * Matrix in bounds
+;;  * Argument dimensons match
+;;  * Argument element types match
+
 (defmacro def-la-wrapper ((c-name lisp-name &key by-reference) result-type &rest args)
   (declare (ignore result-type)) ;; todo: optimize with declarations
   (let ((normal-arglist (loop for (name type . params) in args
-                           when (or (null params)
-                                    (equal '(:inout) params))
+                           when (and (not (eq type 'transpose-t))
+                                     (or (null params)
+                                         (find type '(:vector :matrix))
+                                         (equal '(:inout) params)))
                            collect name))
         (inout-args (loop for (name type . params) in args
                          when (find :inout params)
                          collect name))
+        (transpose-args (loop for (name type . params) in args
+                           when (eq type 'transpose-t)
+                           collect `(,name ,type ,@args)))
         (matrix-args (loop for (name type) in args
                         when (or (eq type :vector) (eq type :matrix))
                         collect name))
-        (var-alist (loop for (name type) in args
+        (var-alist (loop for (name type . params) in args
                       append (append
+                              (when (eq type 'transpose-t)
+                                (destructuring-bind ((trans matrix)) params
+                                  (assert (eq :transpose trans))
+                                  (list (cons (cons matrix :transpose) name))))
                               (when (eq type :vector)
-                                (list (cons (cons name :inc) (prefix-gensym "INC" name))
-                                      (cons (cons name :length) (prefix-gensym "LENGTH" name))))
+                                (list (make-var-sym name :inc)
+                                      (make-var-sym name :length)))
                               (when (or (eq type :matrix) (eq type :vector))
-                                (list (cons (cons name :rows) (prefix-gensym "ROWS" name))
-                                      (cons (cons name :offset) (prefix-gensym "OFFSET" name))
-                                      (cons (cons name :cols) (prefix-gensym "COLS" name))
-                                      (cons (cons name :data) (prefix-gensym "DATA" name))
-                                      (cons (cons name :stride) (prefix-gensym "STRIDE" name))))))))
+                                (list (make-var-sym name :rows)
+                                      (make-var-sym name :offset)
+                                      (make-var-sym name :cols)
+                                      (make-var-sym name :data)
+                                      (make-var-sym name :stride)))))))
     (labels ((var-symbol (name type)
                (cdr (assoc (cons name type) var-alist :test #'equal)))
              (true-arg (name type params)
@@ -210,7 +261,10 @@
                       (return-from true-arg (list (var-symbol (second p) (first p))))))
                   (list name))
                  (t (list name)))))
-      `(defun ,lisp-name ,normal-arglist
+      `(defun ,lisp-name (,@normal-arglist
+                          ,@(when transpose-args
+                                  (list '&key (loop for (name) in transpose-args
+                                                 collect name))))
          ;; declare types
          ,@(when matrix-args `((declare (type matrix ,@matrix-args))))
          ;; bind counts
@@ -224,19 +278,15 @@
             ;; check sizes
             `(,@(loop
                    for (name type . params) in args
-                   for length-checks = (loop for param in params
-                                          when (and (consp param) (find (first param) '(:length :rows :cols)))
-                                          collect (var-symbol (second param) (first param)))
-                   when (cdr length-checks)
-                   collect `(assert (= ,@length-checks)))
+                   append (length-check var-alist name type params))
                 ,@(reduce
                    (lambda (body arg)
                      (destructuring-bind (name type &rest params) arg
                        (bind-refs var-alist name type params by-reference body)))
                    args
                    :initial-value
-                   `(x (,c-name ,@(loop for (name type . params) in args
-                                     append (true-arg name type params)))))))
+                   `((,c-name ,@(loop for (name type . params) in args
+                                   append (true-arg name type params)))))))
          ;;output
          ,@(cond
             ((null inout-args) nil)
@@ -257,11 +307,11 @@
    'progn
    (loop
       with strname = (string name)
-      for prefix in '(f d)
+      for prefix in '(s d)
       for strprefix = (string-downcase (string prefix))
       for prefix-type = (ecase prefix
                           (d :double)
-                          (f :float))
+                          (s :float))
       for typed-args = (loop for (name type . params) in args
                           collect `(,name ,(case type
                                                  ((:float :double)

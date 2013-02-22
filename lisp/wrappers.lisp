@@ -71,6 +71,16 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 2 BLAS ;;;
 ;;;;;;;;;;;;;;;;;;;;
+(def-blas gemv :void
+  (trans transpose-t (:transpose a))
+  (m blas-size-t (:rows a))
+  (n blas-size-t (:cols a))
+  (alpha :float)
+  (a :matrix)
+  (x :vector (:length (:cols a)))
+  (beta :float)
+  (y :vector (:length (:rows a)) :inout))
+
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 3 BLAS ;;;
