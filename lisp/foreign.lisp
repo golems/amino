@@ -81,6 +81,64 @@
 ;; - SIZES: (or (:length var) (:rows var) (:cols var))
 ;;   - automatically get these size vars and check validity
 
+
+;;; CALL BY REFERENCING ;;;
+
+(defmacro with-reference ((var value type) &body body)
+  (with-gensyms (ptr)
+    `(let ((,ptr ,value))
+       (cffi:with-foreign-object (,var ',type)
+         (setf (cffi:mem-ref ,var ',type) ,ptr)
+         ,@body))))
+
+(defmacro def-ref-type (name value-type)
+  `(progn
+     (define-foreign-type ,name ()
+       ()
+       (:simple-parser ,name)
+       (:actual-type :pointer))
+     (defmethod expand-to-foreign-dyn (value var body (type ,name))
+       (append (list 'with-reference (list var value ',value-type))
+                     body))))
+
+(def-ref-type int-ref-t :int)
+(def-ref-type double-ref-t :double)
+(def-ref-type float-ref-t :float)
+(def-ref-type size-ref-t size-t)
+(def-ref-type blas-size-ref-t blas-size-t)
+
+(define-foreign-type foreign-array-t ()
+  ()
+  (:simple-parser foreign-array-t)
+  (:actual-type :pointer))
+
+(defmethod expand-to-foreign-dyn (value var body (type foreign-array-t))
+  `(with-pointer-to-vector-data (,var ,value)
+     ,@body))
+
+(define-foreign-type transpose-t ()
+  ()
+  (:simple-parser transpose-array-t)
+  (:actual-type :pointer))
+
+(defmethod expand-to-foreign-dyn (value var body (type transpose-t))
+  `(with-reference (,var (if ,value +transpose+ +no-transpose+) :uint8)
+     ,@body))
+
+(defun ref-true-type (type by-reference)
+  (if by-reference
+      (ecase type
+        (:double 'double-ref-t)
+        (:float 'float-ref-t)
+        (:int 'int-ref-t)
+        (size-t 'size-ref-t)
+        (blas-size-t 'blas-size-ref-t)
+        (transpose-t 'transpose-t))
+      type))
+
+
+;;; Foreign Binding ;;;
+
 (defun prefix-gensym (prefix var)
   (gensym (concatenate 'string prefix "-" (string var) "-")))
 
@@ -91,34 +149,20 @@
     (:matrix
      (prefix-gensym "LD" var))))
 
-
+;; Bind the C function
 (defmacro def-la-cfun ((c-name lisp-name &key by-reference) result-type &rest args)
   `(defcfun (,c-name ,lisp-name) ,result-type
      ,@(loop for (name type &rest checks) in args
           append (case type
                    ((:vector :matrix)
-                    `((,name :pointer)
-                      (,(extra-arg-symbol name type) ,(if by-reference
-                                                          :pointer 'size-t))))
-                   (otherwise (list (list name (if by-reference
-                                                   :pointer type))))))))
+                    `((,name foreign-array-t)
+                      (,(extra-arg-symbol name type) ,(ref-true-type 'size-t by-reference))))
+                   (otherwise (list (list name (ref-true-type type by-reference))))))))
 
-(defmacro with-pointer-to ((var value type) &body body)
-  (with-gensyms (ptr)
-    `(let ((,ptr ,value))
-       (cffi:with-foreign-object (,var ',type)
-         (setf (cffi:mem-ref ,var ',type) ,ptr)
-         ,@body))))
-
+;;; Wrapper Generation ;;;
 
 (defun var-sym (alist name thing)
   (cdr (assoc (cons name thing) alist :test #'equal)))
-
-(defun count-source-var (alist type params)
-  (case type
-    ((blas-size-t size-t)
-     (when-let (source (find-if (lambda (x) (find (car x) '(:length :rows :cols))) params))
-       (var-sym alist (second source) (first source))))))
 
 (defun bind-counts (var-alist var type body)
   (let ((data (var-sym var-alist var :data))
@@ -150,39 +194,8 @@
       (otherwise body))))
 
 
-(defun append-body (bindings body)
-  (list (append bindings body)))
-
-(defun append-list-body (bindings body)
-  (append-body (car bindings) body))
-
-(defun bind-refs (var-alist var type params by-reference body)
-  (let ((thing (case type
-                 (:matrix (var-sym var-alist var :stride))
-                 (:vector (var-sym var-alist var :inc))))
-        (data (var-sym var-alist var :data)))
-    (cond
-      ((find type '(:matrix :vector))
-       (assert thing)
-       (append-body
-        `(cffi-sys:with-pointer-to-vector-data (,var ,data))
-        (if by-reference
-            (append-body `(with-pointer-to (,thing ,thing :int))
-                         body)
-            body)))
-      ((eq type 'transpose-t)
-       `((with-pointer-to (,var (if ,var ,+transpose+ ,+no-transpose+) :uint8)
-           ,@body)))
-      (by-reference
-       (let ((var (or (count-source-var var-alist type params)
-                      var)))
-         `((with-pointer-to (,var ,var ,type)
-             ,@body))))
-      (t body))))
-
 (defun make-var-sym (name thing)
   (cons (cons name thing) (prefix-gensym (string thing) name)))
-
 
 (defun length-check (alist var type params)
   (let ((checks))
@@ -215,7 +228,7 @@
 ;;  * Argument dimensons match
 ;;  * Argument element types match
 
-(defmacro def-la-wrapper ((c-name lisp-name &key by-reference) result-type &rest args)
+(defmacro def-la-wrapper ((c-name lisp-name) result-type &rest args)
   (declare (ignore result-type)) ;; todo: optimize with declarations
   (let ((normal-arglist (loop for (name type . params) in args
                            when (and (not (eq type 'transpose-t))
@@ -252,9 +265,9 @@
              (true-arg (name type params)
                (cond
                  ((eq type :vector)
-                  (list name (var-symbol name :inc)))
+                  (list (var-symbol name :data) (var-symbol name :inc)))
                  ((eq type :matrix)
-                  (list name (var-symbol name :stride)))
+                  (list (var-symbol name :data) (var-symbol name :stride)))
                  (params
                   (dolist (p params)
                     (when (and (consp p) (find (first p) '(:rows :length :cols)))
@@ -279,14 +292,9 @@
             `(,@(loop
                    for (name type . params) in args
                    append (length-check var-alist name type params))
-                ,@(reduce
-                   (lambda (body arg)
-                     (destructuring-bind (name type &rest params) arg
-                       (bind-refs var-alist name type params by-reference body)))
-                   args
-                   :initial-value
-                   `((,c-name ,@(loop for (name type . params) in args
-                                   append (true-arg name type params)))))))
+                ;; funcall
+                (,c-name ,@(loop for (name type . params) in args
+                              append (true-arg name type params)))))
          ;;output
          ,@(cond
             ((null inout-args) nil)

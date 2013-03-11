@@ -92,7 +92,7 @@
 ;;;;;;;;;;;;;
 
 (def-la ("aa_la_d_angle" d-angle) :double
-  (n c-size-t (:length x) (:length y))
+  (n size-t (:length x) (:length y))
   (x :vector)
   (y :vector))
 
