@@ -41,7 +41,7 @@ TESTS = aa_test la_test
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
-bin_PROGRAMS = aa_test la_test
+noinst_PROGRAMS = aa_test la_test
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
@@ -74,10 +74,11 @@ distclean-local:
 	-rm -rf doxygen-doc
 
 aa_test_SOURCES = src/test/aa_test.c
-aa_test_LDADD = libamino.la
+aa_test_LDADD = libamino.la -lblas -llapack
 
 la_test_SOURCES = src/test/la_test.F90
-la_test_LDADD = libamino.la
+la_test_LDADD = libamino.la -lblas -llapack
+
 $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 
 clapack_doc.c: doc/clapack_doc.c include/amino/clapack.h include/amino/clapack_impl.h
