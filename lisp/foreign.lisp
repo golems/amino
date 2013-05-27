@@ -40,6 +40,14 @@
 
 (in-package :amino)
 
+(define-foreign-library libblas
+  (:unix "libblas.so")
+  (t (:default "libblas")))
+
+(define-foreign-library liblapack
+  (:unix "liblapack.so")
+  (t (:default "liblapack")))
+
 (define-foreign-library libamino
   (:unix "libamino.so")
   (t (:default "libamino")))
@@ -48,15 +56,14 @@
   (:unix "libamino_xerbla_nop.so")
   (t (:default "libamino_xerbla_nop")))
 
-(define-foreign-library libblas
-  (:unix "libblas.so")
-  (t (:default "libblas")))
 
 (defctype blas-size-t :int)
 (defctype transpose-t :uint8)
 
-(use-foreign-library libamino-xerbla)
+(use-foreign-library libblas)
+(use-foreign-library liblapack)
 (use-foreign-library libamino)
+(use-foreign-library libamino-xerbla)
 
 
 (defcfun "xerbla_" :void
