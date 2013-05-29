@@ -792,6 +792,32 @@ void quat() {
         aa_tf_qrot(q1, p, pr);
         aveq( "tf_qrot", 3, pr, pq, .00001 );
     }
+
+    // slerp
+    {
+        double R0[9], R_5[9], R1[9];
+        double q0[4], q_5[4], q1[4];
+        double qs[4];
+
+        aa_tf_xangle2rotmat( 0.0, R0 );
+        aa_tf_xangle2rotmat( M_PI_2, R_5 );
+        aa_tf_xangle2rotmat( M_PI, R1);
+
+        aa_tf_rotmat2quat(R0, q0);
+        aa_tf_rotmat2quat(R_5, q_5);
+        aa_tf_rotmat2quat(R1, q1);
+
+        aa_tf_qslerp( 0, q0, q1, qs );
+        aveq( "qslerp 0", 4, q0, qs, .00001 );
+
+        aa_tf_qslerp( 1, q0, q1, qs );
+        aveq( "qslerp 1", 4, q1, qs, .00001 );
+
+        aa_tf_qslerp( .5, q0, q1, qs );
+        aveq( "qslerp .5", 4, q_5, qs, .00001 );
+
+    }
+
 }
 
 void tm() {

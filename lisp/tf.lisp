@@ -162,6 +162,51 @@
   (aa-tf-zangle2rotmat theta r)
   r)
 
+(defcfun aa-tf-12inv :void
+  (tf transformation-matrix-t)
+  (tf-i transformation-matrix-t))
+(defun tf-inv (tf &optional (tf-i (make-matrix 3 4)))
+  (aa-tf-12inv tf tf-i))
+
+(defcfun aa-tf-12rel :void
+  (tf1 transformation-matrix-t)
+  (tf2 transformation-matrix-t)
+  (tf transformation-matrix-t))
+(defun tf-rel (tf1 tf2 &optional (tf (make-matrix 3 4)))
+  (aa-tf-12rel tf1 tf2 tf)
+  tf)
+
+(defcfun aa-tf-qinv :void
+  (q quaternion-t)
+  (qi quaternion-t))
+(defun tf-qinv (q &optional (q-i (make-matrix 4 1)))
+  (aa-tf-qinv q q-i)
+  q-i)
+
+
+(defcfun aa-tf-qnormalize :void
+  (q quaternion-t))
+(defun tf-qnorm (q &optional (q-n (make-matrix 4 1)))
+  (replace (matrix-data q-n) (matrix-data q))
+  (aa-tf-qnormalize q-n)
+  q-n)
+
+(defcfun aa-tf-rotmat2quat :void
+  (r rotation-matrix-t)
+  (q quaternion-t))
+(defun tf-rotmat2quat (r &optional (q (make-matrix 4 1)))
+  (aa-tf-rotmat2quat r q)
+  q)
+
+
+(defcfun aa-tf-qslerp :void
+  (r :double)
+  (q0 quaternion-t)
+  (q1 quaternion-t)
+  (q quaternion-t))
+(defun tf-qslerp (r q0 q1 &optional (q (make-matrix 4 1)))
+  (aa-tf-qslerp r q0 q1 q)
+  q)
 
 ;;; Convenience
 
