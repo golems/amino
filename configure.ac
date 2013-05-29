@@ -2,7 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
 AC_INIT([amino], [0.20120916], [ntd@gatech.edu])
+
 AM_INIT_AUTOMAKE([subdir-objects])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_SRCDIR([include/amino.h])
 AC_CONFIG_HEADERS([config.h])
@@ -89,7 +91,7 @@ APPEND_CFLAG([-Wpointer-arith])
 APPEND_CFLAG([-Wfloat-equal])
 APPEND_CFLAG([-Wshadow])
 APPEND_CFLAG([-Wwrite-strings])
-APPEND_CFLAG([-Wc++-compat])
+dnl APPEND_CFLAG([-Wc++-compat])
 
 AC_LANG([Fortran])
 APPEND_FCFLAG([-fimplicit-none])

@@ -43,6 +43,7 @@ lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
 noinst_PROGRAMS = aa_test la_test
 
+
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
 	src/la.c                       \
@@ -58,10 +59,12 @@ libamino_la_SOURCES =                  \
 	src/io.c                       \
 	src/are.c                      \
 	src/sigsys.c                   \
-	src/cv.c                       \
-	mem_mod.f90                    \
-	la_mod.f90                     \
-	src/tff.f90
+	src/cv.c
+
+libamino_la_LIBADD =                   \
+	libamino_mem.la                \
+	libamino_la.la                 \
+	libamino_tf.la
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.f
 
@@ -80,7 +83,30 @@ aa_test_LDADD = libamino.la -lblas -llapack
 la_test_SOURCES = src/test/la_test.F90
 la_test_LDADD = libamino.la -lblas -llapack
 
+
+# use some convenience libraries to force fortran module dependencies
+noinst_LTLIBRARIES =                   \
+	libamino_mem.la                \
+	libamino_la.la                 \
+	libamino_tf.la
+
+# each convenience library depends on the fortran source for that module
+libamino_mem_la_SOURCES = mem_mod.f90
+libamino_la_la_SOURCES = la_mod.f90
+libamino_tf_la_SOURCES = src/tff.f90
+
+# each module file depends on the object files for its conveneince library
+amino_mem.mod: $(libamino_mem_la_OBJECTS)
+amino_la.mod: $(libamino_la_la_OBJECTS)
+amino_tf.mod: $(libamino_tf_la_OBJECTS)
+
+# dependent objects dependent on the appropriate module
+$(libamino_la_la_OBJECTS): amino_mem.mod
+$(libamino_tf_la_OBJECTS): amino_la.mod
 $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
+
+foo:
+	echo $(la_test_OBJECTS)
 
 clapack_doc.c: doc/clapack_doc.c include/amino/clapack.h include/amino/clapack_impl.h
 	$(CPP) $(INCLUDES) -CC $< -o $@
@@ -91,13 +117,10 @@ la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
 
 la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
-amino_la.mod: la_mod.$(OBJEXT)
 
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
-amino_mem.mod: mem_mod.$(OBJEXT)
 
-la_mod.$(OBJEXT): amino_mem.mod
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 
