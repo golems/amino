@@ -93,7 +93,7 @@ noinst_LTLIBRARIES =                   \
 # each convenience library depends on the fortran source for that module
 libamino_mem_la_SOURCES = mem_mod.f90
 libamino_la_la_SOURCES = la_mod.f90
-libamino_tf_la_SOURCES = src/tff.f90
+libamino_tf_la_SOURCES = src/tff.F90
 
 # each module file depends on the object files for its conveneince library
 amino_mem.mod: $(libamino_mem_la_OBJECTS)

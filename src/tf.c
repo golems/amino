@@ -82,24 +82,9 @@ void aa_tf_qnormalize( double q[restrict 4] ) {
     aa_la_normalize( 4, q );
 }
 
-void aa_tf_qconj( const double q[restrict 4], double r[restrict 4] ) {
-    r[0] = -q[0];
-    r[1] = -q[1];
-    r[2] = -q[2];
-    r[3] =  q[3];
-}
-
 void aa_tf_qinv( const double q[restrict 4], double r[restrict 4] ) {
     aa_tf_qconj(q,r);
     aa_la_scal( 4, 1.0/aa_la_dot(4,r,r), r );
-}
-
-void aa_tf_qmul( const double a[restrict 4], const double b[restrict 4],
-                 double c[restrict 4] ) {
-    c[3] = a[3]*b[3] - aa_la_dot(3, a, b);
-    aa_la_cross( a, b, c );
-    for( size_t i = 0; i < 3; i ++ )
-        c[i] += a[3]*b[i] + b[3]*a[i];
 }
 
 void aa_tf_qrel( const double q1[restrict 4], const double q2[restrict 4],

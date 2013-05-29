@@ -212,9 +212,28 @@ AA_API void aa_tf_qrel(const double q1[AA_RESTRICT 4],
                        double q_rel[AA_RESTRICT 4]);
 
 /** Quaternion SLERP. */
-AA_API void aa_tf_qslerp( double t, const double a[AA_RESTRICT 4],
+AA_API void aa_tf_qslerp( double tau, const double a[AA_RESTRICT 4],
                           const double b[AA_RESTRICT 4],
                           double c[AA_RESTRICT 4] );
+
+/** Derivative of quaternation SLERP WRT tau.
+ *
+ * This is NOT a time derivative.  Use the chain rule:
+ * (dq/dt = * (dq/dtau)*(dt/dtau) )
+ */
+AA_API void aa_tf_qslerpdiff( double tau, const double a[AA_RESTRICT 4],
+                              const double b[AA_RESTRICT 4],
+                              double c[AA_RESTRICT 4] );
+
+/* Quaternaion time derivate to angular velocity */
+AA_API void aa_tf_qdiff2vel( const double q[AA_RESTRICT 4],
+                             const double dq_dt[AA_RESTRICT 4],
+                             double v[AA_RESTRICT 3] );
+
+/* Angular velocity to quaternion time derivative */
+AA_API void aa_tf_qvel2diff( const double q[AA_RESTRICT 4],
+                             const double v[AA_RESTRICT 2],
+                             double dq_dt[AA_RESTRICT 4] );
 
 /*********/
 /* Axang */
