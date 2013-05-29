@@ -312,7 +312,7 @@
   (let ((c-lisp-name (gensym (string lisp-name))))
     `(progn (def-la-cfun (,c-name ,c-lisp-name :by-reference ,by-reference) ,result-type
               ,@args)
-            (def-la-wrapper (,c-lisp-name ,lisp-name :by-reference ,by-reference) ,result-type
+            (def-la-wrapper (,c-lisp-name ,lisp-name) ,result-type
               ,@args))))
 
 

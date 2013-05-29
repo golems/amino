@@ -70,31 +70,31 @@ with_stdout("mac.f",
 
 
   /* 93 chain */
-  print("      Subroutine aa_tf_93chain(R1, v1, R2, v2, R3, v3)"),
-  print("      Double Precision R1(3,3)"),
-  print("      Double Precision v1(3)"),
-  print("      Double Precision R2(3,3)"),
-  print("      Double Precision v2(3)"),
-  print("      Double Precision R3(3,3)"),
-  print("      Double Precision v3(3,1)"),
-  block( [tf],
-    tf :
-    matrix(
-      [R1(1,1),R1(1,2),R1(1,3), v1(1)],
-      [R1(2,1),R1(2,2),R1(2,3), v1(2)],
-      [R1(3,1),R1(3,2),R1(3,3), v1(3)],
-      [0,0,0,1])
-    .
-    matrix(
-      [R2(1,1),R2(1,2),R2(1,3), v2(1)],
-      [R2(2,1),R2(2,2),R2(2,3), v2(2)],
-      [R2(3,1),R2(3,2),R2(3,3), v2(3)],
-      [0,0,0,1]),
-    fortran( R3 = submatrix( 4, tf, 4 ) ),
-    fortran( v3 = submatrix( 4, tf, 1,2,3))
-    ),
-  print("      Return"),
-  print("      End"),
+  /* print("      Subroutine aa_tf_93chain(R1, v1, R2, v2, R3, v3)"), */
+  /* print("      Double Precision R1(3,3)"), */
+  /* print("      Double Precision v1(3)"), */
+  /* print("      Double Precision R2(3,3)"), */
+  /* print("      Double Precision v2(3)"), */
+  /* print("      Double Precision R3(3,3)"), */
+  /* print("      Double Precision v3(3,1)"), */
+  /* block( [tf], */
+  /*   tf : */
+  /*   matrix( */
+  /*     [R1(1,1),R1(1,2),R1(1,3), v1(1)], */
+  /*     [R1(2,1),R1(2,2),R1(2,3), v1(2)], */
+  /*     [R1(3,1),R1(3,2),R1(3,3), v1(3)], */
+  /*     [0,0,0,1]) */
+  /*   . */
+  /*   matrix( */
+  /*     [R2(1,1),R2(1,2),R2(1,3), v2(1)], */
+  /*     [R2(2,1),R2(2,2),R2(2,3), v2(2)], */
+  /*     [R2(3,1),R2(3,2),R2(3,3), v2(3)], */
+  /*     [0,0,0,1]), */
+  /*   fortran( R3 = submatrix( 4, tf, 4 ) ), */
+  /*   fortran( v3 = submatrix( 4, tf, 1,2,3)) */
+  /*   ), */
+  /* print("      Return"), */
+  /* print("      End"), */
 
   /* 9mul */
   print("      Subroutine aa_tf_9mul(R1, R2, R)"),

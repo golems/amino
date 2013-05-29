@@ -60,7 +60,8 @@ libamino_la_SOURCES =                  \
 	src/sigsys.c                   \
 	src/cv.c                       \
 	mem_mod.f90                    \
-	la_mod.f90
+	la_mod.f90                     \
+	src/tff.f90
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.f
 

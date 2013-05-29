@@ -55,52 +55,9 @@ void aa_tf_12inv( const double T[restrict 12], double Ti[restrict 12] ) {
 void aa_tf_93inv( const double R[restrict 9], const double v[restrict 3],
                   double Ri[restrict 9], double vi[restrict 3] ) {
     aa_la_transpose2( 3, 3, R, Ri );
-    aa_tf_9rot( Ri, (double[]){-v[0],-v[1],-v[2]}, vi );
+    double vv[3] = {-v[0],-v[1],-v[2]};
+    aa_tf_9rot( Ri, vv, vi );
 }
-
-
-void aa_tf_93( const double R[restrict 9], const double v[restrict 3],
-               const double p0[restrict 3], double pp[restrict 3] ) {
-    pp[0] = v[0] +
-        p0[0] * AA_MATREF(R,3,0,0) +
-        p0[1] * AA_MATREF(R,3,0,1) +
-        p0[2] * AA_MATREF(R,3,0,2);
-    pp[1] = v[1] +
-        p0[0] * AA_MATREF(R,3,1,0) +
-        p0[1] * AA_MATREF(R,3,1,1) +
-        p0[2] * AA_MATREF(R,3,1,2);
-    pp[2] = v[2] +
-        p0[0] * AA_MATREF(R,3,2,0) +
-        p0[1] * AA_MATREF(R,3,2,1) +
-        p0[2] * AA_MATREF(R,3,2,2);
-}
-
-void aa_tf_12( const double T[restrict 12], const double p0[restrict 3],
-               double p1[restrict 3] ) {
-    aa_tf_93( T, T+9, p0, p1 );
-}
-
-
-void aa_tf_9( const double R[restrict 9], const double p0[restrict 3],
-              double p1[restrict 3] ) {
-    aa_tf_93( R, AA_FAR(0,0,0), p0, p1 );
-}
-
-void aa_tf_93chain_( const double R0[restrict 9], const double v0[restrict 3],
-                     const double R1[restrict 9], const double v1[restrict 3],
-                     double R[restrict 9], double v[restrict 3] );
-
-void aa_tf_93chain( const double R0[restrict 9], const double v0[restrict 3],
-                    const double R1[restrict 9], const double v1[restrict 3],
-                    double R[restrict 9], double v[restrict 3] ) {
-    aa_tf_93chain_( R0, v0, R1, v1, R, v );
-}
-
-void aa_tf_12chain( const double T1[restrict 12], const double T2[restrict 12],
-                    double T[restrict 12] ) {
-    aa_tf_93chain( T1, T1+9, T2, T2+9, T, T+9 );
-}
-
 
 void aa_tf_93rel( const double R1[restrict 9], const double v1[restrict 3],
                   const double R2[restrict 9], const double v2[restrict 3],
@@ -116,28 +73,9 @@ void aa_tf_12rel( const double T1[restrict 12], const double T2[restrict 12],
 }
 
 
-// from maxima
-void aa_tf_9mul_( const double R0[restrict 9], const double R1[restrict 9],
-                  double R[restrict 9] );
-void aa_tf_9mul( const double R0[restrict 9], const double R1[restrict 9],
-                 double R[restrict 9] ) {
-    aa_tf_9mul_(R0, R1, R);
-}
-
 void aa_tf_9rot( const double R[restrict 9], const double p0[restrict 3],
                  double pp[restrict 3] ) {
-    pp[0] =
-        p0[0] * AA_MATREF(R,3,0,0) +
-        p0[1] * AA_MATREF(R,3,0,1) +
-        p0[2] * AA_MATREF(R,3,0,2);
-    pp[1] =
-        p0[0] * AA_MATREF(R,3,1,0) +
-        p0[1] * AA_MATREF(R,3,1,1) +
-        p0[2] * AA_MATREF(R,3,1,2);
-    pp[2] =
-        p0[0] * AA_MATREF(R,3,2,0) +
-        p0[1] * AA_MATREF(R,3,2,1) +
-        p0[2] * AA_MATREF(R,3,2,2);
+    aa_tf_9(R,p0,pp);
 }
 
 void aa_tf_qnormalize( double q[restrict 4] ) {

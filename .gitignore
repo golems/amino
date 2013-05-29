@@ -38,14 +38,13 @@ amino*.tar.gz
 /la-doc.c
 /lapack-doc.c
 /Makefile
-/amino_la.mod
+/*.mod
 /core
 /la_mod.f90
 /la_test
 /clapack_doc.c
 /la_doc.c
 /lapack_doc.c
-/amino_mem.mod
 /mem_mod.f90
 /la_mod.s
 /mem_mod.s

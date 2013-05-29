@@ -248,6 +248,19 @@ N: cols in the block."
       (= 1 (matrix-rows matrix))
       (= 1 (matrix-cols matrix))))
 
+(defun matrix-vector-n-p (matrix n inc)
+  (let ((rows (matrix-rows matrix))
+        (cols (matrix-cols matrix))
+        (stride (matrix-stride matrix)))
+  (or
+   ;; column vector storage
+   (and (= n rows stride)
+        (= inc 1 cols))
+   ;; row vector storage
+   (and (= n cols)
+        (= 1 rows)
+        (= inc stride)))))
+
 (defmacro check-vector-storage (place)
   `(progn
      (check-type ,place matrix)
