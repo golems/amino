@@ -816,6 +816,15 @@ void quat() {
         aa_tf_qslerp( .5, q0, q1, qs );
         aveq( "qslerp .5", 4, q_5, qs, .00001 );
 
+        /* slerp diff */
+        double dr_dtau[4];
+        double w[3], dr_dtau_w[4];
+        aa_tf_qslerpdiff( .5, q0, q1, dr_dtau );
+        /* dtau/dt == 1.0 */
+        aa_tf_qdiff2vel( qs, dr_dtau, w );
+        aa_tf_qvel2diff( qs, w, dr_dtau_w );
+        aveq( "qslerp diff vel", 4, dr_dtau, dr_dtau_w, .001 );
+
     }
 
 }
