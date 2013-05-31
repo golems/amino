@@ -178,7 +178,7 @@ struct aa_mem_region_node {
  * are merged into one, possibly requiring several calls to free()
  * followed by a single malloc of a new, larger chunk.
  */
-typedef struct {
+typedef struct aa_mem_region {
     uint8_t *head;                ///< pointer to first free element of top chunk
     struct aa_mem_region_node *node;  ///< linked list of chunks
 } aa_mem_region_t;
@@ -207,6 +207,7 @@ AA_API void *aa_mem_region_tmpalloc( aa_mem_region_t *region, size_t size );
  * allocation.
  */
 AA_API void *aa_mem_region_alloc( aa_mem_region_t *region, size_t size );
+
 
 /** Deallocates all allocated objects from the region.  If the region
  * contains multiple chunks, they are merged into one.
@@ -277,6 +278,7 @@ AA_API void aa_mem_region_local_pop( void *ptr );
  */
 AA_API void aa_mem_region_local_release( void );
 
+#define AA_MEM_REGION_NEW( reg, type ) ( (type*) aa_mem_region_alloc((reg), sizeof(type)) )
 
 /*----------- Pooled Allocation ------------------*/
 
@@ -333,22 +335,80 @@ AA_API int aa_circbuf_read( aa_circbuf_t *cb, int fd, size_t n );
 /// untested
 AA_API int aa_circbuf_write( aa_circbuf_t *cb, int fd, size_t n );
 
+
+/***************/
+/* Linked List */
+/***************/
+
+typedef struct aa_mem_cons {
+    void *data;
+    struct aa_mem_cons *next;
+} aa_mem_cons_t;
+
+/** A linked list allocated out of a memory region
+ *
+ * "Region List" / "Real-Time List"
+ */
+typedef struct aa_mem_rlist {
+    struct aa_mem_region *reg;
+    struct aa_mem_cons *head;
+    struct aa_mem_cons **tailp;
+} aa_mem_rlist_t;
+
+/** Allocate rlist out of region.
+ *
+ * All nodes in the rlist will also come from the same region
+ * You can free all nodes by popping the list itself from the region
+ */
+struct aa_mem_rlist *aa_mem_rlist_alloc( struct aa_mem_region *reg );
+
+/** Push a copy of data at p to the front of the list */
+void aa_mem_rlist_push_cpy( struct aa_mem_rlist *list, void *p, size_t n );
+
+/** Push the pointer p to the front of the list */
+void aa_mem_rlist_push_ptr( struct aa_mem_rlist *list, void *p );
+
+/** Enqueue a copy of data at p at the back of the list */
+void aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n );
+
+/** Enqueue a the pointer p at the back of the list */
+void aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p );
+
+/** Remove front element of the list and return its data pointer.
+ *
+ * Note, this does not release any memory from the list's underlying
+ * region.
+ */
+void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
+
 /**********/
 /* Arrays */
 /**********/
+
+
+#define AA_MEM_CPY(dst, src, n_elem)                            \
+    {                                                           \
+        /* _Static_assert(sizeof(*dst) == sizeof(*src));*/      \
+        memcpy( dst, src, sizeof(*dst)*n_elem );                \
+    }
+
+#define AA_MEM_SET(dst, val, n_elem)                                    \
+    {                                                                   \
+        for( size_t aa_$_set_i = 0; aa_$_set_i < n_elem; aa_$_set_i++ ) \
+            dst[aa_$_set_i] = val;                                      \
+    }
 
 /// make a floating point array literal
 #define AA_FAR(...) ((double[]){__VA_ARGS__})
 
 /// copy n double floats from src to dst
 static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
-    memcpy( dst, src, sizeof( dst[0] ) * n );
+    AA_MEM_CPY( dst, src, n );
 }
 
 /// set n double floats to val
 static inline void aa_fset( double *dst, double val, size_t n ) {
-    for( size_t i = 0; i < n; i ++ )
-        dst[i] = val;
+    AA_MEM_SET( dst, val, n );
 }
 
 /// set n bytes of p to zero
@@ -358,7 +418,7 @@ static inline void aa_zero( void *p, size_t n ) {
 
 /// zero array p of length n
 static inline void aa_fzero( double *p, size_t n ) {
-    aa_zero(p,n*sizeof(double));
+    AA_MEM_SET( p, 0, n );
 }
 
 /// zeros var, must know sizeof(var)

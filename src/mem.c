@@ -316,3 +316,77 @@ void aa_mem_pool_release( aa_mem_pool_t *pool ) {
     pool->top = NULL;
     aa_mem_region_release( &pool->region );
 }
+
+
+/*********/
+/* Lists */
+/*********/
+
+struct aa_mem_rlist *aa_mem_rlist_alloc( struct aa_mem_region *reg ) {
+    aa_mem_rlist_t *list = AA_MEM_REGION_NEW( reg, aa_mem_rlist_t);
+    list->reg = reg;
+    list->head = NULL;
+    list->tailp = &list->head;
+    return list;
+}
+
+/*-- Cons --*/
+aa_mem_cons_t *aa_mem_cons_cpy( aa_mem_region_t *reg, void *p, size_t n, aa_mem_cons_t *next  ) {
+    aa_mem_cons_t *node = (aa_mem_cons_t*) aa_mem_region_alloc( reg, sizeof(aa_mem_cons_t) + n );
+    node->data = node+1;
+    node->next = next;
+    memcpy( node->data, p, n );
+    return node;
+}
+
+aa_mem_cons_t *aa_mem_cons_ptr( aa_mem_region_t *reg, void *p, aa_mem_cons_t *next  ) {
+    aa_mem_cons_t *node = AA_MEM_REGION_NEW( reg, aa_mem_cons_t );
+    node->data = p;
+    node->next = next;
+    return node;
+}
+
+/*-- Push --*/
+void aa_mem_rlist_push_cons( struct aa_mem_rlist *list, aa_mem_cons_t *node ) {
+    list->head = node;
+    if( &list->head == list->tailp )
+        list->tailp = &node->next;
+}
+
+void aa_mem_rlist_push_cpy( struct aa_mem_rlist *list, void *p, size_t n ) {
+    struct aa_mem_cons *node = aa_mem_cons_cpy(list->reg, p, n, list->head);
+    aa_mem_rlist_push_cons(list,node);
+}
+
+void aa_mem_rlist_push_ptr( struct aa_mem_rlist *list, void *p ) {
+    struct aa_mem_cons *node = aa_mem_cons_ptr(list->reg, p, list->head);
+    aa_mem_rlist_push_cons(list,node);
+}
+
+/*-- Enqueue --*/
+void aa_mem_rlist_enqueue_cons( struct aa_mem_rlist *list, aa_mem_cons_t *node ) {
+    *list->tailp = node;
+    list->tailp = &node->next;
+}
+
+void aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n ) {
+    struct aa_mem_cons *node = aa_mem_cons_cpy(list->reg, p, n, NULL);
+    aa_mem_rlist_enqueue_cons(list,node);
+}
+
+void aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p ) {
+    struct aa_mem_cons *node = aa_mem_cons_ptr(list->reg, p, NULL);
+    aa_mem_rlist_enqueue_cons(list,node);
+}
+
+/*-- Pop --*/
+void *aa_mem_rlist_pop( struct aa_mem_rlist *list ) {
+    if( NULL == list->head ) return NULL;
+
+    struct aa_mem_cons *node = list->head;
+    list->head = node->next;
+
+    if( NULL == list->head ) list->tailp = &list->head;
+    return node->data;
+
+}

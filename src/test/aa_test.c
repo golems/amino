@@ -1716,6 +1716,72 @@ void misc() {
     afeq( aa_fmodulo(270 - 360, 360), 270, 0 );
 }
 
+
+void list() {
+    int front[] = {2,   5,  2, 1, 0};
+    int back[] =  {80, 50, 20, 4, 26};
+    aa_mem_region_t reg;
+    aa_mem_region_init(&reg, 2048);
+
+    assert(sizeof(front) == sizeof(back));
+
+    /* ptr */
+    {
+        aa_mem_rlist_t *lf = aa_mem_rlist_alloc( &reg );
+        aa_mem_rlist_t *lb = aa_mem_rlist_alloc( &reg );
+        for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
+            aa_mem_rlist_push_ptr( lf, front+i );
+            aa_mem_rlist_enqueue_ptr( lf, back+i );
+
+            aa_mem_rlist_enqueue_ptr( lb, back+i );
+            aa_mem_rlist_push_ptr( lb, front+i );
+        }
+
+        for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
+            size_t j = sizeof(front)/sizeof(front[0]) - i - 1;
+            int *f = aa_mem_rlist_pop(lf);
+            int *b = aa_mem_rlist_pop(lb);
+            assert( f == front + j );
+            assert( b == front + j );
+        }
+        for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
+            int *f = aa_mem_rlist_pop(lf);
+            int *b = aa_mem_rlist_pop(lb);
+            assert( f == back + i );
+            assert( b == back + i );
+        }
+    }
+
+    aa_mem_region_release( &reg );
+
+    /* copy */
+    {
+        aa_mem_rlist_t *lf = aa_mem_rlist_alloc( &reg );
+        aa_mem_rlist_t *lb = aa_mem_rlist_alloc( &reg );
+        for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
+            aa_mem_rlist_push_cpy( lf, front+i, sizeof(front[i]) );
+            aa_mem_rlist_enqueue_cpy( lf, back+i, sizeof(back[i]) );
+
+            aa_mem_rlist_enqueue_cpy( lb, back+i, sizeof(back[i]) );
+            aa_mem_rlist_push_cpy( lb, front+i, sizeof(front[i]) );
+        }
+
+        for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
+            size_t j = sizeof(front)/sizeof(front[0]) - i - 1;
+            int *f = aa_mem_rlist_pop(lf);
+            int *b = aa_mem_rlist_pop(lb);
+            assert( *f == front[j] );
+            assert( *b == front[j] );
+        }
+        for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
+            int *f = aa_mem_rlist_pop(lf);
+            int *b = aa_mem_rlist_pop(lb);
+            assert( *f == back[i] );
+            assert( *b == back[i] );
+        }
+    }
+}
+
 int main( int argc, char **argv ) {
     printf("Init aa_test\n");
     (void) argc; (void) argv;
@@ -1781,5 +1847,8 @@ int main( int argc, char **argv ) {
     ang();
     plane();
     aa_mem_region_destroy(&g_region);
+
+    list();
+
     printf("Ending aa_test\n");
 }
