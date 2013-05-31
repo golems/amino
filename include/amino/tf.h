@@ -76,6 +76,12 @@ typedef double aa_tf_t[12];
 /// Identity Rotation Vector
 #define AA_TF_ROTVEC_IDENT ( (double[3]){0,0,0} )
 
+static const double aa_tf_ident[12] = {1,0,0, 0,1,0, 0,0,1, 0,0,0};
+static const double aa_rotmat_ident[9] = {1,0,0, 0,1,0, 0,0,1};
+static const double aa_tf_quat_ident[4] = {0,0,0,1};
+static const double aa_tf_axang_ident[4] = {0,0,0,0};
+static const double aa_tf_rotvec_ident[3] = {0,0,0};
+
 /**************/
 /* Transforms */
 /**************/
@@ -199,11 +205,10 @@ AA_API void aa_tf_qrot_( const double q[AA_RESTRICT 4],
                          double p[AA_RESTRICT 3] );
 
 /** Quaternion point rotation. */
-static inline void aa_tf_qrot( const double q[AA_RESTRICT 4],
-                               const double v[AA_RESTRICT 3],
-                               double p[AA_RESTRICT 3] ) {
-    aa_tf_qrot_(q,v,p);
-}
+void aa_tf_qrot( const double q[AA_RESTRICT 4],
+                 const double v[AA_RESTRICT 3],
+                 double p[AA_RESTRICT 3] );
+
 /** Relative orientation.
     \f[ q_{\rm rel} = q_1 q_2^{-1} \f]
  */

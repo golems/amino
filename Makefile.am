@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 INCLUDES = -I$(top_srcdir)/include
-EXTRA_DIST = src/mac/gen.mac src/mac/mac.f       \
+EXTRA_DIST = src/mac/gen.mac                     \
              src/la_impl.c                       \
              src/la_mod.F90 src/la_implf.F90     \
              src/mem_mod.F90 src/mem_impl.F90
@@ -53,7 +53,6 @@ libamino_la_SOURCES =                  \
 	src/plot.c                     \
 	src/debug.c                    \
 	src/kin.c                      \
-	src/mac/mac.f                  \
 	src/validate.c                 \
 	src/time.c                     \
 	src/io.c                       \
@@ -66,7 +65,7 @@ libamino_la_LIBADD =                   \
 	libamino_la.la                 \
 	libamino_tf.la
 
-libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.f
+libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]

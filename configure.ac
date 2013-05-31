@@ -15,7 +15,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
-AC_PROG_F77
 AC_PROG_FC
 AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
@@ -119,6 +118,9 @@ AS_IF([test "x$enable_debug" = "xyes"],[
     AC_LANG([C])
     APPEND_CFLAG([-fstack-check])
 ])
+
+
+AC_LANG([C])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

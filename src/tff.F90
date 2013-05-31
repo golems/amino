@@ -132,6 +132,36 @@ contains
          x
   end subroutine aa_tf_qmul
 
+
+  pure Function quat_product( a, b ) result(q)
+    Real(8), Dimension(4)  :: q
+    Real(8), Dimension(4), intent(in) :: a,b
+    Call aa_tf_qmul(a,b, q)
+  End Function quat_product
+
+  pure Subroutine aa_tf_qinv( q, r ) &
+    bind( C, name="aa_tf_qinv" )
+    Real(C_DOUBLE), Dimension(4), intent(out) :: r
+    Real(C_DOUBLE), Dimension(4), intent(in) :: q
+    Call aa_tf_qconj( q, r )
+    r = r / dot_product(q,q)
+  End Subroutine aa_tf_qinv
+
+  pure Subroutine aa_tf_qrot( q, v, r ) &
+       bind( C, name="aa_tf_qrot" )
+    real(C_DOUBLE), Dimension(3), intent(out) :: r
+    real(C_DOUBLE), Dimension(4), intent(in) :: q
+    real(C_DOUBLE), Dimension(3), intent(in) :: v
+    real(C_DOUBLE), Dimension(4) :: qv, qr1, qr2, qi
+    qv(W_INDEX) = 0d0
+    qv(XYZ_INDEX) = v
+    Call aa_tf_qinv( q, qi )
+    call aa_tf_qmul( q, qv, qr1 )
+    call aa_tf_qmul( qr1, qi, qr2 )
+    r = qr2(1:3)
+  End Subroutine aa_tf_qrot
+
+
   pure subroutine aa_tf_qslerp( tau, q1, q2, r ) &
        bind( C, name="aa_tf_qslerp" )
     real(C_DOUBLE), dimension(4), intent(out) :: r

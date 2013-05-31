@@ -82,10 +82,10 @@ void aa_tf_qnormalize( double q[restrict 4] ) {
     aa_la_normalize( 4, q );
 }
 
-void aa_tf_qinv( const double q[restrict 4], double r[restrict 4] ) {
-    aa_tf_qconj(q,r);
-    aa_la_scal( 4, 1.0/aa_la_dot(4,r,r), r );
-}
+/* void aa_tf_qinv( const double q[restrict 4], double r[restrict 4] ) { */
+/*     aa_tf_qconj(q,r); */
+/*     aa_la_scal( 4, 1.0/aa_la_dot(4,r,r), r ); */
+/* } */
 
 void aa_tf_qrel( const double q1[restrict 4], const double q2[restrict 4],
                  double q_rel[restrict 4]) {
@@ -97,9 +97,6 @@ void aa_tf_qrel( const double q1[restrict 4], const double q2[restrict 4],
 void aa_tf_qadd( const double a[restrict 4], const double b[restrict 4],
                  double c[restrict 4] );
 
-void aa_tf_qslerp( double t, const double a[restrict 4],
-                   const double b[restrict 4],
-                   double c[restrict 4] );
 
 void aa_tf_quat2axang( const double q[restrict 4], double axang[restrict 4] ) {
     double a = aa_la_norm(4,q);
@@ -317,7 +314,8 @@ void aa_tf_quat2rotvec_near( const double q[restrict 4],
 int aa_tf_isrotmat( const double R[restrict 9] ) {
     double Rt[9], Ri[9], d;
     aa_la_transpose2( 3, 3, R, Rt );
-    aa_la_inverse3x3( R, Ri );
+    //aa_la_inverse3x3( R, Ri );
+    AA_MEM_CPY(Ri, R, 9); aa_la_inv( 3, Ri );
     d = aa_la_det3x3( R );
     return aa_veq( 9, Rt, Ri, .0001 ) && aa_feq( d, 1, .0001 );
 }
