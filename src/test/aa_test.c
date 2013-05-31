@@ -48,6 +48,17 @@
 #include <inttypes.h>
 #include <sys/resource.h>
 
+void randtf(double T[12], double q[4], double R[9], double v[3]) {
+    double axa[4];
+    aa_vrand(3,v);
+    aa_vrand(4,axa); axa[3] *= M_PI;
+    aa_tf_axang2quat( axa, q );
+    aa_tf_quat2rotmat( q, T );
+    aa_tf_quat2rotmat( q, R );
+    aa_fcpy( T+9, v, 3 );
+}
+
+
 static void afeq( double a, double b, double tol ) {
     assert( aa_feq(a,b,tol) );
 }
@@ -1269,16 +1280,6 @@ void tf() {
     }
 }
 
-void randtf(double T[12], double q[4], double R[9], double v[3]) {
-    double axa[4];
-    aa_vrand(3,v);
-    aa_vrand(4,axa); axa[3] *= M_PI;
-    aa_tf_axang2quat( axa, q );
-    aa_tf_quat2rotmat( q, T );
-    aa_tf_quat2rotmat( q, R );
-    aa_fcpy( T+9, v, 3 );
-}
-
 void tffuzz() {
     for( size_t k = 0; k < 1000; k ++ ) {
         // tfs
@@ -1316,6 +1317,28 @@ void tffuzz() {
         aa_tf_qrot(q, p0, p1a);
         aa_tf_9rot(R, p0, p1b);
         aveq( "tf_qrot", 3, p1a, p1b, .001 );
+    }
+
+    // 9mul
+    {
+        double v[5][3], T[5][12], q[5][4], R[5][9];
+        double Ttmp[5][12], Rtmp[4][9], Rn[9], Tn[12];
+        for( size_t i = 0; i < 5; i ++ ) {
+            randtf(T[i], q[i], R[i], v[i]);
+        }
+        aa_tf_9mul( R[0], R[1], Rtmp[0] );
+        aa_tf_9mul( Rtmp[0], R[2], Rtmp[1] );
+        aa_tf_9mul( Rtmp[1], R[3], Rtmp[2] );
+        aa_tf_9mul( Rtmp[2], R[4], Rtmp[3] );
+        aa_tf_v9mul( Rn, R[0], R[1], R[2], R[3], R[4], NULL );
+        aveq( "tf_v9muln", 9, Rtmp[3], Rn, .001 );
+
+        aa_tf_12chain( T[0], T[1], Ttmp[0] );
+        aa_tf_12chain( Ttmp[0], T[2], Ttmp[1] );
+        aa_tf_12chain( Ttmp[1], T[3], Ttmp[2] );
+        aa_tf_12chain( Ttmp[2], T[4], Ttmp[3] );
+        aa_tf_v12chain( Tn, T[0], T[1], T[2], T[3], T[4], NULL );
+        aveq( "tf_v12chain", 12, Ttmp[3], Tn, .001 );
     }
 }
 

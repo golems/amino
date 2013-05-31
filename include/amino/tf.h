@@ -120,6 +120,13 @@ AA_API void aa_tf_q3inv( double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] );
 AA_API void aa_tf_12chain( const double T1[AA_RESTRICT 12],
                            const double T2[AA_RESTRICT 12],
                            double T[AA_RESTRICT 12] );
+
+/// Varargs transform chain
+AA_API void aa_tf_v12chain( double T[AA_RESTRICT 12] ,
+                            const double T1[AA_RESTRICT 12],
+                            const double T2[AA_RESTRICT 12],
+                            ... );
+
 /// chain two transforms
 AA_API void aa_tf_93chain( const double R0[AA_RESTRICT 9],
                            const double v0[AA_RESTRICT 3],
@@ -155,7 +162,7 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
 AA_API int aa_tf_isrotmat( const double R[AA_RESTRICT 9] );
 
 
-/// multiple two rotation matrices
+/// Multiply two rotation matrices
 AA_API void aa_tf_9mul( const double R0[AA_RESTRICT 9],
                         const double R1[AA_RESTRICT 9],
                         double R[AA_RESTRICT 9] );
@@ -163,6 +170,11 @@ AA_API void aa_tf_9mul( const double R0[AA_RESTRICT 9],
 AA_API void aa_tf_9rot( const double R[AA_RESTRICT 9],
                         const double p0[AA_RESTRICT 3],
                         double p1[AA_RESTRICT 3] );
+
+
+/// Vararg multiply two rotation matrices
+AA_API void aa_tf_v9mul( double R[AA_RESTRICT 9],
+                         const double R1[AA_RESTRICT 9], const double R2[AA_RESTRICT 9], ... );
 
 /***************/
 /* Quaternions */

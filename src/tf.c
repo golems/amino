@@ -340,6 +340,47 @@ void aa_tf_rotmat2rotvec( const double R[restrict 9],
     aa_la_scal( 3, ( (s > AA_TF_EPSILON) ? atan2(s,c)/s : 1 ), rv );
 }
 
+void aa_tf_v9mul( double R[AA_RESTRICT 9], const double R1[AA_RESTRICT 9], const double R2[AA_RESTRICT 9], ... ) {
+    va_list argp;
+
+    double tmp1[9], tmp2[9];
+    double *Ri, *Rp = tmp1, *Rc = tmp2;
+
+    aa_tf_9mul( R1, R2, Rp );
+
+    va_start(argp, R2);
+    while( NULL != (Ri = va_arg(argp, double *)) ) {
+        aa_tf_9mul( Rp, Ri, Rc );
+        double *r = Rp;
+        Rp = Rc;
+        Rc = r;
+    }
+
+    AA_MEM_CPY( R, Rp, 9 );
+    va_end(argp);
+}
+
+
+void aa_tf_v12chain( double T[AA_RESTRICT 12], const double T1[AA_RESTRICT 12], const double T2[AA_RESTRICT 12], ... ) {
+    va_list argp;
+
+    double tmp1[12], tmp2[12];
+    double *Ti, *Tp = tmp1, *Tc = tmp2;
+
+    aa_tf_12chain( T1, T2, Tp );
+
+    va_start(argp, T2);
+    while( NULL != (Ti = va_arg(argp, double *)) ) {
+        aa_tf_12chain( Tp, Ti, Tc );
+        double *t = Tp;
+        Tp = Tc;
+        Tc = t;
+    }
+
+    AA_MEM_CPY( T, Tp, 12 );
+    va_end(argp);
+}
+
 void aa_tf_axang2rotmat( const double ra[restrict 4],
                          double R[restrict 9] ) {
     double quat[4];
