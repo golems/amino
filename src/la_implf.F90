@@ -379,6 +379,21 @@ subroutine AA_FMOD_C_BEGIN(la, colfit, m, n, A, lda, x)
   call AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD_C_END(la,colfit)
 
+pure subroutine AA_FMOD(la,lerp) (u, v1, v2, vu)
+  real(AA_FSIZE), intent(in)  :: v1(:), v2(:)
+  real(AA_FSIZE), intent(in)  :: u
+  real(AA_FSIZE), intent(out) :: vu(:)
+  vu = v1 + u * (v2 - v1 )
+end subroutine AA_FMOD(la,lerp)
+
+subroutine AA_FMOD_C_BEGIN(la,lerp, n, u, v1, inc1, v2, inc2, vu, incu)
+  integer(c_size_t), intent(in), value :: n, inc1, inc2, incu
+  real(AA_FSIZE), intent(in)  :: v1(n*inc1), v2(n*inc2)
+  real(AA_FSIZE), intent(in), value  :: u
+  real(AA_FSIZE), intent(out) :: vu(n*incu)
+  call aa_la_lerp( u, v1(1:size(v1):inc1), v2(1:size(v2):inc2), vu(1:size(vu):incu) )
+end subroutine AA_FMOD_C_END(la,lerp)
+
 subroutine AA_FMOD_C_BEGIN(la, assign_hungarian, m, n, A, lda, row, col)
   use amino_mem
   integer(c_size_t), intent(in), value :: m,n,lda

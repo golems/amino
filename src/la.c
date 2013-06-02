@@ -337,14 +337,12 @@ AA_API void aa_la_linterp( size_t n,
                            double t0, const double *X0,
                            double t1, const double *X1,
                            double ti, double *Xi ) {
-    double alpha =  (ti-t0)/(t1-t0);
-    // x0 + alpha(x1-x0)
-    // x0 - alpha*x0 + alpha*x1;
-    // x0*(1-alpha) + x1*alpha
-    for( size_t i = 0; i < n; i++ ) {
-        Xi[i] = X0[i] + alpha*(X1[i]-X0[i]);
-    }
+    aa_la_d_lerp( n, (ti-t0)/(t1-t0),
+                  X0, 1,
+                  X1, 1,
+                  Xi, 1 );
 }
+
 
 
 

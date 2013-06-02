@@ -71,6 +71,21 @@ AA_FDEC(AA_TYPE, la, ssd,
         const AA_TYPE *x, size_t incx,
         const AA_TYPE *y, size_t incy )
 
+/** Linear interpolation of vectors
+ *
+ * \param n length of vectors
+ * \param u interpolation parameter, at 0, vu=v1, and at 1, vu=v2
+ * \param v1 initial vector
+ * \param v2 final vector
+ * \param inc1 stepsize of v1
+ * \param inc2 stepsize of v2
+ * \param incu stepsize of vu
+*/
+AA_API void AA_NAME(la,lerp)
+( size_t n, AA_TYPE u,
+  const AA_TYPE *v1, size_t inc1,
+  const AA_TYPE *v2, size_t inc2,
+  AA_TYPE *vu, size_t incu );
 
 /** Standard deviation of vector.
  * \param n length of d

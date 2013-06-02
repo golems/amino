@@ -144,6 +144,11 @@ module amino_la
      module procedure AA_MANGLE_FIFACE(la,unit_fun)
   end interface
 
+  !> Linear Interpolation of vectors
+  interface aa_la_lerp
+     module procedure AA_MANGLE_FIFACE(la,lerp)
+  end interface
+
   !> Vector projection
   interface aa_la_proj_sub
      module procedure AA_MANGLE_FIFACE(la,proj_sub)
