@@ -162,6 +162,28 @@ contains
   End Subroutine aa_tf_qrot
 
 
+  pure Subroutine aa_tf_qexp( q, r ) &
+       bind( C, name="aa_tf_qexp" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: r
+    real(C_DOUBLE), Dimension(4), intent(in) :: q
+    real(C_DOUBLE) :: vnorm,ew
+    vnorm = aa_la_norm2( q(XYZ_INDEX) )
+    ew = exp(q(W_INDEX))
+    r(W_INDEX) = ew * cos(vnorm)
+    r(XYZ_INDEX) = ew * q(XYZ_INDEX)/vnorm * sin(vnorm)
+  end Subroutine aa_tf_qexp
+
+  pure subroutine aa_tf_qln( q, r ) &
+       bind( C, name="aa_tf_qln" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: r
+    real(C_DOUBLE), Dimension(4), intent(in) :: q
+    real(C_DOUBLE) :: vnorm,qnorm
+    vnorm = aa_la_norm2( q(XYZ_INDEX) )
+    qnorm = aa_la_norm2( q )
+    r(W_INDEX) = log(qnorm)
+    r(XYZ_INDEX) = q(XYZ_INDEX)/vnorm * acos( q(W_INDEX) / qnorm )
+  end subroutine aa_tf_qln
+
   pure subroutine aa_tf_qslerp( tau, q1, q2, r ) &
        bind( C, name="aa_tf_qslerp" )
     real(C_DOUBLE), dimension(4), intent(out) :: r
