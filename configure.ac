@@ -94,6 +94,7 @@ dnl APPEND_CFLAG([-Wc++-compat])
 
 AC_LANG([Fortran])
 APPEND_FCFLAG([-fimplicit-none])
+APPEND_FCFLAG([-ffree-line-length-none])
 APPEND_FCFLAG([-Wall])
 APPEND_FCFLAG([-pedantic])
 APPEND_FCFLAG([-Wextra])

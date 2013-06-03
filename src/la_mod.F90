@@ -149,6 +149,24 @@ module amino_la
      module procedure AA_MANGLE_FIFACE(la,lerp)
   end interface
 
+
+  interface aa_la_3spline_param
+     module procedure AA_MANGLE_FIFACE(la,3spline_param)
+  end interface
+
+  interface aa_la_3spline
+     module procedure AA_MANGLE_FIFACE(la,3spline)
+  end interface
+
+  interface aa_la_5spline_param
+     module procedure AA_MANGLE_FIFACE(la,5spline_param)
+  end interface
+
+  interface aa_la_5spline
+     module procedure AA_MANGLE_FIFACE(la,5spline)
+  end interface
+
+
   !> Vector projection
   interface aa_la_proj_sub
      module procedure AA_MANGLE_FIFACE(la,proj_sub)

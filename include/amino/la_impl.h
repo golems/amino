@@ -87,6 +87,47 @@ AA_API void AA_NAME(la,lerp)
   const AA_TYPE *v2, size_t inc2,
   AA_TYPE *vu, size_t incu );
 
+/** Compute cubic spline parameters */
+AA_API void AA_NAME(la,3spline_param)
+( size_t n, AA_TYPE tf,
+  const AA_TYPE *x1, size_t incx1,
+  const AA_TYPE *dx1, size_t incdx1,
+  const AA_TYPE *x2, size_t inc2,
+  const AA_TYPE *dx2, size_t incdx2,
+  AA_TYPE *a2, AA_TYPE *a3 );
+
+/** Compute cubic spline value */
+AA_API void AA_NAME(la,3spline)
+( size_t n, AA_TYPE tf,
+  const AA_TYPE *x1, size_t incx1,
+  const AA_TYPE *dx1, size_t incdx1,
+  const AA_TYPE *a2, const AA_TYPE *a3,
+  AA_TYPE *x, size_t incx,
+  AA_TYPE *dx, size_t incdx,
+  AA_TYPE *ddx, size_t incddx );
+
+/** Compute quintic spline parameters */
+AA_API void AA_NAME(la,5spline_param)
+( size_t n, AA_TYPE tf,
+  const AA_TYPE *x1, size_t incx1,
+  const AA_TYPE *dx1, size_t incdx1,
+  const AA_TYPE *ddx1, size_t incddx1,
+  const AA_TYPE *x2, size_t inc2,
+  const AA_TYPE *dx2, size_t incdx2,
+  const AA_TYPE *ddx2, size_t incddx2,
+  AA_TYPE *a3, AA_TYPE *a4, AA_TYPE *a5 );
+
+/** Compute quintic spline value */
+AA_API void AA_NAME(la,5spline)
+( size_t n, AA_TYPE tf,
+  const AA_TYPE *x1, size_t incx1,
+  const AA_TYPE *dx1, size_t incdx1,
+  const AA_TYPE *ddx1, size_t incddx1,
+  const AA_TYPE *a3, const AA_TYPE *a4, const AA_TYPE *a5,
+  AA_TYPE *x, size_t incx,
+  AA_TYPE *dx, size_t incdx,
+  AA_TYPE *ddx, size_t incddx );
+
 /** Standard deviation of vector.
  * \param n length of d
  * \param x vector
