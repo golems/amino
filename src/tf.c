@@ -404,7 +404,7 @@ void aa_tf_eulerzyx2rotmat( const double e[restrict 3],
     R[1] = sa*cb;
     R[2] = -sb;
 
-    R[3] = ca*cb*sg - sa*cg;
+    R[3] = ca*sb*sg - sa*cg;
     R[4] = sa*sb*sg + ca*cg;
     R[5] = cb*sg;
 
