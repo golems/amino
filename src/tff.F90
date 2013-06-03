@@ -132,7 +132,6 @@ contains
          x
   end subroutine aa_tf_qmul
 
-
   pure Function quat_product( a, b ) result(q)
     Real(8), Dimension(4)  :: q
     Real(8), Dimension(4), intent(in) :: a,b
@@ -170,19 +169,39 @@ contains
     vnorm = aa_la_norm2( q(XYZ_INDEX) )
     ew = exp(q(W_INDEX))
     r(W_INDEX) = ew * cos(vnorm)
-    r(XYZ_INDEX) = ew * q(XYZ_INDEX)/vnorm * sin(vnorm)
+    r(XYZ_INDEX) = (ew * sin(vnorm) / vnorm) * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
 
   pure subroutine aa_tf_qln( q, r ) &
        bind( C, name="aa_tf_qln" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vnorm,qnorm
+    real(C_DOUBLE) :: vnorm, qnorm, theta
     vnorm = aa_la_norm2( q(XYZ_INDEX) )
     qnorm = aa_la_norm2( q )
+    ! Maybe should use atan2 here
+    theta =  acos( q(W_INDEX) / qnorm )
     r(W_INDEX) = log(qnorm)
-    r(XYZ_INDEX) = q(XYZ_INDEX)/vnorm * acos( q(W_INDEX) / qnorm )
+    r(XYZ_INDEX) = theta / vnorm *  q(XYZ_INDEX)
   end subroutine aa_tf_qln
+
+  !> Compute q**a
+  pure subroutine aa_tf_qpow( q, a, r ) &
+       bind( C, name="aa_tf_qpow" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: r
+    real(C_DOUBLE), Dimension(4), intent(in) :: q
+    real(C_DOUBLE), value, intent(in) :: a
+    real(C_DOUBLE) :: qnorm, vnorm, theta, pa
+    ! intermediates
+    qnorm = aa_la_norm2(q)
+    vnorm = aa_la_norm2( q(XYZ_INDEX) )
+    ! Maybe should use atan2 here
+    theta = acos( q(W_INDEX) / qnorm )
+    pa = qnorm ** a
+    ! output
+    r(W_INDEX) = pa * cos(a*theta)
+    r(XYZ_INDEX) = (pa * sin(a*theta) / vnorm) * q(XYZ_INDEX)
+  end subroutine aa_tf_qpow
 
   pure subroutine aa_tf_qslerp( tau, q1, q2, r ) &
        bind( C, name="aa_tf_qslerp" )
@@ -332,5 +351,33 @@ contains
     qv(XYZ_INDEX) = 0.5 * v
     call aa_tf_qmul(qv, q, dq_dt)
   end subroutine aa_tf_qvel2diff
+
+
+  ! subroutine aa_tf_eulerzyx2quat( e, q ) &
+  !   bind( C, name="aa_tf_eulerzyx2quat" )
+  !   Real(C_DOUBLE), dimension(3), intent(in) :: e
+  !   Real(C_DOUBLE), dimension(4), intent(out) :: q
+  !   Real(C_DOUBLE)  :: y, p, r
+  !   Real(C_DOUBLE)  :: y2, p2, r2
+  !   Real(C_DOUBLE)  :: cy, cp, cr
+  !   Real(C_DOUBLE)  :: sy, sp, sr
+  !   y = e(1)
+  !   p = e(2)
+  !   r = e(3)
+  !   y2 = y/2.0
+  !   p2 = p/2.0
+  !   r2 = r/2.0
+  !   cy = cos(y2)
+  !   cp = cos(p2)
+  !   cr = cos(r2)
+  !   sy = sin(y2)
+  !   sp = sin(p2)
+  !   sr = sin(r2)
+  !   q(1) = cr*sp*cy + sr*cp*sy
+  !   q(2) = cr*cp*sy - sr*sp*cy
+  !   q(3) = sr*cp*cy - cr*sp*cy
+  !   q(4) = cr*cp*cy + sr*sp*sy
+  ! end subroutine aa_tf_eulerzyx2quat
+
 
 end module amino_tf
