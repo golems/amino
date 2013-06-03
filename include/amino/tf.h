@@ -242,6 +242,21 @@ AA_API void aa_tf_qslerpdiff( double tau, const double a[AA_RESTRICT 4],
                               const double b[AA_RESTRICT 4],
                               double c[AA_RESTRICT 4] );
 
+/** Chain-rule slerp differentiation */
+AA_API void aa_tf_qslerpchaindiff( double u, double du,
+                                   const double q1[AA_RESTRICT 4], const double dq1[AA_RESTRICT 4],
+                                   const double q2[AA_RESTRICT 4], const double dq2[AA_RESTRICT 4],
+                                   double q[AA_RESTRICT 4], double dq[AA_RESTRICT 4] );
+
+
+/** Triad sequence of slerp differentiation */
+AA_API void aa_tf_qslerp3diff( double u12, double du12,
+                               const double q1[AA_RESTRICT 4], const double q2[AA_RESTRICT 4],
+                               double u34, double du34,
+                               const double q3[AA_RESTRICT 4], const double q4[AA_RESTRICT 4],
+                               double u, double du,
+                               double q[AA_RESTRICT 4], double dq[AA_RESTRICT 4] );
+
 /* Quaternaion time derivate to angular velocity */
 AA_API void aa_tf_qdiff2vel( const double q[AA_RESTRICT 4],
                              const double dq_dt[AA_RESTRICT 4],

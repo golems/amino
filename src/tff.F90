@@ -239,6 +239,77 @@ contains
     end if
   end subroutine aa_tf_qslerpdiff
 
+  !! Chain Rule Derivative of a SLERP'ed quaternion
+  !! Assumes that q1 and q2 are unit quaternions
+  pure subroutine aa_tf_qslerpchaindiff( u, du, q1, dq1, q2, dq2, q, dq ) &
+       bind( C, name="aa_tf_qslerpchaindiff" )
+    real(C_DOUBLE), dimension(4), intent(out) :: q, dq
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, dq1, dq2
+    real(C_DOUBLE), value, intent(in) :: u, du
+    ! locals
+    real(C_DOUBLE) :: q1q2, theta, dtheta, a, b, d1, d2, da, db, s, c, sa, sb, ca, cb
+    ! check interpolation bounds
+    if( 0.0 >= u ) then
+       dq = 0d0
+       q = q1
+       return
+    elseif ( 1.0 <= u ) then
+       dq = 0d0
+       q = q2
+       return
+    end if
+    ! get angle
+    q1q2 = dot_product(q1,q2)
+    theta = acos( q1q2 )
+    if( 0 == theta ) then
+       dq = 0d0
+       q = q1
+       return
+    end if
+    ! find parameters
+    dtheta = ( dot_product(q1, dq2) + dot_product(dq1, q2) ) / sqrt(1 - q1q2**2)
+    s = sin(theta)
+    c = cos(theta)
+    sa = sin(1-u*theta)
+    ca = cos(1-u*theta)
+    sb = sin(u*theta)
+    cb = cos(u*theta)
+    a = sa / s
+    b = sb / s
+    d1 = (theta*du + u*dtheta) / s
+    d2 = dtheta*c / s**2
+    da = d2*sa - d1*ca
+    db = - d2*sb + d1*cb
+    ! get the result
+    if( q1q2 >= 0.0 ) then
+       q = q1*a + q2*b
+       dq = (dq1*a + q1*da) + (dq2*b + q2*db)
+    else
+       q = q1*a - q2*b
+       dq = (dq1*a + q1*da) - (dq2*b + q2*db)
+    end if
+  end subroutine aa_tf_qslerpchaindiff
+
+  !! Perform a triad of slerps and computer the derivative as well
+  pure subroutine aa_tf_qslerp3diff( u12, du12, q1, q2, u34, du34, q3, q4, u, du, q, dq ) &
+    bind( C, name="aa_tf_qslerp3diff" )
+    real(C_DOUBLE), dimension(4), intent(out) :: q, dq
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, q3, q4
+    real(C_DOUBLE), value, intent(in) :: u12, du12, u34, du34, u, du
+    ! locals
+    real(C_DOUBLE), dimension(4) :: q12, dq12, q34, dq34
+    ! Intermediates
+    call aa_tf_qslerp( u12, q1, q2, q12 )
+    call aa_tf_qslerpdiff( u12, q1, q2, dq12 )
+    dq12 = dq12 * du12 ! chain rule
+    call aa_tf_qslerp( u34, q3, q4, q34 )
+    call aa_tf_qslerpdiff( u34, q3, q4, dq34 )
+    dq34 = dq34 * du34 ! chain rule
+    ! Final
+    call aa_tf_qslerpchaindiff( u, du, q12, dq12, q34, dq34, q, dq )
+  end subroutine aa_tf_qslerp3diff
+
+
   !! Convert differential quaternion to velocity
   !! Note, pass the time derivative of the quaternion as dq_dt
   subroutine aa_tf_qdiff2vel( q, dq_dt, v ) &
