@@ -245,7 +245,7 @@ contains
     end if
   end subroutine aa_tf_qslerpalg
 
-  !! Derivative of a SLERP'ed quaternion
+  !! Derivative of a SLERPed quaternion
   !! Note, this is not a time deriviative, but derivative by the slerp parameter tau
   !! Use the chain rule if you need the time derivative (ie, to find a velocity)
   pure subroutine aa_tf_qslerpdiff( tau, q1, q2, r ) &
@@ -274,7 +274,7 @@ contains
   end subroutine aa_tf_qslerpdiff
 
 
-  !! Derivative of a SLERP'ed quaternion, computed algebraicly
+  !! Derivative of a SLERPed quaternion, computed algebraicly
   pure subroutine aa_tf_qslerpdiffalg( tau, q1, q2, dq ) &
        bind( C, name="aa_tf_qslerpdiffalg" )
     real(C_DOUBLE), dimension(4), intent(out) :: dq
@@ -294,7 +294,7 @@ contains
   end subroutine aa_tf_qslerpdiffalg
 
 
-  !! Chain Rule Derivative of a SLERP'ed quaternion
+  !! Chain Rule Derivative of a SLERPed quaternion
   !! Assumes that q1 and q2 are unit quaternions
   pure subroutine aa_tf_qslerpchaindiff( u, du, q1, dq1, q2, dq2, q, dq ) &
        bind( C, name="aa_tf_qslerpchaindiff" )
@@ -387,5 +387,7 @@ contains
     qv(XYZ_INDEX) = 0.5 * v
     call aa_tf_qmul(qv, q, dq_dt)
   end subroutine aa_tf_qvel2diff
+
+#include "aa_tf_euler.f90"
 
 end module amino_tf

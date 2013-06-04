@@ -399,25 +399,26 @@ void aa_tf_axang2rotmat( const double ra[restrict 4],
 /* } */
 
 // Craig 3rd Ed., p44
-void aa_tf_eulerzyx2rotmat( const double e[restrict 3],
-                            double R[restrict 9] ) {
-    double ca, cb, cg, sa, sb, sg;
-    sincos( e[0], &sa, &ca );
-    sincos( e[1], &sb, &cb );
-    sincos( e[2], &sg, &cg );
+/* void aa_tf_eulerzyx2rotmat( const double e[restrict 3], */
+/*                             double R[restrict 9] ) { */
+/*     double ca, cb, cg, sa, sb, sg; */
+/*     sincos( e[0], &sa, &ca ); */
+/*     sincos( e[1], &sb, &cb ); */
+/*     sincos( e[2], &sg, &cg ); */
 
-    R[0] = ca*cb;
-    R[1] = sa*cb;
-    R[2] = -sb;
+/*     R[0] = ca*cb; */
+/*     R[1] = sa*cb; */
+/*     R[2] = -sb; */
 
-    R[3] = ca*sb*sg - sa*cg;
-    R[4] = sa*sb*sg + ca*cg;
-    R[5] = cb*sg;
+/*     R[3] = ca*sb*sg - sa*cg; */
+/*     R[4] = sa*sb*sg + ca*cg; */
+/*     R[5] = cb*sg; */
 
-    R[6] = ca*sb*cg + sa*sg;
-    R[7] = sa*sb*cg - ca*sg;
-    R[8] = cb*cg;
-}
+/*     R[6] = ca*sb*cg + sa*sg; */
+/*     R[7] = sa*sb*cg - ca*sg; */
+/*     R[8] = cb*cg; */
+/* } */
+
 
 // Craig 3rd Ed., p43 (same as fixed XYZ)
 void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
@@ -437,20 +438,20 @@ void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
 }
 
 
-AA_API void aa_tf_eulerzyx2quat( const double e[AA_RESTRICT 3],
-                                 double q[AA_RESTRICT 4] ) {
-    double ca, cb, cg, sa, sb, sg;
-    sincos( e[0]/2, &sa, &ca );
-    sincos( e[1]/2, &sb, &cb );
-    sincos( e[2]/2, &sg, &cg );
+/* AA_API void aa_tf_eulerzyx2quat( const double e[AA_RESTRICT 3], */
+/*                                  double q[AA_RESTRICT 4] ) { */
+/*     double ca, cb, cg, sa, sb, sg; */
+/*     sincos( e[0]/2, &sa, &ca ); */
+/*     sincos( e[1]/2, &sb, &cb ); */
+/*     sincos( e[2]/2, &sg, &cg ); */
 
-    q[0] = ca*cb*sg - sa*sb*cg;
-    q[1] = sa*cb*sg + ca*sb*cg;
-    q[2] = sa*cb*cg - ca*sb*sg;
-    q[3] = sa*sb*sg + ca*cb*cg;
+/*     q[0] = ca*cb*sg - sa*sb*cg; */
+/*     q[1] = sa*cb*sg + ca*sb*cg; */
+/*     q[2] = sa*cb*cg - ca*sb*sg; */
+/*     q[3] = sa*sb*sg + ca*cb*cg; */
 
-    aa_tf_qnormalize(q);
-}
+/*     aa_tf_qnormalize(q); */
+/* } */
 
 void aa_tf_xangle2rotmat( double theta_x, double R[restrict 9] ) {
     double s,c;

@@ -62,3 +62,5 @@ amino*.tar.gz
 /compile
 /aa_regress
 /aa_fuzz
+/src/mac/aa_tf_euler.f90
+/tf_mod.f90
