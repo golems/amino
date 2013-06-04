@@ -401,6 +401,10 @@ AA_API void aa_tf_eulerzyx2rotmat( const double e[AA_RESTRICT 3],
 AA_API void aa_tf_rotmat2eulerzyx( const double R[AA_RESTRICT 9],
                                    double e[AA_RESTRICT 3] );
 
+
+AA_API void aa_tf_eulerzyx2quat( const double e[AA_RESTRICT 3],
+                                 double q[AA_RESTRICT 4] );
+
 /** Angle about x axis */
 AA_API void aa_tf_xangle2rotmat( double theta_x, double R[AA_RESTRICT 9] );
 /** Angle about y axis */

@@ -436,6 +436,22 @@ void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
     e[2] = g;
 }
 
+
+AA_API void aa_tf_eulerzyx2quat( const double e[AA_RESTRICT 3],
+                                 double q[AA_RESTRICT 4] ) {
+    double ca, cb, cg, sa, sb, sg;
+    sincos( e[0]/2, &sa, &ca );
+    sincos( e[1]/2, &sb, &cb );
+    sincos( e[2]/2, &sg, &cg );
+
+    q[0] = ca*cb*sg - sa*sb*cg;
+    q[1] = sa*cb*sg + ca*sb*cg;
+    q[2] = sa*cb*cg - ca*sb*sg;
+    q[3] = sa*sb*sg + ca*cb*cg;
+
+    aa_tf_qnormalize(q);
+}
+
 void aa_tf_xangle2rotmat( double theta_x, double R[restrict 9] ) {
     double s,c;
     sincos( theta_x, &s, &c);

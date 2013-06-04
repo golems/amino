@@ -37,11 +37,11 @@ pkginclude_HEADERS = 	                \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
-TESTS = aa_test la_test
+TESTS = aa_test la_test aa_regress
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
-noinst_PROGRAMS = aa_test la_test
+noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress
 
 
 libamino_la_SOURCES =                  \
@@ -79,8 +79,14 @@ distclean-local:
 aa_test_SOURCES = src/test/aa_test.c
 aa_test_LDADD = libamino.la -lblas -llapack
 
+aa_regress_SOURCES = src/test/aa_regress.c
+aa_regress_LDADD = libamino.la -lblas -llapack
+
 la_test_SOURCES = src/test/la_test.F90
 la_test_LDADD = libamino.la -lblas -llapack
+
+aa_fuzz_SOURCES = src/test/aa_fuzz.c
+aa_fuzz_LDADD = libamino.la -lblas -llapack
 
 
 # use some convenience libraries to force fortran module dependencies

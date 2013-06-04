@@ -132,12 +132,6 @@ contains
          x
   end subroutine aa_tf_qmul
 
-  pure Function quat_product( a, b ) result(q)
-    Real(8), Dimension(4)  :: q
-    Real(8), Dimension(4), intent(in) :: a,b
-    Call aa_tf_qmul(a,b, q)
-  End Function quat_product
-
   pure Subroutine aa_tf_qinv( q, r ) &
     bind( C, name="aa_tf_qinv" )
     Real(C_DOUBLE), Dimension(4), intent(out) :: r
@@ -351,33 +345,5 @@ contains
     qv(XYZ_INDEX) = 0.5 * v
     call aa_tf_qmul(qv, q, dq_dt)
   end subroutine aa_tf_qvel2diff
-
-
-  ! subroutine aa_tf_eulerzyx2quat( e, q ) &
-  !   bind( C, name="aa_tf_eulerzyx2quat" )
-  !   Real(C_DOUBLE), dimension(3), intent(in) :: e
-  !   Real(C_DOUBLE), dimension(4), intent(out) :: q
-  !   Real(C_DOUBLE)  :: y, p, r
-  !   Real(C_DOUBLE)  :: y2, p2, r2
-  !   Real(C_DOUBLE)  :: cy, cp, cr
-  !   Real(C_DOUBLE)  :: sy, sp, sr
-  !   y = e(1)
-  !   p = e(2)
-  !   r = e(3)
-  !   y2 = y/2.0
-  !   p2 = p/2.0
-  !   r2 = r/2.0
-  !   cy = cos(y2)
-  !   cp = cos(p2)
-  !   cr = cos(r2)
-  !   sy = sin(y2)
-  !   sp = sin(p2)
-  !   sr = sin(r2)
-  !   q(1) = cr*sp*cy + sr*cp*sy
-  !   q(2) = cr*cp*sy - sr*sp*cy
-  !   q(3) = sr*cp*cy - cr*sp*cy
-  !   q(4) = cr*cp*cy + sr*sp*sy
-  ! end subroutine aa_tf_eulerzyx2quat
-
 
 end module amino_tf

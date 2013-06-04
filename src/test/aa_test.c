@@ -1185,10 +1185,10 @@ void rotmat() {
         aa_tf_eulerzyx2rotmat( e, R1 );
         aveq( "tf_rotmat2eulerzyx", 9, R, R1, .001 );
 
-        /* double q[4], qr[4]; */
-        /* aa_tf_eulerzyx2quat( e, q ); */
-        /* aa_tf_rotmat2quat(R, qr); */
-        /* aveq( "tf_eulerzyx2quat", 4, q, qr, .001 ); */
+        double q[4], qr[4];
+        aa_tf_eulerzyx2quat( e, q );
+        aa_tf_rotmat2quat(R, qr);
+        aveq( "tf_eulerzyx2quat", 4, q, qr, .001 );
     }
     // euler
     {
@@ -1198,10 +1198,10 @@ void rotmat() {
         aa_tf_eulerzyx2rotmat( e, R1 );
         aveq( "tf_eulerzyx2rotmat", 9, R1r, R1, .001 );
 
-        /* double q[4], qr[4]; */
-        /* aa_tf_eulerzyx2quat( e, q ); */
-        /* aa_tf_rotmat2quat(R1, qr); */
-        /* aveq( "tf_eulerzyx2quat", 4, q, qr, .001 ); */
+        double q[4], qr[4];
+        aa_tf_eulerzyx2quat( e, q );
+        aa_tf_rotmat2quat(R1, qr);
+        aveq( "tf_eulerzyx2quat", 4, q, qr, .001 );
     }
 
     //xyzangle
