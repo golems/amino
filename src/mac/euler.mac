@@ -49,25 +49,66 @@ Z : [ 0, 0, 1 ]$
 /* Note, GCC's optimizer will eliminate redundant calls to sin/cos
 (merging them to sincos).  No need to worry about that here */
 
-with_stdout("aa_tf_euler.f90",
+lp : "("$
+rp : ")"$
 
-  /*-- Euler ZYX --*/
+gen(stuff, tf1, tf2, tf3, x1, x2, x3)  := (
+  printf(true, "~&subroutine aa_tf_euler~a2rotmat(e, R) &", stuff),
+  printf(true, "~&  bind~a C, name=\"aa_tf_euler~a2rotmat\" ~a~&", lp, stuff, rp ),
 
-  print("subroutine aa_tf_eulerzyx2rotmat(e, R) &"),
-  print("  bind( C, name=\"aa_tf_eulerzyx2rotmat\" )" ),
   print("  real(C_DOUBLE), intent(in)  :: e(3)"),
   print("  real(C_DOUBLE), intent(out) :: R(3,3)"),
-  f90( R =  submatrix(4, tf_rotz(e(1)) . tf_roty(e(2)) . tf_rotx(e(3)), 4 )
+  f90( R =  submatrix(4, tf1(e(1)) . tf2(e(2)) . tf3(e(3)), 4 )
     ),
-  print("End subroutine aa_tf_eulerzyx2rotmat") ,
+  printf(true, "~&End subroutine aa_tf_euler~a2rotmat", stuff) ,
 
-  print("subroutine aa_tf_eulerzyx2quat(e, q) &"),
-  print("  bind( C, name=\"aa_tf_eulerzyx2quat\" )" ),
+  printf(true, "~&subroutine aa_tf_euler~a2quat(e, q) &", stuff),
+  printf(true, "~&  bind~a C, name=\"aa_tf_euler~a2quat\" ~a~&", lp, stuff, rp ),
   print("  real(C_DOUBLE), intent(in)  :: e(3)"),
   print("  real(C_DOUBLE), intent(out) :: q(4)"),
   f90( q =
-    qmul( qmul( qaxang(e(1),Z), qaxang(e(2),Y)), qaxang(e(3),X) ) ),
-  print("End subroutine aa_tf_eulerzyx2quat")
+    qmul( qmul( qaxang(e(1),x1), qaxang(e(2),x2)), qaxang(e(3),x3) ) ),
+  printf(true, "~&end subroutine aa_tf_euler~a2quat~&", stuff)
+  );
+
+
+with_stdout("aa_tf_euler.f90",
+
+  /*-- Euler XYZ --*/
+  gen(xyz, tf_rotx, tf_roty, tf_rotz, X, Y, Z ),
+
+  /*-- Euler XZY --*/
+  gen(xzy, tf_rotx, tf_rotz, tf_roty, X, Z, Y ),
+
+  /*-- Euler YXZ --*/
+  gen(yxz, tf_roty, tf_rotx, tf_rotz, Y, X, Z ),
+
+  /*-- Euler YZX --*/
+  gen(yzx, tf_roty, tf_rotz, tf_rotx, Y, Z, X ),
+
+  /*-- Euler ZXY --*/
+  gen(zxy, tf_rotz, tf_rotx, tf_roty, Z, X, Y ),
+
+  /*-- Euler ZYX --*/
+  gen(zyx, tf_rotz, tf_roty, tf_rotx, Z, Y, X ),
+
+  /*-- Euler XYX --*/
+  gen(xyx, tf_rotx, tf_roty, tf_rotx, X, Y, X ),
+
+  /*-- Euler XZX --*/
+  gen(xzx, tf_rotx, tf_rotz, tf_rotx, X, Z, X ),
+
+  /*-- Euler YXY --*/
+  gen(yxy, tf_roty, tf_rotx, tf_roty, Y, X, Y ),
+
+  /*-- Euler YZY --*/
+  gen(yzy, tf_roty, tf_rotz, tf_roty, Y, Z, Y ),
+
+  /*-- Euler ZXZ --*/
+  gen(zxz, tf_rotz, tf_rotx, tf_rotz, Z, X, Z ),
+
+  /*-- Euler ZYZ --*/
+  gen(zyz, tf_rotz, tf_roty, tf_rotz, Z, Y, Z )
 
 )$
 

@@ -75,21 +75,45 @@ static void rotvec() {
     aveq("rotvec", 3, vq, vr, .001 );
 }
 
+typedef void (*fun_type)(const double *a, double*b);
 
-static void euler() {
-    double e[3], R[9],  q[4];
-    aa_vrand(3,e);
+static void euler_helper( double e[4], fun_type e2r, fun_type e2q ) {
+    double R[9],  q[4];
+    e2r(e, R);
+    aa_tf_isrotmat(R) ;
 
-    aa_tf_eulerzyx2rotmat(e, R);
-    assert( aa_tf_isrotmat(R) );
-
-    aa_tf_eulerzyx2quat(e, q);
+    e2q(e, q);
 
     double vq[3], vr[3];
     aa_tf_quat2rotvec(q, vq);
     aa_tf_rotmat2rotvec(R, vr);
 
     aveq("euler-vecs", 3, vq, vr, .001 );
+}
+
+static void euler() {
+    double e[3];
+    aa_vrand(3,e);
+
+    euler_helper( e, &aa_tf_eulerxyz2rotmat, &aa_tf_eulerxyz2quat );
+    euler_helper( e, &aa_tf_eulerxzy2rotmat, &aa_tf_eulerxzy2quat );
+
+    euler_helper( e, &aa_tf_euleryxz2rotmat, &aa_tf_euleryxz2quat );
+    euler_helper( e, &aa_tf_euleryzx2rotmat, &aa_tf_euleryzx2quat );
+
+    euler_helper( e, &aa_tf_eulerzxy2rotmat, &aa_tf_eulerzxy2quat );
+    euler_helper( e, &aa_tf_eulerzyx2rotmat, &aa_tf_eulerzyx2quat );
+
+
+    euler_helper( e, &aa_tf_eulerxyx2rotmat, &aa_tf_eulerxyx2quat );
+    euler_helper( e, &aa_tf_eulerxzx2rotmat, &aa_tf_eulerxzx2quat );
+
+    euler_helper( e, &aa_tf_euleryxy2rotmat, &aa_tf_euleryxy2quat );
+    euler_helper( e, &aa_tf_euleryzy2rotmat, &aa_tf_euleryzy2quat );
+
+    euler_helper( e, &aa_tf_eulerzxz2rotmat, &aa_tf_eulerzxz2quat );
+    euler_helper( e, &aa_tf_eulerzyz2rotmat, &aa_tf_eulerzyz2quat );
+
 }
 
 static void euler1() {

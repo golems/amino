@@ -418,6 +418,33 @@ AA_API void aa_tf_rotmat2eulerzyx( const double R[AA_RESTRICT 9],
 AA_API void aa_tf_eulerzyx2quat( const double e[AA_RESTRICT 3],
                                  double q[AA_RESTRICT 4] );
 
+
+#define AA_TF_DEF_EULER(letters) \
+    AA_API void \
+    aa_tf_euler ## letters ## 2rotmat( const double e[AA_RESTRICT 3],   \
+                                       double R[AA_RESTRICT 9] );       \
+    AA_API void \
+    aa_tf_euler ## letters ## 2quat( const double e[AA_RESTRICT 3],      \
+                                    double q[AA_RESTRICT 4] );
+
+AA_TF_DEF_EULER( xyz )
+AA_TF_DEF_EULER( xzy )
+
+AA_TF_DEF_EULER( yxz )
+AA_TF_DEF_EULER( yzx )
+
+AA_TF_DEF_EULER( zyx )
+AA_TF_DEF_EULER( zxy )
+
+AA_TF_DEF_EULER( xyx )
+AA_TF_DEF_EULER( xzx )
+
+AA_TF_DEF_EULER( yxy )
+AA_TF_DEF_EULER( yzy )
+
+AA_TF_DEF_EULER( zxz )
+AA_TF_DEF_EULER( zyz )
+
 /** Angle about x axis */
 AA_API void aa_tf_xangle2rotmat( double theta_x, double R[AA_RESTRICT 9] );
 /** Angle about y axis */
