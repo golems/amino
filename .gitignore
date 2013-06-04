@@ -60,3 +60,5 @@ amino*.tar.gz
 /m4/ltoptions.m4
 /m4/libtool.m4
 /compile
+/aa_regress
+/aa_fuzz
