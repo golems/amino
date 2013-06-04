@@ -139,6 +139,27 @@ static void chain() {
     aveq("chain-rot", 3, vr, vq, .001 );
 }
 
+
+static void quat() {
+    double q1[4], q2[4], u;
+    aa_vrand( 4, q1 );
+    aa_vrand( 4, q2 );
+    u = aa_frand();
+    aa_tf_qnormalize(q1);
+    aa_tf_qnormalize(q2);
+
+    double qg[4], qa[4];
+    aa_tf_qslerp( u, q1, q2, qg );
+    aa_tf_qslerpalg( u, q1, q2, qa );
+    aveq("slerp", 4, qg, qa, .001 );
+
+    double dqg[4], dqa[4];
+    aa_tf_qslerpdiff( u, q1, q2, dqg );
+    aa_tf_qslerpdiffalg( u, q1, q2, dqa );
+    aveq("slerpdiff", 4, dqg, dqa, .001 );
+
+}
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -170,6 +191,7 @@ int main( void ) {
         euler();
         euler1();
         chain();
+        quat();
     }
 
     return 0;

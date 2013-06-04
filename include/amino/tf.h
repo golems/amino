@@ -275,6 +275,12 @@ AA_API void aa_tf_qslerp( double tau, const double a[AA_RESTRICT 4],
                           const double b[AA_RESTRICT 4],
                           double c[AA_RESTRICT 4] );
 
+
+/** Quaternion SLERP, computed algebraicly. */
+AA_API void aa_tf_qslerpalg( double tau, const double a[AA_RESTRICT 4],
+                             const double b[AA_RESTRICT 4],
+                             double c[AA_RESTRICT 4] );
+
 /** Derivative of quaternation SLERP WRT tau.
  *
  * This is NOT a time derivative.  Use the chain rule:
@@ -283,6 +289,13 @@ AA_API void aa_tf_qslerp( double tau, const double a[AA_RESTRICT 4],
 AA_API void aa_tf_qslerpdiff( double tau, const double a[AA_RESTRICT 4],
                               const double b[AA_RESTRICT 4],
                               double c[AA_RESTRICT 4] );
+
+
+/** Derivative of quaternation SLERP WRT tau, computed algebraicly
+ */
+AA_API void aa_tf_qslerpdiffalg( double tau, const double a[AA_RESTRICT 4],
+                                 const double b[AA_RESTRICT 4],
+                                 double c[AA_RESTRICT 4] );
 
 /** Chain-rule slerp differentiation */
 AA_API void aa_tf_qslerpchaindiff( double u, double du,

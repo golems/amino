@@ -224,6 +224,27 @@ contains
     end if
   end subroutine aa_tf_qslerp
 
+
+  !> Algebraic computation of SLERP
+  pure subroutine aa_tf_qslerpalg( tau, q1, q2, r ) &
+       bind( C, name="aa_tf_qslerpalg" )
+    real(C_DOUBLE), dimension(4), intent(out) :: r
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
+    real(C_DOUBLE), value, intent(in) :: tau
+    real(C_DOUBLE), dimension(4) :: q1i, qm, qp
+    if( 0 >= tau ) then
+       r = q1
+    elseif ( 1 <= tau ) then
+       r = q2
+    else
+       ! ( q2*q1^-1 ) ^ t  *
+       call aa_tf_qinv( q1, q1i )
+       call aa_tf_qmul( q2, q1i, qm )
+       call aa_tf_qpow( qm, tau, qp )
+       call aa_tf_qmul( qp, q1, r )
+    end if
+  end subroutine aa_tf_qslerpalg
+
   !! Derivative of a SLERP'ed quaternion
   !! Note, this is not a time deriviative, but derivative by the slerp parameter tau
   !! Use the chain rule if you need the time derivative (ie, to find a velocity)
@@ -251,6 +272,27 @@ contains
        r = (s1*q1 + s2*q2) * d
     end if
   end subroutine aa_tf_qslerpdiff
+
+
+  !! Derivative of a SLERP'ed quaternion, computed algebraicly
+  pure subroutine aa_tf_qslerpdiffalg( tau, q1, q2, dq ) &
+       bind( C, name="aa_tf_qslerpdiffalg" )
+    real(C_DOUBLE), dimension(4), intent(out) :: dq
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
+    real(C_DOUBLE), value, intent(in) :: tau
+    real(C_DOUBLE), dimension(4) :: q1i, qm, ql, q
+    if( 0.0 >= tau .or. 1.0 <= tau ) then
+       dq = 0d0
+       return
+    end if
+    ! dq = ln(q2*q1^-1) * slerp(q1,q2,u)
+    call aa_tf_qslerp( tau, q1, q2, q )
+    call aa_tf_qinv( q1, q1i )
+    call aa_tf_qmul( q2, q1i, qm );
+    call aa_tf_qln( qm, ql )
+    call aa_tf_qmul( ql, q, dq )
+  end subroutine aa_tf_qslerpdiffalg
+
 
   !! Chain Rule Derivative of a SLERP'ed quaternion
   !! Assumes that q1 and q2 are unit quaternions
