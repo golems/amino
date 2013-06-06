@@ -254,7 +254,7 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
     real(C_DOUBLE) :: theta, s1, s2, d
-    if( 0.0 >= tau .or. 1.0 <= tau ) then
+    if( 0.0 > tau .or. 1.0 < tau ) then
        r = 0d0
        return
     end if
@@ -281,7 +281,7 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
     real(C_DOUBLE), dimension(4) :: q1i, qm, ql, q
-    if( 0.0 >= tau .or. 1.0 <= tau ) then
+    if( 0.0 > tau .or. 1.0 < tau ) then
        dq = 0d0
        return
     end if
@@ -302,13 +302,13 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, dq1, dq2
     real(C_DOUBLE), value, intent(in) :: u, du
     ! locals
-    real(C_DOUBLE) :: q1q2, theta, dtheta, a, b, d1, d2, da, db, s, c, sa, sb, ca, cb
+    real(C_DOUBLE) :: q1q2, theta, dtheta, a, b, da, db, s, c, sa, sb, ca, cb
     ! check interpolation bounds
-    if( 0.0 >= u ) then
+    if( 0.0 > u ) then
        dq = 0d0
        q = q1
        return
-    elseif ( 1.0 <= u ) then
+    elseif ( 1.0 < u ) then
        dq = 0d0
        q = q2
        return
@@ -323,25 +323,30 @@ contains
     end if
     ! find parameters
     dtheta = ( dot_product(q1, dq2) + dot_product(dq1, q2) ) / sqrt(1 - q1q2**2)
+
     s = sin(theta)
     c = cos(theta)
-    sa = sin(1-u*theta)
-    ca = cos(1-u*theta)
+    sa = sin((1-u)*theta)
+    ca = cos((1-u)*theta)
     sb = sin(u*theta)
     cb = cos(u*theta)
+
     a = sa / s
     b = sb / s
-    d1 = (theta*du + u*dtheta) / s
-    d2 = dtheta*c / s**2
-    da = d2*sa - d1*ca
-    db = - d2*sb + d1*cb
+
+    da = ( ca * (dtheta*(1-u) - du*theta) ) / s - &
+         ( dtheta * c * sa ) / s**2
+
+    db = ( (dtheta*u + theta*du) *cb ) / s - &
+         ( dtheta * c * sb ) / s**2
+
     ! get the result
-    if( q1q2 >= 0.0 ) then
-       q = q1*a + q2*b
-       dq = (dq1*a + q1*da) + (dq2*b + q2*db)
-    else
+    if( q1q2 < 0.0 ) then
        q = q1*a - q2*b
        dq = (dq1*a + q1*da) - (dq2*b + q2*db)
+    else
+       q = q1*a + q2*b
+       dq = (dq1*a + q1*da) + (dq2*b + q2*db)
     end if
   end subroutine aa_tf_qslerpchaindiff
 
