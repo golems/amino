@@ -209,6 +209,11 @@ AA_API void *aa_mem_region_tmpalloc( aa_mem_region_t *region, size_t size );
 AA_API void *aa_mem_region_alloc( aa_mem_region_t *region, size_t size );
 
 
+/** Duplicate size bytes at p, allocated out of region.
+ */
+AA_API void *aa_mem_region_dup( aa_mem_region_t *region, void *p, size_t size );
+
+
 /** Deallocates all allocated objects from the region.  If the region
  * contains multiple chunks, they are merged into one.
  */
@@ -279,6 +284,7 @@ AA_API void aa_mem_region_local_pop( void *ptr );
 AA_API void aa_mem_region_local_release( void );
 
 #define AA_MEM_REGION_NEW( reg, type ) ( (type*) aa_mem_region_alloc((reg), sizeof(type)) )
+#define AA_MEM_REGION_NEW_CPY( reg, src, type ) ( (type*) aa_mem_region_dup((reg), (src), sizeof(type)) )
 #define AA_MEM_REGION_NEW_N( reg, type, n ) ( (type*) aa_mem_region_alloc((reg), (n)*sizeof(type)) )
 
 /*----------- Pooled Allocation ------------------*/
@@ -390,7 +396,7 @@ void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
 #define AA_MEM_CPY(dst, src, n_elem)                            \
     {                                                           \
         /* _Static_assert(sizeof(*dst) == sizeof(*src));*/      \
-        memcpy( dst, src, sizeof(*dst)*n_elem );                \
+        memcpy( dst, src, sizeof((dst)[0])*n_elem );            \
     }
 
 #define AA_MEM_SET(dst, val, n_elem)                                    \
