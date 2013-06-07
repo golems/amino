@@ -1182,11 +1182,11 @@ void rotmat() {
         double e[3];
         double R1[9];
         aa_tf_rotmat2eulerzyx( R, e );
-        aa_tf_eulerzyx2rotmat( e, R1 );
+        aa_tf_eulerzyx2rotmat( e[0], e[1], e[2], R1 );
         aveq( "tf_rotmat2eulerzyx", 9, R, R1, .001 );
 
         double q[4], qr[4];
-        aa_tf_eulerzyx2quat( e, q );
+        aa_tf_eulerzyx2quat( e[0], e[1], e[2], q );
         aa_tf_rotmat2quat(R, qr);
         aveq( "tf_eulerzyx2quat", 4, q, qr, .001 );
     }
@@ -1195,11 +1195,11 @@ void rotmat() {
         double e[3] = { M_PI_2, 0, 0};
         double R1[9];
         double R1r[9] = {0,1,0, -1,0,0, 0,0,1};
-        aa_tf_eulerzyx2rotmat( e, R1 );
+        aa_tf_eulerzyx2rotmat( e[0], e[1], e[2], R1 );
         aveq( "tf_eulerzyx2rotmat", 9, R1r, R1, .001 );
 
         double q[4], qr[4];
-        aa_tf_eulerzyx2quat( e, q );
+        aa_tf_eulerzyx2quat( e[0], e[1], e[2], q );
         aa_tf_rotmat2quat(R1, qr);
         aveq( "tf_eulerzyx2quat", 4, q, qr, .001 );
     }
