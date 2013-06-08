@@ -245,6 +245,34 @@ contains
     end if
   end subroutine aa_tf_qslerpalg
 
+  !> Spherical Cubic Interpolation
+  pure subroutine aa_tf_qsquad( h, q1, q2, s1, s2, r ) &
+       bind( C, name="aa_tf_qsquad" )
+    real(C_DOUBLE), dimension(4), intent(out) :: r
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, s1, s2
+    real(C_DOUBLE), value, intent(in) :: h
+    real(C_DOUBLE), dimension(4) :: rq, rs
+    call aa_tf_qslerp( h, q1, q2, rq )
+    call aa_tf_qslerp( h, s1, s2, rs )
+    call aa_tf_qslerp( 2*h*(1-h), rq, rs, r )
+  end subroutine aa_tf_qsquad
+
+  !> Compute s_i parameters for SQUAD
+  pure subroutine aa_tf_qsquad_param( q1, q2, q3, s2 ) &
+       bind( C, name="aa_tf_qsquad_param" )
+    real(C_DOUBLE), dimension(4), intent(out) :: s2
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, q3
+    real(C_DOUBLE), dimension(4) :: q2_inv, q21, l21, q23, l23,  qd, qe
+    call aa_tf_qinv( q2, q2_inv )
+    call aa_tf_qmul( q2_inv, q1, q21 )
+    call aa_tf_qln( q21, l21 )
+    call aa_tf_qmul( q2_inv, q3, q23 )
+    call aa_tf_qln( q23, l23 )
+    qd =  - (l21 + l23) / 4.0
+    call aa_tf_qexp( qd, qe )
+    call aa_tf_qmul( q2, qe, s2 )
+  end subroutine aa_tf_qsquad_param
+
   !! Derivative of a SLERPed quaternion
   !! Note, this is not a time deriviative, but derivative by the slerp parameter tau
   !! Use the chain rule if you need the time derivative (ie, to find a velocity)

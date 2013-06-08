@@ -808,7 +808,7 @@ void quat() {
     {
         double R0[9], R_5[9], R1[9];
         double q0[4], q_5[4], q1[4];
-        double qs[4];
+        double qs[4], qas[4];
 
         aa_tf_xangle2rotmat( 0.0, R0 );
         aa_tf_xangle2rotmat( M_PI_2, R_5 );
@@ -819,13 +819,19 @@ void quat() {
         aa_tf_rotmat2quat(R1, q1);
 
         aa_tf_qslerp( 0, q0, q1, qs );
+        aa_tf_qslerpalg( 0, q0, q1, qas );
         aveq( "qslerp 0", 4, q0, qs, .00001 );
+        aveq( "qslerpalg 0", 4, q0, qas, .00001 );
 
         aa_tf_qslerp( 1, q0, q1, qs );
+        aa_tf_qslerpalg( 1, q0, q1, qas );
         aveq( "qslerp 1", 4, q1, qs, .00001 );
+        aveq( "qslerpalg 1", 4, q1, qas, .00001 );
 
         aa_tf_qslerp( .5, q0, q1, qs );
+        aa_tf_qslerpalg( .5, q0, q1, qas );
         aveq( "qslerp .5", 4, q_5, qs, .00001 );
+        aveq( "qslerpalg .5", 4, q_5, qas, .00001 );
 
         /* slerp diff */
         double dr_dtau[4];
