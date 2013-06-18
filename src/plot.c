@@ -46,9 +46,9 @@ AA_API void
 aa_plot_row_series( size_t m, size_t n, double *t, double *X,
                     struct aa_plot_opts *opts ) {
 
-    int r;
-    FILE *g = popen("gnuplot -persist", "w");
-    //FILE *g = stderr;
+    FILE *g = opts->script_file ?
+        fopen(opts->script_file, "w") :
+        popen("gnuplot -persist", "w");
 
     assert(g);
     assert( n > 0 );
@@ -78,7 +78,7 @@ aa_plot_row_series( size_t m, size_t n, double *t, double *X,
         fprintf(g, "e\n");
     }
     fflush(g);
-    r = pclose(g);
-    assert( -1 != r );
-}
 
+    if( opts->script_file ) fclose(g);
+    else pclose(g);
+}

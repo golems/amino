@@ -52,6 +52,7 @@ typedef struct aa_plot_opts {
     const char *xlabel;        ///< x axis label
     const char *ylabel;        ///< y axis label
     const char ** axis_label ; ///< name of each data series
+    const char *script_file;   ///< output gnuplot commands to this file
 } aa_plot_opts_t;
 
 /** Plots Y over t.
