@@ -221,6 +221,11 @@ AA_API void aa_tf_9rot( const double R[AA_RESTRICT 9],
                         const double p0[AA_RESTRICT 3],
                         double p1[AA_RESTRICT 3] );
 
+/// relative transform from R1 to R2
+AA_API void aa_tf_9rel( const double R1[AA_RESTRICT 9], const double R2[AA_RESTRICT 9],
+                        double Ri[AA_RESTRICT 9] );
+
+
 
 /// Vararg multiply two rotation matrices
 AA_API void aa_tf_v9mul( double R[AA_RESTRICT 9],

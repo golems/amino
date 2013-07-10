@@ -178,6 +178,15 @@ static void quat() {
     aa_tf_qslerpdiffalg( u, q1, q2, dqa );
     aveq("slerpdiff", 4, dqg, dqa, .001 );
 
+    double R1[9], R2[9], Rr[9], qr[4], qrr[4];
+    aa_tf_quat2rotmat(q1, R1);
+    aa_tf_quat2rotmat(q2, R2);
+    aa_tf_9rel( R1, R2, Rr );
+    aa_tf_qrel( q1, q2, qr );
+    aa_tf_rotmat2quat( Rr, qrr );
+    if(qr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qr[i] *= -1;
+    if(qrr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qrr[i] *= -1;
+    aveq("qrel", 4, qr, qrr, .001 );
 }
 
 int main( void ) {

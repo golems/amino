@@ -78,6 +78,14 @@ void aa_tf_9rot( const double R[restrict 9], const double p0[restrict 3],
     aa_tf_9(R,p0,pp);
 }
 
+void aa_tf_9rel( const double R1[restrict 9], const double R2[restrict 9],
+                 double Ri[restrict 9] ) {
+    double R2i[9];
+    aa_la_transpose2( 3, 3, R2, R2i );
+    aa_tf_9mul( R1, R2i, Ri );
+}
+
+
 void aa_tf_qnormalize( double q[restrict 4] ) {
     aa_la_normalize( 4, q );
 }
