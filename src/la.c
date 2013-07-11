@@ -241,42 +241,45 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     const int ni = (int)n;
 
     // this method uses an LU factorization
-    /* // B = AA^T */
-    /* double B[m*m]; */
-    /* cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni, */
-    /*              1, A, mi, A, mi, 0, B, mi ); */
+    // B = AA^T
+    double *B = (double*)aa_mem_region_local_alloc( sizeof(double) *
+                                                    (m*m) );
+    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni,
+                 1, A, mi, A, mi, 0, B, mi );
 
-    /* // B += kI */
-    /* for( size_t i = 0; i < m; i ++ ) */
-    /*    B[i*m+i] += k; */
+    // B += kI
+    for( size_t i = 0; i < m; i ++ )
+       B[i*m+i] += k;
 
-    /* // B = B^-1 */
-    /* aa_la_inv(m,B); */
+    // B = B^-1
+    aa_la_inv(m,B);
 
-    /* // A^* = A^T*B */
-    /* cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi, */
-    /*              1, A, mi, B, mi, 0, A_star, ni ); */
+    // A^* = A^T*B
+    cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi,
+                 1, A, mi, B, mi, 0, A_star, ni );
+
+    aa_mem_region_local_pop( B );
 
     // This method uses the SVD
-    double *W = (double*)aa_mem_region_local_alloc( sizeof(double) *
-                                                (m*m + n*n + AA_MIN(m,n)) );
-    double *U = W;        // size m*m
-    double *Vt = U + m*m; // size n*n
-    double *S = Vt + n*n; // size min(m,n)
+    /* double *W = (double*)aa_mem_region_local_alloc( sizeof(double) * */
+    /*                                             (m*m + n*n + AA_MIN(m,n)) ); */
+    /* double *U = W;        // size m*m */
+    /* double *Vt = U + m*m; // size n*n */
+    /* double *S = Vt + n*n; // size min(m,n) */
 
-    // A = U S V^T
-    aa_la_svd(m,n,A,U,S,Vt);
+    /* // A = U S V^T */
+    /* aa_la_svd(m,n,A,U,S,Vt); */
 
-    memset( A_star, 0, sizeof(double)*m*n );
-    // \sum s_i/(s_i**2+k) * v_i * u_i^T
-    for( size_t i = 0; i < AA_MIN(m,n); i ++ ) {
-        cblas_dger( CblasColMajor, ni, mi, S[i] / (S[i]*S[i] + k),
-                Vt + i, ni,
-                U + m*i, 1,
-                A_star, ni
-                );
-    }
-    aa_mem_region_local_pop( W );
+    /* memset( A_star, 0, sizeof(double)*m*n ); */
+    /* // \sum s_i/(s_i**2+k) * v_i * u_i^T */
+    /* for( size_t i = 0; i < AA_MIN(m,n); i ++ ) { */
+    /*     cblas_dger( CblasColMajor, ni, mi, S[i] / (S[i]*S[i] + k), */
+    /*             Vt + i, ni, */
+    /*             U + m*i, 1, */
+    /*             A_star, ni */
+    /*             ); */
+    /* } */
+    /* aa_mem_region_local_pop( W ); */
 }
 
 /// Deadzone Damped Pseudoinverse
