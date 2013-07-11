@@ -532,6 +532,26 @@ AA_API double aa_la_trace( size_t n, const double *A );
  */
 AA_API void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double *A_star );
 
+
+/** Deadzone, Damped Pseudo Inverse of A.
+ *
+ *  \f[ A^\ddagger \leftarrow \sum_{i=0}^r \frac{\sigma_i}{{\sigma_i}^2+k} v_i {u_i}^T \f]
+ *
+ * The denominator \f ${\sigma_i}^2 \f$ goes to zero near
+ * singularities.  This function fixes the minimum value of the
+ * denominator at parameter s2_min.
+ *
+ * See "Introduction to inverse kinematics with jacobian transpose,
+ * pseudoinverse and damped least squares methods". Buss, S.R. 2004
+ *
+ * \param m rows of A
+ * \param n cols of A
+ * \param A \f$ A \in \Re^m\times\Re^n\f$
+ * \param A_star \f$ A^\ddagger \in \Re^n\times\Re^m\f$
+ * \param s2_min Minimum acceptable value for squared Singular Value
+ */
+AA_API void aa_la_dzdpinv( size_t m, size_t n, double s2_min, const double *A, double *A_star ) ;
+
 /** Damped Least Squares.
  * \f[ x = A^\ddagger b \f]
  *
@@ -546,6 +566,28 @@ AA_API void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double 
  * \param x \f$ x \in \Re^n \f$
  */
 AA_API void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *b, double *x );
+
+
+/** Least Squares with Nullspace projection.
+ *
+ * \f[ x = A^* b + (I-A^\* A)x_p \f]
+ *
+ * See "Introduction to inverse kinematics with jacobian transpose,
+ * pseudoinverse and damped least squares methods". Buss, S.R. 2004
+ *
+ * \param m rows in A
+ * \param n cols in A
+ * \param A \f$ A \in \Re^m\times\Re^n \f$
+ * \param A* \f$ A \in \Re^m\times\Re^n \f$
+ * \param b \f$ b \in \Re^m \f$
+ * \param xp \f$ x \in \Re^n \f$
+ * \param x \f$ x \in \Re^n \f$
+ */
+AA_API void aa_la_xlsnp( size_t m, size_t n,
+                         const double *A, const double *A_star, const double *b,
+                         const double *xp, double *x );
+
+
 
 /** Damped Least Squares with Nullspace projection.
  *
