@@ -11,7 +11,7 @@ dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h
 
-nodist_include_HEADERS = amino_la.mod amino_mem.mod
+nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
 
 pkginclude_HEADERS = 	                \
 	include/amino/debug.h           \
