@@ -240,6 +240,10 @@ AA_API void aa_tf_v9mul( double R[AA_RESTRICT 9],
  */
 AA_API void aa_tf_qnormalize( double q[AA_RESTRICT 4] );
 
+/** Normailize quaternion.
+ */
+AA_API void aa_tf_qnormalize2( const double q[AA_RESTRICT 4], double qnorm[AA_RESTRICT 4] );
+
 /** Quaternion conjugate */
 AA_API void aa_tf_qconj( const double q[AA_RESTRICT 4],
                          double r[AA_RESTRICT 4] );

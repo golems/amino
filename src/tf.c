@@ -85,11 +85,6 @@ void aa_tf_9rel( const double R1[restrict 9], const double R2[restrict 9],
     aa_tf_9mul( R1, R2i, Ri );
 }
 
-
-void aa_tf_qnormalize( double q[restrict 4] ) {
-    aa_la_normalize( 4, q );
-}
-
 /* void aa_tf_qinv( const double q[restrict 4], double r[restrict 4] ) { */
 /*     aa_tf_qconj(q,r); */
 /*     aa_la_scal( 4, 1.0/aa_la_dot(4,r,r), r ); */

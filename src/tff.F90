@@ -111,6 +111,23 @@ contains
     R3 = matmul(R1,R2)
   end subroutine aa_tf_9mul
 
+
+  !!! Quaternions
+
+  pure subroutine aa_tf_qnormalize( q ) &
+       bind( C, name="aa_tf_qnormalize" )
+    real(C_DOUBLE), dimension(4), intent(inout) :: q
+    q = q / sqrt(dot_product(q,q))
+  end subroutine aa_tf_qnormalize
+
+
+  pure subroutine aa_tf_qnormalize2( q, qnorm ) &
+       bind( C, name="aa_tf_qnormalize2" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE), dimension(4), intent(out) :: qnorm
+    qnorm = q / sqrt(dot_product(q,q))
+  end subroutine aa_tf_qnormalize2
+
   pure subroutine aa_tf_qconj( q, qc ) &
        bind( C, name="aa_tf_qconj" )
     real(C_DOUBLE), dimension(4), intent(in) :: q
