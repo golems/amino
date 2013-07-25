@@ -43,11 +43,22 @@
 #define R_INDEX  :,1:3
 #define T_INDEX  :,4
 
+#define DQ_REAL 1:4
+#define DQ_DUAL 5:8
+
 module amino_tf
   use ISO_C_BINDING
   use amino_la
   implicit none
 
+  interface aa_tf_quat2rotmat
+     subroutine aa_tf_quat2rotmat( q, r ) &
+          bind(C,name="aa_tf_quat2rotmat")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), dimension(4) :: q
+       real(C_DOUBLE), intent(out), dimension(3,3) :: r
+     end subroutine aa_tf_quat2rotmat
+  end interface aa_tf_quat2rotmat
 
 contains
   pure subroutine aa_tf_9( R1, p1, p ) &
@@ -220,9 +231,9 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
     real(C_DOUBLE) :: theta, d, s1, s2
-    if( 0 >= tau ) then
+    if( 0 == tau ) then
        r = q1
-    elseif ( 1 <= tau ) then
+    elseif ( 1 == tau ) then
        r = q2
     else
        theta = aa_la_angle( q1, q2 )
@@ -492,6 +503,102 @@ contains
       call aa_tf_qvel2diff(qtmp, v, dq1)
     end subroutine term
   end subroutine aa_tf_qvelrk4
+
+  !!! dual quaternsions
+
+  !> Dual quaternion scalar multplication
+  subroutine aa_tf_dqsmul( s, d, e ) &
+       bind( C, name="aa_tf_dqsmul" )
+    real(C_DOUBLE), intent(in), value :: s
+    real(C_DOUBLE), intent(in) :: d(8)
+    real(C_DOUBLE), intent(out) ::e(8)
+    e = s*d
+  end subroutine aa_tf_dqsmul
+
+  !> Dual quaternion addition
+  subroutine aa_tf_dqadd( d1, d2, e ) &
+       bind( C, name="aa_tf_dqadd" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
+    real(C_DOUBLE), intent(out), dimension(8) :: e
+    e = d1+d2
+  end subroutine aa_tf_dqadd
+
+  !> Dual quaternion multiplication
+  subroutine aa_tf_dqmul( d1, d2, e ) &
+       bind( C, name="aa_tf_dqmul" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
+    real(C_DOUBLE), intent(out), dimension(8) :: e
+    real(C_DOUBLE), dimension(4) :: t1, t2
+
+    call aa_tf_qmul( d1(DQ_REAL), d2(DQ_REAL), e(DQ_REAL) )
+    call aa_tf_qmul( d1(DQ_REAL), d2(DQ_DUAL), t1 )
+    call aa_tf_qmul( d1(DQ_DUAL), d2(DQ_REAL), t2 )
+    e(DQ_DUAL) = t1 + t2
+  end subroutine aa_tf_dqmul
+
+  !> Dual quaternion conjugate
+  subroutine aa_tf_dqconj( d, e ) &
+       bind( C, name="aa_tf_dqconj" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d
+    real(C_DOUBLE), intent(out), dimension(8) :: e
+    call aa_tf_qconj( d(DQ_REAL), e(DQ_REAL) )
+    call aa_tf_qconj( d(DQ_DUAL), e(DQ_DUAL) )
+  end subroutine aa_tf_dqconj
+
+  !> Dual quaternion construction from unit quaternion and translation
+  !> vector.
+  subroutine aa_tf_qt2dq( q, v, d ) &
+       bind( C, name="aa_tf_qt2dq" )
+    real(C_DOUBLE), intent(in), dimension(3) :: q(4), v(3)
+    real(C_DOUBLE), intent(out), dimension(8) :: d
+    real(C_DOUBLE) :: tmp(4)
+    d(DQ_REAL) = q
+    tmp(XYZ_INDEX) = v/2
+    tmp(W_INDEX) = 0d0
+    call aa_tf_qmul( tmp, d(DQ_REAL), d(DQ_DUAL) )
+  end subroutine aa_tf_qt2dq
+
+  !> Dual quaternion translation vector
+ subroutine aa_tf_dqt( d, t ) &
+       bind( C, name="aa_tf_dqt" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d
+    real(C_DOUBLE), intent(out), dimension(3) :: t
+    real(C_DOUBLE) :: t1(4), t2(4)
+    call aa_tf_qconj( d(DQ_REAL), t1)
+    call aa_tf_qmul( d(DQ_DUAL), t1, t2 )
+    t = 2*t2(1:3)
+  end subroutine aa_tf_dqt
+
+  !> Dual quaternion to transformation matrix
+  subroutine aa_tf_dq2tf12( d, t ) &
+       bind( C, name="aa_tf_dq2tf12" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d
+    real(C_DOUBLE), intent(out), dimension(3,4) :: t
+    call aa_tf_quat2rotmat( d(DQ_REAL), t(R_INDEX) )
+    call aa_tf_dqt( d, t(T_INDEX) )
+  end subroutine aa_tf_dq2tf12
+
+  !> Normalize a dual quaternion
+  subroutine aa_tf_dqnormalize( d ) &
+       bind( C, name="aa_tf_dqnormalize" )
+    real(C_DOUBLE), intent(inout), dimension(8) :: d
+    d = d / aa_la_norm2( d(DQ_REAL) )
+  end subroutine aa_tf_dqnormalize
+
+  !> Transform a point using the dual quaternion
+  subroutine aa_tf_dq( d, p0, p1 ) &
+       bind( C, name="aa_tf_dq" )
+    real(C_DOUBLE), intent(in) :: d(8), p0(3)
+    real(C_DOUBLE), intent(out) :: p1(3)
+    real(C_DOUBLE) :: pq(8), dc(8), t1(8), t2(8)
+    pq(1) = 1d0
+    pq(2:5) = 0d0
+    pq(6:8) = p0/2
+    call aa_tf_dqmul(d, pq, t1)
+    call aa_tf_dqconj( d, dc )
+    call aa_tf_dqmul( t1, dc, t2 )
+    call aa_tf_dqt( t2, p1 )
+  end subroutine aa_tf_dq
 
 #include "aa_tf_euler.f90"
 

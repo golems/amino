@@ -104,7 +104,7 @@ tf_get_tran(tf) := matrix([tf[1,4]],[tf[2,4]],[tf[3,4]]);
 
 /* quaternions */
 qconj(q) := [-vref(q,1), -vref(q,2), -vref(q,3), vref(q,4)];
-qinv(q) := qconj(q) / dot4(q,q);
+qinv(q) := qconj(q) / sqrt(dot4(q,q));
 qxyz(q) := [vref(q,1), vref(q,2), vref(q,3)];
 
 qmul(q1,q2) := append(
@@ -112,7 +112,7 @@ qmul(q1,q2) := append(
   [q1[4]*q2[4] - dot3(q1,q2)] );
 
 qrot(q,v) := qmul( qmul(q, [vref(v,1), vref(v,2), vref(v,3), 0] ),
-  qinv(q) );
+  qconj(q) );
 
 qnrot(q,v) := qmul( qmul(q, [vref(v,1), vref(v,2), vref(v,3), 0] ),
   qinv(q) );
@@ -123,6 +123,16 @@ qaxang(theta, v) := ([
   sin(theta/2)*vref(v,3),
   cos(theta/2) ]);
 
+
+/* dual quaternions */
+dq_real(dq) := [dq[1], dq[2], dq[3], dq[4]];
+dq_dual(dq) := [dq[5], dq[6], dq[7], dq[8]];
+
+dqconj(dq) := append( qconj(dq_real(dq)), qconf(dq_dual(dq)) );
+
+dqmul(d1, d2) := append(
+  qmul( dq_real(d1), dq_real(d2) ),
+  qmul( dq_real(d1), dq_dual(d2) ) + qmul( dq_dual(d1), dq_real(d2) ) );
 
 /* Rodrigues' Formula */
 
@@ -164,3 +174,7 @@ spatial_jacobian(tfs, axes, tfe) := block(
       map(lambda([tf, a_local], jacobian_column(tf . a_local, tf_get_tran(tf), pe)),
         pyr, axes))));
 
+
+/* Local Variables: */
+/* mode: maxima */
+/* End: */
