@@ -323,8 +323,49 @@ AA_API void aa_tf_qdiff2vel( const double q[AA_RESTRICT 4],
 
 /* Angular velocity to quaternion time derivative */
 AA_API void aa_tf_qvel2diff( const double q[AA_RESTRICT 4],
-                             const double v[AA_RESTRICT 2],
+                             const double v[AA_RESTRICT 3],
                              double dq_dt[AA_RESTRICT 4] );
+
+
+
+/** Integrate unit quaternion, Runge-Kutta-1 (euler) integration.
+ *
+ * \param q0 Initial rotation quaternion
+ * \param dq Quaternion derivative
+ * \param dt Time step
+ * \param q1 Final rotation quaternion
+ **/
+AA_API void aa_tf_qrk1( const double q0[AA_RESTRICT 4],
+                           const double dq[AA_RESTRICT 4],
+                           double dt,
+                           double q1[AA_RESTRICT 4] );
+
+/** Integrate unit quaternion from angular velocity, Runge-Kutta-1
+ *  (euler) integration.
+ *
+ * \param q0 Initial rotation quaternion
+ * \param v Rotational velocity
+ * \param dt Time step
+ * \param q1 Final rotation quaternion
+ **/
+AA_API void aa_tf_qvelrk1( const double q0[AA_RESTRICT 4],
+                           const double v[AA_RESTRICT 3],
+                           double dt,
+                           double q1[AA_RESTRICT 4] );
+
+
+/** Integrate unit quaternion from angular velocity, Runge-Kutta-4
+ *  (euler) integration.
+ *
+ * \param q0 Initial rotation quaternion
+ * \param v Rotational velocity
+ * \param dt Time step
+ * \param q1 Final rotation quaternion
+ **/
+AA_API void aa_tf_qvelrk4( const double q0[AA_RESTRICT 4],
+                           const double v[AA_RESTRICT 3],
+                           double dt,
+                           double q1[AA_RESTRICT 4] );
 
 /*********/
 /* Axang */

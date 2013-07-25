@@ -421,6 +421,61 @@ contains
     call aa_tf_qmul(qv, q, dq_dt)
   end subroutine aa_tf_qvel2diff
 
+
+  subroutine aa_tf_qrk1( q0, dq, dt, q1 ) &
+       bind( C, name="aa_tf_qrk1" )
+    real(C_DOUBLE), intent(in) :: dq(4), q0(4)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: q1(4)
+    q1 = q0 + dt * dq         ! euler integration
+    q1 = q1 / aa_la_norm2(q1) ! normalize
+  end subroutine aa_tf_qrk1
+
+
+  !! Integrate rotational velocity, Runge-Kutta 2 (euler integration)
+  subroutine aa_tf_qvelrk1( q0, v, dt, q1 ) &
+       bind( C, name="aa_tf_qvelrk1" )
+    real(C_DOUBLE), intent(in) :: v(3), q0(4)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: q1(4)
+    real(C_DOUBLE), dimension(4) :: dq
+    call aa_tf_qvel2diff(q0, v, dq)
+    call aa_tf_qrk1( q0, dq, dt, q1 )
+  end subroutine aa_tf_qvelrk1
+
+
+  !! Integrate rotational velocity, Runge-Kutta 4
+  subroutine aa_tf_qvelrk4( q0, v, dt, q1 ) &
+       bind( C, name="aa_tf_qvelrk4" )
+    real(C_DOUBLE), intent(in) :: v(3), q0(4)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: q1(4)
+    real(C_DOUBLE) :: dq(4,4), qtmp(4)
+
+    ! k1
+    call aa_tf_qvel2diff(q0, v, dq(:,1))
+    ! k2
+    call term(dq(:,1), dt/2, dq(:,2))
+    ! k3
+    call term(dq(:,2), dt/2, dq(:,3))
+    ! k4
+    call term(dq(:,3), dt, dq(:,4))
+
+    ! combine
+    qtmp = dq(:,1) + dq(:,4) + 2 * ( dq(:,2) + dq(:,3) )
+    call aa_tf_qrk1( q0, qtmp, dt/6, q1 )
+
+  contains
+    subroutine term( dq0, dt, dq1 )
+      real(C_DOUBLE), intent(in) ::  dq0(4)
+      real(C_DOUBLE), intent(in), value :: dt
+      real(C_DOUBLE), intent(out) :: dq1(4)
+      real(C_DOUBLE) :: qtmp(4)
+      call aa_tf_qrk1( q0, dq0, dt, qtmp )
+      call aa_tf_qvel2diff(qtmp, v, dq1)
+    end subroutine term
+  end subroutine aa_tf_qvelrk4
+
 #include "aa_tf_euler.f90"
 
 end module amino_tf
