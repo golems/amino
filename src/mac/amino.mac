@@ -111,8 +111,7 @@ qmul(q1,q2) := append(
   (q1[4]*qxyz(q2) + q2[4]*qxyz(q1) + vcross(q1,q2)),
   [q1[4]*q2[4] - dot3(q1,q2)] );
 
-qrot(q,v) := qmul( qmul(q, [vref(v,1), vref(v,2), vref(v,3), 0] ),
-  qconj(q) );
+qrot(q,v) := v + vcross( 2*qxyz(q), ( vcross(qxyz(q),v) + q[4]*v ) );
 
 qnrot(q,v) := qmul( qmul(q, [vref(v,1), vref(v,2), vref(v,3), 0] ),
   qinv(q) );

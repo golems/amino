@@ -198,6 +198,7 @@ void aa_tf_axang2quat( const double axang[restrict 4],
     sincos( axang[3]/2, &s, &c );
     q[3] = c;
     aa_la_smul( 3, s, axang, q );
+    aa_tf_qnormalize(q);
 }
 
 void aa_tf_quat2rotmat( const double q[restrict 4],

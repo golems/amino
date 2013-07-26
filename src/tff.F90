@@ -151,13 +151,20 @@ contains
        bind( C, name="aa_tf_qmul" )
     real(C_DOUBLE), dimension(4), intent(out) :: q
     real(C_DOUBLE), dimension(4), intent(in) :: a,b
-    real(C_DOUBLE) :: x(3)
-    q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - &
-         dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
-    call aa_la_cross_sub(a(XYZ_INDEX), b(XYZ_INDEX), x)
-    q(XYZ_INDEX) = a(W_INDEX)*b(XYZ_INDEX) + &
-         a(XYZ_INDEX)*b(W_INDEX) + &
-         x
+
+    q(1) =   a(1)*b(4) + a(2)*b(3) - a(3)*b(2) + a(4)*b(1)
+    q(2) = - a(1)*b(3) + a(2)*b(4) + b(1)*a(3) + a(4)*b(2)
+    q(3) =   a(1)*b(2) - a(2)*b(1) + a(3)*b(4) + a(4)*b(3)
+    q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
+
+    ! real(C_DOUBLE) :: x(3)
+    ! q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - &
+    !      dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
+    ! call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), x)
+    ! q(XYZ_INDEX) = a(W_INDEX)*b(XYZ_INDEX) + &
+    !      a(XYZ_INDEX)*b(W_INDEX) + &
+    !      x
+
   end subroutine aa_tf_qmul
 
   pure Subroutine aa_tf_qinv( q, r ) &
@@ -168,18 +175,37 @@ contains
     r = r / dot_product(q,q)
   End Subroutine aa_tf_qinv
 
+  pure Subroutine aa_tf_cross(v1,v2,vc) &
+       bind( C, name="aa_tf_cross" )
+    real(C_DOUBLE), intent(in), dimension(3) :: v1,v2
+    real(C_DOUBLE), intent(out), dimension(3) :: vc
+    vc(1) = v1(2)*v2(3) - v2(2)*v1(3)
+    vc(2) = v2(1)*v1(3) - v1(1)*v2(3)
+    vc(3) = v1(1)*v2(2) - v2(1)*v1(2)
+  End Subroutine aa_tf_cross
+
   pure Subroutine aa_tf_qrot( q, v, r ) &
        bind( C, name="aa_tf_qrot" )
     real(C_DOUBLE), Dimension(3), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE), Dimension(3), intent(in) :: v
-    real(C_DOUBLE), Dimension(4) :: qv, qr1, qr2, qi
-    qv(W_INDEX) = 0d0
-    qv(XYZ_INDEX) = v
-    Call aa_tf_qinv( q, qi )
-    call aa_tf_qmul( q, qv, qr1 )
-    call aa_tf_qmul( qr1, qi, qr2 )
-    r = qr2(1:3)
+    !real(C_DOUBLE), Dimension(4) :: qv, qr1, qr2, qi
+
+    !! slow implementation
+    ! qv(W_INDEX) = 0d0
+    ! qv(XYZ_INDEX) = v
+    ! Call aa_tf_qconj( q, qi )
+    ! call aa_tf_qmul( q, qv, qr1 )
+    ! call aa_tf_qmul( qr1, qi, qr2 )
+    ! r = qr2(1:3)
+
+    real(C_DOUBLE), Dimension(3) :: t1, t2
+
+    !! Gfortran 4.7 -O2 optimizes this to 15 muls, 9 adds, 6 subs, 10 movs
+    call aa_tf_cross(q(1:3), v, t1)
+    t1 = t1 + q(4)*v
+    call aa_tf_cross(q(1:3), t1, t2)
+    r = v + 2*t2
   End Subroutine aa_tf_qrot
 
 
@@ -456,7 +482,7 @@ contains
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: q1(4)
     q1 = q0 + dt * dq         ! euler integration
-    q1 = q1 / aa_la_norm2(q1) ! normalize
+    call aa_tf_qnormalize(q1)
   end subroutine aa_tf_qrk1
 
 

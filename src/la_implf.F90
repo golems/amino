@@ -59,8 +59,11 @@
 pure subroutine AA_FMOD(la,cross_sub)(x, y, z)
   AA_FTYPE(AA_FSIZE), intent(out) :: z(:)
   AA_FTYPE(AA_FSIZE), intent(in) :: x(:),y(:)
-  integer, dimension(3), parameter :: yzx = [2,3,1], zxy = [3,1,2]
-  z = x(yzx)*y(zxy) - x(zxy)*y(yzx)
+  !integer, dimension(3), parameter :: yzx = [2,3,1], zxy = [3,1,2]
+  !z = x(yzx)*y(zxy) - x(zxy)*y(yzx)
+  z(1) = x(2)*y(3) - y(2)*x(3)
+  z(2) = y(1)*x(3) - x(1)*y(3)
+  z(3) = x(1)*y(2) - y(1)*x(2)
 end subroutine AA_FMOD(la,cross_sub)
 
 !> Cross product
