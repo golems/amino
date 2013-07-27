@@ -457,25 +457,25 @@ void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
 /*     aa_tf_qnormalize(q); */
 /* } */
 
-void aa_tf_xangle2rotmat( double theta_x, double R[restrict 9] ) {
-    double s,c;
-    sincos( theta_x, &s, &c);
-    R[0] = 1;    R[3] = 0;    R[6] = 0;
-    R[1] = 0;    R[4] = c;    R[7] = -s;
-    R[2] = 0;    R[5] = s;    R[8] = c;
-}
-void aa_tf_yangle2rotmat( double theta_y, double R[restrict 9] ) {
-    double s,c;
-    sincos( theta_y, &s, &c);
-    R[0] = c;    R[3] = 0;    R[6] = s;
-    R[1] = 0;    R[4] = 1;    R[7] = 0;
-    R[2] = -s;   R[5] = 0;    R[8] = c;
+/* void aa_tf_xangle2rotmat( double theta_x, double R[restrict 9] ) { */
+/*     double s,c; */
+/*     sincos( theta_x, &s, &c); */
+/*     R[0] = 1;    R[3] = 0;    R[6] = 0; */
+/*     R[1] = 0;    R[4] = c;    R[7] = -s; */
+/*     R[2] = 0;    R[5] = s;    R[8] = c; */
+/* } */
+/* void aa_tf_yangle2rotmat( double theta_y, double R[restrict 9] ) { */
+/*     double s,c; */
+/*     sincos( theta_y, &s, &c); */
+/*     R[0] = c;    R[3] = 0;    R[6] = s; */
+/*     R[1] = 0;    R[4] = 1;    R[7] = 0; */
+/*     R[2] = -s;   R[5] = 0;    R[8] = c; */
 
-}
-void aa_tf_zangle2rotmat( double theta_z, double R[restrict 9] ) {
-    double s,c;
-    sincos( theta_z, &s, &c);
-    R[0] = c;    R[3] = -s;   R[6] = 0;
-    R[1] = s;    R[4] = c;    R[7] = 0;
-    R[2] = 0;    R[5] = 0;    R[8] = 1;
-}
+/* } */
+/* void aa_tf_zangle2rotmat( double theta_z, double R[restrict 9] ) { */
+/*     double s,c; */
+/*     sincos( theta_z, &s, &c); */
+/*     R[0] = c;    R[3] = -s;   R[6] = 0; */
+/*     R[1] = s;    R[4] = c;    R[7] = 0; */
+/*     R[2] = 0;    R[5] = 0;    R[8] = 1; */
+/* } */

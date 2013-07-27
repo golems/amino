@@ -64,3 +64,9 @@ amino*.tar.gz
 /aa_fuzz
 /src/mac/aa_tf_euler.f90
 /tf_mod.f90
+/src/mac/mac_tf.f90
+/src/sub/.deps/.dirstamp
+/src/sub/.dirstamp
+/src/mac/tf.f90
+/tf_mod.s
+/tff.s

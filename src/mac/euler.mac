@@ -112,3 +112,6 @@ with_stdout("aa_tf_euler.f90",
 
 )$
 
+/* Local Variables: */
+/* mode: maxima */
+/* End: */
