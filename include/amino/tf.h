@@ -53,6 +53,11 @@
 /// A rotation matrix, column major
 typedef double aa_tf_rotmat_t[9];
 
+
+
+#define AA_TF_QUAT_W   3
+#define AA_TF_QUAT_XYZ 0
+
 /// A quaternion, x,y,z,w order
 typedef struct aa_tf_quat {
     union {
@@ -94,7 +99,7 @@ typedef struct {
  *  The first 9 elements are a column major rotation matrix.
  *  The last 3 elements are the origin vector.
  */
-typedef struct aa_tf {
+typedef struct aa_tf_tfmat {
     union {
         struct {
             double R[9];
@@ -102,7 +107,38 @@ typedef struct aa_tf {
         };
         double data[12];
     };
-} aa_tf_t;
+} aa_tf_tfmat_t;
+
+
+
+
+/// index of dual quaternion real part
+#define AA_TF_DUQU_REAL 0
+/// index of dual quaternion dual part
+#define AA_TF_DUQU_DUAL 4
+
+/// index of dual quaternion real w
+#define AA_TF_DUQU_REAL_W    (AA_TF_DUQU_REAL + AA_TF_QUAT_W)
+/// index of dual quaternion real xyz
+#define AA_TF_DUQU_REAL_XYZ  (AA_TF_DUQU_REAL + AA_TF_QUAT_XYZ)
+
+/// index of dual quaternion dual w
+#define AA_TF_DUQU_DUAL_W    (AA_TF_DUQU_DUAL + AA_TF_QUAT_W)
+/// index of dual quaternion dual xyz
+#define AA_TF_DUQU_DUAL_XYZ  (AA_TF_DUQU_DUAL + AA_TF_QUAT_XYZ)
+
+
+
+typedef struct aa_tf_duqu {
+    union {
+        struct {
+            aa_tf_quat_t real;
+            aa_tf_quat_t dual;
+        };
+        double data[8];
+    };
+} aa_tf_duqu_t;
+
 
 /// a small number
 #define AA_TF_EPSILON .0001
@@ -146,7 +182,7 @@ AA_API void aa_tf_93( const double R[AA_RESTRICT 9],
                       const double p0[AA_RESTRICT 3],
                       double p1[AA_RESTRICT 4] );
 /// apply a euclidean transform
-AA_API void aa_tf_q3( const double quat[AA_RESTRICT 4],
+AA_API void aa_tf_qv( const double quat[AA_RESTRICT 4],
                       const double v[AA_RESTRICT 3],
                       const double p0[AA_RESTRICT 3],
                       double p1[AA_RESTRICT 4] );
@@ -234,6 +270,7 @@ AA_API void aa_tf_v9mul( double R[AA_RESTRICT 9],
 /***************/
 /* Quaternions */
 /***************/
+
 
 /** Normalize Quaternion.
  * \f[ \bf{q} \leftarrow \frac{\bf q}{\Arrowvert {\bf q} \Arrowvert} \f]
@@ -502,4 +539,50 @@ AA_API void aa_tf_xangle2rotmat( double theta_x, double R[AA_RESTRICT 9] );
 AA_API void aa_tf_yangle2rotmat( double theta_y, double R[AA_RESTRICT 9] );
 /** Angle about z axis */
 AA_API void aa_tf_zangle2rotmat( double theta_z, double R[AA_RESTRICT 9] );
+
+
+
+/* Dual Quaternions */
+
+/** Dual quaternion addition */
+AA_API void aa_tf_duqu_add( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
+                            double d3[AA_RESTRICT 8] );
+
+/** Dual quaternion scalar multiplication */
+AA_API void aa_tf_duqu_smul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
+                             double d3[AA_RESTRICT 8] );
+
+/** Dual quaternion multiplication */
+AA_API void aa_tf_duqu_mul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
+                            double d3[AA_RESTRICT 8] );
+
+/** Dual quaternion conjugate */
+AA_API void aa_tf_duqu_conj( const double d[AA_RESTRICT 8], double dconj[AA_RESTRICT 8] );
+
+/** Dual quaternion norm */
+AA_API void aa_tf_duqu_norm( const double d[AA_RESTRICT 8], double *nreal, double *ndual );
+
+/** Dual quaternion normalization */
+AA_API void aa_tf_duqu_normalize( double d[AA_RESTRICT 8] );
+
+
+/** Dual quaternion transformation */
+AA_API void aa_tf_duqu( const double d[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
+                        double p1[AA_RESTRICT 3]  );
+
+
+/** Dual quaternion normalization */
+AA_API void aa_tf_duqu_trans( const double d[AA_RESTRICT 8], double v[AA_RESTRICT 3] );
+
+/** Dual quaternion normalization */
+AA_API void aa_tf_duqu2ftmat( const double d[AA_RESTRICT 8], double T[AA_RESTRICT 12] );
+
+/** Dual quaternion normalization */
+AA_API void aa_tf_tfmat2duqu( const double T[AA_RESTRICT 12], double d[AA_RESTRICT 8] ) ;
+
+/** Dual quaternion normalization */
+AA_API void aa_tf_qv2duqu( const double q[AA_RESTRICT 3], const double v[AA_RESTRICT 3],
+                           double d[AA_RESTRICT 8] ) ;
+
+
 #endif //AMINO_TF_H

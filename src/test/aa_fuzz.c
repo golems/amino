@@ -189,6 +189,46 @@ static void quat() {
     aveq("qrel", 4, qr, qrr, .001 );
 }
 
+
+static void duqu() {
+
+    // random tf
+    double q[4], v[3], p0[3];
+    aa_vrand( 4, q );
+    aa_vrand( 3, v );
+    //AA_MEM_SET( v, 0, 3 );
+    aa_vrand( 3, p0 );
+    aa_tf_qnormalize(q);
+
+    // tfmat
+    aa_tf_tfmat_t T;
+    aa_tf_quat2rotmat(q, T.R);
+    AA_MEM_CPY( &T.t.x, v, 3 );
+
+    // dual quat
+    aa_tf_duqu_t H;
+    aa_tf_qv2duqu( q, v, H.data );
+
+    // check trans
+    double hv[3];
+    aa_tf_duqu_trans(H.data, hv);
+    aveq("duqu-trans", 3, v, hv, .001 );
+
+    //double nreal,ndual;
+    //aa_tf_duqu_norm( H.data, &nreal, &ndual );
+    //printf("norm: %f + %f \\epsilon \n", nreal, ndual );
+
+    // transform points
+    double p1H[3], p1qv[3], p1T[3];
+    aa_tf_12( T.data, p0, p1T );
+    aa_tf_qv( q, v, p0, p1qv );
+    aa_tf_duqu(  H.data, p0, p1H );
+
+    aveq( "tf-qv",   3, p1T, p1qv, .001 );
+    aveq( "tf-duqu", 3, p1T, p1H, .001 );
+
+}
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -221,6 +261,7 @@ int main( void ) {
         euler1();
         chain();
         quat();
+        duqu();
     }
 
     return 0;
