@@ -46,6 +46,11 @@
 #define DQ_REAL 1:4
 #define DQ_DUAL 5:8
 
+#define DQ_REAL_XYZ 1:3
+#define DQ_REAL_W 4
+#define DQ_DUAL_XYZ 5:7
+#define DQ_DUAL_W 8
+
 module amino_tf
   use ISO_C_BINDING
   use amino_la
@@ -224,20 +229,45 @@ contains
     real(C_DOUBLE), dimension(4), intent(out) :: q
     real(C_DOUBLE), dimension(4), intent(in) :: a,b
 
-    q(1) =   a(1)*b(4) + a(2)*b(3) - a(3)*b(2) + a(4)*b(1)
-    q(2) = - a(1)*b(3) + a(2)*b(4) + b(1)*a(3) + a(4)*b(2)
-    q(3) =   a(1)*b(2) - a(2)*b(1) + a(3)*b(4) + a(4)*b(3)
-    q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
+    !q(1) =   a(1)*b(4) + a(2)*b(3) - a(3)*b(2) + a(4)*b(1)
+    !q(2) = - a(1)*b(3) + a(2)*b(4) + a(3)*b(1) + a(4)*b(2)
+    !q(3) =   a(1)*b(2) - a(2)*b(1) + a(3)*b(4) + a(4)*b(3)
+    !q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
 
-    ! real(C_DOUBLE) :: x(3)
-    ! q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - &
-    !      dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
-    ! call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), x)
-    ! q(XYZ_INDEX) = a(W_INDEX)*b(XYZ_INDEX) + &
-    !      a(XYZ_INDEX)*b(W_INDEX) + &
-    !      x
+    !q(1) =   a(4)*b(1) - a(3)*b(2) + a(2)*b(3) + a(1)*b(4)
+    !q(2) =   a(3)*b(1) + a(4)*b(2) - a(1)*b(3) + a(2)*b(4)
+    !q(3) = - a(2)*b(1) + a(1)*b(2) + a(4)*b(3) + a(3)*b(4)
+    !q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
+
+    !q(1) =   a(1)*b(4) + a(2)*b(3) - a(3)*b(2) + a(4)*b(1)
+    !q(2) =   a(3)*b(1) + a(4)*b(2) - a(1)*b(3) + a(2)*b(4)
+    !q(3) = + a(4)*b(3) + a(3)*b(4) - a(2)*b(1) + a(1)*b(2)
+    !q(4) = - a(2)*b(2) - a(1)*b(1) + a(4)*b(4) - a(3)*b(3)
+
+
+    q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
+    call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), q(XYZ_INDEX))
+    q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
 
   end subroutine aa_tf_qmul
+
+
+  !! Multiply vector and quaternion
+  pure subroutine aa_tf_vqmul( v, q, y) &
+       bind( C, name="aa_tf_vqmul" )
+    real(C_DOUBLE), intent(in) :: v(3), q(4)
+    real(C_DOUBLE), intent(out) :: y(4)
+
+
+    y(W_INDEX) =  - dot_product(v,q(XYZ_INDEX))
+    call aa_tf_cross(v, q(XYZ_INDEX), y(XYZ_INDEX))
+    y(XYZ_INDEX) = (y(XYZ_INDEX)  + q(W_INDEX) * v)
+
+    !q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
+    !call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), q(XYZ_INDEX))
+    !q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
+
+  end subroutine aa_tf_vqmul
 
   pure Subroutine aa_tf_qinv( q, r ) &
     bind( C, name="aa_tf_qinv" )
@@ -247,13 +277,15 @@ contains
     r = r / dot_product(q,q)
   End Subroutine aa_tf_qinv
 
-  pure Subroutine aa_tf_cross(v1,v2,vc) &
+  pure Subroutine aa_tf_cross(a,b,c) &
        bind( C, name="aa_tf_cross" )
-    real(C_DOUBLE), intent(in), dimension(3) :: v1,v2
-    real(C_DOUBLE), intent(out), dimension(3) :: vc
-    vc(1) = v1(2)*v2(3) - v2(2)*v1(3)
-    vc(2) = v2(1)*v1(3) - v1(1)*v2(3)
-    vc(3) = v1(1)*v2(2) - v2(1)*v1(2)
+    real(C_DOUBLE), intent(in), dimension(3) :: a,b
+    real(C_DOUBLE), intent(out), dimension(3) :: c
+
+    c(1) =  a(2)*b(3) - a(3)*b(2)
+    c(2) =  a(3)*b(1) - a(1)*b(3)
+    c(3) =  a(1)*b(2) - a(2)*b(1)
+
   End Subroutine aa_tf_cross
 
   pure Subroutine aa_tf_qrot( q, v, r ) &
@@ -271,13 +303,12 @@ contains
     ! call aa_tf_qmul( qr1, qi, qr2 )
     ! r = qr2(1:3)
 
-    real(C_DOUBLE), Dimension(3) :: t1, t2
-
-    !! Gfortran 4.7 -O2 optimizes this to 15 muls, 9 adds, 6 subs, 10 movs
-    call aa_tf_cross(q(1:3), v, t1)
-    t1 = t1 + q(4)*v
-    call aa_tf_cross(q(1:3), t1, t2)
-    r = v + 2*t2
+    !! Optimized implementation
+    real(C_DOUBLE) :: tmp(3)
+    call aa_tf_cross(q(1:3), v, tmp)
+    tmp = tmp + q(4)*v
+    call aa_tf_cross(q(1:3), tmp, r)
+    r = v + 2*r
   End Subroutine aa_tf_qrot
 
 
@@ -541,10 +572,9 @@ contains
        bind( C, name="aa_tf_qvel2diff" )
     real(C_DOUBLE), intent(in) :: v(3), q(4)
     real(C_DOUBLE), intent(out) :: dq_dt(4)
-    real(C_DOUBLE), dimension(4) :: qv
-    qv(W_INDEX) = 0d0
-    qv(XYZ_INDEX) = 0.5 * v
-    call aa_tf_qmul(qv, q, dq_dt)
+    ! dq/dt = 1/2 * v * q
+    call aa_tf_vqmul( v, q, dq_dt )
+    dq_dt = dq_dt / 2
   end subroutine aa_tf_qvel2diff
 
 
@@ -670,12 +700,12 @@ contains
        bind( C, name="aa_tf_qv2duqu" )
     real(C_DOUBLE), intent(in), dimension(3) :: q(4), v(3)
     real(C_DOUBLE), intent(out), dimension(8) :: d
-    real(C_DOUBLE) :: tmp(4)
     d(DQ_REAL) = q
-    ! d%dual = 1/2 * v * q
-    tmp(XYZ_INDEX) = v/2
-    tmp(W_INDEX) = 0d0
-    call aa_tf_qmul( tmp, q, d(DQ_DUAL) ) ! todo: optmize out w=0
+
+    ! d%dual = 1/2 * v * q, Note, this is the same formula as
+    ! converting an angular velocity to a quaternion derivative
+    call aa_tf_qvel2diff( q, v, d(DQ_DUAL))
+
   end subroutine aa_tf_qv2duqu
 
   !> Dual quaternion translation vector
@@ -683,10 +713,17 @@ contains
        bind( C, name="aa_tf_duqu_trans" )
     real(C_DOUBLE), intent(in), dimension(8) :: d
     real(C_DOUBLE), intent(out), dimension(3) :: t
-    real(C_DOUBLE) :: rconj(4), mul(4)
-    call aa_tf_qconj( d(DQ_REAL), rconj)
-    call aa_tf_qmul( d(DQ_DUAL), rconj, mul )
-    t = 2*mul(XYZ_INDEX)
+
+    ! t = 2 * d(dual) * d(real)^*, and ignore t(w)
+
+    !real(C_DOUBLE) :: rconj(4), mul(4)
+    !call aa_tf_qconj( d(DQ_REAL), rconj)
+    !call aa_tf_qmul( d(DQ_DUAL), rconj, mul )
+    !t = 2*mul(XYZ_INDEX)
+
+    call aa_tf_cross(d(XYZ_INDEX), d(DQ_DUAL_XYZ), t)
+    t = 2 * ( t + d(DQ_REAL_W)*d(DQ_DUAL_XYZ) - d(DQ_DUAL_W)*d(DQ_REAL_XYZ) )
+
   end subroutine aa_tf_duqu_trans
 
   !> Dual quaternion to transformation matrix
@@ -703,15 +740,22 @@ contains
        bind( C, name="aa_tf_duqu" )
     real(C_DOUBLE), intent(in) :: d(8), p0(3)
     real(C_DOUBLE), intent(out) :: p1(3)
-    real(C_DOUBLE) :: pq(8), t1(8)
     ! p1 = d * p * d^{-1}
-    ! TODO: optimize
-    pq(XYZ_INDEX) = 0d0
-    pq(W_INDEX) = 1d0
-    pq(5:7) = p0/2
-    pq(8) = 0d0
-    call aa_tf_duqu_mul(d, pq, t1)
-    call aa_tf_duqu_trans( t1, p1 )
+    ! p1 = (2*dual + real*p0) * conj(real)
+
+    real(C_DOUBLE) :: ax(3), aw
+
+    ! ax = real_w p + real_x x p + 2 dual_x
+    call aa_tf_cross( d(DQ_REAL_XYZ), p0, ax )
+    ax = ax + d(DQ_REAL_W)*p0 + 2*d(DQ_DUAL_XYZ)
+
+    ! aw = dot( real_x, p ) - 2 dual_w
+    aw = dot_product( d(DQ_REAL_XYZ), p0 ) - 2*d(DQ_DUAL_W)
+
+    ! p1 = real_x x ax + real_w ax + aw real_x
+    call aa_tf_cross( d(DQ_REAL_XYZ), ax, p1 )
+    p1 = p1 + d(DQ_REAL_W)*ax + aw*d(DQ_REAL_XYZ)
+
   end subroutine aa_tf_duqu
 
 #include "aa_tf_euler.f90"
