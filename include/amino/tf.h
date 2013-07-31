@@ -271,6 +271,10 @@ AA_API void aa_tf_v9mul( double R[AA_RESTRICT 9],
 /* Quaternions */
 /***************/
 
+/** Dual quaternion normalization */
+AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
+                         double c[AA_RESTRICT 3] ) ;
+
 
 /** Normalize Quaternion.
  * \f[ \bf{q} \leftarrow \frac{\bf q}{\Arrowvert {\bf q} \Arrowvert} \f]
@@ -581,7 +585,7 @@ AA_API void aa_tf_duqu2ftmat( const double d[AA_RESTRICT 8], double T[AA_RESTRIC
 AA_API void aa_tf_tfmat2duqu( const double T[AA_RESTRICT 12], double d[AA_RESTRICT 8] ) ;
 
 /** Dual quaternion normalization */
-AA_API void aa_tf_qv2duqu( const double q[AA_RESTRICT 3], const double v[AA_RESTRICT 3],
+AA_API void aa_tf_qv2duqu( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                            double d[AA_RESTRICT 8] ) ;
 
 

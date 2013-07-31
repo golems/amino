@@ -137,10 +137,28 @@ contains
     real(C_DOUBLE), intent(in)  :: T1(3,4)
     real(C_DOUBLE), intent(in)  :: T2(3,4)
     real(C_DOUBLE), intent(out) :: T3(3,4)
-    call aa_tf_93chain( &
-         T1(R_INDEX), T1(T_INDEX), &
-         T2(R_INDEX), T2(T_INDEX), &
-         T3(R_INDEX), T3(T_INDEX) )
+    ! call aa_tf_93chain( &
+    !      T1(R_INDEX), T1(T_INDEX), &
+    !      T2(R_INDEX), T2(T_INDEX), &
+    !      T3(R_INDEX), T3(T_INDEX) )
+
+    !! Factorized
+    T3(1,1) =  T1(1,1)*T2(1,1) + T1(1,2)*T2(2,1) + T1(1,3)*T2(3,1);
+    T3(2,1) =  T1(2,1)*T2(1,1) + T1(2,2)*T2(2,1) + T1(2,3)*T2(3,1);
+    T3(3,1) =  T1(3,1)*T2(1,1) + T1(3,2)*T2(2,1) + T1(3,3)*T2(3,1);
+
+    T3(1,2) =  T1(1,1)*T2(1,2) + T1(1,2)*T2(2,2) + T1(1,3)*T2(3,2);
+    T3(2,2) =  T1(2,1)*T2(1,2) + T1(2,2)*T2(2,2) + T1(2,3)*T2(3,2);
+    T3(3,2) =  T1(3,1)*T2(1,2) + T1(3,2)*T2(2,2) + T1(3,3)*T2(3,2);
+
+    T3(1,3) =  T1(1,1)*T2(1,3) + T1(1,2)*T2(2,3) + T1(1,3)*T2(3,3);
+    T3(2,3) =  T1(2,1)*T2(1,3) + T1(2,2)*T2(2,3) + T1(2,3)*T2(3,3);
+    T3(3,3) =  T1(3,1)*T2(1,3) + T1(3,2)*T2(2,3) + T1(3,3)*T2(3,3);
+
+    T3(1,4) = T1(1,1)*T2(1,4) + T1(1,2)*T2(2,4) + T1(1,3)*T2(3,4) + T1(1,4);
+    T3(2,4) = T1(2,1)*T2(1,4) + T1(2,2)*T2(2,4) + T1(2,3)*T2(3,4) + T1(2,4);
+    T3(3,4) = T1(3,1)*T2(1,4) + T1(3,2)*T2(2,4) + T1(3,3)*T2(3,4) + T1(3,4);
+
   end subroutine aa_tf_12chain
 
   pure subroutine aa_tf_12( T, p1, p) &
@@ -239,15 +257,15 @@ contains
     !q(3) = - a(2)*b(1) + a(1)*b(2) + a(4)*b(3) + a(3)*b(4)
     !q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
 
-    !q(1) =   a(1)*b(4) + a(2)*b(3) - a(3)*b(2) + a(4)*b(1)
-    !q(2) =   a(3)*b(1) + a(4)*b(2) - a(1)*b(3) + a(2)*b(4)
-    !q(3) = + a(4)*b(3) + a(3)*b(4) - a(2)*b(1) + a(1)*b(2)
-    !q(4) = - a(2)*b(2) - a(1)*b(1) + a(4)*b(4) - a(3)*b(3)
+    q(1) =    a(1)*b(4) + a(2)*b(3) + a(4)*b(1) - a(3)*b(2)
+    q(2) =    a(3)*b(1) + a(4)*b(2) + a(2)*b(4) - a(1)*b(3)
+    q(3) =    a(4)*b(3) + a(3)*b(4) + a(1)*b(2) - a(2)*b(1)
+    q(4) = - (a(2)*b(2) + a(1)*b(1) + a(3)*b(3) - a(4)*b(4))
 
 
-    q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
-    call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), q(XYZ_INDEX))
-    q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
+    !q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
+    !call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), q(XYZ_INDEX))
+    !q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
 
   end subroutine aa_tf_qmul
 
@@ -304,11 +322,18 @@ contains
     ! r = qr2(1:3)
 
     !! Optimized implementation
-    real(C_DOUBLE) :: tmp(3)
-    call aa_tf_cross(q(1:3), v, tmp)
-    tmp = tmp + q(4)*v
-    call aa_tf_cross(q(1:3), tmp, r)
-    r = v + 2*r
+    !real(C_DOUBLE) :: tmp(3)
+    !call aa_tf_cross(q(1:3), v, tmp)
+    !tmp = tmp + q(4)*v
+    !call aa_tf_cross(q(1:3), tmp, r)
+    !r = v + 2*r
+
+    !! factored implementation
+    r(1) =  q(2) * ( v(3)*q(4) + v(2)*q(1) - v(1)*q(2) ) - q(3) * ( v(2)*q(4) + v(1)*q(3) - q(1)*v(3) )
+    r(2) =  q(3) * ( v(1)*q(4) + v(3)*q(2) - v(2)*q(3) ) - q(1) * ( v(3)*q(4) + v(2)*q(1) - v(1)*q(2) )
+    r(3) =  q(1) * ( v(2)*q(4) + v(1)*q(3) - v(3)*q(1) ) - q(2) * ( v(1)*q(4) + v(3)*q(2) - v(2)*q(3) )
+    r = 2*r + v
+
   End Subroutine aa_tf_qrot
 
 

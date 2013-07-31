@@ -70,3 +70,4 @@ amino*.tar.gz
 /src/mac/tf.f90
 /tf_mod.s
 /tff.s
+/vecbench
