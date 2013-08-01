@@ -588,5 +588,12 @@ AA_API void aa_tf_tfmat2duqu( const double T[AA_RESTRICT 12], double d[AA_RESTRI
 AA_API void aa_tf_qv2duqu( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                            double d[AA_RESTRICT 8] ) ;
 
+/** Dual quaternion derivative from velocity */
+AA_API void aa_tf_duqu_vel2diff( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
+                                 double dd[AA_RESTRICT 8] ) ;
 
+
+/** Dual quaternion derivative to spatial velocity */
+AA_API void aa_tf_duqu_diff2vel( const double d[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
+                                 double dx[AA_RESTRICT 6] ) ;
 #endif //AMINO_TF_H

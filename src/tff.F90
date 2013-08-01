@@ -783,6 +783,41 @@ contains
 
   end subroutine aa_tf_duqu
 
+
+  !! Convert spatial velocity to quaternion derivative
+  subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
+       bind( C, name="aa_tf_duqu_vel2diff" )
+    real(C_DOUBLE), intent(in) :: d(8), dx(6)
+    real(C_DOUBLE), intent(out) :: dd(8)
+    real(C_DOUBLE) :: a(4), b(4), v(3)
+    ! orientation
+    call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
+    ! translation
+    ! dd_dual = (dx*d_real + x*dd_real) / 2
+    call aa_tf_vqmul( dx(1:3), d(DQ_REAL), a )
+    call aa_tf_duqu_trans( d, v )
+    call aa_tf_vqmul( v, dd(DQ_REAL), b )
+    dd(DQ_DUAL) = (a + b)/2
+  end subroutine aa_tf_duqu_vel2diff
+
+  !! Convert spatial velocity to quaternion derivative
+  subroutine aa_tf_duqu_diff2vel( d, dd, dx ) &
+       bind( C, name="aa_tf_duqu_diff2vel" )
+    real(C_DOUBLE), intent(in) :: d(8), dd(8)
+    real(C_DOUBLE), intent(out) :: dx(6)
+    real(C_DOUBLE) :: t1(4), t2(4), v(3), rc(4)
+    ! orientation
+    call aa_tf_qdiff2vel( d(DQ_REAL), dd(DQ_REAL), dx(4:6) )
+    !translation
+    ! dx = (2*dd_dual - v*dd_real) * conj(d_real)
+    call aa_tf_duqu_trans( d, v )
+    call aa_tf_vqmul( v, dd(DQ_REAL), t1 )
+    t1 = 2*dd(DQ_DUAL) - t1
+    call aa_tf_qconj( d(DQ_REAL), rc )
+    call aa_tf_qmul( t1, rc, t2 )
+    dx(1:3) = t2(XYZ_INDEX)
+  end subroutine aa_tf_duqu_diff2vel
+
 #include "aa_tf_euler.f90"
 
 end module amino_tf

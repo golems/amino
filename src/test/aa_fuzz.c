@@ -227,7 +227,32 @@ static void duqu() {
     aveq( "tf-qv",   3, p1T, p1qv, .001 );
     aveq( "tf-duqu", 3, p1T, p1H, .001 );
 
+    // derivative
+    double dx[6], dd[8], dq[4];
+    aa_vrand(6, dx);
+    double dt = aa_frand() / 100;
+    aa_tf_duqu_vel2diff( H.data, dx, dd );
+    aa_tf_qvel2diff( q, dx+3, dq );
+
+    // back to velocity
+    double dx1[6];
+    aa_tf_duqu_diff2vel( H.data, dd, dx1 );
+    aveq( "duqu-vel invert", 6, dx, dx1, .001 );
+
+    // integrate
+    double H1[8], q1[4], v1[3], H1qv[8];
+    for( size_t i = 0; i < 8; i ++ ) H1[i] = H.data[i] + dd[i]*dt; // some numerical error here...
+    for( size_t i = 0; i < 3; i ++ ) v1[i] = v[i] + dx[i]*dt;
+    aa_tf_duqu_normalize( H1 );
+    aa_tf_qrk1( q, dq, dt, q1 );
+    aa_tf_qv2duqu( q1, v1, H1qv );
+    aveq( "duqu-vel_real", 4, dq, dd, .001 );
+    aveq( "duqu-vel-int real", 4, H1, H1qv, .001 );
+    aveq( "duqu-vel-int dual", 4, H1+4, H1qv+4, .001 );
+
 }
+
+
 
 int main( void ) {
     // init
