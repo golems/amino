@@ -793,14 +793,12 @@ contains
     real(C_DOUBLE), intent(out), dimension(3) :: t
 
     ! t = 2 * d(dual) * d(real)^*, and ignore t(w)
+    real(C_DOUBLE) ::  mul(4)
+    call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), mul )
+    t = 2*mul(XYZ_INDEX)
 
-    !real(C_DOUBLE) :: rconj(4), mul(4)
-    !call aa_tf_qconj( d(DQ_REAL), rconj)
-    !call aa_tf_qmul( d(DQ_DUAL), rconj, mul )
-    !t = 2*mul(XYZ_INDEX)
-
-    call aa_tf_cross(d(XYZ_INDEX), d(DQ_DUAL_XYZ), t)
-    t = 2 * ( t + d(DQ_REAL_W)*d(DQ_DUAL_XYZ) - d(DQ_DUAL_W)*d(DQ_REAL_XYZ) )
+    !call aa_tf_cross(d(XYZ_INDEX), d(DQ_DUAL_XYZ), t)
+    !t = 2 * ( t + d(DQ_REAL_W)*d(DQ_DUAL_XYZ) - d(DQ_DUAL_W)*d(DQ_REAL_XYZ) )
 
   end subroutine aa_tf_duqu_trans
 
@@ -842,15 +840,16 @@ contains
        bind( C, name="aa_tf_duqu_vel2diff" )
     real(C_DOUBLE), intent(in) :: d(8), dx(6)
     real(C_DOUBLE), intent(out) :: dd(8)
-    real(C_DOUBLE) :: a(4), b(4), v(3)
+    real(C_DOUBLE) :: a(4), b(4), c(4)
     ! orientation
     call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
     ! translation
     ! dd_dual = (dx*d_real + x*dd_real) / 2
+    ! dd_dual = dx*r/2 + d*r_conj*dr)
     call aa_tf_vqmul( dx(1:3), d(DQ_REAL), a )
-    call aa_tf_duqu_trans( d, v )
-    call aa_tf_vqmul( v, dd(DQ_REAL), b )
-    dd(DQ_DUAL) = (a + b)/2
+    call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), b)
+    call aa_tf_qmul( b, dd(DQ_REAL), c )
+    dd(DQ_DUAL) = a/2d0 + c
   end subroutine aa_tf_duqu_vel2diff
 
   !! Convert spatial velocity to quaternion derivative
@@ -858,17 +857,14 @@ contains
        bind( C, name="aa_tf_duqu_diff2vel" )
     real(C_DOUBLE), intent(in) :: d(8), dd(8)
     real(C_DOUBLE), intent(out) :: dx(6)
-    real(C_DOUBLE) :: t1(4), t2(4), v(3), rc(4)
+    real(C_DOUBLE) :: t1(4), t2(4)
     ! orientation
     call aa_tf_qdiff2vel( d(DQ_REAL), dd(DQ_REAL), dx(4:6) )
-    !translation
-    ! dx = (2*dd_dual - v*dd_real) * conj(d_real)
-    call aa_tf_duqu_trans( d, v )
-    call aa_tf_vqmul( v, dd(DQ_REAL), t1 )
-    t1 = 2*dd(DQ_DUAL) - t1
-    call aa_tf_qconj( d(DQ_REAL), rc )
-    call aa_tf_qmul( t1, rc, t2 )
-    dx(1:3) = t2(XYZ_INDEX)
+    ! translation
+    ! dx/dt = 2 * ( d_dual/dt conj(r) + d_dual conj(d_real/dt) )
+    call aa_tf_qmulc( dd(DQ_DUAL), d(DQ_REAL), t1 )
+    call aa_tf_qmulc( d(DQ_DUAL), dd(DQ_REAL), t2 )
+    dx(1:3) = 2 * (t1(XYZ_INDEX) + t2(XYZ_INDEX))
   end subroutine aa_tf_duqu_diff2vel
 
   !! TODO: Some questions on numerical accuracy here.  Is it be better
