@@ -308,6 +308,18 @@ AA_API void aa_tf_qmul( const double a[AA_RESTRICT 4],
                         const double b[AA_RESTRICT 4],
                         double c[AA_RESTRICT 4] );
 
+
+/** Quaternion conjugate a and multiply by b. */
+AA_API void aa_tf_qcmul( const double a[AA_RESTRICT 4],
+                         const double b[AA_RESTRICT 4],
+                         double c[AA_RESTRICT 4] );
+
+/** Quaternion multiply a by conjugate b. */
+AA_API void aa_tf_qmulc( const double a[AA_RESTRICT 4],
+                         const double b[AA_RESTRICT 4],
+                         double c[AA_RESTRICT 4] );
+
+
 /** Quaternion point rotation. */
 void aa_tf_qrot( const double q[AA_RESTRICT 4],
                  const double v[AA_RESTRICT 3],

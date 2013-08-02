@@ -188,6 +188,21 @@ static void quat() {
     if(qrr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qrr[i] *= -1;
     aveq("qrel", 4, qr, qrr, .001 );
 
+    // mulc
+    {
+        double q1c[4], q2c[4], t1[4], t2[4];
+        aa_tf_qconj(q1, q1c);
+        aa_tf_qconj(q2, q2c);
+
+        aa_tf_qmul(q1,q2c,t1);
+        aa_tf_qmulc(q1,q2,t2);
+        aveq("qmulc", 4, t1, t2, .001 );
+
+        aa_tf_qmul(q1c,q2,t1);
+        aa_tf_qcmul(q1,q2,t2);
+        aveq("qcmul", 4, t1, t2, .001 );
+    }
+
     // diff
     double w[3]={0}, dq[4], wdq[3];
     aa_vrand( 3, w );
@@ -248,35 +263,68 @@ static void duqu() {
     aveq( "tf-duqu", 3, p1T, p1H, .001 );
 
     // derivative
-    double dx[6], dd[8], dq[4];
-    aa_vrand(6, dx);
-    double dt = aa_frand() / 100;
-    aa_tf_duqu_vel2diff( H.data, dx, dd );
-    aa_tf_qvel2diff( q, dx+3, dq );
+    {
+        double dx[6], dd[8], dq[4];
+        aa_vrand(6, dx);
+        double dt = aa_frand() / 100;
+        aa_tf_duqu_vel2diff( H.data, dx, dd );
+        aa_tf_qvel2diff( q, dx+3, dq );
 
-    // back to velocity
-    double dx1[6];
-    aa_tf_duqu_diff2vel( H.data, dd, dx1 );
-    aveq( "duqu-vel invert", 6, dx, dx1, .001 );
+        // back to velocity
+        double dx1[6];
+        aa_tf_duqu_diff2vel( H.data, dd, dx1 );
+        aveq( "duqu-vel invert", 6, dx, dx1, .001 );
 
-    // integrate
-    double H1[8], q1[4], v1[3], H1qv[8];
-    double H1_sdd[8], H1_sdx[8];
-    for( size_t i = 0; i < 8; i ++ ) H1[i] = H.data[i] + dd[i]*dt; // some numerical error here...
-    for( size_t i = 0; i < 3; i ++ ) v1[i] = v[i] + dx[i]*dt;
-    aa_tf_duqu_normalize( H1 );
-    aa_tf_qrk1( q, dq, dt, q1 );
-    aa_tf_qv2duqu( q1, v1, H1qv );
-    aveq( "duqu-vel_real", 4, dq, dd, .001 );
-    aveq( "duqu-vel-int real", 4, H1, H1qv, .001 );
-    aveq( "duqu-vel-int dual", 4, H1+4, H1qv+4, .001 );
-    aa_tf_duqu_svel( H.data, dx, dt, H1_sdx );
-    aa_tf_duqu_sdiff( H.data, dd, dt, H1_sdd );
-    aveq( "duqu-int vel", 8, H1, H1_sdx, .01 );
-    aveq( "duqu-int diff", 8, H1_sdx, H1_sdd, .001 );
+        // integrate
+        double H1[8], q1[4], v1[3], H1qv[8];
+        double H1_sdd[8], H1_sdx[8];
+        for( size_t i = 0; i < 8; i ++ ) H1[i] = H.data[i] + dd[i]*dt; // some numerical error here...
+        for( size_t i = 0; i < 3; i ++ ) v1[i] = v[i] + dx[i]*dt;
+        aa_tf_duqu_normalize( H1 );
+        aa_tf_qrk1( q, dq, dt, q1 );
+        aa_tf_qv2duqu( q1, v1, H1qv );
+        aveq( "duqu-vel_real", 4, dq, dd, .001 );
+        aveq( "duqu-vel-int real", 4, H1, H1qv, .001 );
+        aveq( "duqu-vel-int dual", 4, H1+4, H1qv+4, .001 );
+        aa_tf_duqu_svel( H.data, dx, dt, H1_sdx );
+        aa_tf_duqu_sdiff( H.data, dd, dt, H1_sdd );
+        aveq( "duqu-int vel", 8, H1, H1_sdx, .01 );
+        aveq( "duqu-int diff", 8, H1_sdx, H1_sdd, .001 );
+    }
 }
 
 
+void relq() {
+    // random transforms
+    double q0[4], qrel[4], q1[4];
+    aa_vrand(4,q0);
+    aa_vrand(4,q1);
+    aa_tf_qnormalize(q0);
+    aa_tf_qnormalize(q1);
+    aa_tf_qcmul(q0, q1, qrel );
+
+    // random velocity, point 0
+    double dx0[3]={0}, dq0[4];
+    aa_vrand(3,dx0);
+    aa_tf_qvel2diff( q0, dx0, dq0 );
+
+    // computed velocity, point 1
+    double dq1[4], dx1[3];
+    aa_tf_qmul( dq0, qrel, dq1 );
+    aa_tf_qdiff2vel( q1, dq1, dx1 );
+
+    // integrate both velocities
+    double q0_1[4], q1_1[4];
+    aa_tf_qsvel( q0, dx0, .01, q0_1 );
+    aa_tf_qsvel( q1, dx1, .01, q1_1 );
+
+    // new relative orientation
+    double qrel_1[4];
+    aa_tf_qcmul( q0_1, q1_1, qrel_1 );
+
+    // check
+    aveq("relq", 4, qrel, qrel_1, .00001);
+}
 
 int main( void ) {
     // init
@@ -311,6 +359,7 @@ int main( void ) {
         chain();
         quat();
         duqu();
+        relq();
     }
 
     return 0;
