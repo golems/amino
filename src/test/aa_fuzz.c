@@ -281,15 +281,15 @@ static void duqu() {
         for( size_t i = 0; i < 8; i ++ ) H1[i] = H.data[i] + dd[i]*dt; // some numerical error here...
         for( size_t i = 0; i < 3; i ++ ) v1[i] = v[i] + dx[i]*dt;
         aa_tf_duqu_normalize( H1 );
-        aa_tf_qrk1( q, dq, dt, q1 );
+        aa_tf_qsvel( q, dx+3, dt, q1 );
         aa_tf_qv2duqu( q1, v1, H1qv );
         aveq( "duqu-vel_real", 4, dq, dd, .001 );
         aveq( "duqu-vel-int real", 4, H1, H1qv, .001 );
         aveq( "duqu-vel-int dual", 4, H1+4, H1qv+4, .001 );
         aa_tf_duqu_svel( H.data, dx, dt, H1_sdx );
         aa_tf_duqu_sdiff( H.data, dd, dt, H1_sdd );
-        aveq( "duqu-int vel", 8, H1, H1_sdx, .01 );
-        aveq( "duqu-int diff", 8, H1_sdx, H1_sdd, .001 );
+        aveq( "duqu-int vel", 8, H1qv, H1_sdx, .001 );
+        aveq( "duqu-int diff", 8, H1_sdx, H1_sdd, .0001 );
     }
 }
 

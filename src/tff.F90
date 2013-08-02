@@ -915,7 +915,7 @@ contains
     x1 = x0 + dt*dx(1:3) ! constant dx => rk4 == euler
     ! orientation
     call aa_tf_qsvel( d0(1:4), dx(4:6), dt, q1 )
-    call aa_tf_qv2duqu( q1, x0, d1 )
+    call aa_tf_qv2duqu( q1, x1, d1 )
   end subroutine aa_tf_duqu_svel
 
   !! Integrate dual quaternion derivative
