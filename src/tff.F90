@@ -687,26 +687,40 @@ contains
     end subroutine term
   end subroutine aa_tf_qvelrk4
 
+
+  function aa_tf_sinc( theta ) result(s)
+    real(C_DOUBLE), value :: theta
+    real(C_DOUBLE) :: s
+    real(C_DOUBLE) :: x
+    if( 0d0 == theta ) then
+       s = 1d0
+    elseif ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
+       x = theta**2
+       ! Rewrite partial Taylor series using Horners rule.  First
+       ! three terms should be accurate within machine precision,
+       ! because the third term is less than theta**4 and thus less
+       ! than epsilon.
+       s = 1d0 + x * (-1d0/6 + x/120d0)
+    else
+       s = sin(theta)/theta
+    end if
+
+  end function aa_tf_sinc
+
   !! Integrate rotational velocity
   subroutine aa_tf_qsvel( q0, w, dt, q1 ) &
        bind( C, name="aa_tf_qsvel" )
     real(C_DOUBLE), intent(in) :: w(3), q0(4)
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE) :: e(4), wnorm, theta
+    real(C_DOUBLE) :: e(4), wnorm, theta, dt2
     !! Exponential map method
     wnorm = sqrt(dot_product(w,w))
-    ! TODO: Can we use sinc(theta) below instead?
-    ! check for divide by zero (or something super small)
-    if( epsilon(dt) >= wnorm ) then
-       ! Would an RK1 normalize help at all here?
-       q1 = q0
-    else
-       theta = wnorm * dt / 2
-       e(XYZ_INDEX) = w * (sin(theta)/wnorm)
-       e(W_INDEX) = cos(theta)
-       call aa_tf_qmul(e,q0, q1)
-    end if
+    dt2 = dt/2
+    theta = wnorm * dt2
+    e(XYZ_INDEX) = aa_tf_sinc(theta) * dt2 * w
+    e(W_INDEX) = cos(theta)
+    call aa_tf_qmul(e,q0, q1)
   end subroutine aa_tf_qsvel
 
 
