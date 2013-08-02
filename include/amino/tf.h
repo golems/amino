@@ -585,6 +585,11 @@ AA_API void aa_tf_duqu_smul( const double d1[AA_RESTRICT 8], const double d2[AA_
 AA_API void aa_tf_duqu_mul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
                             double d3[AA_RESTRICT 8] );
 
+AA_API void aa_tf_duqu_cmul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
+                             double d3[AA_RESTRICT 8] );
+AA_API void aa_tf_duqu_mulc( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
+                             double d3[AA_RESTRICT 8] );
+
 /** Dual quaternion conjugate */
 AA_API void aa_tf_duqu_conj( const double d[AA_RESTRICT 8], double dconj[AA_RESTRICT 8] );
 

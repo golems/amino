@@ -770,6 +770,24 @@ contains
     call aa_tf_qconj( d(DQ_DUAL), e(DQ_DUAL) )
   end subroutine aa_tf_duqu_conj
 
+  subroutine aa_tf_duqu_cmul( d1, d2, e ) &
+       bind( C, name="aa_tf_duqu_cmul" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
+    real(C_DOUBLE), intent(out), dimension(8) :: e
+    real(C_DOUBLE), dimension(8) :: d1c
+    call aa_tf_duqu_conj( d1, d1c )
+    call aa_tf_duqu_mul( d1c, d2, e );
+  end subroutine aa_tf_duqu_cmul
+
+  subroutine aa_tf_duqu_mulc( d1, d2, e ) &
+       bind( C, name="aa_tf_duqu_mulc" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
+    real(C_DOUBLE), intent(out), dimension(8) :: e
+    real(C_DOUBLE), dimension(8) :: d2c
+    call aa_tf_duqu_conj( d2, d2c )
+    call aa_tf_duqu_mul( d1, d2c, e );
+  end subroutine aa_tf_duqu_mulc
+
   !> Normalize a dual quaternion
   subroutine aa_tf_duqu_normalize( d ) &
        bind( C, name="aa_tf_duqu_normalize" )

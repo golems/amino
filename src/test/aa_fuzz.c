@@ -212,8 +212,10 @@ static void quat() {
 
     // integrate
 
-    double qn_rk1[4], qn_vrk1[4], qn_vrk4[4], qn_vexp[4];
+    double qn_rk1[4], qn_vrk1[4], qn_vrk4[4], qn_vexp[4],w0[3] = {0};
     double dt = .02;
+
+
     aa_tf_qrk1( q1, dq, dt, qn_rk1 );
     aa_tf_qvelrk1( q1, w, dt, qn_vrk1 );
     aa_tf_qvelrk4( q1, w, dt, qn_vrk4 );
@@ -221,6 +223,8 @@ static void quat() {
     aveq("qvelrk1", 4, qn_rk1, qn_vrk1, .001 );
     aveq("qvelrk4", 4, qn_rk1, qn_vrk4, .001 );
     aveq("qvelexp", 4, qn_vrk4, qn_vexp, .0001);
+    aa_tf_qsvel( q1, w0, dt, qn_vexp );
+    aveq("qvelsvel0", 4, q1, qn_vexp, .000 );
 
 }
 
@@ -294,7 +298,7 @@ static void duqu() {
 }
 
 
-void relq() {
+void rel_q() {
     // random transforms
     double q0[4], qrel[4], q1[4];
     aa_vrand(4,q0);
@@ -324,6 +328,53 @@ void relq() {
 
     // check
     aveq("relq", 4, qrel, qrel_1, .00001);
+}
+
+void rel_d() {
+    // random transforms
+    double q0[4], v0[3], q1[4], v1[4];
+    aa_vrand(4,q0);
+    aa_vrand(4,q1);
+    aa_tf_qnormalize(q0);
+    aa_tf_qnormalize(q1);
+    aa_vrand(3,v0);
+    aa_vrand(3,v1);
+
+    // dual quat transforms
+    double d0[8], drel[8], d1[8], d1p[8];
+    aa_tf_qv2duqu(q0,v0, d0);
+    aa_tf_qv2duqu(q1,v1, d1);
+    // d0 * drel = d1
+    // drel = conj(d0) * d1
+    aa_tf_duqu_cmul( d0, d1, drel );
+    aa_tf_duqu_mul( d0, drel, d1p );
+    aveq("duqu-relmul", 8, d1, d1p, .001 );
+
+    // random velocity
+    double dx0[6], dd0[8];
+    aa_vrand(6,dx0);
+    aa_tf_duqu_vel2diff(d0, dx0, dd0);
+
+    // second velocity
+    // d1 = d0*drel
+    // d1/dt = d0/dt * drel + d0 * drel/dt, and drel/dt = 0
+    double dd1[8];
+    aa_tf_duqu_mul( dd0, drel, dd1 );
+
+    // integrate
+    double d0_1[8], d1_1[8];
+    aa_tf_duqu_sdiff( d0, dd0, .01, d0_1 );
+    aa_tf_duqu_sdiff( d1, dd1, .01, d1_1 );
+    aa_tf_duqu_normalize( d0_1 );
+    aa_tf_duqu_normalize( d1_1 );
+
+    // new relative
+    double drel_1[8];
+    // drel = d0*inv(d1)
+    aa_tf_duqu_cmul( d0_1, d1_1, drel_1 );
+
+    // check
+    aveq("rel_d", 8, drel, drel_1, .001);
 }
 
 int main( void ) {
@@ -359,7 +410,8 @@ int main( void ) {
         chain();
         quat();
         duqu();
-        relq();
+        rel_q();
+        rel_d();
     }
 
     return 0;
