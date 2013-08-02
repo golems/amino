@@ -39,6 +39,9 @@
 
 #define W_INDEX   4
 #define XYZ_INDEX  1:3
+#define X_INDEX  1
+#define Y_INDEX  2
+#define Z_INDEX  3
 
 #define R_INDEX  :,1:3
 #define T_INDEX  :,4
@@ -342,7 +345,7 @@ contains
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE) :: vnorm,ew
-    vnorm = aa_la_norm2( q(XYZ_INDEX) )
+    vnorm = sqrt( dot_product(q,q) )
     ew = exp(q(W_INDEX))
     r(W_INDEX) = ew * cos(vnorm)
     r(XYZ_INDEX) = (ew * sin(vnorm) / vnorm) * q(XYZ_INDEX)
@@ -657,7 +660,30 @@ contains
     end subroutine term
   end subroutine aa_tf_qvelrk4
 
-  !!! Dual Quaternsions
+  !! Integrate rotational velocity
+  subroutine aa_tf_qsvel( q0, w, dt, q1 ) &
+       bind( C, name="aa_tf_qsvel" )
+    real(C_DOUBLE), intent(in) :: w(3), q0(4)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: q1(4)
+    real(C_DOUBLE) :: e(4), wnorm, theta
+    !! Exponential map method
+    wnorm = sqrt(dot_product(w,w))
+    ! TODO: Can we use sinc(theta) below instead?
+    ! check for divide by zero (or something super small)
+    if( epsilon(dt) >= wnorm ) then
+       ! Would an RK1 normalize help at all here?
+       q1 = q0
+    else
+       theta = wnorm * dt / 2
+       e(XYZ_INDEX) = w * (sin(theta)/wnorm)
+       e(W_INDEX) = cos(theta)
+       call aa_tf_qmul(e,q0, q1)
+    end if
+  end subroutine aa_tf_qsvel
+
+
+  !!! Dual Quaternions
   !!!
   !!! Stored as 8 doubles
   !!! - First four are "real" (rotation)
@@ -817,6 +843,68 @@ contains
     call aa_tf_qmul( t1, rc, t2 )
     dx(1:3) = t2(XYZ_INDEX)
   end subroutine aa_tf_duqu_diff2vel
+
+  !! TODO: Some questions on numerical accuracy here.  Is it be better
+  !! to extract translational velocity from the dual quaternion
+  !! derivative, and integrate orientation and translation
+  !! independently, or to just RK1 the dual quaternion derivative?
+
+  ! ! Integrate dual quaternion, runge-kutta 1
+  ! subroutine aa_tf_duqu_rk1( d0, dd, dt, d1 ) &
+  !      bind( C, name="aa_tf_duqu_rk1" )
+  !   real(C_DOUBLE), intent(in) :: dd(8), d0(8)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: d1(8)
+  !   d1 = d0 + dt * dd         ! euler integration
+  !   call aa_tf_duqu_normalize(d1)
+  ! end subroutine aa_tf_duqu_rk1
+
+
+  ! subroutine aa_tf_duqu_rk4( d0, dd, dt, d1 ) &
+  !      bind( C, name="aa_tf_duqu_rk4" )
+  !   real(C_DOUBLE), intent(in) :: dd(8), d0(8)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: d1(8)
+  !   d1 = d0 + dt * dd         ! euler integration
+  !   call aa_tf_duqu_normalize(d1)
+
+  ! contains
+  !   subroutine term( dd0, dt, dd1 )
+  !     real(C_DOUBLE), intent(in) ::  dq0(8)
+  !     real(C_DOUBLE), intent(in), value :: dt
+  !     real(C_DOUBLE), intent(out) :: dq1(8)
+  !     real(C_DOUBLE) :: qtmp(8)
+  !     call aa_tf_duqu_rk1( q0, dq0, dt, qtmp )
+  !     call aa_tf_qvel2diff(qtmp, v, dq1)
+  !   end subroutine term
+  ! end subroutine aa_tf_duqu_rk4
+
+
+  !! Integrate spatial velocity to to get dual quaternion
+  subroutine aa_tf_duqu_svel( d0, dx, dt, d1 ) &
+       bind( C, name="aa_tf_duqu_svel" )
+    real(C_DOUBLE), intent(in) :: dx(6), d0(8)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: d1(8)
+    real(C_DOUBLE) :: x0(3), x1(3), q1(4)
+    ! translation
+    call aa_tf_duqu_trans( d0, x0 )
+    x1 = x0 + dt*dx(1:3) ! constant dx => rk4 == euler
+    ! orientation
+    call aa_tf_qsvel( d0(1:4), dx(4:6), dt, q1 )
+    call aa_tf_qv2duqu( q1, x0, d1 )
+  end subroutine aa_tf_duqu_svel
+
+  !! Integrate dual quaternion derivative
+  subroutine aa_tf_duqu_sdiff( d0, dd, dt, d1 ) &
+       bind( C, name="aa_tf_duqu_sdiff" )
+    real(C_DOUBLE), intent(in) :: dd(8), d0(8)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: d1(8)
+    real(C_DOUBLE) :: dx(6)
+    call aa_tf_duqu_diff2vel( d0, dd, dx )
+    call aa_tf_duqu_svel( d0, dx, dt, d1 );
+  end subroutine aa_tf_duqu_sdiff
 
 #include "aa_tf_euler.f90"
 

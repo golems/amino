@@ -412,6 +412,19 @@ AA_API void aa_tf_qvelrk4( const double q0[AA_RESTRICT 4],
                            double dt,
                            double q1[AA_RESTRICT 4] );
 
+
+/** Integrate unit quaternion from constant angular velocity
+ *
+ * \param q0 Initial rotation quaternion
+ * \param v Rotational velocity
+ * \param dt Time step
+ * \param q1 Final rotation quaternion
+ **/
+AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
+                         const double v[AA_RESTRICT 3],
+                         double dt,
+                         double q1[AA_RESTRICT 4] );
+
 /*********/
 /* Axang */
 /*********/
@@ -596,4 +609,12 @@ AA_API void aa_tf_duqu_vel2diff( const double d[AA_RESTRICT 8], const double dx[
 /** Dual quaternion derivative to spatial velocity */
 AA_API void aa_tf_duqu_diff2vel( const double d[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                                  double dx[AA_RESTRICT 6] ) ;
+
+
+/** Dual quaternion integration */
+AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
+                             double dt, double d1[AA_RESTRICT 6] ) ;
+AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
+                              double dt, double d1[AA_RESTRICT 6] ) ;
+
 #endif //AMINO_TF_H

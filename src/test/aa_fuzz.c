@@ -187,6 +187,26 @@ static void quat() {
     if(qr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qr[i] *= -1;
     if(qrr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qrr[i] *= -1;
     aveq("qrel", 4, qr, qrr, .001 );
+
+    // diff
+    double w[3]={0}, dq[4], wdq[3];
+    aa_vrand( 3, w );
+    aa_tf_qvel2diff( q1, w, dq );
+    aa_tf_qdiff2vel( q1, dq, wdq );
+    aveq("qveldiff", 3, w, wdq, .000001);
+
+    // integrate
+
+    double qn_rk1[4], qn_vrk1[4], qn_vrk4[4], qn_vexp[4];
+    double dt = .02;
+    aa_tf_qrk1( q1, dq, dt, qn_rk1 );
+    aa_tf_qvelrk1( q1, w, dt, qn_vrk1 );
+    aa_tf_qvelrk4( q1, w, dt, qn_vrk4 );
+    aa_tf_qsvel( q1, w, dt, qn_vexp );
+    aveq("qvelrk1", 4, qn_rk1, qn_vrk1, .001 );
+    aveq("qvelrk4", 4, qn_rk1, qn_vrk4, .001 );
+    aveq("qvelexp", 4, qn_vrk4, qn_vexp, .0001);
+
 }
 
 
@@ -241,6 +261,7 @@ static void duqu() {
 
     // integrate
     double H1[8], q1[4], v1[3], H1qv[8];
+    double H1_sdd[8], H1_sdx[8];
     for( size_t i = 0; i < 8; i ++ ) H1[i] = H.data[i] + dd[i]*dt; // some numerical error here...
     for( size_t i = 0; i < 3; i ++ ) v1[i] = v[i] + dx[i]*dt;
     aa_tf_duqu_normalize( H1 );
@@ -249,7 +270,10 @@ static void duqu() {
     aveq( "duqu-vel_real", 4, dq, dd, .001 );
     aveq( "duqu-vel-int real", 4, H1, H1qv, .001 );
     aveq( "duqu-vel-int dual", 4, H1+4, H1qv+4, .001 );
-
+    aa_tf_duqu_svel( H.data, dx, dt, H1_sdx );
+    aa_tf_duqu_sdiff( H.data, dd, dt, H1_sdd );
+    aveq( "duqu-int vel", 8, H1, H1_sdx, .01 );
+    aveq( "duqu-int diff", 8, H1_sdx, H1_sdd, .001 );
 }
 
 
