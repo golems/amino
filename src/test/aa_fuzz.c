@@ -202,6 +202,17 @@ static void quat() {
         aa_tf_qcmul(q1,q2,t2);
         aveq("qcmul", 4, t1, t2, .001 );
     }
+    // conj. props
+    {
+        // p*q = conj(conj(q) * conj(p))
+        double c1[4], c2[4], c2c1[4], cc2c1[4], q1q2[4];
+        aa_tf_qconj(q1,c1);
+        aa_tf_qconj(q2,c2);
+        aa_tf_qmul(c2,c1,c2c1);
+        aa_tf_qmul(q1,q2,q1q2);
+        aa_tf_qconj(c2c1,cc2c1);
+        aveq("conjprop", 4, q1q2, cc2c1, .0001);
+    }
 
     // diff
     double w[3]={0}, dq[4], wdq[3];

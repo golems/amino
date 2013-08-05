@@ -375,7 +375,7 @@ contains
     vnorm = sqrt( dot_product(q,q) )
     ew = exp(q(W_INDEX))
     r(W_INDEX) = ew * cos(vnorm)
-    r(XYZ_INDEX) = (ew * sin(vnorm) / vnorm) * q(XYZ_INDEX)
+    r(XYZ_INDEX) = (ew * aa_tf_sinc(2*vnorm)) * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
 
   pure subroutine aa_tf_qln( q, r ) &
@@ -616,11 +616,10 @@ contains
        bind( C, name="aa_tf_qdiff2vel" )
     real(C_DOUBLE), dimension(3), intent(out) :: v
     real(C_DOUBLE), dimension(4), intent(in) :: q, dq_dt
-    real(C_DOUBLE), dimension(4) :: qc, qtmp, qv
-    call aa_tf_qconj(q, qc)
-    qtmp = 2*dq_dt
-    call aa_tf_qmul(qtmp, qc, qv)
-    v = qv(XYZ_INDEX)
+    real(C_DOUBLE), dimension(4) :: qv
+    !! v = 2 * dq/dt * conj(q)
+    call aa_tf_qmulc(dq_dt, q, qv)
+    v = 2*qv(XYZ_INDEX)
   end subroutine aa_tf_qdiff2vel
 
   subroutine aa_tf_qvel2diff( q, v, dq_dt ) &
@@ -688,7 +687,7 @@ contains
   end subroutine aa_tf_qvelrk4
 
 
-  function aa_tf_sinc( theta ) result(s)
+  pure function aa_tf_sinc( theta ) result(s)
     real(C_DOUBLE), value :: theta
     real(C_DOUBLE) :: s
     real(C_DOUBLE) :: x
@@ -713,13 +712,12 @@ contains
     real(C_DOUBLE), intent(in) :: w(3), q0(4)
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE) :: e(4), wnorm, theta, dt2
+    real(C_DOUBLE), dimension(4) :: wq, e
     !! Exponential map method
-    wnorm = sqrt(dot_product(w,w))
-    dt2 = dt/2
-    theta = wnorm * dt2
-    e(XYZ_INDEX) = aa_tf_sinc(theta) * dt2 * w
-    e(W_INDEX) = cos(theta)
+    !! q1 = exp(w*dt/2) * q0
+    wq(XYZ_INDEX) = w*(dt/2d0)
+    wq(W_INDEX) = 0d0
+    call aa_tf_qexp( wq, e )
     call aa_tf_qmul(e,q0, q1)
   end subroutine aa_tf_qsvel
 
