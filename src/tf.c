@@ -101,21 +101,21 @@ void aa_tf_qadd( const double a[restrict 4], const double b[restrict 4],
                  double c[restrict 4] );
 
 
-void aa_tf_quat2axang( const double q[restrict 4], double axang[restrict 4] ) {
-    double a = aa_la_norm(4,q);
-    double w = q[3]/a;
-    axang[3] = aa_ang_norm_pi(2 * acos(w));
-    /* aa_la_smul( 3,  */
-    /*             ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /\* ident check *\/ ? */
-    /*               0 : 1.0 / (a*sqrt(1 - w*w)) ),  */
-    /*             q, axang ); */
+/* void aa_tf_quat2axang( const double q[restrict 4], double axang[restrict 4] ) { */
+/*     double a = aa_la_norm(4,q); */
+/*     double w = q[3]/a; */
+/*     axang[3] = aa_ang_norm_pi(2 * acos(w)); */
+/*     /\* aa_la_smul( 3,  *\/ */
+/*     /\*             ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /\\* ident check *\\/ ? *\/ */
+/*     /\*               0 : 1.0 / (a*sqrt(1 - w*w)) ),  *\/ */
+/*     /\*             q, axang ); *\/ */
 
-    if(  aa_feq( axang[3], 0, AA_TF_EPSILON ) ) {
-        aa_fzero( axang, 3 );
-    } else {
-        aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang );
-    }
-}
+/*     if(  aa_feq( axang[3], 0, AA_TF_EPSILON ) ) { */
+/*         aa_fzero( axang, 3 ); */
+/*     } else { */
+/*         aa_la_smul( 3, 1.0 / (a*sqrt(1 - w*w)), q, axang ); */
+/*     } */
+/* } */
 
 void aa_tf_axang_make( double x, double y, double z, double theta,
                        double axang[restrict 4] ) {
@@ -192,14 +192,14 @@ void aa_tf_rotvec2axang( const double rotvec[restrict 3],
     /*             rotvec, axang ); */
 }
 
-void aa_tf_axang2quat( const double axang[restrict 4],
-                       double q[restrict 4] ) {
-    double s,c;
-    sincos( axang[3]/2, &s, &c );
-    q[3] = c;
-    aa_la_smul( 3, s, axang, q );
-    aa_tf_qnormalize(q);
-}
+/* void aa_tf_axang2quat( const double axang[restrict 4], */
+/*                        double q[restrict 4] ) { */
+/*     double s,c; */
+/*     sincos( axang[3]/2, &s, &c ); */
+/*     q[3] = c; */
+/*     aa_la_smul( 3, s, axang, q ); */
+/*     aa_tf_qnormalize(q); */
+/* } */
 
 void aa_tf_quat2rotmat( const double q[restrict 4],
                         double R[restrict 9] ) {

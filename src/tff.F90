@@ -223,10 +223,24 @@ contains
 
   !!! Quaternions
 
+  pure function aa_tf_qnorm( q ) result(n) &
+       bind( C, name="aa_tf_qnorm" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE) :: n
+    n =  sqrt(dot_product(q,q))
+  end function aa_tf_qnorm
+
+  pure function aa_tf_qvnorm( q ) result(n) &
+       bind( C, name="aa_tf_qvnorm" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE) :: n
+    n =  sqrt(dot_product(q(XYZ_INDEX),q(XYZ_INDEX)))
+  end function aa_tf_qvnorm
+
   pure subroutine aa_tf_qnormalize( q ) &
        bind( C, name="aa_tf_qnormalize" )
     real(C_DOUBLE), dimension(4), intent(inout) :: q
-    q = q / sqrt(dot_product(q,q))
+    q = q / aa_tf_qnorm(q)
   end subroutine aa_tf_qnormalize
 
 
@@ -234,7 +248,8 @@ contains
        bind( C, name="aa_tf_qnormalize2" )
     real(C_DOUBLE), dimension(4), intent(in) :: q
     real(C_DOUBLE), dimension(4), intent(out) :: qnorm
-    qnorm = q / sqrt(dot_product(q,q))
+    qnorm = q
+    call aa_tf_qnormalize(qnorm)
   end subroutine aa_tf_qnormalize2
 
   pure subroutine aa_tf_qconj( q, qc ) &
@@ -372,23 +387,67 @@ contains
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE) :: vnorm,ew
-    vnorm = sqrt( dot_product(q,q) )
+    vnorm = sqrt( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)) )
     ew = exp(q(W_INDEX))
     r(W_INDEX) = ew * cos(vnorm)
-    r(XYZ_INDEX) = (ew * aa_tf_sinc(2*vnorm)) * q(XYZ_INDEX)
+    r(XYZ_INDEX) = ew * aa_tf_sinc(vnorm) * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
+
+  Subroutine aa_tf_axang2quat( a, q ) &
+       bind( C, name="aa_tf_axang2quat" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: q
+    real(C_DOUBLE), Dimension(4), intent(in) :: a
+    real(C_DOUBLE) :: t(4)
+    if (0d0 == a(4)) then
+       q(XYZ_INDEX) = 0d0
+       q(W_INDEX) = 1d0
+    else
+       ! q = normalize( exp( theta/2 * u ) )
+       t(XYZ_INDEX) = a(1:3)
+       t(W_INDEX) = 0d0
+       call aa_tf_qnormalize(t)
+       t =  a(4)/2 * t
+       call aa_tf_qexp( t, q )
+       call aa_tf_qnormalize(q)
+    end if
+  end Subroutine aa_tf_axang2quat
+
+  Subroutine aa_tf_quat2axang( q, a ) &
+       bind( C, name="aa_tf_quat2axang" )
+    real(C_DOUBLE), Dimension(4), intent(in) :: q
+    real(C_DOUBLE), Dimension(4), intent(out) :: a
+    real(C_DOUBLE) :: s, vnorm
+    !real(C_DOUBLE) :: e(4)
+    ! assume unit quaternion
+    !a(4) = 2d0*acos(q(W_INDEX))
+    vnorm = aa_tf_qvnorm(q)
+    if( abs(vnorm) < epsilon(vnorm) ) then
+       a = 0d0
+    else
+       !! log method
+       !call aa_tf_qln( q, e )
+       !a(4) = 2d0 * aa_tf_qvnorm(e)
+       !a(1:3) = e(XYZ_INDEX) / aa_tf_qvnorm(e)
+
+       !! optimized method
+       a(4) = 2d0 * atan2( aa_tf_qvnorm(q), q(W_INDEX) )
+       s = sqrt(1-q(4)**2) ! sin(theta/2)
+       a(1:3) = q(XYZ_INDEX) / s
+    end if
+  end Subroutine aa_tf_quat2axang
+
 
   pure subroutine aa_tf_qln( q, r ) &
        bind( C, name="aa_tf_qln" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE) :: vnorm, qnorm, theta
-    vnorm = aa_la_norm2( q(XYZ_INDEX) )
-    qnorm = aa_la_norm2( q )
-    ! Maybe should use atan2 here
-    theta =  acos( q(W_INDEX) / qnorm )
-    r(W_INDEX) = log(qnorm)
+    vnorm = aa_tf_qvnorm(q)
+    qnorm = aa_tf_qnorm(q)
+    !theta =  acos( q(W_INDEX) / qnorm )
+    theta = atan2( vnorm, q(W_INDEX) )
     r(XYZ_INDEX) = theta / vnorm *  q(XYZ_INDEX)
+    r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
   end subroutine aa_tf_qln
 
   !> Compute q**a

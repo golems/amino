@@ -289,6 +289,16 @@ AA_API void aa_tf_qnormalize2( const double q[AA_RESTRICT 4], double qnorm[AA_RE
 AA_API void aa_tf_qconj( const double q[AA_RESTRICT 4],
                          double r[AA_RESTRICT 4] );
 
+
+/** Quaternion exponential */
+AA_API void aa_tf_qexp( const double q[AA_RESTRICT 4],
+                        double r[AA_RESTRICT 4] );
+
+
+/** Quaternion natural log */
+AA_API void aa_tf_qln( const double q[AA_RESTRICT 4],
+                       double r[AA_RESTRICT 4] );
+
 /** Quaternion inverse */
 AA_API void aa_tf_qinv( const double q[AA_RESTRICT 4],
                         double r[AA_RESTRICT 4] );
@@ -592,6 +602,8 @@ AA_API void aa_tf_duqu_mulc( const double d1[AA_RESTRICT 8], const double d2[AA_
 
 /** Dual quaternion conjugate */
 AA_API void aa_tf_duqu_conj( const double d[AA_RESTRICT 8], double dconj[AA_RESTRICT 8] );
+
+
 
 /** Dual quaternion norm */
 AA_API void aa_tf_duqu_norm( const double d[AA_RESTRICT 8], double *nreal, double *ndual );
