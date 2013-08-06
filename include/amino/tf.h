@@ -603,6 +603,11 @@ AA_API void aa_tf_duqu_mulc( const double d1[AA_RESTRICT 8], const double d2[AA_
 /** Dual quaternion conjugate */
 AA_API void aa_tf_duqu_conj( const double d[AA_RESTRICT 8], double dconj[AA_RESTRICT 8] );
 
+/** Dual quaternion exponential */
+AA_API void aa_tf_duqu_exp( const double d[AA_RESTRICT 8], double e[AA_RESTRICT 8] );
+
+/** Dual quaternion natural logarithm */
+AA_API void aa_tf_duqu_ln( const double d[AA_RESTRICT 8], double e[AA_RESTRICT 8] );
 
 
 /** Dual quaternion norm */

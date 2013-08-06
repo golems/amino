@@ -68,6 +68,44 @@ module amino_tf
      end subroutine aa_tf_quat2rotmat
   end interface aa_tf_quat2rotmat
 
+
+  type aa_tf_dual_t
+     real(C_DOUBLE) :: r
+     real(C_DOUBLE) :: d
+  end type aa_tf_dual_t
+
+  Interface Operator(+)
+     MODULE PROCEDURE aa_tf_dual_add
+  End Interface
+  Interface Operator(-)
+     MODULE PROCEDURE aa_tf_dual_sub
+  End Interface
+  Interface Operator(*)
+     MODULE PROCEDURE aa_tf_dual_mul
+  End Interface
+  Interface Operator(/)
+     MODULE PROCEDURE aa_tf_dual_div
+  End Interface
+
+  Interface sin
+     MODULE PROCEDURE aa_tf_dual_sin
+  End Interface
+  Interface cos
+     MODULE PROCEDURE aa_tf_dual_cos
+  End Interface
+  Interface acos
+     MODULE PROCEDURE aa_tf_dual_acos
+  End Interface
+  Interface exp
+     MODULE PROCEDURE aa_tf_dual_exp
+  End Interface
+  Interface log
+     MODULE PROCEDURE aa_tf_dual_log
+  End Interface
+  Interface sqrt
+     MODULE PROCEDURE aa_tf_dual_sqrt
+  End Interface
+
 contains
   pure subroutine aa_tf_9( R1, p1, p ) &
        bind( C, name="aa_tf_9" )
@@ -387,8 +425,8 @@ contains
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE) :: vnorm,ew
-    vnorm = sqrt( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)) )
-    ew = exp(q(W_INDEX))
+    vnorm = aa_tf_qvnorm(q)
+    ew = exp(q(W_INDEX)) ! for pure quaternion, ew is 1
     r(W_INDEX) = ew * cos(vnorm)
     r(XYZ_INDEX) = ew * aa_tf_sinc(vnorm) * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
@@ -444,9 +482,13 @@ contains
     real(C_DOUBLE) :: vnorm, qnorm, theta
     vnorm = aa_tf_qvnorm(q)
     qnorm = aa_tf_qnorm(q)
-    !theta =  acos( q(W_INDEX) / qnorm )
-    theta = atan2( vnorm, q(W_INDEX) )
-    r(XYZ_INDEX) = theta / vnorm *  q(XYZ_INDEX)
+    if( 0d0 == vnorm ) then
+       r(XYZ_INDEX) = 0d0
+    else
+       !theta =  acos( q(W_INDEX) / qnorm )
+       theta = atan2( vnorm, q(W_INDEX) )
+       r(XYZ_INDEX) = theta / vnorm *  q(XYZ_INDEX)
+    end if
     r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
   end subroutine aa_tf_qln
 
@@ -781,12 +823,143 @@ contains
   end subroutine aa_tf_qsvel
 
 
+
+  !!! Dual numbers
+
+  elemental subroutine aa_tf_dual_pack2( r, d, c )
+    real(C_DOUBLE), intent(in)  :: r,d
+    type(aa_tf_dual_t), intent(out) :: c
+    c = aa_tf_dual_t(r,d)
+  end subroutine aa_tf_dual_pack2
+
+  pure subroutine aa_tf_dual_pack1( x, c )
+    real(C_DOUBLE), intent(in) :: x(:)
+    type(aa_tf_dual_t), intent(out) :: c(:)
+    integer :: n
+    n = size(x)/2
+    call aa_tf_dual_pack2( x(1:n), x(n+1:n+n), c(1:n) )
+  end subroutine aa_tf_dual_pack1
+
+  elemental function aa_tf_dual_r( a ) result (r)
+    type(aa_tf_dual_t), intent(in) :: a
+    real(C_DOUBLE) :: r
+    r = a%r
+  end function aa_tf_dual_r
+
+  elemental function aa_tf_dual_d( a ) result (d)
+    type(aa_tf_dual_t), intent(in) :: a
+    real(C_DOUBLE) :: d
+    d = a%d
+  end function aa_tf_dual_d
+
+  pure subroutine aa_tf_dual_unpack( c, x )
+    real(C_DOUBLE), intent(out) :: x(:)
+    type(aa_tf_dual_t), intent(in) :: c(:)
+    integer :: n
+    n = size(c)
+    x(1:n) = aa_tf_dual_r(c)
+    x(n+1:n+n) = aa_tf_dual_d(c)
+  end subroutine aa_tf_dual_unpack
+
+
+  elemental subroutine aa_tf_dual_mul4( ar, ad, br, bd, cr, cd )
+    real(C_DOUBLE), intent(in) :: ar, ad, br, bd
+    real(C_DOUBLE), intent(out) :: cr, cd
+    cr = ar*br
+    cd = ar*bd + ad*br
+  end subroutine aa_tf_dual_mul4
+
+  elemental subroutine aa_tf_dual_scal4( ar, ad, br, bd )
+    real(C_DOUBLE), intent(in) :: ar, ad
+    real(C_DOUBLE), intent(inout) :: br, bd
+    real(C_DOUBLE) :: cr, cd
+    call aa_tf_dual_mul4( ar, ad, br, bd, cr, cd )
+    br = cr
+    bd = cd
+  end subroutine aa_tf_dual_scal4
+
+  elemental function aa_tf_dual_mul( a, b ) result (c)
+    type(aa_tf_dual_t), intent(in) :: a,b
+    type(aa_tf_dual_t) :: c
+    real(C_DOUBLE) :: cr, cd
+    call aa_tf_dual_mul4( a%r, a%d, b%r, b%d, cr, cd )
+    c =  aa_tf_dual_t( cr, cd )
+  end function aa_tf_dual_mul
+
+  subroutine aa_tf_dual_scalv( ar, ad, x )
+    real(C_DOUBLE), intent(in) :: ar, ad
+    real(C_DOUBLE), intent(inout) :: x(:)
+    integer :: n
+    n = size(x)/2
+    call aa_tf_dual_scal4( ar, ad, x(1:n), x(n+1:n+n))
+  end subroutine aa_tf_dual_scalv
+
+  elemental function aa_tf_dual_add( a, b ) result (c)
+    type(aa_tf_dual_t), intent(in) :: a,b
+    type(aa_tf_dual_t) :: c
+    c =  aa_tf_dual_t( a%r+b%r, a%d+b%d )
+  end function aa_tf_dual_add
+
+  elemental function aa_tf_dual_sub( a, b ) result (c)
+    type(aa_tf_dual_t), intent(in) :: a,b
+    type(aa_tf_dual_t) :: c
+    c =  aa_tf_dual_t( a%r-b%r, a%d-b%d )
+  end function aa_tf_dual_sub
+
+  elemental function aa_tf_dual_div( a, b ) result (c)
+    type(aa_tf_dual_t), intent(in) :: a,b
+    type(aa_tf_dual_t) :: c
+    c =  aa_tf_dual_t( a%r / b%r, (a%d*b%r - a%r*b%d) / b%r**2 )
+  end function aa_tf_dual_div
+
+  elemental function aa_tf_dual_sin( x ) result (y)
+    type(aa_tf_dual_t), intent(in) :: x
+    type(aa_tf_dual_t) :: y
+    y = aa_tf_dual_t( sin(x%r), cos(x%r)*x%d )
+  end function aa_tf_dual_sin
+
+  elemental function aa_tf_dual_cos( x ) result (y)
+    type(aa_tf_dual_t), intent(in) :: x
+    type(aa_tf_dual_t) :: y
+    y = aa_tf_dual_t( cos(x%r), -sin(x%r)*x%d )
+  end function aa_tf_dual_cos
+
+  elemental function aa_tf_dual_acos( x ) result (y)
+    type(aa_tf_dual_t), intent(in) :: x
+    type(aa_tf_dual_t) :: y
+    y = aa_tf_dual_t( acos(x%r), - x%d / sqrt(1 - x%r**2) )
+  end function aa_tf_dual_acos
+
+  elemental function aa_tf_dual_exp( x ) result (y)
+    type(aa_tf_dual_t), intent(in) :: x
+    type(aa_tf_dual_t) :: y
+    y = aa_tf_dual_t( exp(x%r), exp(x%r)*x%d )
+  end function aa_tf_dual_exp
+
+  elemental function aa_tf_dual_log( x ) result (y)
+    type(aa_tf_dual_t), intent(in) :: x
+    type(aa_tf_dual_t) :: y
+    y = aa_tf_dual_t( log(x%r), x%d / x%r )
+  end function aa_tf_dual_log
+
+
+  elemental function aa_tf_dual_sqrt( x ) result (y)
+    type(aa_tf_dual_t), intent(in) :: x
+    type(aa_tf_dual_t) :: y
+    y = aa_tf_dual_t( sqrt(x%r), x%d / (2d0*sqrt(x%r)) )
+  end function aa_tf_dual_sqrt
+
   !!! Dual Quaternions
   !!!
   !!! Stored as 8 doubles
   !!! - First four are "real" (rotation)
   !!! - Second four are "dual" (translation)
 
+  ! pure function aa_tf_duqu_dual_w( d ) result(y)
+  !   real(C_DOUBLE), intent(in) :: d(8)
+  !   complex(C_DOUBLE) :: y
+  !   y = aa_tf_dual( d(DQ_REAL_W), d(DQ_DUAL_W) )
+  ! end function aa_tf_duqu_dual_w
 
   !> Dual quaternion scalar multplication
   subroutine aa_tf_duqu_smul( s, d, e ) &
@@ -857,9 +1030,19 @@ contains
        bind( C, name="aa_tf_duqu_norm" )
     real(C_DOUBLE), intent(in), dimension(8) :: d
     real(C_DOUBLE), intent(out) :: nreal, ndual
-    nreal = sqrt( dot_product(d(DQ_REAL), d(DQ_REAL)) )
+    nreal = aa_tf_qnorm( d(DQ_REAL) )
     ndual = dot_product( d(DQ_REAL), d(DQ_DUAL) ) / nreal
   end subroutine aa_tf_duqu_norm
+
+  !> Dual quaternion norm of vector component
+  subroutine aa_tf_duqu_vnorm( d, nreal, ndual ) &
+       bind( C, name="aa_tf_duqu_vnorm" )
+    real(C_DOUBLE), intent(in), dimension(8) :: d
+    real(C_DOUBLE), intent(out) :: nreal, ndual
+    nreal = aa_tf_qvnorm( d(DQ_REAL) )
+    ndual = dot_product( d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ) ) / nreal
+  end subroutine aa_tf_duqu_vnorm
+
 
   !> Dual quaternion construction from unit quaternion and translation
   !> vector.
@@ -925,20 +1108,57 @@ contains
 
 
   !! Convert spatial velocity to quaternion derivative
+  ! subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
+  !      bind( C, name="aa_tf_duqu_vel2diff" )
+  !   real(C_DOUBLE), intent(in) :: d(8), dx(6)
+  !   real(C_DOUBLE), intent(out) :: dd(8)
+  !   real(C_DOUBLE) :: a(4), b(4), c(4)
+  !   ! orientation
+  !   call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
+  !   ! translation
+  !   ! dd_dual = (dx*d_real + x*dd_real) / 2
+  !   ! dd_dual = dx*r/2 + d*r_conj*dr)
+  !   call aa_tf_vqmul( dx(1:3), d(DQ_REAL), a )
+  !   call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), b)
+  !   call aa_tf_qmul( b, dd(DQ_REAL), c )
+  !   dd(DQ_DUAL) = a/2d0 + c
+  ! end subroutine aa_tf_duqu_vel2diff
+
+
+  subroutine aa_tf_duqu_vel2twist( d, dx, t ) &
+       bind( C, name="aa_tf_duqu_vel2twist" )
+    real(C_DOUBLE), intent(in) :: d(8), dx(6)
+    real(C_DOUBLE), intent(out) :: t(8)
+    real(C_DOUBLE) :: p(3)
+    ! t = omega + \eps * ( cross(x,omega) + dx )
+    t(DQ_REAL_XYZ) = dx(4:6)
+    t(DQ_REAL_W) = 0d0
+    call aa_tf_duqu_trans( d, p )
+    call aa_tf_cross( dx(4:6), p, t(DQ_DUAL_XYZ) )
+    t(DQ_DUAL_XYZ) = dx(1:3) - t(DQ_DUAL_XYZ)
+    t(DQ_DUAL_W) = 0d0
+  end subroutine aa_tf_duqu_vel2twist
+
   subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
        bind( C, name="aa_tf_duqu_vel2diff" )
     real(C_DOUBLE), intent(in) :: d(8), dx(6)
     real(C_DOUBLE), intent(out) :: dd(8)
-    real(C_DOUBLE) :: a(4), b(4), c(4)
-    ! orientation
-    call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
-    ! translation
-    ! dd_dual = (dx*d_real + x*dd_real) / 2
-    ! dd_dual = dx*r/2 + d*r_conj*dr)
-    call aa_tf_vqmul( dx(1:3), d(DQ_REAL), a )
-    call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), b)
-    call aa_tf_qmul( b, dd(DQ_REAL), c )
-    dd(DQ_DUAL) = a/2d0 + c
+    real(C_DOUBLE), dimension(8) :: t
+
+    ! dd = twist * d / 2
+    call aa_tf_duqu_vel2twist( d, dx, t )
+    call aa_tf_duqu_mul( t, d, dd )
+    dd = dd / 2d0
+
+    ! ! orientation
+    ! call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
+    ! ! translation
+    ! ! dd_dual = (dx*d_real + x*dd_real) / 2
+    ! ! dd_dual = dx*r/2 + d*r_conj*dr)
+    ! call aa_tf_vqmul( dx(1:3), d(DQ_REAL), a )
+    ! call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), b)
+    ! call aa_tf_qmul( b, dd(DQ_REAL), c )
+    ! dd(DQ_DUAL) = a/2d0 + c
   end subroutine aa_tf_duqu_vel2diff
 
   !! Convert spatial velocity to quaternion derivative
@@ -955,6 +1175,53 @@ contains
     call aa_tf_qmulc( d(DQ_DUAL), dd(DQ_REAL), t2 )
     dx(1:3) = 2 * (t1(XYZ_INDEX) + t2(XYZ_INDEX))
   end subroutine aa_tf_duqu_diff2vel
+
+  !! Exponential of a dual quaternion
+  subroutine aa_tf_duqu_exp( d, e ) &
+       bind( C, name="aa_tf_duqu_exp" )
+    real(C_DOUBLE), intent(in) :: d(8)
+    real(C_DOUBLE), intent(out) :: e(8)
+    real(C_DOUBLE) :: nr, nd, sc, c
+    type(aa_tf_dual_t) :: expw
+    call aa_tf_duqu_vnorm( d, nr, nd );
+    sc = aa_tf_sinc( nr )
+    c = cos( nr )
+    ! compute pure exponential
+    e(DQ_REAL_XYZ) = sc*d(DQ_REAL_XYZ)
+    e(DQ_REAL_W) = c
+    e(DQ_DUAL_XYZ) = (sc * d(DQ_DUAL_XYZ)) + ((nd/nr) * (c-sc) * d(DQ_REAL_XYZ))
+    e(DQ_DUAL_W) = -sin(nr)*nd
+
+    ! impure part
+    if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
+       expw = aa_tf_dual_exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
+       call aa_tf_dual_scalv( expw%r, expw%d, e )
+    end if
+  end subroutine aa_tf_duqu_exp
+
+  subroutine aa_tf_duqu_ln( d, e ) &
+       bind( C, name="aa_tf_duqu_ln" )
+    real(C_DOUBLE), intent(in) :: d(8)
+    real(C_DOUBLE), intent(out) :: e(8)
+    type(aa_tf_dual_t) :: nq, nv, a, dh(4), eh(4)
+    !! log(q) = ( v/norm(v) * acos(w/norm(q)),  log(norm(q)) )
+    !! Evaulated using dual numbers
+    ! construct some dual numbers
+    call aa_tf_duqu_norm( d, nq%r, nq%d )
+    call aa_tf_duqu_vnorm( d, nv%r, nv%d )
+    call aa_tf_dual_pack1( d, dh )
+    ! compute imaginary scale
+    a = acos( dh(W_INDEX)/nq ) / nv
+    ! imaginary component
+    eh(XYZ_INDEX) = aa_tf_dual_mul(a,dh(XYZ_INDEX))
+    ! real component
+    eh(W_INDEX) = log(nq)
+    ! unpack dual number to split storage
+    call aa_tf_dual_unpack(eh, e)
+  end subroutine aa_tf_duqu_ln
+
+
+
 
   !! TODO: Some questions on numerical accuracy here.  Is it be better
   !! to extract translational velocity from the dual quaternion

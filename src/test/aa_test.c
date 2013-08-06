@@ -738,15 +738,16 @@ void quat() {
         double a[4] = {1,2,3,4};
         double b[4];
         double r[4] = { 0.26726, 0.53452, 0.80178, 1.5041 };
+        aa_tf_qnormalize(a);
         aa_tf_quat2axang(a,b);
-        aveq( "tf_quat2axang", 4, b, r, 0.001 );
+        aveq( "tf_quat2axang-1", 4, b, r, 0.001 );
     }
     // 2 axis-angle
     {
         double ra_r[4] = {0,0,0,0};
         double ra[4];
         aa_tf_quat2axang( AA_FAR(0,0,0,1), ra);
-        aveq( "tf_quat2axang", 4, ra, ra_r, 0.001 );
+        aveq( "tf_quat2axang-2", 4, ra, ra_r, 0.001 );
     }
 
     // from axis-angle

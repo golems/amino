@@ -213,6 +213,13 @@ static void quat() {
         aa_tf_qconj(c2c1,cc2c1);
         aveq("conjprop", 4, q1q2, cc2c1, .0001);
     }
+    // exp
+    {
+        double q1e[4], q1eln[4];
+        aa_tf_qexp(q1, q1e);
+        aa_tf_qln(q1e, q1eln);
+        aveq("exp-log", 4, q1, q1eln, .00001 );
+    }
 
     // diff
     double w[3]={0}, dq[4], wdq[3];
@@ -306,6 +313,15 @@ static void duqu() {
         aveq( "duqu-int vel", 8, H1qv, H1_sdx, .001 );
         aveq( "duqu-int diff", 8, H1_sdx, H1_sdd, .0001 );
     }
+
+
+    // exponential
+    {
+        double expd[8], lnexpd[8];
+        aa_tf_duqu_exp(H.data, expd );
+        aa_tf_duqu_ln( expd, lnexpd );
+        aveq( "duqu exp", 8, H.data, lnexpd, .001 );
+    }
 }
 
 
@@ -330,15 +346,15 @@ void rel_q() {
 
     // integrate both velocities
     double q0_1[4], q1_1[4];
-    aa_tf_qsvel( q0, dx0, .01, q0_1 );
-    aa_tf_qsvel( q1, dx1, .01, q1_1 );
+    aa_tf_qsvel( q0, dx0, .1, q0_1 );
+    aa_tf_qsvel( q1, dx1, .1, q1_1 );
 
     // new relative orientation
     double qrel_1[4];
     aa_tf_qcmul( q0_1, q1_1, qrel_1 );
 
     // check
-    aveq("relq", 4, qrel, qrel_1, .00001);
+    aveq("relq", 4, qrel, qrel_1, .000001);
 }
 
 void rel_d() {
