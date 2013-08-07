@@ -1274,6 +1274,20 @@ contains
     call aa_tf_qv2duqu( q1, x1, d1 )
   end subroutine aa_tf_duqu_svel
 
+  !! Integrate spatial velocity to to get dual quaternion
+  subroutine aa_tf_duqu_svel_twist( d0, dx, dt, d1 ) &
+       bind( C, name="aa_tf_duqu_svel_twist" )
+    real(C_DOUBLE), intent(in) :: dx(6), d0(8)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: d1(8)
+    real(C_DOUBLE) :: twist(8), etwist(8)
+    call aa_tf_duqu_vel2twist( d0, dx, twist )
+    twist = (dt/2d0)*twist
+    call aa_tf_duqu_exp( twist, etwist )
+    call aa_tf_duqu_mul( etwist, d0, d1 )
+  end subroutine aa_tf_duqu_svel_twist
+
+
   !! Integrate dual quaternion derivative
   subroutine aa_tf_duqu_sdiff( d0, dd, dt, d1 ) &
        bind( C, name="aa_tf_duqu_sdiff" )
