@@ -642,7 +642,7 @@ AA_API void aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx
 
 
 /** Dual quaternion twist to velocity */
-AA_API void aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double t[AA_RESTRICT 8],
+AA_API void aa_tf_duqu_twist2vel( const double d[AA_RESTRICT 8], const double t[AA_RESTRICT 8],
                                   double dx[AA_RESTRICT 6] ) ;
 
 /** Dual quaternion derivative from velocity */
@@ -655,15 +655,30 @@ AA_API void aa_tf_duqu_diff2vel( const double d[AA_RESTRICT 8], const double dd[
                                  double dx[AA_RESTRICT 6] ) ;
 
 
-/** Dual quaternion integration */
+/** Dual quaternion twist integration.
+ * \param d0 initial position, dual quaternion
+ * \param twist dual quaternion twist
+ * \param dt time step
+ * \param d1 final position, dual quaternion
+ */
+AA_API void aa_tf_duqu_stwist( const double d0[AA_RESTRICT 8], const double twist[AA_RESTRICT 8],
+                               double dt, double d1[AA_RESTRICT 6] ) ;
+
+/** Dual quaternion velocity integration.
+ * \param d0 initial position, dual quaternion
+ * \param dd dual quaternion derivative
+ * \param dt time step
+ * \param d1 final position, dual quaternion
+ */
 AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                              double dt, double d1[AA_RESTRICT 6] ) ;
 
-
-/** Dual quaternion integration, twist exponential */
-AA_API void aa_tf_duqu_svel_twist( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
-                                   double dt, double d1[AA_RESTRICT 6] ) ;
-
+/** Dual quaternion derivative integration .
+ * \param d0 initial position, dual quaternion
+ * \param dd dual quaternion derivative
+ * \param dt time step
+ * \param d1 final position, dual quaternion
+ */
 AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                               double dt, double d1[AA_RESTRICT 6] ) ;
 

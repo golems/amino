@@ -393,9 +393,8 @@ void rel_d() {
     // second velocity
     // d1 = d0*drel
     // d1/dt = d0/dt * drel + d0 * drel/dt, and drel/dt = 0
-    double dd1[8], dx1[6];
+    double dd1[8];
     aa_tf_duqu_mul( dd0, drel, dd1 );
-    aa_tf_duqu_diff2vel( d1, dd1, dx1 );
 
     // integrate
     double d0_1[8], d1_1[8];
@@ -412,18 +411,12 @@ void rel_d() {
 
     // twist
     double d0_1t[8], d1_1t[8], drel_1t[8];
-    aa_tf_duqu_svel_twist( d0, dx0, dt, d0_1t );
-    aa_tf_duqu_svel_twist( d1, dx1, dt, d1_1t );
-    aa_tf_duqu_normalize( d0_1t );
-    aa_tf_duqu_normalize( d1_1t );
+    aa_tf_duqu_svel( d0, dx0, dt, d0_1t );
+    aa_tf_duqu_sdiff( d1, dd1, dt, d1_1t );
     aa_tf_duqu_cmul( d0_1t, d1_1t, drel_1t );
-    //printf("rel0: "); aa_dump_vec( stdout, drel, 8 );
-    //printf("relt: "); aa_dump_vec( stdout, drel_1t, 8 );
-    //printf("rel1: "); aa_dump_vec( stdout, drel_1, 8 );
-
 
     // check
-    aveq("rel_d", 8, drel, drel_1t, .001);
+    aveq("rel_d", 8, drel, drel_1t, 1e-6);
 }
 
 int main( void ) {

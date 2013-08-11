@@ -1233,44 +1233,17 @@ contains
     call aa_tf_dual_unpack(eh, e)
   end subroutine aa_tf_duqu_ln
 
-
-
-
-  !! TODO: Some questions on numerical accuracy here.  Is it be better
-  !! to extract translational velocity from the dual quaternion
-  !! derivative, and integrate orientation and translation
-  !! independently, or to just RK1 the dual quaternion derivative?
-
-  ! ! Integrate dual quaternion, runge-kutta 1
-  ! subroutine aa_tf_duqu_rk1( d0, dd, dt, d1 ) &
-  !      bind( C, name="aa_tf_duqu_rk1" )
-  !   real(C_DOUBLE), intent(in) :: dd(8), d0(8)
-  !   real(C_DOUBLE), intent(in), value :: dt
-  !   real(C_DOUBLE), intent(out) :: d1(8)
-  !   d1 = d0 + dt * dd         ! euler integration
-  !   call aa_tf_duqu_normalize(d1)
-  ! end subroutine aa_tf_duqu_rk1
-
-
-  ! subroutine aa_tf_duqu_rk4( d0, dd, dt, d1 ) &
-  !      bind( C, name="aa_tf_duqu_rk4" )
-  !   real(C_DOUBLE), intent(in) :: dd(8), d0(8)
-  !   real(C_DOUBLE), intent(in), value :: dt
-  !   real(C_DOUBLE), intent(out) :: d1(8)
-  !   d1 = d0 + dt * dd         ! euler integration
-  !   call aa_tf_duqu_normalize(d1)
-
-  ! contains
-  !   subroutine term( dd0, dt, dd1 )
-  !     real(C_DOUBLE), intent(in) ::  dq0(8)
-  !     real(C_DOUBLE), intent(in), value :: dt
-  !     real(C_DOUBLE), intent(out) :: dq1(8)
-  !     real(C_DOUBLE) :: qtmp(8)
-  !     call aa_tf_duqu_rk1( q0, dq0, dt, qtmp )
-  !     call aa_tf_qvel2diff(qtmp, v, dq1)
-  !   end subroutine term
-  ! end subroutine aa_tf_duqu_rk4
-
+  !! Integrate twist to to get dual quaternion
+  subroutine aa_tf_duqu_stwist( d0, twist, dt, d1 ) &
+       bind( C, name="aa_tf_duqu_stwist" )
+    real(C_DOUBLE), intent(in) :: twist(8), d0(8)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: d1(8)
+    real(C_DOUBLE) :: twist1(8), etwist(8)
+    twist1 = (dt/2d0)*twist
+    call aa_tf_duqu_exp( twist1, etwist )
+    call aa_tf_duqu_mul( etwist, d0, d1 )
+  end subroutine aa_tf_duqu_stwist
 
   !! Integrate spatial velocity to to get dual quaternion
   subroutine aa_tf_duqu_svel( d0, dx, dt, d1 ) &
@@ -1278,27 +1251,10 @@ contains
     real(C_DOUBLE), intent(in) :: dx(6), d0(8)
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: d1(8)
-    real(C_DOUBLE) :: x0(3), x1(3), q1(4)
-    ! translation
-    call aa_tf_duqu_trans( d0, x0 )
-    x1 = x0 + dt*dx(1:3) ! constant dx => rk4 == euler
-    ! orientation
-    call aa_tf_qsvel( d0(1:4), dx(4:6), dt, q1 )
-    call aa_tf_qv2duqu( q1, x1, d1 )
-  end subroutine aa_tf_duqu_svel
-
-  !! Integrate spatial velocity to to get dual quaternion
-  subroutine aa_tf_duqu_svel_twist( d0, dx, dt, d1 ) &
-       bind( C, name="aa_tf_duqu_svel_twist" )
-    real(C_DOUBLE), intent(in) :: dx(6), d0(8)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: d1(8)
-    real(C_DOUBLE) :: twist(8), etwist(8)
+    real(C_DOUBLE) :: twist(8)
     call aa_tf_duqu_vel2twist( d0, dx, twist )
-    twist = (dt/2d0)*twist
-    call aa_tf_duqu_exp( twist, etwist )
-    call aa_tf_duqu_mul( etwist, d0, d1 )
-  end subroutine aa_tf_duqu_svel_twist
+    call aa_tf_duqu_stwist( d0, twist, dt, d1 );
+  end subroutine aa_tf_duqu_svel
 
 
   !! Integrate dual quaternion derivative
