@@ -43,7 +43,7 @@ TESTS = aa_test la_test aa_regress
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
-noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress vecbench
+noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress
 
 
 libamino_la_SOURCES =                  \
@@ -60,7 +60,6 @@ libamino_la_SOURCES =                  \
 	src/io.c                       \
 	src/are.c                      \
 	src/sigsys.c                   \
-	src/vec.c                      \
 	src/cv.c
 
 libamino_la_LIBADD =                   \
@@ -102,8 +101,8 @@ la_test_LDADD = libamino.la -lblas -llapack
 aa_fuzz_SOURCES = src/test/aa_fuzz.c
 aa_fuzz_LDADD = libamino.la -lblas -llapack
 
-vecbench_SOURCES = src/test/vecbench.c
-vecbench_LDADD = libamino.la -lblas -llapack
+#vecbench_SOURCES = src/test/vecbench.c
+#vecbench_LDADD = libamino.la -lblas -llapack
 
 # use some convenience libraries to force fortran module dependencies
 noinst_LTLIBRARIES =                   \
