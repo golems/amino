@@ -1139,6 +1139,19 @@ contains
     t(DQ_DUAL_W) = 0d0
   end subroutine aa_tf_duqu_vel2twist
 
+
+  subroutine aa_tf_duqu_twist2vel( d, t, dx ) &
+       bind( C, name="aa_tf_duqu_twist2vel" )
+    real(C_DOUBLE), intent(in) :: d(8), t(8)
+    real(C_DOUBLE), intent(out) :: dx(6)
+    real(C_DOUBLE) :: p(3), pxw(3)
+    ! dx = Omega - [0, p x omega ]
+    dx(4:6) = t(1:3)
+    call aa_tf_duqu_trans( d, p )
+    call aa_tf_cross( p, t(1:3), pxw )
+    dx(1:3) = t(5:7) - pxw
+  end subroutine aa_tf_duqu_twist2vel
+
   subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
        bind( C, name="aa_tf_duqu_vel2diff" )
     real(C_DOUBLE), intent(in) :: d(8), dx(6)

@@ -314,11 +314,10 @@ static void duqu() {
         aveq( "duqu-int diff", 8, H1_sdx, H1_sdd, .0001 );
 
         /* // twist */
-        double H1t[8];
-        aa_tf_duqu_svel_twist( H.data, dx, dt, H1t );
-        //printf("H1s: "); aa_dump_vec( stdout, H1_sdd, 8 );
-        //printf("H1t: "); aa_dump_vec( stdout, H1t, 8 );
-        // TODO: check me
+        double tw[8], dxtw[6];
+        aa_tf_duqu_vel2twist(H.data, dx, tw );
+        aa_tf_duqu_twist2vel(H.data, tw, dxtw );
+        aveq( "duqu twist<->vel", 6, dx, dxtw, 1e-6 );
 
 
     }
