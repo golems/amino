@@ -468,7 +468,7 @@ contains
        !a(1:3) = e(XYZ_INDEX) / aa_tf_qvnorm(e)
 
        !! optimized method
-       a(4) = 2d0 * atan2( aa_tf_qvnorm(q), q(W_INDEX) )
+       a(4) = 2d0 * atan2( vnorm, q(W_INDEX) )
        s = sqrt(1-q(4)**2) ! sin(theta/2)
        a(1:3) = q(XYZ_INDEX) / s
     end if
@@ -487,7 +487,7 @@ contains
     else
        !theta =  acos( q(W_INDEX) / qnorm )
        theta = atan2( vnorm, q(W_INDEX) )
-       r(XYZ_INDEX) = theta / vnorm *  q(XYZ_INDEX)
+       r(XYZ_INDEX) = theta / vnorm * q(XYZ_INDEX)
     end if
     r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
   end subroutine aa_tf_qln
@@ -930,6 +930,13 @@ contains
     y = aa_tf_dual_t( acos(x%r), - x%d / sqrt(1 - x%r**2) )
   end function aa_tf_dual_acos
 
+  elemental function aa_tf_dual_atan2( a, b ) result (y)
+    type(aa_tf_dual_t), intent(in) :: a, b
+    type(aa_tf_dual_t) :: y
+    y%r = atan2(a%r, b%r)
+    y%d = (b%r*a%d - a%r*b%d) / (a%r**2 + b%r**2)
+  end function aa_tf_dual_atan2
+
   elemental function aa_tf_dual_exp( x ) result (y)
     type(aa_tf_dual_t), intent(in) :: x
     type(aa_tf_dual_t) :: y
@@ -1216,17 +1223,23 @@ contains
        bind( C, name="aa_tf_duqu_ln" )
     real(C_DOUBLE), intent(in) :: d(8)
     real(C_DOUBLE), intent(out) :: e(8)
-    type(aa_tf_dual_t) :: nq, nv, a, dh(4), eh(4)
+    type(aa_tf_dual_t) :: nq, nv, a, dh(4), eh(4), thetah
     !! log(q) = ( v/norm(v) * acos(w/norm(q)),  log(norm(q)) )
+    !! log(q) = ( v/norm(v) * atan(norm(q),w),  log(norm(q)) )
     !! Evaulated using dual numbers
-    ! construct some dual numbers
-    call aa_tf_duqu_norm( d, nq%r, nq%d )
     call aa_tf_duqu_vnorm( d, nv%r, nv%d )
+    call aa_tf_duqu_norm( d, nq%r, nq%d )
     call aa_tf_dual_pack1( d, dh )
-    ! compute imaginary scale
-    a = acos( dh(W_INDEX)/nq ) / nv
-    ! imaginary component
-    eh(XYZ_INDEX) = aa_tf_dual_mul(a,dh(XYZ_INDEX))
+    if ( 0d0 == nv%r ) then
+       eh(XYZ_INDEX) = aa_tf_dual_t(0d0, 0d0)
+    else
+       ! compute imaginary scale
+       ! is this really OK if nv%r is very small?
+       thetah = atan2( nv, dh(W_INDEX) )
+       a = thetah / nv
+       ! imaginary component
+       eh(XYZ_INDEX) = aa_tf_dual_mul(a,dh(XYZ_INDEX))
+    end if
     ! real component
     eh(W_INDEX) = log(nq)
     ! unpack dual number to split storage
