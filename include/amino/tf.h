@@ -148,6 +148,7 @@ typedef struct aa_tf_duqu {
 #define AA_TF_IDENT_INITIALIZER {1,0,0, 0,1,0, 0,0,1, 0,0,0}
 #define AA_TF_ROTMAT_IDENT_INITIALIZER {1,0,0, 0,1,0, 0,0,1}
 #define AA_TF_QUAT_IDENT_INITIALIZER {0,0,0,1}
+#define AA_TF_DUQU_IDENT_INITIALIZER {0,0,0,1, 0,0,0,0}
 #define AA_TF_AXANG_IDENT_INITIALIZER {1,0,0,0}
 #define AA_TF_ROTVEC_IDENT_INITIALIZER {0,0,0}
 
@@ -165,6 +166,7 @@ typedef struct aa_tf_duqu {
 static const double aa_tf_ident[12] = AA_TF_IDENT_INITIALIZER;
 static const double aa_tf_rotmat_ident[9] = AA_TF_ROTMAT_IDENT_INITIALIZER;
 static const double aa_tf_quat_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
+static const double aa_tf_duqu_ident[8] = AA_TF_DUQU_IDENT_INITIALIZER;
 static const double aa_tf_axang_ident[4] = AA_TF_AXANG_IDENT_INITIALIZER;
 static const double aa_tf_rotvec_ident[3] = AA_TF_ROTVEC_IDENT_INITIALIZER;
 

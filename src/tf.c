@@ -278,19 +278,19 @@ void aa_tf_rotmat2quat( const double R[restrict 9],
     aa_tf_qnormalize(q);
 }
 
-void aa_tf_rotvec2quat( const double rotvec[restrict 3],
-                        double q[restrict 4] ) {
-    double aa[4];
-    aa_tf_rotvec2axang(rotvec, aa);
-    aa_tf_axang2quat(aa,q);
-}
+/* void aa_tf_rotvec2quat( const double rotvec[restrict 3], */
+/*                         double q[restrict 4] ) { */
+/*     double aa[4]; */
+/*     aa_tf_rotvec2axang(rotvec, aa); */
+/*     aa_tf_axang2quat(aa,q); */
+/* } */
 
-void aa_tf_quat2rotvec( const double q[restrict 4],
-                        double rotvec[restrict 3] ) {
-    double aa[4];
-    aa_tf_quat2axang(q,aa);
-    aa_tf_axang2rotvec(aa,rotvec);
-}
+/* void aa_tf_quat2rotvec( const double q[restrict 4], */
+/*                         double rotvec[restrict 3] ) { */
+/*     double aa[4]; */
+/*     aa_tf_quat2axang(q,aa); */
+/*     aa_tf_axang2rotvec(aa,rotvec); */
+/* } */
 
 
 void aa_tf_quat2rotvec_near( const double q[restrict 4],

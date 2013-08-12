@@ -330,6 +330,19 @@ static void duqu() {
         aa_tf_duqu_ln( expd, lnexpd );
         aveq( "duqu exp", 8, H.data, lnexpd, .001 );
     }
+    // Logarithm
+    {
+        double HI[8], HIln[8], dxi[6], dx0[6] = {0};
+        aa_tf_duqu_mulc( H.data, H.data, HI );
+        aa_tf_duqu_ln(HI, HIln);
+        aa_tf_duqu_twist2vel(HI, HIln, dxi );
+        aveq( "duqu ln 0 near", 6, dx0, dxi, .0001 );
+
+        aa_tf_duqu_ln(aa_tf_duqu_ident, HIln);
+        aa_tf_duqu_twist2vel(HI, HIln, dxi );
+        aveq( "duqu ln 0 exact", 6, dx0, dxi, 0.0 );
+
+    }
 }
 
 
