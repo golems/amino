@@ -431,7 +431,7 @@ contains
     real(C_DOUBLE) :: vnorm, ew, s
     vnorm = aa_tf_qvnorm(q)
     if( 0d0 == q(W_INDEX) ) then
-       ! pure quaternion, optimize out exp(w) == 1
+       ! pure quaternion, optimize out exp(0) == 1
        r(W_INDEX) = cos(vnorm)
        s = aa_tf_sinc(vnorm)
     else
@@ -851,12 +851,14 @@ contains
     real(C_DOUBLE), intent(in) :: w(3), q0(4)
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE), dimension(4) :: wq, e
+    real(C_DOUBLE)  :: rv(3), e(4)
     !! Exponential map method
     !! q1 = exp(w*dt/2) * q0
-    wq(XYZ_INDEX) = w*(dt/2d0)
-    wq(W_INDEX) = 0d0
-    call aa_tf_qexp( wq, e )
+    !wq(XYZ_INDEX) = w*(dt/2d0)
+    !wq(W_INDEX) = 0d0
+    !call aa_tf_qexp( wq, e )
+    rv = w*dt
+    call aa_tf_rotvec2quat(rv, e) ! equivalent to calling the exponential
     call aa_tf_qmul(e,q0, q1)
   end subroutine aa_tf_qsvel
 
@@ -1242,13 +1244,21 @@ contains
     real(C_DOUBLE) :: nr, nd, sc, c
     type(aa_tf_dual_t) :: expw
     call aa_tf_duqu_vnorm( d, nr, nd );
-    sc = aa_tf_sinc( nr )
-    c = cos( nr )
     ! compute pure exponential
-    e(DQ_REAL_XYZ) = sc*d(DQ_REAL_XYZ)
-    e(DQ_REAL_W) = c
-    e(DQ_DUAL_XYZ) = (sc * d(DQ_DUAL_XYZ)) + ((nd/nr) * (c-sc) * d(DQ_REAL_XYZ))
-    e(DQ_DUAL_W) = -sin(nr)*nd
+    if( 0d0 == nr ) then
+       e(DQ_REAL_XYZ) = d(DQ_REAL_XYZ) ! sinc(0) = 1
+       e(DQ_REAL_W) = 1d0 ! cos(0) 1
+       !! limit as vnorm->0 of ( (cos(vnorm) - sinc(vnorm))/vnorm ) == 0
+       !! sin(0) == 0
+       e(DQ_DUAL) = 0d0
+    else
+       sc = aa_tf_sinc( nr )
+       c = cos( nr )
+       e(DQ_REAL_XYZ) = sc*d(DQ_REAL_XYZ)
+       e(DQ_REAL_W) = c
+       e(DQ_DUAL_XYZ) = (sc * d(DQ_DUAL_XYZ)) + (nd * (c-sc)/nr * d(DQ_REAL_XYZ))
+       e(DQ_DUAL_W) = -sin(nr)*nd
+    end if
 
     ! impure part
     if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
@@ -1261,27 +1271,47 @@ contains
        bind( C, name="aa_tf_duqu_ln" )
     real(C_DOUBLE), intent(in) :: d(8)
     real(C_DOUBLE), intent(out) :: e(8)
-    type(aa_tf_dual_t) :: nq, nv, a, dh(4), eh(4), thetah
+    real(C_DOUBLE) :: vv, theta, nr, mr2, mr, sc, ar, ad
     !! log(q) = ( v/norm(v) * acos(w/norm(q)),  log(norm(q)) )
     !! log(q) = ( v/norm(v) * atan(norm(q),w),  log(norm(q)) )
-    !! Evaulated using dual numbers
-    call aa_tf_duqu_vnorm( d, nv%r, nv%d )
-    call aa_tf_duqu_norm( d, nq%r, nq%d )
-    call aa_tf_dual_pack1( d, dh )
-    if ( 0d0 == nv%r ) then
-       eh(XYZ_INDEX) = aa_tf_dual_t(0d0, 0d0)
+
+    !! Norms
+    vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
+    mr2 = vv+d(DQ_REAL_W)**2
+    mr = sqrt( mr2 )
+
+    !! Scaling parameter
+    if ( 0d0 == vv ) then
+       ar = 1/mr
+       ad = -d(DQ_DUAL_W) / mr2
     else
-       ! compute imaginary scale
-       ! is this really OK if nv%r is very small?
-       thetah = atan2( nv, dh(W_INDEX) )
-       a = thetah / nv
-       ! imaginary component
-       eh(XYZ_INDEX) = aa_tf_dual_mul(a,dh(XYZ_INDEX))
+       ! Dual number computation
+       ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
+       ! a = atan2( nv, dh(W_INDEX) ) / nv
+
+       ! expanded dual computation
+       nr = sqrt(vv)
+       theta = atan2(nr, d(DQ_REAL_W))
+       sc = aa_tf_sinc(theta)
+
+       ar = 1/(mr*sc)
+
+       ! Note: lim_{x->0} { (1 - cos(x))/x } = 0
+       ! Note: lim_{x->0} { sin(x)/x } = 1, this is sinc(x)
+       ! It may help to specially handle  (cos(theta) - 1/sinc(theta))/theta near to theta=0
+       ad = dot_product(d(DQ_REAL_XYZ)/nr,d(DQ_DUAL_XYZ)) / sc * (cos(theta)-1/sc)/theta - d(DQ_DUAL_W)
+       ad = ad / mr2
+
     end if
-    ! real component
-    eh(W_INDEX) = log(nq)
-    ! unpack dual number to split storage
-    call aa_tf_dual_unpack(eh, e)
+
+    !! imaginary component
+    !e_w = log(m)
+    e(DQ_REAL_W) = log(mr)
+    e(DQ_DUAL_W) = dot_product(d(DQ_REAL),d(DQ_DUAL))/mr2
+
+    !! real component
+    e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+    e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
   end subroutine aa_tf_duqu_ln
 
   !! Integrate twist to to get dual quaternion

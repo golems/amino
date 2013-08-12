@@ -39,11 +39,11 @@ pkginclude_HEADERS = 	                \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
-TESTS = aa_test la_test aa_regress
+TESTS = aa_test la_test aa_regress q_test aa_fuzz
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
-noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress
+noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress q_test
 
 
 libamino_la_SOURCES =                  \
@@ -91,6 +91,9 @@ distclean-local:
 
 aa_test_SOURCES = src/test/aa_test.c
 aa_test_LDADD = libamino.la -lblas -llapack
+
+q_test_SOURCES = src/test/q_test.c
+q_test_LDADD = libamino.la -lblas -llapack
 
 aa_regress_SOURCES = src/test/aa_regress.c
 aa_regress_LDADD = libamino.la -lblas -llapack
