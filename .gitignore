@@ -46,8 +46,7 @@ amino*.tar.gz
 /la_doc.c
 /lapack_doc.c
 /mem_mod.f90
-/la_mod.s
-/mem_mod.s
+*.s
 /src/test/.dirstamp
 /src/test/.deps/.dirstamp
 /src/mac/.dirstamp
@@ -68,6 +67,13 @@ amino*.tar.gz
 /src/sub/.deps/.dirstamp
 /src/sub/.dirstamp
 /src/mac/tf.f90
-/tf_mod.s
-/tff.s
 /vecbench
+/aa_regress.log
+/aa_regress.trs
+/aa_test.log
+/aa_test.trs
+/la_test.log
+/la_test.trs
+/q_test
+/test-driver
+/test-suite.log
