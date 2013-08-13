@@ -81,6 +81,12 @@ static inline double aa_fclamp( double val, double min, double max) {
     return val;
 }
 
+/// apply deadzone to val
+static inline double aa_fdeadzone( double val, double min, double max, double deadval) {
+    if( min < val && max > val )  return deadval;
+    else return val;
+}
+
 /// modify each element of v to be within range (min,max)
 static inline void aa_vclamp( size_t n, double *v, double min, double max) {
     for( size_t i = 0; i < n; i++ ) {
