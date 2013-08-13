@@ -1256,7 +1256,8 @@ contains
        c = cos( nr )
        e(DQ_REAL_XYZ) = sc*d(DQ_REAL_XYZ)
        e(DQ_REAL_W) = c
-       e(DQ_DUAL_XYZ) = (sc * d(DQ_DUAL_XYZ)) + (nd * (c-sc)/nr * d(DQ_REAL_XYZ))
+       e(DQ_DUAL_XYZ) = (sc * d(DQ_DUAL_XYZ)) &
+            + (dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ)) * limscal(nr) * (d(DQ_REAL_XYZ)/nr))
        e(DQ_DUAL_W) = -sin(nr)*nd
     end if
 
@@ -1265,6 +1266,22 @@ contains
        expw = aa_tf_dual_exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
        call aa_tf_dual_scalv( expw%r, expw%d, e )
     end if
+    contains
+      function limscal(x) result(y)
+        real(C_DOUBLE) :: x
+        real(C_DOUBLE) :: y
+        if ( abs(x) < sqrt(sqrt(epsilon(x))) ) then
+           !! Taylor Series expansion for theta near zero
+           y = 0d0
+           y = x**2 * (-1/3628800 - 1/39916800 + y)  ! x**9
+           y = x**2 * (1/40320d0 + 1/362880d0 + y)   ! x**7
+           y = x**2 * (-1/720d0 - 1/5040d0 + y)      ! x**5
+           y = x**2 * (1/24d0 + 1/120d0 + y)         ! x**3
+           y = x    * (-1/2d0 - 1/6d0 + y )          ! x**1
+        else
+           y = ( cos(x) - aa_tf_sinc(x) ) / x
+        end if
+      end function limscal
   end subroutine aa_tf_duqu_exp
 
   subroutine aa_tf_duqu_ln( d, e ) &
