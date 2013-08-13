@@ -447,17 +447,24 @@ contains
        bind( C, name="aa_tf_qln" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vv, vnorm, qnorm, theta
+    real(C_DOUBLE) :: vv, vnorm, qnorm, theta, a
     ! compute qnorm and vnorm efficiently
     vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
     qnorm = sqrt( vv + q(W_INDEX)**2 )
     if( 0d0 == vv ) then
        r(XYZ_INDEX) = 0d0
     else
-       vnorm = sqrt(vv)
-       theta = atan2( vnorm, q(W_INDEX) )
-       ! for unit quaternions, vnorm = sin(theta)
-       r(XYZ_INDEX) = theta / vnorm * q(XYZ_INDEX)
+       vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
+       ! TODO: does it really make sense to restrict the angle this way?
+       theta = atan2( sign(1d0,q(W_INDEX))*vnorm, sign(1d0,q(W_INDEX))*q(W_INDEX) )
+       if( vnorm < sqrt(sqrt(epsilon(vnorm))) ) then
+          ! theta/vnorm == theta*qnorm/(vnorm*qnorm) == 1/(qnorm*sinc(theta)),
+          ! Avoid division by small numbers
+          a = 1d0/(qnorm*aa_tf_sinc(theta))
+       else
+          a = theta/vnorm
+       end if
+       r(XYZ_INDEX) = a*q(XYZ_INDEX)
     end if
     r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
   end subroutine aa_tf_qln
@@ -1301,7 +1308,7 @@ contains
 
     !! Scaling parameter
     if ( 0d0 == vv ) then
-       ar = 1/mr
+       ar = 1/mr                 ! sinc(0) = 1
        ad = -d(DQ_DUAL_W) / mr2
     else
        ! Dual number computation
@@ -1310,15 +1317,14 @@ contains
 
        ! expanded dual computation
        nr = sqrt(vv)
-       theta = atan2(nr, d(DQ_REAL_W))
+       ! TODO: does it really make sense to restrict the angle this way?
+       theta = atan2( sign(1d0,d(W_INDEX))*nr, sign(1d0,d(W_INDEX))*d(W_INDEX) )
+
        sc = aa_tf_sinc(theta)
 
        ar = 1/(mr*sc)
 
-       ! Note: lim_{x->0} { (1 - cos(x))/x } = 0
-       ! Note: lim_{x->0} { sin(x)/x } = 1, this is sinc(x)
-       ! It may help to specially handle  (cos(theta) - 1/sinc(theta))/theta near to theta=0
-       ad = dot_product(d(DQ_REAL_XYZ)/nr,d(DQ_DUAL_XYZ)) / sc * (cos(theta)-1/sc)/theta - d(DQ_DUAL_W)
+       ad = dot_product(d(DQ_REAL_XYZ)/nr,d(DQ_DUAL_XYZ)) / sc * limscal(theta) - d(DQ_DUAL_W)
        ad = ad / mr2
 
     end if
@@ -1331,6 +1337,25 @@ contains
     !! real component
     e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
     e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
+    contains
+      function limscal(x) result(y)
+        real(C_DOUBLE) :: x
+        real(C_DOUBLE) :: y
+        !! lim_{x->0} { (1 - cos(x))/x } = 0
+        !! lim_{x->0} { sin(x)/x } = 1, this is sinc(x)
+        !! ( cos(x) - 1/sinc(x) ) / x == cos(x)/x - 1/sin(x) == cos(x)/x - csc(x)
+        if( abs(x) < sqrt(sqrt(epsilon(x))) ) then
+           !! Taylor Series expansion for theta near zero
+           y = 0d0
+           y = x**2 * (-1/3628800 + 73d0/33421440d0 + y) ! x**9
+           y = x**2 * (1/40320d0 + 127d0/604800d0 + y)   ! x**7
+           y = x**2 * (-1/720d0 + 31d0/15120d0 + y)      ! x**5
+           y = x**2 * (1/24d0 + 7d0/360d0 + y)           ! x**3
+           y = x    * (-1d0/2d0 + 1/6d0 + y )            ! x**1
+        else
+           y = ( cos(x) - 1d0/aa_tf_sinc(x) ) / x
+        end if
+      end function limscal
   end subroutine aa_tf_duqu_ln
 
   !! Integrate twist to to get dual quaternion
