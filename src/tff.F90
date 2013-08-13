@@ -1246,11 +1246,13 @@ contains
     call aa_tf_duqu_vnorm( d, nr, nd );
     ! compute pure exponential
     if( 0d0 == nr ) then
-       e(DQ_REAL_XYZ) = d(DQ_REAL_XYZ) ! sinc(0) = 1
+       ! avoid division by zero and optimize out known values
+       e(DQ_REAL_XYZ) = 0d0 ! sinc(0) = 1 and d_xyz = 0
        e(DQ_REAL_W) = 1d0 ! cos(0) 1
        !! limit as vnorm->0 of ( (cos(vnorm) - sinc(vnorm))/vnorm ) == 0
        !! sin(0) == 0
-       e(DQ_DUAL) = 0d0
+       e(DQ_DUAL_XYZ) = d(DQ_DUAL_XYZ)
+       e(DQ_DUAL_W) = 0d0 ! sin(0) = 0
     else
        sc = aa_tf_sinc( nr )
        c = cos( nr )

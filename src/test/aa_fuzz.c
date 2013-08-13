@@ -263,8 +263,9 @@ static void duqu() {
     AA_MEM_CPY( &T.t.x, v, 3 );
 
     // dual quat
-    aa_tf_duqu_t H;
+    aa_tf_duqu_t H, H_tran;
     aa_tf_qv2duqu( q, v, H.data );
+    aa_tf_qv2duqu( aa_tf_quat_ident, v, H_tran.data );
 
     // check trans
     double hv[3];
@@ -330,6 +331,13 @@ static void duqu() {
         aa_tf_duqu_ln( expd, lnexpd );
         aveq( "duqu exp", 8, H.data, lnexpd, .001 );
     }
+    {
+        double expd[8], lnexpd[8];
+        aa_tf_duqu_exp(H_tran.data, expd );
+        aa_tf_duqu_ln( expd, lnexpd );
+        aveq( "duqu-tran exp", 8, H_tran.data, lnexpd, .001 );
+    }
+
     // Logarithm
     {
         double HI[8], HIln[8], dxi[6], dx0[6] = {0};
