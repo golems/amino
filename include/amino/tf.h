@@ -605,8 +605,11 @@ AA_API void aa_tf_duqu_smul( const double d1[AA_RESTRICT 8], const double d2[AA_
 AA_API void aa_tf_duqu_mul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
                             double d3[AA_RESTRICT 8] );
 
+/** Dual quaternion multiply conjugate of d1 by d2 */
 AA_API void aa_tf_duqu_cmul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
                              double d3[AA_RESTRICT 8] );
+
+/** Dual quaternion multiply d1 by conjugate of d2 */
 AA_API void aa_tf_duqu_mulc( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
                              double d3[AA_RESTRICT 8] );
 
@@ -619,7 +622,6 @@ AA_API void aa_tf_duqu_exp( const double d[AA_RESTRICT 8], double e[AA_RESTRICT 
 /** Dual quaternion natural logarithm */
 AA_API void aa_tf_duqu_ln( const double d[AA_RESTRICT 8], double e[AA_RESTRICT 8] );
 
-
 /** Dual quaternion norm */
 AA_API void aa_tf_duqu_norm( const double d[AA_RESTRICT 8], double *nreal, double *ndual );
 
@@ -627,31 +629,28 @@ AA_API void aa_tf_duqu_norm( const double d[AA_RESTRICT 8], double *nreal, doubl
 AA_API void aa_tf_duqu_normalize( double d[AA_RESTRICT 8] );
 
 /** Dual quaternion angle minimization */
-AA_API void aa_tf_duqu_minimization( double d[AA_RESTRICT 8] );
+AA_API void aa_tf_duqu_minimize( double d[AA_RESTRICT 8] );
 
 /** Dual quaternion transformation */
 AA_API void aa_tf_duqu( const double d[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
                         double p1[AA_RESTRICT 3]  );
 
-
-/** Dual quaternion normalization */
+/** Extract dual quaternion translation vector */
 AA_API void aa_tf_duqu_trans( const double d[AA_RESTRICT 8], double v[AA_RESTRICT 3] );
 
-/** Dual quaternion normalization */
-AA_API void aa_tf_duqu2ftmat( const double d[AA_RESTRICT 8], double T[AA_RESTRICT 12] );
+/** Convert dual quaternion to transformation matrix */
+AA_API void aa_tf_duqu2tfmat( const double d[AA_RESTRICT 8], double T[AA_RESTRICT 12] );
 
-/** Dual quaternion normalization */
+/** Convert transformation matrix to dual quaternion */
 AA_API void aa_tf_tfmat2duqu( const double T[AA_RESTRICT 12], double d[AA_RESTRICT 8] ) ;
 
-/** Dual quaternion normalization */
+/** Convert orientation unit quaternion and translation vector to dual quaternion. */
 AA_API void aa_tf_qv2duqu( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                            double d[AA_RESTRICT 8] ) ;
-
 
 /** Dual quaternion twist from velocity */
 AA_API void aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                                   double t[AA_RESTRICT 8] ) ;
-
 
 /** Dual quaternion twist to velocity */
 AA_API void aa_tf_duqu_twist2vel( const double d[AA_RESTRICT 8], const double t[AA_RESTRICT 8],
@@ -661,11 +660,9 @@ AA_API void aa_tf_duqu_twist2vel( const double d[AA_RESTRICT 8], const double t[
 AA_API void aa_tf_duqu_vel2diff( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                                  double dd[AA_RESTRICT 8] ) ;
 
-
 /** Dual quaternion derivative to spatial velocity */
 AA_API void aa_tf_duqu_diff2vel( const double d[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                                  double dx[AA_RESTRICT 6] ) ;
-
 
 /** Dual quaternion twist integration.
  * \param d0 initial position, dual quaternion
@@ -678,14 +675,14 @@ AA_API void aa_tf_duqu_stwist( const double d0[AA_RESTRICT 8], const double twis
 
 /** Dual quaternion velocity integration.
  * \param d0 initial position, dual quaternion
- * \param dd dual quaternion derivative
+ * \param dx spatial velocity
  * \param dt time step
  * \param d1 final position, dual quaternion
  */
 AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                              double dt, double d1[AA_RESTRICT 6] ) ;
 
-/** Dual quaternion derivative integration .
+/** Dual quaternion derivative integration.
  * \param d0 initial position, dual quaternion
  * \param dd dual quaternion derivative
  * \param dt time step
