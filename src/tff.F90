@@ -285,6 +285,27 @@ contains
     q = q / aa_tf_qnorm(q)
   end subroutine aa_tf_qnormalize
 
+  pure subroutine aa_tf_qminimize( q ) &
+       bind( C, name="aa_tf_qminimize" )
+    real(C_DOUBLE), dimension(4), intent(inout) :: q
+    ! Make W positive. This puts the quaternion in the right hand side
+    ! of the complex plane.  Thus, it will represent a rotation with a
+    ! minimum angle.
+    if( q(W_INDEX) < 0 ) then
+       q = -q
+    end if
+  end subroutine aa_tf_qminimize
+
+  pure subroutine aa_tf_qminimize2( q, qm ) &
+       bind( C, name="aa_tf_qminimize2" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE), dimension(4), intent(out) :: qm
+    if( q(W_INDEX) < 0 ) then
+       qm = -q
+    else
+       qm = q
+    end if
+  end subroutine aa_tf_qminimize2
 
   pure subroutine aa_tf_qnormalize2( q, qnorm ) &
        bind( C, name="aa_tf_qnormalize2" )
@@ -455,15 +476,8 @@ contains
        r(XYZ_INDEX) = 0d0
     else
        vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
-       ! TODO: does it really make sense to restrict the angle this way?
-       theta = atan2( sign(1d0,q(W_INDEX))*vnorm, sign(1d0,q(W_INDEX))*q(W_INDEX) )
-       if( vnorm < sqrt(sqrt(epsilon(vnorm))) ) then
-          ! theta/vnorm == theta*qnorm/(vnorm*qnorm) == 1/(qnorm*sinc(theta)),
-          ! Avoid division by small numbers
-          a = 1d0/(qnorm*aa_tf_sinc(theta))
-       else
-          a = theta/vnorm
-       end if
+       theta = atan2( vnorm, q(W_INDEX) )
+       a = theta/vnorm
        r(XYZ_INDEX) = a*q(XYZ_INDEX)
     end if
     r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
@@ -506,6 +520,7 @@ contains
     t(W_INDEX) = 0d0
     call aa_tf_qexp( t, q )
     call aa_tf_qnormalize(q)
+    call aa_tf_qminimize(q)
   end Subroutine aa_tf_rotvec2quat
 
   Subroutine aa_tf_axang2quat( a, q ) &
@@ -521,9 +536,10 @@ contains
        bind( C, name="aa_tf_quat2rotvec" )
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE), Dimension(3), intent(out) :: rv
-    real(C_DOUBLE) :: qrv(4)
+    real(C_DOUBLE) :: qmin(4),qrv(4)
     !! log method
-    call aa_tf_qln( q, qrv )
+    call aa_tf_qminimize2(q, qmin)
+    call aa_tf_qln( qmin, qrv )
     rv = 2*qrv(1:3) ! qrv(4) will be 0 for unit quaternions
   end Subroutine aa_tf_quat2rotvec
 
@@ -563,26 +579,27 @@ contains
     real(C_DOUBLE), dimension(4), intent(out) :: r
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
-    real(C_DOUBLE) :: theta, d, s1, s2
+    real(C_DOUBLE) :: c12, theta, s1, s2
     if( 0 == tau ) then
        r = q1
     elseif ( 1 == tau ) then
        r = q2
     else
-       theta = aa_la_angle( q1, q2 )
-       if( 0 == theta ) then
+       c12 = dot_product(q1,q2)
+       if( 0 == c12 ) then
           r = q1
        else
-          d = 1d0 / sin(theta)
-          s1 = sin( (1 - tau) * theta )
-          s2 = sin( tau * theta )
-          if( dot_product(q1,q2) < 0.0 ) then
-             r = (s1*q1 - s2*q2) * d
+          theta = acos(abs(c12))
+          s1 = sin( (1 - tau) * theta ) / sin(theta)
+          s2 = sin( tau * theta ) / sin(theta)
+          if( c12 < 0.0 ) then
+             r = (s1*q1 - s2*q2)
           else
-             r = (s1*q1 + s2*q2) * d
+             r = (s1*q1 + s2*q2)
           end if
        end if
     end if
+    call aa_tf_qnormalize(r)
   end subroutine aa_tf_qslerp
 
 
@@ -598,10 +615,12 @@ contains
     elseif ( 1 == tau ) then
        r = q2
     else
-       ! ( q2*q1^-1 ) ^ t  *
-       call aa_tf_qmulc( q2, q1, qm )
+       ! q1 * (conj(q1) * q2) ^ t  *
+       call aa_tf_qcmul( q1, q2, qm )
+       call aa_tf_qminimize(qm)        ! go the short way
        call aa_tf_qpow( qm, tau, qp )
-       call aa_tf_qmul( qp, q1, r )
+       call aa_tf_qmul( q1, qp, r )
+       call aa_tf_qnormalize(r)
     end if
   end subroutine aa_tf_qslerpalg
 
@@ -640,23 +659,24 @@ contains
     real(C_DOUBLE), dimension(4), intent(out) :: r
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
-    real(C_DOUBLE) :: theta, s1, s2, d
-    if( 0.0 > tau .or. 1.0 < tau ) then
+    real(C_DOUBLE) :: c12,theta, s1, s2,sc
+    if( 0 == tau .or. 1.0 == tau ) then
        r = 0d0
        return
     end if
-    theta = aa_la_angle( q1, q2 )
-    if( 0 == theta ) then
+    c12 = dot_product(q1,q2)
+    if( 0 == c12 ) then
        r = 0d0
        return
     end if
-    d = 1.0 / sin(theta)
-    s1 = -theta * cos( (1 - tau) * theta )
-    s2 = theta * cos( theta * tau )
-    if( dot_product(q1,q2) < 0.0 ) then
-       r = (s1*q1 - s2*q2) * d
+    theta = acos(abs(c12))
+    sc = aa_tf_sinc( theta )
+    s1 = -cos( (1 - tau) * theta ) / sc
+    s2 = cos( theta * tau ) / sc
+    if( c12 < 0.0 ) then
+       r = (s1*q1 - s2*q2)
     else
-       r = (s1*q1 + s2*q2) * d
+       r = (s1*q1 + s2*q2)
     end if
   end subroutine aa_tf_qslerpdiff
 
@@ -673,8 +693,9 @@ contains
        return
     end if
     ! dq = ln(q2*q1^-1) * slerp(q1,q2,u)
-    call aa_tf_qslerp( tau, q1, q2, q )
+    call aa_tf_qslerpalg( tau, q1, q2, q )
     call aa_tf_qmulc( q2, q1, qm );
+    call aa_tf_qminimize(qm)
     call aa_tf_qln( qm, ql )
     call aa_tf_qmul( ql, q, dq )
   end subroutine aa_tf_qslerpdiffalg
@@ -701,7 +722,7 @@ contains
     end if
     ! get angle
     q1q2 = dot_product(q1,q2)
-    theta = acos( q1q2 )
+    theta = acos( abs(q1q2) )
     if( 0 == theta ) then
        dq = 0d0
        q = q1
@@ -858,18 +879,14 @@ contains
     real(C_DOUBLE), intent(in) :: w(3), q0(4)
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE)  :: rv(3), e(4)
+    real(C_DOUBLE)  :: wq(4), e(4)
     !! Exponential map method
     !! q1 = exp(w*dt/2) * q0
-    !wq(XYZ_INDEX) = w*(dt/2d0)
-    !wq(W_INDEX) = 0d0
-    !call aa_tf_qexp( wq, e )
-    rv = w*dt
-    call aa_tf_rotvec2quat(rv, e) ! equivalent to calling the exponential
+    wq(XYZ_INDEX) = w*(dt/2)
+    wq(W_INDEX) = 0d0
+    call aa_tf_qexp( wq, e )
     call aa_tf_qmul(e,q0, q1)
   end subroutine aa_tf_qsvel
-
-
 
   !!! Dual numbers
 
@@ -1079,6 +1096,15 @@ contains
     d = d / aa_la_norm2( d(DQ_REAL) )
   end subroutine aa_tf_duqu_normalize
 
+  !> Dual quaternion angle minimization
+  subroutine aa_tf_duqu_minimize( d ) &
+       bind( C, name="aa_tf_duqu_minimize" )
+    real(C_DOUBLE), intent(inout), dimension(8) :: d
+    if ( d(DQ_REAL_W) < 0 ) then
+       d = -d
+    end if
+  end subroutine aa_tf_duqu_minimize
+
   !> Dual quaternion norm
   subroutine aa_tf_duqu_norm( d, nreal, ndual ) &
        bind( C, name="aa_tf_duqu_norm" )
@@ -1097,7 +1123,6 @@ contains
     ndual = dot_product( d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ) ) / nreal
   end subroutine aa_tf_duqu_vnorm
 
-
   !> Dual quaternion construction from unit quaternion and translation
   !> vector.
   subroutine aa_tf_qv2duqu( q, v, d ) &
@@ -1111,6 +1136,17 @@ contains
     call aa_tf_qvel2diff( q, v, d(DQ_DUAL))
 
   end subroutine aa_tf_qv2duqu
+
+  !> Dual quaternion construction from unit quaternion and translation
+  !> vector, with minimized angle
+  subroutine aa_tf_qv2duqu_min( q, v, d ) &
+       bind( C, name="aa_tf_qv2duqu_min" )
+    real(C_DOUBLE), intent(in), dimension(3) :: q(4), v(3)
+    real(C_DOUBLE), intent(out), dimension(8) :: d
+    real(C_DOUBLE) :: qmin(4)
+    call aa_tf_qminimize2(q, qmin)
+    call aa_tf_qv2duqu(qmin, v, d)
+  end subroutine aa_tf_qv2duqu_min
 
   !> Dual quaternion translation vector
  subroutine aa_tf_duqu_trans( d, t ) &
@@ -1317,8 +1353,7 @@ contains
 
        ! expanded dual computation
        nr = sqrt(vv)
-       ! TODO: does it really make sense to restrict the angle this way?
-       theta = atan2( sign(1d0,d(W_INDEX))*nr, sign(1d0,d(W_INDEX))*d(W_INDEX) )
+       theta = atan2( nr, d(W_INDEX) )
 
        sc = aa_tf_sinc(theta)
 

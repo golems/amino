@@ -39,11 +39,9 @@ pkginclude_HEADERS = 	                \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
-TESTS = aa_test la_test aa_regress q_test aa_fuzz
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
-noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress q_test
 
 
 libamino_la_SOURCES =                  \
@@ -89,21 +87,6 @@ src/mac/mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
 distclean-local:
 	-rm -rf doxygen-doc
 
-aa_test_SOURCES = src/test/aa_test.c
-aa_test_LDADD = libamino.la -lblas -llapack
-
-q_test_SOURCES = src/test/q_test.c
-q_test_LDADD = libamino.la -lblas -llapack
-
-aa_regress_SOURCES = src/test/aa_regress.c
-aa_regress_LDADD = libamino.la -lblas -llapack
-
-la_test_SOURCES = src/test/la_test.F90
-la_test_LDADD = libamino.la -lblas -llapack
-
-aa_fuzz_SOURCES = src/test/aa_fuzz.c
-aa_fuzz_LDADD = libamino.la -lblas -llapack
-
 #vecbench_SOURCES = src/test/vecbench.c
 #vecbench_LDADD = libamino.la -lblas -llapack
 
@@ -130,6 +113,31 @@ $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 
 foo:
 	echo $(la_test_OBJECTS)
+
+## TESTS ##
+
+TESTS = aa_test la_test aa_regress q_test aa_fuzz
+noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress q_test
+noinst_LTLIBRARIES += libtestutil.la
+
+libtestutil_la_SOURCES = src/test/testutil.c
+
+aa_test_SOURCES = src/test/aa_test.c
+aa_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+
+q_test_SOURCES = src/test/q_test.c
+q_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+
+aa_regress_SOURCES = src/test/aa_regress.c
+aa_regress_LDADD = libamino.la -lblas -llapack libtestutil.la
+
+la_test_SOURCES = src/test/la_test.F90
+la_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+
+aa_fuzz_SOURCES = src/test/aa_fuzz.c
+aa_fuzz_LDADD = libamino.la -lblas -llapack libtestutil.la
+
+## PREPROCESSING ##
 
 clapack_doc.c: doc/clapack_doc.c include/amino/clapack.h include/amino/clapack_impl.h
 	$(CPP) $(INCLUDES) -CC $< -o $@

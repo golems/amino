@@ -42,24 +42,12 @@
 
 //#define AA_ALLOC_STACK_MAX
 #include "amino.h"
+#include "amino/test.h"
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <inttypes.h>
 #include <sys/resource.h>
-
-static void aveq( const char * name,
-                  size_t n, double *a, double *b, double tol ) {
-    if( !aa_veq(n, a, b, tol) ) {
-        fprintf( stderr, "FAILED: %s\n",name);
-        fprintf( stderr, "a: ");
-        aa_dump_vec( stderr, a, n );
-        fprintf( stderr, "b: ");
-        aa_dump_vec( stderr, b, n );
-
-        assert( 0 );
-    }
-}
 
 static void rotvec() {
     double e[3], R[9], q[4], vr[3], vq[3];
@@ -162,21 +150,21 @@ static void chain() {
 
 static void quat() {
     double q1[4], q2[4], u;
-    aa_vrand( 4, q1 );
-    aa_vrand( 4, q2 );
+    aa_test_qurand( q1 );
+    aa_test_qurand( q2 );
     u = aa_frand();
-    aa_tf_qnormalize(q1);
-    aa_tf_qnormalize(q2);
 
-    double qg[4], qa[4];
-    aa_tf_qslerp( u, q1, q2, qg );
-    aa_tf_qslerpalg( u, q1, q2, qa );
-    aveq("slerp", 4, qg, qa, .001 );
+    {
+        double qg[4], qa[4];
+        aa_tf_qslerp( u, q1, q2, qg );
+        aa_tf_qslerpalg( u, q1, q2, qa );
+        aveq("slerp", 4, qg, qa, .001 );
 
-    double dqg[4], dqa[4];
-    aa_tf_qslerpdiff( u, q1, q2, dqg );
-    aa_tf_qslerpdiffalg( u, q1, q2, dqa );
-    aveq("slerpdiff", 4, dqg, dqa, .001 );
+        double dqg[4], dqa[4];
+        aa_tf_qslerpdiff( u, q1, q2, dqg );
+        aa_tf_qslerpdiffalg( u, q1, q2, dqa );
+        aveq("slerpdiff", 4, dqg, dqa, .001 );
+    }
 
     double R1[9], R2[9], Rr[9], qr[4], qrr[4];
     aa_tf_quat2rotmat(q1, R1);
@@ -187,6 +175,15 @@ static void quat() {
     if(qr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qr[i] *= -1;
     if(qrr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qrr[i] *= -1;
     aveq("qrel", 4, qr, qrr, .001 );
+
+    // minimize
+    {
+        double qmin[4], axang[4];
+        aa_tf_qminimize2( q1, qmin );
+        test( "quat-minimize",  fabs(q1[3]) == qmin[3] );
+        aa_tf_quat2axang( qmin, axang );
+        test( "quat-minimize-angle",  fabs(axang[3]) <= M_PI );
+    }
 
     // mulc
     {
@@ -219,6 +216,9 @@ static void quat() {
         aa_tf_qexp(q1, q1e);
         aa_tf_qln(q1e, q1eln);
         aveq("exp-log", 4, q1, q1eln, .00001 );
+        aa_tf_qln(q1, q1eln);
+        aa_tf_qexp(q1eln, q1e);
+        aveq("log-exp", 4, q1, q1e, .00001 );
     }
 
     // diff
@@ -251,11 +251,10 @@ static void duqu() {
 
     // random tf
     double q[4], v[3], p0[3];
-    aa_vrand( 4, q );
     aa_vrand( 3, v );
+    aa_test_qurand( q );
     //AA_MEM_SET( v, 0, 3 );
     aa_vrand( 3, p0 );
-    aa_tf_qnormalize(q);
 
     // tfmat
     aa_tf_tfmat_t T;
@@ -329,7 +328,10 @@ static void duqu() {
         double expd[8], lnexpd[8];
         aa_tf_duqu_exp(H.data, expd );
         aa_tf_duqu_ln( expd, lnexpd );
-        aveq( "duqu exp", 8, H.data, lnexpd, .001 );
+        aveq( "duqu-exp-ln", 8, H.data, lnexpd, .001 );
+        aa_tf_duqu_ln( H.data, lnexpd );
+        aa_tf_duqu_exp(lnexpd, expd );
+        aveq( "duqu-ln-exp", 8, H.data, expd, .001 );
     }
     {
         double expd[8], lnexpd[8];

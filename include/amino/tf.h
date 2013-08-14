@@ -283,6 +283,14 @@ AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRI
  */
 AA_API void aa_tf_qnormalize( double q[AA_RESTRICT 4] );
 
+/** Minimize angle represented by the quaternion.  This puts the
+ *  quaternion in the right-hand side of the complex plane.  Its w
+ *  value will be positive.
+*/
+AA_API void aa_tf_qminimize( double q[AA_RESTRICT 4] );
+
+AA_API void aa_tf_qminimize2( const double q[AA_RESTRICT 4], double qmin[AA_RESTRICT 4] );
+
 /** Normailize quaternion.
  */
 AA_API void aa_tf_qnormalize2( const double q[AA_RESTRICT 4], double qnorm[AA_RESTRICT 4] );
@@ -618,6 +626,8 @@ AA_API void aa_tf_duqu_norm( const double d[AA_RESTRICT 8], double *nreal, doubl
 /** Dual quaternion normalization */
 AA_API void aa_tf_duqu_normalize( double d[AA_RESTRICT 8] );
 
+/** Dual quaternion angle minimization */
+AA_API void aa_tf_duqu_minimization( double d[AA_RESTRICT 8] );
 
 /** Dual quaternion transformation */
 AA_API void aa_tf_duqu( const double d[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],

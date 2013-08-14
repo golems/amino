@@ -56,13 +56,13 @@ static void quat_tiny(double q[4]) {
     aa_tf_qnormalize(q);
 }
 
-static void duqu_tiny(double d[8], double s) {
+static void duqu_tiny(double d[8], double sq, double sv) {
     double q[4], v[3];
     aa_vrand(3, q);
     aa_vrand(3, v);
     for(size_t i = 0; i < 3; i++){
-        q[i] *= s;
-        v[i] *= s;
+        q[i] *= sq;
+        v[i] *= sv;
     }
 
     q[3] = 1;
@@ -99,8 +99,10 @@ static void qexp(void) {
 }
 
 static void duqu_exp(void) {
-    double dtiny[8];
-    duqu_tiny(dtiny, 1e-7);
+    double dtiny[8], dtinyq[8], dtinyv[8];
+    duqu_tiny(dtiny, 1e-7, 1e-7);
+    duqu_tiny(dtinyq, 1e-7, 0);
+    duqu_tiny(dtinyv, 0, 1e-7);
 
     // exp ident
     {
@@ -111,6 +113,10 @@ static void duqu_exp(void) {
         // tiny
         aa_tf_duqu_exp(dtiny, e );
         aveq( "duqu-exp-tiny", 8, e, ep, 1e-6);
+        aa_tf_duqu_exp(dtinyq, e );
+        aveq( "duqu-exp-tinyq", 8, e, ep, 1e-6);
+        aa_tf_duqu_exp(dtinyv, e );
+        aveq( "duqu-exp-tinyv", 8, e, ep, 1e-6);
     }
 
     // log ident

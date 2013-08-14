@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2010-2012, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,17 +40,39 @@
  *
  */
 
-#ifndef AMINO_TEST_H
-#define AMINO_TEST_H
+#include "amino.h"
+#include "amino/test.h"
 
 
-void test( const char *name, int check ) ;
-void afeq( double a, double b, double tol ) ;
-void aveq( const char * name, size_t n, double *a, double *b, double tol ) ;
-void aneq( double a, double b, double tol ) ;
+void test( const char *name, int check ) {
+    if( !check ) {
+        fprintf( stderr, "FAILED: %s\n",name);
+        abort();
+    }
+}
 
-/* Random unit quaternion */
-void aa_test_qurand( double q[4] );
+void afeq( double a, double b, double tol ) {
+    assert( aa_feq(a,b,tol) );
+}
 
+void aveq( const char * name,
+                  size_t n, double *a, double *b, double tol ) {
+    if( !aa_veq(n, a, b, tol) ) {
+        fprintf( stderr, "FAILED: %s\n",name);
+        fprintf( stderr, "a: ");
+        aa_dump_vec( stderr, a, n );
+        fprintf( stderr, "b: ");
+        aa_dump_vec( stderr, b, n );
+        abort();
+    }
+}
 
-#endif
+void aneq( double a, double b, double tol ) {
+    assert( !aa_feq(a,b,tol) );
+}
+
+void aa_test_qurand( double q[4] ) {
+    aa_vrand(4, q);
+    for( size_t i = 0; i < 4; i ++ ) q[i] -= 0.5;
+    aa_tf_qnormalize(q);
+}
