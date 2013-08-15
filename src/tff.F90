@@ -444,24 +444,34 @@ contains
 
   End Subroutine aa_tf_qrot
 
-
   pure Subroutine aa_tf_qexp( q, r ) &
        bind( C, name="aa_tf_qexp" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vnorm, ew, s
-    vnorm = aa_tf_qvnorm(q)
-    if( 0d0 == q(W_INDEX) ) then
-       ! pure quaternion, optimize out exp(0) == 1
-       r(W_INDEX) = cos(vnorm)
-       s = aa_tf_sinc(vnorm)
+    real(C_DOUBLE) :: vv,vnorm, ew, s
+    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+    if( 0d0 == vv) then
+       ! Scalar quaternion
+       r(XYZ_INDEX) = 0d0
+       r(W_INDEX) = exp(q(W_INDEX))
     else
-       ! impure quaternion
-       ew = exp(q(W_INDEX))
-       r(W_INDEX) = ew * cos(vnorm)
-       s = ew*aa_tf_sinc(vnorm)
+       ! Nonzero vector
+       vnorm = sqrt(vv)
+       ! Avoid division by very small vnorm
+       if( vnorm < sqrt(sqrt(epsilon(vnorm))) ) then
+          s = aa_tf_sinc_series(vnorm) ! approx. 1
+       else
+          s = sin(vnorm)/vnorm
+       end if
+       r(W_INDEX) = cos(vnorm)
+       if ( 0d0 /= q(W_INDEX) ) then
+          ! impure quaternion, exp(0) /= 1
+          ew = exp(q(W_INDEX))
+          r(W_INDEX) = r(W_INDEX) * ew
+          s = s*ew
+       end if
+       r(XYZ_INDEX) = s * q(XYZ_INDEX)
     end if
-    r(XYZ_INDEX) = s * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
 
   pure subroutine aa_tf_qln( q, r ) &
@@ -476,8 +486,14 @@ contains
        r(XYZ_INDEX) = 0d0
     else
        vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
-       theta = atan2( vnorm, q(W_INDEX) )
-       a = theta/vnorm
+       theta = atan2( vnorm, q(W_INDEX) ) ! always positive
+       ! Try to avoid division by very small vnorm
+       if ( theta < sqrt(sqrt(epsilon(theta))) ) then
+          ! a = theta*qnorm / (vnorm*qnorm) = theta/(sin(theta)*qnorm)
+          a = aa_tf_invsinc_series(theta)/qnorm ! approx. 1/qnorm
+       else
+          a = theta/vnorm
+       end if
        r(XYZ_INDEX) = a*q(XYZ_INDEX)
     end if
     r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
@@ -854,17 +870,30 @@ contains
   end subroutine aa_tf_qvelrk4
 
 
+  !! Evaluate a polynomial via Horners rule
+  pure function aa_tf_horner3( x, a0, a1, a2 ) result(y)
+    real(C_DOUBLE), value :: x, a0, a1, a2
+    real(C_DOUBLE) :: y
+    y = a0 + x * (a1 + x*a2)
+  end function aa_tf_horner3
+
+  ! sin(theta)/theta
   pure function aa_tf_sinc_series( theta ) result(s)
     real(C_DOUBLE), value :: theta
     real(C_DOUBLE) :: s
-    real(C_DOUBLE) :: x
-    x = theta**2
     ! Rewrite partial Taylor series using Horners rule.  First
     ! three terms should be accurate within machine precision,
     ! because the third term is less than theta**4 and thus less
     ! than epsilon.
-    s = 1d0 + x * (-1d0/6 + x/120d0)
+    s = aa_tf_horner3( theta**2, 1d0, -1d0/6d0, 1d0/120d0)
   end function aa_tf_sinc_series
+
+  ! theta/sin(theta)
+  pure function aa_tf_invsinc_series( theta ) result(s)
+    real(C_DOUBLE), value :: theta
+    real(C_DOUBLE) :: s
+    s = aa_tf_horner3( theta**2, 1d0, 1d0/6d0, 7d0/360d0 )
+  end function aa_tf_invsinc_series
 
   pure function aa_tf_sinc( theta ) result(s)
     real(C_DOUBLE), value :: theta
@@ -1290,49 +1319,42 @@ contains
        bind( C, name="aa_tf_duqu_exp" )
     real(C_DOUBLE), intent(in) :: d(8)
     real(C_DOUBLE), intent(out) :: e(8)
-    real(C_DOUBLE) :: nr, nd, sc, c
+    real(C_DOUBLE) :: nr, c, vv, vd, ar, ad
     type(aa_tf_dual_t) :: expw
-    call aa_tf_duqu_vnorm( d, nr, nd );
+    vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
     ! compute pure exponential
-    if( 0d0 == nr ) then
+    if( 0d0 == vv ) then
        ! avoid division by zero and optimize out known values
        e(DQ_REAL_XYZ) = 0d0 ! sinc(0) = 1 and d_xyz = 0
        e(DQ_REAL_W) = 1d0 ! cos(0) 1
        !! limit as vnorm->0 of ( (cos(vnorm) - sinc(vnorm))/vnorm ) == 0
        !! sin(0) == 0
        e(DQ_DUAL_XYZ) = d(DQ_DUAL_XYZ)
-       e(DQ_DUAL_W) = 0d0 ! sin(0) = 0
+       e(DQ_DUAL_W) = 0d0
     else
-       sc = aa_tf_sinc( nr )
+       nr = sqrt(vv)
        c = cos( nr )
-       e(DQ_REAL_XYZ) = sc*d(DQ_REAL_XYZ)
+       if( nr < sqrt(sqrt(epsilon(nr))) ) then
+          ar = aa_tf_sinc_series(nr)
+          ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
+          ad = aa_tf_horner3( nr**2, -1d0/3d0, 1d0/30d0, -1d0/840 )
+       else
+          ar = sin(nr)/nr
+          ad = (c-ar)/vv
+       end if
+       vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
+       ad = vd*ad
+       e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
        e(DQ_REAL_W) = c
-       e(DQ_DUAL_XYZ) = (sc * d(DQ_DUAL_XYZ)) &
-            + (dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ)) * limscal(nr) * (d(DQ_REAL_XYZ)/nr))
-       e(DQ_DUAL_W) = -sin(nr)*nd
+       e(DQ_DUAL_XYZ) = (ar * d(DQ_DUAL_XYZ)) + (ad * (d(DQ_REAL_XYZ)))
+       e(DQ_DUAL_W) = -ar * vd
     end if
 
     ! impure part
     if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
-       expw = aa_tf_dual_exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
+       expw = exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
        call aa_tf_dual_scalv( expw%r, expw%d, e )
     end if
-    contains
-      function limscal(x) result(y)
-        real(C_DOUBLE) :: x
-        real(C_DOUBLE) :: y
-        if ( abs(x) < sqrt(sqrt(epsilon(x))) ) then
-           !! Taylor Series expansion for theta near zero
-           y = 0d0
-           y = x**2 * (-1/3628800 - 1/39916800 + y)  ! x**9
-           y = x**2 * (1/40320d0 + 1/362880d0 + y)   ! x**7
-           y = x**2 * (-1/720d0 - 1/5040d0 + y)      ! x**5
-           y = x**2 * (1/24d0 + 1/120d0 + y)         ! x**3
-           y = x    * (-1/2d0 - 1/6d0 + y )          ! x**1
-        else
-           y = ( cos(x) - aa_tf_sinc(x) ) / x
-        end if
-      end function limscal
   end subroutine aa_tf_duqu_exp
 
   subroutine aa_tf_duqu_ln( d, e ) &
@@ -1349,44 +1371,39 @@ contains
     mr2 = vv+d(DQ_REAL_W)**2
     mr = sqrt( mr2 )
 
-    !! Scaling parameter
+    !! Scalar part
+    !e_w = log(m)
+    e(DQ_REAL_W) = log(mr)
+    e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
+
+    !! Vector part
     if ( 0d0 == vv ) then
-       ar = 1/mr                 ! sinc(0) = 1
-       ad = -d(DQ_DUAL_W) / mr2
+       ! Optimize for 0 real vector
+       e(DQ_REAL_XYZ) = 0d0
+       e(DQ_DUAL_XYZ) = d(DQ_DUAL_XYZ) / mr
     else
        ! Dual number computation
        ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
        ! a = atan2( nv, dh(W_INDEX) ) / nv
 
        ! expanded dual computation
-       nr = sqrt(vv)
-       theta = atan2( nr, d(W_INDEX) )
+       nr = sqrt(vv)                   ! nr is positive
+       theta = atan2( nr, d(W_INDEX) ) ! theta is always positive
 
-       if( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
-          ar = 1d0/(mr*aa_tf_sinc_series(theta))
+       ! Try to avoid small number division
+       if( theta < sqrt(sqrt(epsilon(theta))) ) then
+          ar = aa_tf_invsinc_series(theta)/mr
           !! Taylor Series expansion for theta near zero
-          ! y = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
-          ad = theta**2 * (-29d0/4200d0)       ! x**6
-          ad = theta**2 * (-17d0/420d0 + ad)   ! x**4
-          ad = theta**2 * (-1d0/5d0 + ad)      ! x**2
-          ad = -2d0/3d0 + ad
-          ad = ad/mr
+          ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
+          ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
        else
           ar = theta/nr
-          ad =  (d(W_INDEX) - ar*mr2) / (nr**2)
+          ad =  (d(W_INDEX) - ar*mr2) / vv
        end if
-       ad = vd*ad
+       ad = (vd*ad - d(DQ_DUAL_W)) / mr2
+       e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+       e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
     end if
-    ad = (ad - d(DQ_DUAL_W)) / mr2
-
-    !! imaginary component
-    !e_w = log(m)
-    e(DQ_REAL_W) = log(mr)
-    e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
-
-    !! real component
-    e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
-    e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
   end subroutine aa_tf_duqu_ln
 
   !! Integrate twist to to get dual quaternion
