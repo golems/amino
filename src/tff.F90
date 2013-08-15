@@ -854,19 +854,25 @@ contains
   end subroutine aa_tf_qvelrk4
 
 
-  pure function aa_tf_sinc( theta ) result(s)
+  pure function aa_tf_sinc_series( theta ) result(s)
     real(C_DOUBLE), value :: theta
     real(C_DOUBLE) :: s
     real(C_DOUBLE) :: x
+    x = theta**2
+    ! Rewrite partial Taylor series using Horners rule.  First
+    ! three terms should be accurate within machine precision,
+    ! because the third term is less than theta**4 and thus less
+    ! than epsilon.
+    s = 1d0 + x * (-1d0/6 + x/120d0)
+  end function aa_tf_sinc_series
+
+  pure function aa_tf_sinc( theta ) result(s)
+    real(C_DOUBLE), value :: theta
+    real(C_DOUBLE) :: s
     if( 0d0 == theta ) then
        s = 1d0
     elseif ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
-       x = theta**2
-       ! Rewrite partial Taylor series using Horners rule.  First
-       ! three terms should be accurate within machine precision,
-       ! because the third term is less than theta**4 and thus less
-       ! than epsilon.
-       s = 1d0 + x * (-1d0/6 + x/120d0)
+       s = aa_tf_sinc_series(theta)
     else
        s = sin(theta)/theta
     end if
@@ -1333,12 +1339,13 @@ contains
        bind( C, name="aa_tf_duqu_ln" )
     real(C_DOUBLE), intent(in) :: d(8)
     real(C_DOUBLE), intent(out) :: e(8)
-    real(C_DOUBLE) :: vv, theta, nr, mr2, mr, sc, ar, ad
+    real(C_DOUBLE) :: vv, vd, theta, nr, mr2, mr, ar, ad
     !! log(q) = ( v/norm(v) * acos(w/norm(q)),  log(norm(q)) )
     !! log(q) = ( v/norm(v) * atan(norm(q),w),  log(norm(q)) )
 
     !! Norms
     vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
+    vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
     mr2 = vv+d(DQ_REAL_W)**2
     mr = sqrt( mr2 )
 
@@ -1355,42 +1362,31 @@ contains
        nr = sqrt(vv)
        theta = atan2( nr, d(W_INDEX) )
 
-       sc = aa_tf_sinc(theta)
-
-       ar = 1/(mr*sc)
-
-       ad = dot_product(d(DQ_REAL_XYZ)/nr,d(DQ_DUAL_XYZ)) / sc * limscal(theta) - d(DQ_DUAL_W)
-       ad = ad / mr2
-
+       if( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
+          ar = 1d0/(mr*aa_tf_sinc_series(theta))
+          !! Taylor Series expansion for theta near zero
+          ! y = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
+          ad = theta**2 * (-29d0/4200d0)       ! x**6
+          ad = theta**2 * (-17d0/420d0 + ad)   ! x**4
+          ad = theta**2 * (-1d0/5d0 + ad)      ! x**2
+          ad = -2d0/3d0 + ad
+          ad = ad/mr
+       else
+          ar = theta/nr
+          ad =  (d(W_INDEX) - ar*mr2) / (nr**2)
+       end if
+       ad = vd*ad
     end if
+    ad = (ad - d(DQ_DUAL_W)) / mr2
 
     !! imaginary component
     !e_w = log(m)
     e(DQ_REAL_W) = log(mr)
-    e(DQ_DUAL_W) = dot_product(d(DQ_REAL),d(DQ_DUAL))/mr2
+    e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
 
     !! real component
     e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
     e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
-    contains
-      function limscal(x) result(y)
-        real(C_DOUBLE) :: x
-        real(C_DOUBLE) :: y
-        !! lim_{x->0} { (1 - cos(x))/x } = 0
-        !! lim_{x->0} { sin(x)/x } = 1, this is sinc(x)
-        !! ( cos(x) - 1/sinc(x) ) / x == cos(x)/x - 1/sin(x) == cos(x)/x - csc(x)
-        if( abs(x) < sqrt(sqrt(epsilon(x))) ) then
-           !! Taylor Series expansion for theta near zero
-           y = 0d0
-           y = x**2 * (-1/3628800 + 73d0/33421440d0 + y) ! x**9
-           y = x**2 * (1/40320d0 + 127d0/604800d0 + y)   ! x**7
-           y = x**2 * (-1/720d0 + 31d0/15120d0 + y)      ! x**5
-           y = x**2 * (1/24d0 + 7d0/360d0 + y)           ! x**3
-           y = x    * (-1d0/2d0 + 1/6d0 + y )            ! x**1
-        else
-           y = ( cos(x) - 1d0/aa_tf_sinc(x) ) / x
-        end if
-      end function limscal
   end subroutine aa_tf_duqu_ln
 
   !! Integrate twist to to get dual quaternion
