@@ -450,29 +450,26 @@ contains
        bind( C, name="aa_tf_qexp" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vv,vnorm, ew, s
+    real(C_DOUBLE) :: vv, vnorm, ew, sc, c
+    ew = exp(q(W_INDEX))
     vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
     if( 0d0 == vv) then
        ! Scalar quaternion
        r(XYZ_INDEX) = 0d0
-       r(W_INDEX) = exp(q(W_INDEX))
+       r(W_INDEX) = ew
     else
        ! Nonzero vector
        vnorm = sqrt(vv)
        ! Avoid division by very small vnorm
        if( vnorm < sqrt(sqrt(epsilon(vnorm))) ) then
-          s = aa_tf_sinc_series(vnorm) ! approx. 1
+          sc = aa_tf_sinc_series(vnorm) ! approx. 1
+          c = aa_tf_cos_series(vnorm)   ! approx. 1
        else
-          s = sin(vnorm)/vnorm
+          sc = sin(vnorm)/vnorm
+          c = cos(vnorm)
        end if
-       r(W_INDEX) = cos(vnorm)
-       if ( 0d0 /= q(W_INDEX) ) then
-          ! impure quaternion, exp(0) /= 1
-          ew = exp(q(W_INDEX))
-          r(W_INDEX) = r(W_INDEX) * ew
-          s = s*ew
-       end if
-       r(XYZ_INDEX) = s * q(XYZ_INDEX)
+       r(W_INDEX) = ew * c
+       r(XYZ_INDEX) = ew * sc * q(XYZ_INDEX)
     end if
   end Subroutine aa_tf_qexp
 
@@ -899,6 +896,13 @@ contains
     ! than epsilon.
     s = aa_tf_horner3( theta**2, 1d0, -1d0/6d0, 1d0/120d0)
   end function aa_tf_sinc_series
+
+  ! cos(theta) for small theta
+  pure function aa_tf_cos_series( theta ) result(s)
+    real(C_DOUBLE), value :: theta
+    real(C_DOUBLE) :: s
+    s = aa_tf_horner3( theta**2, 1d0, -1d0/2d0, 1d0/24d0)
+  end function aa_tf_cos_series
 
   ! theta/sin(theta)
   pure function aa_tf_invsinc_series( theta ) result(s)
@@ -1345,13 +1349,14 @@ contains
        e(DQ_DUAL_W) = 0d0
     else
        nr = sqrt(vv)
-       c = cos( nr )
        if( nr < sqrt(sqrt(epsilon(nr))) ) then
-          ar = aa_tf_sinc_series(nr)
+          ar = aa_tf_sinc_series(nr) ! approx. 1
+          c = aa_tf_cos_series(nr)   ! approx. 1
           ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
-          ad = aa_tf_horner3( nr**2, -1d0/3d0, 1d0/30d0, -1d0/840 )
+          ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
        else
           ar = sin(nr)/nr
+          c = cos(nr)
           ad = (c-ar)/vv
        end if
        vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
