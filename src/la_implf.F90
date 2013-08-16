@@ -164,7 +164,7 @@ end subroutine AA_FMOD(la,colssd_c)
 !> Angle between vectors
 !!
 !! Method from: Kahan, Willliam. How futile are mindless assessments
-!! of roundoff in floating-point computation. progress). 2006
+!! of roundoff in floating-point computation. 2006
 !!
 !! \param[in] x first vector
 !! \param[in] y second vector
@@ -206,7 +206,21 @@ end function AA_FMOD_C_END(la,angle)
 pure function AA_FMOD(la,norm2)( x ) result(a)
   real(AA_FSIZE), intent(in) :: x(:)
   real(AA_FSIZE) :: a
-  a = sqrt(dot_product(x,x))
+  real(AA_FSIZE) :: scl, ssq
+  integer :: i
+  ssq = real(1,AA_FSIZE)
+  scl = real(0,AA_FSIZE)
+  do i=1,size(x)
+     if ( real(0,AA_FSIZE) /= x(i) ) then
+        if( scl < abs(x(i)) ) then
+           ssq = real(1,AA_FSIZE) + ssq * (scl/abs(x(i)))**2
+           scl = abs(x(i))
+        else
+           ssq = ssq + (abs(x(i))/scl)**2
+        end if
+     end if
+  end do
+  a = scl * sqrt(ssq)
 end function AA_FMOD(la,norm2)
 
 !> Make unit vector
