@@ -1,19 +1,47 @@
+/* -*- mode: C; c-basic-offset: 4 -*- */
+/* ex: set shiftwidth=4 tabstop=4 expandtab: */
+/*
+ * Copyright (c) 2010-2013, Georgia Tech Research Corporation
+ * All rights reserved.
+ *
+ * Author(s): Neil T. Dantam <ntd@gatech.edu>
+ * Georgia Tech Humanoid Robotics Lab
+ * Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
+ *
+ *
+ * This file is provided under the following "BSD-style" License:
+ *
+ *
+ *   Redistribution and use in source and binary forms, with or
+ *   without modification, are permitted provided that the following
+ *   conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+ *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ *   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ *   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ *   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *   POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
 #include "amino.h"
-
-
-static void aveq( const char * name,
-                  size_t n, double *a, double *b, double tol ) {
-    if( !aa_veq(n, a, b, tol) ) {
-        fprintf( stderr, "FAILED: %s\n",name);
-        fprintf( stderr, "a: ");
-        aa_dump_vec( stderr, a, n );
-        fprintf( stderr, "b: ");
-        aa_dump_vec( stderr, b, n );
-
-        assert( 0 );
-    }
-}
-
+#include "amino/test.h"
 
 static void rotmat_axang() {
     /* Had some numerical stability issues */
@@ -36,48 +64,21 @@ static void rotmat_axang() {
     aveq("quat2", 4, qvq, qvr, .001);
 }
 
-static void qrel() {
-
-    {
-        double r0[4] =   {-0.255393,  0.574795,  0.777422, 0.000147};
-        double r_r0[4] = { 0.257651, -0.575645, -0.776040, 0.003256};
-        double x0[3] =   { 0.292773, -0.220171, -0.298606};
-        double x_r0[3] = { 0.293673, -0.214814, -0.296594};
-        double S0[8], S_r0[8], Se[8];
-        aa_tf_qv2duqu(r0,x0,S0);
-        aa_tf_qv2duqu(r_r0,x_r0,S_r0);
-        //for( size_t i = 0; i < 8; i ++ ) Se[i]*=-1;
-
-        double twist[8], dx[6], qln[4], rv[3];
-        double zero[3] = {0};
-        aa_tf_duqu_mulc( S0, S_r0, Se );
-
-        aa_tf_duqu_ln( Se, twist );
-        aa_tf_qln(Se, qln);
-        aa_tf_quat2rotvec_near(Se, zero, rv);
-        aa_tf_duqu_twist2vel( S0, twist, dx );
-
-        fprintf(stderr,"Se: ");aa_dump_vec( stderr, Se, 8 );
-        fprintf(stderr,"ln: ");aa_dump_vec( stderr, twist, 8 );
-        fprintf(stderr,"qln: ");aa_dump_vec( stderr, qln, 4 );
-        fprintf(stderr,"rv: ");aa_dump_vec( stderr, rv, 3 );
-        fprintf(stderr,"dx: ");aa_dump_vec( stderr, dx, 6 );
-        printf( "dot: %f\n",  aa_la_dot(4, r0, r_r0 )) ;
-    }
-    {
-        double r0[4] =    {-0.277017,0.566639,0.775419,-0.030125};
-        double r_r0[4]  = {0.277017,-0.566639,-0.775419,0.030125};
-        double re[4], rv[4];
-        aa_tf_qmulc(r0, r_r0, re);
-        double zero[3] = {0};
-        aa_tf_qln(re, rv);
-        fprintf(stderr,"qrel: ");aa_dump_vec( stderr, re, 4 );
-        fprintf(stderr,"rv: ");aa_dump_vec( stderr, rv, 4 );
-    }
-
+static void slerp() {
+    double q[4], q1[4], u;
+    aa_test_qurand(q);
+    u = aa_frand();
+    aa_tf_qslerp(u, q, q, q1);
+    aveq( "slerp-equiv", 4, q1, q, 1e-8 );
+    aa_tf_qslerpalg(u, q, q, q1);
+    aveq( "slerpalg-equiv", 4, q1, q, 1e-8 );
 }
 
+
 int main() {
+    srand((unsigned int)time(NULL)); // might break in 2038
+    aa_test_ulimit();
+
     rotmat_axang();
-    //qrel();
+    slerp();
 }

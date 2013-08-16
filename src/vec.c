@@ -44,6 +44,7 @@
 // #define AA_ALLOC_STACK_MAX 0
 
 #include "amino.h"
+#include "amino/vec.h"
 
 void aa_vecm_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
                     double c[AA_RESTRICT 3] ) {

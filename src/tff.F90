@@ -37,6 +37,8 @@
 !!   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 !!   POSSIBILITY OF SUCH DAMAGE.
 
+#define PI (4d0*atan(1d0))
+#define PI_2 (2d0*atan(1d0))
 
 #define W_INDEX   4
 #define XYZ_INDEX  1:3
@@ -590,29 +592,40 @@ contains
     ! end if
   end Subroutine aa_tf_quat2axang
 
+
+  pure subroutine aa_tf_qslerp_param( q1, q2, theta, d1, d2 ) &
+       bind( C, name="aa_tf_qslerp_param" )
+    real(C_DOUBLE), intent(out) :: theta, d1, d2
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
+    theta = abs(aa_la_angle( q1, q2))
+    d1 = sin(theta)
+    if( theta > PI_2 ) then
+       ! Go the short way
+       theta = PI - theta
+       d2 = -d1
+    else
+       d2 = d1
+    end if
+  end subroutine aa_tf_qslerp_param
+
   pure subroutine aa_tf_qslerp( tau, q1, q2, r ) &
        bind( C, name="aa_tf_qslerp" )
     real(C_DOUBLE), dimension(4), intent(out) :: r
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
-    real(C_DOUBLE) :: c12, theta, s1, s2
+    real(C_DOUBLE) :: theta, d1,d2,s1, s2
     if( 0 == tau ) then
        r = q1
     elseif ( 1 == tau ) then
        r = q2
     else
-       c12 = dot_product(q1,q2)
-       if( 0 == c12 ) then
+       call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
+       if( 0d0 == theta ) then
           r = q1
        else
-          theta = acos(abs(c12))
-          s1 = sin( (1 - tau) * theta ) / sin(theta)
-          s2 = sin( tau * theta ) / sin(theta)
-          if( c12 < 0.0 ) then
-             r = (s1*q1 - s2*q2)
-          else
-             r = (s1*q1 + s2*q2)
-          end if
+          s1 = sin( theta - tau*theta )
+          s2 = sin( tau*theta )
+          r = s1/d1 * q1 + s2/d2 * q2
        end if
     end if
     call aa_tf_qnormalize(r)
@@ -667,6 +680,23 @@ contains
     call aa_tf_qmul( q2, qe, s2 )
   end subroutine aa_tf_qsquad_param
 
+
+  pure subroutine aa_tf_qslerpdiff_param( q1, q2, theta, d1, d2 ) &
+       bind( C, name="aa_tf_qslerpdiff_param" )
+    real(C_DOUBLE), intent(out) :: theta, d1, d2
+    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
+    theta = abs(aa_la_angle( q1, q2))
+    if( theta > PI_2 ) then
+       ! Go the short way
+       theta = PI - theta
+       d1 = aa_tf_sinc(theta)
+       d2 = -d1
+    else
+       d1 = aa_tf_sinc(theta)
+       d2 = d1
+    end if
+  end subroutine aa_tf_qslerpdiff_param
+
   !! Derivative of a SLERPed quaternion
   !! Note, this is not a time deriviative, but derivative by the slerp parameter tau
   !! Use the chain rule if you need the time derivative (ie, to find a velocity)
@@ -675,25 +705,11 @@ contains
     real(C_DOUBLE), dimension(4), intent(out) :: r
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
-    real(C_DOUBLE) :: c12,theta, s1, s2,sc
-    if( 0 == tau .or. 1.0 == tau ) then
-       r = 0d0
-       return
-    end if
-    c12 = dot_product(q1,q2)
-    if( 0 == c12 ) then
-       r = 0d0
-       return
-    end if
-    theta = acos(abs(c12))
-    sc = aa_tf_sinc( theta )
-    s1 = -cos( (1 - tau) * theta ) / sc
-    s2 = cos( theta * tau ) / sc
-    if( c12 < 0.0 ) then
-       r = (s1*q1 - s2*q2)
-    else
-       r = (s1*q1 + s2*q2)
-    end if
+    real(C_DOUBLE) :: theta, s1, s2, d1,d2
+    call aa_tf_qslerpdiff_param( q1, q2, theta, d1, d2 )
+    s1 = cos( theta - tau*theta )
+    s2 = cos( tau*theta )
+    r = -s1/d1*q1 + s2/d2*q2
   end subroutine aa_tf_qslerpdiff
 
 
@@ -704,10 +720,6 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
     real(C_DOUBLE), dimension(4) :: qm, ql, q
-    if( 0.0 > tau .or. 1.0 < tau ) then
-       dq = 0d0
-       return
-    end if
     ! dq = ln(q2*q1^-1) * slerp(q1,q2,u)
     call aa_tf_qslerpalg( tau, q1, q2, q )
     call aa_tf_qmulc( q2, q1, qm );

@@ -42,6 +42,7 @@
 
 #include "amino.h"
 #include "amino/test.h"
+#include <sys/resource.h>
 
 
 void test( const char *name, int check ) {
@@ -75,4 +76,30 @@ void aa_test_qurand( double q[4] ) {
     aa_vrand(4, q);
     for( size_t i = 0; i < 4; i ++ ) q[i] -= 0.5;
     aa_tf_qnormalize(q);
+}
+
+
+void aa_test_ulimit( void ) {
+    // some limits because
+    {
+        int r;
+        struct rlimit lim;
+        // address space
+        lim.rlim_cur = (1<<30);
+        lim.rlim_max = (1<<30);
+        r = setrlimit( RLIMIT_AS, &lim );
+        assert(0 == r );
+        // cpu time
+        lim.rlim_cur = 60;
+        lim.rlim_max = 60;
+        r = setrlimit( RLIMIT_CPU, &lim );
+        assert(0 == r );
+        // drop a core
+        r = getrlimit( RLIMIT_CORE, &lim );
+        assert(0==r);
+        lim.rlim_cur = 100*1<<20;
+        r = setrlimit( RLIMIT_CORE, &lim );
+        assert(0==r);
+
+    }
 }

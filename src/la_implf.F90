@@ -163,12 +163,24 @@ end subroutine AA_FMOD(la,colssd_c)
 
 !> Angle between vectors
 !!
+!! Method from: Kahan, Willliam. How futile are mindless assessments
+!! of roundoff in floating-point computation. progress). 2006
+!!
 !! \param[in] x first vector
 !! \param[in] y second vector
 pure function AA_FMOD(la,angle)( x, y ) result(r)
   real(AA_FSIZE), intent(in) :: x(:),y(:)
-  real(AA_FSIZE) :: r
-  r = acos( dot_product(x, y) / sqrt( dot_product(x,x)*dot_product(y,y) ) )
+  real(AA_FSIZE) :: r, nx, ny, s, c
+  integer i
+  nx = sqrt(dot_product(x,x))
+  ny = sqrt(dot_product(y,y))
+  s = real(0, AA_FSIZE)
+  c = real(0, AA_FSIZE)
+  do i=1,size(x)
+     s = s + (ny*x(i) - nx*y(i))**2
+     c = c + (ny*x(i) + nx*y(i))**2
+  end do
+  r = real(2,AA_FSIZE)*atan2(sqrt(s),sqrt(c))
 end function AA_FMOD(la,angle)
 
 !> Angle between vectors, C interface

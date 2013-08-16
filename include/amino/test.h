@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2010-2013, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -51,6 +51,9 @@ void aneq( double a, double b, double tol ) ;
 
 /* Random unit quaternion */
 void aa_test_qurand( double q[4] );
+
+/* Set limits*/
+void aa_test_ulimit( void );
 
 
 #endif
