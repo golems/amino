@@ -71,6 +71,15 @@ module amino_tf
      end subroutine aa_tf_quat2rotmat
   end interface aa_tf_quat2rotmat
 
+  interface aa_tf_rotmat2quat
+     subroutine aa_tf_rotmat2quat( r, q ) &
+          bind(C,name="aa_tf_rotmat2quat")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), dimension(3,3) :: r
+       real(C_DOUBLE), intent(out), dimension(4) :: q
+     end subroutine aa_tf_rotmat2quat
+  end interface aa_tf_rotmat2quat
+
 
   type aa_tf_dual_t
      real(C_DOUBLE) :: r
@@ -1188,6 +1197,15 @@ contains
 
   end subroutine aa_tf_qv2duqu
 
+
+  subroutine aa_tf_duqu2qv( d, q, v ) &
+       bind( C, name="aa_tf_duqu2qv" )
+    real(C_DOUBLE), intent(out), dimension(3) :: q(4), v(3)
+    real(C_DOUBLE), intent(in), dimension(8) :: d
+    q = d(DQ_REAL)
+    call aa_tf_duqu_trans( d, v )
+  end subroutine aa_tf_duqu2qv
+
   !> Dual quaternion construction from unit quaternion and translation
   !> vector, with minimized angle
   subroutine aa_tf_qv2duqu_min( q, v, d ) &
@@ -1223,6 +1241,15 @@ contains
     call aa_tf_quat2rotmat( d(DQ_REAL), t(R_INDEX) )
     call aa_tf_duqu_trans( d, t(T_INDEX) )
   end subroutine aa_tf_duqu2tfmat
+
+  subroutine aa_tf_tfmat2duqu( t, d ) &
+       bind( C, name="aa_tf_tfmat2duqu" )
+    real(C_DOUBLE), intent(out), dimension(8) :: d
+    real(C_DOUBLE), intent(in), dimension(3,4) :: t
+    real(C_DOUBLE) :: q(4)
+    call aa_tf_rotmat2quat( t(1:3,1:3), q )
+    call aa_tf_qv2duqu(q, t(1:3,4), d)
+  end subroutine aa_tf_tfmat2duqu
 
   !> Transform a point using the dual quaternion
   subroutine aa_tf_duqu( d, p0, p1 ) &

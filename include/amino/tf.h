@@ -648,6 +648,10 @@ AA_API void aa_tf_tfmat2duqu( const double T[AA_RESTRICT 12], double d[AA_RESTRI
 AA_API void aa_tf_qv2duqu( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                            double d[AA_RESTRICT 8] ) ;
 
+/** Convert dual quaternion to orientation unit quaternion and translation vector. */
+AA_API void aa_tf_duqu2qv( const double d[AA_RESTRICT 8],
+                           double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] ) ;
+
 /** Dual quaternion twist from velocity */
 AA_API void aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                                   double t[AA_RESTRICT 8] ) ;
