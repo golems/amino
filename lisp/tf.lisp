@@ -45,12 +45,15 @@
 
 
 (defun expand-type (value var body type)
-  (with-gensyms (x ptr0)
+  (with-gensyms (x y ptr0)
     `(let ((,x ,value))
-       (check-type ,x ,type)
-       (with-pointer-to-vector-data (,ptr0 (matrix-data ,x))
-         (let ((,var (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
-           ,@body)))))
+       (let ((,y (etypecase ,x
+                   (matrix ,x)
+                   ((simple-array double-float) (wrap-col-vector ,x)))))
+         (check-type ,y ,type)
+         (with-pointer-to-vector-data (,ptr0 (matrix-data ,y))
+           (let ((,var (inc-pointer ,ptr0 (* 8 (matrix-offset ,y)))))
+             ,@body))))))
 
 
 ;;; Transformation Matrix
@@ -119,6 +122,18 @@
 (defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
   (expand-type value var body 'quaternion))
 
+;;; Dual Quaternion
+(defun dual-quaternion-p (x)
+  (matrix-vector-n-p x 8 1))
+(deftype dual-quaternion ()
+  '(and matrix
+    (satisfies dual-quaternion-p)))
+(define-foreign-type dual-quaternion-t ()
+  ()
+  (:simple-parser dual-quaternion-t)
+  (:actual-type :pointer))
+(defmethod expand-to-foreign-dyn (value var body (type dual-quaternion-t))
+  (expand-type value var body 'dual-quaternion))
 
 
 ;;; Wrappers
@@ -207,6 +222,104 @@
 (defun tf-qslerp (r q0 q1 &optional (q (make-matrix 4 1)))
   (aa-tf-qslerp r q0 q1 q)
   q)
+
+
+;;; Dual quaternion
+(defcfun aa-tf-duqu-trans :void
+  (d dual-quaternion-t)
+  (x point-3-t))
+(defun tf-duqu-trans (d &optional (x (make-matrix 3 1)))
+  "Extract dual quaternion translation"
+  (aa-tf-duqu-trans d x)
+  x)
+
+
+(defcfun aa-tf-qv2duqu :void
+  (q quaternion-t)
+  (v point-3-t)
+  (d dual-quaternion-t))
+(defun tf-qv2duqu (q v &optional (d (make-matrix 8 1)))
+  "Convert unit quaternion and translation vector to dual quaternion"
+  (aa-tf-qv2duqu q v d)
+  d)
+
+(defcfun aa-tf-duqu2qv :void
+  (d dual-quaternion-t)
+  (q quaternion-t)
+  (v point-3-t))
+(defun tf-duqu2qv (d &optional
+                   (q (make-matrix 4 1))
+                   (v (make-matrix 3 1)))
+  "Convert dual quaternion to unit quaternion and translation vector"
+  (aa-tf-duqu2qv d q v)
+  (values q v))
+
+(defcfun aa-tf-duqu-conj :void
+  (x dual-quaternion-t)
+  (y dual-quaternion-t))
+(defun tf-duqu-conj (x &optional (y (make-matrix 8 1)))
+  "Dual quaternion conjugate"
+  (aa-tf-duqu-conj x y)
+  y)
+
+(defcfun aa-tf-duqu-inv :void
+  (x dual-quaternion-t)
+  (y dual-quaternion-t))
+(defun tf-duqu-inv (x &optional (y (make-matrix 8 1)))
+  "Dual quaternion inverse"
+  (aa-tf-duqu-inv x y)
+  y)
+
+(defcfun aa-tf-duqu-normalize :void
+  (y dual-quaternion-t))
+(defun tf-duqu-normalize (x &optional (y (make-matrix 8 1)))
+  "Dual quaternion normalization"
+  (matrix-copy x y)
+  (aa-tf-duqu-normalize y)
+  y)
+
+(defcfun aa-tf-duqu-mul :void
+  (a dual-quaternion-t)
+  (b dual-quaternion-t)
+  (c dual-quaternion-t))
+(defun tf-duqu-mul (a b &optional (c (make-matrix 8 1)))
+  "Dual quaternion multiply: c = a*b"
+  (aa-tf-duqu-mul a b c)
+  c)
+
+(defcfun aa-tf-duqu-cmul :void
+  (a dual-quaternion-t)
+  (b dual-quaternion-t)
+  (c dual-quaternion-t))
+(defun tf-duqu-cmul (a b &optional (c (make-matrix 8 1)))
+  "Dual quaternion multiply: c = conj(a)*b"
+  (aa-tf-duqu-cmul a b c)
+  c)
+
+(defcfun aa-tf-duqu-mulc :void
+  (a dual-quaternion-t)
+  (b dual-quaternion-t)
+  (c dual-quaternion-t))
+(defun tf-duqu-mulc (a b &optional (c (make-matrix 8 1)))
+  "Dual quaternion multiply: c = a*conj(b)"
+  (aa-tf-duqu-mulc a b c)
+  c)
+
+(defcfun aa-tf-duqu-ln :void
+  (x dual-quaternion-t)
+  (y dual-quaternion-t))
+(defun tf-duqu-ln (x &optional (y (make-matrix 8 1)))
+  "Dual quaternion logarithm"
+  (aa-tf-duqu-ln x y)
+  y)
+
+(defcfun aa-tf-duqu-exp :void
+  (x dual-quaternion-t)
+  (y dual-quaternion-t))
+(defun tf-duqu-exp (x &optional (y (make-matrix 8 1)))
+  "Dual quaternion exponential"
+  (aa-tf-duqu-exp x y)
+  y)
 
 ;;; Convenience
 

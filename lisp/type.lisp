@@ -161,16 +161,17 @@
                         (coerce x type))))
       matrix)))
 
-(defun matrix-copy (matrix)
+(defun matrix-copy (matrix &optional
+                    (copy (make-matrix (matrix-rows matrix)
+                                       (matrix-cols matrix))))
   "Create a copy of MATRIX."
   (let ((m (matrix-rows matrix))
         (n (matrix-cols matrix)))
-    (let ((matrix-1 (make-matrix m n)))
-      (dotimes (j n)
-        (dotimes (i m)
-          (setf (matref matrix-1 i j)
-                (matref matrix i j))))
-      matrix-1)))
+    (dotimes (j n)
+      (dotimes (i m)
+        (setf (matref copy i j)
+              (matref matrix i j))))
+    copy))
 
 
 (defun matrix-counts-in-bounds-p (data-length offset stride rows cols)
@@ -296,3 +297,11 @@ N: cols in the block."
 (defun col-vector (&rest args)
   (declare (dynamic-extent args))
   (col-matrix args))
+
+(defun wrap-col-vector (column)
+  (declare (type (simple-array double-float (*)) column))
+  (%make-matrix :data column
+                :offset 0
+                :stride (length column)
+                :cols 1
+                :rows (length column)))
