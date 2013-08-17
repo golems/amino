@@ -442,6 +442,20 @@ void rel_d() {
     aveq("rel_d", 8, drel, drel_1t, 1e-6);
 }
 
+
+static void slerp() {
+    double q[4], qy[4], u, du;
+    double dq1[4], dq2[4], dqy[4];
+    aa_test_qurand(q);
+    u = aa_frand();
+    du = aa_frand();
+    aa_vrand(4,dq1);
+    aa_vrand(4,dq2);
+
+    aa_tf_qslerpchaindiff( u, du, q, dq1, q, dq2, qy, dqy );
+    aveq("chaindiff equiv", 4, q, qy, 1e-6);
+}
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -456,6 +470,7 @@ int main( void ) {
         duqu();
         rel_q();
         rel_d();
+        slerp();
     }
 
     return 0;

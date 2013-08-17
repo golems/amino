@@ -743,7 +743,7 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, dq1, dq2
     real(C_DOUBLE), value, intent(in) :: u, du
     ! locals
-    real(C_DOUBLE) :: q1q2, theta, dtheta, a, b, da, db, s, c, sa, sb, ca, cb
+    real(C_DOUBLE) :: theta, dtheta, dtheta_c, a, b, da, db, s, c, sa, sb, ca, cb, d1, d2
     ! check interpolation bounds
     if( 0.0 > u ) then
        dq = 0d0
@@ -755,40 +755,41 @@ contains
        return
     end if
     ! get angle
-    q1q2 = dot_product(q1,q2)
-    theta = acos( abs(q1q2) )
+    call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
     if( 0 == theta ) then
        dq = 0d0
        q = q1
        return
     end if
-    ! find parameters
-    dtheta = ( dot_product(q1, dq2) + dot_product(dq1, q2) ) / sqrt(1 - q1q2**2)
 
-    s = sin(theta)
+    s = sin(theta) ! nonzero
     c = cos(theta)
     sa = sin((1-u)*theta)
     ca = cos((1-u)*theta)
     sb = sin(u*theta)
     cb = cos(u*theta)
 
-    a = sa / s
-    b = sb / s
+    ! find parameters
+    ! TODO: what if cos(theta) == 0?
+    ! Try using the derivative of the atan2 formula for vector angle
+    ! instead.
+    dtheta_c = dot_product(q1, dq2) + dot_product(dq1, q2)
+    dtheta =  dtheta_c / c
 
-    da = ( ca * (dtheta*(1-u) - du*theta) ) / s - &
-         ( dtheta * c * sa ) / s**2
+    ! TODO: Taylor series evaluation when sin(theta) -> 0
 
-    db = ( (dtheta*u + theta*du) *cb ) / s - &
-         ( dtheta * c * sb ) / s**2
+    a = sa / d1
+    b = sb / d2
+
+    da = ( ca * (dtheta*(1-u) - du*theta) ) / d1
+    da = da - ( dtheta_c * sa ) / d1**2
+
+    db = ( (dtheta*u + theta*du) * cb ) / d2
+    db = db - ( dtheta_c * b ) / d1
 
     ! get the result
-    if( q1q2 < 0.0 ) then
-       q = q1*a - q2*b
-       dq = (dq1*a + q1*da) - (dq2*b + q2*db)
-    else
-       q = q1*a + q2*b
-       dq = (dq1*a + q1*da) + (dq2*b + q2*db)
-    end if
+    q = q1*a + q2*b
+    dq = (dq1*a + q1*da) + (dq2*b + q2*db)
   end subroutine aa_tf_qslerpchaindiff
 
   !! Perform a triad of slerps and computer the derivative as well
