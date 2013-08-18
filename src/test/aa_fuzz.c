@@ -456,6 +456,36 @@ static void slerp() {
     aveq("chaindiff equiv", 4, q, qy, 1e-6);
 }
 
+
+static void theta2quat() {
+    double theta = (aa_frand() - 0.5) * 2 * M_PI;
+    double qx[4], qy[4], qz[4];
+    double Rx[9], Ry[9], Rz[9];
+    double qRx[4], qRy[4], qRz[4];
+    aa_tf_xangle2rotmat( theta, Rx );
+    aa_tf_yangle2rotmat( theta, Ry );
+    aa_tf_zangle2rotmat( theta, Rz );
+
+    aa_tf_xangle2quat( theta, qx );
+    aa_tf_yangle2quat( theta, qy );
+    aa_tf_zangle2quat( theta, qz );
+
+    aa_tf_rotmat2quat( Rx, qRx );
+    aa_tf_rotmat2quat( Ry, qRy );
+    aa_tf_rotmat2quat( Rz, qRz );
+
+    aa_tf_qminimize( qx );
+    aa_tf_qminimize( qRx );
+    aa_tf_qminimize( qy );
+    aa_tf_qminimize( qRy );
+    aa_tf_qminimize( qz );
+    aa_tf_qminimize( qRz );
+
+    aveq("xangle2quat", 4, qx, qRx, 1e-6 );
+    aveq("yangle2quat", 4, qy, qRy, 1e-6 );
+    aveq("xangle2quat", 4, qz, qRz, 1e-6 );
+}
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -471,6 +501,7 @@ int main( void ) {
         rel_q();
         rel_d();
         slerp();
+        theta2quat();
     }
 
     return 0;

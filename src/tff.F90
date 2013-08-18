@@ -547,6 +547,36 @@ contains
     call aa_tf_qminimize(q)
   end Subroutine aa_tf_rotvec2quat
 
+  Subroutine aa_tf_xangle2quat( theta, q ) &
+       bind( C, name="aa_tf_xangle2quat" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: q
+    real(C_DOUBLE), intent(in), value :: theta
+    q(1) = sin(theta/2)
+    q(2) = 0d0
+    q(3) = 0d0
+    q(W_INDEX) = cos(theta/2)
+  end Subroutine aa_tf_xangle2quat
+
+  Subroutine aa_tf_yangle2quat( theta, q ) &
+       bind( C, name="aa_tf_yangle2quat" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: q
+    real(C_DOUBLE), intent(in), value :: theta
+    q(1) = 0d0
+    q(2) = sin(theta/2)
+    q(3) = 0d0
+    q(W_INDEX) = cos(theta/2)
+  end Subroutine aa_tf_yangle2quat
+
+  Subroutine aa_tf_zangle2quat( theta, q ) &
+       bind( C, name="aa_tf_zangle2quat" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: q
+    real(C_DOUBLE), intent(in), value :: theta
+    q(1) = 0d0
+    q(2) = 0d0
+    q(3) = sin(theta/2)
+    q(W_INDEX) = cos(theta/2)
+  end Subroutine aa_tf_zangle2quat
+
   Subroutine aa_tf_axang2quat( a, q ) &
        bind( C, name="aa_tf_axang2quat" )
     real(C_DOUBLE), Dimension(4), intent(out) :: q

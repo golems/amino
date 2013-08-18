@@ -136,8 +136,9 @@
   (expand-type value var body 'dual-quaternion))
 
 
-;;; Wrappers
+;;; Wrappers ;;;
 
+;;; Matrices
 
 (defcfun aa-tf-12 :void
   (tf transformation-matrix-t)
@@ -191,6 +192,8 @@
   (aa-tf-12rel tf1 tf2 tf)
   tf)
 
+;;; Quaternions
+
 (defcfun aa-tf-qinv :void
   (q quaternion-t)
   (qi quaternion-t))
@@ -222,6 +225,28 @@
 (defun tf-qslerp (r q0 q1 &optional (q (make-matrix 4 1)))
   (aa-tf-qslerp r q0 q1 q)
   q)
+
+
+(defcfun aa-tf-xangle2quat :void
+  (theta :double)
+  (r quaternion-t))
+(defun tf-xangle2quat (theta &optional (r (make-matrix 4 1)))
+  (aa-tf-xangle2quat theta r)
+  r)
+
+(defcfun aa-tf-yangle2quat :void
+  (theta :double)
+  (r quaternion-t))
+(defun tf-yangle2quat (theta &optional (r (make-matrix 4 1)))
+  (aa-tf-yangle2quat theta r)
+  r)
+
+(defcfun aa-tf-zangle2quat :void
+  (theta :double)
+  (r quaternion-t))
+(defun tf-zangle2quat (theta &optional (r (make-matrix 4 1)))
+  (aa-tf-zangle2quat theta r)
+  r)
 
 
 ;;; Dual quaternion

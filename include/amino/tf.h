@@ -457,6 +457,14 @@ AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
                          double dt,
                          double q1[AA_RESTRICT 4] );
 
+
+/** Unit quaternion for angle about x axis */
+AA_API void aa_tf_xangle2quat( double theta_x, double q[AA_RESTRICT 4] );
+/** Unit quaternion for angle about y axis */
+AA_API void aa_tf_yangle2quat( double theta_y, double q[AA_RESTRICT 4] );
+/** Unit quaternion for angle about z axis */
+AA_API void aa_tf_zangle2quat( double theta_z, double q[AA_RESTRICT 4] );
+
 /*********/
 /* Axang */
 /*********/
