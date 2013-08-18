@@ -42,6 +42,10 @@
 
 ;;; Geometric types ;;;;
 
+(defparameter +tf-quat-ident+ (col-vector 0 0 0 1))
+(defparameter +tf-duqu-ident+ (col-vector 0 0 0 1
+                                          0 0 0 0))
+(defparameter +tf-vec-3-ident+ (col-vector 0 0 0))
 
 
 (defun expand-type (value var body type)
@@ -194,28 +198,37 @@
 
 ;;; Quaternions
 
-(defcfun aa-tf-qinv :void
-  (q quaternion-t)
-  (qi quaternion-t))
-(defun tf-qinv (q &optional (q-i (make-matrix 4 1)))
-  (aa-tf-qinv q q-i)
-  q-i)
+(defmacro def-q2 ((c-fun lisp-fun) doc-string)
+  `(progn (defcfun ,c-fun :void
+            (x quaternion-t)
+            (y quaternion-t))
+          (defun ,lisp-fun (x &optional (y (make-matrix 4 1)))
+            ,doc-string
+            (,c-fun x y)
+            y)))
 
+(def-q2 (aa-tf-qconj tf-qconj) "Quaternion conjugate")
+(def-q2 (aa-tf-qinv tf-qinv) "Quaternion inverse")
+(def-q2 (aa-tf-qnormalize2 tf-qnormalize) "Normalize unit quaternion")
+(def-q2 (aa-tf-qminimize2 tf-qminimize) "Minimum angle unit quaternion")
+(def-q2 (aa-tf-qexp tf-qexp) "Quaternion exponential")
+(def-q2 (aa-tf-qln tf-qln) "Quaternion logarithm")
 
-(defcfun aa-tf-qnormalize :void
-  (q quaternion-t))
-(defun tf-qnorm (q &optional (q-n (make-matrix 4 1)))
-  (replace (matrix-data q-n) (matrix-data q))
-  (aa-tf-qnormalize q-n)
-  q-n)
+(defmacro def-q3 ((c-fun lisp-fun) doc-string)
+  `(progn (defcfun ,c-fun :void
+            (x1 quaternion-t)
+            (x2 quaternion-t)
+            (y quaternion-t))
+          (defun ,lisp-fun (x1 x2 &optional (y (make-matrix 4 1)))
+            ,doc-string
+            (,c-fun x1 x2 y)
+            y)))
 
-(defcfun aa-tf-rotmat2quat :void
-  (r rotation-matrix-t)
-  (q quaternion-t))
-(defun tf-rotmat2quat (r &optional (q (make-matrix 4 1)))
-  (aa-tf-rotmat2quat r q)
-  q)
-
+(def-q3 (aa-tf-qadd tf-qadd) "Add two quaternions")
+(def-q3 (aa-tf-qsub tf-qsub) "Subtract quaternions")
+(def-q3 (aa-tf-qmul tf-qmul) "Multiply quaternions")
+(def-q3 (aa-tf-qcmul tf-qcmul) "Multiply conjugate of first arg with second arg")
+(def-q3 (aa-tf-qmulc tf-qmulc) "Multiply first arg with conjugate of second arg")
 
 (defcfun aa-tf-qslerp :void
   (r :double)
@@ -223,14 +236,41 @@
   (q1 quaternion-t)
   (q quaternion-t))
 (defun tf-qslerp (r q0 q1 &optional (q (make-matrix 4 1)))
+  "Quaternion spherical linear interpolation"
   (aa-tf-qslerp r q0 q1 q)
   q)
 
+
+(defcfun aa-tf-qsvel :void
+  (q0 quaternion-t)
+  (w point-3-t)
+  (q1 quaternion-t))
+(defun tf-qsvel (q0 w &optional (q1 (make-matrix 4 1)))
+  "Integrate unit quaternion rotational velocity"
+  (aa-tf-qsvel q0 w q1)
+  q1)
+
+(defcfun aa-tf-rotmat2quat :void
+  (r rotation-matrix-t)
+  (q quaternion-t))
+(defun tf-rotmat2quat (r &optional (q (make-matrix 4 1)))
+  "Convert rotation matrix to quaternion"
+  (aa-tf-rotmat2quat r q)
+  q)
+
+(defcfun aa-tf-quat2rotmat :void
+  (q quaternion-t)
+  (r rotation-matrix-t))
+(defun tf-quat2rotmat (q &optional (r (make-matrix 3 3)))
+  "Convert quaternion to rotation matrix"
+  (aa-tf-quat2rotmat q r)
+  r)
 
 (defcfun aa-tf-xangle2quat :void
   (theta :double)
   (r quaternion-t))
 (defun tf-xangle2quat (theta &optional (r (make-matrix 4 1)))
+  "Convert rotation about x to unit quaternion"
   (aa-tf-xangle2quat theta r)
   r)
 
@@ -238,6 +278,7 @@
   (theta :double)
   (r quaternion-t))
 (defun tf-yangle2quat (theta &optional (r (make-matrix 4 1)))
+  "Convert rotation about y to unit quaternion"
   (aa-tf-yangle2quat theta r)
   r)
 
@@ -245,6 +286,7 @@
   (theta :double)
   (r quaternion-t))
 (defun tf-zangle2quat (theta &optional (r (make-matrix 4 1)))
+  "Convert rotation about z to unit quaternion"
   (aa-tf-zangle2quat theta r)
   r)
 
@@ -257,7 +299,6 @@
   "Extract dual quaternion translation"
   (aa-tf-duqu-trans d x)
   x)
-
 
 (defcfun aa-tf-qv2duqu :void
   (q quaternion-t)

@@ -123,6 +123,13 @@
   (aref (matrix-data matrix)
         (matrix-index matrix i j)))
 
+(defun vecref (matrix i)
+  "Return I'th element of column vector MATRIX"
+  (etypecase matrix
+    (simple-vector (svref matrix i))
+    (array (aref matrix i))
+    (matrix (matref matrix i 0))))
+
 (defun (setf matref) (value matrix i j)
   "Set element at row i, col j."
   (setf (aref (matrix-data matrix)

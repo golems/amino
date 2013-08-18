@@ -45,4 +45,6 @@
   :depends-on ("cffi")
   :components ((:file "package")
                (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
-               (:file "type" :depends-on ("package"))))
+               (:file "type" :depends-on ("package"))
+               (:file "foreign" :depends-on ("type"))
+               (:file "tf" :depends-on ("foreign"))))
