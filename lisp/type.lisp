@@ -251,6 +251,19 @@ N: cols in the block."
 ;;; VECTORS ;;;
 ;;;;;;;;;;;;;;;
 
+;; Lisp array vectors
+(defun make-vec (n)
+  (make-array n :element-type 'double-float))
+
+(defun vec (&rest args)
+  (let ((vec (make-vec (length args))))
+    (loop
+       for i from 0
+       for x in args
+       do (setf (aref vec i)
+                (coerce x 'double-float)))
+    vec))
+
 (defun matrix-vector-store-p (matrix)
   "Is the matrix stored in a way that looks like a vector?"
   (or (= (matrix-stride matrix)
@@ -305,6 +318,8 @@ N: cols in the block."
   (declare (dynamic-extent args))
   (col-matrix args))
 
+
+
 (defun wrap-col-vector (column)
   (declare (type (simple-array double-float (*)) column))
   (%make-matrix :data column
@@ -312,3 +327,20 @@ N: cols in the block."
                 :stride (length column)
                 :cols 1
                 :rows (length column)))
+
+(defmacro with-matrix ((var value) &body body)
+  "Ensure value is a matrix descriptor.
+Will wrap simple-vectors in a descriptor struct."
+  (with-gensyms (body-fun desc value-sym n)
+    `(flet ((,body-fun (,var) ,@body))
+       (let ((,value-sym ,value))
+         (etypecase ,value-sym
+           (matrix (,body-fun ,value-sym))
+           ((simple-array double-float (*))
+            (let* ((,n (length ,value-sym))
+                   (,desc (%make-matrix :data ,value-sym
+                                        :stride ,n
+                                        :rows ,n
+                                        :cols 1)))
+              ;; (declare (dynamic-extent ,desc))
+              (,body-fun ,desc))))))))

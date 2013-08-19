@@ -49,16 +49,34 @@
 
 
 (defun expand-type (value var body type)
-  (with-gensyms (x y ptr0)
-    `(let ((,x ,value))
-       (let ((,y (etypecase ,x
-                   (matrix ,x)
-                   ((simple-array double-float) (wrap-col-vector ,x)))))
-         (check-type ,y ,type)
-         (with-pointer-to-vector-data (,ptr0 (matrix-data ,y))
-           (let ((,var (inc-pointer ,ptr0 (* 8 (matrix-offset ,y)))))
-             ,@body))))))
+  (with-gensyms (x ptr0)
+    `(with-matrix (,x ,value)
+       (check-type ,x ,type)
+       (with-pointer-to-vector-data (,ptr0 (matrix-data ,x))
+         (let ((,var (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
+           ,@body)))))
 
+
+(defun expand-vector (value var body length)
+  "Get the data pointer for value, checking storage and size"
+  (with-gensyms (x ptr0 body-fun)
+    `(flet ((,body-fun (,var) ,@body))
+       (let ((,x ,value))
+         (etypecase ,x
+           (matrix
+            (if (matrix-vector-n-p ,x ,length 1)
+                ;; valid type
+                (with-pointer-to-vector-data (,ptr0 (matrix-data ,x))
+                  (,body-fun (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
+                ;; invalid type, throw error
+                (matrix-storage-error "Invalid matrix size or storage of ~D: ~A" ,length ,x)))
+           ((simple-array double-float (*))
+            (if (= (length ,x) ,length)
+                ;; valid type
+                (with-pointer-to-vector-data (,ptr0 ,x)
+                  (,body-fun ,ptr0))
+                ;; invalid type
+                (matrix-storage-error "Invalid matrix size of ~D: ~A" ,length ,x))))))))
 
 ;;; Transformation Matrix
 (defun transformation-matrix-p (x)
@@ -101,43 +119,28 @@
   (expand-type value var body 'rotation-matrix))
 
 ;;; Point 3
-(defun point-3-p (x)
-  (matrix-vector-n-p x 3 1))
-(deftype point-3 ()
-  '(and matrix
-    (satisfies point-3-p)))
-(define-foreign-type point-3-t ()
+(define-foreign-type vector-3-t ()
   ()
-  (:simple-parser point-3-t)
+  (:simple-parser vector-3-t)
   (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type point-3-t))
-  (expand-type value var body 'point-3))
+(defmethod expand-to-foreign-dyn (value var body (type vector-3-t))
+  (expand-vector value var body 3))
 
 ;;; Quaternion
-(defun quaternion-p (x)
-  (matrix-vector-n-p x 4 1))
-(deftype quaternion ()
-  '(and matrix
-    (satisfies quaternion-p)))
 (define-foreign-type quaternion-t ()
   ()
   (:simple-parser quaternion-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
-  (expand-type value var body 'quaternion))
+  (expand-vector value var body 4))
 
 ;;; Dual Quaternion
-(defun dual-quaternion-p (x)
-  (matrix-vector-n-p x 8 1))
-(deftype dual-quaternion ()
-  '(and matrix
-    (satisfies dual-quaternion-p)))
 (define-foreign-type dual-quaternion-t ()
   ()
   (:simple-parser dual-quaternion-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type dual-quaternion-t))
-  (expand-type value var body 'dual-quaternion))
+  (expand-vector value var body 8))
 
 
 ;;; Wrappers ;;;
@@ -146,8 +149,8 @@
 
 (defcfun aa-tf-12 :void
   (tf transformation-matrix-t)
-  (p0 point-3-t)
-  (p1 point-3-t))
+  (p0 vector-3-t)
+  (p1 vector-3-t))
 (defun tf-12 (tf p0 &optional (p1 (make-matrix 3 1)))
   (aa-tf-12 tf p0 p1)
   p1)
@@ -207,13 +210,6 @@
             (,c-fun x y)
             y)))
 
-(def-q2 (aa-tf-qconj tf-qconj) "Quaternion conjugate")
-(def-q2 (aa-tf-qinv tf-qinv) "Quaternion inverse")
-(def-q2 (aa-tf-qnormalize2 tf-qnormalize) "Normalize unit quaternion")
-(def-q2 (aa-tf-qminimize2 tf-qminimize) "Minimum angle unit quaternion")
-(def-q2 (aa-tf-qexp tf-qexp) "Quaternion exponential")
-(def-q2 (aa-tf-qln tf-qln) "Quaternion logarithm")
-
 (defmacro def-q3 ((c-fun lisp-fun) doc-string)
   `(progn (defcfun ,c-fun :void
             (x1 quaternion-t)
@@ -223,6 +219,13 @@
             ,doc-string
             (,c-fun x1 x2 y)
             y)))
+
+(def-q2 (aa-tf-qconj tf-qconj) "Quaternion conjugate")
+(def-q2 (aa-tf-qinv tf-qinv) "Quaternion inverse")
+(def-q2 (aa-tf-qnormalize2 tf-qnormalize) "Normalize unit quaternion")
+(def-q2 (aa-tf-qminimize2 tf-qminimize) "Minimum angle unit quaternion")
+(def-q2 (aa-tf-qexp tf-qexp) "Quaternion exponential")
+(def-q2 (aa-tf-qln tf-qln) "Quaternion logarithm")
 
 (def-q3 (aa-tf-qadd tf-qadd) "Add two quaternions")
 (def-q3 (aa-tf-qsub tf-qsub) "Subtract quaternions")
@@ -243,7 +246,7 @@
 
 (defcfun aa-tf-qsvel :void
   (q0 quaternion-t)
-  (w point-3-t)
+  (w vector-3-t)
   (q1 quaternion-t))
 (defun tf-qsvel (q0 w &optional (q1 (make-matrix 4 1)))
   "Integrate unit quaternion rotational velocity"
@@ -292,9 +295,30 @@
 
 
 ;;; Dual quaternion
+
+
+(defmacro def-dq2 ((c-fun lisp-fun) doc-string)
+  `(progn (defcfun ,c-fun :void
+            (x dual-quaternion-t)
+            (y dual-quaternion-t))
+          (defun ,lisp-fun (x &optional (y (make-matrix 8 1)))
+            ,doc-string
+            (,c-fun x y)
+            y)))
+
+(defmacro def-dq3 ((c-fun lisp-fun) doc-string)
+  `(progn (defcfun ,c-fun :void
+            (x1 dual-quaternion-t)
+            (x2 dual-quaternion-t)
+            (y dual-quaternion-t))
+          (defun ,lisp-fun (x1 x2 &optional (y (make-matrix 8 1)))
+            ,doc-string
+            (,c-fun x1 x2 y)
+            y)))
+
 (defcfun aa-tf-duqu-trans :void
   (d dual-quaternion-t)
-  (x point-3-t))
+  (x vector-3-t))
 (defun tf-duqu-trans (d &optional (x (make-matrix 3 1)))
   "Extract dual quaternion translation"
   (aa-tf-duqu-trans d x)
@@ -302,7 +326,7 @@
 
 (defcfun aa-tf-qv2duqu :void
   (q quaternion-t)
-  (v point-3-t)
+  (v vector-3-t)
   (d dual-quaternion-t))
 (defun tf-qv2duqu (q v &optional (d (make-matrix 8 1)))
   "Convert unit quaternion and translation vector to dual quaternion"
@@ -312,7 +336,7 @@
 (defcfun aa-tf-duqu2qv :void
   (d dual-quaternion-t)
   (q quaternion-t)
-  (v point-3-t))
+  (v vector-3-t))
 (defun tf-duqu2qv (d &optional
                    (q (make-matrix 4 1))
                    (v (make-matrix 3 1)))
@@ -328,13 +352,14 @@
   (aa-tf-duqu-conj x y)
   y)
 
-(defcfun aa-tf-duqu-inv :void
-  (x dual-quaternion-t)
-  (y dual-quaternion-t))
-(defun tf-duqu-inv (x &optional (y (make-matrix 8 1)))
-  "Dual quaternion inverse"
-  (aa-tf-duqu-inv x y)
-  y)
+(def-dq2 (aa-tf-duqu-inv tf-duqu-inv) "Dual quaternion inverse")
+(def-dq2 (aa-tf-duqu-ln tf-duqu-ln) "Dual quaternion natural logarithm")
+(def-dq2 (aa-tf-duqu-exp tf-duqu-exp) "Dual quaternion exponential")
+
+(def-dq3 (aa-tf-duqu-mul tf-duqu-mul) "Dual quaternion multiply: c = a*b")
+(def-dq3 (aa-tf-duqu-cmul tf-duqu-cmul) "Dual quaternion multiply: c = conj(a)*b")
+(def-dq3 (aa-tf-duqu-mulc tf-duqu-mulc) "Dual quaternion multiply: c = a*conj(b)")
+
 
 (defcfun aa-tf-duqu-normalize :void
   (y dual-quaternion-t))
@@ -342,49 +367,6 @@
   "Dual quaternion normalization"
   (matrix-copy x y)
   (aa-tf-duqu-normalize y)
-  y)
-
-(defcfun aa-tf-duqu-mul :void
-  (a dual-quaternion-t)
-  (b dual-quaternion-t)
-  (c dual-quaternion-t))
-(defun tf-duqu-mul (a b &optional (c (make-matrix 8 1)))
-  "Dual quaternion multiply: c = a*b"
-  (aa-tf-duqu-mul a b c)
-  c)
-
-(defcfun aa-tf-duqu-cmul :void
-  (a dual-quaternion-t)
-  (b dual-quaternion-t)
-  (c dual-quaternion-t))
-(defun tf-duqu-cmul (a b &optional (c (make-matrix 8 1)))
-  "Dual quaternion multiply: c = conj(a)*b"
-  (aa-tf-duqu-cmul a b c)
-  c)
-
-(defcfun aa-tf-duqu-mulc :void
-  (a dual-quaternion-t)
-  (b dual-quaternion-t)
-  (c dual-quaternion-t))
-(defun tf-duqu-mulc (a b &optional (c (make-matrix 8 1)))
-  "Dual quaternion multiply: c = a*conj(b)"
-  (aa-tf-duqu-mulc a b c)
-  c)
-
-(defcfun aa-tf-duqu-ln :void
-  (x dual-quaternion-t)
-  (y dual-quaternion-t))
-(defun tf-duqu-ln (x &optional (y (make-matrix 8 1)))
-  "Dual quaternion logarithm"
-  (aa-tf-duqu-ln x y)
-  y)
-
-(defcfun aa-tf-duqu-exp :void
-  (x dual-quaternion-t)
-  (y dual-quaternion-t))
-(defun tf-duqu-exp (x &optional (y (make-matrix 8 1)))
-  "Dual quaternion exponential"
-  (aa-tf-duqu-exp x y)
   y)
 
 ;;; Convenience
@@ -410,14 +392,14 @@
               (aref a 8) 1d0))
     tf))
 
-(defun tf (a b)
-  (declare (type matrix a b))
-  (cond
-    ((transformation-matrix-p a)
-     (cond
-       ((transformation-matrix-p b)
-        (tf-12chain a b))
-       ((point-3-p b)
-        (tf-12 a b))
-       (t (error "Can't transform ~A * ~A" a b))))
-    (t (error "Can't transform ~A * ~A" a b))))
+;; (defun tf (a b)
+;;   (declare (type matrix a b))
+;;   (cond
+;;     ((transformation-matrix-p a)
+;;      (cond
+;;        ((transformation-matrix-p b)
+;;         (tf-12chain a b))
+;;        ((vector-3-p b)
+;;         (tf-12 a b))
+;;        (t (error "Can't transform ~A * ~A" a b))))
+;;     (t (error "Can't transform ~A * ~A" a b))))
