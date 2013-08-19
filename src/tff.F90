@@ -81,6 +81,15 @@ module amino_tf
   end interface aa_tf_rotmat2quat
 
 
+  interface aa_tf_rotmat2axang
+     subroutine aa_tf_rotmat2axang( r, a ) &
+          bind(C,name="aa_tf_rotmat2axang")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), dimension(3,3) :: r
+       real(C_DOUBLE), intent(out), dimension(4) :: a
+     end subroutine aa_tf_rotmat2axang
+  end interface aa_tf_rotmat2axang
+
   type aa_tf_dual_t
      real(C_DOUBLE) :: r
      real(C_DOUBLE) :: d
@@ -273,6 +282,32 @@ contains
     R(1,2) = -sin(theta)
     R(2,2) = cos(theta)
   end subroutine aa_tf_zangle2rotmat
+
+
+  ! screw symmetrix matrix for u
+  subroutine aa_tf_skew_sym( u, R ) &
+       bind( C, name="aa_tf_skew_sym" )
+    real(C_DOUBLE), intent(in) ::  u(3)
+    real(C_DOUBLE), intent(out) :: R(3,3)
+    real(C_DOUBLE) :: x,y,z
+
+    x = u(1)
+    y = u(2)
+    z = u(3)
+
+    R(1,1) = 0d0
+    R(2,1) = z
+    R(3,1) = -y
+
+    R(2,1) = -z
+    R(2,2) = 0d0
+    R(2,3) = x
+
+    R(1,3) = y
+    R(2,3) = -x
+    R(3,3) = 0d0
+  end subroutine aa_tf_skew_sym
+
 
   !!! Quaternions
 

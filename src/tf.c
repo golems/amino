@@ -214,7 +214,7 @@ void aa_tf_quat2rotmat( const double q[restrict 4],
     y = q[1];
     z = q[2];
 
-    d = aa_la_dot(4, q, q);
+    d = sqrt( x*x + y*y + z*z + w*w );
     s = 2/d;
     xs = x*s;
     ys = y*s;
