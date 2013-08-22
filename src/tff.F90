@@ -465,7 +465,8 @@ contains
     real(C_DOUBLE), Dimension(3), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE), Dimension(3), intent(in) :: v
-    !real(C_DOUBLE), Dimension(4) :: qv, qr1, qr2, qi
+
+    real(C_DOUBLE) :: a,b,c
 
     !! slow implementation
     ! qv(W_INDEX) = 0d0
@@ -483,10 +484,14 @@ contains
     !r = v + 2*r
 
     !! factored implementation
-    r(1) =  q(2) * ( v(3)*q(4) + v(2)*q(1) - v(1)*q(2) ) - q(3) * ( v(2)*q(4) + v(1)*q(3) - q(1)*v(3) )
-    r(2) =  q(3) * ( v(1)*q(4) + v(3)*q(2) - v(2)*q(3) ) - q(1) * ( v(3)*q(4) + v(2)*q(1) - v(1)*q(2) )
-    r(3) =  q(1) * ( v(2)*q(4) + v(1)*q(3) - v(3)*q(1) ) - q(2) * ( v(1)*q(4) + v(3)*q(2) - v(2)*q(3) )
-    r = 2*r + v
+    a =  v(3)*q(4) + v(2)*q(1) - v(1)*q(2)
+    b =  v(1)*q(4) + v(3)*q(2) - v(2)*q(3)
+    c =  v(2)*q(4) + v(1)*q(3) - v(3)*q(1)
+
+    r(1) =  q(2) * a - q(3) * c
+    r(2) =  q(3) * b - q(1) * a
+    r(3) =  q(1) * c - q(2) * b
+    r = r + r + v
 
   End Subroutine aa_tf_qrot
 

@@ -44,38 +44,48 @@
 // #define AA_ALLOC_STACK_MAX 0
 
 #include "amino.h"
-#include "amino/vec.h"
+#include "amino/arch/arch.h"
 
 void aa_vecm_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
                     double c[AA_RESTRICT 3] ) {
-    aa_vec_d4_t va = aa_vec_d3_ld(a);
-    aa_vec_d4_t vb = aa_vec_d3_ld(b);
-    aa_vec_d4_t vc = aa_vec_cross(va,vb);
-    aa_vec_d3_st(c,vc);
+    aa_vec_4d_t va = aa_vec_3d_ld(a);
+    aa_vec_4d_t vb = aa_vec_3d_ld(b);
+    aa_vec_4d_t vc = aa_vec_cross(va,vb);
+    aa_vec_3d_st(c,vc);
 }
+
+void aa_vecm_qconj( const double q[4], double r[4] )  {
+    aa_vec_4d_t a =  aa_vec_4d_ld(q);
+    aa_vec_4d_t b =  aa_vec_qconj(a);
+    aa_vec_4d_st(r,b);
+    /* aa_vec_4d_t s = {-1, -1, -1, 1}; */
+    /* return q*s; */
+}
+
+
 
 void aa_vecm_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4],
                    double c[AA_RESTRICT 4] ) {
-    aa_vec_d4_t va = aa_vec_d4_ld(a);
-    aa_vec_d4_t vb = aa_vec_d4_ld(b);
-    aa_vec_d4_t vc = aa_vec_qmul(va,vb);
-    aa_vec_d4_st(c,vc);
+    aa_vec_4d_t va = aa_vec_4d_ld(a);
+    aa_vec_4d_t vb = aa_vec_4d_ld(b);
+    aa_vec_4d_t vc = aa_vec_qmul(va,vb);
+    aa_vec_4d_st(c,vc);
 }
 
 void aa_vecm_qrot( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                    double p[AA_RESTRICT 3] ) {
 
-    aa_vec_d4_t vq = aa_vec_d4_ld(q);
-    aa_vec_d4_t vv = aa_vec_d3_ld(v);
-    aa_vec_d4_t vp = aa_vec_qrot(vq,vv);
-    aa_vec_d3_st(p,vp);
+    aa_vec_4d_t vq = aa_vec_4d_ld(q);
+    aa_vec_4d_t vv = aa_vec_3d_ld(v);
+    aa_vec_4d_t vp = aa_vec_qrot(vq,vv);
+    aa_vec_3d_st(p,vp);
 }
 
 void aa_vecm_tfmul( const double T0[AA_RESTRICT 12], const double T1[AA_RESTRICT 12],
                     double U[AA_RESTRICT 12] ) {
 
-    aa_vec_d4_t T0c0, T0c1, T0c2, T0c3;
-    aa_vec_d4_t Uc0, Uc1, Uc2, Uc3;
+    aa_vec_4d_t T0c0, T0c1, T0c2, T0c3;
+    aa_vec_4d_t Uc0, Uc1, Uc2, Uc3;
 
     AA_VEC_TFMAT_LD( T0c0, T0c1, T0c2, T0c3, T0 );
     AA_VEC_TFMUL( T0c0, T0c1, T0c2, T0c3, T1, Uc0, Uc1, Uc2, Uc3 );
@@ -103,12 +113,12 @@ void aa_vecm_tfmul( const double T0[AA_RESTRICT 12], const double T1[AA_RESTRICT
 void aa_vecm_duqu_mul( const double d0[AA_RESTRICT 8], const double d1[AA_RESTRICT 8],
                        double d2[AA_RESTRICT 8] ) {
 
-    aa_vec_d4_t d0r, d0d, d1r, d1d, d2r, d2d;
-    d0r = aa_vec_d4_ld( d0 );
-    d0d = aa_vec_d4_ld( d0+4 );
-    d1r = aa_vec_d4_ld( d1 );
-    d1d = aa_vec_d4_ld( d1+4 );
+    aa_vec_4d_t d0r, d0d, d1r, d1d, d2r, d2d;
+    d0r = aa_vec_4d_ld( d0 );
+    d0d = aa_vec_4d_ld( d0+4 );
+    d1r = aa_vec_4d_ld( d1 );
+    d1d = aa_vec_4d_ld( d1+4 );
     AA_VEC_DUQU_MUL( d0r, d0d, d1r, d1d, d2r, d2d );
-    aa_vec_d4_st( d2, d2r );
-    aa_vec_d4_st( d2+4, d2d );
+    aa_vec_4d_st( d2, d2r );
+    aa_vec_4d_st( d2+4, d2d );
 }

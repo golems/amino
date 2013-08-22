@@ -39,52 +39,70 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef AA_VEC_H
-#define AA_VEC_H
+
+#ifndef AA_AMINO_ARCH_GCC_H
+#define AA_AMINO_ARCH_GCC_H
+
+typedef double aa_vec_2d_t __attribute__ ((vector_size (16)));
+typedef double aa_vec_4d_t __attribute__ ((vector_size (32)));
+typedef int64_t aa_vec_4d_size_t __attribute__ ((vector_size (32)));
 
 
-typedef double aa_vec_d4_t __attribute__ ((vector_size (32)));
-typedef int64_t aa_vec_d4_size_t __attribute__ ((vector_size (32)));
 
-
-static inline aa_vec_d4_t
-aa_vec_d4_shuffle( aa_vec_d4_t a,
+static inline aa_vec_4d_t
+aa_vec_4d_shuffle( aa_vec_4d_t a,
                    int64_t i0, int64_t i1, int64_t i2, int64_t i3  ) {
-    aa_vec_d4_size_t m = {i0,i1,i2,i3};
+    aa_vec_4d_size_t m = {i0,i1,i2,i3};
     return __builtin_shuffle(a,m);
 }
 
 
+static inline aa_vec_4d_t
+aa_vec_4d_shuffle2( aa_vec_4d_t a, aa_vec_4d_t b,
+                    int64_t i0, int64_t i1, int64_t i2, int64_t i3  ) {
+    aa_vec_4d_size_t m = {i0,i1,i2,i3};
+    return __builtin_shuffle(a,b,m);
+}
+
+#ifdef __AVX__
+
+#include "amino/arch/avx.h"
+
+#else
+
 /** Load a vec4 from memory */
-static inline aa_vec_d4_t
-aa_vec_d4_ld( const double src[4] ) {
-    aa_vec_d4_t dst = {src[0], src[1], src[2], src[3]};
+static inline aa_vec_4d_t
+aa_vec_4d_ld( const double src[4] ) {
+    aa_vec_4d_t dst = {src[0], src[1], src[2], src[3]};
     return dst;
 }
 
 /** Store a vec4 to memory */
 static inline void
-aa_vec_d4_st( double dst[4], const aa_vec_d4_t src ) {
+aa_vec_4d_st( double dst[4], const aa_vec_4d_t src ) {
     dst[0] = src[0];
     dst[1] = src[1];
     dst[2] = src[2];
     dst[3] = src[3];
 }
 
+
 /** Load a vec3 from memory */
-static inline aa_vec_d4_t
-aa_vec_d3_ld( const double src[3] ) {
-    aa_vec_d4_t dst = {src[0], src[1], src[2] };
+static inline aa_vec_4d_t
+aa_vec_3d_ld( const double src[3] ) {
+    aa_vec_4d_t dst = {src[0], src[1], src[2] };
     return dst;
 }
 
 /** Store a vec3 to memory */
 static inline void
-aa_vec_d3_st( double dst[3], const aa_vec_d4_t src ) {
+aa_vec_3d_st( double dst[3], const aa_vec_4d_t src ) {
     dst[0] = src[0];
     dst[1] = src[1];
     dst[2] = src[2];
 }
+
+#endif
 
 /** Load a tf matrix from memory */
 #define AA_VEC_TFMAT_LD( col0, col1, col2, col3, T ){   \
@@ -105,7 +123,7 @@ aa_vec_d3_st( double dst[3], const aa_vec_d4_t src ) {
 /** Store a tf matrix to memory */
 static inline void
 aa_vec_tfmat_st( double T[AA_RESTRICT 12],
-                 aa_vec_d4_t col0, aa_vec_d4_t col1, aa_vec_d4_t col2, aa_vec_d4_t col3 ) {
+                 aa_vec_4d_t col0, aa_vec_4d_t col1, aa_vec_4d_t col2, aa_vec_4d_t col3 ) {
     T[0]  = col0[0];
     T[1]  = col0[1];
     T[2]  = col0[2];
@@ -121,23 +139,32 @@ aa_vec_tfmat_st( double T[AA_RESTRICT 12],
 }
 
 /** Vectorized cross product */
-static inline aa_vec_d4_t
-aa_vec_cross( const aa_vec_d4_t a, const aa_vec_d4_t b ) {
-    return ( aa_vec_d4_shuffle( a, 1,2,0,3 ) * aa_vec_d4_shuffle( b, 2,0,1,3 ) -
-             aa_vec_d4_shuffle( a, 2,0,1,3 ) * aa_vec_d4_shuffle( b, 1,2,0,3 ) );
+static inline aa_vec_4d_t
+aa_vec_cross( const aa_vec_4d_t a, const aa_vec_4d_t b ) {
+    return ( aa_vec_4d_shuffle( a, 1,2,0,3 ) * aa_vec_4d_shuffle( b, 2,0,1,3 ) -
+             aa_vec_4d_shuffle( a, 2,0,1,3 ) * aa_vec_4d_shuffle( b, 1,2,0,3 ) );
 }
 
 void aa_vecm_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
                     double c[AA_RESTRICT 3] );
 
+/** Vectorized quaternion conjugate */
+static inline aa_vec_4d_t
+aa_vec_qconj( const aa_vec_4d_t q )  {
+    aa_vec_4d_t c = -q;
+    c[3] *= -1;
+    return c;
+}
+
+
 /** Vectorized quaternion multiplication */
-static inline aa_vec_d4_t
-aa_vec_qmul( const aa_vec_d4_t a, const aa_vec_d4_t b ) {
-    aa_vec_d4_t vc;
-    vc = ( aa_vec_d4_shuffle( a, 0,2,3,1 ) * aa_vec_d4_shuffle( b, 3,0,2,1) +
-           aa_vec_d4_shuffle( a, 1,3,2,0 ) * aa_vec_d4_shuffle( b, 2,1,3,0) +
-           aa_vec_d4_shuffle( a, 3,1,0,2 ) * aa_vec_d4_shuffle( b, 0,3,1,2) -
-           aa_vec_d4_shuffle( a, 2,0,1,3 ) * aa_vec_d4_shuffle( b, 1,2,0,3) );
+static inline aa_vec_4d_t
+aa_vec_qmul( const aa_vec_4d_t a, const aa_vec_4d_t b ) {
+    aa_vec_4d_t vc;
+    vc = ( aa_vec_4d_shuffle( a, 0,2,3,1 ) * aa_vec_4d_shuffle( b, 3,0,2,1) +
+           aa_vec_4d_shuffle( a, 1,3,2,0 ) * aa_vec_4d_shuffle( b, 2,1,3,0) +
+           aa_vec_4d_shuffle( a, 3,1,0,2 ) * aa_vec_4d_shuffle( b, 0,3,1,2) -
+           aa_vec_4d_shuffle( a, 2,0,1,3 ) * aa_vec_4d_shuffle( b, 1,2,0,3) );
 
     vc[3] = -vc[3];
 
@@ -150,15 +177,15 @@ void aa_vecm_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4],
 
 
 /** Vectorized quaternion rotation */
-static inline aa_vec_d4_t
-aa_vec_qrot( const aa_vec_d4_t q, const aa_vec_d4_t v ) {
-    aa_vec_d4_t a = ( aa_vec_d4_shuffle( v, 2,0,1,3 ) * q[3]  +
-                      aa_vec_d4_shuffle( v, 1,2,0,3 ) * q     -
-                      v * aa_vec_d4_shuffle( q, 1,2,0,3 ) );
+static inline aa_vec_4d_t
+aa_vec_qrot( const aa_vec_4d_t q, const aa_vec_4d_t v ) {
+    aa_vec_4d_t a = ( aa_vec_4d_shuffle( v, 2,0,1,3 ) * q[3]  +
+                      aa_vec_4d_shuffle( v, 1,2,0,3 ) * q     -
+                      v * aa_vec_4d_shuffle( q, 1,2,0,3 ) );
 
-    aa_vec_d4_t b = aa_vec_d4_shuffle( a, 2,0,1,3 );
+    aa_vec_4d_t b = aa_vec_4d_shuffle( a, 2,0,1,3 );
 
-    return 2 * ( aa_vec_d4_shuffle(q, 1,2,0,3)*a - aa_vec_d4_shuffle(q, 2,0,1,3)*b ) + v;
+    return 2 * ( aa_vec_4d_shuffle(q, 1,2,0,3)*a - aa_vec_4d_shuffle(q, 2,0,1,3)*b ) + v;
 }
 
 
@@ -190,4 +217,4 @@ void aa_vecm_tfmul( const double T0[AA_RESTRICT 12], const double T1[AA_RESTRICT
 void aa_vecm_duqu_mul( const double d0[AA_RESTRICT 8], const double d1[AA_RESTRICT 8],
                        double d2[AA_RESTRICT 8] );
 
-#endif //AA_VEC_H
+#endif //AA_AMINO_ARCH_GCC_H
