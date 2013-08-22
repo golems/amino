@@ -656,6 +656,18 @@ AA_API void aa_tf_tfmat2duqu( const double T[AA_RESTRICT 12], double d[AA_RESTRI
 AA_API void aa_tf_qv2duqu( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                            double d[AA_RESTRICT 8] ) ;
 
+/** Convert x angle and translation to dual quaternion. */
+AA_API void aa_tf_xxyz2duqu( double theta, double x, double y, double z,
+                             double d[AA_RESTRICT 8] );
+
+/** Convert y angle and translation to dual quaternion. */
+AA_API void aa_tf_yxyz2duqu( double theta, double x, double y, double z,
+                             double d[AA_RESTRICT 8] );
+
+/** Convert z angle and translation to dual quaternion. */
+AA_API void aa_tf_zxyz2duqu( double theta, double x, double y, double z,
+                             double d[AA_RESTRICT 8] );
+
 /** Convert dual quaternion to orientation unit quaternion and translation vector. */
 AA_API void aa_tf_duqu2qv( const double d[AA_RESTRICT 8],
                            double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] ) ;

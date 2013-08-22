@@ -1263,6 +1263,44 @@ contains
 
   end subroutine aa_tf_qv2duqu
 
+  ! x angle and translations to dual quaternion
+  subroutine aa_tf_xxyz2duqu( theta, x, y, z, d ) &
+       bind( C, name="aa_tf_xxyz2duqu" )
+    real(C_DOUBLE), intent(in), value :: theta, x, y, z
+    real(C_DOUBLE), intent(out), dimension(8) :: d
+    real(C_DOUBLE) :: q(4), v(3)
+    call aa_tf_xangle2quat(theta,q)
+    v(1) = x
+    v(2) = y
+    v(3) = z
+    call aa_tf_qv2duqu(q,v,d)
+  end subroutine aa_tf_xxyz2duqu
+
+  ! y angle and translations to dual quaternion
+  subroutine aa_tf_yxyz2duqu( theta, x, y, z, d ) &
+       bind( C, name="aa_tf_yxyz2duqu" )
+    real(C_DOUBLE), intent(in), value :: theta, x, y, z
+    real(C_DOUBLE), intent(out), dimension(8) :: d
+    real(C_DOUBLE) :: q(4), v(3)
+    call aa_tf_yangle2quat(theta,q)
+    v(1) = x
+    v(2) = y
+    v(3) = z
+    call aa_tf_qv2duqu(q,v,d)
+  end subroutine aa_tf_yxyz2duqu
+
+  ! z angle and translations to dual quaternion
+  subroutine aa_tf_zxyz2duqu( theta, x, y, z, d ) &
+       bind( C, name="aa_tf_zxyz2duqu" )
+    real(C_DOUBLE), intent(in), value :: theta, x, y, z
+    real(C_DOUBLE), intent(out), dimension(8) :: d
+    real(C_DOUBLE) :: q(4), v(3)
+    call aa_tf_zangle2quat(theta,q)
+    v(1) = x
+    v(2) = y
+    v(3) = z
+    call aa_tf_qv2duqu(q,v,d)
+  end subroutine aa_tf_zxyz2duqu
 
   subroutine aa_tf_duqu2qv( d, q, v ) &
        bind( C, name="aa_tf_duqu2qv" )
