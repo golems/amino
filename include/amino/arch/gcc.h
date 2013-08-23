@@ -104,6 +104,16 @@ aa_vec_3d_st( double dst[3], const aa_vec_4d_t src ) {
 
 #endif
 
+/** 4D dot product */
+double
+aa_vec_4d_dot( const aa_vec_4d_t a, const aa_vec_4d_t b ) {
+    aa_vec_4d_t sq = a*b;
+    aa_vec_2d_t y = {sq[2], sq[3]};
+    aa_vec_2d_t x = {sq[0], sq[1]};
+    aa_vec_2d_t z = x+y;
+    return z[0] + z[1];
+}
+
 /** Load a tf matrix from memory */
 #define AA_VEC_TFMAT_LD( col0, col1, col2, col3, T ){   \
         col0[0] = T[0];                                 \
@@ -171,6 +181,20 @@ aa_vec_qmul( const aa_vec_4d_t a, const aa_vec_4d_t b ) {
     return vc;
 }
 
+
+static inline aa_vec_4d_t
+aa_vec_vqmul( const aa_vec_4d_t v, const aa_vec_4d_t q ) {
+    aa_vec_4d_t t = aa_vec_4d_shuffle(v, 2,0,1,1);
+    t[3] = -v[2];
+
+    aa_vec_4d_t y;
+    y =  aa_vec_4d_shuffle(v, 1,2,0,0) * aa_vec_4d_shuffle(q, 2,0,1,0);
+    y += aa_vec_4d_shuffle(v, 0,1,2,1) * aa_vec_4d_shuffle(q, 3,3,3,2);
+    y -= t * aa_vec_4d_shuffle(q, 1,2,0,2);
+    y[3] = -y[3];
+    return y;
+}
+
 /** Vectorized quaternion multiplication */
 void aa_vecm_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4],
                    double c[AA_RESTRICT 4] );
@@ -210,11 +234,23 @@ void aa_vecm_tfmul( const double T0[AA_RESTRICT 12], const double T1[AA_RESTRICT
 /** Vectorized dual quaternion multiply */
 #define AA_VEC_DUQU_MUL( d0r, d0d, d1r, d1d, d2r, d2d ) {               \
         d2r = aa_vec_qmul( d0r, d1r );                                  \
-        d2d =  aa_vec_qmul( d0r, d1d ) + aa_vec_qmul( d0d, d1r );       \
+        d2d = aa_vec_qmul( d0r, d1d ) + aa_vec_qmul( d0d, d1r );        \
     }
 
 /** Vectorized dual quaternion multiply */
 void aa_vecm_duqu_mul( const double d0[AA_RESTRICT 8], const double d1[AA_RESTRICT 8],
                        double d2[AA_RESTRICT 8] );
+
+/** Extract dual quaternion translation */
+static inline aa_vec_4d_t
+aa_vec_duqu_trans( aa_vec_4d_t r, aa_vec_4d_t d ) {
+    return 2 * aa_vec_qmul( d, aa_vec_qconj(r));
+}
+
+/** Compute dual quaternion dual part */
+static inline aa_vec_4d_t
+aa_vec_qv2duqu_dual( aa_vec_4d_t r, aa_vec_4d_t d ) {
+    return aa_vec_vqmul( aa_vec_qconj(r), d ) / 2;
+}
 
 #endif //AA_AMINO_ARCH_GCC_H
