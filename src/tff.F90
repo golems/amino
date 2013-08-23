@@ -673,7 +673,8 @@ contains
        bind( C, name="aa_tf_qslerp_param" )
     real(C_DOUBLE), intent(out) :: theta, d1, d2
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
-    theta = abs(aa_la_angle( q1, q2))
+    !theta = abs(aa_la_angle( q1, q2))
+    theta = abs(aa_tf_quangle(q1, q2))
     d1 = sin(theta)
     if( theta > PI_2 ) then
        ! Go the short way
@@ -690,19 +691,13 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
     real(C_DOUBLE) :: theta, d1,d2,s1, s2
-    if( 0 == tau ) then
+    call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
+    if( 0d0 == theta ) then
        r = q1
-    elseif ( 1 == tau ) then
-       r = q2
     else
-       call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
-       if( 0d0 == theta ) then
-          r = q1
-       else
-          s1 = sin( theta - tau*theta )
-          s2 = sin( tau*theta )
-          r = s1/d1 * q1 + s2/d2 * q2
-       end if
+       s1 = sin( theta - tau*theta )
+       s2 = sin( tau*theta )
+       r = s1/d1 * q1 + s2/d2 * q2
     end if
     call aa_tf_qnormalize(r)
   end subroutine aa_tf_qslerp
@@ -715,18 +710,12 @@ contains
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
     real(C_DOUBLE), dimension(4) :: qm, qp
-    if( 0 == tau ) then
-       r = q1
-    elseif ( 1 == tau ) then
-       r = q2
-    else
-       ! q1 * (conj(q1) * q2) ^ t  *
-       call aa_tf_qcmul( q1, q2, qm )
-       call aa_tf_qminimize(qm)        ! go the short way
-       call aa_tf_qpow( qm, tau, qp )
-       call aa_tf_qmul( q1, qp, r )
-       call aa_tf_qnormalize(r)
-    end if
+    ! q1 * (conj(q1) * q2) ^ t  *
+    call aa_tf_qcmul( q1, q2, qm )
+    call aa_tf_qminimize(qm)        ! go the short way
+    call aa_tf_qpow( qm, tau, qp )
+    call aa_tf_qmul( q1, qp, r )
+    call aa_tf_qnormalize(r)
   end subroutine aa_tf_qslerpalg
 
   !> Spherical Cubic Interpolation
@@ -761,7 +750,8 @@ contains
        bind( C, name="aa_tf_qslerpdiff_param" )
     real(C_DOUBLE), intent(out) :: theta, d1, d2
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
-    theta = abs(aa_la_angle( q1, q2))
+    !theta = abs(aa_la_angle( q1, q2))
+    theta = abs(aa_tf_quangle(q1, q2))
     if( theta > PI_2 ) then
        ! Go the short way
        theta = PI - theta
@@ -803,6 +793,19 @@ contains
     call aa_tf_qln( qm, ql )
     call aa_tf_qmul( ql, q, dq )
   end subroutine aa_tf_qslerpdiffalg
+
+  !! Angle between two unit quaternions
+  pure function aa_tf_quangle(x, y) result(theta)
+    real(C_DOUBLE), dimension(4), intent(in) :: x, y
+    real(C_DOUBLE) :: theta
+    real(C_DOUBLE) :: s, c
+    real(C_DOUBLE) :: a(4), b(4)
+    a = x-y
+    b = x+y
+    s = sqrt(dot_product(a,a))
+    c = sqrt(dot_product(b,b))
+    theta = 2d0 * atan2(s, c)
+  end function aa_tf_quangle
 
 
   !! Chain Rule Derivative of a SLERPed quaternion
@@ -958,13 +961,47 @@ contains
     end subroutine term
   end subroutine aa_tf_qvelrk4
 
+  !! Evaluate a polynomial via Horners rule
+  pure function aa_tf_horner( x, a ) result(y)
+    real(C_DOUBLE), value :: x
+    real(C_DOUBLE), intent(in) :: a(:)
+    real(C_DOUBLE) :: y
+    integer :: i
+    y = a(size(a))
+    do i=(1-size(a)),1
+       y = a(i) + x*y
+    end do
+  end function aa_tf_horner
 
   !! Evaluate a polynomial via Horners rule
   pure function aa_tf_horner3( x, a0, a1, a2 ) result(y)
     real(C_DOUBLE), value :: x, a0, a1, a2
     real(C_DOUBLE) :: y
-    y = a0 + x * (a1 + x*a2)
+    y = a2
+    y = a1 + x*y
+    y = a0 + x*y
   end function aa_tf_horner3
+
+  !! Evaluate a polynomial via Horners rule
+  pure function aa_tf_horner4( x, a0, a1, a2, a3) result(y)
+    real(C_DOUBLE), value :: x, a0, a1, a2, a3
+    real(C_DOUBLE) :: y
+    y = a3
+    y = a2 + x*y
+    y = a1 + x*y
+    y = a0 + x*y
+  end function aa_tf_horner4
+
+  !! Evaluate a polynomial via Horners rule
+  pure function aa_tf_horner5( x, a0, a1, a2, a3, a4) result(y)
+    real(C_DOUBLE), value :: x, a0, a1, a2, a3, a4
+    real(C_DOUBLE) :: y
+    y = a4
+    y = a3 + x*y
+    y = a2 + x*y
+    y = a1 + x*y
+    y = a0 + x*y
+  end function aa_tf_horner5
 
   ! sin(theta)/theta
   pure function aa_tf_sinc_series( theta ) result(s)
