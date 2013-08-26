@@ -109,6 +109,33 @@ void aa_vecm_tfmul( const double T0[AA_RESTRICT 12], const double T1[AA_RESTRICT
 
 }
 
+
+void aa_vecm_tfmul_2d( const double T0[AA_RESTRICT 12], const double T1[AA_RESTRICT 12],
+                       double U[AA_RESTRICT 12] ) {
+    aa_vec_2d_t c0, c1, c2, c3;
+    aa_vec_2d_t r0, r1, r2, r3;
+    c0 = aa_vec_2d_ld( T0 );
+    c1 = aa_vec_2d_ld( T0 + 3 );
+    c2 = aa_vec_2d_ld( T0 + 6 );
+    c3 = aa_vec_2d_ld( T0 + 9 );
+
+    r0 = c0*T1[0+0*3] + c1*T1[1+0*3] + c2*T1[2+0*3];
+    r1 = c0*T1[0+1*3] + c1*T1[1+1*3] + c2*T1[2+1*3];
+    r2 = c0*T1[0+2*3] + c1*T1[1+2*3] + c2*T1[2+2*3];
+    r3 = c0*T1[0+3*3] + c1*T1[1+3*3] + c2*T1[2+3*3] + c3;
+
+    aa_vec_2d_st( U,   r0 );
+    aa_vec_2d_st( U+3, r1 );
+    aa_vec_2d_st( U+6, r2 );
+    aa_vec_2d_st( U+9, r3 );
+
+    U[2+0*3] = T0[2+0*3]*T1[0+0*3] + T0[2+2]*T1[1+0*3] + T0[2+3]*T1[2+0*3];
+    U[2+1*3] = T0[2+0*3]*T1[0+1*3] + T0[2+2]*T1[1+1*3] + T0[2+3]*T1[2+1*3];
+    U[2+2*3] = T0[2+0*3]*T1[0+2*3] + T0[2+2]*T1[1+2*3] + T0[2+3]*T1[2+2*3];
+    U[2+3*3] = T0[2+0*3]*T1[0+3*3] + T0[2+2]*T1[1+3*3] + T0[2+3]*T1[2+3*3] + T0[2+3*3];
+
+}
+
 /** Vectorized dual quaternion multiply */
 void aa_vecm_duqu_mul( const double d0[AA_RESTRICT 8], const double d1[AA_RESTRICT 8],
                        double d2[AA_RESTRICT 8] ) {

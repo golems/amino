@@ -68,7 +68,7 @@ aa_vec_4d_shuffle2( aa_vec_4d_t a, aa_vec_4d_t b,
 
 #include "amino/arch/avx.h"
 
-#else
+#else // generic load/store
 
 /** Load a vec4 from memory */
 static inline aa_vec_4d_t
@@ -87,6 +87,8 @@ aa_vec_4d_st( double dst[4], const aa_vec_4d_t src ) {
 }
 
 
+
+
 /** Load a vec3 from memory */
 static inline aa_vec_4d_t
 aa_vec_3d_ld( const double src[3] ) {
@@ -103,6 +105,23 @@ aa_vec_3d_st( double dst[3], const aa_vec_4d_t src ) {
 }
 
 #endif
+
+/** Load a vec2 from memory */
+static inline aa_vec_2d_t
+aa_vec_2d_ld( const double src[2] ) {
+    aa_vec_2d_t dst = {src[0], src[1] };
+    return dst;
+}
+
+/** Store a vec4 to memory */
+static inline void
+aa_vec_2d_st( double dst[2], const aa_vec_2d_t src ) {
+    dst[0] = src[0];
+    dst[1] = src[1];
+}
+
+
+
 
 /** 4D dot product */
 double
