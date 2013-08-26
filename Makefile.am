@@ -5,6 +5,7 @@ EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
              src/la_mod.F90 src/la_implf.F90     \
              src/mem_mod.F90 src/mem_impl.F90    \
              src/tff.F90                         \
+             src/mac/tf.mac                      \
              src/mac/aa_tf_euler.f90
 
 dist_pkgdata_DATA = src/mac/amino.mac
@@ -15,6 +16,7 @@ nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
 
 pkginclude_HEADERS = 	                \
 	include/amino/debug.h           \
+	include/amino/test.h            \
 	include/amino/endconv.h         \
 	include/amino/io.h              \
 	include/amino/kin.h             \
@@ -69,19 +71,19 @@ libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]
-	cd src/mac && maxima --very-quiet -b gen.mac
+	cd $(top_srcdir)/src/mac && maxima --very-quiet -b gen.mac
 	@echo [maxima end]
 
-BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/mac_tf.f90
+BUILT_SOURCES = src/mac/aa_tf_euler.f90
 
 src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
 	@echo [maxima start]
-	cd src/mac && maxima --very-quiet -b euler.mac
+	cd $(top_srcdir)/src/mac && maxima --very-quiet -b euler.mac
 	@echo [maxima end]
 
 src/mac/mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
 	@echo [maxima start]
-	cd src/mac && maxima --very-quiet -b tf.mac
+	cd $(top_srcdir)/src/mac && maxima --very-quiet -b tf.mac
 	@echo [maxima end]
 
 distclean-local:
@@ -152,7 +154,7 @@ la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/un
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 
-tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90 src/mac/mac_tf.f90
+tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90
 	$(CPP) $(INCLUDES) -x c -CC $< -o $@
 
 
