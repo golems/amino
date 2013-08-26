@@ -136,13 +136,9 @@ contains
     real(C_DOUBLE), intent(in)  :: R1(3,3)
     real(C_DOUBLE), intent(in)  :: p1(3)
     real(C_DOUBLE), intent(out) :: p(3)
-    integer :: i
-
-    !p = matmul(R1,p1)
-    forall(i=1:3)
-       p(i) = dot_product(R1(i,:),p1)
-    end forall
-
+    p(1) = R1(1,1)*p1(1) + R1(1,2)*p1(2) + R1(1,3)*p1(3)
+    p(2) = R1(2,1)*p1(1) + R1(2,2)*p1(2) + R1(2,3)*p1(3)
+    p(3) = R1(3,1)*p1(1) + R1(3,2)*p1(2) + R1(3,3)*p1(3)
   end subroutine aa_tf_9
 
   pure Subroutine aa_tf_9mul(R1, R2, R3) &
@@ -168,11 +164,9 @@ contains
     real(C_DOUBLE), intent(in)  :: v1(3)
     real(C_DOUBLE), intent(in)  :: p1(3)
     real(C_DOUBLE), intent(out) :: p(3)
-    !p = matmul(R1,p1) + v1
     call aa_tf_9( R1, p1, p )
     p = p + v1
   end subroutine aa_tf_93
-
 
   pure subroutine aa_tf_qv( q, v, p1, p2) &
        bind( C, name="aa_tf_qv" )
@@ -182,7 +176,6 @@ contains
     p2 = p2 + v
   end subroutine aa_tf_qv
 
-
   pure subroutine aa_tf_93chain( R1, v1, R2, v2, R3, v3 ) &
        bind( C, name="aa_tf_93chain" )
     real(C_DOUBLE), intent(in)  :: R1(3,3)
@@ -191,10 +184,6 @@ contains
     real(C_DOUBLE), intent(in)  :: v2(3)
     real(C_DOUBLE), intent(out) :: R3(3,3)
     real(C_DOUBLE), intent(out) :: v3(3)
-
-    !R3 = matmul(R1,R2)
-    !v3 = matmul(R1,v2) + v1
-
     call aa_tf_9mul( R1, R2, R3 )
     call aa_tf_93(R1, v1, v2, v3)
   end subroutine aa_tf_93chain
@@ -210,19 +199,17 @@ contains
     !      T3(R_INDEX), T3(T_INDEX) )
 
     !! Factorized
-    ! T3(1,1) =  T1(1,1)*T2(1,1) + T1(1,2)*T2(2,1) + T1(1,3)*T2(3,1);
-    ! T3(2,1) =  T1(2,1)*T2(1,1) + T1(2,2)*T2(2,1) + T1(2,3)*T2(3,1);
-    ! T3(3,1) =  T1(3,1)*T2(1,1) + T1(3,2)*T2(2,1) + T1(3,3)*T2(3,1);
+    T3(1,1) =  T1(1,1)*T2(1,1) + T1(1,2)*T2(2,1) + T1(1,3)*T2(3,1);
+    T3(2,1) =  T1(2,1)*T2(1,1) + T1(2,2)*T2(2,1) + T1(2,3)*T2(3,1);
+    T3(3,1) =  T1(3,1)*T2(1,1) + T1(3,2)*T2(2,1) + T1(3,3)*T2(3,1);
 
-    ! T3(1,2) =  T1(1,1)*T2(1,2) + T1(1,2)*T2(2,2) + T1(1,3)*T2(3,2);
-    ! T3(2,2) =  T1(2,1)*T2(1,2) + T1(2,2)*T2(2,2) + T1(2,3)*T2(3,2);
-    ! T3(3,2) =  T1(3,1)*T2(1,2) + T1(3,2)*T2(2,2) + T1(3,3)*T2(3,2);
+    T3(1,2) =  T1(1,1)*T2(1,2) + T1(1,2)*T2(2,2) + T1(1,3)*T2(3,2);
+    T3(2,2) =  T1(2,1)*T2(1,2) + T1(2,2)*T2(2,2) + T1(2,3)*T2(3,2);
+    T3(3,2) =  T1(3,1)*T2(1,2) + T1(3,2)*T2(2,2) + T1(3,3)*T2(3,2);
 
-    ! T3(1,3) =  T1(1,1)*T2(1,3) + T1(1,2)*T2(2,3) + T1(1,3)*T2(3,3);
-    ! T3(2,3) =  T1(2,1)*T2(1,3) + T1(2,2)*T2(2,3) + T1(2,3)*T2(3,3);
-    ! T3(3,3) =  T1(3,1)*T2(1,3) + T1(3,2)*T2(2,3) + T1(3,3)*T2(3,3);
-
-    call aa_tf_9mul( T1(:,1:3), T2(:,1:3), T3(:,1:3) )
+    T3(1,3) =  T1(1,1)*T2(1,3) + T1(1,2)*T2(2,3) + T1(1,3)*T2(3,3);
+    T3(2,3) =  T1(2,1)*T2(1,3) + T1(2,2)*T2(2,3) + T1(2,3)*T2(3,3);
+    T3(3,3) =  T1(3,1)*T2(1,3) + T1(3,2)*T2(2,3) + T1(3,3)*T2(3,3);
 
     T3(1,4) = T1(1,1)*T2(1,4) + T1(1,2)*T2(2,4) + T1(1,3)*T2(3,4) + T1(1,4);
     T3(2,4) = T1(2,1)*T2(1,4) + T1(2,2)*T2(2,4) + T1(2,3)*T2(3,4) + T1(2,4);
