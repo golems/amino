@@ -52,6 +52,12 @@ Z : [ 0, 0, 1 ]$
 lp : "("$
 rp : ")"$
 
+qassign(var,quat) := block([],
+  f90( var(1) = quat[1] ),
+  f90( var(2) = quat[2] ),
+  f90( var(3) = quat[3] ),
+  f90( var(4) = quat[4] ) );
+
 gen(stuff, tf1, tf2, tf3, x1, x2, x3)  := (
   printf(true, "~&subroutine aa_tf_euler~a2rotmat(e1, e2, e3, R) &", stuff),
   printf(true, "~&  bind~a C, name=\"aa_tf_euler~a2rotmat\" ~a~&", lp, stuff, rp ),
@@ -66,8 +72,7 @@ gen(stuff, tf1, tf2, tf3, x1, x2, x3)  := (
   printf(true, "~&  bind~a C, name=\"aa_tf_euler~a2quat\" ~a~&", lp, stuff, rp ),
   print("  real(C_DOUBLE), value, intent(in)  :: e1, e2, e3"),
   print("  real(C_DOUBLE), intent(out) :: q(4)"),
-  f90( q =
-    qmul( qmul( qaxang(e1,x1), qaxang(e2,x2)), qaxang(e3,x3) ) ),
+  qassign( 'q , qmul( qmul( qaxang(e1,x1), qaxang(e2,x2)), qaxang(e3,x3) ) ) ,
   printf(true, "~&end subroutine aa_tf_euler~a2quat~&", stuff)
   );
 
