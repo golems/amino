@@ -46,6 +46,7 @@
 typedef double aa_vec_2d_t __attribute__ ((vector_size (16)));
 typedef double aa_vec_4d_t __attribute__ ((vector_size (32)));
 typedef int64_t aa_vec_4d_size_t __attribute__ ((vector_size (32)));
+typedef int64_t aa_vec_2d_size_t __attribute__ ((vector_size (16)));
 
 
 
@@ -56,6 +57,18 @@ aa_vec_4d_shuffle( aa_vec_4d_t a,
     return __builtin_shuffle(a,m);
 }
 
+static inline aa_vec_2d_t
+aa_vec_2d_shuffle( aa_vec_2d_t a,
+                   int64_t i0, int64_t i1  ) {
+    aa_vec_2d_size_t m = {i0,i1};
+    return __builtin_shuffle(a,m);
+}
+
+
+static inline aa_vec_2d_t
+aa_vec_2d_swap( aa_vec_2d_t a ) {
+    return aa_vec_2d_shuffle(a, 1, 0 );
+}
 
 static inline aa_vec_4d_t
 aa_vec_4d_shuffle2( aa_vec_4d_t a, aa_vec_4d_t b,
@@ -200,6 +213,15 @@ aa_vec_qmul( const aa_vec_4d_t a, const aa_vec_4d_t b ) {
     return vc;
 }
 
+#define AA_VEC_QMUL_2DB( ax, ay, az, aw, bxy, bzw, rxy, rzw ) { \
+    aa_vec_2d_t aa_vec_tmp;                                     \
+    aa_vec_tmp = ax*bzw - az*bxy;                               \
+    aa_vec_tmp[0] = -aa_vec_tmp[0];                             \
+    rx_xy = ay*bzw + aw*bxy + aa_vec_2d_swap(aa_vec_tmp);       \
+    aa_vec_tmp = ax*bxy + az*bzw;                               \
+    aa_vec_tmp[0] = -aa_vec_tmp[0];                             \
+    rx_wz = aw*bzw - ay*bxy + aa_vec_2d_swap(aa_vec_tmp);       \
+    }
 
 static inline aa_vec_4d_t
 aa_vec_vqmul( const aa_vec_4d_t v, const aa_vec_4d_t q ) {
