@@ -50,17 +50,34 @@
 #include <sys/resource.h>
 
 static void rotvec() {
-    double e[3], R[9], q[4], vr[3], vq[3];
+    double e[3],  R[9], q[4], vr[3], vq[3];
     aa_vrand(3,e);
 
     aa_tf_rotvec2quat(e, q);
     aa_tf_quat2rotmat(q, R);
     assert( aa_tf_isrotmat(R) );
 
+
     aa_tf_rotmat2rotvec(R, vr);
     aa_tf_quat2rotvec(q, vq);
 
     aveq("rotvec", 3, vq, vr, .001 );
+
+    {
+        double ee[9], eln[3], qe[4];
+        aa_tf_rotmat_exp_rv( e, ee );
+        aa_tf_rotmat2quat( ee, qe );
+        aa_tf_quat2rotvec( qe, eln );
+        aveq("rotmat_exp_rv", 3, e, eln, 1e-6 );
+    }
+    {
+        double aa[4], ee[9], eln[3], qe[4];
+        aa_tf_rotvec2axang(e, aa);
+        aa_tf_rotmat_exp_aa( aa, ee );
+        aa_tf_rotmat2quat( ee, qe );
+        aa_tf_quat2rotvec( qe, eln );
+        aveq("rotmat_exp_aa", 3, e, eln, 1e-6 );
+    }
 }
 
 typedef void (*fun_type)(double,double,double, double*b);

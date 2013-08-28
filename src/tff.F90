@@ -290,14 +290,62 @@ contains
     R(2,1) = z
     R(3,1) = -y
 
-    R(2,1) = -z
+    R(1,2) = -z
     R(2,2) = 0d0
-    R(2,3) = x
+    R(3,2) = x
 
     R(1,3) = y
     R(2,3) = -x
     R(3,3) = 0d0
   end subroutine aa_tf_skew_sym
+
+  subroutine aa_tf_rotmat_exp_aa( axang, E ) &
+       bind( C, name="aa_tf_rotmat_exp_aa" )
+    real(C_DOUBLE), intent(in) ::  axang(4)
+    real(C_DOUBLE), intent(out) :: E(3,3)
+    real(C_DOUBLE) :: w(3,3), w2(3,3), theta
+    integer :: i
+
+    call aa_tf_skew_sym( axang(1:3), w )
+    call aa_tf_9mul(w,w,w2)
+
+    theta = axang(4)
+
+    E = sin(theta)*w + (1d0 - cos(theta)) * w2
+
+    forall (i=1:3)
+       E(i,i) = E(i,i) + 1
+    end forall
+
+  end subroutine aa_tf_rotmat_exp_aa
+
+  subroutine aa_tf_rotmat_exp_rv( rv, E ) &
+       bind( C, name="aa_tf_rotmat_exp_rv" )
+    real(C_DOUBLE), intent(in) ::  rv(3)
+    real(C_DOUBLE), intent(out) :: E(3,3)
+    real(C_DOUBLE) :: w(3,3), w2(3,3), sc, cc, theta
+    integer :: i
+
+    call aa_tf_skew_sym( rv, w )
+    call aa_tf_9mul(w,w,w2)
+
+    theta = sqrt(dot_product(rv,rv))
+
+    if ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
+       ! taylor series
+       sc = aa_tf_sinc_series(theta) ! approx. 1
+       cc = theta * aa_tf_horner3( theta**2, 1d0/2, -1d0/24, 1d0/720 )
+    else
+       sc = sin(theta)/theta
+       cc = (1d0-cos(theta)) / theta**2
+    end if
+
+    E = sc*w + cc*w2
+
+    forall (i=1:3)
+       E(i,i) = E(i,i) + 1
+    end forall
+  end subroutine aa_tf_rotmat_exp_rv
 
 
   !!! Quaternions

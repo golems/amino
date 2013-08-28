@@ -263,6 +263,11 @@ AA_API void aa_tf_9rot( const double R[AA_RESTRICT 9],
 AA_API void aa_tf_9rel( const double R1[AA_RESTRICT 9], const double R2[AA_RESTRICT 9],
                         double Ri[AA_RESTRICT 9] );
 
+/// Rotation Matrix exponential from axis angle
+AA_API void aa_tf_rotmat_exp_aa( const double aa[AA_RESTRICT 4], double R[AA_RESTRICT 9] );
+
+/// Rotation Matrix exponential from rotation vector
+AA_API void aa_tf_rotmat_exp_rv( const double rv[AA_RESTRICT 3], double R[AA_RESTRICT 9] );
 
 
 /// Vararg multiply two rotation matrices
