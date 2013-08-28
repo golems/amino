@@ -59,7 +59,6 @@
 
 module amino_tf
   use ISO_C_BINDING
-  use amino_la
   implicit none
 
   interface aa_tf_quat2rotmat
@@ -273,7 +272,6 @@ contains
     R(1,2) = -sin(theta)
     R(2,2) = cos(theta)
   end subroutine aa_tf_zangle2rotmat
-
 
   ! screw symmetrix matrix for u
   subroutine aa_tf_skew_sym( u, R ) &
@@ -851,8 +849,8 @@ contains
     real(C_DOUBLE) :: a(4), b(4)
     a = x-y
     b = x+y
-    s = sqrt(dot_product(a,a))
-    c = sqrt(dot_product(b,b))
+    s = aa_tf_qnorm(a)
+    c = aa_tf_qnorm(b)
     theta = 2d0 * atan2(s, c)
   end function aa_tf_quangle
 
@@ -1310,7 +1308,7 @@ contains
   subroutine aa_tf_duqu_normalize( d ) &
        bind( C, name="aa_tf_duqu_normalize" )
     real(C_DOUBLE), intent(inout), dimension(8) :: d
-    d = d / aa_la_norm2( d(DQ_REAL) )
+    d = d / aa_tf_qnorm( d(DQ_REAL) )
   end subroutine aa_tf_duqu_normalize
 
   !> Dual quaternion angle minimization
