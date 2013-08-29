@@ -98,8 +98,14 @@ void aa_tf_qrel( const double q1[restrict 4], const double q2[restrict 4],
 }
 
 void aa_tf_qadd( const double a[restrict 4], const double b[restrict 4],
-                 double c[restrict 4] );
+                 double c[restrict 4] ) {
+    for( size_t i = 0; i < 4; i ++ ) c[i] = a[i] + b[i];
+}
 
+void aa_tf_qsub( const double a[restrict 4], const double b[restrict 4],
+                 double c[restrict 4] ) {
+    for( size_t i = 0; i < 4; i ++ ) c[i] = a[i] - b[i];
+}
 
 /* void aa_tf_quat2axang( const double q[restrict 4], double axang[restrict 4] ) { */
 /*     double a = aa_la_norm(4,q); */
