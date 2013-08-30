@@ -35,6 +35,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/unit.h            \
 	include/amino/cv.h              \
 	include/amino/validate.h        \
+	include/amino/const.h           \
 	include/amino/def.h             \
 	include/amino/undef.h           \
 	include/amino/mangle.h          \

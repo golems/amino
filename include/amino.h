@@ -193,6 +193,7 @@
 #include "amino/validate.h"
 #include "amino/io.h"
 #include "amino/cv.h"
+#include "amino/const.h"
 
 
 #endif //AMINO_H
