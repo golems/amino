@@ -43,17 +43,26 @@
 #ifndef AA_AMINO_ARCH_AVX_H
 #define AA_AMINO_ARCH_AVX_H
 
-/** Load a vec4 from memory */
-static inline aa_vec_4d_t
-aa_vec_4d_ld( const double src[4] ) {
-    return __builtin_ia32_loadupd256(src);
-}
+/* /\** Load a vec4 from memory *\/ */
+/* static inline aa_vec_4d_t */
+/* aa_vec_4d_ld( const double src[4] ) { */
+/*     //const double *a = __builtin_assume_aligned(src, 32); */
+/*     return *(aa_vec_4d_t*)src; */
+/*     //aa_vec_4d_t dst = a; */
+/*     /\* dst[0] = a[0]; *\/ */
+/*     /\* dst[1] = a[1]; *\/ */
+/*     /\* dst[2] = a[2]; *\/ */
+/*     /\* dst[3] = a[3]; *\/ */
+/*     //return dst; */
 
-/** Store a vec4 to memory */
-static inline void
-aa_vec_4d_st( double dst[4], const aa_vec_4d_t src ) {
-    __builtin_ia32_storeupd256( dst, src );
-}
+/*     //return __builtin_ia32_loadupd256(src); */
+/* } */
+
+/* /\** Store a vec4 to memory *\/ */
+/* static inline void */
+/* aa_vec_4d_st( double dst[4], const aa_vec_4d_t src ) { */
+/*     __builtin_ia32_storeupd256( dst, src ); */
+/* } */
 
 
 /** Load a vec3 from memory */

@@ -43,8 +43,8 @@
 #ifndef AA_AMINO_ARCH_GCC_H
 #define AA_AMINO_ARCH_GCC_H
 
-typedef double aa_vec_2d_t __attribute__ ((vector_size (16)));
-typedef double aa_vec_4d_t __attribute__ ((vector_size (32)));
+typedef double aa_vec_2d_t __attribute__ ((vector_size (16), aligned(16)));
+typedef double aa_vec_4d_t __attribute__ ((vector_size (32), aligned(32)));
 typedef int64_t aa_vec_4d_size_t __attribute__ ((vector_size (32)));
 typedef int64_t aa_vec_2d_size_t __attribute__ ((vector_size (16)));
 
@@ -77,29 +77,37 @@ aa_vec_4d_shuffle2( aa_vec_4d_t a, aa_vec_4d_t b,
     return __builtin_shuffle(a,b,m);
 }
 
-#ifdef __AVX__
-
-#include "amino/arch/avx.h"
-
-#else // generic load/store
 
 /** Load a vec4 from memory */
 static inline aa_vec_4d_t
 aa_vec_4d_ld( const double src[4] ) {
-    aa_vec_4d_t dst = {src[0], src[1], src[2], src[3]};
-    return dst;
+    return *(aa_vec_4d_t*)src;
 }
 
 /** Store a vec4 to memory */
 static inline void
 aa_vec_4d_st( double dst[4], const aa_vec_4d_t src ) {
-    dst[0] = src[0];
-    dst[1] = src[1];
-    dst[2] = src[2];
-    dst[3] = src[3];
+    *(aa_vec_4d_t*)dst = src;
 }
 
 
+/** Load a vec2 from memory */
+static inline aa_vec_2d_t
+aa_vec_2d_ld( const double src[2] ) {
+    return *(aa_vec_2d_t*)src;
+}
+
+/** Store a vec2 to memory */
+static inline void
+aa_vec_2d_st( double dst[2], const aa_vec_2d_t src ) {
+    *(aa_vec_2d_t*)dst = src;
+}
+
+#ifdef __AVX__
+
+#include "amino/arch/avx.h"
+
+#else // generic load/store
 
 
 /** Load a vec3 from memory */
@@ -118,21 +126,6 @@ aa_vec_3d_st( double dst[3], const aa_vec_4d_t src ) {
 }
 
 #endif
-
-/** Load a vec2 from memory */
-static inline aa_vec_2d_t
-aa_vec_2d_ld( const double src[2] ) {
-    aa_vec_2d_t dst = {src[0], src[1] };
-    return dst;
-}
-
-/** Store a vec4 to memory */
-static inline void
-aa_vec_2d_st( double dst[2], const aa_vec_2d_t src ) {
-    dst[0] = src[0];
-    dst[1] = src[1];
-}
-
 
 
 
