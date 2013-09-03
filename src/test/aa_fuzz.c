@@ -503,6 +503,19 @@ static void theta2quat() {
     aveq("xangle2quat", 4, qz, qRz, 1e-6 );
 }
 
+
+static void rotmat() {
+    double q[4], R[9], w[3], dR[9], dRw[3];
+    aa_test_qurand( q );
+    aa_vrand( 3, w );
+    aa_tf_quat2rotmat(q, R);
+    aa_tf_rotmat_vel2diff( R, w, dR );
+    aa_tf_rotmat_diff2vel( R, dR, dRw );
+    aveq("rotmat-vel", 3, w, dRw, 1e-6 );
+
+
+}
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -519,6 +532,7 @@ int main( void ) {
         rel_d();
         slerp();
         theta2quat();
+        rotmat();
     }
 
     return 0;

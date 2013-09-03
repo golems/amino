@@ -297,6 +297,22 @@ contains
     R(3,3) = 0d0
   end subroutine aa_tf_skew_sym
 
+  subroutine aa_tf_unskewsym( R, u ) &
+       bind( C, name="aa_tf_unskewsym" )
+    real(C_DOUBLE), intent(out) ::  u(3)
+    real(C_DOUBLE), intent(in) :: R(3,3)
+    real(C_DOUBLE) :: tr, c
+
+    tr = R(1,1) + R(2,2) + R(3,3)
+    c = sqrt( tr + 1 ) / 2d0
+
+    u(1) = c * (R(3,2) - R(2,3))
+    u(2) = c * (R(1,3) - R(3,1))
+    u(3) = c * (R(2,1) - R(1,2))
+
+  end subroutine aa_tf_unskewsym
+
+
   subroutine aa_tf_rotmat_exp_aa( axang, E ) &
        bind( C, name="aa_tf_rotmat_exp_aa" )
     real(C_DOUBLE), intent(in) ::  axang(4)
@@ -345,6 +361,24 @@ contains
     end forall
   end subroutine aa_tf_rotmat_exp_rv
 
+
+  subroutine aa_tf_rotmat_vel2diff( R, w, dR ) &
+       bind( C, name="aa_tf_rotmat_vel2diff" )
+    real(C_DOUBLE), intent(in) :: R(3,3), w(3)
+    real(C_DOUBLE), intent(out) :: dR(3,3)
+    real(C_DOUBLE) :: V(3,3)
+    call aa_tf_skew_sym( w, V )
+    call aa_tf_9mul(V,R,dR)
+  end subroutine aa_tf_rotmat_vel2diff
+
+  subroutine aa_tf_rotmat_diff2vel( R, dR, w ) &
+       bind( C, name="aa_tf_rotmat_diff2vel" )
+    real(C_DOUBLE), intent(in) :: R(3,3), dR(3,3)
+    real(C_DOUBLE), intent(out) ::  w(3)
+    real(C_DOUBLE) :: V(3,3)
+    V = matmul( dR, transpose(R) )
+    call aa_tf_unskewsym(V,w)
+  end subroutine aa_tf_rotmat_diff2vel
 
   !!! Quaternions
 
