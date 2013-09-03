@@ -297,6 +297,64 @@ contains
     R(3,3) = 0d0
   end subroutine aa_tf_skew_sym
 
+  subroutine aa_tf_skewsym_scal1( a, u, R ) &
+       bind( C, name="aa_tf_skewsym_scal1" )
+    real(C_DOUBLE), intent(in) ::  u(3), a
+    real(C_DOUBLE), intent(out) :: R(3,3)
+    real(C_DOUBLE) :: x,y,z
+
+    x = a*u(1)
+    y = a*u(2)
+    z = a*u(3)
+
+    R(1,1) = 0d0
+    R(2,1) = z
+    R(3,1) = -y
+
+    R(1,2) = -z
+    R(2,2) = 0d0
+    R(3,2) = x
+
+    R(1,3) = y
+    R(2,3) = -x
+    R(3,3) = 0d0
+  end subroutine aa_tf_skewsym_scal1
+
+  subroutine aa_tf_skewsym_scal2( a, b, u, R ) &
+       bind( C, name="aa_tf_skewsym_scal2" )
+    real(C_DOUBLE), intent(in) ::  u(3), a, b
+    real(C_DOUBLE), intent(out) :: R(3,3)
+    real(C_DOUBLE) :: x,y,z, ax,ay,az,  bx,by,bz, bxx, byy, bzz
+
+    x = u(1)
+    y = u(2)
+    z = u(3)
+
+    ax = a*x
+    ay = a*y
+    az = a*z
+
+    bx = b*x
+    by = b*y
+    bz = b*z
+
+    bxx = bx*x
+    byy = by*y
+    bzz = bz*z
+
+    R(1,1) = 1d0 -bzz - byy
+    R(2,1) = az + bx*y
+    R(3,1) = -ay + bx*z
+
+    R(1,2) = -az + bx*y
+    R(2,2) = 1d0 -bzz - bxx
+    R(3,2) = ax + by*z
+
+    R(1,3) = ay + bx*z
+    R(2,3) = -ax + by*z
+    R(3,3) = 1d0 -byy - bxx
+  end subroutine aa_tf_skewsym_scal2
+
   subroutine aa_tf_unskewsym( R, u ) &
        bind( C, name="aa_tf_unskewsym" )
     real(C_DOUBLE), intent(out) ::  u(3)
@@ -313,35 +371,27 @@ contains
   end subroutine aa_tf_unskewsym
 
 
+  subroutine aa_tf_unskewsym_scal( a, R, u ) &
+       bind( C, name="aa_tf_unskewsym_scal" )
+    real(C_DOUBLE), intent(out) ::  u(3)
+    real(C_DOUBLE), intent(in) :: R(3,3), a
+    u(1) = a * (R(3,2) - R(2,3))
+    u(2) = a * (R(1,3) - R(3,1))
+    u(3) = a * (R(2,1) - R(1,2))
+  end subroutine aa_tf_unskewsym_scal
+
   subroutine aa_tf_rotmat_exp_aa( axang, E ) &
        bind( C, name="aa_tf_rotmat_exp_aa" )
     real(C_DOUBLE), intent(in) ::  axang(4)
     real(C_DOUBLE), intent(out) :: E(3,3)
-    real(C_DOUBLE) :: w(3,3), w2(3,3), theta
-    integer :: i
-
-    call aa_tf_skew_sym( axang(1:3), w )
-    call aa_tf_9mul(w,w,w2)
-
-    theta = axang(4)
-
-    E = sin(theta)*w + (1d0 - cos(theta)) * w2
-
-    forall (i=1:3)
-       E(i,i) = E(i,i) + 1
-    end forall
-
+    call aa_tf_skewsym_scal2( sin(axang(4)), 1d0-cos(axang(4)), axang(1:3), E )
   end subroutine aa_tf_rotmat_exp_aa
 
   subroutine aa_tf_rotmat_exp_rv( rv, E ) &
        bind( C, name="aa_tf_rotmat_exp_rv" )
     real(C_DOUBLE), intent(in) ::  rv(3)
     real(C_DOUBLE), intent(out) :: E(3,3)
-    real(C_DOUBLE) :: w(3,3), w2(3,3), sc, cc, theta
-    integer :: i
-
-    call aa_tf_skew_sym( rv, w )
-    call aa_tf_9mul(w,w,w2)
+    real(C_DOUBLE) :: sc, cc, theta
 
     theta = sqrt(dot_product(rv,rv))
 
@@ -354,13 +404,77 @@ contains
        cc = (1d0-cos(theta)) / theta**2
     end if
 
-    E = sc*w + cc*w2
-
-    forall (i=1:3)
-       E(i,i) = E(i,i) + 1
-    end forall
+    call aa_tf_skewsym_scal2( sc, cc, rv, E )
   end subroutine aa_tf_rotmat_exp_rv
 
+
+  subroutine aa_tf_rotmat_angle( R, c, s, theta )
+    real(C_DOUBLE), intent(in) ::  R(3,3)
+    real(C_DOUBLE), intent(out) ::  c,s,theta
+    c = ( R(1,1) + R(2,2) + R(3,3) - 1 ) / 2
+    s = sqrt( 1 - c*c ) ! efficiently compute sin, always positive
+    theta = atan2(s,c)  ! always positive
+  end subroutine aa_tf_rotmat_angle
+
+  subroutine aa_tf_rotmat_lnv( R, v ) &
+       bind( C, name="aa_tf_rotmat_lnv" )
+    real(C_DOUBLE), intent(out) ::  v(3)
+    real(C_DOUBLE), intent(in) :: R(3,3)
+    real(C_DOUBLE) :: a, c, s, theta
+    call aa_tf_rotmat_angle(R, c, s, theta )
+    if ( theta < sqrt(sqrt(epsilon(theta))) ) then
+       a = aa_tf_invsinc_series(theta)
+    else
+       a = theta / s
+    end if
+    call aa_tf_unskewsym_scal( a/2d0, R, v )
+  end subroutine aa_tf_rotmat_lnv
+
+  subroutine aa_tf_tfmat_expv( v, T ) &
+       bind( C, name="aa_tf_tfmat_expv" )
+    real(C_DOUBLE), intent(in) ::  v(6)
+    real(C_DOUBLE), intent(out) :: T(3,4)
+    real(C_DOUBLE) :: sc, cc, ssc, theta, K(3,3)
+
+    theta = sqrt(dot_product(v(4:6),v(4:6)))
+
+    if ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
+       ! taylor series
+       sc = aa_tf_sinc_series(theta) ! approx. 1
+       cc = theta * aa_tf_horner3( theta**2, 1d0/2, -1d0/24, 1d0/720 )
+       ssc = aa_tf_horner3( theta**2, 1d0/6, -1d0/120, 1d0/5040 )
+    else
+       sc = sin(theta)/theta
+       cc = (1d0 - cos(theta)) / theta**2
+       ssc = (theta - sin(theta)) / theta**3
+    end if
+
+    call aa_tf_skewsym_scal2( sc, cc,  v(4:6), T(:,1:3) )
+    call aa_tf_skewsym_scal2( cc, ssc, v(4:6), K )
+
+    call aa_tf_9(K, v(1:3), T(:,4))
+
+  end subroutine aa_tf_tfmat_expv
+
+  subroutine aa_tf_tfmat_lnv( T, v ) &
+       bind( C, name="aa_tf_tfmat_lnv" )
+    real(C_DOUBLE), intent(out) ::  v(6)
+    real(C_DOUBLE), intent(in) :: T(3,4)
+    real(C_DOUBLE) :: theta, c, s, a, b, K(3,3)
+
+    call aa_tf_rotmat_angle(T(:,1:3), c, s, theta )
+
+    if ( theta < sqrt(sqrt(epsilon(theta))) ) then
+       a = aa_tf_invsinc_series(theta)
+       b = aa_tf_horner3( theta**2, 1d0/12, 1d0/720, 1d0/30240 )
+    else
+       a = theta / s
+       b = ( 2*s - theta*(1+c) ) / ( 2*theta**2 * s )
+    end if
+    call aa_tf_unskewsym_scal( a/2d0, T(:,1:3), v(4:6) )
+    call aa_tf_skewsym_scal2( -0.5d0, b, v(4:6), K )
+    call aa_tf_9( K, T(:,4), v(1:3) )
+  end subroutine aa_tf_tfmat_lnv
 
   subroutine aa_tf_rotmat_vel2diff( R, w, dR ) &
        bind( C, name="aa_tf_rotmat_vel2diff" )
@@ -379,6 +493,38 @@ contains
     V = matmul( dR, transpose(R) )
     call aa_tf_unskewsym(V,w)
   end subroutine aa_tf_rotmat_diff2vel
+
+
+  !! Integrate rotational velocity
+  subroutine aa_tf_rotmat_svel( R0, w, dt, R1 ) &
+       bind( C, name="aa_tf_rotmat_svel" )
+    real(C_DOUBLE), intent(in) :: w(3), R0(3,3)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: R1(3,3)
+    real(C_DOUBLE)  :: delta(3), e(3,3)
+    !! Exponential map method
+    !! q1 = exp(w*dt/2) * q0
+    delta = w*dt
+    call aa_tf_rotmat_exp_rv( delta, e )
+    call aa_tf_9mul(e,R0, R1)
+  end subroutine aa_tf_rotmat_svel
+
+
+  subroutine aa_tf_tfmat_vel2diff( T, dx, dT ) &
+       bind( C, name="aa_tf_tfmat_vel2diff" )
+    real(C_DOUBLE), intent(in) :: T(3,4), dx(6)
+    real(C_DOUBLE), intent(out) :: dT(3,4)
+    call aa_tf_rotmat_vel2diff( T(:,1:3), dx(4:6), dT(:,1:3) )
+    dT(:,4) = dx(1:3)
+  end subroutine aa_tf_tfmat_vel2diff
+
+  subroutine aa_tf_tfmat_diff2vel( T, dT, dx ) &
+       bind( C, name="aa_tf_tfmat_diff2vel" )
+    real(C_DOUBLE), intent(in) :: T(3,4), dT(3,4)
+    real(C_DOUBLE), intent(out) ::  dx(6)
+    call aa_tf_rotmat_diff2vel( T(:,1:3), dT(:,1:3), dx(4:6) )
+    dx(1:3) =  dT(:,4)
+  end subroutine aa_tf_tfmat_diff2vel
 
   !!! Quaternions
 
@@ -755,7 +901,7 @@ contains
     real(C_DOUBLE), intent(out) :: theta, d1, d2
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     !theta = abs(aa_la_angle( q1, q2))
-    theta = abs(aa_tf_quangle(q1, q2))
+    theta = abs(aa_tf_quangle2(q1, q2))
     d1 = sin(theta)
     if( theta > PI_2 ) then
        ! Go the short way
@@ -832,7 +978,7 @@ contains
     real(C_DOUBLE), intent(out) :: theta, d1, d2
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     !theta = abs(aa_la_angle( q1, q2))
-    theta = abs(aa_tf_quangle(q1, q2))
+    theta = abs(aa_tf_quangle2(q1, q2))
     if( theta > PI_2 ) then
        ! Go the short way
        theta = PI - theta
@@ -876,7 +1022,7 @@ contains
   end subroutine aa_tf_qslerpdiffalg
 
   !! Angle between two unit quaternions
-  pure function aa_tf_quangle(x, y) result(theta)
+  pure function aa_tf_quangle2(x, y) result(theta)
     real(C_DOUBLE), dimension(4), intent(in) :: x, y
     real(C_DOUBLE) :: theta
     real(C_DOUBLE) :: s, c
@@ -886,7 +1032,7 @@ contains
     s = aa_tf_qnorm(a)
     c = aa_tf_qnorm(b)
     theta = 2d0 * atan2(s, c)
-  end function aa_tf_quangle
+  end function aa_tf_quangle2
 
 
   !! Chain Rule Derivative of a SLERPed quaternion

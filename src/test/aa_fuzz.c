@@ -64,8 +64,10 @@ static void rotvec() {
     aveq("rotvec", 3, vq, vr, .001 );
 
     {
-        double ee[9], eln[3], qe[4];
+        double ee[9], eln[3], qe[4], rln[3];
         aa_tf_rotmat_exp_rv( e, ee );
+        aa_tf_rotmat_lnv( ee, rln );
+        aveq("rotmat_lnv", 3, e, rln, 1e-6 );
         aa_tf_rotmat2quat( ee, qe );
         aa_tf_quat2rotvec( qe, eln );
         aveq("rotmat_exp_rv", 3, e, eln, 1e-6 );
@@ -189,8 +191,8 @@ static void quat() {
     aa_tf_9rel( R1, R2, Rr );
     aa_tf_qrel( q1, q2, qr );
     aa_tf_rotmat2quat( Rr, qrr );
-    if(qr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qr[i] *= -1;
-    if(qrr[3] < 0 ) for( size_t i = 0; i < 4; i ++ ) qrr[i] *= -1;
+    aa_tf_qminimize( qr );
+    aa_tf_qminimize( qrr );
     aveq("qrel", 4, qr, qrr, .001 );
 
     // minimize
@@ -260,6 +262,17 @@ static void quat() {
     aveq("qvelexp", 4, qn_vrk4, qn_vexp, .0001);
     aa_tf_qsvel( q1, w0, dt, qn_vexp );
     aveq("qvelsvel0", 4, q1, qn_vexp, .000 );
+
+    {
+        double Rb[9], qR[4];
+        aa_tf_qsvel( q1, w, dt, qn_vexp );
+        aa_tf_rotmat_svel( R1, w, dt, Rb );
+        aa_tf_rotmat2quat( Rb, qR );
+        aa_tf_qminimize( qn_vexp);
+        aa_tf_qminimize( qR );
+        aveq("rotmat_svel", 4, qn_vexp, qR, 1e-4 );
+    }
+
 
 }
 
@@ -516,6 +529,21 @@ static void rotmat() {
 
 }
 
+static void tfmat() {
+    double  v[6], evR[9], ev[12], lneR[3], lne[6];
+    aa_vrand( 6, v );
+
+    aa_tf_tfmat_expv( v, ev );
+    aa_tf_rotmat_exp_rv( v+3, evR );
+    aveq( "rotmat-tfmat-exp", 9, evR, ev, 1e-6 );
+    aa_tf_tfmat_lnv( ev, lne );
+    aa_tf_rotmat_lnv( evR, lneR );
+
+    aveq( "rotmat-exp-ln", 3, v+3, lneR, 1e-6 );
+    aveq( "tfmat-exp-ln", 6, v, lne, 1e-6 );
+}
+
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -533,6 +561,7 @@ int main( void ) {
         slerp();
         theta2quat();
         rotmat();
+        tfmat();
     }
 
     return 0;
