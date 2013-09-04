@@ -322,7 +322,8 @@ contains
 
   subroutine aa_tf_skewsym_scal2( a, b, u, R ) &
        bind( C, name="aa_tf_skewsym_scal2" )
-    real(C_DOUBLE), intent(in) ::  u(3), a, b
+    real(C_DOUBLE), intent(in) ::  u(3)
+    real(C_DOUBLE), intent(in), value ::  a, b
     real(C_DOUBLE), intent(out) :: R(3,3)
     real(C_DOUBLE) :: x,y,z, ax,ay,az,  bx,by,bz, bxx, byy, bzz
 

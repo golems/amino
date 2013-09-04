@@ -246,6 +246,8 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
 /* Matrices */
 /************/
 
+AA_API void aa_tf_skewsym_scal2( double a, double b, const double u[3], double R[9] );
+
 /// tests if R is a rotation matrix
 AA_API int aa_tf_isrotmat( const double R[AA_RESTRICT 9] );
 

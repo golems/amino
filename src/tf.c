@@ -209,41 +209,7 @@ void aa_tf_rotvec2axang( const double rotvec[restrict 3],
 
 void aa_tf_quat2rotmat( const double q[restrict 4],
                         double R[restrict 9] ) {
-    double w,x,y,z;
-    double d,s,xs,ys,zs;
-    double wx,wy,wz;
-    double xx,xy,xz;
-    double yy,yz,zz;
-
-    w = q[3];
-    x = q[0];
-    y = q[1];
-    z = q[2];
-
-    d = sqrt( x*x + y*y + z*z + w*w );
-    s = 2/d;
-    xs = x*s;
-    ys = y*s;
-    zs = z*s;
-    wx = w*xs;
-    wy = w*ys;
-    wz = w*zs;
-    xx = x*xs;
-    xy = x*ys;
-    xz = x*zs;
-    yy = y*ys;
-    yz = y*zs;
-    zz = z*zs;
-
-    AA_MATREF(R,3,0,0) = 1 - yy - zz;
-    AA_MATREF(R,3,1,0) = xy + wz;
-    AA_MATREF(R,3,2,0) = xz - wy;
-    AA_MATREF(R,3,0,1) = xy - wz;
-    AA_MATREF(R,3,1,1) = 1 - xx - zz;
-    AA_MATREF(R,3,2,1) = yz + wx;
-    AA_MATREF(R,3,0,2) = xz + wy;
-    AA_MATREF(R,3,1,2) = yz - wx;
-    AA_MATREF(R,3,2,2) = 1 - xx - yy;
+    aa_tf_skewsym_scal2( 2*q[3], 2, q, R );
 }
 
 void aa_tf_rotmat2quat( const double R[restrict 9],
