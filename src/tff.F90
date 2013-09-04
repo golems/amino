@@ -387,8 +387,8 @@ contains
     call aa_tf_skewsym_scal2( sin(axang(4)), 1d0-cos(axang(4)), axang(1:3), E )
   end subroutine aa_tf_rotmat_exp_aa
 
-  subroutine aa_tf_rotmat_exp_rv( rv, E ) &
-       bind( C, name="aa_tf_rotmat_exp_rv" )
+  subroutine aa_tf_rotmat_expv( rv, E ) &
+       bind( C, name="aa_tf_rotmat_expv" )
     real(C_DOUBLE), intent(in) ::  rv(3)
     real(C_DOUBLE), intent(out) :: E(3,3)
     real(C_DOUBLE) :: sc, cc, theta
@@ -405,7 +405,7 @@ contains
     end if
 
     call aa_tf_skewsym_scal2( sc, cc, rv, E )
-  end subroutine aa_tf_rotmat_exp_rv
+  end subroutine aa_tf_rotmat_expv
 
 
   subroutine aa_tf_rotmat_angle( R, c, s, theta )
@@ -494,6 +494,13 @@ contains
     call aa_tf_unskewsym(V,w)
   end subroutine aa_tf_rotmat_diff2vel
 
+  subroutine aa_tf_qv2tfmat( q, v, T ) &
+       bind( C, name="aa_tf_qv2tfmat" )
+    real(C_DOUBLE), intent(in)  :: q(4), v(3)
+    real(C_DOUBLE), intent(out)  :: T(3,4)
+    call aa_tf_quat2rotmat( q, T(:,1:3) )
+    T(:,4) = v
+  end subroutine aa_tf_qv2tfmat
 
   !! Integrate rotational velocity
   subroutine aa_tf_rotmat_svel( R0, w, dt, R1 ) &
@@ -505,10 +512,25 @@ contains
     !! Exponential map method
     !! q1 = exp(w*dt/2) * q0
     delta = w*dt
-    call aa_tf_rotmat_exp_rv( delta, e )
+    call aa_tf_rotmat_expv( delta, e )
     call aa_tf_9mul(e,R0, R1)
   end subroutine aa_tf_rotmat_svel
 
+  !! Integrate rotational velocity
+  subroutine aa_tf_tfmat_svel( T0, dx, dt, T1 ) &
+       bind( C, name="aa_tf_tfmat_svel" )
+    real(C_DOUBLE), intent(in) :: dx(6), T0(3,4)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: T1(3,4)
+    real(C_DOUBLE)  :: delta(6), e(3,4)
+    !! Exponential map method
+    !! q1 = exp(w*dt/2) * q0
+    delta(4:6) = dx(4:6) * dt
+    call aa_tf_cross( dx(4:6), T0(:,4), delta(1:3) )
+    delta(1:3) = (dx(1:3) - delta(1:3)) * dt ! twist
+    call aa_tf_tfmat_expv(delta, e)
+    call aa_tf_12chain(e, T0, T1)
+  end subroutine aa_tf_tfmat_svel
 
   subroutine aa_tf_tfmat_vel2diff( T, dx, dT ) &
        bind( C, name="aa_tf_tfmat_vel2diff" )

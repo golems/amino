@@ -65,12 +65,12 @@ static void rotvec() {
 
     {
         double ee[9], eln[3], qe[4], rln[3];
-        aa_tf_rotmat_exp_rv( e, ee );
+        aa_tf_rotmat_expv( e, ee );
         aa_tf_rotmat_lnv( ee, rln );
         aveq("rotmat_lnv", 3, e, rln, 1e-6 );
         aa_tf_rotmat2quat( ee, qe );
         aa_tf_quat2rotvec( qe, eln );
-        aveq("rotmat_exp_rv", 3, e, eln, 1e-6 );
+        aveq("rotmat_expv", 3, e, eln, 1e-6 );
     }
     {
         double aa[4], ee[9], eln[3], qe[4];
@@ -530,11 +530,11 @@ static void rotmat() {
 }
 
 static void tfmat() {
-    double  v[6], evR[9], ev[12], lneR[3], lne[6];
+    double v[6], evR[9], ev[12], lneR[3], lne[6];
     aa_vrand( 6, v );
 
     aa_tf_tfmat_expv( v, ev );
-    aa_tf_rotmat_exp_rv( v+3, evR );
+    aa_tf_rotmat_expv( v+3, evR );
     aveq( "rotmat-tfmat-exp", 9, evR, ev, 1e-6 );
     aa_tf_tfmat_lnv( ev, lne );
     aa_tf_rotmat_lnv( evR, lneR );
@@ -543,6 +543,50 @@ static void tfmat() {
     aveq( "tfmat-exp-ln", 6, v, lne, 1e-6 );
 }
 
+static void integrate() {
+    // random tf
+    double q[4], v[3], dx[7]={0};
+    aa_vrand( 3, v );
+    aa_vrand( 6, dx );
+    aa_test_qurand( q );
+    double dt = aa_frand() / 100;
+
+    // convert
+    double S[8], T[12];
+    aa_tf_qv2duqu( q, v, S );
+    aa_tf_qv2tfmat( q, v, T );
+
+    // integrate
+    double S1[8], q1[4], T1[12], R1[9];
+    aa_tf_duqu_svel( S, dx, dt, S1 );
+    aa_tf_qsvel( q, dx+3, dt, q1 );
+    aa_tf_rotmat_svel( T, dx+3, dt, R1 );
+    aa_tf_tfmat_svel( T, dx, dt, T1 );
+
+    // normalize
+    double R1q[4], T1q[8];
+    aa_tf_rotmat2quat( R1, R1q );
+    aa_tf_tfmat2duqu( T1, T1q );
+    aa_tf_duqu_minimize( S1 );
+    aa_tf_duqu_minimize( T1q );
+    aa_tf_qminimize( q1 );
+    aa_tf_qminimize( R1q );
+
+
+    // check
+    aveq( "duqu-quat", 4, S, q, 0 );
+    aveq( "int-duqu-quat", 4, S1, q1, 1e-8 );
+    aveq( "int-rotmat-quat", 4, R1q, q1, 1e-8 );
+    aveq( "int-duqu-tfmat", 8, S1, T1q, 1e-6 );
+
+
+    // normalized check
+    aa_tf_duqu_normalize( T1q );
+    aa_tf_duqu_normalize( S1 );
+    aveq( "int-duqu-tfmat-norm", 8, S1, T1q, 1e-7 );
+
+
+}
 
 int main( void ) {
     // init
@@ -562,6 +606,7 @@ int main( void ) {
         theta2quat();
         rotmat();
         tfmat();
+        integrate();
     }
 
     return 0;

@@ -242,9 +242,9 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
                          const double T2[AA_RESTRICT 12],
                          double Trel[AA_RESTRICT 12] );
 
-/*********************/
-/* Rotation Matrices */
-/*********************/
+/************/
+/* Matrices */
+/************/
 
 /// tests if R is a rotation matrix
 AA_API int aa_tf_isrotmat( const double R[AA_RESTRICT 9] );
@@ -267,8 +267,34 @@ AA_API void aa_tf_9rel( const double R1[AA_RESTRICT 9], const double R2[AA_RESTR
 AA_API void aa_tf_rotmat_exp_aa( const double aa[AA_RESTRICT 4], double R[AA_RESTRICT 9] );
 
 /// Rotation Matrix exponential from rotation vector
-AA_API void aa_tf_rotmat_exp_rv( const double rv[AA_RESTRICT 3], double R[AA_RESTRICT 9] );
+AA_API void aa_tf_rotmat_expv( const double rv[AA_RESTRICT 3], double R[AA_RESTRICT 9] );
 
+/// Rotation Matrix logarithm
+AA_API void aa_tf_rotmat_lnv( double R[AA_RESTRICT 9], const double v[AA_RESTRICT 3] );
+
+/// Transformation Matrix exponential
+AA_API void aa_tf_tfmat_expv( const double v[AA_RESTRICT 6], double T[AA_RESTRICT 12] );
+
+/// Transformation Matrix logarithm
+AA_API void aa_tf_tfmat_lnv( double T[AA_RESTRICT 12], const double v[AA_RESTRICT 6] );
+
+/// Velocity to rotation matrix derivative
+AA_API void aa_tf_rotmat_vel2diff( const double R[AA_RESTRICT 9],
+                                   const double w[AA_RESTRICT 3], double dR[AA_RESTRICT 9] );
+
+/// Rotation matrix derivative to velocity
+AA_API void aa_tf_rotmat_diff2vel( const double R[AA_RESTRICT 9],
+                                   const double dR[AA_RESTRICT 9], double w[AA_RESTRICT 3] );
+
+/// Integrate rotational velocity
+AA_API void aa_tf_rotmat_svel( const double R0[AA_RESTRICT 9],
+                               const double w[AA_RESTRICT 3], double dt,
+                               double R1[AA_RESTRICT 9] );
+
+/// Integrate rotational velocity
+AA_API void aa_tf_tfmat_svel( const double T0[AA_RESTRICT 12],
+                              const double w[AA_RESTRICT 3], double dt,
+                              double T1[AA_RESTRICT 12] );
 
 /// Vararg multiply two rotation matrices
 AA_API void aa_tf_v9mul( double R[AA_RESTRICT 9],
@@ -550,6 +576,11 @@ AA_API void aa_tf_axang2rotmat( const double ra[AA_RESTRICT 4],
 /// convert rotatoin vector to rotation matrix
 AA_API void aa_tf_rotvec2rotmat( const double rv[AA_RESTRICT 3],
                                  double R[AA_RESTRICT 9] );
+
+
+/** Convert orientation unit quaternion and translation vector to transformation matrix. */
+AA_API void aa_tf_qv2tfmat( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+                           double T[AA_RESTRICT 12] ) ;
 
 /* AA_API void aa_tf_tfv2tfq( const double vrv[AA_RESTRICT 6],  */
 /*                            double x[AA_RESTRICT 3], double quat[AA_RESTRICT 4] ); */
