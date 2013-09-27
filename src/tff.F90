@@ -1761,34 +1761,23 @@ contains
     real(C_DOUBLE) :: nr, c, vv, vd, ar, ad
     type(aa_tf_dual_t) :: expw
     vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
-    ! compute pure exponential
-    if( 0d0 == vv ) then
-       ! avoid division by zero and optimize out known values
-       e(DQ_REAL_XYZ) = 0d0 ! sinc(0) = 1 and d_xyz = 0
-       e(DQ_REAL_W) = 1d0 ! cos(0) 1
-       !! limit as vnorm->0 of ( (cos(vnorm) - sinc(vnorm))/vnorm ) == 0
-       !! sin(0) == 0
-       e(DQ_DUAL_XYZ) = d(DQ_DUAL_XYZ)
-       e(DQ_DUAL_W) = 0d0
+    nr = sqrt(vv)
+    if( nr < sqrt(sqrt(epsilon(nr))) ) then
+       ar = aa_tf_sinc_series(nr) ! approx. 1
+       c = aa_tf_cos_series(nr)   ! approx. 1
+       ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
+       ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
     else
-       nr = sqrt(vv)
-       if( nr < sqrt(sqrt(epsilon(nr))) ) then
-          ar = aa_tf_sinc_series(nr) ! approx. 1
-          c = aa_tf_cos_series(nr)   ! approx. 1
-          ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
-          ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
-       else
-          ar = sin(nr)/nr
-          c = cos(nr)
-          ad = (c-ar)/vv
-       end if
-       vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
-       ad = vd*ad
-       e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
-       e(DQ_REAL_W) = c
-       e(DQ_DUAL_XYZ) = (ar * d(DQ_DUAL_XYZ)) + (ad * (d(DQ_REAL_XYZ)))
-       e(DQ_DUAL_W) = -ar * vd
+       ar = sin(nr)/nr
+       c = cos(nr)
+       ad = (c-ar)/vv
     end if
+    vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
+    ad = vd*ad
+    e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+    e(DQ_REAL_W) = c
+    e(DQ_DUAL_XYZ) = (ar * d(DQ_DUAL_XYZ)) + (ad * (d(DQ_REAL_XYZ)))
+    e(DQ_DUAL_W) = -ar * vd
 
     ! impure part
     if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
@@ -1802,9 +1791,6 @@ contains
     real(C_DOUBLE), intent(in) :: d(8)
     real(C_DOUBLE), intent(out) :: e(8)
     real(C_DOUBLE) :: vv, vd, theta, nr, mr2, mr, ar, ad
-    !! log(q) = ( v/norm(v) * acos(w/norm(q)),  log(norm(q)) )
-    !! log(q) = ( v/norm(v) * atan(norm(q),w),  log(norm(q)) )
-
     !! Norms
     vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
     vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
@@ -1817,33 +1803,27 @@ contains
     e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
 
     !! Vector part
-    if ( 0d0 == vv ) then
-       ! Optimize for 0 real vector
-       e(DQ_REAL_XYZ) = 0d0
-       e(DQ_DUAL_XYZ) = d(DQ_DUAL_XYZ) / mr
+    ! Dual number computation
+    ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
+    ! a = atan2( nv, dh(W_INDEX) ) / nv
+
+    ! expanded dual computation
+    nr = sqrt(vv)                   ! nr is positive
+    theta = atan2( nr, d(W_INDEX) ) ! theta is always positive
+
+    ! Try to avoid small number division
+    if( theta < sqrt(sqrt(epsilon(theta))) ) then
+       ar = aa_tf_invsinc_series(theta)/mr
+       !! Taylor Series expansion for theta near zero
+       ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
+       ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
     else
-       ! Dual number computation
-       ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
-       ! a = atan2( nv, dh(W_INDEX) ) / nv
-
-       ! expanded dual computation
-       nr = sqrt(vv)                   ! nr is positive
-       theta = atan2( nr, d(W_INDEX) ) ! theta is always positive
-
-       ! Try to avoid small number division
-       if( theta < sqrt(sqrt(epsilon(theta))) ) then
-          ar = aa_tf_invsinc_series(theta)/mr
-          !! Taylor Series expansion for theta near zero
-          ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
-          ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
-       else
-          ar = theta/nr
-          ad =  (d(W_INDEX) - ar*mr2) / vv
-       end if
-       ad = (vd*ad - d(DQ_DUAL_W)) / mr2
-       e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
-       e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
+       ar = theta/nr
+       ad =  (d(W_INDEX) - ar*mr2) / vv
     end if
+    ad = (vd*ad - d(DQ_DUAL_W)) / mr2
+    e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+    e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
   end subroutine aa_tf_duqu_ln
 
   !! Integrate twist to to get dual quaternion
