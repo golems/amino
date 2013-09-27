@@ -65,7 +65,8 @@
          :message (apply #'format nil format args)))
 
 
-(defstruct (matrix (:constructor %make-matrix))
+(defstruct (matrix (:constructor %make-matrix)
+                   (:conc-name %matrix-))
   "Descriptor for a matrix following LAPACK conventions."
   (data nil :type (or (simple-array double-float (*))
                       (simple-array float (*))
@@ -80,12 +81,39 @@
 
 (defun make-matrix (m n)
   "Make a new matrix with M rows and N cols."
-  (%make-matrix :data (make-array (* m n)
-                                  :element-type 'double-float)
-                :offset 0
-                :stride m
-                :rows m
-                :cols n))
+  (if (= 1 n)
+      (make-array m :element-type 'double-float)
+      (%make-matrix :data (make-array (* m n)
+                                      :element-type 'double-float)
+                    :offset 0
+                    :stride m
+                    :rows m
+                    :cols n)))
+
+(defun matrix-data (m)
+  (etypecase m
+    ((simple-array * (*))  m)
+    (matrix (%matrix-data m))))
+
+(defun matrix-offset (m)
+  (etypecase m
+    ((simple-array * (*))  0)
+    (matrix (%matrix-offset m))))
+
+(defun matrix-stride (m)
+  (etypecase m
+    ((simple-array * (*))  (length m))
+    (matrix (%matrix-stride m))))
+
+(defun matrix-rows (m)
+  (etypecase m
+    ((simple-array * (*)) (length m))
+    (matrix (%matrix-rows m))))
+
+(defun matrix-cols (m)
+  (etypecase m
+    ((simple-array * (*)) 1)
+    (matrix (%matrix-cols m))))
 
 (defun matrix-type (matrix)
   "Return the element type of MATRIX."
@@ -263,6 +291,16 @@ N: cols in the block."
        do (setf (aref vec i)
                 (coerce x 'double-float)))
     vec))
+
+
+(defun vec-copy (vec &key (start 0) (end (length vec)))
+  ;; TODO: matrix version
+  (let* ((n (- end start))
+         (new (make-vec n)))
+    (dotimes (i n)
+      (setf (aref new i)
+            (aref vec (+ start i))))
+    new))
 
 (defun matrix-vector-store-p (matrix)
   "Is the matrix stored in a way that looks like a vector?"

@@ -40,110 +40,6 @@
 
 (in-package :amino)
 
-;;; Geometric types ;;;;
-
-(defparameter +tf-quat-ident+ (col-vector 0 0 0 1))
-(defparameter +tf-duqu-ident+ (col-vector 0 0 0 1
-                                          0 0 0 0))
-(defparameter +tf-vec-3-ident+ (col-vector 0 0 0))
-
-
-(defun expand-type (value var body type)
-  (with-gensyms (x ptr0)
-    `(with-matrix (,x ,value)
-       (check-type ,x ,type)
-       (with-pointer-to-vector-data (,ptr0 (matrix-data ,x))
-         (let ((,var (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
-           ,@body)))))
-
-
-(defun expand-vector (value var body length)
-  "Get the data pointer for value, checking storage and size"
-  (with-gensyms (x ptr0 body-fun)
-    `(flet ((,body-fun (,var) ,@body))
-       (let ((,x ,value))
-         (etypecase ,x
-           (matrix
-            (if (matrix-vector-n-p ,x ,length 1)
-                ;; valid type
-                (with-pointer-to-vector-data (,ptr0 (matrix-data ,x))
-                  (,body-fun (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
-                ;; invalid type, throw error
-                (matrix-storage-error "Invalid matrix size or storage of ~D: ~A" ,length ,x)))
-           ((simple-array double-float (*))
-            (if (= (length ,x) ,length)
-                ;; valid type
-                (with-pointer-to-vector-data (,ptr0 ,x)
-                  (,body-fun ,ptr0))
-                ;; invalid type
-                (matrix-storage-error "Invalid matrix size of ~D: ~A" ,length ,x))))))))
-
-;;; Transformation Matrix
-(defun transformation-matrix-p (x)
-  (and (= 3 (matrix-rows x))
-       (<= 4 (matrix-cols x))
-       (= 3 (matrix-stride x))
-       (<= 12 (- (length (matrix-data x))
-                 (matrix-offset x)))
-       (eq (array-element-type (matrix-data x))
-           'double-float)))
-(deftype transformation-matrix ()
-  '(and matrix
-    (satisfies transformation-matrix-p)))
-(define-foreign-type transformation-matrix-t ()
-  ()
-  (:simple-parser transformation-matrix-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type transformation-matrix-t))
-  (expand-type value var body 'transformation-matrix))
-
-;;; Rotation Matrix
-(defun rotation-matrix-p (x)
-  (and (= 3 (matrix-rows x))
-       (<= 3 (matrix-cols x))
-       (= 3 (matrix-stride x))
-       (<= 9 (- (length (matrix-data x))
-                (matrix-offset x)))
-       (eq (array-element-type (matrix-data x))
-           'double-float)))
-(deftype rotation-matrix ()
-  '(and matrix
-    (satisfies rotation-matrix-p)))
-
-
-(define-foreign-type rotation-matrix-t ()
-  ()
-  (:simple-parser rotation-matrix-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type rotation-matrix-t))
-  (expand-type value var body 'rotation-matrix))
-
-;;; Point 3
-(define-foreign-type vector-3-t ()
-  ()
-  (:simple-parser vector-3-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type vector-3-t))
-  (expand-vector value var body 3))
-
-;;; Quaternion
-(define-foreign-type quaternion-t ()
-  ()
-  (:simple-parser quaternion-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
-  (expand-vector value var body 4))
-
-;;; Dual Quaternion
-(define-foreign-type dual-quaternion-t ()
-  ()
-  (:simple-parser dual-quaternion-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type dual-quaternion-t))
-  (expand-vector value var body 8))
-
-
-;;; Wrappers ;;;
 
 ;;; Matrices
 
@@ -151,7 +47,7 @@
   (tf transformation-matrix-t)
   (p0 vector-3-t)
   (p1 vector-3-t))
-(defun tf-12 (tf p0 &optional (p1 (make-matrix 3 1)))
+(defun tf-12 (tf p0 &optional (p1 (make-vec 3)))
   (aa-tf-12 tf p0 p1)
   p1)
 
@@ -238,7 +134,7 @@
   (q0 quaternion-t)
   (q1 quaternion-t)
   (q quaternion-t))
-(defun tf-qslerp (r q0 q1 &optional (q (make-matrix 4 1)))
+(defun tf-qslerp (r q0 q1 &optional (q (make-vec 4)))
   "Quaternion spherical linear interpolation"
   (aa-tf-qslerp r q0 q1 q)
   q)
@@ -248,7 +144,7 @@
   (q0 quaternion-t)
   (w vector-3-t)
   (q1 quaternion-t))
-(defun tf-qsvel (q0 w &optional (q1 (make-matrix 4 1)))
+(defun tf-qsvel (q0 w &optional (q1 (make-vec 4)))
   "Integrate unit quaternion rotational velocity"
   (aa-tf-qsvel q0 w q1)
   q1)
@@ -319,7 +215,7 @@
 (defcfun aa-tf-duqu-trans :void
   (d dual-quaternion-t)
   (x vector-3-t))
-(defun tf-duqu-trans (d &optional (x (make-matrix 3 1)))
+(defun tf-duqu-trans (d &optional (x (make-vec 3)))
   "Extract dual quaternion translation"
   (aa-tf-duqu-trans d x)
   x)
@@ -343,6 +239,42 @@
   "Convert dual quaternion to unit quaternion and translation vector"
   (aa-tf-duqu2qv d q v)
   (values q v))
+
+
+(defcfun aa-tf-xxyz2duqu :void
+  (x-angle :double)
+  (x :double)
+  (y :double)
+  (z :double)
+  (s dual-quaternion-t))
+(defun tf-xxyz2duqu (x-angle x y z &optional (s (make-matrix 8 1)))
+  "x-angle and vector to dual quaternion"
+  (aa-tf-xxyz2duqu x-angle x y z s)
+  s)
+
+
+(defcfun aa-tf-yxyz2duqu :void
+  (y-angle :double)
+  (x :double)
+  (y :double)
+  (z :double)
+  (s dual-quaternion-t))
+(defun tf-yxyz2duqu (y-angle x y z &optional (s (make-matrix 8 1)))
+  "y-angle and vector to dual quaternion"
+  (aa-tf-xxyz2duqu y-angle x y z s)
+  s)
+
+(defcfun aa-tf-zxyz2duqu :void
+  (z-angle :double)
+  (x :double)
+  (y :double)
+  (z :double)
+  (s dual-quaternion-t))
+(defun tf-zxyz2duqu (z-angle x y z &optional (s (make-matrix 8 1)))
+  "z-angle and vector to dual quaternion"
+  (aa-tf-zxyz2duqu z-angle x y z s)
+  s)
+
 
 (defcfun aa-tf-duqu-conj :void
   (x dual-quaternion-t)
