@@ -4,7 +4,7 @@ AC_PREREQ([2.65])
 AC_INIT([amino], [0.20120916], [ntd@gatech.edu])
 
 AM_INIT_AUTOMAKE([subdir-objects])
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([no])])
 
 AC_CONFIG_SRCDIR([include/amino.h])
 AC_CONFIG_HEADERS([config.h])
@@ -20,35 +20,8 @@ AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
 
 # Checks for libraries.
-
-# Checks for header files.
-AC_CHECK_HEADERS([inttypes.h stdint.h stdlib.h string.h unistd.h math.h threads.h])
 AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_HEADER_STDBOOL
-AC_C_INLINE
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_C_RESTRICT
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-AC_TYPE_UINT8_T
-AC_CHECK_TYPES([ptrdiff_t])
-
-# Checks for library functions.
-AC_FUNC_ALLOCA
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
-
-#AC_SEARCH_LIBS([cblas_dgemm],[blas], [true], [echo "Failed: need BLAS library" && exit 1])
-#AC_SEARCH_LIBS([dgesvd_],[lapack], [true], [echo "Failed: need LAPACK library" && exit 1])
 AC_SEARCH_LIBS([clock_gettime],[rt])
-
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_FUNCS([sincos])
 
