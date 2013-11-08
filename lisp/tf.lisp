@@ -261,7 +261,7 @@
   (s dual-quaternion-t))
 (defun tf-yxyz2duqu (y-angle x y z &optional (s (make-matrix 8 1)))
   "y-angle and vector to dual quaternion"
-  (aa-tf-xxyz2duqu y-angle x y z s)
+  (aa-tf-yxyz2duqu y-angle x y z s)
   s)
 
 (defcfun aa-tf-zxyz2duqu :void
