@@ -79,6 +79,10 @@
   (cols 0 :type (integer 1 #.most-positive-fixnum))
   (rows 0 :type (integer 1 #.most-positive-fixnum)))
 
+
+(deftype double-matrix ()
+  `(or matrix list (simple-array double-float (*))))
+
 (defun make-matrix (m n)
   "Make a new matrix with M rows and N cols."
   (if (= 1 n)
@@ -93,26 +97,33 @@
 (defun matrix-data (m)
   (etypecase m
     ((simple-array * (*))  m)
+    (list (map-into (make-array (length m) :element-type 'double-float)
+                    (lambda (k) (coerce k 'double-float))
+                    m))
     (matrix (%matrix-data m))))
 
 (defun matrix-offset (m)
   (etypecase m
     ((simple-array * (*))  0)
+    (list 0)
     (matrix (%matrix-offset m))))
 
 (defun matrix-stride (m)
   (etypecase m
     ((simple-array * (*))  (length m))
+    (list (length m))
     (matrix (%matrix-stride m))))
 
 (defun matrix-rows (m)
   (etypecase m
     ((simple-array * (*)) (length m))
+    (list (length m))
     (matrix (%matrix-rows m))))
 
 (defun matrix-cols (m)
   (etypecase m
     ((simple-array * (*)) 1)
+    (list 1)
     (matrix (%matrix-cols m))))
 
 (defun matrix-type (matrix)

@@ -40,6 +40,7 @@
 
 (in-package :amino)
 
+
 (define-foreign-library libblas
   (:unix "libblas.so")
   (t (:default "libblas")))
@@ -291,7 +292,7 @@
                                   (list '&key (loop for (name) in transpose-args
                                                  collect name))))
          ;; declare types
-         ,@(when matrix-args `((declare (type matrix ,@matrix-args))))
+         ,@(when matrix-args `((declare (type double-matrix ,@matrix-args))))
          ;; bind counts
          ,@(reduce
             (lambda (body arg)
