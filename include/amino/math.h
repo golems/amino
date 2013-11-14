@@ -655,6 +655,33 @@ AA_API void aa_la_linterp( size_t n,
                            double ti, double *Xi );
 
 
+/** Quadratic interpolation.
+    \param n size of the X vectors
+    \param t0 independent variable
+    \param X0 dependent variable at t0
+    \param t1 independent variable
+    \param X1 dependent variable at t1
+    \param t2 independent variable
+    \param X2 dependent variable at t2
+    \param ti independent variable, interpolation point
+    \param Xi dependent variable, interpolated values
+
+*/
+AA_API void aa_la_quadterp( size_t n,
+                            double t0, const double *X0,
+                            double t1, const double *X1,
+                            double t2, const double *X2,
+                            double ti, double *Xi );
+
+/** Quadratic interpolation, derivative
+ */
+AA_API void aa_la_quadterp_dx( size_t n,
+                               double t0, const double *X0,
+                               double t1, const double *X1,
+                               double t2, const double *X2,
+                               double ti, double *dXi );
+
+
 /** Convert plane to hessian normal form
  *
  * \param plane Coefficients for plane

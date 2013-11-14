@@ -387,6 +387,76 @@ AA_API void aa_la_linterp( size_t n,
 
 
 
+AA_API void aa_la_quadterp( size_t n,
+                            double t0, const double *X0,
+                            double t1, const double *X1,
+                            double t2, const double *X2,
+                            double ti, double *Xi )
+{
+    /* x = a + b*t + c*t*t
+     *
+     * x0 = a + b*t0 + c*t0*t0
+     * x1 = a + b*t1 + c*t1*t1
+     * x2 = a + b*t2 + c*t2*t2
+     *
+     * [x0]    [ 1,  t0,  t0*t0 ]   [a]
+     * [x1] =  [ 1,  t1,  t1*t1 ] = [b]
+     * [x2]    [ 1,  t2,  t2*t2 ]   [c]
+     *
+     *  X = T*A
+     *  A = T^-1 * X
+     */
+
+    /* M is T^-1*/
+    // col 0
+    double M00 = t1*t2/((t1-t0)*(t2-t0));
+    double M10 = -(t2+t1)/((t1-t0)*(t2-t0));
+    double M20 = 1/((t1-t0)*(t2-t0));
+    // col 1
+    double M01 = -t0*t2/((t1-t0)*(t2-t1));
+    double M11 = (t2+t0)/((t1-t0)*(t2-t1));
+    double M21 = -1/((t1-t0)*(t2-t1));
+    // col 2
+    double M02 = t0*t1/((t2-t0)*(t2-t1));
+    double M12 = -(t1+t0)/((t2-t0)*(t2-t1));
+    double M22 = 1/((t2-t0)*(t2-t1));
+
+    double ti2 = ti*ti;
+
+    for( size_t i = 0; i < n; i ++ ) {
+        double a = M00*X0[i] + M01*X1[i] + M02*X2[i];
+        double b = M10*X0[i] + M11*X1[i] + M12*X2[i];
+        double c = M20*X0[i] + M21*X1[i] + M22*X2[i];
+        Xi[i] = a + b*ti + c*ti2;
+    }
+}
+
+AA_API void aa_la_quadterp_dx( size_t n,
+                               double t0, const double *X0,
+                               double t1, const double *X1,
+                               double t2, const double *X2,
+                               double ti, double *dXi )
+{
+    // col 0
+    double M10 = -(t2+t1)/((t1-t0)*(t2-t0));
+    double M20 = 1/((t1-t0)*(t2-t0));
+    // col 1
+    double M11 = (t2+t0)/((t1-t0)*(t2-t1));
+    double M21 = -1/((t1-t0)*(t2-t1));
+    // col 2
+    double M12 = -(t1+t0)/((t2-t0)*(t2-t1));
+    double M22 = 1/((t2-t0)*(t2-t1));
+
+    double ti_2 = ti/2;
+
+    for( size_t i = 0; i < n; i ++ ) {
+        double b = M10*X0[i] + M11*X1[i] + M12*X2[i];
+        double c = M20*X0[i] + M21*X1[i] + M22*X2[i];
+        dXi[i] = b + c*ti_2;
+    }
+}
+
+
 
 double aa_la_det3x3( const double R[restrict 9] ) {
 
