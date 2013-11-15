@@ -77,3 +77,4 @@ amino*.tar.gz
 /q_test
 /test-driver
 /test-suite.log
+/testcpp

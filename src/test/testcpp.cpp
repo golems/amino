@@ -1,7 +1,7 @@
-/* -*- mode: C++; c-basic-offset: 4  -*- */
+/* -*- mode: C++; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2013, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,48 +40,69 @@
  *
  */
 
-#ifndef AMINO_HPP
-#define AMINO_HPP
-/**
- * \file amino.hpp
- * \author Neil T. Dantam
- */
-
-#include "amino.h"
-#include "amino/mem.hpp"
+#include "amino.hpp"
+#include <iostream>
 
 
-//namespace amino {
-//#include "amino/mat.hpp"
-//}
+void allocator() {
+    aa_mem_region_t reg;
+    aa_mem_region_init( &reg, 1024 );
 
-/// amino namespace
-namespace amino {
+    /*--- List ---*/
+    amino::RegionList<int>::allocator alloc(&reg);
+    amino::RegionList<int>::type list(alloc);
 
-    /// Locks mutex on construction, unlocks on destruction
-    class ScopedMutex {
-    public:
-        /// costruct this and lock m
-        ScopedMutex( pthread_mutex_t *m ) :
-            mutex(m)
-        {
-            pthread_mutex_lock(mutex);
-        }
-        /// costruct this and lock m
-        ScopedMutex( pthread_mutex_t &m ) :
-            mutex(&m)
-        {
-            pthread_mutex_lock(mutex);
-        }
-        /// destroy this and unlock m
-        ~ScopedMutex() {
-            pthread_mutex_unlock(mutex);
-        }
+    list.push_back(1);
+    list.push_back(2);
+    list.push_back(3);
+    printf("List:\n");
+    for( amino::RegionList<int>::iterator p = list.begin(); p != list.end(); p++ ) {
+        printf("> %d\n", *p);
 
-    private:
-        /// the mutex
-        pthread_mutex_t *mutex;
-    };
+    }
+
+    /*--- Vector ---*/
+    amino::RegionVector<int>::allocator alloc1(&reg);
+    amino::RegionVector<int>::type vector(3, 0, alloc1);
+
+    vector[0] = 10;
+    vector[1] = 20;
+    vector[2] = 30;
+
+    printf("Vector:\n");
+    for( amino::RegionVector<int>::iterator p = vector.begin(); p != vector.end(); p++ ) {
+        printf("> %d\n", *p);
+    }
+
+    /*--- Map ---*/
+    amino::RegionMap<int,int>::allocator alloc2(&reg);
+    amino::RegionMap<int,int>::type map(std::less<int>(), alloc2);
+
+    map[1] = 10;
+    map[2] = 20;
+    map[3] = 30;
+
+    printf("Map:\n> %d %d %d\n", map[1], map[2], map[3] );
+
+
+    /*--- Stats ---*/
+    printf("Stats:\n"
+           "> start: 0x%x\n"
+           "> head:  0x%x\n"
+           "> used:  %lu\n",
+           reg.node->d,
+           reg.head,
+           reg.head - reg.node->d
+        );
+
+
+    aa_mem_region_destroy( &reg );
+
+
 }
 
-#endif //AMINO_HPP
+int main( int argc, char **argv) {
+    (void)argc; (void)argv;
+    allocator();
+    return 0;
+}

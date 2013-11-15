@@ -119,8 +119,8 @@ foo:
 
 ## TESTS ##
 
-TESTS = aa_test la_test aa_regress q_test aa_fuzz
-noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress q_test
+TESTS = aa_test la_test aa_regress q_test aa_fuzz testcpp
+noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress q_test testcpp
 noinst_LTLIBRARIES += libtestutil.la
 
 libtestutil_la_SOURCES = src/test/testutil.c
@@ -139,6 +139,9 @@ la_test_LDADD = libamino.la -lblas -llapack libtestutil.la
 
 aa_fuzz_SOURCES = src/test/aa_fuzz.c
 aa_fuzz_LDADD = libamino.la -lblas -llapack libtestutil.la
+
+testcpp_SOURCES = src/test/testcpp.cpp
+testcpp_LDADD = libamino.la -lblas -llapack libtestutil.la
 
 ## PREPROCESSING ##
 
