@@ -10,11 +10,12 @@ EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
 
 dist_pkgdata_DATA = src/mac/amino.mac
 
-include_HEADERS = include/amino.h
+include_HEADERS = include/amino.h include/amino.hpp
 
 nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
 
 pkginclude_HEADERS = 	                \
+	include/amino/mem.hpp           \
 	include/amino/debug.h           \
 	include/amino/test.h            \
 	include/amino/endconv.h         \
