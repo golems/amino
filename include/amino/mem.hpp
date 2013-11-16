@@ -53,8 +53,18 @@
  * \file amino/mem.hpp
  */
 
-namespace amino {
 
+/** Allocate memory for an object of a memory region
+ *
+ * Do not pass the pointer to delete.
+ */
+inline void *
+operator new ( size_t n, aa_mem_region_t *reg )
+{
+    return aa_mem_region_alloc( reg, n );
+}
+
+namespace amino {
 
 /** Allocate out of an aa_mem_region_t
  */
