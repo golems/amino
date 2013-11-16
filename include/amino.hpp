@@ -58,30 +58,50 @@
 /// amino namespace
 namespace amino {
 
-    /// Locks mutex on construction, unlocks on destruction
-    class ScopedMutex {
-    public:
-        /// costruct this and lock m
-        ScopedMutex( pthread_mutex_t *m ) :
-            mutex(m)
-        {
-            pthread_mutex_lock(mutex);
-        }
-        /// costruct this and lock m
-        ScopedMutex( pthread_mutex_t &m ) :
-            mutex(&m)
-        {
-            pthread_mutex_lock(mutex);
-        }
-        /// destroy this and unlock m
-        ~ScopedMutex() {
-            pthread_mutex_unlock(mutex);
-        }
+/// Locks mutex on construction, unlocks on destruction
+class ScopedMutex {
+public:
+    /// costruct this and lock m
+    ScopedMutex( pthread_mutex_t *m ) :
+    mutex(m)
+    {
+        pthread_mutex_lock(mutex);
+    }
+    /// costruct this and lock m
+    ScopedMutex( pthread_mutex_t &m ) :
+    mutex(&m)
+    {
+        pthread_mutex_lock(mutex);
+    }
+    /// destroy this and unlock m
+    ~ScopedMutex() {
+        pthread_mutex_unlock(mutex);
+    }
 
-    private:
-        /// the mutex
-        pthread_mutex_t *mutex;
-    };
+private:
+    /// the mutex
+    pthread_mutex_t *mutex;
+};
+
+
+
+template<typename T>
+T next( T p )
+{
+    T q = p;
+    q++;
+    return q;
+}
+
+
+template<typename T>
+T prev( T p )
+{
+    T q = p;
+    q--;
+    return q;
+}
+
 }
 
 #endif //AMINO_HPP
