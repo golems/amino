@@ -16,6 +16,7 @@ nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
 
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
+	include/amino/tf.hpp           \
 	include/amino/debug.h           \
 	include/amino/test.h            \
 	include/amino/endconv.h         \

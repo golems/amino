@@ -1,7 +1,7 @@
-/* -*- mode: C++; c-basic-offset: 4  -*- */
+/* -*- mode: C++; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2013, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,69 +40,53 @@
  *
  */
 
-#ifndef AMINO_HPP
-#define AMINO_HPP
-/**
- * \file amino.hpp
- * \author Neil T. Dantam
- */
+#ifndef AA_TF_HPP
+#define AA_TF_HPP
 
-#include "amino.h"
-#include "amino/mem.hpp"
-#include "amino/tf.hpp"
-
-
-//namespace amino {
-//#include "amino/mat.hpp"
-//}
-
-/// amino namespace
 namespace amino {
 
-/// Locks mutex on construction, unlocks on destruction
-class ScopedMutex {
-public:
-    /// costruct this and lock m
-    ScopedMutex( pthread_mutex_t *m ) :
-    mutex(m)
-    {
-        pthread_mutex_lock(mutex);
+struct DualQuat : aa_tf_duqu {
+    DualQuat() {}
+
+    DualQuat(const double S[8]) {
+        memcpy(this->data, S, 8*sizeof(S[0]));
     }
-    /// costruct this and lock m
-    ScopedMutex( pthread_mutex_t &m ) :
-    mutex(&m)
-    {
-        pthread_mutex_lock(mutex);
-    }
-    /// destroy this and unlock m
-    ~ScopedMutex() {
-        pthread_mutex_unlock(mutex);
+    DualQuat(const double q[4], const double v[3]) {
+        from_qv(q,v);
     }
 
-private:
-    /// the mutex
-    pthread_mutex_t *mutex;
+    void from_qv(const double q[4], const double v[3]) {
+        aa_tf_qv2duqu(q,v,this->data);
+    }
+    void from_tfmat(const double T[12] ) {
+        aa_tf_tfmat2duqu(T,this->data);
+    }
 };
 
 
+struct QuatVec : aa_tf_qv {
+    QuatVec() {}
 
-template<typename T>
-T next( T p )
-{
-    T q = p;
-    q++;
-    return q;
+    QuatVec(const double a_r[4], const double a_v[3])
+    {
+        memcpy(this->r.data, a_r, 4*sizeof(this->r.data[0]));
+        memcpy(this->v.data, a_v, 3*sizeof(this->v.data[0]));
+    }
+    QuatVec(const struct aa_tf_duqu *S) {
+        from_duqu(S->data);
+    }
+    QuatVec(const struct aa_tf_duqu S) {
+        from_duqu(S.data);
+    }
+
+    void from_duqu(const double S[8]) {
+        aa_tf_duqu2qv( S, this->r.data, this->v.data );
+    }
+    void from_tfmat(const double T[12]) {
+        aa_tf_tfmat2duqu( T, this->data );
+    }
+};
+
 }
 
-
-template<typename T>
-T prev( T p )
-{
-    T q = p;
-    q--;
-    return q;
-}
-
-}
-
-#endif //AMINO_HPP
+#endif //AA_MEM_HPP

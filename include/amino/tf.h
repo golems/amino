@@ -109,6 +109,16 @@ typedef struct aa_tf_tfmat {
     };
 } aa_tf_tfmat_t;
 
+/** Transformation as quaternion and vector */
+typedef struct aa_tf_qv {
+    union {
+        struct {
+            aa_tf_quat_t r;
+            aa_tf_vec_t v;
+        };
+        double data[7];
+    };
+} aa_tf_qv_t;
 
 
 
