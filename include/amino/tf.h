@@ -49,10 +49,31 @@
 /* Types */
 /*********/
 
+typedef struct aa_tf_vec3 {
+    union {
+        struct {
+            double x;
+            double y;
+            double z;
+        };
+        double data[3];
+    };
+} aa_tf_vec3_t;
 
 /// A rotation matrix, column major
-typedef double aa_tf_rotmat_t[9];
+typedef struct aa_tf_rotmat {
+    double data[9];
+} aa_tf_rotmat_t;
 
+typedef struct aa_tf_axang {
+    union {
+        struct {
+            struct aa_tf_vec3 axis;
+            double angle;
+        };
+        double data[4];
+    };
+} aa_tf_axang_t;
 
 
 #define AA_TF_QUAT_W   3
@@ -66,6 +87,10 @@ typedef struct aa_tf_quat {
             double y;
             double z;
             double w;
+        };
+        struct {
+            struct aa_tf_vec3 vec;
+            double scalar;
         };
         double data[4];
     };
@@ -84,17 +109,6 @@ typedef struct aa_tf_eulerzyx {
 } aa_tf_eulerzyx_t;
 
 
-typedef struct {
-    union {
-        struct {
-            double x;
-            double y;
-            double z;
-        };
-        double data[3];
-    };
-} aa_tf_vec_t;
-
 /** A transformation matrix.
  *  The first 9 elements are a column major rotation matrix.
  *  The last 3 elements are the origin vector.
@@ -103,7 +117,7 @@ typedef struct aa_tf_tfmat {
     union {
         struct {
             double R[9];
-            aa_tf_vec_t t;
+            aa_tf_vec3_t t;
         };
         double data[12];
     };
@@ -114,7 +128,7 @@ typedef struct aa_tf_qv {
     union {
         struct {
             aa_tf_quat_t r;
-            aa_tf_vec_t v;
+            aa_tf_vec3_t v;
         };
         double data[7];
     };
