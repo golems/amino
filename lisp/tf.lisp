@@ -96,7 +96,6 @@
   tf)
 
 ;;; Quaternions
-
 (defmacro def-q2 ((c-fun lisp-fun) doc-string)
   `(progn (defcfun ,c-fun :void
             (x quaternion-t)
@@ -139,15 +138,46 @@
   (aa-tf-qslerp r q0 q1 q)
   q)
 
-
 (defcfun aa-tf-qsvel :void
   (q0 quaternion-t)
   (w vector-3-t)
+  (dt :double)
   (q1 quaternion-t))
-(defun tf-qsvel (q0 w &optional (q1 (make-vec 4)))
+(defun tf-qsvel (q0 w dt &optional (q1 (make-quaternion)))
   "Integrate unit quaternion rotational velocity"
-  (aa-tf-qsvel q0 w q1)
+  (aa-tf-qsvel q0 w dt q1)
   q1)
+
+
+(defcfun aa-tf-qvelrk1 :void
+  (q0 quaternion-t)
+  (w vector-3-t)
+  (dt :double)
+  (q1 quaternion-t))
+(defun tf-qvelrk1 (q0 w dt &optional (q1 (make-quaternion)))
+  "Integrate unit quaternion rotational velocity"
+  (aa-tf-qvelrk1 q0 w dt q1)
+  q1)
+
+(defcfun aa-tf-qvelrk4 :void
+  (q0 quaternion-t)
+  (w vector-3-t)
+  (dt :double)
+  (q1 quaternion-t))
+(defun tf-qvelrk4 (q0 w dt &optional (q1 (make-quaternion)))
+  "Integrate unit quaternion rotational velocity"
+  (aa-tf-qvelrk4 q0 w dt q1)
+  q1)
+
+(defcfun aa-tf-qvel2diff :void
+  (q quaternion-t)
+  (w vector-3-t)
+  (dq quaternion-t))
+(defun tf-qvel2diff (q w &optional (dq (make-quaternion)))
+  "Velocity to quaternion derivative"
+  (aa-tf-qvel2diff q w dq)
+  dq)
+
 
 (defcfun aa-tf-rotmat2quat :void
   (r rotation-matrix-t)
@@ -163,6 +193,15 @@
 (defun tf-quat2rotmat (q &optional (r (make-matrix 3 3)))
   "Convert quaternion to rotation matrix"
   (aa-tf-quat2rotmat q r)
+  r)
+
+
+(defcfun aa-tf-quat2rotvec :void
+  (q quaternion-t)
+  (r rotation-vector-t))
+(defun tf-quat2rotvec (q &optional (r (make-rotation-vector)))
+  "Convert quaternion to rotation matrix"
+  (aa-tf-quat2rotvec q r)
   r)
 
 (defcfun aa-tf-xangle2quat :void
@@ -300,6 +339,17 @@
   (matrix-copy x y)
   (aa-tf-duqu-normalize y)
   y)
+
+
+;;; Euler
+(defcfun aa-tf-eulerzyx2quat :void
+  (e1 :double)
+  (e2 :double)
+  (e3 :double)
+  (r quaternion-t))
+(defun tf-eulerzyx2quat (e1 e2 e3 &optional (r (make-quaternion)))
+  (aa-tf-eulerzyx2quat e1 e2 e3 r)
+  r)
 
 ;;; Convenience
 

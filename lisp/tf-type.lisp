@@ -109,7 +109,6 @@
   '(and matrix
     (satisfies rotation-matrix-p)))
 
-
 (define-foreign-type rotation-matrix-t ()
   ()
   (:simple-parser rotation-matrix-t)
@@ -132,6 +131,20 @@
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
   (expand-vector value var body 4))
+
+(defun make-quaternion (&key (x 0d0) (y 0d0) (z 0d0) (w 1d0))
+  (vec x y z w))
+
+;; Rotation Vector
+(defun make-rotation-vector (&optional (x 0d0) (y 0d0) (z 0d0))
+  (vec x y z))
+
+(define-foreign-type rotation-vector-t ()
+  ()
+  (:simple-parser rotation-vector-t)
+  (:actual-type :pointer))
+(defmethod expand-to-foreign-dyn (value var body (type rotation-vector-t))
+  (expand-vector value var body 3))
 
 ;;; Dual Quaternion
 (define-foreign-type dual-quaternion-t ()
