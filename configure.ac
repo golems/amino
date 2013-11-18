@@ -44,12 +44,16 @@ dnl Check if FLAG is supported, and if so, add it
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
          [AC_DEFUN([APPEND_CFLAG],
                    [AX_CHECK_COMPILE_FLAG([$1], [CFLAGS="$1 $CFLAGS"])])
+          AC_DEFUN([APPEND_CXXFLAG],
+                   [AX_CHECK_COMPILE_FLAG([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
           AC_DEFUN([APPEND_FCFLAG],
                    [AX_CHECK_COMPILE_FLAG([$1], [FCFLAGS="$1 $FCFLAGS"])])])
 
 m4_ifdef([AX_CHECK_COMPILER_FLAGS],
          [AC_DEFUN([APPEND_CFLAG],
                    [AX_CHECK_COMPILER_FLAGS([$1], [CFLAGS="$1 $CFLAGS"])])
+          AC_DEFUN([APPEND_CXXFLAG],
+                   [AX_CHECK_COMPILER_FLAGS([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
           AC_DEFUN([APPEND_FCFLAG],
                    [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])])
 
@@ -64,7 +68,15 @@ APPEND_CFLAG([-Wpointer-arith])
 APPEND_CFLAG([-Wfloat-equal])
 APPEND_CFLAG([-Wshadow])
 APPEND_CFLAG([-Wwrite-strings])
-dnl APPEND_CFLAG([-Wc++-compat])
+APPEND_CFLAG([-Wc++-compat])
+
+AC_LANG([C++])
+APPEND_CXXFLAG([-Wextra])
+APPEND_CXXFLAG([-Wconversion])
+APPEND_CXXFLAG([-Wpointer-arith])
+APPEND_CXXFLAG([-Wfloat-equal])
+APPEND_CXXFLAG([-Wshadow])
+APPEND_CXXFLAG([-Wwrite-strings])
 
 AC_LANG([Fortran])
 APPEND_FCFLAG([-fimplicit-none])
