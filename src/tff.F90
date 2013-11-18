@@ -167,13 +167,13 @@ contains
     p = p + v1
   end subroutine aa_tf_93
 
-  pure subroutine aa_tf_qv( q, v, p1, p2) &
-       bind( C, name="aa_tf_qv" )
+  pure subroutine aa_tf_tf_qv( q, v, p1, p2) &
+       bind( C, name="aa_tf_tf_qv" )
     real(C_DOUBLE), intent(in)  :: q(4), v(3), p1(3)
     real(C_DOUBLE), intent(out) :: p2(3)
     call aa_tf_qrot( q, p1, p2 )
     p2 = p2 + v
-  end subroutine aa_tf_qv
+  end subroutine aa_tf_tf_qv
 
   pure subroutine aa_tf_93chain( R1, v1, R2, v2, R3, v3 ) &
        bind( C, name="aa_tf_93chain" )
@@ -1648,8 +1648,8 @@ contains
   end subroutine aa_tf_tfmat2duqu
 
   !> Transform a point using the dual quaternion
-  subroutine aa_tf_duqu( d, p0, p1 ) &
-       bind( C, name="aa_tf_duqu" )
+  subroutine aa_tf_tf_duqu( d, p0, p1 ) &
+       bind( C, name="aa_tf_tf_duqu" )
     real(C_DOUBLE), intent(in) :: d(8), p0(3)
     real(C_DOUBLE), intent(out) :: p1(3)
     ! p1 = d * p * d^{-1}
@@ -1668,7 +1668,7 @@ contains
     call aa_tf_cross( d(DQ_REAL_XYZ), ax, p1 )
     p1 = p1 + d(DQ_REAL_W)*ax + aw*d(DQ_REAL_XYZ)
 
-  end subroutine aa_tf_duqu
+  end subroutine aa_tf_tf_duqu
 
 
   !! Convert spatial velocity to quaternion derivative

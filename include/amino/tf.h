@@ -194,10 +194,10 @@ AA_API void aa_tf_93( const double R[AA_RESTRICT 9],
                       const double p0[AA_RESTRICT 3],
                       double p1[AA_RESTRICT 4] );
 /// apply a euclidean transform
-AA_API void aa_tf_qv( const double quat[AA_RESTRICT 4],
-                      const double v[AA_RESTRICT 3],
-                      const double p0[AA_RESTRICT 3],
-                      double p1[AA_RESTRICT 4] );
+AA_API void aa_tf_tf_qv( const double quat[AA_RESTRICT 4],
+                         const double v[AA_RESTRICT 3],
+                         const double p0[AA_RESTRICT 3],
+                         double p1[AA_RESTRICT 4] );
 
 /// apply a euclidean transform
 AA_API void aa_tf_9( const double R[AA_RESTRICT 9],
@@ -688,7 +688,7 @@ AA_API void aa_tf_duqu_normalize( double d[AA_RESTRICT 8] );
 AA_API void aa_tf_duqu_minimize( double d[AA_RESTRICT 8] );
 
 /** Dual quaternion transformation */
-AA_API void aa_tf_duqu( const double d[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
+AA_API void aa_tf_tf_duqu( const double d[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
                         double p1[AA_RESTRICT 3]  );
 
 /** Extract dual quaternion translation vector */

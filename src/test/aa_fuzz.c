@@ -308,8 +308,8 @@ static void duqu() {
     // transform points
     double p1H[3], p1qv[3], p1T[3];
     aa_tf_12( T.data, p0, p1T );
-    aa_tf_qv( q, v, p0, p1qv );
-    aa_tf_duqu(  H.data, p0, p1H );
+    aa_tf_tf_qv( q, v, p0, p1qv );
+    aa_tf_tf_duqu(  H.data, p0, p1H );
 
     aveq( "tf-qv",   3, p1T, p1qv, .001 );
     aveq( "tf-duqu", 3, p1T, p1H, .001 );

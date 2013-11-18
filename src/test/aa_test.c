@@ -1779,14 +1779,14 @@ void list() {
 
         for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
             size_t j = sizeof(front)/sizeof(front[0]) - i - 1;
-            int *f = aa_mem_rlist_pop(lf);
-            int *b = aa_mem_rlist_pop(lb);
+            int *f = (int*)aa_mem_rlist_pop(lf);
+            int *b = (int*)aa_mem_rlist_pop(lb);
             assert( f == front + j );
             assert( b == front + j );
         }
         for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
-            int *f = aa_mem_rlist_pop(lf);
-            int *b = aa_mem_rlist_pop(lb);
+            int *f = (int*)aa_mem_rlist_pop(lf);
+            int *b = (int*)aa_mem_rlist_pop(lb);
             assert( f == back + i );
             assert( b == back + i );
         }
@@ -1808,14 +1808,14 @@ void list() {
 
         for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
             size_t j = sizeof(front)/sizeof(front[0]) - i - 1;
-            int *f = aa_mem_rlist_pop(lf);
-            int *b = aa_mem_rlist_pop(lb);
+            int *f = (int*)aa_mem_rlist_pop(lf);
+            int *b = (int*)aa_mem_rlist_pop(lb);
             assert( *f == front[j] );
             assert( *b == front[j] );
         }
         for( size_t i = 0; i < sizeof(front)/sizeof(front[0]); i ++ ) {
-            int *f = aa_mem_rlist_pop(lf);
-            int *b = aa_mem_rlist_pop(lb);
+            int *f = (int*)aa_mem_rlist_pop(lf);
+            int *b = (int*)aa_mem_rlist_pop(lb);
             assert( *f == back[i] );
             assert( *b == back[i] );
         }
