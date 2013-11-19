@@ -83,3 +83,5 @@ amino*.tar.gz
 *.jar
 /java/.dirstamp
 /java/.deps/.dirstamp
+/doc/.javadoc.stamp
+/doc/javadoc

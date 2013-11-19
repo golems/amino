@@ -124,7 +124,7 @@ foo:
 JSOURCES =                                        \
 	$(top_srcdir)/java/Lib.java
 
-EXTRA_DIST += $(JSOURCES)
+EXTRA_DIST += $(JSOURCES) doc/javadoc
 
 if HAVE_JAVAC
 
@@ -152,6 +152,15 @@ lib_LTLIBRARIES += libaminoj.la
 libaminoj_la_CPPFLAGS = $(CPPFLAGS) $(JNICPPFLAGS)
 libaminoj_la_SOURCES = java/aminoj.c
 libaminoj_la_LIBADD = libamino.la
+
+# Javadocs
+doc/.javadoc.stamp: $(JSOURCES)
+	javadoc -d doc/javadoc $(JSOURCES)
+	touch $@
+
+doc/javadoc: doc/.javadoc.stamp
+
+javadoc: doc/.javadoc.stamp
 
 endif
 

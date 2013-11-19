@@ -50,17 +50,29 @@ public class Lib
 
     /* Native Function Wrappers */
 
-    /** Create a new memory region
+    /** Create a new memory region.
      *
-     * Returns handle to memory region.  Must call
-     * mem_region_destroy() later.
+     * @param size Initial size of the memory region.  Alocations
+     * beyond this size will result in additional C heap use.
+     *
+     * @return A handle to memory region.  Must call
+     * mem_region_destroy() later to free the memory.
      */
     public static native long mem_region_create( long size );
 
     /** Release all bytes allocated by the region.
+     *
+     * @param handle The region handle return by mem_region_create()
      */
-    public static native void mem_region_release( long size );
+    public static native void mem_region_release( long handle );
 
-    /** Destroy a memory region */
+    /** Destroy a memory region.
+     *
+     * Release all memory allocated in this region and destroy the
+     * region itself.
+     *
+     * @param handle The region handle return by mem_region_create()
+     *
+     */
     public static native void mem_region_destroy( long handle );
 }
