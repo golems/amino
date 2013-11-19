@@ -78,3 +78,8 @@ amino*.tar.gz
 /test-driver
 /test-suite.log
 /testcpp
+/org_golems_amino_Lib.h
+*.class
+*.jar
+/java/.dirstamp
+/java/.deps/.dirstamp

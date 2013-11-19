@@ -119,6 +119,43 @@ $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 foo:
 	echo $(la_test_OBJECTS)
 
+
+## JAVA ##
+JSOURCES =                                        \
+	$(top_srcdir)/java/Lib.java
+
+EXTRA_DIST += $(JSOURCES)
+
+if HAVE_JAVAC
+
+BUILT_SOURCES += org_golems_amino_Lib.h
+
+JCLASSES =                                        \
+	org/golems/amino/Lib.class
+
+org/golems/amino/Lib.class: $(JSOURCES)
+	$(JAVAC) -d $(top_builddir) $(JSOURCES)
+
+org_golems_amino_Lib.h: $(top_builddir)/org/golems/amino/Lib.class
+	$(JAVAH) org.golems.amino.Lib
+	touch $@
+
+org.golems.amino.jar: $(JCLASSES)
+	$(JAR) cf $@ $(JCLASSES)
+
+
+# install the jar file somewhere reasonable
+javadir = $(datadir)/java
+java_DATA = org.golems.amino.jar
+
+lib_LTLIBRARIES += libaminoj.la
+libaminoj_la_CPPFLAGS = $(CPPFLAGS) $(JNICPPFLAGS)
+libaminoj_la_SOURCES = java/aminoj.c
+libaminoj_la_LIBADD = libamino.la
+
+endif
+
+
 ## TESTS ##
 
 TESTS = aa_test la_test aa_regress q_test aa_fuzz testcpp
