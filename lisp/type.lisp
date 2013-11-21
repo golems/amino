@@ -303,6 +303,15 @@ N: cols in the block."
                 (coerce x 'double-float)))
     vec))
 
+(defun veccat (&rest args)
+  (let* ((n (loop for x in args summing (length x)))
+         (y (make-vec n))
+         (i -1))
+    (dolist (x args)
+      (dotimes (j (length x))
+        (setf (aref y (incf i))
+              (aref x j))))
+    y))
 
 (defun vec-copy (vec &key (start 0) (end (length vec)))
   ;; TODO: matrix version
