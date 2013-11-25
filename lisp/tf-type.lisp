@@ -69,6 +69,11 @@
                   (,body-fun (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
                 ;; invalid type, throw error
                 (matrix-storage-error "Invalid matrix size or storage of ~D: ~A" ,length ,x)))
+           (real-array
+            (if (= ,length (length (real-array-data ,x)))
+                (with-pointer-to-vector-data (,ptr0 (real-array-data ,x))
+                  (,body-fun ,ptr0))
+                (matrix-storage-error "Invalid matrix size of ~D: ~A" ,length ,x)))
            ((simple-array double-float (*))
             (if (= (length ,x) ,length)
                 ;; valid type
@@ -117,6 +122,13 @@
   (expand-type value var body 'rotation-matrix))
 
 ;;; Point 3
+
+;; or should this just be an array deftype?
+(defstruct (vec3 (:include real-array
+                           (data (make-vec 3) :type  (simple-array double-float (3))))))
+(defun vec3 (x y z)
+  (make-vec3 :data (vec x y z)))
+
 (define-foreign-type vector-3-t ()
   ()
   (:simple-parser vector-3-t)
@@ -125,6 +137,20 @@
   (expand-vector value var body 3))
 
 ;;; Quaternion
+(defstruct (quaternion (:include real-array
+                                 (data (make-vec 4) :type  (simple-array double-float (4))))))
+(defun quaternion-x (q)
+  (aref (quaternion-data q) +x+))
+(defun quaternion-y (q)
+  (aref (quaternion-data q) +y+))
+(defun quaternion-z (q)
+  (aref (quaternion-data q) +z+))
+(defun quaternion-w (q)
+  (aref (quaternion-data q) +w+))
+
+(defun quaternion (x y z w)
+  (make-quaternion :data (vec x y z w)))
+
 (define-foreign-type quaternion-t ()
   ()
   (:simple-parser quaternion-t)
@@ -132,12 +158,11 @@
 (defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
   (expand-vector value var body 4))
 
-(defun make-quaternion (&key (x 0d0) (y 0d0) (z 0d0) (w 1d0))
-  (vec x y z w))
-
 ;; Rotation Vector
-(defun make-rotation-vector (&optional (x 0d0) (y 0d0) (z 0d0))
-  (vec x y z))
+(defstruct (rotation-vector (:include vec3)))
+
+(defun rotation-vector (x y z)
+  (make-rotation-vector :data (vec x y z)))
 
 (define-foreign-type rotation-vector-t ()
   ()
@@ -147,6 +172,12 @@
   (expand-vector value var body 3))
 
 ;;; Dual Quaternion
+(defstruct (dual-quaternion (:include real-array
+                                 (data (make-vec 8) :type  (simple-array double-float (8))))))
+;; (defun dual-quaternion (q v)
+;;   ;; TODO
+;;   (assert 0))
+
 (define-foreign-type dual-quaternion-t ()
   ()
   (:simple-parser dual-quaternion-t)

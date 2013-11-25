@@ -50,6 +50,10 @@
 ;;;   - Cols
 (in-package :amino)
 
+(defconstant +x+ 0)
+(defconstant +y+ 1)
+(defconstant +z+ 2)
+(defconstant +w+ 3)
 
 (define-condition matrix-storage (error)
   ((message
@@ -64,6 +68,9 @@
   (error 'matrix-storage
          :message (apply #'format nil format args)))
 
+
+(defstruct real-array
+  (data nil :type  (simple-array double-float (*))))
 
 (defstruct (matrix (:constructor %make-matrix)
                    (:conc-name %matrix-))
@@ -97,6 +104,7 @@
 (defun matrix-data (m)
   (etypecase m
     ((simple-array * (*))  m)
+    (real-array (real-array-data m))
     (list (map-into (make-array (length m) :element-type 'double-float)
                     (lambda (k) (coerce k 'double-float))
                     m))
@@ -106,11 +114,13 @@
   (etypecase m
     ((simple-array * (*))  0)
     (list 0)
+    (real-array 0)
     (matrix (%matrix-offset m))))
 
 (defun matrix-stride (m)
   (etypecase m
     ((simple-array * (*))  (length m))
+    (real-array (length (real-array-data m)))
     (list (length m))
     (matrix (%matrix-stride m))))
 

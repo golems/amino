@@ -100,7 +100,7 @@
   `(progn (defcfun ,c-fun :void
             (x quaternion-t)
             (y quaternion-t))
-          (defun ,lisp-fun (x &optional (y (make-matrix 4 1)))
+          (defun ,lisp-fun (x &optional (y (make-quaternion)))
             ,doc-string
             (,c-fun x y)
             y)))
@@ -110,7 +110,7 @@
             (x1 quaternion-t)
             (x2 quaternion-t)
             (y quaternion-t))
-          (defun ,lisp-fun (x1 x2 &optional (y (make-matrix 4 1)))
+          (defun ,lisp-fun (x1 x2 &optional (y (make-quaternion)))
             ,doc-string
             (,c-fun x1 x2 y)
             y)))
@@ -182,7 +182,7 @@
 (defcfun aa-tf-rotmat2quat :void
   (r rotation-matrix-t)
   (q quaternion-t))
-(defun tf-rotmat2quat (r &optional (q (make-matrix 4 1)))
+(defun tf-rotmat2quat (r &optional (q (make-quaternion)))
   "Convert rotation matrix to quaternion"
   (aa-tf-rotmat2quat r q)
   q)
@@ -207,7 +207,7 @@
 (defcfun aa-tf-xangle2quat :void
   (theta :double)
   (r quaternion-t))
-(defun tf-xangle2quat (theta &optional (r (make-matrix 4 1)))
+(defun tf-xangle2quat (theta &optional (r (make-quaternion)))
   "Convert rotation about x to unit quaternion"
   (aa-tf-xangle2quat theta r)
   r)
@@ -215,7 +215,7 @@
 (defcfun aa-tf-yangle2quat :void
   (theta :double)
   (r quaternion-t))
-(defun tf-yangle2quat (theta &optional (r (make-matrix 4 1)))
+(defun tf-yangle2quat (theta &optional (r (make-quaternion)))
   "Convert rotation about y to unit quaternion"
   (aa-tf-yangle2quat theta r)
   r)
@@ -223,7 +223,7 @@
 (defcfun aa-tf-zangle2quat :void
   (theta :double)
   (r quaternion-t))
-(defun tf-zangle2quat (theta &optional (r (make-matrix 4 1)))
+(defun tf-zangle2quat (theta &optional (r (make-quaternion)))
   "Convert rotation about z to unit quaternion"
   (aa-tf-zangle2quat theta r)
   r)
@@ -236,7 +236,7 @@
   `(progn (defcfun ,c-fun :void
             (x dual-quaternion-t)
             (y dual-quaternion-t))
-          (defun ,lisp-fun (x &optional (y (make-matrix 8 1)))
+          (defun ,lisp-fun (x &optional (y (make-dual-quaternion)))
             ,doc-string
             (,c-fun x y)
             y)))
@@ -246,7 +246,7 @@
             (x1 dual-quaternion-t)
             (x2 dual-quaternion-t)
             (y dual-quaternion-t))
-          (defun ,lisp-fun (x1 x2 &optional (y (make-matrix 8 1)))
+          (defun ,lisp-fun (x1 x2 &optional (y (make-dual-quaternion)))
             ,doc-string
             (,c-fun x1 x2 y)
             y)))
@@ -259,11 +259,17 @@
   (aa-tf-duqu-trans d x)
   x)
 
+(defun tf-duqu-rot (d &optional (r (make-quaternion)))
+  "Extration dual quaternion rotation"
+  (replace (quaternion-data r)
+           (dual-quaternion-data d))
+  r)
+
 (defcfun aa-tf-qv2duqu :void
   (q quaternion-t)
   (v vector-3-t)
   (d dual-quaternion-t))
-(defun tf-qv2duqu (q v &optional (d (make-matrix 8 1)))
+(defun tf-qv2duqu (q v &optional (d (make-dual-quaternion)))
   "Convert unit quaternion and translation vector to dual quaternion"
   (aa-tf-qv2duqu q v d)
   d)
@@ -273,7 +279,7 @@
   (q quaternion-t)
   (v vector-3-t))
 (defun tf-duqu2qv (d &optional
-                   (q (make-matrix 4 1))
+                   (q (make-quaternion))
                    (v (make-matrix 3 1)))
   "Convert dual quaternion to unit quaternion and translation vector"
   (aa-tf-duqu2qv d q v)
@@ -286,7 +292,7 @@
   (y :double)
   (z :double)
   (s dual-quaternion-t))
-(defun tf-xxyz2duqu (x-angle x y z &optional (s (make-matrix 8 1)))
+(defun tf-xxyz2duqu (x-angle x y z &optional (s (make-dual-quaternion)))
   "x-angle and vector to dual quaternion"
   (aa-tf-xxyz2duqu x-angle x y z s)
   s)
@@ -298,7 +304,7 @@
   (y :double)
   (z :double)
   (s dual-quaternion-t))
-(defun tf-yxyz2duqu (y-angle x y z &optional (s (make-matrix 8 1)))
+(defun tf-yxyz2duqu (y-angle x y z &optional (s (make-dual-quaternion)))
   "y-angle and vector to dual quaternion"
   (aa-tf-yxyz2duqu y-angle x y z s)
   s)
@@ -309,7 +315,7 @@
   (y :double)
   (z :double)
   (s dual-quaternion-t))
-(defun tf-zxyz2duqu (z-angle x y z &optional (s (make-matrix 8 1)))
+(defun tf-zxyz2duqu (z-angle x y z &optional (s (make-dual-quaternion)))
   "z-angle and vector to dual quaternion"
   (aa-tf-zxyz2duqu z-angle x y z s)
   s)
@@ -318,7 +324,7 @@
 (defcfun aa-tf-duqu-conj :void
   (x dual-quaternion-t)
   (y dual-quaternion-t))
-(defun tf-duqu-conj (x &optional (y (make-matrix 8 1)))
+(defun tf-duqu-conj (x &optional (y (make-dual-quaternion)))
   "Dual quaternion conjugate"
   (aa-tf-duqu-conj x y)
   y)
@@ -334,7 +340,7 @@
 
 (defcfun aa-tf-duqu-normalize :void
   (y dual-quaternion-t))
-(defun tf-duqu-normalize (x &optional (y (make-matrix 8 1)))
+(defun tf-duqu-normalize (x &optional (y (make-dual-quaternion)))
   "Dual quaternion normalization"
   (matrix-copy x y)
   (aa-tf-duqu-normalize y)
