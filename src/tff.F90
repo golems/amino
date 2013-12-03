@@ -749,27 +749,19 @@ contains
        bind( C, name="aa_tf_qexp" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vv, vnorm, ew, sc, c
+    real(C_DOUBLE) :: vnorm, ew, sc, c
     ew = exp(q(W_INDEX))
-    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    if( 0d0 == vv) then
-       ! Scalar quaternion
-       r(XYZ_INDEX) = 0d0
-       r(W_INDEX) = ew
+    vnorm = sqrt( dot_product(q(XYZ_INDEX), q(XYZ_INDEX)) )
+    ! Avoid division by very small vnorm
+    if( vnorm < sqrt(sqrt(epsilon(vnorm))) ) then
+       sc = aa_tf_sinc_series(vnorm) ! approx. 1
+       c = aa_tf_cos_series(vnorm)   ! approx. 1
     else
-       ! Nonzero vector
-       vnorm = sqrt(vv)
-       ! Avoid division by very small vnorm
-       if( vnorm < sqrt(sqrt(epsilon(vnorm))) ) then
-          sc = aa_tf_sinc_series(vnorm) ! approx. 1
-          c = aa_tf_cos_series(vnorm)   ! approx. 1
-       else
-          sc = sin(vnorm)/vnorm
-          c = cos(vnorm)
-       end if
-       r(W_INDEX) = ew * c
-       r(XYZ_INDEX) = ew * sc * q(XYZ_INDEX)
+       sc = sin(vnorm)/vnorm
+       c = cos(vnorm)
     end if
+    r(W_INDEX) = ew * c
+    r(XYZ_INDEX) = ew * sc * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
 
   pure subroutine aa_tf_qln( q, r ) &
@@ -780,20 +772,16 @@ contains
     ! compute qnorm and vnorm efficiently
     vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
     qnorm = sqrt( vv + q(W_INDEX)**2 )
-    if( 0d0 == vv ) then
-       r(XYZ_INDEX) = 0d0
+    vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
+    theta = atan2( vnorm, q(W_INDEX) ) ! always positive
+    ! Try to avoid division by very small vnorm
+    if ( theta < sqrt(sqrt(epsilon(theta))) ) then
+       ! a = theta*qnorm / (vnorm*qnorm) = theta/(sin(theta)*qnorm)
+       a = aa_tf_invsinc_series(theta)/qnorm ! approx. 1/qnorm
     else
-       vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
-       theta = atan2( vnorm, q(W_INDEX) ) ! always positive
-       ! Try to avoid division by very small vnorm
-       if ( theta < sqrt(sqrt(epsilon(theta))) ) then
-          ! a = theta*qnorm / (vnorm*qnorm) = theta/(sin(theta)*qnorm)
-          a = aa_tf_invsinc_series(theta)/qnorm ! approx. 1/qnorm
-       else
-          a = theta/vnorm
-       end if
-       r(XYZ_INDEX) = a*q(XYZ_INDEX)
+       a = theta/vnorm
     end if
+    r(XYZ_INDEX) = a*q(XYZ_INDEX)
     r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
   end subroutine aa_tf_qln
 
