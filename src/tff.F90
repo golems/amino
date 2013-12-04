@@ -821,7 +821,7 @@ contains
     t(XYZ_INDEX) = a/2d0
     t(W_INDEX) = 0d0
     call aa_tf_qexp( t, q )
-    call aa_tf_qnormalize(q)
+    call aa_tf_qnormalize(q) ! not required, but helps stability
     call aa_tf_qminimize(q)
   end Subroutine aa_tf_rotvec2quat
 
@@ -1143,6 +1143,76 @@ contains
     call aa_tf_vqmul( v, q, dq_dt )
     dq_dt = dq_dt / 2
   end subroutine aa_tf_qvel2diff
+
+
+  subroutine aa_tf_rotvec_qjac( v, G ) &
+       bind( C, name="aa_tf_rotvec_qjac" )
+    real(C_DOUBLE), dimension(3), intent(in) :: v
+    real(C_DOUBLE), dimension(4,3), intent(out) :: G
+    real(C_DOUBLE) :: n, s, c, a
+    n = sqrt(dot_product(v,v))
+    !! TODO: this is more or less the jacobian of the quaternion
+    !! exponential.  We could be more general by just using that
+    !! jacobian.
+    if( 0 == n ) then
+       ! limit as v->0
+       G(1,1) = 0.5d0
+       G(2,1) = 0d0
+       G(3,1) = 0d0
+       G(4,1) = -v(1)/4
+
+       G(1,2) = 0d0
+       G(2,2) = 0.5d0
+       G(3,2) = 0d0
+       G(4,2) = -v(2)/4
+
+       G(1,3) = 0d0
+       G(2,3) = 0d0
+       G(3,3) = 0.5d0
+       G(4,3) = -v(3)/4
+    else
+       s = sin(n/2)
+       c = cos(n/2)
+       a = c*n - 2*s
+
+       G(1,1) = 2*n*n*s + v(1)*v(1)*a
+       G(2,1) = v(1)*v(2)*a
+       G(3,1) = v(1)*v(3)*a
+       G(4,1) = -v(1)*n*n*s
+
+       G(1,2) = v(1)*v(2)*a
+       G(2,2) = 2*n*n*s + v(2)*v(2)*a
+       G(3,2) = v(2)*v(3)*a
+       G(4,2) = -v(2)*n*n*s
+
+       G(1,3) = v(1)*v(3)*a
+       G(2,3) = v(2)*v(3)*a
+       G(3,3) = 2*n*n*s + v(3)*v(3)*a
+       G(4,3) = -v(3)*n*n*s
+
+       G = G / (2*n**3)
+    end if
+
+  end subroutine aa_tf_rotvec_qjac
+
+  subroutine aa_tf_rotvec_diff2qdiff( v, dv, dq ) &
+       bind( C, name="aa_tf_rotvec_diff2qdiff" )
+    real(C_DOUBLE), dimension(4), intent(out) :: dq
+    real(C_DOUBLE), dimension(3), intent(in) :: v, dv
+    real(C_DOUBLE) :: G(4,3)
+    call aa_tf_rotvec_qjac( v, G )
+    dq = matmul( G, dv )
+  end subroutine aa_tf_rotvec_diff2qdiff
+
+  subroutine aa_tf_rotvec_diff2vel( v, dv, w ) &
+       bind( C, name="aa_tf_rotvec_diff2vel" )
+    real(C_DOUBLE), dimension(3), intent(out) :: w
+    real(C_DOUBLE), dimension(3), intent(in) :: v, dv
+    real(C_DOUBLE) :: dq(4), q(4)
+    call aa_tf_rotvec_diff2qdiff(v,dv,dq)
+    call aa_tf_rotvec2quat(v, q)
+    call aa_tf_qdiff2vel( q, dq, w )
+  end subroutine aa_tf_rotvec_diff2vel
 
 
   subroutine aa_tf_qrk1( q0, dq, dt, q1 ) &

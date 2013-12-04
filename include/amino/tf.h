@@ -461,6 +461,9 @@ AA_API void aa_tf_qvel2diff( const double q[AA_RESTRICT 4],
                              double dq_dt[AA_RESTRICT 4] );
 
 
+/* Convert rotation vector derivative to rotational velocity */
+AA_API void aa_tf_rotvec_diff2vel( const double v[3], const double dv[3],
+                                   double w[3] );
 
 /** Integrate unit quaternion, Runge-Kutta-1 (euler) integration.
  *
