@@ -392,17 +392,18 @@ contains
        bind( C, name="aa_tf_rotmat_expv" )
     real(C_DOUBLE), intent(in) ::  rv(3)
     real(C_DOUBLE), intent(out) :: E(3,3)
-    real(C_DOUBLE) :: sc, cc, theta
+    real(C_DOUBLE) :: sc, cc, theta, theta2
 
-    theta = sqrt(dot_product(rv,rv))
+    theta2 = dot_product(rv,rv)
+    theta = sqrt(theta2)
 
-    if ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
+    if ( theta2 < sqrt(epsilon(theta2)) ) then
        ! taylor series
-       sc = aa_tf_sinc_series(theta) ! approx. 1
-       cc = theta * aa_tf_horner3( theta**2, 1d0/2, -1d0/24, 1d0/720 )
+       sc = aa_tf_sinc_series2(theta2) ! approx. 1
+       cc = theta * aa_tf_horner3( theta2, 1d0/2, -1d0/24, 1d0/720 )
     else
        sc = sin(theta)/theta
-       cc = (1d0-cos(theta)) / theta**2
+       cc = (1d0-cos(theta)) / theta2
     end if
 
     call aa_tf_skewsym_scal2( sc, cc, rv, E )
@@ -435,19 +436,20 @@ contains
        bind( C, name="aa_tf_tfmat_expv" )
     real(C_DOUBLE), intent(in) ::  v(6)
     real(C_DOUBLE), intent(out) :: T(3,4)
-    real(C_DOUBLE) :: sc, cc, ssc, theta, K(3,3)
+    real(C_DOUBLE) :: sc, cc, ssc, theta2, theta, K(3,3)
 
-    theta = sqrt(dot_product(v(4:6),v(4:6)))
+    theta2 = dot_product(v(4:6),v(4:6))
+    theta = sqrt(theta2)
 
-    if ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
+    if ( theta2 < sqrt(epsilon(theta2)) ) then
        ! taylor series
-       sc = aa_tf_sinc_series(theta) ! approx. 1
-       cc = theta * aa_tf_horner3( theta**2, 1d0/2, -1d0/24, 1d0/720 )
-       ssc = aa_tf_horner3( theta**2, 1d0/6, -1d0/120, 1d0/5040 )
+       sc = aa_tf_sinc_series2(theta2) ! approx. 1
+       cc = theta * aa_tf_horner3( theta2, 1d0/2, -1d0/24, 1d0/720 )
+       ssc = aa_tf_horner3( theta2, 1d0/6, -1d0/120, 1d0/5040 )
     else
        sc = sin(theta)/theta
-       cc = (1d0 - cos(theta)) / theta**2
-       ssc = (theta - sin(theta)) / theta**3
+       cc = (1d0 - cos(theta)) / theta2
+       ssc = (theta - sin(theta)) / (theta2*theta)
     end if
 
     call aa_tf_skewsym_scal2( sc, cc,  v(4:6), T(:,1:3) )
@@ -749,14 +751,15 @@ contains
        bind( C, name="aa_tf_qexp" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vnorm, ew, sc, c
+    real(C_DOUBLE) :: vv, vnorm, ew, sc, c
     ew = exp(q(W_INDEX))
-    vnorm = sqrt( dot_product(q(XYZ_INDEX), q(XYZ_INDEX)) )
+    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
     ! Avoid division by very small vnorm
-    if( vnorm < sqrt(sqrt(epsilon(vnorm))) ) then
-       sc = aa_tf_sinc_series(vnorm) ! approx. 1
-       c = aa_tf_cos_series(vnorm)   ! approx. 1
+    if( vv < sqrt(epsilon(vv)) ) then
+       sc = aa_tf_sinc_series2(vv) ! approx. 1
+       c = aa_tf_cos_series2(vv)   ! approx. 1
     else
+       vnorm = sqrt(vv)
        sc = sin(vnorm)/vnorm
        c = cos(vnorm)
     end if
@@ -1311,6 +1314,14 @@ contains
     y = a0 + x*y
   end function aa_tf_horner5
 
+
+
+  pure function aa_tf_sinc_series2( theta2 ) result(s)
+    real(C_DOUBLE), value :: theta2
+    real(C_DOUBLE) :: s
+    s = aa_tf_horner3( theta2, 1d0, -1d0/6d0, 1d0/120d0)
+  end function aa_tf_sinc_series2
+
   ! sin(theta)/theta
   pure function aa_tf_sinc_series( theta ) result(s)
     real(C_DOUBLE), value :: theta
@@ -1319,21 +1330,34 @@ contains
     ! three terms should be accurate within machine precision,
     ! because the third term is less than theta**4 and thus less
     ! than epsilon.
-    s = aa_tf_horner3( theta**2, 1d0, -1d0/6d0, 1d0/120d0)
+    s = aa_tf_sinc_series2( theta**2 )
   end function aa_tf_sinc_series
+
+  pure function aa_tf_cos_series2( theta2 ) result(s)
+    real(C_DOUBLE), value :: theta2
+    real(C_DOUBLE) :: s
+    s = aa_tf_horner3( theta2, 1d0, -1d0/2d0, 1d0/24d0)
+  end function aa_tf_cos_series2
 
   ! cos(theta) for small theta
   pure function aa_tf_cos_series( theta ) result(s)
     real(C_DOUBLE), value :: theta
     real(C_DOUBLE) :: s
-    s = aa_tf_horner3( theta**2, 1d0, -1d0/2d0, 1d0/24d0)
+    s = aa_tf_cos_series2(theta)
   end function aa_tf_cos_series
+
+
+  pure function aa_tf_invsinc_series2( theta2 ) result(s)
+    real(C_DOUBLE), value :: theta2
+    real(C_DOUBLE) :: s
+    s = aa_tf_horner3( theta2, 1d0, 1d0/6d0, 7d0/360d0 )
+  end function aa_tf_invsinc_series2
 
   ! theta/sin(theta)
   pure function aa_tf_invsinc_series( theta ) result(s)
     real(C_DOUBLE), value :: theta
     real(C_DOUBLE) :: s
-    s = aa_tf_horner3( theta**2, 1d0, 1d0/6d0, 7d0/360d0 )
+    s = aa_tf_invsinc_series2( theta**2 )
   end function aa_tf_invsinc_series
 
   pure function aa_tf_sinc( theta ) result(s)
@@ -1819,13 +1843,13 @@ contains
     real(C_DOUBLE) :: nr, c, vv, vd, ar, ad
     type(aa_tf_dual_t) :: expw
     vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
-    nr = sqrt(vv)
-    if( nr < sqrt(sqrt(epsilon(nr))) ) then
-       ar = aa_tf_sinc_series(nr) ! approx. 1
-       c = aa_tf_cos_series(nr)   ! approx. 1
+    if( vv < sqrt(epsilon(vv)) ) then
+       ar = aa_tf_sinc_series2(vv) ! approx. 1
+       c = aa_tf_cos_series2(vv)   ! approx. 1
        ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
        ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
     else
+       nr = sqrt(vv)
        ar = sin(nr)/nr
        c = cos(nr)
        ad = (c-ar)/vv
