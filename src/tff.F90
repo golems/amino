@@ -825,7 +825,7 @@ contains
     t(W_INDEX) = 0d0
     call aa_tf_qexp( t, q )
     call aa_tf_qnormalize(q) ! not required, but helps stability
-    call aa_tf_qminimize(q)
+    !call aa_tf_qminimize(q)
   end Subroutine aa_tf_rotvec2quat
 
   Subroutine aa_tf_xangle2quat( theta, q ) &
@@ -1202,9 +1202,32 @@ contains
        bind( C, name="aa_tf_rotvec_diff2qdiff" )
     real(C_DOUBLE), dimension(4), intent(out) :: dq
     real(C_DOUBLE), dimension(3), intent(in) :: v, dv
-    real(C_DOUBLE) :: G(4,3)
-    call aa_tf_rotvec_qjac( v, G )
-    dq = matmul( G, dv )
+
+    real(C_DOUBLE) :: y(3), dy(3), phi2, phi, sinc, k, ydy
+
+    y = v / 2
+    dy = dv / 2
+    phi2 = dot_product(y,y)
+
+    if( phi2 < sqrt(epsilon(phi)) ) then
+       ! Taylor series approx
+       sinc = aa_tf_sinc_series2(phi2)
+       k = aa_tf_horner3( phi2, -1d0/2, 1d0/30, -1d0/840 )
+    else
+       phi = sqrt(phi2)
+       sinc = sin(phi)/phi
+       k = (cos(phi)-sinc) / phi2
+    end if
+
+    ydy = dot_product(y,dy)
+
+    dq(W_INDEX) = -ydy*sinc
+    dq(XYZ_INDEX) = sinc*dy + k*ydy*y
+
+    ! real(C_DOUBLE) :: G(4,3)
+    ! call aa_tf_rotvec_qjac( v, G )
+    ! dq = matmul( G, dv )
+
   end subroutine aa_tf_rotvec_diff2qdiff
 
   subroutine aa_tf_rotvec_diff2vel( v, dv, w ) &
