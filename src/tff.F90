@@ -1212,7 +1212,7 @@ contains
     if( phi2 < sqrt(epsilon(phi)) ) then
        ! Taylor series approx
        sinc = aa_tf_sinc_series2(phi2)
-       k = aa_tf_horner3( phi2, -1d0/2, 1d0/30, -1d0/840 )
+       k = aa_tf_horner3( phi2, -1d0/3, 1d0/30, -1d0/840 )
     else
        phi = sqrt(phi2)
        sinc = sin(phi)/phi
