@@ -1803,8 +1803,8 @@ contains
     t(DQ_REAL_XYZ) = dx(4:6)
     t(DQ_REAL_W) = 0d0
     call aa_tf_duqu_trans( d, p )
-    call aa_tf_cross( dx(4:6), p, t(DQ_DUAL_XYZ) )
-    t(DQ_DUAL_XYZ) = dx(1:3) - t(DQ_DUAL_XYZ)
+    call aa_tf_cross( p, dx(4:6), t(DQ_DUAL_XYZ) )
+    t(DQ_DUAL_XYZ) = t(DQ_DUAL_XYZ) + dx(1:3)
     t(DQ_DUAL_W) = 0d0
   end subroutine aa_tf_duqu_vel2twist
 
