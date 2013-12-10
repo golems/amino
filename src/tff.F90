@@ -653,10 +653,10 @@ contains
        bind( C, name="aa_tf_qcmul" )
     real(C_DOUBLE), dimension(4), intent(out) :: q
     real(C_DOUBLE), dimension(4), intent(in) :: a,b
-    q(1) = + a(3)*b(2) + a(4)*b(1) -   (a(2)*b(3) + a(1)*b(4))
-    q(2) = + a(1)*b(3) + a(4)*b(2) -   (a(3)*b(1) + a(2)*b(4))
-    q(3) = + a(2)*b(1) + a(4)*b(3) -   (a(1)*b(2) + a(3)*b(4))
-    q(4) = + a(4)*b(4) + a(3)*b(3) - (-(a(1)*b(1) + a(2)*b(2)))
+    q(1) = ( a(3)*b(2) - a(2)*b(3) ) + ( a(4)*b(1) - a(1)*b(4) )
+    q(2) = ( a(1)*b(3) - a(3)*b(1) ) + ( a(4)*b(2) - a(2)*b(4) )
+    q(3) = ( a(2)*b(1) - a(1)*b(2) ) + ( a(4)*b(3) - a(3)*b(4) )
+    q(4) = ( a(4)*b(4) + a(3)*b(3) ) + ( a(1)*b(1) + a(2)*b(2) )
   end subroutine aa_tf_qcmul
 
   !! Multiply a and conj(b)
@@ -664,10 +664,10 @@ contains
        bind( C, name="aa_tf_qmulc" )
     real(C_DOUBLE), dimension(4), intent(out) :: q
     real(C_DOUBLE), dimension(4), intent(in) :: a,b
-    q(1) = + a(3)*b(2) + a(1)*b(4) -   (a(2)*b(3) + a(4)*b(1))
-    q(2) = + a(1)*b(3) + a(2)*b(4) -   (a(3)*b(1) + a(4)*b(2))
-    q(3) = + a(2)*b(1) + a(3)*b(4) -   (a(1)*b(2) + a(4)*b(3))
-    q(4) = + a(1)*b(1) + a(2)*b(2) - (-(a(3)*b(3) + a(4)*b(4)))
+    q(1) = ( a(3)*b(2) - a(2)*b(3) ) + ( a(1)*b(4) - a(4)*b(1) )
+    q(2) = ( a(1)*b(3) - a(3)*b(1) ) + ( a(2)*b(4) - a(4)*b(2) )
+    q(3) = ( a(2)*b(1) - a(1)*b(2) ) + ( a(3)*b(4) - a(4)*b(3) )
+    q(4) = ( a(1)*b(1) + a(2)*b(2) ) + ( a(3)*b(3) + a(4)*b(4) )
   end subroutine aa_tf_qmulc
 
 
@@ -676,31 +676,30 @@ contains
        bind( C, name="aa_tf_vqmul" )
     real(C_DOUBLE), intent(in) :: v(3), q(4)
     real(C_DOUBLE), intent(out) :: y(4)
+    y(1) = +  v(2)*q(3) - v(3)*q(2) + v(1)*q(4)
+    y(2) = +  v(3)*q(1) - v(1)*q(3) + v(2)*q(4)
+    y(3) = +  v(1)*q(2) - v(2)*q(1) + v(3)*q(4)
+    y(4) = -  v(1)*q(1) - v(2)*q(2) - v(3)*q(3)
 
-    ! y(W_INDEX) =  - dot_product(v,q(XYZ_INDEX))
-    ! call aa_tf_cross(v, q(XYZ_INDEX), y(XYZ_INDEX))
-    ! y(XYZ_INDEX) = (y(XYZ_INDEX)  + q(W_INDEX) * v)
-
-    y(1) = +  v(2)*q(3) + v(1)*q(4) - v(3)*q(2)
-    y(2) = +  v(3)*q(1) + v(2)*q(4) - v(1)*q(3)
-    y(3) = +  v(1)*q(2) + v(3)*q(4) - v(2)*q(1)
-    y(4) = - (v(1)*q(1) + v(2)*q(2) - (-v(3)*q(3)))
-
-
-    !q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
-    !call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), q(XYZ_INDEX))
-    !q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
-
+    ! y(1) = + v(1)*q(4) + v(2)*q(3) - v(3)*q(2)
+    ! y(2) = - v(1)*q(3) + v(2)*q(4) + v(3)*q(1)
+    ! y(3) = + v(1)*q(2) - v(2)*q(1) + v(3)*q(4)
+    ! y(4) = - v(1)*q(1) - v(2)*q(2) - v(3)*q(3)
   end subroutine aa_tf_vqmul
 
-  pure subroutine aa_tf_qvmul( q,v, a) &
+  pure subroutine aa_tf_qvmul( q, v, y) &
        bind( C, name="aa_tf_qvmul" )
     real(C_DOUBLE), intent(in) :: v(3), q(4)
-    real(C_DOUBLE), intent(out) :: a(4)
-    a(1) =   q(4)*v(1) -  q(3)*v(2) + q(2)*v(3)
-    a(2) =   q(4)*v(2) -  q(1)*v(3) + q(3)*v(1)
-    a(3) =   q(4)*v(3) -  q(2)*v(1) + q(1)*v(2)
-    a(4) = -(q(3)*v(3) - (-q(2)*v(2)) + q(1)*v(1))
+    real(C_DOUBLE), intent(out) :: y(4)
+    y(1) = + q(2)*v(3) - q(3)*v(2) + q(4)*v(1)
+    y(2) = + q(3)*v(1) - q(1)*v(3) + q(4)*v(2)
+    y(3) = + q(1)*v(2) - q(2)*v(1) + q(4)*v(3)
+    y(4) = - q(1)*v(1) - q(2)*v(2) - q(3)*v(3)
+
+    ! y(1) = + q(4)*v(1) - q(3)*v(2) + q(2)*v(3)
+    ! y(2) = + q(3)*v(1) + q(4)*v(2) - q(1)*v(3)
+    ! y(3) = - q(2)*v(1) + q(1)*v(2) + q(4)*v(3)
+    ! y(4) = - q(1)*v(1) - q(2)*v(2) - q(3)*v(3)
   end subroutine aa_tf_qvmul
 
 
