@@ -693,6 +693,17 @@ contains
 
   end subroutine aa_tf_vqmul
 
+  pure subroutine aa_tf_qvmul( q,v, a) &
+       bind( C, name="aa_tf_qvmul" )
+    real(C_DOUBLE), intent(in) :: v(3), q(4)
+    real(C_DOUBLE), intent(out) :: a(4)
+    a(1) =   q(4)*v(1) -  q(3)*v(2) + q(2)*v(3)
+    a(2) =   q(4)*v(2) -  q(1)*v(3) + q(3)*v(1)
+    a(3) =   q(4)*v(3) -  q(2)*v(1) + q(1)*v(2)
+    a(4) = -(q(3)*v(3) - (-q(2)*v(2)) + q(1)*v(1))
+  end subroutine aa_tf_qvmul
+
+
   pure Subroutine aa_tf_qinv( q, r ) &
     bind( C, name="aa_tf_qinv" )
     Real(C_DOUBLE), Dimension(4), intent(out) :: r
@@ -1757,54 +1768,59 @@ contains
        bind( C, name="aa_tf_tf_duqu" )
     real(C_DOUBLE), intent(in) :: d(8), p0(3)
     real(C_DOUBLE), intent(out) :: p1(3)
+    real(C_DOUBLE) :: a(4), b(4)
     ! p1 = d * p * d^{-1}
     ! p1 = (2*dual + real*p0) * conj(real)
+    call aa_tf_qvmul( d(DQ_REAL), p0, a )
+    a =  a + d(DQ_DUAL) + d(DQ_DUAL)
+    call aa_tf_qmulc( a, d(DQ_REAL), b )
+    p1 = b(XYZ_INDEX)
 
-    real(C_DOUBLE) :: rx,ry,rz,rw, dx,dy,dz,dw, vx,vy,vz, rxx,ryy,rzz,rww, rvx, rvy, rvz
+    ! real(C_DOUBLE) :: rx,ry,rz,rw, dx,dy,dz,dw, vx,vy,vz, rxx,ryy,rzz,rww, rvx, rvy, rvz
 
-    rx=d(1)
-    ry=d(2)
-    rz=d(3)
-    rw=d(4)
+    ! rx=d(1)
+    ! ry=d(2)
+    ! rz=d(3)
+    ! rw=d(4)
 
-    dx=d(5)
-    dy=d(6)
-    dz=d(7)
-    dw=d(8)
+    ! dx=d(5)
+    ! dy=d(6)
+    ! dz=d(7)
+    ! dw=d(8)
 
-    vx=p0(1)
-    vy=p0(2)
-    vz=p0(3)
+    ! vx=p0(1)
+    ! vy=p0(2)
+    ! vz=p0(3)
 
-    ! real(C_DOUBLE) :: ax(3), aw
+    ! ! real(C_DOUBLE) :: ax(3), aw
 
-    ! ! ax = real_w p + real_x x p + 2 dual_x
-    ! call aa_tf_cross( d(DQ_REAL_XYZ), p0, ax )
-    ! ax = ax + d(DQ_REAL_W)*p0 + 2*d(DQ_DUAL_XYZ)
+    ! ! ! ax = real_w p + real_x x p + 2 dual_x
+    ! ! call aa_tf_cross( d(DQ_REAL_XYZ), p0, ax )
+    ! ! ax = ax + d(DQ_REAL_W)*p0 + 2*d(DQ_DUAL_XYZ)
 
-    ! ! aw = dot( real_x, p ) - 2 dual_w
-    ! aw = dot_product( d(DQ_REAL_XYZ), p0 ) - 2*d(DQ_DUAL_W)
+    ! ! ! aw = dot( real_x, p ) - 2 dual_w
+    ! ! aw = dot_product( d(DQ_REAL_XYZ), p0 ) - 2*d(DQ_DUAL_W)
 
-    ! ! p1 = real_x x ax + real_w ax + aw real_x
-    ! call aa_tf_cross( d(DQ_REAL_XYZ), ax, p1 )
-    ! p1 = p1 + d(DQ_REAL_W)*ax + aw*d(DQ_REAL_XYZ)
+    ! ! ! p1 = real_x x ax + real_w ax + aw real_x
+    ! ! call aa_tf_cross( d(DQ_REAL_XYZ), ax, p1 )
+    ! ! p1 = p1 + d(DQ_REAL_W)*ax + aw*d(DQ_REAL_XYZ)
 
-    rxx = rx*rx
-    ryy = ry*ry
-    rzz = rz*rz
-    rww = rw*rw
+    ! rxx = rx*rx
+    ! ryy = ry*ry
+    ! rzz = rz*rz
+    ! rww = rw*rw
 
-    rvx = rx*vx
-    rvy = ry*vy
-    rvz = rz*vz
+    ! rvx = rx*vx
+    ! rvy = ry*vy
+    ! rvz = rz*vz
 
-    p1(1) = rx*(rvz + rvy) + rw*(ry*vz - rz*vy) - dw*rx - dy*rz + dz*ry + dx*rw
-    p1(2) = ry*(rvx + rvz) + rw*(rz*vx - rx*vz) - dw*ry - dz*rx + dx*rz + dy*rw
-    p1(3) = rz*(rvy + rvx) + rw*(rx*vy - ry*vx) - dw*rz - dx*ry + dy*rx + dz*rw
+    ! p1(1) = rx*(rvz + rvy) + rw*(ry*vz - rz*vy) + rw*dx - dw*rx + dz*ry - dy*rz
+    ! p1(2) = ry*(rvx + rvz) + rw*(rz*vx - rx*vz) + rw*dy - dw*ry + dx*rz - dz*rx
+    ! p1(3) = rz*(rvy + rvx) + rw*(rx*vy - ry*vx) + rw*dz - dw*rz + dy*rx - dx*ry
 
-    p1(1) = p1(1) + p1(1) + vx*(rww - rzz + rxx - ryy)
-    p1(2) = p1(2) + p1(2) + vy*(rww - rxx + ryy - rzz)
-    p1(3) = p1(3) + p1(3) + vz*(rww - ryy + rzz - rxx)
+    ! p1(1) = p1(1) + p1(1) + vx*(rww - rzz + rxx - ryy)
+    ! p1(2) = p1(2) + p1(2) + vy*(rww - rxx + ryy - rzz)
+    ! p1(3) = p1(3) + p1(3) + vz*(rww - ryy + rzz - rxx)
   end subroutine aa_tf_tf_duqu
 
 
