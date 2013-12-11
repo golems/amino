@@ -49,6 +49,17 @@
 #include <inttypes.h>
 #include <sys/resource.h>
 
+void rand_tf( double S[8], double T[12] ) {
+    double a[3], q[4];
+    aa_vrand(3,a);
+    aa_tf_rotvec2quat(a, q);
+    aa_tf_quat2rotmat(q, T);
+
+    aa_vrand(3,T+9);
+
+    aa_tf_qv2duqu( q, T+9, S );
+}
+
 static void rotvec() {
     double e[3],  R[9], q[4], vr[3], vq[3];
     aa_vrand(3,e);
@@ -145,25 +156,32 @@ static void euler1() {
 
 
 static void chain() {
-    double e1[3], e2[3], R1[9], R2[9], q1[4], q2[4];
-    aa_vrand(3,e1);
-    aa_vrand(3,e2);
+    double S1[8], S2[8], S3[8];
+    double T1[12], T2[12], T3[12], TS[8];
+    double qv[7], qvS[8];
 
-    aa_tf_eulerzyx2rotmat(e1[0], e1[1], e1[2], R1);
-    aa_tf_eulerzyx2rotmat(e2[0], e2[1], e2[2], R2);
-    aa_tf_eulerzyx2quat(e1[0], e1[1], e1[2], q1);
-    aa_tf_eulerzyx2quat(e2[0], e2[1], e2[2], q2);
+    rand_tf(S1, T1);
+    rand_tf(S2, T2);
 
+    // rotation
+    aa_tf_qmul( S1, S2, S3 );
+    aa_tf_9mul( T1, T2, T3 );
+    aa_tf_rotmat2quat( T3, TS );
+    aa_tf_qminimize( S3 );
+    aa_tf_qminimize( TS );
+    aveq("chain-rot q/9", 4, S3, TS, 1e-6 );
 
-    double q[4], R[9];
-    aa_tf_qmul( q1, q2, q );
-    aa_tf_9mul( R1, R2, R );
-
-    double vq[3], vr[3];
-    aa_tf_rotmat2rotvec(R, vr);
-    aa_tf_quat2rotvec(q, vq);
-
-    aveq("chain-rot", 3, vr, vq, .001 );
+    // Transformation
+    aa_tf_12chain( T1, T2, T3 );
+    aa_tf_duqu_mul( S1, S2, S3 );
+    aa_tf_qv_chain( S1, T1+9, S2, T2+9, qv, qv+4 );
+    aa_tf_tfmat2duqu( T3, TS );
+    aa_tf_qv2duqu( qv, qv+4, qvS );
+    aa_tf_duqu_minimize( S3 );
+    aa_tf_duqu_minimize( TS );
+    aa_tf_duqu_minimize( qvS );
+    aveq("chain-tf T/S", 8, S3, TS, 1e-6 );
+    aveq("chain-tf qv/S", 8, S3, qvS, 1e-6 );
 }
 
 
@@ -280,26 +298,32 @@ static void quat() {
 static void duqu() {
 
     // random tf
-    double q[4], v[3], p0[3];
-    aa_vrand( 3, v );
-    aa_test_qurand( q );
-    //AA_MEM_SET( v, 0, 3 );
+    aa_tf_tfmat_t T;
+    aa_tf_duqu_t H;
+    double S_ident[8] = AA_TF_DUQU_IDENT_INITIALIZER;
+    double Q_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
+    double v_ident[3] = {0};
+    double p0[3];
+    rand_tf(  H.data, T.data );
     aa_vrand( 3, p0 );
 
+    //double q[4], v[3], p0[3];
+    //aa_vrand( 3, v );
+    //aa_test_qurand( q );
+    //AA_MEM_SET( v, 0, 3 );
+
     // tfmat
-    aa_tf_tfmat_t T;
-    aa_tf_quat2rotmat(q, T.R);
-    AA_MEM_CPY( &T.t.x, v, 3 );
+    //aa_tf_quat2rotmat(q, T.R);
+    //AA_MEM_CPY( &T.t.x, v, 3 );
 
     // dual quat
-    aa_tf_duqu_t H, H_tran;
-    aa_tf_qv2duqu( q, v, H.data );
-    aa_tf_qv2duqu( aa_tf_quat_ident, v, H_tran.data );
+    //aa_tf_qv2duqu( q, v, H.data );
+    //aa_tf_qv2duqu( aa_tf_quat_ident, v, H_tran.data );
 
     // check trans
     double hv[3];
     aa_tf_duqu_trans(H.data, hv);
-    aveq("duqu-trans", 3, v, hv, .001 );
+    aveq("duqu-trans", 3, T.v.data, hv, .001 );
 
     //double nreal,ndual;
     //aa_tf_duqu_norm( H.data, &nreal, &ndual );
@@ -308,11 +332,29 @@ static void duqu() {
     // transform points
     double p1H[3], p1qv[3], p1T[3];
     aa_tf_12( T.data, p0, p1T );
-    aa_tf_tf_qv( q, v, p0, p1qv );
+    aa_tf_tf_qv( H.real.data, T.v.data, p0, p1qv );
     aa_tf_tf_duqu(  H.data, p0, p1H );
 
     aveq( "tf-qv",   3, p1T, p1qv, .001 );
     aveq( "tf-duqu", 3, p1T, p1H, .001 );
+
+    // conjugate
+    {
+
+        double S_conj[8];
+        double E_conj[7];
+        double SSc[8], EEc[7];
+
+        aa_tf_duqu_conj(H.data, S_conj);
+        aa_tf_qv_conj(H.real.data, T.v.data, E_conj, E_conj+4);
+
+        aa_tf_duqu_mul( H.data, S_conj, SSc );
+        aa_tf_qv_chain( H.real.data, T.v.data, E_conj, E_conj+4, EEc, EEc+4 );
+
+        aveq( "duqu conj", 8, SSc, S_ident, 1e-6 );
+        aveq( "qv conj q", 4, EEc, Q_ident, 1e-6 );
+        aveq( "qv conj v", 3, EEc+4, v_ident, 1e-6 );
+    }
 
     // derivative
     {
@@ -320,7 +362,7 @@ static void duqu() {
         aa_vrand(6, dx);
         double dt = aa_frand() / 100;
         aa_tf_duqu_vel2diff( H.data, dx, dd );
-        aa_tf_qvel2diff( q, dx+3, dq );
+        aa_tf_qvel2diff( H.real.data, dx+3, dq );
 
         // back to velocity
         double dx1[6];
@@ -331,9 +373,9 @@ static void duqu() {
         double H1[8], q1[4], v1[3], H1qv[8];
         double H1_sdd[8], H1_sdx[8];
         for( size_t i = 0; i < 8; i ++ ) H1[i] = H.data[i] + dd[i]*dt; // some numerical error here...
-        for( size_t i = 0; i < 3; i ++ ) v1[i] = v[i] + dx[i]*dt;
+        for( size_t i = 0; i < 3; i ++ ) v1[i] = T.v.data[i] + dx[i]*dt;
         aa_tf_duqu_normalize( H1 );
-        aa_tf_qsvel( q, dx+3, dt, q1 );
+        aa_tf_qsvel( H.real.data, dx+3, dt, q1 );
         aa_tf_qv2duqu( q1, v1, H1qv );
         aveq( "duqu-vel_real", 4, dq, dd, .001 );
         aveq( "duqu-vel-int real", 4, H1, H1qv, .001 );
@@ -362,12 +404,6 @@ static void duqu() {
         aa_tf_duqu_ln( H.data, lnexpd );
         aa_tf_duqu_exp(lnexpd, expd );
         aveq( "duqu-ln-exp", 8, H.data, expd, .001 );
-    }
-    {
-        double expd[8], lnexpd[8];
-        aa_tf_duqu_exp(H_tran.data, expd );
-        aa_tf_duqu_ln( expd, lnexpd );
-        aveq( "duqu-tran exp", 8, H_tran.data, lnexpd, .001 );
     }
 
     // Logarithm
@@ -584,8 +620,21 @@ static void integrate() {
     aa_tf_duqu_normalize( T1q );
     aa_tf_duqu_normalize( S1 );
     aveq( "int-duqu-tfmat-norm", 8, S1, T1q, 1e-7 );
+}
 
+void qvmul(void)  {
+    double q[4], v[4], r1[4], r2[4];
+    aa_vrand( 3, v );
+    v[3] = 0;
+    aa_vrand( 4, q );
 
+    aa_tf_qvmul( q, v, r1);
+    aa_tf_qmul(  q, v, r2);
+    aveq( "qvmul", 4, r1, r2, 1e-7 );
+
+    aa_tf_vqmul( v, q, r1);
+    aa_tf_qmul(  v, q, r2);
+    aveq( "vqmul", 4, r1, r2, 1e-7 );
 }
 
 int main( void ) {

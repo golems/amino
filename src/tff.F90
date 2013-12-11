@@ -187,6 +187,24 @@ contains
     call aa_tf_93(R1, v1, v2, v3)
   end subroutine aa_tf_93chain
 
+  pure subroutine aa_tf_qv_chain( q1, v1, q2, v2, q3, v3 ) &
+       bind( C, name="aa_tf_qv_chain" )
+    real(C_DOUBLE), intent(in)  :: q1(4), v1(3), q2(4), v2(3)
+    real(C_DOUBLE), intent(out) :: q3(4), v3(3)
+    call aa_tf_qmul( q1, q2, q3 )
+    call aa_tf_tf_qv(q1, v1, v2, v3)
+  end subroutine aa_tf_qv_chain
+
+  pure subroutine aa_tf_qv_conj( q, v, qc, vc ) &
+       bind( C, name="aa_tf_qv_conj" )
+    real(C_DOUBLE), intent(in)  :: q(4), v(3)
+    real(C_DOUBLE), intent(out) :: qc(4), vc(3)
+    call aa_tf_qconj(q, qc)
+    call aa_tf_qrot(qc, v, vc)
+    vc = -vc
+  end subroutine aa_tf_qv_conj
+
+
   pure subroutine aa_tf_12chain( T1, T2, T3 ) &
        bind( C, name="aa_tf_12chain" )
     real(C_DOUBLE), intent(in)  :: T1(3,4)
@@ -728,8 +746,6 @@ contains
     real(C_DOUBLE), Dimension(4), intent(in) :: q
     real(C_DOUBLE), Dimension(3), intent(in) :: v
 
-    real(C_DOUBLE) :: a,b,c
-
     !! slow implementation
     ! qv(W_INDEX) = 0d0
     ! qv(XYZ_INDEX) = v
@@ -739,21 +755,11 @@ contains
     ! r = qr2(1:3)
 
     !! Optimized implementation
-    !real(C_DOUBLE) :: tmp(3)
-    !call aa_tf_cross(q(1:3), v, tmp)
-    !tmp = tmp + q(4)*v
-    !call aa_tf_cross(q(1:3), tmp, r)
-    !r = v + 2*r
-
-    !! factored implementation
-    a =  v(3)*q(4) + v(2)*q(1) - v(1)*q(2)
-    b =  v(1)*q(4) + v(3)*q(2) - v(2)*q(3)
-    c =  v(2)*q(4) + v(1)*q(3) - v(3)*q(1)
-
-    r(1) =  q(2) * a - q(3) * c
-    r(2) =  q(3) * b - q(1) * a
-    r(3) =  q(1) * c - q(2) * b
-    r = r + r + v
+    real(C_DOUBLE) :: a(3), b(3)
+    call aa_tf_cross(q(1:3), v, a)
+    a = a + q(4)*v
+    call aa_tf_cross(q(1:3), a, b)
+    r = b + b + v
 
   End Subroutine aa_tf_qrot
 

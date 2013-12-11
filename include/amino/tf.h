@@ -117,7 +117,7 @@ typedef struct aa_tf_tfmat {
     union {
         struct {
             double R[9];
-            aa_tf_vec3_t t;
+            aa_tf_vec3_t v;
         };
         double data[12];
     };
@@ -226,7 +226,8 @@ AA_API void aa_tf_93inv( const double R[AA_RESTRICT 9],
                       const double v[AA_RESTRICT 3],
                          double Ri[AA_RESTRICT 9], double vi[AA_RESTRICT 3] );
 /// invert transform
-AA_API void aa_tf_q3inv( double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] );
+AA_API void aa_tf_qv_conj( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+                           double qc[AA_RESTRICT 4], double vc[AA_RESTRICT 3]  );
 
 /// chain two transforms
 AA_API void aa_tf_12chain( const double T1[AA_RESTRICT 12],
@@ -246,12 +247,12 @@ AA_API void aa_tf_93chain( const double R0[AA_RESTRICT 9],
                            const double v1[AA_RESTRICT 3],
                            double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
 /// chain two transforms
-AA_API void aa_tf_q3chain( const double q0[AA_RESTRICT 4],
-                           const double v0[AA_RESTRICT 3],
-                           const double q1[AA_RESTRICT 4],
-                           const double v1[AA_RESTRICT 3],
-                           double q[AA_RESTRICT 4],
-                           double v[AA_RESTRICT 3] );
+AA_API void aa_tf_qv_chain( const double q0[AA_RESTRICT 4],
+                            const double v0[AA_RESTRICT 3],
+                            const double q1[AA_RESTRICT 4],
+                            const double v1[AA_RESTRICT 3],
+                            double q[AA_RESTRICT 4],
+                            double v[AA_RESTRICT 3] );
 
 /// relative transform
 AA_API void aa_tf_93rel( const double R1[AA_RESTRICT 9],
@@ -385,6 +386,15 @@ AA_API void aa_tf_qmul( const double a[AA_RESTRICT 4],
                         const double b[AA_RESTRICT 4],
                         double c[AA_RESTRICT 4] );
 
+/** Quaternion multiplication. */
+AA_API void aa_tf_qvmul( const double q[AA_RESTRICT 4],
+                         const double v[AA_RESTRICT 3],
+                         double c[AA_RESTRICT 4] );
+
+/** Quaternion multiplication. */
+AA_API void aa_tf_vqmul( const double v[AA_RESTRICT 3],
+                         const double q[AA_RESTRICT 4],
+                         double c[AA_RESTRICT 4] );
 
 /** Quaternion conjugate a and multiply by b. */
 AA_API void aa_tf_qcmul( const double a[AA_RESTRICT 4],
