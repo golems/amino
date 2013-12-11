@@ -690,8 +690,8 @@ contains
 
 
   !! Multiply vector and quaternion
-  pure subroutine aa_tf_vqmul( v, q, y) &
-       bind( C, name="aa_tf_vqmul" )
+  pure subroutine aa_tf_qmul_vq( v, q, y) &
+       bind( C, name="aa_tf_qmul_vq" )
     real(C_DOUBLE), intent(in) :: v(3), q(4)
     real(C_DOUBLE), intent(out) :: y(4)
     y(1) = +  v(2)*q(3) - v(3)*q(2) + v(1)*q(4)
@@ -703,10 +703,10 @@ contains
     ! y(2) = - v(1)*q(3) + v(2)*q(4) + v(3)*q(1)
     ! y(3) = + v(1)*q(2) - v(2)*q(1) + v(3)*q(4)
     ! y(4) = - v(1)*q(1) - v(2)*q(2) - v(3)*q(3)
-  end subroutine aa_tf_vqmul
+  end subroutine aa_tf_qmul_vq
 
-  pure subroutine aa_tf_qvmul( q, v, y) &
-       bind( C, name="aa_tf_qvmul" )
+  pure subroutine aa_tf_qmul_qv( q, v, y) &
+       bind( C, name="aa_tf_qmul_qv" )
     real(C_DOUBLE), intent(in) :: v(3), q(4)
     real(C_DOUBLE), intent(out) :: y(4)
     y(1) = + q(2)*v(3) - q(3)*v(2) + q(4)*v(1)
@@ -718,7 +718,7 @@ contains
     ! y(2) = + q(3)*v(1) + q(4)*v(2) - q(1)*v(3)
     ! y(3) = - q(2)*v(1) + q(1)*v(2) + q(4)*v(3)
     ! y(4) = - q(1)*v(1) - q(2)*v(2) - q(3)*v(3)
-  end subroutine aa_tf_qvmul
+  end subroutine aa_tf_qmul_qv
 
 
   pure Subroutine aa_tf_qinv( q, r ) &
@@ -1159,7 +1159,7 @@ contains
     real(C_DOUBLE), intent(in) :: v(3), q(4)
     real(C_DOUBLE), intent(out) :: dq_dt(4)
     ! dq/dt = 1/2 * v * q
-    call aa_tf_vqmul( v, q, dq_dt )
+    call aa_tf_qmul_vq( v, q, dq_dt )
     dq_dt = dq_dt / 2
   end subroutine aa_tf_qvel2diff
 
@@ -1776,7 +1776,7 @@ contains
     real(C_DOUBLE) :: a(4), b(4)
     ! p1 = d * p * d^{-1}
     ! p1 = (2*dual + real*p0) * conj(real)
-    call aa_tf_qvmul( d(DQ_REAL), p0, a )
+    call aa_tf_qmul_qv( d(DQ_REAL), p0, a )
     a =  a + d(DQ_DUAL) + d(DQ_DUAL)
     call aa_tf_qmulc( a, d(DQ_REAL), b )
     p1 = b(XYZ_INDEX)

@@ -628,13 +628,13 @@ void qvmul(void)  {
     v[3] = 0;
     aa_vrand( 4, q );
 
-    aa_tf_qvmul( q, v, r1);
+    aa_tf_qmul_qv( q, v, r1);
     aa_tf_qmul(  q, v, r2);
-    aveq( "qvmul", 4, r1, r2, 1e-7 );
+    aveq( "qmul_qv", 4, r1, r2, 1e-7 );
 
-    aa_tf_vqmul( v, q, r1);
+    aa_tf_qmul_vq( v, q, r1);
     aa_tf_qmul(  v, q, r2);
-    aveq( "vqmul", 4, r1, r2, 1e-7 );
+    aveq( "qmul_v", 4, r1, r2, 1e-7 );
 }
 
 int main( void ) {
