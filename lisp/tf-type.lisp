@@ -129,6 +129,12 @@
 (defun vec3 (x y z)
   (make-vec3 :data (vec x y z)))
 
+
+(defstruct (point3 (:include vec3)))
+
+(defun point3 (x y z)
+  (make-point3 :data (vec x y z)))
+
 (define-foreign-type vector-3-t ()
   ()
   (:simple-parser vector-3-t)
@@ -184,3 +190,5 @@
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type dual-quaternion-t))
   (expand-vector value var body 8))
+
+;;; Implicit dual quaternion

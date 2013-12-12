@@ -47,7 +47,7 @@
   (tf transformation-matrix-t)
   (p0 vector-3-t)
   (p1 vector-3-t))
-(defun tf-12 (tf p0 &optional (p1 (make-vec 3)))
+(defun tf-12 (tf p0 &optional (p1 (make-point3)))
   (aa-tf-12 tf p0 p1)
   p1)
 
@@ -128,12 +128,22 @@
 (def-q3 (aa-tf-qcmul tf-qcmul) "Multiply conjugate of first arg with second arg")
 (def-q3 (aa-tf-qmulc tf-qmulc) "Multiply first arg with conjugate of second arg")
 
+
+(defcfun aa-tf-qrot :void
+  (q quaternion-t)
+  (p0 vector-3-t)
+  (p1 vector-3-t))
+(defun tf-qrot (q p0 &optional (p1 (make-point3)))
+  "Quaternion spherical linear interpolation"
+  (aa-tf-qrot q p0 p1)
+  p1)
+
 (defcfun aa-tf-qslerp :void
   (r :double)
   (q0 quaternion-t)
   (q1 quaternion-t)
   (q quaternion-t))
-(defun tf-qslerp (r q0 q1 &optional (q (make-vec 4)))
+(defun tf-qslerp (r q0 q1 &optional (q (make-quaternion)))
   "Quaternion spherical linear interpolation"
   (aa-tf-qslerp r q0 q1 q)
   q)
@@ -177,6 +187,15 @@
   "Velocity to quaternion derivative"
   (aa-tf-qvel2diff q w dq)
   dq)
+
+(defcfun aa-tf-qdiff2vel :void
+  (q quaternion-t)
+  (dq quaternion-t)
+  (w vector-3-t))
+(defun tf-qdiff2vel (q dq &optional (w (make-vec3)))
+  "Velocity to quaternion derivative"
+  (aa-tf-qdiff2vel q dq w)
+  w)
 
 
 (defcfun aa-tf-rotmat2quat :void
@@ -254,7 +273,7 @@
 (defcfun aa-tf-duqu-trans :void
   (d dual-quaternion-t)
   (x vector-3-t))
-(defun tf-duqu-trans (d &optional (x (make-vec 3)))
+(defun tf-duqu-trans (d &optional (x (make-point3)))
   "Extract dual quaternion translation"
   (aa-tf-duqu-trans d x)
   x)
@@ -320,6 +339,33 @@
   (aa-tf-zxyz2duqu z-angle x y z s)
   s)
 
+
+(defun tf-xangle2duqu (theta &optional (s (make-dual-quaternion)))
+  "x-angle to dual quaternion with zero translation"
+  (check-type s dual-quaternion)
+  (let ((r (make-array 4 :element-type 'double-float)))
+    (declare (dynamic-extent r))
+    (tf-qv2duqu (tf-xangle2quat theta r)
+                +tf-vec-3-ident+
+                s)))
+
+(defun tf-yangle2duqu (theta &optional (s (make-dual-quaternion)))
+  "y-angle to dual quaternion with zero translation"
+  (check-type s dual-quaternion)
+  (let ((r (make-array 4 :element-type 'double-float)))
+    (declare (dynamic-extent r))
+    (tf-qv2duqu (tf-yangle2quat theta r)
+                +tf-vec-3-ident+
+                s)))
+
+(defun tf-zangle2duqu (theta &optional (s (make-dual-quaternion)))
+  "z-angle to dual quaternion with zero translation"
+  (check-type s dual-quaternion)
+  (let ((r (make-array 4 :element-type 'double-float)))
+    (declare (dynamic-extent r))
+    (tf-qv2duqu (tf-zangle2quat theta r)
+                +tf-vec-3-ident+
+                s)))
 
 (defcfun aa-tf-duqu-conj :void
   (x dual-quaternion-t)
