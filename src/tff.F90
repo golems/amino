@@ -504,7 +504,7 @@ contains
     call aa_tf_rotmat_angle(T(:,1:3), c, s, theta )
 
     if ( theta < sqrt(sqrt(epsilon(theta))) ) then
-       a = aa_tf_invsinc_series(theta)
+       a = aa_tf_invsinc_series2(theta**2)
        b = aa_tf_horner3( theta**2, 1d0/12, 1d0/720, 1d0/30240 )
     else
        a = theta / s
@@ -1989,10 +1989,9 @@ contains
 
     ! Try to avoid small number division
     if( theta < sqrt(sqrt(epsilon(theta))) ) then
-       ar = aa_tf_invsinc_series(theta)/mr
-       !! Taylor Series expansion for theta near zero
        ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
        ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
+       ar = aa_tf_invsinc_series2(theta**2)/mr
     else
        ar = theta/nr
        ad =  (d(W_INDEX) - ar*mr2) / vv
