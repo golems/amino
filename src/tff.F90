@@ -61,15 +61,6 @@ module amino_tf
   use ISO_C_BINDING
   implicit none
 
-  interface aa_tf_quat2rotmat
-     subroutine aa_tf_quat2rotmat( q, r ) &
-          bind(C,name="aa_tf_quat2rotmat")
-       use ISO_C_BINDING
-       real(C_DOUBLE), intent(in), dimension(4) :: q
-       real(C_DOUBLE), intent(out), dimension(3,3) :: r
-     end subroutine aa_tf_quat2rotmat
-  end interface aa_tf_quat2rotmat
-
   interface aa_tf_rotmat2quat
      subroutine aa_tf_rotmat2quat( r, q ) &
           bind(C,name="aa_tf_rotmat2quat")
@@ -338,41 +329,68 @@ contains
     R(3,3) = 0d0
   end subroutine aa_tf_skewsym_scal1
 
+
+  subroutine aa_tf_skewsym_scal_c( u, a, b, R ) &
+       bind( C, name="aa_tf_skewsym_scal_c" )
+    real(C_DOUBLE), intent(in) ::  u(3), a(3), b(3)
+    real(C_DOUBLE), intent(out) :: R(3,3)
+    real(C_DOUBLE) :: bu(3), bc(3)
+    real(C_DOUBLE) :: cx,cy,cz, dx,dy,dz, ex,ey,ez
+
+    bu = b*u
+
+    bc(1) = b(1)*u(2)
+    bc(2) = b(2)*u(3)
+    bc(3) = b(3)*u(1)
+
+    cx = 1d0 - bu(3) - bu(2)
+    cy = 1d0 - bu(3) - bu(1)
+    cz = 1d0 - bu(2) - bu(1)
+
+    dx = a(3) + bc(1)
+    dy = a(1) + bc(2)
+    dz = a(2) + bc(3)
+
+    ex = bc(3) - a(2)
+    ey = bc(1) - a(3)
+    ez = bc(2) - a(1)
+
+    R(1,1) = cx
+    R(2,1) = dx
+    R(3,1) = ex
+
+    R(1,2) = ey
+    R(2,2) = cy
+    R(3,2) = dy
+
+    R(1,3) = dz
+    R(2,3) = ez
+    R(3,3) = cz
+  end subroutine aa_tf_skewsym_scal_c
+
   subroutine aa_tf_skewsym_scal2( a, b, u, R ) &
        bind( C, name="aa_tf_skewsym_scal2" )
     real(C_DOUBLE), intent(in) ::  u(3)
     real(C_DOUBLE), intent(in), value ::  a, b
     real(C_DOUBLE), intent(out) :: R(3,3)
-    real(C_DOUBLE) :: x,y,z, ax,ay,az,  bx,by,bz, bxx, byy, bzz
-
-    x = u(1)
-    y = u(2)
-    z = u(3)
-
-    ax = a*x
-    ay = a*y
-    az = a*z
-
-    bx = b*x
-    by = b*y
-    bz = b*z
-
-    bxx = bx*x
-    byy = by*y
-    bzz = bz*z
-
-    R(1,1) = 1d0 -bzz - byy
-    R(2,1) = az + bx*y
-    R(3,1) = -ay + bx*z
-
-    R(1,2) = -az + bx*y
-    R(2,2) = 1d0 -bzz - bxx
-    R(3,2) = ax + by*z
-
-    R(1,3) = ay + bx*z
-    R(2,3) = -ax + by*z
-    R(3,3) = 1d0 -byy - bxx
+    real(C_DOUBLE) :: au(3), bu(3)
+    au = a*u
+    bu = b*u
+    call aa_tf_skewsym_scal_c(u,au,bu,R)
   end subroutine aa_tf_skewsym_scal2
+
+
+  subroutine aa_tf_quat2rotmat( q, R ) &
+       bind( C, name="aa_tf_quat2rotmat" )
+
+    real(C_DOUBLE), intent(in) :: q(4)
+    real(C_DOUBLE), intent(out) :: R(3,3)
+    real(C_DOUBLE) :: a(3), b(3)
+    b = 2*q(XYZ_INDEX)
+    a = q(4)*b
+    call aa_tf_skewsym_scal_c(q(XYZ_INDEX),a,b,R)
+  end subroutine aa_tf_quat2rotmat
+
 
   subroutine aa_tf_unskewsym( R, u ) &
        bind( C, name="aa_tf_unskewsym" )

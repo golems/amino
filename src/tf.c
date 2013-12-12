@@ -207,11 +207,6 @@ void aa_tf_rotvec2axang( const double rotvec[restrict 3],
 /*     aa_tf_qnormalize(q); */
 /* } */
 
-void aa_tf_quat2rotmat( const double q[restrict 4],
-                        double R[restrict 9] ) {
-    aa_tf_skewsym_scal2( 2*q[3], 2, q, R );
-}
-
 void aa_tf_rotmat2quat( const double R[restrict 9],
                         double q[restrict 4] ) {
 
