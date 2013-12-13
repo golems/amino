@@ -392,6 +392,34 @@
   (aa-tf-duqu-normalize y)
   y)
 
+;;; quaternion-translation
+(defcfun aa-tf-qv-chain :void
+  (q0 quaternion-t)
+  (v0 vector-3-t)
+  (q1 quaternion-t)
+  (v1 vector-3-t)
+  (q2 quaternion-t)
+  (v2 vector-3-t))
+
+(defun tf-duqu2qutr (S &optional (E (make-quaternion-translation)))
+  (tf-duqu2qv s
+              (quaternion-translation-quaternion e)
+              (quaternion-translation-translation e))
+  e)
+
+(defun tf-qutr2duqu (e &optional (s (make-dual-quaternion)))
+  (tf-qv2duqu (quaternion-translation-quaternion e)
+              (quaternion-translation-translation e)
+              s))
+
+(defun tf-qutr-mul (e0 e1 &optional (e2 (make-quaternion-translation)))
+  (aa-tf-qv-chain (quaternion-translation-quaternion e0)
+                  (quaternion-translation-translation e0)
+                  (quaternion-translation-quaternion e1)
+                  (quaternion-translation-translation e1)
+                  (quaternion-translation-quaternion e2)
+                  (quaternion-translation-translation e2))
+  e2)
 
 ;;; Euler
 (defcfun aa-tf-eulerzyx2quat :void
@@ -425,6 +453,7 @@
               (aref a 4) 1d0
               (aref a 8) 1d0))
     tf))
+
 
 ;; (defun tf (a b)
 ;;   (declare (type matrix a b))

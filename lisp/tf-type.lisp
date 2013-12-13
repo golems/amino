@@ -192,3 +192,6 @@
   (expand-vector value var body 8))
 
 ;;; Implicit dual quaternion
+(defstruct quaternion-translation
+  (quaternion (make-quaternion) :type  quaternion)
+  (translation (make-vec3) :type  vec3))
