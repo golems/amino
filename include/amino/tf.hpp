@@ -54,6 +54,15 @@ struct Vec3 : aa_tf_vec3 {
     Vec3( const struct aa_tf_duqu &S ) :  aa_tf_vec3(from_duqu(S.data))   {}
     Vec3( const struct aa_tf_tfmat *T ) : aa_tf_vec3(from_tfmat(T->data)) {}
     Vec3( const struct aa_tf_tfmat &T ) : aa_tf_vec3(from_tfmat(T.data))  {}
+    Vec3( double _x, double _y, double _z ) : aa_tf_vec3(from_xyz(_x,_y,_z)) {}
+
+    static aa_tf_vec3 from_xyz( double x, double y, double z ) {
+        aa_tf_vec3 V;
+        V.x = x;
+        V.y = y;
+        V.z = z;
+        return V;
+    }
 
     static aa_tf_vec3 from_vec3( const double a_x[3] ) {
         aa_tf_vec3 V;
@@ -115,6 +124,35 @@ struct RotMat : aa_tf_rotmat {
     RotMat( const aa_tf_axang *p ) :  aa_tf_rotmat(from_axang(p->data)) {}
     RotMat( const aa_tf_axang &p ) :  aa_tf_rotmat(from_axang(p.data)) {}
 
+    RotMat( double r11, double r12, double r13,
+            double r21, double r22, double r23,
+            double r31, double r32, double r33 ) :
+        aa_tf_rotmat(from_rotmat(r11, r12, r13,
+                                 r21, r22, r23,
+                                 r31, r32, r33))
+    {}
+
+
+    static aa_tf_rotmat from_rotmat( double r11, double r12, double r13,
+                                     double r21, double r22, double r23,
+                                     double r31, double r32, double r33 )
+    {
+        aa_tf_rotmat R;
+        R.data[0] = r11;
+        R.data[1] = r21;
+        R.data[2] = r31;
+
+        R.data[3] = r12;
+        R.data[4] = r22;
+        R.data[5] = r32;
+
+        R.data[6] = r13;
+        R.data[7] = r23;
+        R.data[8] = r33;
+        return R;
+    }
+
+
     static aa_tf_rotmat from_quat( const double x[4] ) {
         aa_tf_rotmat y;
         aa_tf_quat2rotmat(x, y.data);
@@ -146,6 +184,9 @@ struct AxisAngle : aa_tf_axang {
     AxisAngle( const aa_tf_rotmat &p ) : aa_tf_axang(from_rotmat(p.data)) {}
     AxisAngle( const aa_tf_axang *p ) :  aa_tf_axang(from_axang(p->data)) {}
     AxisAngle( const aa_tf_axang &p ) :  aa_tf_axang(from_axang(p.data)) {}
+    AxisAngle( double x, double y, double z, double theta ) :
+        aa_tf_axang(from_axang(x,y,z,theta))
+    {}
 
     static aa_tf_axang from_quat( const double x[4] ) {
         aa_tf_axang y;
@@ -156,6 +197,12 @@ struct AxisAngle : aa_tf_axang {
         aa_tf_axang y;
         aa_tf_rotmat2axang(x, y.data);
         return y;
+    }
+
+    static aa_tf_axang from_axang( double x, double y, double z, double theta ) {
+        double n = sqrt( x*x + y*y + z*z );
+        double a[4] = {x/n, y/n, z/n, theta};
+        return from_axang(a);
     }
     static aa_tf_axang from_axang( const double x[4] ) {
         aa_tf_axang y;
@@ -180,6 +227,12 @@ struct DualQuat : aa_tf_duqu {
     DualQuat(const struct aa_tf_duqu &S) :  aa_tf_duqu(from_duqu(S.data))   {}
     DualQuat(const struct aa_tf_qv *S) :    aa_tf_duqu(from_qv(S->r.data, S->v.data)) {}
     DualQuat(const struct aa_tf_qv &S) :    aa_tf_duqu(from_qv(S.r.data, S.v.data))  {}
+    DualQuat(const struct aa_tf_quat *r, const struct aa_tf_vec3 *v) :
+        aa_tf_duqu(from_qv(r->data, v->data))
+    {}
+    DualQuat(const struct aa_tf_quat &r, const struct aa_tf_vec3 &v) :
+        aa_tf_duqu(from_qv(r.data, v.data))
+    {}
     DualQuat(const struct aa_tf_tfmat *T) : aa_tf_duqu(from_tfmat(T->data)) {}
     DualQuat(const struct aa_tf_tfmat &T) : aa_tf_duqu(from_tfmat(T.data))  {}
 
@@ -206,6 +259,12 @@ struct QuatVec : aa_tf_qv {
 
     QuatVec(const struct aa_tf_qv *S) :    aa_tf_qv(from_qv(S->r.data, S->v.data)) {}
     QuatVec(const struct aa_tf_qv &S) :    aa_tf_qv(from_qv(S.r.data, S.v.data))  {}
+    QuatVec(const struct aa_tf_quat *_r, const struct aa_tf_vec3 *_v) :
+        aa_tf_qv(from_qv(_r->data, _v->data))
+    {}
+    QuatVec(const struct aa_tf_quat &_r, const struct aa_tf_vec3 &_v) :
+        aa_tf_qv(from_qv(_r.data, _v.data))
+    {}
     QuatVec(const struct aa_tf_duqu *S) :  aa_tf_qv(from_duqu(S->data))  {}
     QuatVec(const struct aa_tf_duqu &S) :  aa_tf_qv(from_duqu(S.data))   {}
     QuatVec(const struct aa_tf_tfmat *T) : aa_tf_qv(from_tfmat(T->data)) {}
@@ -239,6 +298,12 @@ struct TfMat : aa_tf_tfmat {
     TfMat(const struct aa_tf_duqu &S) :  aa_tf_tfmat(from_duqu(S.data))   {}
     TfMat(const struct aa_tf_qv *S) :    aa_tf_tfmat(from_qv(S->r.data, S->v.data)) {}
     TfMat(const struct aa_tf_qv &S) :    aa_tf_tfmat(from_qv(S.r.data, S.v.data))  {}
+    TfMat(const struct aa_tf_quat *_r, const struct aa_tf_vec3 *_v) :
+        aa_tf_tfmat(from_qv(_r->data, _v->data))
+    {}
+    TfMat(const struct aa_tf_quat &_r, const struct aa_tf_vec3 &_v) :
+        aa_tf_tfmat(from_qv(_r.data, _v.data))
+    {}
 
     static aa_tf_tfmat from_duqu( const double s[8] ) {
         aa_tf_tfmat T;
@@ -257,6 +322,45 @@ struct TfMat : aa_tf_tfmat {
     }
 };
 
+/*---- OPERATORS -----*/
+
+static inline struct aa_tf_rotmat
+operator*(const struct aa_tf_rotmat &a, const struct aa_tf_rotmat &b) {
+    struct aa_tf_rotmat c;
+    aa_tf_9mul(a.data, b.data, c.data);
+    return c;
 }
+
+static inline struct aa_tf_quat
+operator*(const struct aa_tf_quat &a, const struct aa_tf_quat &b) {
+    struct aa_tf_quat c;
+    aa_tf_qmul(a.data, b.data, c.data);
+    return c;
+}
+
+static inline struct aa_tf_tfmat
+operator*(const struct aa_tf_tfmat &a, const struct aa_tf_tfmat &b) {
+    struct aa_tf_tfmat c;
+    aa_tf_12chain(a.data, b.data, c.data);
+    return c;
+}
+
+static inline struct aa_tf_duqu
+operator*(const struct aa_tf_duqu &a, const struct aa_tf_duqu &b) {
+    struct aa_tf_duqu c;
+    aa_tf_duqu_mul(a.data, b.data, c.data);
+    return c;
+}
+
+static inline struct aa_tf_qv
+operator*(const struct aa_tf_qv &a, const struct aa_tf_qv &b) {
+    struct aa_tf_qv c;
+    aa_tf_qv_chain(a.r.data, a.v.data,
+                   b.r.data, b.v.data,
+                   c.r.data, c.v.data);
+    return c;
+}
+
+};
 
 #endif //AA_MEM_HPP
