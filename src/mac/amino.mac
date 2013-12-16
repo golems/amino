@@ -123,6 +123,21 @@ qaxang(theta, v) := ([
   cos(theta/2) ]);
 
 
+qmat_l(q) :=
+matrix(
+  [ q[4], -q[3],  q[2], q[1]],
+  [ q[3],  q[4], -q[1], q[2]],
+  [-q[2],  q[1],  q[4], q[3]],
+  [-q[1], -q[2], -q[3], q[4]]);
+
+
+qmat_r(q) :=
+matrix(
+  [ q[4],  q[3], -q[2], q[1]],
+  [-q[3],  q[4],  q[1], q[2]],
+  [ q[2], -q[1],  q[4], q[3]],
+  [-q[1], -q[2], -q[3], q[4]]);
+
 /* dual quaternions */
 dq_real(dq) := [dq[1], dq[2], dq[3], dq[4]];
 dq_dual(dq) := [dq[5], dq[6], dq[7], dq[8]];

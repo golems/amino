@@ -389,6 +389,25 @@ contains
     b = 2*q(XYZ_INDEX)
     a = q(4)*b
     call aa_tf_skewsym_scal_c(q(XYZ_INDEX),a,b,R)
+
+    ! real(C_DOUBLE) :: rx,ry,rz,rw
+    ! rx = q(1)
+    ! ry = q(2)
+    ! rz = q(3)
+    ! rw = q(4)
+
+    ! R(1,1) = -rz**2-ry**2+rx**2+rw**2
+    ! R(1,2) = 2*rx*ry-2*rw*rz
+    ! R(1,3) = 2*rx*rz+2*rw*ry
+
+    ! R(2,1) = 2*rw*rz+2*rx*ry
+    ! R(2,2) = -rz**2+ry**2-rx**2+rw**2
+    ! R(2,3) = 2*ry*rz-2*rw*rx
+
+    ! R(3,1) = 2*rx*rz-2*rw*ry
+    ! R(3,2) = 2*ry*rz+2*rw*rx
+    ! R(3,3) = rz**2-ry**2-rx**2+rw**2
+
   end subroutine aa_tf_quat2rotmat
 
 
