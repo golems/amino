@@ -406,9 +406,9 @@ AA_API void aa_tf_qmulc( const double a[AA_RESTRICT 4],
 
 
 /** Quaternion point rotation. */
-void aa_tf_qrot( const double q[AA_RESTRICT 4],
-                 const double v[AA_RESTRICT 3],
-                 double p[AA_RESTRICT 3] );
+AA_API void aa_tf_qrot( const double q[AA_RESTRICT 4],
+                        const double v[AA_RESTRICT 3],
+                        double p[AA_RESTRICT 3] );
 
 /** Relative orientation.
     \f[ q_{\rm rel} = q_1 q_2^{-1} \f]
