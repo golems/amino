@@ -42,6 +42,7 @@
   (:export
    ;; TF Types
    :axis-angle :quaternion :rotation-matrix  :dual-quaternion :quaternion-translation :transformation-matrix
+   :dual-quaternion-2 :quaternion-translation-2 :transformation-matrix-2
    :x-angle :y-angle :z-angle
    ;; Generics
    :transform

@@ -42,10 +42,6 @@
 
 ;;; Geometric types ;;;;
 
-(defparameter +tf-quat-ident+ (col-vector 0 0 0 1))
-(defparameter +tf-duqu-ident+ (col-vector 0 0 0 1
-                                          0 0 0 0))
-(defparameter +tf-vec-3-ident+ (col-vector 0 0 0))
 
 
 (defun expand-type (value var body type)

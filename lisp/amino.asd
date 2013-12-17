@@ -48,7 +48,8 @@
                ;; LA
                (:file "type" :depends-on ("package"))
                (:file "foreign" :depends-on ("type"))
-               (:file "generic" :depends-on ("foreign"))
+               (:file "wrappers" :depends-on ("foreign"))
+               (:file "generic" :depends-on ("wrappers"))
                ;; TF
                (:file "tf-type" :depends-on ("foreign"))
                (:file "tf" :depends-on ("tf-type"))

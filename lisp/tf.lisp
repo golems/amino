@@ -40,6 +40,11 @@
 
 (in-package :amino)
 
+(defparameter +tf-quat-ident+ (make-quaternion :data (vec 0 0 0 1)))
+
+(defparameter +tf-duqu-ident+ (make-dual-quaternion :data (vec 0 0 0 1
+                                                               0 0 0 0)))
+(defparameter +tf-vec-3-ident+ (vec3 0 0 0))
 
 ;;; Matrices
 

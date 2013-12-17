@@ -42,13 +42,22 @@
 
 
 (defgeneric quaternion (x))
-(defgeneric dual-quaternion (x))
-
 (defgeneric rotation-matrix (x))
+
+(defgeneric dual-quaternion (x))
+(defgeneric quaternion-translation (x))
 (defgeneric transformation-matrix (x))
 
+(defgeneric dual-quaternion-2 (r x))
+(defgeneric quaternion-translation-2 (r x))
+(defgeneric transformation-matrix-2 (r x))
 
 ;;; Quaternion
+(defmethod quaternion ((x quaternion)) x)
+
+(defmethod quaternion ((x (eql nil)))
+  (make-quaternion :data (vec 0d0 0d0 0d0 1d0)))
+
 (defmethod quaternion ((x axis-angle))
   (tf-axang2quat x))
 
@@ -70,13 +79,70 @@
   (tf-zangle2quat (principal-angle-value x)))
 
 ;;; Dual-Quaternion
+(defmethod dual-quaternion ((x dual-quaternion)) x)
+
+(defmethod dual-quaternion ((x (eql nil)))
+  (make-dual-quaternion :data (vec 0d0 0d0 0d0 1d0
+                                   0d0 0d0 0d0 0d0)))
+
+(defmethod dual-quaternion ((x quaternion))
+  (make-dual-quaternion :data (replace (make-vec 8) (quaternion-data x))))
+
+
+(defmethod dual-quaternion ((x quaternion-translation))
+  (tf-qv2duqu (quaternion-translation-quaternion x)
+              (quaternion-translation-translation x)))
+
 (defmethod dual-quaternion ((x array))
   (assert (= 8 (length x)))
   (make-dual-quaternion :data (replace (make-vec 8) x)))
 
+(defmethod dual-quaternion-2 ((r quaternion) (x vec3))
+  (tf-qv2duqu r x))
+
+(defmethod dual-quaternion-2 ((r principal-angle) (x vec3))
+  (tf-qv2duqu (quaternion r) x))
+
+(defmethod dual-quaternion-2 ((r euler-angle) (x vec3))
+  (tf-qv2duqu (quaternion r) x))
+
+(defmethod dual-quaternion-2 ((r axis-angle) (x vec3))
+  (tf-qv2duqu (quaternion r) x))
+
+(defmethod dual-quaternion-2 ((r matrix) (x vec3))
+  (tf-qv2duqu (quaternion r) x))
+
 ;;; Quaternion-Translation
+(defmethod quaternion-translation ((x quaternion-translation))
+  (tf-duqu2qutr x))
+
+(defmethod quaternion-translation ((x (eql nil)))
+  (make-quaternion-translation :quaternion (quaternion nil)
+                               :translation (make-vec3 :data (vec 0d0 0d0 0d0))))
+
 (defmethod quaternion-translation ((x dual-quaternion))
   (tf-duqu2qutr x))
+
+
+(defmethod quaternion-translation-2 ((r quaternion) (x vec3))
+  (make-quaternion-translation :quaternion r
+                               :translation x))
+
+(defmethod quaternion-translation-2 ((r principal-angle) (x vec3))
+  (make-quaternion-translation :quaternion (quaternion r)
+                               :translation x))
+
+(defmethod quaternion-translation-2 ((r euler-angle) (x vec3))
+  (make-quaternion-translation :quaternion (quaternion r)
+                               :translation x))
+
+(defmethod quaternion-translation-2 ((r axis-angle) (x vec3))
+  (make-quaternion-translation :quaternion (quaternion r)
+                               :translation x))
+
+(defmethod quaternion-translation-2 ((r matrix) (x vec3))
+  (make-quaternion-translation :quaternion (quaternion r)
+                               :translation x))
 
 ;;; Rotation Matrix
 (defmethod rotation-matrix ((x quaternion))
@@ -91,7 +157,6 @@
   (tf-zangle2rotmat (principal-angle-value x)))
 
 ;;; Transformation Matrix
-
 
 ;;; Multiplies
 
