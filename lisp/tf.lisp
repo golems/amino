@@ -43,6 +43,15 @@
 
 ;;; Matrices
 
+(defcfun aa-tf-9 :void
+  (tf rotation-matrix-t)
+  (p0 vector-3-t)
+  (p1 vector-3-t))
+(defun tf-9 (tf p0 &optional (p1 (make-point3)))
+  (aa-tf-9 tf p0 p1)
+  p1)
+
+
 (defcfun aa-tf-12 :void
   (tf transformation-matrix-t)
   (p0 vector-3-t)
@@ -56,42 +65,50 @@
   (tf1 transformation-matrix-t)
   (tf2 transformation-matrix-t)
   (tf transformation-matrix-t))
-(defun tf-12chain (tf1 tf2 &optional (tf (make-matrix 3 4)))
+(defun tf-12chain (tf1 tf2 &optional (tf (make-transformation-matrix)))
   (aa-tf-12chain tf1 tf2 tf)
   tf)
 
 (defcfun aa-tf-xangle2rotmat :void
   (theta :double)
   (r rotation-matrix-t))
-(defun tf-xangle2rotmat (theta &optional (r (make-matrix 3 3)))
+(defun tf-xangle2rotmat (theta &optional (r (make-rotation-matrix)))
   (aa-tf-xangle2rotmat theta r)
   r)
 
 (defcfun aa-tf-yangle2rotmat :void
   (theta :double)
   (r rotation-matrix-t))
-(defun tf-yangle2rotmat (theta &optional (r (make-matrix 3 3)))
+(defun tf-yangle2rotmat (theta &optional (r (make-rotation-matrix)))
   (aa-tf-yangle2rotmat theta r)
   r)
 
 (defcfun aa-tf-zangle2rotmat :void
   (theta :double)
   (r rotation-matrix-t))
-(defun tf-zangle2rotmat (theta &optional (r (make-matrix 3 3)))
+(defun tf-zangle2rotmat (theta &optional (r (make-rotation-matrix)))
   (aa-tf-zangle2rotmat theta r)
   r)
+
+(defcfun aa-tf-axang2rotmat :void
+  (a axis-angle-t)
+  (r rotation-matrix-t))
+(defun tf-axang2rotmat (a &optional (r (make-rotation-matrix)))
+  (aa-tf-axang2rotmat a r)
+  r)
+
 
 (defcfun aa-tf-12inv :void
   (tf transformation-matrix-t)
   (tf-i transformation-matrix-t))
-(defun tf-inv (tf &optional (tf-i (make-matrix 3 4)))
+(defun tf-inv (tf &optional (tf-i (make-transformation-matrix)))
   (aa-tf-12inv tf tf-i))
 
 (defcfun aa-tf-12rel :void
   (tf1 transformation-matrix-t)
   (tf2 transformation-matrix-t)
   (tf transformation-matrix-t))
-(defun tf-rel (tf1 tf2 &optional (tf (make-matrix 3 4)))
+(defun tf-rel (tf1 tf2 &optional (tf (make-transformation-matrix)))
   (aa-tf-12rel tf1 tf2 tf)
   tf)
 
@@ -247,6 +264,12 @@
   (aa-tf-zangle2quat theta r)
   r)
 
+(defcfun aa-tf-axang2quat :void
+  (a axis-angle-t)
+  (r quaternion-t))
+(defun tf-axang2quat (a &optional (r (make-quaternion)))
+  (aa-tf-axang2quat a r)
+  r)
 
 ;;; Dual quaternion
 
@@ -440,7 +463,7 @@
   (matrix-block tf 0 3 3 1))
 
 (defun make-tf (&key r (x 0d0) (y 0d0) (z 0d0))
-  (let* ((tf (make-matrix 3 4))
+  (let* ((tf (make-transformation-matrix))
          (a (matrix-data tf)))
     (setf (aref a 9) (coerce x 'double-float)
           (aref a 10) (coerce y 'double-float)

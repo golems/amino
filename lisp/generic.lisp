@@ -83,17 +83,3 @@
      (etypecase b
        ((simple-array double-float (*))
         (%simple-array-double-float-op+ a b (make-array (length a) :element-type 'double-float)))))))
-
-
-;; Geometry
-(defmethod g* ((a quaternion) (b quaternion))
-  (tf-qmul a b))
-
-(defmethod g* ((a quaternion) (b point3))
-  (tf-qrot a b))
-(defmethod g* ((a quaternion) (b point3))
-  (tf-qrot a b))
-
-(defmethod g* ((a number) (b quaternion))
-  (make-quaternion :data (dscal (coerce a 'double-float)
-                                (vec-copy (quaternion-data b)))))

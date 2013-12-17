@@ -39,4 +39,12 @@
 
 (defpackage :amino
   (:use :cl :cffi :alexandria)
+  (:export
+   ;; TF Types
+   :axis-angle :quaternion :rotation-matrix  :dual-quaternion :quaternion-translation :transformation-matrix
+   :x-angle :y-angle :z-angle
+   ;; Generics
+   :transform
+   :g*
+   )
   (:nicknames :aa))

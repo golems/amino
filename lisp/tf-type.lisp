@@ -101,7 +101,12 @@
 (defmethod expand-to-foreign-dyn (value var body (type transformation-matrix-t))
   (expand-type value var body 'transformation-matrix))
 
+(defun make-transformation-matrix ()
+  (make-matrix 3 4))
+
 ;;; Rotation Matrix
+
+;; TODO: check determinant and norms
 (defun rotation-matrix-p (x)
   (and (= 3 (matrix-rows x))
        (<= 3 (matrix-cols x))
@@ -120,6 +125,9 @@
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type rotation-matrix-t))
   (expand-type value var body 'rotation-matrix))
+
+(defun make-rotation-matrix ()
+  (make-matrix 3 3))
 
 ;;; Point 3
 
@@ -142,6 +150,23 @@
 (defmethod expand-to-foreign-dyn (value var body (type vector-3-t))
   (expand-vector value var body 3))
 
+;;; Axis-Angle
+(defstruct (axis-angle (:include real-array
+                                 (data (make-vec 4) :type  (simple-array double-float (4))))))
+
+(defun axis-angle (x y z theta)
+  (let ((n (sqrt (+ (* x x) (* y y) (* z z)))))
+    (make-axis-angle :data (vec (/ x n) (/ y n) (/ z n) theta))))
+
+
+(define-foreign-type axis-angle-t ()
+  ()
+  (:simple-parser axis-angle-t)
+  (:actual-type :pointer))
+(defmethod expand-to-foreign-dyn (value var body (type axis-angle-t))
+  (expand-vector value var body 4))
+
+
 ;;; Quaternion
 (defstruct (quaternion (:include real-array
                                  (data (make-vec 4) :type  (simple-array double-float (4))))))
@@ -153,9 +178,6 @@
   (aref (quaternion-data q) +z+))
 (defun quaternion-w (q)
   (aref (quaternion-data q) +w+))
-
-(defun quaternion (x y z w)
-  (make-quaternion :data (vec x y z w)))
 
 (define-foreign-type quaternion-t ()
   ()
@@ -176,6 +198,25 @@
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type rotation-vector-t))
   (expand-vector value var body 3))
+
+
+;; Principal Angle
+(defstruct principal-angle
+  (value 0d0 :type double-float))
+
+(defstruct (x-angle (:include principal-angle)
+                    (:constructor x-angle (value))))
+(defstruct (y-angle (:include principal-angle)
+                    (:constructor y-angle (value))))
+(defstruct (z-angle (:include principal-angle)
+                    (:constructor z-angle (value))))
+
+(defstruct (euler-angle (:include real-array
+                                  (data (make-vec 3) :type  (simple-array double-float (3))))))
+
+(defstruct (euler-zyx (:include euler-angle)))
+(defun euler-zyx (z y x)
+  (make-euler-zyx :data (vec z y x)))
 
 ;;; Dual Quaternion
 (defstruct (dual-quaternion (:include real-array
