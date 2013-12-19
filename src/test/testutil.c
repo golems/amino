@@ -57,7 +57,7 @@ void afeq( double a, double b, double tol ) {
 }
 
 void aveq( const char * name,
-                  size_t n, double *a, double *b, double tol ) {
+                  size_t n, const double *a, const double *b, double tol ) {
     if( !aa_veq(n, a, b, tol) ) {
         fprintf( stderr, "FAILED: %s\n",name);
         fprintf( stderr, "a: ");
