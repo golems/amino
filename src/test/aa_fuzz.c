@@ -419,6 +419,15 @@ static void duqu() {
         aveq( "duqu ln 0 exact", 6, dx0, dxi, 0.0 );
 
     }
+    // Pure translation
+    {
+        double S[8], v[3], v1[3];
+        aa_vrand(3,v);
+        aa_tf_xyz2duqu( v[0], v[1], v[2], S );
+        aa_tf_duqu_trans(S, v1);
+        aveq( "duqu trans orientation", 4, S, aa_tf_quat_ident, 0.0 );
+        aveq( "duqu trans translation", 3, v, v1, 1e-6 );
+    }
 }
 
 

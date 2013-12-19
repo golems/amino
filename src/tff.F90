@@ -1713,6 +1713,18 @@ contains
 
   end subroutine aa_tf_qv2duqu
 
+  subroutine aa_tf_xyz2duqu( x, y, z, d ) &
+       bind( C, name="aa_tf_xyz2duqu" )
+    real(C_DOUBLE), intent(in), value :: x,y,z
+    real(C_DOUBLE), intent(out), dimension(8) :: d
+    d(DQ_REAL_XYZ) = real(0.0,C_DOUBLE)
+    d(DQ_REAL_W) = real(1.0,C_DOUBLE)
+    d(DQ_DUAL_W) = real(0.0,C_DOUBLE)
+    d(4+1) = 0.5 * x
+    d(4+2) = 0.5 * y
+    d(4+3) = 0.5 * z
+  end subroutine aa_tf_xyz2duqu
+
   ! x angle and translations to dual quaternion
   subroutine aa_tf_xxyz2duqu( theta, x, y, z, d ) &
        bind( C, name="aa_tf_xxyz2duqu" )
