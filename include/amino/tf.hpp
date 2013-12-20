@@ -291,6 +291,7 @@ struct AxisAngle : aa_tf_axang {
 struct DualQuat : aa_tf_duqu {
     DualQuat() {}
 
+    DualQuat(const double *S) :  aa_tf_duqu(from_duqu(S))  {}
     DualQuat(const struct aa_tf_duqu *S) :  aa_tf_duqu(from_duqu(S->data))  {}
     DualQuat(const struct aa_tf_duqu &S) :  aa_tf_duqu(from_duqu(S.data))   {}
     DualQuat(const struct aa_tf_qv *S) :    aa_tf_duqu(from_qv(S->r.data, S->v.data)) {}
@@ -313,6 +314,12 @@ struct DualQuat : aa_tf_duqu {
         aa_tf_duqu(from_qv(Quat::from_axang(r.data).data,
                            v.data))
     {}
+
+    aa_tf_vec3 translation() {
+        aa_tf_vec3 V;
+        aa_tf_duqu_trans( this->data, V.data );
+        return V;
+    }
 
     static aa_tf_duqu from_duqu( const double s[8] ) {
         DualQuat S;
@@ -422,6 +429,27 @@ struct TfMat : aa_tf_tfmat {
 };
 
 /*---- OPERATORS -----*/
+
+
+/* Vec3 */
+static inline struct aa_tf_vec3
+operator+(const struct aa_tf_vec3 &a, const struct aa_tf_vec3 &b) {
+    struct aa_tf_vec3 c;
+    c.x = a.x + b.x;
+    c.y = a.y + b.y;
+    c.z = a.z + b.z;
+    return c;
+}
+
+static inline struct aa_tf_vec3
+operator/(const struct aa_tf_vec3 &a, double b ) {
+    struct aa_tf_vec3 c;
+    c.x = a.x / b;
+    c.y = a.y / b;
+    c.z = a.z / b;
+    return c;
+}
+
 
 static inline struct aa_tf_rotmat
 operator*(const struct aa_tf_rotmat &a, const struct aa_tf_rotmat &b) {
