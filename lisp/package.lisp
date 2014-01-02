@@ -47,5 +47,6 @@
    ;; Generics
    :transform
    :g*
+   :matrix->list
    )
   (:nicknames :aa))

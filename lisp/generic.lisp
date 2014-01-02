@@ -40,6 +40,8 @@
 
 (in-package :amino)
 
+
+
 (defgeneric g* (a b))
 (defgeneric g- (a b))
 (defgeneric g+ (a b))
@@ -83,3 +85,12 @@
      (etypecase b
        ((simple-array double-float (*))
         (%simple-array-double-float-op+ a b (make-array (length a) :element-type 'double-float)))))))
+
+(defgeneric matrix->list (matrix))
+
+(defmethod matrix->list ((matrix array))
+  (loop for x across matrix
+     collect x))
+
+(defmethod matrix->list ((matrix real-array))
+  (matrix->list (real-array-data matrix)))

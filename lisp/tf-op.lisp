@@ -71,6 +71,14 @@
                       (aref data 1)
                       (aref data 2))))
 
+(defmethod quaternion ((x array))
+  (check-type x (array double-float (4)))
+  (make-quaternion :data
+                   (vec (aref x 0)
+                        (aref x 1)
+                        (aref x 2)
+                        (aref x 3))))
+
 (defmethod quaternion ((x x-angle))
   (tf-xangle2quat (principal-angle-value x)))
 (defmethod quaternion ((x y-angle))
@@ -143,6 +151,17 @@
 (defmethod quaternion-translation-2 ((r matrix) (x vec3))
   (make-quaternion-translation :quaternion (quaternion r)
                                :translation x))
+
+(defmethod quaternion-translation-2 ((r array) (x array))
+  (check-type x (array double-float (3)))
+  (make-quaternion-translation :quaternion (quaternion r)
+                               :translation (vec3 (aref x 0)
+                                                  (aref x 1)
+                                                  (aref x 2))))
+
+(defmethod matrix->list ((matrix quaternion-translation))
+  (list (matrix->list (quaternion-translation-quaternion matrix))
+        (matrix->list (quaternion-translation-translation matrix))))
 
 ;;; Rotation Matrix
 (defmethod rotation-matrix ((x quaternion))

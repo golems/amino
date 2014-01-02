@@ -201,11 +201,18 @@
   (value 0d0 :type double-float))
 
 (defstruct (x-angle (:include principal-angle)
-                    (:constructor x-angle (value))))
+                    (:constructor %x-angle (value))))
 (defstruct (y-angle (:include principal-angle)
-                    (:constructor y-angle (value))))
+                    (:constructor %y-angle (value))))
 (defstruct (z-angle (:include principal-angle)
-                    (:constructor z-angle (value))))
+                    (:constructor %z-angle (value))))
+
+(defun x-angle (value)
+  (%x-angle (coerce value 'double-float)))
+(defun y-angle (value)
+  (%y-angle (coerce value 'double-float)))
+(defun z-angle (value)
+  (%z-angle (coerce value 'double-float)))
 
 (defstruct (euler-angle (:include real-array
                                   (data (make-vec 3) :type  (simple-array double-float (3))))))
