@@ -221,6 +221,16 @@ AA_API void AA_LAPACK_NAME(gesvd)
   AA_TYPE *work, const int *lwork, int *info );
 
 
+AA_API int AA_LAPACK_NAME(geev)
+(const char *jobvl, const char *jobvr,
+ int *n, AA_TYPE *a, int *lda,
+ AA_TYPE *wr, AA_TYPE *wi,
+ AA_TYPE *vl, int *ldvl,
+ AA_TYPE *vr, int *ldvr,
+ AA_TYPE *work, int *lwork, int *info);
+
+
+
 /** DGELSD computes the minimum-norm solution to a real linear least
  *  squares problem.
  *
@@ -868,6 +878,8 @@ AA_API void AA_LAPACK_NAME(laset)
 
 
 
+
+
 #include "amino/undef.h"
 
 #if AA_TYPE == double
@@ -952,4 +964,3 @@ AA_API void slag2d_ ( const int *M, const int *N,
                       const int *INFO );
 
 #endif // AA_TYPE == float
-

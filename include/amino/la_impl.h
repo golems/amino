@@ -396,6 +396,13 @@ AA_API int AA_NAME(la,svd)
   AA_TYPE *S,
   AA_TYPE *Vt, size_t ldvt );
 
+/** Compute eigen values and vectors */
+AA_API int AA_NAME(la,eev)
+( size_t n, const AA_TYPE *A, size_t lda,
+  AA_TYPE *wr,
+  AA_TYPE *wi,
+  AA_TYPE *Vl, size_t ldvl,
+  AA_TYPE *Vr,  size_t ldvr );
 
 /** Fit a least-squares hyperplane to columns of A.
  *

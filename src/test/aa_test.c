@@ -325,6 +325,16 @@ void la2() {
                 assert( fabs( fabs(Vt[i]) - fabs(Vtr[i]) ) < .001 );
         }
     }
+    // EEV
+    {
+        double A[4] = {1,2,3,4};
+        double wr[2], wi[2];
+        double rwr[2] = { -0.37228, 5.37228};
+        double rwi[2] = {0};
+        aa_la_d_eev(2,A,2, wr, wi, NULL, 0, NULL, 0);
+        aveq( "eev val", 2, wr, rwr, 1e-4 );
+        aveq( "eev val", 2, wi, rwi, 1e-4 );
+    }
     // invert
     {
         double A[] = {1,2,3,4};

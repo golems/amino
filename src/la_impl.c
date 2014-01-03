@@ -468,4 +468,47 @@ AA_API int AA_NAME(la,svd)
     return info;
 }
 
+
+AA_API int AA_NAME(la,eev)
+( size_t n, const AA_TYPE *A, size_t lda,
+  AA_TYPE *wr,
+  AA_TYPE *wi,
+  AA_TYPE *Vl, size_t ldvl,
+  AA_TYPE *Vr, size_t ldvr )
+{
+    int info = -1;
+    int ni = (int)n;
+    int ldai = (int)lda;
+    int lwork = -1;
+
+    const char *jobvl = Vl ? "V" : "N";
+    int ldvli = Vl ? (int)ldvl : 1;
+    const char *jobvr = Vr ? "V" : "N";
+    int ldvri = Vr ? (int)ldvr : 1;
+
+    AA_TYPE *Ap = (AA_TYPE*)aa_mem_region_local_alloc( n*n*sizeof(AA_TYPE) );
+    AA_CLA_NAME(lacpy)(0, ni, ni, A, (int)lda,
+                       Ap, ni);
+
+    while(1) {
+        AA_TYPE *work =
+            (AA_TYPE*)aa_mem_region_local_tmpalloc( sizeof(AA_TYPE)*
+                                                    (size_t)(lwork < 0 ? 1 : lwork) );
+        AA_LAPACK_NAME(geev)( jobvl, jobvr,
+                              &ni, Ap, &ldai,
+                              wr, wi,
+                              Vl, &ldvli,
+                              Vr, &ldvri,
+                              work, &lwork, &info );
+        if( lwork >= 0 ) break;
+        assert( -1 == lwork );
+        lwork = (int) work[0];
+
+    }
+
+    aa_mem_region_local_pop(Ap);
+    return info;
+}
+
+
 #include "amino/undef.h"
