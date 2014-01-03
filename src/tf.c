@@ -446,3 +446,20 @@ void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
 /*     R[1] = s;    R[4] = c;    R[7] = 0; */
 /*     R[2] = 0;    R[5] = 0;    R[8] = 1; */
 /* } */
+
+AA_API void aa_tf_quat_davenport
+( size_t n, const double *w, const double *q, double *p )
+{
+    double M[16];
+    aa_tf_quat_davenport_matrix( n,w,q,M);
+    double wr[4]={0}, wi[4]={0}, Vr[16];
+    aa_la_d_eev( 4, M, 4, wr, wi,
+                 NULL, 0, Vr, 4 );
+    /* printf("wr: "); aa_dump_vec(stdout, wr, 4 ); */
+    /* printf("wi: "); aa_dump_vec(stdout, wi, 4 ); */
+    /* printf("Vr\n"); */
+    /* aa_dump_mat(stdout, Vr, 4, 4 ); */
+
+    size_t i = aa_fmaxloc( 4, wr );
+    AA_MEM_CPY( p, Vr+4*i, 4 );
+}

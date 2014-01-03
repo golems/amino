@@ -533,6 +533,14 @@ AA_API void aa_tf_yangle2quat( double theta_y, double q[AA_RESTRICT 4] );
 /** Unit quaternion for angle about z axis */
 AA_API void aa_tf_zangle2quat( double theta_z, double q[AA_RESTRICT 4] );
 
+
+AA_API void aa_tf_quat_davenport_matrix
+( size_t n, const double *w, const double *q, double *M );
+
+
+AA_API void aa_tf_quat_davenport
+( size_t n, const double *w, const double *q, double *p );
+
 /*********/
 /* Axang */
 /*********/

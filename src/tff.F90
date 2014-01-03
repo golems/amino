@@ -1464,6 +1464,24 @@ contains
     call aa_tf_qmul(e,q0, q1)
   end subroutine aa_tf_qsvel
 
+  subroutine aa_tf_quat_davenport_matrix( n, w, q,  M ) &
+       bind( C, name="aa_tf_quat_davenport_matrix" )
+
+    integer(C_SIZE_T), intent(in), value :: n
+    real(C_DOUBLE), intent(in) :: w(n), q(4,n)
+    real(C_DOUBLE), intent(out) :: M(4,4)
+    real(C_DOUBLE) :: tmp(4,4),  p(4,1)
+
+    integer(C_SIZE_T) :: i
+    ! see: F. Landis Markley, et. al. "Averaging Quaternions"
+    M = real(0.0,C_DOUBLE)
+    do i=1,n
+       p(:,1) = q(:,i)
+       tmp = matmul(p, transpose(p))
+       M = M + w(i) * tmp
+    end do
+  end subroutine aa_tf_quat_davenport_matrix
+
   !!! Dual numbers
 
   elemental subroutine aa_tf_dual_pack2( r, d, c )

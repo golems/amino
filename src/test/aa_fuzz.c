@@ -202,6 +202,18 @@ static void quat() {
         aa_tf_qslerpdiffalg( u, q1, q2, dqa );
         aveq("slerpdiff", 4, dqg, dqa, .001 );
     }
+    // average
+    {
+        double qq[8], p[4], s[4];
+        memcpy( qq, q1, sizeof(q1) );
+        memcpy( qq+4, q2, sizeof(q2) );
+        double w[2] = {.5,.5};
+        aa_tf_quat_davenport( 2, w, qq, p );
+        aa_tf_qslerp( .5, q1, q2, s );
+        aa_tf_qminimize( p );
+        aa_tf_qminimize( s );
+        aveq("davenport-2", 4, p, s, 1e-4 );
+    }
 
     double R1[9], R2[9], Rr[9], qr[4], qrr[4];
     aa_tf_quat2rotmat(q1, R1);
