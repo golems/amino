@@ -1520,6 +1520,17 @@ contains
     call aa_tf_qmul(e,q0, q1)
   end subroutine aa_tf_qsvel
 
+  !! Integrate rotational velocity
+  subroutine aa_tf_qsdiff( q0, dq, dt, q1 ) &
+       bind( C, name="aa_tf_qsdiff" )
+    real(C_DOUBLE), intent(in) :: dq(4), q0(4)
+    real(C_DOUBLE), intent(in), value :: dt
+    real(C_DOUBLE), intent(out) :: q1(4)
+    real(C_DOUBLE)  :: w(3)
+    call aa_tf_qdiff2vel(q0, dq, w )
+    call aa_tf_qsvel( q0, w, dt, q1 );
+  end subroutine aa_tf_qsdiff
+
   subroutine aa_tf_quat_davenport_matrix( n, w, q,  M ) &
        bind( C, name="aa_tf_quat_davenport_matrix" )
 
