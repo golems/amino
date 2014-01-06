@@ -1250,9 +1250,10 @@ contains
        bind( C, name="aa_tf_qvel2diff" )
     real(C_DOUBLE), intent(in) :: v(3), q(4)
     real(C_DOUBLE), intent(out) :: dq_dt(4)
+    real(C_DOUBLE) :: v2(3)
     ! dq/dt = 1/2 * v * q
-    call aa_tf_qmul_vq( v, q, dq_dt )
-    dq_dt = dq_dt / 2
+    v2 = v/2
+    call aa_tf_qmul_vq( v2, q, dq_dt )
   end subroutine aa_tf_qvel2diff
 
 
