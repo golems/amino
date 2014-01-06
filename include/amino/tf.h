@@ -44,6 +44,9 @@
 #ifndef AMINO_TF_H
 #define AMINO_TF_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*********/
 /* Types */
@@ -556,7 +559,6 @@ AA_API void aa_tf_qmatrix_r( const double *q, double *M );
 /* Axang */
 /*********/
 
-
 /// copy x,y,z,theta into axang
 AA_API void aa_tf_axang_make( double x, double y, double z, double theta,
                               double axang[AA_RESTRICT 4] );
@@ -575,6 +577,24 @@ AA_API void aa_tf_rotvec_permute( const double rv[AA_RESTRICT 3], int k,
 AA_API void aa_tf_rotvec_near( const double rv[AA_RESTRICT 3],
                                const double rv_near[AA_RESTRICT 3],
                                double rv_p[AA_RESTRICT 3] );
+
+/**************/
+/* Quat-Trans */
+/**************/
+
+#define AA_TF_QUTR_Q 0
+#define AA_TF_QUTR_V 4
+
+/// quaternion-translation to dual quaternion
+void aa_tf_qutr2duqu( const double e[7], double s[8] );
+
+/// dual quaternion to quaternion-translation
+void aa_tf_duqu2qutr( const double s[8], double e[7] );
+
+/** Integrate a quaternion-translation */
+void aa_tf_qutr_svel
+( const double e0[7], const double dx[6], double dt, double e1[7] );
+
 
 /***************/
 /* Conversions */
@@ -810,5 +830,10 @@ AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dd[AA_
  */
 AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                               double dt, double d1[AA_RESTRICT 6] ) ;
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //AMINO_TF_H

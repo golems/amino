@@ -201,13 +201,13 @@ la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
 	$(CPP) $(INCLUDES) -CC $< -o $@
 
 la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
-	$(CPP) $(INCLUDES) -x c -CC $< -o $@
+	$(CPP) $(INCLUDES) -x c  $< -o $@
 
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
-	$(CPP) $(INCLUDES) -x c -CC $< -o $@
+	$(CPP) $(INCLUDES) -x c  $< -o $@
 
-tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90
-	$(CPP) $(INCLUDES) -x c -CC $< -o $@
+tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90 src/tf/qv.f90
+	$(CPP) $(INCLUDES) -x c  $< -o $@
 
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90

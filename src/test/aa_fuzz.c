@@ -623,10 +623,12 @@ static void tfmat() {
 
 static void integrate() {
     // random tf
-    double q[4], v[3], dx[7]={0};
+    double dx[6]={0}, e[7];
+    double *v = e+AA_TF_QUTR_V;
+    double *q = e+AA_TF_QUTR_Q;
     aa_vrand( 3, v );
-    aa_vrand( 6, dx );
     aa_test_qurand( q );
+    aa_vrand( 6, dx );
     double dt = aa_frand() / 100;
 
     // convert
@@ -635,27 +637,30 @@ static void integrate() {
     aa_tf_qv2tfmat( q, v, T );
 
     // integrate
-    double S1[8], q1[4], T1[12], R1[9];
+    double S1[8], q1[4], T1[12], R1[9], E1[7];
     aa_tf_duqu_svel( S, dx, dt, S1 );
     aa_tf_qsvel( q, dx+3, dt, q1 );
     aa_tf_rotmat_svel( T, dx+3, dt, R1 );
     aa_tf_tfmat_svel( T, dx, dt, T1 );
+    aa_tf_qutr_svel( e, dx, dt, E1 );
 
     // normalize
-    double R1q[4], T1q[8];
+    double R1q[4], T1q[8], E1q[8];
     aa_tf_rotmat2quat( R1, R1q );
     aa_tf_tfmat2duqu( T1, T1q );
+    aa_tf_qutr2duqu(E1, E1q);
     aa_tf_duqu_minimize( S1 );
     aa_tf_duqu_minimize( T1q );
+    aa_tf_duqu_minimize( E1q );
     aa_tf_qminimize( q1 );
     aa_tf_qminimize( R1q );
-
 
     // check
     aveq( "duqu-quat", 4, S, q, 0 );
     aveq( "int-duqu-quat", 4, S1, q1, 1e-8 );
     aveq( "int-rotmat-quat", 4, R1q, q1, 1e-8 );
     aveq( "int-duqu-tfmat", 8, S1, T1q, 1e-6 );
+    aveq( "int-qutr", 8, S1, E1q, 1e-6 );
 
 
     // normalized check
