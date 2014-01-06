@@ -202,6 +202,27 @@ static void quat() {
         aa_tf_qslerpdiffalg( u, q1, q2, dqa );
         aveq("slerpdiff", 4, dqg, dqa, .001 );
     }
+
+    // mul
+    {
+        double Ql[16], Qr[16];
+        double y0[4], y1[4], y2[4];
+        aa_tf_qmatrix_l(q1, Ql);
+        aa_tf_qmatrix_r(q2, Qr);
+        aa_tf_qmul(q1,q2, y0);
+        cblas_dgemv( CblasColMajor, CblasNoTrans, 4, 4,
+                     1.0, Ql, 4,
+                     q2, 1,
+                     0, y1, 1 );
+        cblas_dgemv( CblasColMajor, CblasNoTrans, 4, 4,
+                     1.0, Qr, 4,
+                     q1, 1,
+                     0, y2, 1 );
+        aveq( "qmul-1", 4, y0, y1, 1e-6 );
+        aveq( "qmul-2", 4, y0, y2, 1e-6 );
+    }
+
+
     // average
     {
         double qq[8], p[4], s[4];

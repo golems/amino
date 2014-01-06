@@ -703,6 +703,61 @@ contains
 
   end subroutine aa_tf_qmul
 
+
+  ! Matrix for left quaternion in multiply
+  pure subroutine aa_tf_qmatrix_l( q, m) &
+       bind( C, name="aa_tf_qmatrix_l" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE), dimension(4,4), intent(out) :: m
+
+    m(1,1) = q(4)
+    m(2,1) = q(3)
+    m(3,1) = -q(2)
+    m(4,1) = -q(1)
+
+    m(1,2) = -q(3)
+    m(2,2) = q(4)
+    m(3,2) = q(1)
+    m(4,2) = -q(2)
+
+    m(1,3) = q(2)
+    m(2,3) = -q(1)
+    m(3,3) = q(4)
+    m(4,3) = -q(3)
+
+    m(1,4) = q(1)
+    m(2,4) = q(2)
+    m(3,4) = q(3)
+    m(4,4) = q(4)
+  end subroutine aa_tf_qmatrix_l
+
+  ! Matrix for right quaternion in multiply
+  pure subroutine aa_tf_qmatrix_r( q, m) &
+       bind( C, name="aa_tf_qmatrix_r" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE), dimension(4,4), intent(out) :: m
+
+    m(1,1) = q(4)
+    m(2,1) = -q(3)
+    m(3,1) = q(2)
+    m(4,1) = -q(1)
+
+    m(1,2) = q(3)
+    m(2,2) = q(4)
+    m(3,2) = -q(1)
+    m(4,2) = -q(2)
+
+    m(1,3) = -q(2)
+    m(2,3) = q(1)
+    m(3,3) = q(4)
+    m(4,3) = -q(3)
+
+    m(1,4) = q(1)
+    m(2,4) = q(2)
+    m(3,4) = q(3)
+    m(4,4) = q(4)
+  end subroutine aa_tf_qmatrix_r
+
   !! Multiply conj(a) and b
   pure subroutine aa_tf_qcmul( a, b, q) &
        bind( C, name="aa_tf_qcmul" )

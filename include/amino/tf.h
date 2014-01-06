@@ -541,6 +541,17 @@ AA_API void aa_tf_quat_davenport_matrix
 AA_API void aa_tf_quat_davenport
 ( size_t n, const double *w, const double *q, double *p );
 
+
+/** Construct matrix for left quaternion multiply
+ * q*p = M*p
+ */
+AA_API void aa_tf_qmatrix_l( const double *q, double *M );
+
+/** Construct matrix for right quaternion multiply
+ * p*q = M*p
+ */
+AA_API void aa_tf_qmatrix_r( const double *q, double *M );
+
 /*********/
 /* Axang */
 /*********/

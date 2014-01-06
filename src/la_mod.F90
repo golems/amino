@@ -101,6 +101,26 @@ module amino_la
      end subroutine aa_la_s_svd
   end interface
 
+  !! interface to inversion function (via lapack) in amino
+  Interface
+     Function aa_la_inv( n, A ) result(info)
+       use ISO_C_BINDING
+       integer(C_SIZE_T), intent(in), value :: n
+       real(C_DOUBLE), intent(inout) :: A(n,n)
+       integer :: info
+     End Function aa_la_inv
+  End Interface
+
+  Interface
+     Function aa_la_care_laub( m, n, p, A, B, C, X ) result(info)
+       use ISO_C_BINDING
+       integer(C_SIZE_T), intent(in), value :: m, n, p
+       real(C_DOUBLE), intent(in) :: A(m,m), B(m,n), C(p,m)
+       real(C_DOUBLE), intent(out) :: X(m,m)
+       integer :: info
+     End Function aa_la_care_laub
+  End Interface
+
   !> Cross product
   interface aa_la_cross_sub
      module procedure &
