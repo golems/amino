@@ -41,6 +41,10 @@
 #define QUTR_Q 1:4
 #define QUTR_V 5:7
 
+!!!!!!!!!!!!!!!!
+!! CONVERSION !!
+!!!!!!!!!!!!!!!!
+
 subroutine aa_tf_qutr2duqu( e, s ) &
      bind( C, name="aa_tf_qutr2duqu" )
   real(C_DOUBLE), intent(in) :: e(7)
@@ -58,6 +62,41 @@ subroutine aa_tf_duqu2qutr( s, e ) &
   e(QUTR_Q) = S(DQ_REAL)
   call aa_tf_duqu_trans(S, e(QUTR_V))
 end subroutine aa_tf_duqu2qutr
+
+
+subroutine aa_tf_qutr2tfmat( e, T ) &
+     bind( C, name="aa_tf_qutr2tfmat" )
+  real(C_DOUBLE), intent(in) :: e(7)
+  real(C_DOUBLE), intent(out) :: T(3,4)
+  call aa_tf_quat2rotmat(e(QUTR_Q), T(:,1:3))
+  T(:,4) = e(QUTR_V)
+end subroutine aa_tf_qutr2tfmat
+
+
+!!!!!!!!!
+!! OPS !!
+!!!!!!!!!
+
+
+subroutine aa_tf_qutr_tf( e, p0, p1 ) &
+     bind( C, name="aa_tf_qutr_tf" )
+  real(C_DOUBLE), intent(in) :: e(7), p0(3)
+  real(C_DOUBLE), intent(out) :: p1(3)
+  call aa_tf_qrot( e(QUTR_Q), p0, p1 )
+  p1 = p1 + e(QUTR_V)
+end subroutine aa_tf_qutr_tf
+
+subroutine aa_tf_qutr_mul( a, b, c ) &
+     bind( C, name="aa_tf_qutr_mul" )
+  real(C_DOUBLE), intent(out) :: c(7)
+  real(C_DOUBLE), intent(in) :: a(7), b(7)
+  call aa_tf_qmul( a(QUTR_Q), b(QUTR_Q), c(QUTR_Q) )
+  call aa_tf_qutr_tf( a, b(QUTR_V), c(QUTR_V) )
+end subroutine aa_tf_qutr_mul
+
+!!!!!!!!!!!!!!
+!! CALCULUS !!
+!!!!!!!!!!!!!!
 
 !! Integrate velocity
 subroutine aa_tf_qutr_svel( e0, dx, dt, e1 ) &

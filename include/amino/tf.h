@@ -588,8 +588,15 @@ AA_API void aa_tf_rotvec_near( const double rv[AA_RESTRICT 3],
 /// quaternion-translation to dual quaternion
 void aa_tf_qutr2duqu( const double e[7], double s[8] );
 
+/// quaternion-translation to transformation matrix
+void aa_tf_qutr2tfmat( const double e[7], double T[12] );
+
 /// dual quaternion to quaternion-translation
 void aa_tf_duqu2qutr( const double s[8], double e[7] );
+
+
+/// quaternion-translation multiply
+void aa_tf_qutr_mul( const double a[7], const double b[7], double c[7] ) ;
 
 /** Integrate a quaternion-translation */
 void aa_tf_qutr_svel

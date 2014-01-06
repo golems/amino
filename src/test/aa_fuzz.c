@@ -49,15 +49,17 @@
 #include <inttypes.h>
 #include <sys/resource.h>
 
-void rand_tf( double S[8], double T[12] ) {
-    double a[3], q[4];
-    aa_vrand(3,a);
-    aa_tf_rotvec2quat(a, q);
-    aa_tf_quat2rotmat(q, T);
+void rand_tf( double _E[7], double S[8],  double T[12] ) {
+    double tmp[7];
+    double *E = _E ? _E : tmp;
 
-    aa_vrand(3,T+9);
+    aa_test_qurand( E+AA_TF_QUTR_Q );
+    aa_vrand( 3, E+AA_TF_QUTR_V );
 
-    aa_tf_qv2duqu( q, T+9, S );
+    if( S ) aa_tf_qutr2duqu( E, S );
+    if( T ) aa_tf_duqu2tfmat( S, T );
+
+
 }
 
 static void rotvec() {
@@ -157,11 +159,12 @@ static void euler1() {
 
 static void chain() {
     double S1[8], S2[8], S3[8];
+    double E1[7], E2[7], E3[7], ES[8];
     double T1[12], T2[12], T3[12], TS[8];
     double qv[7], qvS[8];
 
-    rand_tf(S1, T1);
-    rand_tf(S2, T2);
+    rand_tf(E1, S1, T1);
+    rand_tf(E2, S2, T2);
 
     // rotation
     aa_tf_qmul( S1, S2, S3 );
@@ -175,13 +178,17 @@ static void chain() {
     aa_tf_12chain( T1, T2, T3 );
     aa_tf_duqu_mul( S1, S2, S3 );
     aa_tf_qv_chain( S1, T1+9, S2, T2+9, qv, qv+4 );
+    aa_tf_qutr_mul( E1, E2, E3 );
     aa_tf_tfmat2duqu( T3, TS );
     aa_tf_qv2duqu( qv, qv+4, qvS );
+    aa_tf_qutr2duqu( E3, ES );
     aa_tf_duqu_minimize( S3 );
     aa_tf_duqu_minimize( TS );
     aa_tf_duqu_minimize( qvS );
+    aa_tf_duqu_minimize( ES );
     aveq("chain-tf T/S", 8, S3, TS, 1e-6 );
     aveq("chain-tf qv/S", 8, S3, qvS, 1e-6 );
+    aveq("chain-tf qutr/duqu", 8, S3, ES, 1e-6 );
 }
 
 
@@ -337,7 +344,7 @@ static void duqu() {
     double Q_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
     double v_ident[3] = {0};
     double p0[3];
-    rand_tf(  H.data, T.data );
+    rand_tf( NULL, H.data, T.data );
     aa_vrand( 3, p0 );
 
     //double q[4], v[3], p0[3];
