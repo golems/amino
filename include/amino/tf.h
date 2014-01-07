@@ -138,6 +138,8 @@ typedef struct aa_tf_qv {
 } aa_tf_qv_t;
 
 
+
+/** Dual Quaternion */
 typedef struct aa_tf_duqu {
     union {
         struct {
@@ -148,6 +150,28 @@ typedef struct aa_tf_duqu {
     };
 } aa_tf_duqu_t;
 
+
+/** Spatial velocity */
+struct aa_tf_dx {
+    union {
+        struct {
+            double dv[3];      ///< translational velocity
+            double omega[3];   ///< rotational velocity
+        };
+        double data[6];
+    };
+};
+
+/** Transform and spatial velocity */
+struct aa_tf_qv_dx {
+    union {
+        struct {
+            struct aa_tf_qv tf; ///< transform
+            struct aa_tf_dx dx; ///< velocity
+        };
+        double data[13];
+    };
+};
 
 /// index of dual quaternion real part
 #define AA_TF_DUQU_REAL 0
