@@ -170,6 +170,19 @@ void *aa_mem_region_tmpalloc( aa_mem_region_t *region, size_t size ) {
     return region->head;
 }
 
+AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size )
+{
+    void *old_ptr = region->head;
+    size_t old_size = aa_mem_region_topsize(region);
+    void *new_ptr = aa_mem_region_tmpalloc(region, size);
+
+    if( old_ptr != new_ptr ) {
+        memcpy( new_ptr, old_ptr, old_size );
+    }
+
+    return new_ptr;
+}
+
 void *aa_mem_region_alloc( aa_mem_region_t *region, size_t size ) {
     uint8_t *nhead = region->head + size;
     if( nhead > region->node->end ) {

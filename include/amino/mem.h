@@ -208,6 +208,9 @@ AA_API void *aa_mem_region_tmpalloc( aa_mem_region_t *region, size_t size );
  */
 AA_API void *aa_mem_region_alloc( aa_mem_region_t *region, size_t size );
 
+/** Temporary allocation, ensuring that there is enough room for size bytes.
+ */
+AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size );
 
 /** Duplicate size bytes at p, allocated out of region.
  */

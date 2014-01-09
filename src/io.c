@@ -54,3 +54,19 @@ AA_API ssize_t aa_read_realloc(int fd, void **buf,
     }
     return read( fd, ((uint8_t*)*buf)+off, n );
 }
+
+
+char *aa_io_getline( FILE *fin, struct aa_mem_region *reg )
+{
+    size_t n = 0;
+    do {
+        int i = fgetc(fin);
+        if( '\n' == i || EOF == i ) {
+            return n ? (char*)aa_mem_region_alloc( reg, n ) : NULL;
+        }
+        n++;
+        char *ptr = (char*)aa_mem_region_tmprealloc(reg, n);
+        ptr[n-1] = (char)i;
+    } while(1);
+}
+

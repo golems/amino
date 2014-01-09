@@ -978,6 +978,17 @@ void mem() {
 
         aa_mem_region_destroy(&reg);
     }
+    // topsize
+    {
+        aa_mem_region_t reg;
+        aa_mem_region_init(&reg, 16);
+        size_t old_n = aa_mem_region_topsize(&reg);
+        void *ptr = aa_mem_region_ptr(&reg);
+        assert( ptr == aa_mem_region_tmpalloc(&reg,old_n) );
+        assert( ptr == aa_mem_region_tmpalloc(&reg,old_n) );
+        assert( ptr != aa_mem_region_tmpalloc(&reg,old_n+1) );
+
+    }
     // region growth
     {
         aa_mem_region_t reg;
