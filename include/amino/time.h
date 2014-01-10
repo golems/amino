@@ -46,6 +46,8 @@
  * \file amino/time.h
  */
 
+#define AA_CLOCK CLOCK_MONOTONIC
+
 #include <errno.h>
 /// create a struct timespec with given elements
 static inline struct timespec
@@ -78,11 +80,11 @@ aa_tm_sub( const struct timespec a, const struct timespec b ) {
                             a.tv_nsec - b.tv_nsec );
 }
 
-/// gets current time via CLOCK_REALTIME
+/// gets current time via AA_CLOCK
 static inline struct timespec
 aa_tm_now() {
     struct timespec t;
-    clock_gettime( CLOCK_REALTIME, &t );
+    clock_gettime( AA_CLOCK, &t );
     return t;
 }
 
