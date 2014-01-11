@@ -103,11 +103,12 @@ module amino_la
 
   !! interface to inversion function (via lapack) in amino
   Interface
-     Function aa_la_inv( n, A ) result(info)
+     Function aa_la_inv( n, A ) result(info) &
+       bind(C,name="aa_la_inv")
        use ISO_C_BINDING
        integer(C_SIZE_T), intent(in), value :: n
        real(C_DOUBLE), intent(inout) :: A(n,n)
-       integer :: info
+       integer(C_INT) :: info
      End Function aa_la_inv
   End Interface
 
