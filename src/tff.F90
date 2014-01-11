@@ -2046,16 +2046,33 @@ contains
     dx(1:3) = t(5:7) - pxw
   end subroutine aa_tf_duqu_twist2vel
 
+  subroutine aa_tf_duqu_twist2diff( d, t, dd ) &
+       bind( C, name="aa_tf_duqu_twist2diff" )
+    real(C_DOUBLE), intent(in) :: d(8), t(8)
+    real(C_DOUBLE), intent(out) :: dd(8)
+    ! dd = twist * d / 2
+    call aa_tf_duqu_mul( t, d, dd )
+    dd = dd / 2d0
+  end subroutine aa_tf_duqu_twist2diff
+
+  subroutine aa_tf_duqu_diff2twist( d, dd, t ) &
+       bind( C, name="aa_tf_duqu_diff2twist" )
+    real(C_DOUBLE), intent(in) :: d(8), dd(8)
+    real(C_DOUBLE), intent(out) :: t(8)
+    real(C_DOUBLE) :: dx(6)
+    call aa_tf_duqu_diff2vel(d, dd, dx)
+    call aa_tf_duqu_vel2twist(d, dx, t)
+  end subroutine aa_tf_duqu_diff2twist
+
+
   subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
        bind( C, name="aa_tf_duqu_vel2diff" )
     real(C_DOUBLE), intent(in) :: d(8), dx(6)
     real(C_DOUBLE), intent(out) :: dd(8)
     real(C_DOUBLE), dimension(8) :: t
 
-    ! dd = twist * d / 2
     call aa_tf_duqu_vel2twist( d, dx, t )
-    call aa_tf_duqu_mul( t, d, dd )
-    dd = dd / 2d0
+    call aa_tf_duqu_twist2diff( d, t, dd )
 
     ! ! orientation
     ! call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
@@ -2185,9 +2202,9 @@ contains
     real(C_DOUBLE), intent(in) :: dd(8), d0(8)
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: d1(8)
-    real(C_DOUBLE) :: dx(6)
-    call aa_tf_duqu_diff2vel( d0, dd, dx )
-    call aa_tf_duqu_svel( d0, dx, dt, d1 );
+    real(C_DOUBLE) :: w(8)
+    call aa_tf_duqu_diff2twist( d0, dd, w )
+    call aa_tf_duqu_stwist( d0, w, dt, d1 );
   end subroutine aa_tf_duqu_sdiff
 
 #include "aa_tf_euler.f90"
