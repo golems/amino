@@ -703,13 +703,9 @@ contains
 
   end subroutine aa_tf_qmul
 
-
-  ! Matrix for left quaternion in multiply
-  pure subroutine aa_tf_qmatrix_l( q, m, ldm) &
-       bind( C, name="aa_tf_qmatrix_l" )
-    integer(C_SIZE_T), intent(in), value :: ldm
+  pure subroutine aa_tf_qmatrix_l( q, m )
     real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(ldm,4), intent(out) :: m
+    real(C_DOUBLE), dimension(:,:), intent(out) :: m
 
     m(1,1) = q(4)
     m(2,1) = q(3)
@@ -732,12 +728,19 @@ contains
     m(4,4) = q(4)
   end subroutine aa_tf_qmatrix_l
 
-  ! Matrix for right quaternion in multiply
-  pure subroutine aa_tf_qmatrix_r( q, m, ldm ) &
-       bind( C, name="aa_tf_qmatrix_r" )
+  ! Matrix for left quaternion in multiply
+  pure subroutine aa_tf_qmatrix_l_c( q, m, ldm) &
+       bind( C, name="aa_tf_qmatrix_l" )
     integer(C_SIZE_T), intent(in), value :: ldm
     real(C_DOUBLE), dimension(4), intent(in) :: q
     real(C_DOUBLE), dimension(ldm,4), intent(out) :: m
+    call aa_tf_qmatrix_l(q,m)
+  end subroutine aa_tf_qmatrix_l_c
+
+  ! Matrix for right quaternion in multiply
+  pure subroutine aa_tf_qmatrix_r(q, m)
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE), dimension(:,:), intent(out) :: m
 
     m(1,1) = q(4)
     m(2,1) = -q(3)
@@ -759,6 +762,14 @@ contains
     m(3,4) = q(3)
     m(4,4) = q(4)
   end subroutine aa_tf_qmatrix_r
+
+  pure subroutine aa_tf_qmatrix_r_c( q, m, ldm ) &
+       bind( C, name="aa_tf_qmatrix_r" )
+    integer(C_SIZE_T), intent(in), value :: ldm
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE), dimension(ldm,4), intent(out) :: m
+    call aa_tf_qmatrix_r(q,m)
+  end subroutine aa_tf_qmatrix_r_c
 
   !! Multiply conj(a) and b
   pure subroutine aa_tf_qcmul( a, b, q) &
@@ -1725,40 +1736,40 @@ contains
     e(DQ_DUAL) = t1 + t2
   end subroutine aa_tf_duqu_mul
 
-  pure subroutine aa_tf_duqu_matrix_l( S, m, ldm) &
+  pure subroutine aa_tf_duqu_matrix_l( S, m )
+    real(C_DOUBLE), dimension(8), intent(in) :: S
+    real(C_DOUBLE), dimension(:,:), intent(out) :: m
+    call aa_tf_qmatrix_l(S(DQ_REAL), M(1:4,1:4) )  ! upper left
+    M(1:4, 5:8) = real(0,C_DOUBLE)                 ! upper right
+    M(5:8, 5:8) = M(1:4,1:4)                       ! lower right
+    call aa_tf_qmatrix_l(S(DQ_DUAL), M(5:8, 1:4) ) ! lower left
+  end subroutine aa_tf_duqu_matrix_l
+
+  pure subroutine aa_tf_duqu_matrix_r( S, m )
+    real(C_DOUBLE), dimension(8), intent(in) :: S
+    real(C_DOUBLE), dimension(:,:), intent(out) :: m
+    call aa_tf_qmatrix_r(S(DQ_REAL), M(:,1:4))    ! upper left
+    M(1:4, 5:8) = real(0,C_DOUBLE)                ! upper right
+    M(5:8, 5:8) = M(1:4,1:4)                      ! lower right
+    call aa_tf_qmatrix_r(S(DQ_DUAL), M(5:8, 1:4)) ! lower left
+  end subroutine aa_tf_duqu_matrix_r
+
+
+  pure subroutine aa_tf_duqu_matrix_l_c( S, m, ldm ) &
        bind( C, name="aa_tf_duqu_matrix_l" )
     integer(C_SIZE_T), intent(in), value :: ldm
     real(C_DOUBLE), dimension(8), intent(in) :: S
     real(C_DOUBLE), dimension(ldm,8), intent(out) :: m
-    real(C_DOUBLE), dimension(4,4) :: D_L
+    call aa_tf_duqu_matrix_l(S,m)
+  end subroutine aa_tf_duqu_matrix_l_c
 
-    call aa_tf_qmatrix_l(S(DQ_REAL), M(:,1:4), ldm) ! upper left
-
-    M(1:4, 5:8) = real(0,C_DOUBLE) ! upper right
-
-    M(5:8, 5:8) = M(1:4,1:4) ! lower right
-
-    call aa_tf_qmatrix_l(S(DQ_DUAL), D_L, int(4,C_SIZE_T) )
-    M(5:8, 1:4) = D_L ! lower left
-
-  end subroutine aa_tf_duqu_matrix_l
-
-  pure subroutine aa_tf_duqu_matrix_r( S, m, ldm) &
+  pure subroutine aa_tf_duqu_matrix_r_c( S, m, ldm ) &
        bind( C, name="aa_tf_duqu_matrix_r" )
     integer(C_SIZE_T), intent(in), value :: ldm
     real(C_DOUBLE), dimension(8), intent(in) :: S
     real(C_DOUBLE), dimension(ldm,8), intent(out) :: m
-    real(C_DOUBLE), dimension(4,4) :: D_R
-
-    call aa_tf_qmatrix_r(S(DQ_REAL), M(:,1:4), ldm) ! upper left
-
-    M(1:4, 5:8) = real(0,C_DOUBLE) ! upper right
-
-    M(5:8, 5:8) = M(1:4,1:4) ! lower right
-
-    call aa_tf_qmatrix_r(S(DQ_DUAL), D_R, int(4,C_SIZE_T) )
-    M(5:8, 1:4) = D_R ! lower left
-  end subroutine aa_tf_duqu_matrix_r
+    call aa_tf_duqu_matrix_r(S,m)
+  end subroutine aa_tf_duqu_matrix_r_c
 
 
   !> Dual quaternion conjugate
