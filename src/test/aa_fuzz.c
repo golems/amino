@@ -214,8 +214,8 @@ static void quat() {
     {
         double Ql[16], Qr[16];
         double y0[4], y1[4], y2[4];
-        aa_tf_qmatrix_l(q1, Ql);
-        aa_tf_qmatrix_r(q2, Qr);
+        aa_tf_qmatrix_l(q1, Ql, 4);
+        aa_tf_qmatrix_r(q2, Qr, 4);
         aa_tf_qmul(q1,q2, y0);
         cblas_dgemv( CblasColMajor, CblasNoTrans, 4, 4,
                      1.0, Ql, 4,
@@ -346,6 +346,31 @@ static void duqu() {
     double p0[3];
     rand_tf( NULL, H.data, T.data );
     aa_vrand( 3, p0 );
+
+    // mull
+    {
+        double A[8], B[8];
+        double A_L[8*8], B_R[8*8];
+        double C[8], Cl[8], Cr[8];
+        aa_vrand(8,A);
+        aa_vrand(8,B);
+        aa_tf_duqu_mul(A,B,C);
+
+        aa_tf_duqu_matrix_l(A, A_L, 8);
+        cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
+                     1.0, A_L, 8,
+                     B, 1,
+                     0, Cl, 1 );
+
+        aveq( "duqu-mul-L", 8, C, Cl, 1e-6 );
+
+        aa_tf_duqu_matrix_r(B, B_R, 8);
+        cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
+                     1.0, B_R, 8,
+                     A, 1,
+                     0, Cr, 1 );
+        aveq( "duqu-mul-R", 8, C, Cr, 1e-6 );
+    }
 
     //double q[4], v[3], p0[3];
     //aa_vrand( 3, v );

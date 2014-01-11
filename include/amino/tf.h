@@ -572,12 +572,12 @@ AA_API void aa_tf_quat_davenport
 /** Construct matrix for left quaternion multiply
  * q*p = M*p
  */
-AA_API void aa_tf_qmatrix_l( const double *q, double *M );
+AA_API void aa_tf_qmatrix_l( const double *q, double *M, size_t ldm );
 
 /** Construct matrix for right quaternion multiply
  * p*q = M*p
  */
-AA_API void aa_tf_qmatrix_r( const double *q, double *M );
+AA_API void aa_tf_qmatrix_r( const double *q, double *M, size_t ldm );
 
 /*********/
 /* Axang */
@@ -762,6 +762,16 @@ AA_API void aa_tf_duqu_smul( const double d1[AA_RESTRICT 8], const double d2[AA_
 /** Dual quaternion multiplication */
 AA_API void aa_tf_duqu_mul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
                             double d3[AA_RESTRICT 8] );
+
+/** Construct matrix for left dual quaternion multiply
+ * q*p = M*p
+ */
+AA_API void aa_tf_duqu_matrix_l( const double *q, double *M, size_t ldm );
+
+/** Construct matrix for right dual quaternion multiply
+ * p*q = M*p
+ */
+AA_API void aa_tf_duqu_matrix_r( const double *q, double *M, size_t ldm );
 
 /** Dual quaternion multiply conjugate of d1 by d2 */
 AA_API void aa_tf_duqu_cmul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
