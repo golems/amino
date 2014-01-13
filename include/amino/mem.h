@@ -440,4 +440,54 @@ static inline void aa_fzero( double *p, size_t n ) {
          aa_$_set_ar_i < sizeof(var)/sizeof(var[0]);            \
          aa_$_set_ar_i ++ ) var[aa_$_set_ar_i] = val;
 
+
+/**************/
+/* Bit Array */
+/**************/
+
+typedef int aa_bits;
+
+#define AA_BITS_BITS (8*sizeof(aa_bits))
+
+static inline size_t
+aa_bits_size( size_t n )
+{
+    size_t words = n / AA_BITS_BITS;
+    if( words*sizeof(aa_bits)*8 < n ) words++;
+    return words;
+}
+
+#define AA_BITS_JK( i, j, k )                 \
+    j = (i) / AA_BITS_BITS;                   \
+    k = (i) - (j)*AA_BITS_BITS;
+
+static inline int
+aa_bits_get( aa_bits *b, size_t i )
+{
+    size_t j,k;
+    AA_BITS_JK(i,j,k);
+
+    return (b[j] >> k) & 0x1;
+}
+
+
+static inline int
+aa_bits_getn( aa_bits *b, size_t n, size_t i )
+{
+    if( aa_bits_size(i) > n ) return 0;
+    else return aa_bits_get( b, i );
+}
+
+static inline void
+aa_bits_set( aa_bits *b, size_t i, int val )
+{
+    size_t j,k;
+    AA_BITS_JK(i,j,k);
+    if( val ) {
+        b[j] |=  0x1<<k;
+    } else {
+        b[j] &= ~ ( 0x1<<k );
+    }
+}
+
 #endif //AA_MEM_H
