@@ -626,6 +626,10 @@ void aa_tf_qutr_mul( const double a[7], const double b[7], double c[7] ) ;
 void aa_tf_qutr_diff2vel
 ( const double e[7], const double de[7], double dx[6] );
 
+/** Quaternion-translation spatial velocity to derivative */
+void aa_tf_qutr_diff2vel
+( const double e[7], const double dx[6], double de[7] );
+
 /** Integrate a quaternion-translation */
 void aa_tf_qutr_svel
 ( const double e0[7], const double dx[6], double dt, double e1[7] );

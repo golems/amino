@@ -119,6 +119,15 @@ subroutine aa_tf_qutr_diff2vel( e, de, dx ) &
   dx(1:3) = de(QUTR_V)
 end subroutine aa_tf_qutr_diff2vel
 
+
+subroutine aa_tf_qutr_vel2diff( e, dx, de ) &
+     bind( C, name="aa_tf_qutr_vel2diff" )
+  real(C_DOUBLE), intent(in) :: e(7), dx(6)
+  real(C_DOUBLE), intent(out) :: de(7)
+  call aa_tf_qvel2diff( e(QUTR_Q), dx(4:6), de(QUTR_Q) )
+  de(QUTR_V) =  dx(1:3)
+end subroutine aa_tf_qutr_vel2diff
+
 subroutine aa_tf_qutr_sdiff( e0, de, dt, e1 ) &
      bind( C, name="aa_tf_qutr_sdiff" )
   real(C_DOUBLE), intent(in) :: de(7), e0(7)
