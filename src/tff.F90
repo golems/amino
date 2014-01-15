@@ -983,10 +983,18 @@ contains
        bind( C, name="aa_tf_axang2quat" )
     real(C_DOUBLE), Dimension(4), intent(out) :: q
     real(C_DOUBLE), Dimension(4), intent(in) :: a
-    real(C_DOUBLE) :: rv(3)
-    rv = a(1:3) * a(4)
-    call aa_tf_rotvec2quat(rv, q)
+    call aa_tf_axang2quat2(a(1:3), a(4), q)
   end Subroutine aa_tf_axang2quat
+
+  Subroutine aa_tf_axang2quat2( axis, angle, q ) &
+       bind( C, name="aa_tf_axang2quat2" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: q
+    real(C_DOUBLE), Dimension(3), intent(in) :: axis
+    real(C_DOUBLE), intent(in), value :: angle
+    real(C_DOUBLE) :: rv(3)
+    rv = axis * angle
+    call aa_tf_rotvec2quat(rv, q)
+  end Subroutine aa_tf_axang2quat2
 
   Subroutine aa_tf_quat2rotvec( q, rv ) &
        bind( C, name="aa_tf_quat2rotvec" )
