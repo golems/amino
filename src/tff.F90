@@ -872,20 +872,11 @@ contains
        bind( C, name="aa_tf_qexp" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
     real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vv, vnorm, ew, sc, c
+    real(C_DOUBLE) :: sc, c, ew
     ew = exp(q(W_INDEX))
-    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    ! Avoid division by very small vnorm
-    if( vv < sqrt(epsilon(vv)) ) then
-       sc = aa_tf_sinc_series2(vv) ! approx. 1
-       c = aa_tf_cos_series2(vv)   ! approx. 1
-    else
-       vnorm = sqrt(vv)
-       sc = sin(vnorm)/vnorm
-       c = cos(vnorm)
-    end if
-    r(W_INDEX) = ew * c
-    r(XYZ_INDEX) = ew * sc * q(XYZ_INDEX)
+    call aa_tf_sinccos2( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)), sc, c)
+    r(W_INDEX) = ew*c
+    r(XYZ_INDEX) = ew*sc * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
 
   pure subroutine aa_tf_qln( q, r ) &
@@ -940,13 +931,11 @@ contains
        bind( C, name="aa_tf_rotvec2quat" )
     real(C_DOUBLE), Dimension(4), intent(out) :: q
     real(C_DOUBLE), Dimension(3), intent(in) :: a
-    real(C_DOUBLE) :: t(4)
-    ! q = normalize( exp( theta/2 * u ) )
-    t(XYZ_INDEX) = a/2d0
-    t(W_INDEX) = 0d0
-    call aa_tf_qexp( t, q )
-    call aa_tf_qnormalize(q) ! not required, but helps stability
-    !call aa_tf_qminimize(q)
+    real(C_DOUBLE) :: sc,c, aa
+    aa = dot_product(a,a)
+    call aa_tf_sinccos2( aa/4, sc, c )
+    q(W_INDEX) = c
+    q(XYZ_INDEX) = sc/2 * a(XYZ_INDEX)
   end Subroutine aa_tf_rotvec2quat
 
   Subroutine aa_tf_xangle2quat( theta, q ) &
@@ -991,9 +980,10 @@ contains
     real(C_DOUBLE), Dimension(4), intent(out) :: q
     real(C_DOUBLE), Dimension(3), intent(in) :: axis
     real(C_DOUBLE), intent(in), value :: angle
-    real(C_DOUBLE) :: rv(3)
-    rv = axis * angle
-    call aa_tf_rotvec2quat(rv, q)
+    real(C_DOUBLE) :: sc,c
+    call aa_tf_sinccos( angle/2, sc, c )
+    q(W_INDEX) = c
+    q(XYZ_INDEX) = angle/2*sc*axis
   end Subroutine aa_tf_axang2quat2
 
   Subroutine aa_tf_quat2rotvec( q, rv ) &
@@ -1468,6 +1458,33 @@ contains
   end function aa_tf_horner5
 
 
+  pure subroutine aa_tf_sinccos( theta, sc, c )
+    real(C_DOUBLE), intent(out) :: sc, c
+    real(C_DOUBLE), intent(in)  :: theta
+    ! Avoid division by very small theta
+    if( theta < sqrt(sqrt(epsilon(theta))) ) then
+       sc = aa_tf_sinc_series(theta) ! approx. 1
+       c = aa_tf_cos_series(theta)   ! approx. 1
+    else
+       sc = sin(theta)/theta
+       c = cos(theta)
+    end if
+  end subroutine aa_tf_sinccos
+
+  pure subroutine aa_tf_sinccos2( theta2, sc, c )
+    real(C_DOUBLE), intent(out) :: sc, c
+    real(C_DOUBLE), intent(in)  :: theta2
+    real(C_DOUBLE)  :: theta
+    ! Avoid division by very small theta
+    if( theta2 < sqrt(epsilon(theta2)) ) then
+       sc = aa_tf_sinc_series2(theta2) ! approx. 1
+       c = aa_tf_cos_series2(theta2)   ! approx. 1
+    else
+       theta = sqrt(theta2)
+       sc = sin(theta)/theta
+       c = cos(theta)
+    end if
+  end subroutine aa_tf_sinccos2
 
   pure function aa_tf_sinc_series2( theta2 ) result(s)
     real(C_DOUBLE), value :: theta2
@@ -1496,7 +1513,7 @@ contains
   pure function aa_tf_cos_series( theta ) result(s)
     real(C_DOUBLE), value :: theta
     real(C_DOUBLE) :: s
-    s = aa_tf_cos_series2(theta)
+    s = aa_tf_cos_series2(theta**2)
   end function aa_tf_cos_series
 
 
