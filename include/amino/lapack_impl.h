@@ -635,6 +635,60 @@ AA_API void AA_LAPACK_NAME(gels)
   AA_TYPE *A, const int *LDA, AA_TYPE *B, const int *LDB, AA_TYPE *WORK,
   const int *LWORK, int *INFO );
 
+/*
+*  DPOTRF computes the Cholesky factorization of a real symmetric
+*  positive definite matrix A.
+*
+*  The factorization has the form
+*     \f[ A = U^T * U \f]  if UPLO = 'U'
+*       or
+*     \f[ A = L  * L^T \f]  if UPLO = 'L'
+*
+*  where U is an upper triangular matrix and L is lower triangular.
+*
+*  This is the block version of the algorithm, calling Level 3 BLAS.
+*
+*
+*  \param[in] UPLO
+*          = 'U':  Upper triangle of A is stored;
+*          = 'L':  Lower triangle of A is stored.
+*
+*  \param[in] N
+*          The order of the matrix A.  N >= 0.
+*
+*  \param[inout] A
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          N-by-N upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading N-by-N lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*          On exit, if INFO = 0, the factor U or L from the Cholesky
+*          factorization A = U**T*U or A = L*L**T.
+*
+*  \param[in] LDA
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  \param[out] INFO
+*        - = 0:  successful exit
+*        - < 0:  if INFO = -i, the i-th argument had an illegal value
+*        - > 0:  if INFO = i, the leading minor of order i is not
+*                positive definite, and the factorization could not be
+*                completed.
+*/
+
+AA_API void AA_LAPACK_NAME(potrf)
+( const char UPLO[1], const int *N,
+  AA_TYPE *A, const int *LDA,
+  int *INFO );
+
+AA_API void AA_LAPACK_NAME(potrs)
+( const char UPLO[1], const int *N, const int *nrhs,
+  AA_TYPE *A, const int *LDA,
+  AA_TYPE *B, const int *LDB,
+  int *INFO );
+
 /** Copies all or part of a two-dimensional matrix A to another
  *  matrix B.
  *
