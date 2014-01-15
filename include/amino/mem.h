@@ -449,12 +449,13 @@ typedef int aa_bits;
 
 #define AA_BITS_BITS (8*sizeof(aa_bits))
 
+/** Size of bit vector in octets */
 static inline size_t
 aa_bits_size( size_t n )
 {
     size_t words = n / AA_BITS_BITS;
     if( words*sizeof(aa_bits)*8 < n ) words++;
-    return words;
+    return words*sizeof(aa_bits);
 }
 
 #define AA_BITS_JK( i, j, k )                 \
