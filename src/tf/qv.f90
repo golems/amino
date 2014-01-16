@@ -94,6 +94,15 @@ subroutine aa_tf_qutr_mul( a, b, c ) &
   call aa_tf_qutr_tf( a, b(QUTR_V), c(QUTR_V) )
 end subroutine aa_tf_qutr_mul
 
+subroutine aa_tf_qutr_mulnorm( a, b, c ) &
+     bind( C, name="aa_tf_qutr_mulnorm" )
+  real(C_DOUBLE), intent(out) :: c(7)
+  real(C_DOUBLE), intent(in) :: a(7), b(7)
+  call aa_tf_qmulnorm( a(QUTR_Q), b(QUTR_Q), c(QUTR_Q) )
+  call aa_tf_qutr_tf( a, b(QUTR_V), c(QUTR_V) )
+end subroutine aa_tf_qutr_mulnorm
+
+
 subroutine aa_tf_qutr_conj( a, b ) &
      bind( C, name="aa_tf_qutr_conj" )
   real(C_DOUBLE), intent(out) :: b(7)

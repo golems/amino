@@ -411,6 +411,11 @@ AA_API void aa_tf_qmul( const double a[AA_RESTRICT 4],
                         const double b[AA_RESTRICT 4],
                         double c[AA_RESTRICT 4] );
 
+/** Quaternion multiplication and normalize. */
+AA_API void aa_tf_qmulnorm( const double a[AA_RESTRICT 4],
+                            const double b[AA_RESTRICT 4],
+                            double c[AA_RESTRICT 4] );
+
 /** Quaternion multiplication. */
 AA_API void aa_tf_qmul_qv( const double q[AA_RESTRICT 4],
                            const double v[AA_RESTRICT 3],
@@ -622,10 +627,11 @@ void aa_tf_qutr2tfmat( const double e[7], double T[12] );
 /// dual quaternion to quaternion-translation
 void aa_tf_duqu2qutr( const double s[8], double e[7] );
 
-
 /// quaternion-translation multiply
 void aa_tf_qutr_mul( const double a[7], const double b[7], double c[7] ) ;
 
+/// quaternion-translation multiply and normalize
+void aa_tf_qutr_mulnorm( const double a[7], const double b[7], double c[7] ) ;
 
 /// quaternion-translation conjugate
 void aa_tf_qutr_conj( const double a[7], double c[7] ) ;

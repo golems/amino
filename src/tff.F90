@@ -703,10 +703,10 @@ contains
     ! q(3) =  - (-a(1)*b(2)) + a(3)*b(4) + (   a(4)*b(3)  - a(2)*b(1) )
     ! q(4) =  -   a(2)*b(2)  + a(4)*b(4) + ( (-a(3)*b(3)) - a(1)*b(1) )
 
-    q(1) =    a(1)*b(4) + a(2)*b(3) + a(4)*b(1) - a(3)*b(2)
-    q(2) =    a(3)*b(1) + a(4)*b(2) + a(2)*b(4) - a(1)*b(3)
-    q(3) =    a(4)*b(3) + a(3)*b(4) + a(1)*b(2) - a(2)*b(1)
-    q(4) = - (a(2)*b(2) + a(1)*b(1) + a(3)*b(3) - a(4)*b(4))
+    q(1) =    (a(1)*b(4) + (a(2)*b(3)) + a(4)*b(1) - a(3)*b(2))
+    q(2) =    (a(3)*b(1) + (a(4)*b(2)) + a(2)*b(4) - a(1)*b(3))
+    q(3) =    (a(4)*b(3) + (a(3)*b(4)) + a(1)*b(2) - a(2)*b(1))
+    q(4) = - ((a(2)*b(2) + (a(1)*b(1)) + a(3)*b(3) - a(4)*b(4)))
 
 
     !q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
@@ -714,6 +714,14 @@ contains
     !q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
 
   end subroutine aa_tf_qmul
+
+  pure subroutine aa_tf_qmulnorm( a, b, q) &
+       bind( C, name="aa_tf_qmulnorm" )
+    real(C_DOUBLE), dimension(4), intent(out) :: q
+    real(C_DOUBLE), dimension(4), intent(in) :: a,b
+    call aa_tf_qmul(a,b,q)
+    call aa_tf_qnormalize(q)
+  end subroutine aa_tf_qmulnorm
 
   pure subroutine aa_tf_qmatrix_l( q, m )
     real(C_DOUBLE), dimension(4), intent(in) :: q
