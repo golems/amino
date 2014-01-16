@@ -134,3 +134,39 @@ size_t aa_io_fread_matrix_fix( FILE *fin, size_t m, size_t n,
 
     return cnt;
 }
+
+ssize_t aa_io_fread_matrix_heap( FILE *fin, size_t n,
+                                 double **A, size_t *elts )
+{
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    if( NULL == *A || 0 == *elts ) {
+        *elts = n;
+        *A = (double*) malloc( *elts * sizeof(double) );
+    }
+
+    size_t lineno = 0;
+    size_t read_elts = 0;
+    while( !feof(fin) ) {
+        lineno++;
+        char *line = aa_io_getline(fin, reg);
+        if( NULL == line ) continue;
+
+        char *line2 = aa_io_skipblank(line);
+        if('\0' == *line2 || AA_IO_ISCOMMENT(*line2)) continue;
+
+        // maybe realloc
+        if( *elts < read_elts + n ) {
+            *elts *= 2;
+            *A = (double*) realloc(*A, *elts * sizeof(double) );
+        }
+
+        // parse
+        size_t i = aa_io_parsevector( line2, n, (*A)+read_elts, 1, NULL );
+        if( i != n ) return -(ssize_t)lineno;
+
+        read_elts += i;
+
+        aa_mem_region_pop(reg, line);
+    }
+    return (ssize_t)(read_elts / n);
+}

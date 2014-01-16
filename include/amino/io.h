@@ -67,4 +67,19 @@ size_t aa_io_getvector( FILE *fin, struct aa_mem_region *reg, size_t n, double *
 size_t aa_io_fread_matrix_fix( FILE *fin, size_t m, size_t n,
                                double *A, size_t lda );
 
+/** Read a fixed size matrix from file.
+ *
+ * Each line of the file becomes a column of the matrix.
+ *
+ *  On success, returns number of matrix columns. On error, returns
+ *  the negative of the erring line.
+ *
+ *
+ * @param n, number of items per line
+ * @param A, pointer to matrix buffer
+ * @param elts, pointer to number of elements in A
+ */
+ssize_t aa_io_fread_matrix_heap( FILE *fin, size_t n,
+                                 double **A, size_t *elts );
+
 #endif //AMINO_IO_H
