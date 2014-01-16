@@ -1000,10 +1000,8 @@ contains
     real(C_DOUBLE), Dimension(4), intent(out) :: q
     real(C_DOUBLE), Dimension(3), intent(in) :: axis
     real(C_DOUBLE), intent(in), value :: angle
-    real(C_DOUBLE) :: sc,c
-    call aa_tf_sinccos( angle/2, sc, c )
-    q(W_INDEX) = c
-    q(XYZ_INDEX) = angle/2*sc*axis
+    q(W_INDEX) = cos(angle/2)
+    q(XYZ_INDEX) = sin(angle/2)*axis
   end Subroutine aa_tf_axang2quat2
 
   Subroutine aa_tf_quat2rotvec( q, rv ) &
