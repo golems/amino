@@ -136,8 +136,11 @@ size_t aa_io_fread_matrix_fix( FILE *fin, size_t m, size_t n,
 }
 
 ssize_t aa_io_fread_matrix_heap( FILE *fin, size_t n,
-                                 double **A, size_t *elts )
+                                 double **A, size_t *_elts )
 {
+    size_t tmp_elts = 0;
+    size_t *elts = _elts ? _elts : &tmp_elts;
+
     struct aa_mem_region *reg = aa_mem_region_local_get();
     if( NULL == *A || 0 == *elts ) {
         *elts = n;
