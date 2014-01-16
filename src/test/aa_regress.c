@@ -66,7 +66,7 @@ static void rotmat_axang() {
 
 static void slerp() {
     double q[4], q1[4], u;
-    aa_test_qurand(q);
+    aa_tf_qurand(q);
     u = aa_frand();
     aa_tf_qslerp(u, q, q, q1);
     aveq( "slerp-equiv", 4, q1, q, 1e-8 );

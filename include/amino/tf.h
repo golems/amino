@@ -562,11 +562,11 @@ AA_API void aa_tf_zangle2quat( double theta_z, double q[AA_RESTRICT 4] );
 
 
 AA_API void aa_tf_quat_davenport_matrix
-( size_t n, const double *w, const double *q, double *M );
+( size_t n, const double *w, const double *q, size_t ldqq, double *M );
 
 
 AA_API void aa_tf_quat_davenport
-( size_t n, const double *w, const double *q, double *p );
+( size_t n, const double *w, const double *qq, size_t ldqq, double *p );
 
 
 /** Construct matrix for left quaternion multiply
@@ -578,6 +578,10 @@ AA_API void aa_tf_qmatrix_l( const double *q, double *M, size_t ldm );
  * p*q = M*p
  */
 AA_API void aa_tf_qmatrix_r( const double *q, double *M, size_t ldm );
+
+
+/** Generate random unit quaternion */
+void aa_tf_qurand( double q[4] );
 
 /*********/
 /* Axang */
@@ -647,6 +651,13 @@ void aa_tf_qutr_svel
 /** Integrate a quaternion-translation */
 void aa_tf_qutr_sdiff
 ( const double e0[7], const double de[7], double dt, double e1[7] );
+
+/** Weighted average transform */
+void aa_tf_qutr_wavg
+( size_t n, double *w, const double *EE, size_t ldee, double *a );
+
+/** Generate random transform */
+void aa_tf_qutr_rand( double E[7] );
 
 /***************/
 /* Conversions */

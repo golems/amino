@@ -123,6 +123,23 @@ subroutine aa_tf_qutr_cmul( a, b, c ) &
   call aa_tf_qutr_mul(ac, b, c)
 end subroutine aa_tf_qutr_cmul
 
+
+subroutine aa_tf_qutr_wavg( n, w, EE, ldee,  a ) &
+     bind( C, name="aa_tf_qutr_wavg" )
+  integer(C_SIZE_T), intent(in), value :: n, ldee
+  real(C_DOUBLE), intent(in) :: EE(ldee,n), w(n)
+  real(C_DOUBLE), intent(out) :: a(7)
+  integer(C_SIZE_T) :: i
+  !! average translation, davenport q method
+  call aa_tf_quat_davenport( n, w, EE, ldee, a(1:4) )
+  !! TODO: Should we consider coupling between orientation and translation?
+  !! TODO: Kahan summation
+  a(5:7)=real(0,C_DOUBLE)
+  do i=1,n
+     a(5:7) = a(5:7) + w(i) * EE(5:7,i)
+  end do
+end subroutine aa_tf_qutr_wavg
+
 !!!!!!!!!!!!!!
 !! CALCULUS !!
 !!!!!!!!!!!!!!

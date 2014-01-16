@@ -448,10 +448,10 @@ void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
 /* } */
 
 AA_API void aa_tf_quat_davenport
-( size_t n, const double *w, const double *q, double *p )
+( size_t n, const double *w, const double *qq, size_t ldqq, double *p )
 {
     double M[16];
-    aa_tf_quat_davenport_matrix( n,w,q,M);
+    aa_tf_quat_davenport_matrix( n,w,qq,ldqq,M);
     double wr[4]={0}, wi[4]={0}, Vr[16];
     aa_la_d_eev( 4, M, 4, wr, wi,
                  NULL, 0, Vr, 4 );
@@ -462,4 +462,18 @@ AA_API void aa_tf_quat_davenport
 
     size_t i = aa_fmaxloc( 4, wr );
     AA_MEM_CPY( p, Vr+4*i, 4 );
+}
+
+
+void aa_tf_qurand( double q[4] ) {
+    aa_vrand(4, q);
+    for( size_t i = 0; i < 4; i ++ ) q[i] -= 0.5;
+    aa_tf_qnormalize(q);
+}
+
+void aa_tf_qutr_rand( double E[7] )
+{
+    aa_vrand(7, E);
+    for( size_t i = 0; i < 7; i ++ ) E[i] -= 0.5;
+    aa_tf_qnormalize(E);
 }

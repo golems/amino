@@ -80,6 +80,18 @@ module amino_tf
      end subroutine aa_tf_rotmat2axang
   end interface aa_tf_rotmat2axang
 
+
+  interface aa_tf_quat_davenport
+     subroutine aa_tf_quat_davenport( n, w, qq, ldqq, p ) &
+          bind(C,name="aa_tf_quat_davenport")
+       use ISO_C_BINDING
+       integer(C_SIZE_T), intent(in), value :: n, ldqq
+       real(C_DOUBLE), intent(in) :: w(n), qq(ldqq,n)
+       real(C_DOUBLE), intent(out) :: p(4)
+     end subroutine aa_tf_quat_davenport
+  end interface aa_tf_quat_davenport
+
+
   type aa_tf_dual_t
      real(C_DOUBLE) :: r
      real(C_DOUBLE) :: d
@@ -1569,11 +1581,11 @@ contains
     call aa_tf_qsvel( q0, w, dt, q1 );
   end subroutine aa_tf_qsdiff
 
-  subroutine aa_tf_quat_davenport_matrix( n, w, q,  M ) &
+  subroutine aa_tf_quat_davenport_matrix( n, w, qq, ldqq,  M ) &
        bind( C, name="aa_tf_quat_davenport_matrix" )
 
-    integer(C_SIZE_T), intent(in), value :: n
-    real(C_DOUBLE), intent(in) :: w(n), q(4,n)
+    integer(C_SIZE_T), intent(in), value :: n, ldqq
+    real(C_DOUBLE), intent(in) :: w(n), qq(ldqq,n)
     real(C_DOUBLE), intent(out) :: M(4,4)
     real(C_DOUBLE) :: tmp(4,4),  p(4,1)
 
@@ -1581,7 +1593,7 @@ contains
     ! see: F. Landis Markley, et. al. "Averaging Quaternions"
     M = real(0.0,C_DOUBLE)
     do i=1,n
-       p(:,1) = q(:,i)
+       p(:,1) = qq(1:4,i)
        tmp = matmul(p, transpose(p))
        M = M + w(i) * tmp
     end do

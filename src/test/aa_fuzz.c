@@ -53,13 +53,10 @@ void rand_tf( double _E[7], double S[8],  double T[12] ) {
     double tmp[7];
     double *E = _E ? _E : tmp;
 
-    aa_test_qurand( E+AA_TF_QUTR_Q );
-    aa_vrand( 3, E+AA_TF_QUTR_V );
+    aa_tf_qutr_rand( E );
 
     if( S ) aa_tf_qutr2duqu( E, S );
     if( T ) aa_tf_duqu2tfmat( S, T );
-
-
 }
 
 static void rotvec() {
@@ -194,8 +191,8 @@ static void chain() {
 
 static void quat() {
     double q1[4], q2[4], u;
-    aa_test_qurand( q1 );
-    aa_test_qurand( q2 );
+    aa_tf_qurand( q1 );
+    aa_tf_qurand( q2 );
     u = aa_frand();
 
     {
@@ -236,7 +233,7 @@ static void quat() {
         memcpy( qq, q1, sizeof(q1) );
         memcpy( qq+4, q2, sizeof(q2) );
         double w[2] = {.5,.5};
-        aa_tf_quat_davenport( 2, w, qq, p );
+        aa_tf_quat_davenport( 2, w, qq, 4, p );
         aa_tf_qslerp( .5, q1, q2, s );
         aa_tf_qminimize( p );
         aa_tf_qminimize( s );
@@ -375,7 +372,7 @@ static void duqu() {
 
     //double q[4], v[3], p0[3];
     //aa_vrand( 3, v );
-    //aa_test_qurand( q );
+    //aa_tf_qurand( q );
     //AA_MEM_SET( v, 0, 3 );
 
     // tfmat
@@ -596,7 +593,7 @@ void rel_d() {
 static void slerp() {
     double q[4], qy[4], u, du;
     double dq1[4], dq2[4], dqy[4];
-    aa_test_qurand(q);
+    aa_tf_qurand(q);
     u = aa_frand();
     du = aa_frand();
     aa_vrand(4,dq1);
@@ -639,7 +636,7 @@ static void theta2quat() {
 
 static void rotmat() {
     double q[4], R[9], w[3], dR[9], dRw[3];
-    aa_test_qurand( q );
+    aa_tf_qurand( q );
     aa_vrand( 3, w );
     aa_tf_quat2rotmat(q, R);
     aa_tf_rotmat_vel2diff( R, w, dR );
@@ -669,7 +666,7 @@ static void integrate() {
     double *v = e+AA_TF_QUTR_V;
     double *q = e+AA_TF_QUTR_Q;
     aa_vrand( 3, v );
-    aa_test_qurand( q );
+    aa_tf_qurand( q );
     aa_vrand( 6, dx );
     double dt = aa_frand() / 100;
 

@@ -49,9 +49,6 @@ void afeq( double a, double b, double tol ) ;
 void aveq( const char * name, size_t n, const double *a, const double *b, double tol ) ;
 void aneq( double a, double b, double tol ) ;
 
-/* Random unit quaternion */
-void aa_test_qurand( double q[4] );
-
 /* Set limits*/
 void aa_test_ulimit( void );
 

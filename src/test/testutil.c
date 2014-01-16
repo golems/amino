@@ -72,12 +72,6 @@ void aneq( double a, double b, double tol ) {
     assert( !aa_feq(a,b,tol) );
 }
 
-void aa_test_qurand( double q[4] ) {
-    aa_vrand(4, q);
-    for( size_t i = 0; i < 4; i ++ ) q[i] -= 0.5;
-    aa_tf_qnormalize(q);
-}
-
 
 void aa_test_ulimit( void ) {
     // some limits because
