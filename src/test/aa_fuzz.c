@@ -340,11 +340,12 @@ static void duqu() {
     // random tf
     aa_tf_tfmat_t T;
     aa_tf_duqu_t H;
+    double E[7];
     double S_ident[8] = AA_TF_DUQU_IDENT_INITIALIZER;
     double Q_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
     double v_ident[3] = {0};
     double p0[3];
-    rand_tf( NULL, H.data, T.data );
+    rand_tf( E, H.data, T.data );
     aa_vrand( 3, p0 );
 
     // mull
@@ -407,14 +408,23 @@ static void duqu() {
     {
 
         double S_conj[8];
-        double E_conj[7];
+        double qv_conj[7], E_conj[7];
         double SSc[8], EEc[7];
+        double Scv[3];
 
         aa_tf_duqu_conj(H.data, S_conj);
-        aa_tf_qv_conj(H.real.data, T.v.data, E_conj, E_conj+4);
+        aa_tf_qv_conj(H.real.data, T.v.data, qv_conj, qv_conj+4);
+        aa_tf_qutr_conj(E, E_conj);
+
+        aa_tf_duqu_trans(S_conj, Scv);
+
+        aveq( "duqu/qutr conj q", 4, S_conj, E_conj, 1e-6 );
+        aveq( "duqu/qv conj q", 4, S_conj, qv_conj, 1e-6 );
+        aveq( "duqu/qutr conj v", 3, Scv, E_conj+4, 1e-6 );
+        aveq( "duqu/qv conj v", 3, Scv, qv_conj+4, 1e-6 );
 
         aa_tf_duqu_mul( H.data, S_conj, SSc );
-        aa_tf_qv_chain( H.real.data, T.v.data, E_conj, E_conj+4, EEc, EEc+4 );
+        aa_tf_qv_chain( H.real.data, T.v.data, qv_conj, qv_conj+4, EEc, EEc+4 );
 
         aveq( "duqu conj", 8, SSc, S_ident, 1e-6 );
         aveq( "qv conj q", 4, EEc, Q_ident, 1e-6 );
@@ -714,6 +724,35 @@ void qvmul(void)  {
     aa_tf_qmul_vq( v, q, r1);
     aa_tf_qmul(  v, q, r2);
     aveq( "qmul_v", 4, r1, r2, 1e-7 );
+}
+
+
+void conj(void) {
+    double S0[8], S1[8], S2[8], SE[7];
+    double E0[8], E1[8], E2[8];
+    rand_tf(E0, S0, NULL);
+    rand_tf(E1, S1, NULL);
+
+    aa_tf_duqu_conj(S0, S2);
+    aa_tf_qutr_conj(E0, E2);
+    aa_tf_duqu2qutr(S2, SE);
+    aveq( "duqu/qutr conj", 7, E2, SE, 1e-7 );
+
+
+    aa_tf_duqu_mul(S0, S1, S2);
+    aa_tf_qutr_mul(E0, E1, E2);
+    aa_tf_duqu2qutr(S2, SE);
+    aveq( "duqu/qutr mul", 7, E2, SE, 1e-7 );
+
+    aa_tf_duqu_mulc(S0, S1, S2);
+    aa_tf_qutr_mulc(E0, E1, E2);
+    aa_tf_duqu2qutr(S2, SE);
+    aveq( "duqu/qutr mulc", 7, E2, SE, 1e-7 );
+
+    aa_tf_duqu_cmul(S0, S1, S2);
+    aa_tf_qutr_cmul(E0, E1, E2);
+    aa_tf_duqu2qutr(S2, SE);
+    aveq( "duqu/qutr cmul", 7, E2, SE, 1e-7 );
 }
 
 int main( void ) {

@@ -622,6 +622,16 @@ void aa_tf_duqu2qutr( const double s[8], double e[7] );
 /// quaternion-translation multiply
 void aa_tf_qutr_mul( const double a[7], const double b[7], double c[7] ) ;
 
+
+/// quaternion-translation conjugate
+void aa_tf_qutr_conj( const double a[7], double c[7] ) ;
+
+/// quaternion-translation conjugate multiply
+void aa_tf_qutr_mulc( const double a[7], const double b[7], double c[7] ) ;
+
+/// quaternion-translation conjugate multiply
+void aa_tf_qutr_cmul( const double a[7], const double b[7], double c[7] ) ;
+
 /** Quaternion-translation derivative to spatial velocity */
 void aa_tf_qutr_diff2vel
 ( const double e[7], const double de[7], double dx[6] );

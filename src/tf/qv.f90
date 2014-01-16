@@ -94,6 +94,35 @@ subroutine aa_tf_qutr_mul( a, b, c ) &
   call aa_tf_qutr_tf( a, b(QUTR_V), c(QUTR_V) )
 end subroutine aa_tf_qutr_mul
 
+subroutine aa_tf_qutr_conj( a, b ) &
+     bind( C, name="aa_tf_qutr_conj" )
+  real(C_DOUBLE), intent(out) :: b(7)
+  real(C_DOUBLE), intent(in) :: a(7)
+  call aa_tf_qconj( a(QUTR_Q), b(QUTR_Q) )
+  call aa_tf_qrot( b(QUTR_Q), a(QUTR_V), b(QUTR_V) )
+  b(QUTR_V) = - b(QUTR_V)
+end subroutine aa_tf_qutr_conj
+
+
+subroutine aa_tf_qutr_mulc( a, b, c ) &
+     bind( C, name="aa_tf_qutr_mulc" )
+  real(C_DOUBLE), intent(out) :: c(7)
+  real(C_DOUBLE), intent(in) :: a(7), b(7)
+  real(C_DOUBLE) :: bc(7)
+  call aa_tf_qutr_conj(b,bc)
+  call aa_tf_qutr_mul(a, bc, c)
+end subroutine aa_tf_qutr_mulc
+
+
+subroutine aa_tf_qutr_cmul( a, b, c ) &
+     bind( C, name="aa_tf_qutr_cmul" )
+  real(C_DOUBLE), intent(out) :: c(7)
+  real(C_DOUBLE), intent(in) :: a(7), b(7)
+  real(C_DOUBLE) :: ac(7)
+  call aa_tf_qutr_conj(a,ac)
+  call aa_tf_qutr_mul(ac, b, c)
+end subroutine aa_tf_qutr_cmul
+
 !!!!!!!!!!!!!!
 !! CALCULUS !!
 !!!!!!!!!!!!!!
