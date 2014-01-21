@@ -511,4 +511,14 @@ AA_API int AA_NAME(la,eev)
 }
 
 
+
+int AA_NAME(la,compar)( const void *_a, const void *_b )
+{
+    double a = *(double*)_a;
+    double b = *(double*)_b;
+    if( a < b ) return -1;
+    if( a > b ) return 1;
+    return 0;
+}
+
 #include "amino/undef.h"

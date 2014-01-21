@@ -254,7 +254,7 @@ static void quat() {
     {
         double qmin[4], axang[4];
         aa_tf_qminimize2( q1, qmin );
-        test( "quat-minimize",  fabs(q1[3]) == qmin[3] );
+        test( "quat-minimize",  aa_feq( fabs(q1[3]), qmin[3], 0) );
         aa_tf_quat2axang( qmin, axang );
         test( "quat-minimize-angle",  fabs(axang[3]) <= M_PI );
     }
@@ -724,7 +724,7 @@ void qvmul(void)  {
 }
 
 
-void conj(void) {
+void tf_conj(void) {
     double S0[8], S1[8], S2[8], SE[7];
     double E0[8], E1[8], E2[8];
     rand_tf(E0, S0, NULL);
@@ -752,6 +752,22 @@ void conj(void) {
     aveq( "duqu/qutr cmul", 7, E2, SE, 1e-7 );
 }
 
+void fuzz_sort(void) {
+    static const size_t n = 512;
+    double a0[n];
+    aa_vrand(n, a0 );
+
+    double ar_qsort[n];
+    double ar_hsort[n];
+    AA_MEM_CPY( ar_qsort, a0, n );
+    AA_MEM_CPY( ar_hsort, a0, n );
+
+    qsort( ar_qsort, n, sizeof(a0[0]), aa_la_d_compar );
+    aa_aheap_sort( n, sizeof(a0[0]), ar_hsort, aa_la_d_compar );
+    aveq( "heap-sort", n, ar_qsort, ar_hsort, 0 );
+
+}
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -771,6 +787,8 @@ int main( void ) {
         rotmat();
         tfmat();
         integrate();
+        tf_conj();
+        fuzz_sort();
     }
 
     return 0;

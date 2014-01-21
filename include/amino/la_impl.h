@@ -420,4 +420,8 @@ AA_FDEC( void, la, colfit,
          size_t m, size_t n,
          const AA_TYPE *A, size_t lda, AA_TYPE *x );
 
+
+/* Ordering / Sort comparison function */
+int AA_NAME(la,compar)( const void *a, const void *b );
+
 #include "amino/undef.h"

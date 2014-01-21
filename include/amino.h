@@ -194,6 +194,7 @@
 #include "amino/io.h"
 #include "amino/cv.h"
 #include "amino/const.h"
+#include "amino/heap.h"
 
 
 #endif //AMINO_H

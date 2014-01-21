@@ -43,6 +43,12 @@
 #ifndef AA_MEM_H
 #define AA_MEM_H
 
+
+#ifndef AA_ALLOC_STACK_MAX
+/// maximum size of objects to stack allocate
+#define AA_ALLOC_STACK_MAX (4096-64)
+#endif //AA_ALLOC_STACK_MAX
+
 /**
  * \file amino/mem.h
  */
@@ -63,6 +69,7 @@ static inline void *aa_malloc0( size_t size ) {
     if(p) memset(p,0,size);
     return p;
 }
+
 
 /** Frees ptr unless NULL == ptr */
 static inline void aa_free_if_valid( void *ptr ) {
@@ -87,10 +94,6 @@ static inline void aa_free_if_valid( void *ptr ) {
 
 
 /*----------- Local Allocation ------------------*/
-#ifndef AA_ALLOC_STACK_MAX
-/// maximum size of objects to stack allocate
-#define AA_ALLOC_STACK_MAX (4096-64)
-#endif //AA_ALLOC_STACK_MAX
 
 /** Allocate a local memory block.
  *
@@ -290,6 +293,9 @@ AA_API void aa_mem_region_local_release( void );
 #define AA_MEM_REGION_NEW_CPY( reg, src, type ) ( (type*) aa_mem_region_dup((reg), (src), sizeof(type)) )
 #define AA_MEM_REGION_NEW_N( reg, type, n ) ( (type*) aa_mem_region_alloc((reg), (n)*sizeof(type)) )
 
+#define AA_MEM_REGION_LOCAL_NEW( type ) ( (type*) aa_mem_region_local_alloc( sizeof(type)) )
+#define AA_MEM_REGION_LOCAL_NEW_N( type, n ) ( (type*) aa_mem_region_local_alloc( (n)*sizeof(type)) )
+
 /*----------- Pooled Allocation ------------------*/
 
 /** Data Structure for Object pools.
@@ -488,6 +494,28 @@ aa_bits_set( aa_bits *b, size_t i, int val )
         b[j] |=  0x1<<k;
     } else {
         b[j] &= ~ ( 0x1<<k );
+    }
+}
+
+
+/************/
+/* Swapping */
+/************/
+
+static inline void aa_memswap3( void *AA_RESTRICT a, void *AA_RESTRICT b, void *AA_RESTRICT tmp, size_t size )
+{
+    memcpy(tmp,a,size);
+    memcpy(a,b,size);
+    memcpy(b,tmp,size);
+}
+
+static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t size )
+{
+    if( size > AA_ALLOC_STACK_MAX) {
+        aa_memswap3( a, b, aa_mem_region_local_tmpalloc(size), size );
+    } else {
+        uint8_t tmp[size];
+        aa_memswap3( a, b, tmp, size );
     }
 }
 

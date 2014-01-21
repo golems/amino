@@ -63,6 +63,7 @@ libamino_la_SOURCES =                  \
 	src/io.c                       \
 	src/are.c                      \
 	src/sigsys.c                   \
+	src/heap.c                     \
 	src/cv.c
 
 libamino_la_LIBADD =                   \
