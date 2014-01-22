@@ -918,6 +918,18 @@ AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA
                               double dt, double d1[AA_RESTRICT 6] ) ;
 
 
+/* Misc */
+
+void aa_tf_relx_mean( size_t n, const double *R,
+                      const double *X, size_t ldx,
+                      const double *Y, size_t ldy,
+                      double rel[3]);
+
+void aa_tf_relx_median( size_t n, const double *R,
+                        const double *X, size_t ldx,
+                        const double *Y, size_t ldy,
+                        double rel[3]);
+
 #ifdef __cplusplus
 }
 #endif

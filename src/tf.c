@@ -477,3 +477,42 @@ void aa_tf_qutr_rand( double E[7] )
     for( size_t i = 0; i < 7; i ++ ) E[i] -= 0.5;
     aa_tf_qnormalize(E);
 }
+
+void aa_tf_relx( size_t n, const double *R,
+                 const double *X, size_t ldx,
+                 const double *Y, size_t ldy,
+                 double *Z, size_t ldz )
+{
+    aa_cla_dlacpy( ' ', 3, (int)n,
+                   Y, (int)ldy,
+                   Z, (int)ldz );
+    for( size_t j = 0; j < n; j ++ ) {
+        double xp[3];
+        aa_tf_9rot( R, &X[ldx*j], xp );
+        for( size_t i = 0; i < 3; i++ )
+            AA_MATREF(Z, ldz, i, j) -=  xp[i];
+    }
+}
+
+void aa_tf_relx_mean( size_t n, const double *R,
+                      const double *X, size_t ldx,
+                      const double *Y, size_t ldy,
+                      double rel[3])
+{
+    double *yp = AA_MEM_REGION_LOCAL_NEW_N(double, 3*n);
+    aa_tf_relx(n,R, X, ldx, Y, ldy, yp, 3 );
+    aa_la_d_colmean( 3, n, yp, 3, rel );
+    aa_mem_region_local_pop(yp);
+}
+
+void aa_tf_relx_median( size_t n, const double *R,
+                        const double *X, size_t ldx,
+                        const double *Y, size_t ldy,
+                        double rel[3])
+{
+    double *yp = AA_MEM_REGION_LOCAL_NEW_N(double, 3*n);
+    aa_tf_relx(n,R, X, ldx, Y, ldy, yp, 3 );
+    for( size_t i = 0; i < 3; i ++ )
+        rel[i] = aa_la_d_median( n, yp+i, 3 );
+    aa_mem_region_local_pop(yp);
+}
