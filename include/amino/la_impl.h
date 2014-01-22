@@ -396,6 +396,27 @@ AA_API int AA_NAME(la,svd)
   AA_TYPE *S,
   AA_TYPE *Vt, size_t ldvt );
 
+
+/** Cmpute median.
+ *
+ * @param n number of elements in x
+ * @param x data array
+ * @param incx increment amount for x
+ */
+AA_API AA_TYPE AA_NAME(la,median)
+( size_t n, const AA_TYPE *x, size_t incx );
+
+/** Destructive median computation.
+ *
+ * @param n number of elements in x
+ * @param x data array
+ * @param incx increment amount for x
+ *
+ * @post entries of x are undefined
+ */
+AA_API AA_TYPE AA_NAME(la,nmedian)
+( size_t n, AA_TYPE *x );
+
 /** Compute eigen values and vectors */
 AA_API int AA_NAME(la,eev)
 ( size_t n, const AA_TYPE *A, size_t lda,

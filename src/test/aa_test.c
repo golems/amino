@@ -1843,6 +1843,17 @@ void list() {
     }
 }
 
+
+static void array(void)
+{
+
+    double x[] = {3,1,5,2,4,6};
+    double m6 = aa_la_d_median( 6, x, 1);
+    double m5 = aa_la_d_median( 5, x, 1);
+    assert( aa_feq(m6, 3.5, 0) );
+    assert( aa_feq(m5, 3, 0) );
+}
+
 int main( int argc, char **argv ) {
     printf("Init aa_test\n");
     (void) argc; (void) argv;
@@ -1907,6 +1918,8 @@ int main( int argc, char **argv ) {
     stat();
     ang();
     plane();
+    array();
+
     aa_mem_region_destroy(&g_region);
 
     list();

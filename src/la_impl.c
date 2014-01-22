@@ -521,4 +521,29 @@ int AA_NAME(la,compar)( const void *_a, const void *_b )
     return 0;
 }
 
+AA_TYPE AA_NAME(la,nmedian)( size_t n, AA_TYPE *x )
+{
+    // this is not great
+    // TODO: linear time select algorithm
+    aa_aheap_sort( x, n, sizeof(AA_TYPE), AA_NAME(la,compar) );
+
+    if( 1 == n ) {
+        return *x;
+    } else {
+        size_t i = n/2;
+        if ( 1 == n%2 ) { // odd
+            return x[i];
+        } else { // even
+            return (x[i] + x[i-1])/2;
+        }
+    }
+}
+
+AA_TYPE AA_NAME(la,median)( size_t n, const AA_TYPE *x, size_t incx )
+{
+    AA_TYPE *y = (AA_TYPE*)aa_mem_region_local_tmpalloc( sizeof(AA_TYPE)*n );
+    AA_CBLAS_NAME(copy) ( (int)n, x, (int)incx, y, 1 );
+    return AA_NAME(la,nmedian)( n, y );
+}
+
 #include "amino/undef.h"

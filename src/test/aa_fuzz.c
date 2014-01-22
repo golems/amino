@@ -763,7 +763,7 @@ void fuzz_sort(void) {
     AA_MEM_CPY( ar_hsort, a0, n );
 
     qsort( ar_qsort, n, sizeof(a0[0]), aa_la_d_compar );
-    aa_aheap_sort( n, sizeof(a0[0]), ar_hsort, aa_la_d_compar );
+    aa_aheap_sort( ar_hsort, n, sizeof(a0[0]), aa_la_d_compar );
     aveq( "heap-sort", n, ar_qsort, ar_hsort, 0 );
 
 }
