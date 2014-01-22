@@ -85,3 +85,4 @@ amino*.tar.gz
 /java/.deps/.dirstamp
 /doc/.javadoc.stamp
 /doc/javadoc
+/amino-*
