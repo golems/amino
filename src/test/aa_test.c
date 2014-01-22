@@ -379,16 +379,16 @@ void la2() {
     /*     aa_la_inv(3, R ); */
     /*     aveq( "la_inv3x3", 9, R, S, 0.00001 ); */
     /* } */
-    /* // det3x3 */
-    /* { */
-    /*     double R[9] = {0,-1,0, 1,0,0, 0,0,-1}; */
-    /*     double S[9]; */
-    /*     aa_la_inverse3x3( R, S ); */
-    /*     double d = aa_la_det3x3( R ); */
-    /*     double dt = aa_la_det3x3( S ); */
-    /*     afeq( -1, d, .000001 ); */
-    /*     afeq( -1, dt, .000001 ); */
-    /* } */
+    // det3x3
+    {
+        double R[9] = {0,-1,0, 1,0,0, 0,0,-1};
+        double S[9];
+        //aa_la_inverse3x3( R, S );
+        double d = aa_la_det3x3( R );
+        //double dt = aa_la_det3x3( S );
+        afeq( -1, d, .000001 );
+        //afeq( -1, dt, .000001 );
+    }
 
     //dpinv
     {

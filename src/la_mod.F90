@@ -122,6 +122,16 @@ module amino_la
      End Function aa_la_care_laub
   End Interface
 
+  !! determinant
+  interface aa_la_det
+     function aa_la_det3x3( R ) result(d) &
+          bind(C,NAME="aa_la_det3x3")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: R(3,3)
+       real(C_DOUBLE) :: d
+     end function aa_la_det3x3
+  end interface
+
   !> Cross product
   interface aa_la_cross_sub
      module procedure &

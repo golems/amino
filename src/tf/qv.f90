@@ -72,6 +72,13 @@ subroutine aa_tf_qutr2tfmat( e, T ) &
   T(:,4) = e(QUTR_V)
 end subroutine aa_tf_qutr2tfmat
 
+subroutine aa_tf_tfmat2qutr( T, e ) &
+     bind( C, name="aa_tf_tfmat2qutr" )
+  real(C_DOUBLE), intent(out) :: e(7)
+  real(C_DOUBLE), intent(in) :: T(3,4)
+  call aa_tf_rotmat2quat( T(:,1:3), e(QUTR_Q))
+  e(QUTR_V) = T(:,4)
+end subroutine aa_tf_tfmat2qutr
 
 !!!!!!!!!
 !! OPS !!

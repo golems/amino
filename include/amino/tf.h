@@ -624,6 +624,9 @@ void aa_tf_qutr2duqu( const double e[7], double s[8] );
 /// quaternion-translation to transformation matrix
 void aa_tf_qutr2tfmat( const double e[7], double T[12] );
 
+/// transformation matrix to  quaternion-translation
+void aa_tf_tfmat2qutr( const double T[12], double e[7] );
+
 /// dual quaternion to quaternion-translation
 void aa_tf_duqu2qutr( const double s[8], double e[7] );
 
@@ -660,7 +663,7 @@ void aa_tf_qutr_sdiff
 
 /** Weighted average transform */
 void aa_tf_qutr_wavg
-( size_t n, double *w, const double *EE, size_t ldee, double *a );
+( size_t n, const double *w, const double *EE, size_t ldee, double *a );
 
 /** Generate random transform */
 void aa_tf_qutr_rand( double E[7] );
