@@ -146,7 +146,12 @@ AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 
 
-AC_MSG_NOTICE([CONFIGURATION SUMMARY])
-AC_MSG_NOTICE([=====================])
-AC_MSG_NOTICE([PREFIX:          $prefix])
-AC_MSG_NOTICE([BUILD JAVA LIB:  $BUILD_JAVA])
+AC_MSG_NOTICE([=========================])
+AC_MSG_NOTICE([= CONFIGURATION SUMMARY =])
+AC_MSG_NOTICE([=========================])
+AC_MSG_NOTICE([C compiler:        $CC])
+AC_MSG_NOTICE([C++ compiler:      $CXX])
+AC_MSG_NOTICE([Fortran compiler:  $FC])
+AC_MSG_NOTICE([Java compiler:     $JAVAC])
+AC_MSG_NOTICE([prefix:            $prefix])
+AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
