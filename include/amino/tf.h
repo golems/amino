@@ -392,6 +392,22 @@ AA_API void aa_tf_qexp( const double q[AA_RESTRICT 4],
 AA_API void aa_tf_qln( const double q[AA_RESTRICT 4],
                        double r[AA_RESTRICT 4] );
 
+
+/** Return the angle of the quaternion.
+ *
+ * Note that this result is half the 3D angle.
+ */
+double aa_tf_qangle( const double q[AA_RESTRICT 4] );
+
+/* Relative quaternion angles
+ */
+double aa_tf_qangle_rel( const double *q, const double *p );
+
+/** Return the angle between unit quaterniosn in 4D space.
+ */
+double aa_tf_quhypangle2
+( const double q[AA_RESTRICT 4], const double p[AA_RESTRICT 4] );
+
 /** Quaternion inverse */
 AA_API void aa_tf_qinv( const double q[AA_RESTRICT 4],
                         double r[AA_RESTRICT 4] );
@@ -565,13 +581,21 @@ AA_API void aa_tf_yangle2quat( double theta_y, double q[AA_RESTRICT 4] );
 /** Unit quaternion for angle about z axis */
 AA_API void aa_tf_zangle2quat( double theta_z, double q[AA_RESTRICT 4] );
 
-
+/* Construct matrix for Davenport's q-method */
 AA_API void aa_tf_quat_davenport_matrix
 ( size_t n, const double *w, const double *q, size_t ldqq, double *M );
 
-
+/* Weighted average quaternion using Davenport's q-method
+ *
+ * @param n number of quaternions
+ * @param w weights
+ * @param Q array of quaternions
+ * @param ldq leading dimension of Q
+ * @param y average quaternion
+ */
 AA_API void aa_tf_quat_davenport
-( size_t n, const double *w, const double *qq, size_t ldqq, double *p );
+( size_t n, const double *w, const double *Q, size_t ldq, double *y );
+
 
 
 /** Construct matrix for left quaternion multiply

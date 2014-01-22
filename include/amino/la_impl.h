@@ -417,6 +417,39 @@ AA_API AA_TYPE AA_NAME(la,median)
 AA_API AA_TYPE AA_NAME(la,nmedian)
 ( size_t n, AA_TYPE *x );
 
+
+/** Compute median and pop array from local memory region
+ */
+static inline AA_TYPE AA_NAME(la,nmedian_pop)
+( size_t n, AA_TYPE *x )
+{
+    AA_TYPE u = AA_NAME(la,nmedian)(n, x);
+    aa_mem_region_local_pop(x);
+    return u;
+}
+
+/** Median Absolute Deviation
+ *
+ * @param n number of elements
+ * @param u median
+ * @param x data array
+ * @param incx increment of x
+ */
+AA_TYPE AA_NAME(la,mad)
+( size_t n, const AA_TYPE u, const AA_TYPE *x, size_t incx );
+
+/** Median Absolute Deviation with Euclidean distance
+ *
+ * @param m rows of A, length of u
+ * @param n cols of A
+ * @param u median (increment of 1)
+ * @param A data matrix
+ * @param lda leading dimension of A
+ *
+ */
+AA_TYPE AA_NAME(la,mad2)
+( size_t m, size_t n, const AA_TYPE *u, const AA_TYPE *A, size_t lda );
+
 /** Compute eigen values and vectors */
 AA_API int AA_NAME(la,eev)
 ( size_t n, const AA_TYPE *A, size_t lda,

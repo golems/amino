@@ -920,6 +920,13 @@ contains
     r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
   end subroutine aa_tf_qln
 
+  function aa_tf_qangle( q ) result(angle) &
+       bind( C, name="aa_tf_qangle" )
+    real(C_DOUBLE), intent(in) :: q(4)
+    real(C_DOUBLE) :: angle
+    angle = atan2( sqrt(dot_product(q(XYZ_INDEX),q(XYZ_INDEX))), q(W_INDEX) )
+  end function aa_tf_qangle
+
   !> Compute q**a
   pure subroutine aa_tf_qpow( q, a, r ) &
        bind( C, name="aa_tf_qpow" )
@@ -1015,6 +1022,7 @@ contains
     rv = 2*qrv(1:3) ! qrv(4) will be 0 for unit quaternions
   end Subroutine aa_tf_quat2rotvec
 
+
   Subroutine aa_tf_quat2axang( q, a ) &
        bind( C, name="aa_tf_quat2axang" )
     real(C_DOUBLE), Dimension(4), intent(in) :: q
@@ -1052,7 +1060,7 @@ contains
     real(C_DOUBLE), intent(out) :: theta, d1, d2
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     !theta = abs(aa_la_angle( q1, q2))
-    theta = abs(aa_tf_quangle2(q1, q2))
+    theta = abs(aa_tf_quhypangle2(q1, q2))
     d1 = sin(theta)
     if( theta > PI_2 ) then
        ! Go the short way
@@ -1129,7 +1137,7 @@ contains
     real(C_DOUBLE), intent(out) :: theta, d1, d2
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     !theta = abs(aa_la_angle( q1, q2))
-    theta = abs(aa_tf_quangle2(q1, q2))
+    theta = abs(aa_tf_quhypangle2(q1, q2))
     if( theta > PI_2 ) then
        ! Go the short way
        theta = PI - theta
@@ -1173,7 +1181,8 @@ contains
   end subroutine aa_tf_qslerpdiffalg
 
   !! Angle between two unit quaternions
-  pure function aa_tf_quangle2(x, y) result(theta)
+  pure function aa_tf_quhypangle2(x, y) result(theta) &
+       bind(C,name="aa_tf_quhypangle2")
     real(C_DOUBLE), dimension(4), intent(in) :: x, y
     real(C_DOUBLE) :: theta
     real(C_DOUBLE) :: s, c
@@ -1183,7 +1192,7 @@ contains
     s = aa_tf_qnorm(a)
     c = aa_tf_qnorm(b)
     theta = 2d0 * atan2(s, c)
-  end function aa_tf_quangle2
+  end function aa_tf_quhypangle2
 
 
   !! Chain Rule Derivative of a SLERPed quaternion
