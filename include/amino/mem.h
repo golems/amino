@@ -401,18 +401,31 @@ void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
 /* Arrays */
 /**********/
 
-
+/* Copy n_elem elements from src to dst.
+ *
+ * May evaluate arguments multiple times.
+ */
 #define AA_MEM_CPY(dst, src, n_elem)                            \
     {                                                           \
         /* _Static_assert(sizeof(*dst) == sizeof(*src));*/      \
         memcpy( dst, src, sizeof((dst)[0])*n_elem );            \
     }
 
+/* Set n_elem elements at dst to val.
+ *
+ * May evaluate arguments multiple times.
+ */
 #define AA_MEM_SET(dst, val, n_elem)                                    \
     {                                                                   \
         for( size_t aa_$_set_i = 0; aa_$_set_i < n_elem; aa_$_set_i++ ) \
             dst[aa_$_set_i] = val;                                      \
     }
+
+/* Set n_elem elements at dst to zero.
+ *
+ * May evaluate arguments multiple times.
+ */
+#define AA_MEM_ZERO(dst, n_elem)  (memset((dst),0,(n_elem)*sizeof(*(dst))))
 
 /// make a floating point array literal
 #define AA_FAR(...) ((double[]){__VA_ARGS__})
