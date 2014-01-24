@@ -166,11 +166,12 @@ void aa_odestep_rk2( size_t n, aa_sys_fun sys, const void *cx,
 
     // output
     // Method A
+    static const double v[] =  {1.0/2, 1.0/2};
     memcpy(x1,x0,sizeof(double)*n);
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)2,
                  dt, k[0], (int)n,
-                 (double[]) {1.0/2, 1.0/2}, 1,
+                 v , 1,
                  1.0, x1, 1 );
 
     /* // Method B */
@@ -210,11 +211,12 @@ void aa_odestep_rk4( size_t n, aa_sys_fun sys, const void *cx,
     sys( cx, t0+dt, x1, k[3] );
 
     // output
+    static const double v[] = {1.0/6, 1.0/3, 1.0/3, 1.0/6};
     memcpy(x1,x0,sizeof(double)*n);
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)4,
                  dt, k[0], (int)n,
-                 (double[]) {1.0/6, 1.0/3, 1.0/3, 1.0/6}, 1,
+                 v, 1,
                  1.0, x1, 1 );
 
     /* // Method A.1 */
@@ -325,15 +327,17 @@ void aa_odestep_rkf45( size_t n, aa_sys_fun sys, const void *cx,
     // output
     memcpy(x4,x0,sizeof(double)*n);
     memcpy(x5,x0,sizeof(double)*n);
+    static const double v1[] = {25.0/216, 0, 1408.0/2565, 2197.0/4104, -1.0/5};
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)5,
                  dt, k, (int)n,
-                 (double[]) {25.0/216, 0, 1408.0/2565, 2197.0/4104, -1.0/5}, 1,
+                 v1, 1,
                  1, x4, 1 );
+    static const double v2[] = {16.0/135, 2.0/55, 6656.0/12825, 28561.0/56430, -9.0/50};
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)5,
                  dt, k, (int)n,
-                 (double[]) {16.0/135, 2.0/55, 6656.0/12825, 28561.0/56430, -9.0/50} , 1,
+                 v2, 1,
                  1, x5, 1 );
 
 }
@@ -390,16 +394,17 @@ void aa_odestep_rkck45( size_t n, aa_sys_fun sys, const void *cx,
     // output
     memcpy(x4,x0,sizeof(double)*n);
     memcpy(x5,x0,sizeof(double)*n);
+    static const double v1[] = {37.0/378, 512.0/1771, 250.0/621, 125.0/594};
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)4,
                  dt, k, (int)n,
-                 (double[]){37.0/378, 512.0/1771, 250.0/621, 125.0/594}, 1,
+                 v1, 1,
                  1, x4, 1 );
+    static const double v2[] = { 2825.0/27648, 277.0/14336, 18575.0/48384, 13525.0/55296, 1.0/4};
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)5,
                  dt, k, (int)n,
-                 (double[]){ 2825.0/27648, 277.0/14336, 18575.0/48384,
-                         13525.0/55296, 1.0/4}, 1,
+                 v2, 1,
                  1, x5, 1 );
 
 }
@@ -468,11 +473,12 @@ void aa_odestep_dorpri45( size_t n, aa_sys_fun sys, const void *cx,
 
     // output (already have x4 from last butcher step)
     memcpy(x5,x0,sizeof(double)*n);
+    static const double v[] = {5179.0/57600, 187.0/2100, 7571.0/16695, 393.0/640,
+                               -92097.0/339200, 1.0/40};
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)6,
                  dt, k, (int)n,
-                 (double[]){5179.0/57600, 187.0/2100, 7571.0/16695, 393.0/640,
-                         -92097.0/339200, 1.0/40}, 1,
+                 v, 1,
                  1, x5, 1 );
 
 }
@@ -508,17 +514,19 @@ void aa_odestep_rkbs23( size_t n, aa_sys_fun sys, const void *cx,
     sys( cx, t0+3*dt/4, x2, k + 2*n );
 
     // k3
+    static const double v1[] = {2.0/9, 1.0/3, 4.0/9};
     butcher( n, sys, cx,
              t0, dt, x0,
-             1, 3, (double[]){2.0/9, 1.0/3, 4.0/9},
+             1, 3, v1,
              k, k + 3*n, x2 );
 
     // output (already have x2 from last butcher step)
     memcpy(x3,x0,sizeof(double)*n);
+    static const double v2[] = {7.0/24, 1.0/4, 1.0/3, 1.0/8};
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n, (int)4,
                  dt, k, (int)n,
-                 (double[]){7.0/24, 1.0/4, 1.0/3, 1.0/8}, 1,
+                 v2, 1,
                  1.0, x3, 1 );
 }
 
