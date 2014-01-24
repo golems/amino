@@ -768,6 +768,23 @@ void fuzz_sort(void) {
 
 }
 
+void mem(void) {
+    static const size_t n = 1024;
+    double a[n], b[n], a2[n], b2[n];
+    aa_vrand(n, a);
+    aa_vrand(n, b);
+    AA_MEM_CPY(a2, a, n);
+    AA_MEM_CPY(b2, b, n);
+
+    aveq( "mem-cpy-a", n, a, a2, 0 );
+    aveq( "mem-cpy-b", n, b, b2, 0 );
+
+    AA_MEM_SWAP(a,b,n);
+
+    aveq( "mem-cpy-a", n, b, a2, 0 );
+    aveq( "mem-cpy-b", n, a, b2, 0 );
+}
+
 int main( void ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
@@ -789,6 +806,7 @@ int main( void ) {
         integrate();
         tf_conj();
         fuzz_sort();
+        mem();
     }
 
     return 0;

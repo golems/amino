@@ -529,23 +529,31 @@ aa_bits_set( aa_bits *b, size_t i, int val )
 /* Swapping */
 /************/
 
-static inline void aa_memswap3( void *AA_RESTRICT a, void *AA_RESTRICT b, void *AA_RESTRICT tmp, size_t size )
-{
-    memcpy(tmp,a,size);
-    memcpy(a,b,size);
-    memcpy(b,tmp,size);
-}
+typedef long aa_memswap_type;
 
+/** Swap size bytes of memory at a and b */
 static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t size )
 {
-    if( size > AA_ALLOC_STACK_MAX) {
-        aa_memswap3( a, b, aa_mem_region_local_tmpalloc(size), size );
-    } else {
-        uint8_t tmp[size];
-        aa_memswap3( a, b, tmp, size );
+
+    // TODO: consider alignment
+    aa_memswap_type *la = (aa_memswap_type*)a, *lb = (aa_memswap_type*)b;
+    for( size_t i = 0; i < size/sizeof(*la); i++ ) {
+        aa_memswap_type tmp = la[i];
+        la[i] = lb[i];
+        lb[i] = tmp;
     }
+
+    uint8_t *ca = (uint8_t*)a, *cb = (uint8_t*)b;
+    for( size_t i = size - size%sizeof(*la); i < size; i ++ ) {
+        uint8_t tmp = ca[i];
+        ca[i] = cb[i];
+        cb[i] = tmp;
+    }
+
 }
 
+/** Swap n_elements at and b */
+#define AA_MEM_SWAP( a, b, n_elem ) (aa_memswap( (a), (b), n_elem*sizeof(*(a)) ))
 
 /***********/
 /* VECTORS */
