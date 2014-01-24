@@ -463,7 +463,7 @@ aa_la_diag( size_t n, double *A, double x ) {
 /** Set A to the identity matrix */
 static inline void
 aa_la_ident( size_t n, double *A ) {
-    aa_fset(A, 0, n*n);
+    AA_MEM_ZERO(A, n*n);
     aa_la_diag(n,A,1.0);
 }
 

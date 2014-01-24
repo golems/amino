@@ -136,16 +136,16 @@ void aa_tf_axang_make( double x, double y, double z, double theta,
 void aa_tf_axang_permute2( const double aa[restrict 4],
                            double aa_plus[restrict 4],
                            double aa_minus[restrict 4] ) {
-    aa_fcpy( aa_plus, aa, 3 );
+    AA_MEM_CPY( aa_plus, aa, 3 );
     aa_plus[3] = aa[3] + 2*M_PI;
-    aa_fcpy( aa_minus, aa, 3 );
+    AA_MEM_CPY( aa_minus, aa, 3 );
     aa_minus[3] = aa[3] - 2*M_PI;
 }
 
 
 void aa_tf_axang_permute( const double ra[restrict 4], int k,
                           double ra_p[restrict 4] ) {
-    aa_fcpy( ra_p, ra, 3 );
+    AA_MEM_CPY( ra_p, ra, 3 );
     ra_p[3] = ra[3] + k*2*M_PI;
 }
 
@@ -164,7 +164,7 @@ void aa_tf_rotvec_near( const double rv[restrict 3],
     double ssd[7];
     double arv[sizeof(ssd)/sizeof(double)][3];
 
-    aa_fcpy(arv[0],rv,3);
+    AA_MEM_CPY(arv[0],rv,3);
     aa_tf_rotvec_permute( rv, 1, arv[1] );
     aa_tf_rotvec_permute( rv, 2, arv[2] );
     aa_tf_rotvec_permute( rv, 3, arv[3] );
@@ -175,7 +175,7 @@ void aa_tf_rotvec_near( const double rv[restrict 3],
     for( size_t i = 0; i < sizeof(ssd)/sizeof(double); i++ ) {
         ssd[i] = aa_la_ssd( 3, rv_near, arv[i] );
     }
-    aa_fcpy( rv_p, arv[ aa_fminloc(7, ssd) ], 3 );
+    AA_MEM_CPY( rv_p, arv[ aa_fminloc(7, ssd) ], 3 );
 }
 
 void aa_tf_axang2rotvec( const double axang[restrict 4],
@@ -187,7 +187,7 @@ void aa_tf_rotvec2axang( const double rotvec[restrict 3],
                          double axang[restrict 4] ) {
     axang[3] = aa_la_norm(3,rotvec);
     if( aa_feq( axang[3], 0, AA_TF_EPSILON ) ) {
-        aa_fzero( axang, 3 );
+        AA_MEM_ZERO( axang, 3 );
     } else {
         aa_la_smul( 3, 1.0 / axang[3] , rotvec, axang );
     }

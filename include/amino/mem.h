@@ -397,6 +397,16 @@ void aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p );
  */
 void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
 
+#define AA_RLIST_DEF( element_type, list_type )                  \
+    typedef struct {                                             \
+        aa_mem_rlist_t rlist;                                    \
+    } list_type;                                                 \
+    static inline list_type*                                     \
+    list_type ## _alloc( aa_mem_region *reg )                    \
+    {                                                            \
+        return (list_type*)aa_mem_rlist_alloc(reg);              \
+    }
+
 /**********/
 /* Arrays */
 /**********/
@@ -431,21 +441,25 @@ void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
 #define AA_FAR(...) ((double[]){__VA_ARGS__})
 
 /// copy n double floats from src to dst
+static inline void aa_fcpy( double *dst, const double *src, size_t n ) AA_DEPRECATED;
 static inline void aa_fcpy( double *dst, const double *src, size_t n ) {
     AA_MEM_CPY( dst, src, n );
 }
 
 /// set n double floats to val
+static inline void aa_fset( double *dst, double val, size_t n ) AA_DEPRECATED;
 static inline void aa_fset( double *dst, double val, size_t n ) {
     AA_MEM_SET( dst, val, n );
 }
 
 /// set n bytes of p to zero
+static inline void aa_zero( void *p, size_t n ) AA_DEPRECATED;
 static inline void aa_zero( void *p, size_t n ) {
     memset(p,0,n);
 }
 
 /// zero array p of length n
+static inline void aa_fzero( double *p, size_t n ) AA_DEPRECATED;
 static inline void aa_fzero( double *p, size_t n ) {
     AA_MEM_SET( p, 0, n );
 }
@@ -531,5 +545,45 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
         aa_memswap3( a, b, tmp, size );
     }
 }
+
+
+/***********/
+/* VECTORS */
+/***********/
+
+/** Append an item to the end of the vector
+ *
+ * @param max Maximum number of elements ptr can hold.  May be
+ * evaluated multiple times.
+ *
+ * @param fill Number of elements to store in vector. May be evaluated
+ * multiple times.
+ *
+ * @param ptr Base pointer of the vector.  May be evaluated multiple times.
+ *
+ * @param value Value to append
+ */
+#define AA_VECTOR_PUSH( max, fill, ptr, value )         \
+    if( (fill) >= (max) ) {                             \
+        (max) = 2*(fill+1);                             \
+        (ptr) = (typeof(ptr))realloc(sizeof(*ptr)*max); \
+    }                                                   \
+    ptr[(fill)++] = (value);
+
+#define AA_VECTOR_DEF( element_type, vector_type )               \
+    typedef struct {                                             \
+        size_t max;                                              \
+        size_t fill;                                             \
+        element_type *ptr;                                       \
+    } vector_type;                                               \
+    static inline vector_type ## _init                           \
+    ( vector_type *vec, size_t max ) {                           \
+        vec->ptr = (element_type*)malloc(max*sizeof(*ptr));      \
+        vec->max = max;                                          \
+        vec->fill = 0;                                           \
+    };
+
+
+
 
 #endif //AA_MEM_H

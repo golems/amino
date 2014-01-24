@@ -55,7 +55,7 @@ void randtf(double T[12], double q[4], double R[9], double v[3]) {
     aa_tf_axang2quat( axa, q );
     aa_tf_quat2rotmat( q, T );
     aa_tf_quat2rotmat( q, R );
-    aa_fcpy( T+9, v, 3 );
+    AA_MEM_CPY( T+9, v, 3 );
 }
 
 
@@ -1160,7 +1160,7 @@ void mem() {
     {
         double x[6] = {1,2,3,4,5,6};
         assert( 6*sizeof(double) == sizeof(x) );
-        AA_ZERO_AR(x);
+        AA_MEM_ZERO(x,6);
         aveq( "zero_ar", 6, x, AA_FAR(0,0,0,0,0,0), 0 );
     }
     // set_ar
