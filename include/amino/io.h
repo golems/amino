@@ -81,5 +81,26 @@ size_t aa_io_fread_matrix_fix( FILE *fin, size_t m, size_t n,
  */
 ssize_t aa_io_fread_matrix_heap( FILE *fin, size_t n,
                                  double **A, size_t *elts );
+/** Vector print.
+ *
+ * @param fout Output file
+ * @param n number of elements in x
+ * @param x vector to write
+ * @param incx increment between elements of x
+ */
+ssize_t aa_io_d_print( FILE *fout, size_t n,
+                       const double *x, size_t incx );
+
+/** General matrix print.
+ *
+ * @param file_order If CblasColMajor, output lines are columns of
+ * A. If CblasRowMajor, ouput lines are rows of A.
+ *
+ * @param A a column-major matrix
+ * @param m rows in A
+ * @param n cols in A
+ */
+ssize_t aa_io_d_gemp( FILE *fout, enum CBLAS_ORDER file_order, size_t m, size_t n,
+                      const double *A, size_t lda );
 
 #endif //AMINO_IO_H

@@ -173,3 +173,38 @@ ssize_t aa_io_fread_matrix_heap( FILE *fin, size_t n,
     }
     return (ssize_t)(read_elts / n);
 }
+
+/** General vector write. */
+ssize_t aa_io_d_print( FILE *fout, size_t n,
+                       const double *x, size_t incx )
+{
+    if( n == 0 ) {
+        fprintf(fout, "\n");
+        return 0;
+    }
+
+    for( size_t i = 0; i < n-1; i ++ )
+        fprintf(fout, "%f\t", x[i*incx] );
+
+    fprintf(fout, "%f\n", x[(n-1)*incx]);
+
+    return 0;
+}
+
+/** General matrix write. */
+ssize_t aa_io_d_gemp( FILE *fout, enum CBLAS_ORDER file_order, size_t m, size_t n,
+                      const double *A, size_t lda )
+{
+    if( CblasColMajor == file_order ) {
+        // col-per-line
+        for( size_t col = 0; col < n; col ++ ) {
+            aa_io_d_print( fout, m, AA_MATCOL(A,lda,col), 1 );
+        }
+    } else {
+        // row-per-line
+        for( size_t row = 0; row < m; row ++ ) {
+            aa_io_d_print( fout, n, A+row, lda );
+        }
+    }
+    return 0;
+}
