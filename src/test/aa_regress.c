@@ -75,10 +75,19 @@ static void slerp() {
 }
 
 
+
+static void rotmat( void ) {
+    double R0[9] = { 0, 1, 0,
+                     0, 0, 1,
+                     1, 0, 0 };
+    assert(aa_tf_isrotmat(R0));
+}
+
 int main() {
     srand((unsigned int)time(NULL)); // might break in 2038
     aa_test_ulimit();
 
     rotmat_axang();
     slerp();
+    rotmat();
 }
