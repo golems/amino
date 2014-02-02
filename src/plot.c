@@ -43,9 +43,11 @@
 #include "amino.h"
 
 AA_API void
-aa_plot_row_series( size_t m, size_t n, double *t, double *X,
-                    struct aa_plot_opts *opts ) {
-
+aa_plot_row_series( size_t m, size_t n,
+                    double *t, size_t inct,
+                    double *X, size_t ldx,
+                    const struct aa_plot_opts *opts ) {
+    assert( ldx >= m );
     FILE *g = opts->script_file ?
         fopen(opts->script_file, "w") :
         popen("gnuplot -persist", "w");
@@ -73,7 +75,7 @@ aa_plot_row_series( size_t m, size_t n, double *t, double *X,
     // print X
     for( size_t s = 0; s < m; s ++ ) {
         for( size_t i = 0; i < n; i++ ) {
-            fprintf(g, "%f %f\n", t[i], AA_MATREF(X,m,s,i) );
+            fprintf(g, "%f %f\n", t[i*inct], AA_MATREF(X,ldx,s,i) );
         }
         fprintf(g, "e\n");
     }

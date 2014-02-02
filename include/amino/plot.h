@@ -65,7 +65,9 @@ typedef struct aa_plot_opts {
  * \param opts plot options
  */
 AA_API void
-aa_plot_row_series( size_t m, size_t n, double *t, double *Y,
-                    struct aa_plot_opts *opts);
+aa_plot_row_series( size_t m, size_t n,
+                    double *t, size_t inct,
+                    double *Y, size_t ldY,
+                    const struct aa_plot_opts *opts);
 
 #endif //AA_PLOT_H
