@@ -241,12 +241,14 @@ AA_API void aa_mem_region_pop( aa_mem_region_t *region, void *ptr );
 /** Pointer to start of free space in region.
  */
 AA_API void *aa_mem_region_ptr( aa_mem_region_t *region );
+
 /** Number of chunks in the region.
  */
 AA_API size_t aa_mem_region_chunk_count( aa_mem_region_t *region );
+
 /** Size of top chunk in region.
  */
-AA_API size_t aa_mem_region_topsize( aa_mem_region_t *region );
+AA_API size_t aa_mem_region_topsize( aa_mem_region_t *region ) AA_DEPRECATED;
 
 
 /** Initialize the thread-local memory region.

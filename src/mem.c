@@ -173,7 +173,7 @@ void *aa_mem_region_tmpalloc( aa_mem_region_t *region, size_t size ) {
 AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size )
 {
     void *old_ptr = region->head;
-    size_t old_size = aa_mem_region_topsize(region);
+    size_t old_size = (size_t)(region->node->end - region->head);
     void *new_ptr = aa_mem_region_tmpalloc(region, size);
 
     if( old_ptr != new_ptr ) {
