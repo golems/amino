@@ -450,8 +450,27 @@ void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
 AA_API void aa_tf_quat_davenport
 ( size_t n, const double *w, const double *qq, size_t ldqq, double *p )
 {
+
+    if( 0 == n ) {
+        AA_MEM_CPY( p, aa_tf_quat_ident, 4 );
+        return;
+    } else if( 1 == n ) {
+        AA_MEM_CPY( p, qq, 4 );
+        return;
+    } // else do stuff
+
     double M[16];
-    aa_tf_quat_davenport_matrix( n,w,qq,ldqq,M);
+
+    if( NULL == w ) {
+        // assume even weight when w is NULL
+        double *wp = AA_MEM_REGION_LOCAL_NEW_N(double,n);
+        for( size_t i = 0; i < n; i ++ ) wp[i] = 1.0/(double)n;
+        aa_tf_quat_davenport_matrix( n,wp,qq,ldqq,M);
+        aa_mem_region_local_pop(wp);
+    } else {
+        aa_tf_quat_davenport_matrix( n,w,qq,ldqq,M);
+    }
+
     double wr[4]={0}, wi[4]={0}, Vr[16];
     aa_la_d_eev( 4, M, 4, wr, wi,
                  NULL, 0, Vr, 4 );
