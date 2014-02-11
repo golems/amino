@@ -63,7 +63,9 @@ char *aa_io_getline( FILE *fin, struct aa_mem_region *reg )
     do {
         int i = fgetc(fin);
         if( '\n' == i || EOF == i ) {
-            return n ? (char*)aa_mem_region_alloc( reg, n ) : NULL;
+            char * str = (char*)aa_mem_region_alloc( reg, n+1 );
+            str[n] = '\0';
+            return str;
         }
         n++;
         char *ptr = (char*)aa_mem_region_tmprealloc(reg, n);
