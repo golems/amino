@@ -73,6 +73,36 @@ char *aa_io_getline( FILE *fin, struct aa_mem_region *reg )
     } while(1);
 }
 
+size_t aa_io_d_parse( const char *str, struct aa_mem_region *reg, double **X, char **lendptr )
+{
+    char *ptr = (char*)str; // promise not to change str
+
+    size_t i = 0;
+    for(; ; i ++ ) {
+        if( NULL == ptr || AA_IO_ISCOMMENT(*ptr) ) break;
+
+        errno = 0;
+        char *endptr;
+
+        double x = strtod(ptr, &endptr);
+        if( ptr == endptr ) break;
+
+        *X = (double*)aa_mem_region_tmprealloc(reg, (1+i)*sizeof(double));
+        (*X)[i] = x;
+
+        endptr = aa_io_skipblank(endptr);
+
+        ptr = endptr;
+    }
+    void *a_ptr = aa_mem_region_alloc(reg, i*sizeof(double));
+    assert( 0 == i || a_ptr == *X );
+
+    if( lendptr ) *lendptr = ptr;
+
+    return i;
+}
+
+
 char *aa_io_skipblank( const char *str )
 {
     const char *ptr = str;
@@ -180,15 +210,11 @@ ssize_t aa_io_fread_matrix_heap( FILE *fin, size_t n,
 ssize_t aa_io_d_print( FILE *fout, size_t n,
                        const double *x, size_t incx )
 {
-    if( n == 0 ) {
-        fprintf(fout, "\n");
-        return 0;
-    }
 
-    for( size_t i = 0; i < n-1; i ++ )
-        fprintf(fout, "%f\t", x[i*incx] );
+    for( size_t i = 0; i < n; i ++ )
+        fprintf(fout, "%f%s", x[i*incx], (i<n-1) ? "\t" : ""  );
+    fprintf(fout, "\n");
 
-    fprintf(fout, "%f\n", x[(n-1)*incx]);
 
     return 0;
 }

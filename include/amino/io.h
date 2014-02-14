@@ -52,6 +52,9 @@ AA_API ssize_t aa_read_realloc(int fd, void **buf, size_t off, size_t *max);
 /** Read line from file, storing in memory region. */
 char *aa_io_getline( FILE *fin, struct aa_mem_region *reg );
 
+/** Parse line into doubles, storing in memory region */
+size_t aa_io_d_parse( const char *str, struct aa_mem_region *reg, double **X, char **lendptr );
+
 /** Skip leading blank characters */
 char *aa_io_skipblank( const char *str );
 
