@@ -332,6 +332,10 @@ N: cols in the block."
             (aref vec (+ start i))))
     new))
 
+(defun vec-list (vec)
+  (loop for x across vec
+     collect x))
+
 (defun matrix-vector-store-p (matrix)
   "Is the matrix stored in a way that looks like a vector?"
   (or (= (matrix-stride matrix)
