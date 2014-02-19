@@ -639,6 +639,11 @@ AA_API void aa_tf_rotvec_near( const double rv[AA_RESTRICT 3],
 /* Quat-Trans */
 /**************/
 
+/// quaternion-translation conjugate
+void aa_tf_qv_conj( const double q[4], const double v[3],
+                    double qc[4], double vc[3] );
+
+
 #define AA_TF_QUTR_Q 0
 #define AA_TF_QUTR_V 4
 

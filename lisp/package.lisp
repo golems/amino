@@ -48,5 +48,6 @@
    :transform
    :g*
    :matrix->list
+   :inverse
    )
   (:nicknames :aa))

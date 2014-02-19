@@ -223,3 +223,14 @@
 
 (defmethod transform ((a euler-angle) (b point3))
   (transform (rotation-matrix a) b))
+
+;; Inverse
+(defgeneric inverse (x))
+
+(defmethod inverse ((x quaternion-translation))
+  (let ((qc (make-quaternion))
+        (vc (make-vec3)))
+    (aa-tf-qv-conj (quaternion-translation-quaternion x)
+                   (quaternion-translation-translation x)
+                   qc vc)
+    (quaternion-translation-2 qc vc)))

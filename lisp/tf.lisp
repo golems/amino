@@ -429,6 +429,13 @@
   (q2 quaternion-t)
   (v2 vector-3-t))
 
+
+(defcfun aa-tf-tf-qv :void
+  (q quaternion-t)
+  (v vector-3-t)
+  (p0 vector-3-t)
+  (p1 vector-3-t))
+
 (defun tf-duqu2qutr (S &optional (E (make-quaternion-translation)))
   (tf-duqu2qv s
               (quaternion-translation-quaternion e)
@@ -448,6 +455,12 @@
                   (quaternion-translation-quaternion e2)
                   (quaternion-translation-translation e2))
   e2)
+
+(defcfun aa-tf-qv-conj :void
+  (q quaternion-t)
+  (v vector-3-t)
+  (qc quaternion-t)
+  (vc vector-3-t))
 
 ;;; Euler
 (defcfun aa-tf-eulerzyx2quat :void
