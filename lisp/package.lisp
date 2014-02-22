@@ -40,7 +40,10 @@
 (defpackage :amino
   (:use :cl :cffi :alexandria)
   (:export
+   ;; General types
+   :vec
    ;; TF Types
+   :vec3
    :axis-angle :quaternion :rotation-matrix  :dual-quaternion :quaternion-translation :transformation-matrix
    :dual-quaternion-2 :quaternion-translation-2 :transformation-matrix-2
    :x-angle :y-angle :z-angle

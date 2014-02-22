@@ -40,6 +40,13 @@
 
 (in-package :amino)
 
+(defgeneric rotation (x))
+(defgeneric translation (x))
+
+(defmethod rotation ((x quaternion-translation))
+  (quaternion-translation-quaternion x))
+(defmethod translation ((x quaternion-translation))
+  (quaternion-translation-translation x))
 
 (defgeneric quaternion (x))
 (defgeneric rotation-matrix (x))
@@ -86,6 +93,7 @@
 (defmethod quaternion ((x z-angle))
   (tf-zangle2quat (principal-angle-value x)))
 
+
 ;;; Dual-Quaternion
 (defmethod dual-quaternion ((x dual-quaternion)) x)
 
@@ -124,6 +132,13 @@
 (defmethod quaternion-translation ((x quaternion-translation))
   (tf-duqu2qutr x))
 
+
+(defmethod quaternion-translation ((x array))
+  (check-type x (array double-float (7)))
+  (make-quaternion-translation :quaternion (make-quaternion :data (subseq x 0 4))
+                               :translation (vec3 (aref x 4) (aref x 5) (aref x 6))))
+
+
 (defmethod quaternion-translation ((x (eql nil)))
   (make-quaternion-translation :quaternion (quaternion nil)
                                :translation (make-vec3 :data (vec 0d0 0d0 0d0))))
@@ -158,6 +173,10 @@
                                :translation (vec3 (aref x 0)
                                                   (aref x 1)
                                                   (aref x 2))))
+
+(defmethod vec-array ((obj quaternion-translation) &optional (array (make-vec 7)) (start 0))
+  (replace array (real-array-data (quaternion-translation-quaternion obj)) :start1 start)
+  (replace array (real-array-data (quaternion-translation-translation obj)) :start1 (+ start 4)))
 
 (defmethod matrix->list ((matrix quaternion-translation))
   (list (matrix->list (quaternion-translation-quaternion matrix))
@@ -195,22 +214,30 @@
 (defmethod g* ((a quaternion) (b euler-angle))
   (tf-qmul a (quaternion b)))
 
-
-
 (defmethod g* ((a dual-quaternion) (b dual-quaternion))
   (tf-duqu-mul a b))
-
 
 (defmethod g* ((a quaternion-translation) (b quaternion-translation))
   (tf-qutr-mul a b))
 
+(defmethod g* ((a dual-quaternion) (b quaternion-translation))
+  (tf-duqu-mul a (dual-quaternion b)))
+
 ;; Transformations
 (defgeneric transform (tf point))
 
-(defmethod transform ((a quaternion) (b point3))
+(defmethod transform ((a quaternion) (b vec3))
   (tf-qrot a b))
 
-(defmethod transform ((a matrix) (b point3))
+(defmethod transform ((a quaternion-translation) (b vec3))
+  (let ((c (make-vec3)))
+    (aa-tf-tf-qv (quaternion-translation-quaternion a)
+                 (quaternion-translation-translation a)
+                 b
+                 c)
+    c))
+
+(defmethod transform ((a matrix) (b vec3))
   (let ((rows (matrix-rows a))
         (cols (matrix-cols a)))
     (assert (= 3 rows))
@@ -218,11 +245,26 @@
       (3 (tf-9 a b))
       (4 (tf-12 a b)))))
 
-(defmethod transform ((a principal-angle) (b point3))
+(defmethod transform ((a principal-angle) (b vec3))
   (transform (rotation-matrix a) b))
 
-(defmethod transform ((a euler-angle) (b point3))
+(defmethod transform ((a euler-angle) (b vec3))
   (transform (rotation-matrix a) b))
+
+(defun g-chain (&rest args)
+  (reduce #'g* args))
+
+;; Transformations
+(defgeneric c-float-array (x))
+
+(defmethod c-float-array ((x list))
+  (format t "~&{~{~F~^,~}}"
+          x))
+
+(defmethod c-float-array ((x quaternion-translation))
+  (c-float-array
+   (append (map 'list #'identity (real-array-data (quaternion-translation-quaternion x)))
+           (map 'list #'identity (real-array-data (quaternion-translation-translation x))))))
 
 ;; Inverse
 (defgeneric inverse (x))
@@ -234,3 +276,13 @@
                    (quaternion-translation-translation x)
                    qc vc)
     (quaternion-translation-2 qc vc)))
+
+
+
+(defmethod g* ((a tf-tag) (b tf-tag))
+  (assert (eql (tf-tag-child a)
+               (tf-tag-parent b)))
+  (make-tf-tag :tf (g* (tf-tag-tf a)
+                       (tf-tag-tf b))
+               :parent (tf-tag-parent a)
+               :child (tf-tag-child b)))

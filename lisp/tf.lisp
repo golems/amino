@@ -496,6 +496,22 @@
     tf))
 
 
+
+(defstruct tf-tag
+  tf
+  parent
+  child)
+
+
+(defun build-tf (&key
+                 (r (quaternion-4 0d0 0d0 0d0 1d0))
+                 (x 0d0)
+                 (y 0d0)
+                 (z 0d0)
+                 (xyz (vec3 x y z)))
+  (make-quaternion-translation :quaternion r
+                               :translation xyz))
+
 ;; (defun tf (a b)
 ;;   (declare (type matrix a b))
 ;;   (cond

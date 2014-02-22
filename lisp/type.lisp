@@ -179,6 +179,12 @@
     (array (aref matrix i))
     (matrix (matref matrix i 0))))
 
+(defun (setf vecref) (value vec i)
+  (etypecase vec
+    (simple-vector (setf (svref vec i) value))
+    (array (setf (aref vec i) value))
+    (matrix (setf (matref vec i 0) value))))
+
 (defun (setf matref) (value matrix i j)
   "Set element at row i, col j."
   (setf (aref (matrix-data matrix)

@@ -40,7 +40,15 @@
 
 (in-package :amino)
 
+(defgeneric vec-array (obj &optional array start))
 
+(defmethod vec-array ((obj array) &optional (array (make-vec (length obj))) (start 0))
+  (check-type obj (array double-float (*)))
+  (replace array obj :start1 start))
+
+
+(defmethod vec-array ((obj real-array) &optional (array (make-vec (length (real-array-data obj)))) (start 0))
+  (replace array (real-array-data obj) :start1 start))
 
 (defgeneric g* (a b))
 (defgeneric g- (a b))
@@ -94,3 +102,19 @@
 
 (defmethod matrix->list ((matrix real-array))
   (matrix->list (real-array-data matrix)))
+
+;; Misc
+(defmethod dot-product (a b))
+
+(defmethod dot-product ((a array) (b array))
+  (assert (= (length a) (length b)))
+  (let ((c 0))
+    (dotimes (i (length a))
+      (setq c (+ c (* (aref a i)
+                      (aref b i)))))
+    c))
+
+(defmethod g+ ((a vec3) (b vec3))
+  (make-vec3 :data
+             (g+ (vec3-data a)
+                 (vec3-data b))))

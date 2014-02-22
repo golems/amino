@@ -133,11 +133,11 @@
 (defun vec3 (x y z)
   (make-vec3 :data (vec x y z)))
 
+(defun vec3-ref (vec i) (aref (vec3-data vec) i))
 
-(defstruct (point3 (:include vec3)))
-
-(defun point3 (x y z)
-  (make-point3 :data (vec x y z)))
+(defun vec3-x (vec) (vec3-ref vec 0))
+(defun vec3-y (vec) (vec3-ref vec 1))
+(defun vec3-z (vec) (vec3-ref vec 2))
 
 (define-foreign-type vector-3-t ()
   ()
@@ -174,6 +174,9 @@
   (aref (quaternion-data q) +z+))
 (defun quaternion-w (q)
   (aref (quaternion-data q) +w+))
+
+(defun quaternion-4 (x y z w)
+  (make-quaternion :data (vec x y z w)))
 
 (define-foreign-type quaternion-t ()
   ()
