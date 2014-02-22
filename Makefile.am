@@ -193,6 +193,12 @@ aa_fuzz_LDADD = libamino.la -lblas -llapack libtestutil.la
 testcpp_SOURCES = src/test/testcpp.cpp
 testcpp_LDADD = libamino.la -lblas -llapack libtestutil.la
 
+
+noinst_PROGRAMS += test_vec
+test_vec_SOURCES = src/test/test_vec.c
+test_vec_LDADD = libamino.la -lblas -llapack libtestutil.la
+test_vec_CFLAGS = $(CFLAGS) -march=native
+
 ## PREPROCESSING ##
 
 clapack_doc.c: doc/clapack_doc.c include/amino/clapack.h include/amino/clapack_impl.h

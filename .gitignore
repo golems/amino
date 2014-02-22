@@ -86,3 +86,4 @@ amino*.tar.gz
 /doc/.javadoc.stamp
 /doc/javadoc
 /amino-*
+/test_vec

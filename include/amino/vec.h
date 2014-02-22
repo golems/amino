@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2013, Georgia Tech Research Corporation
+ * Copyright (c) 2014, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,41 +40,8 @@
  *
  */
 
-#ifndef AA_AMINO_ARCH_AVX_H
-#define AA_AMINO_ARCH_AVX_H
 
-/* /\** Load a vec4 from memory *\/ */
-/* static inline aa_vec_4d */
-/* aa_vec_4d_ld( const double src[4] ) { */
-/*     //const double *a = __builtin_assume_aligned(src, 32); */
-/*     return *(aa_vec_4d*)src; */
-/*     //aa_vec_4d dst = a; */
-/*     /\* dst[0] = a[0]; *\/ */
-/*     /\* dst[1] = a[1]; *\/ */
-/*     /\* dst[2] = a[2]; *\/ */
-/*     /\* dst[3] = a[3]; *\/ */
-/*     //return dst; */
-
-/*     //return __builtin_ia32_loadupd256(src); */
-/* } */
-
-/* /\** Store a vec4 to memory *\/ */
-/* static inline void */
-/* aa_vec_4d_st( double dst[4], const aa_vec_4d src ) { */
-/*     __builtin_ia32_storeupd256( dst, src ); */
-/* } */
-
-
-/** Load a vec3 from memory */
-static inline aa_vec_4d
-aa_vec_3d_ld( const double src[3] ) {
-    aa_vec_2d d2 = __builtin_ia32_loadupd(src);
-    aa_vec_4d d4;
-    d4[0] = d2[0];
-    d4[1] = d2[1];
-    d4[3] = src[3];
-    return d4;
-}
-
-
-#endif //AA_AMINO_ARCH_AVX_H
+#ifndef AMINO_VEC_H
+#define AMINO_VEC_H
+#include "amino/arch/arch.h"
+#endif /*AMINO_VEC_H*/

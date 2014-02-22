@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2013, Georgia Tech Research Corporation
+ * Copyright (c) 2010-2014, Georgia Tech Research Corporation
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -40,41 +40,53 @@
  *
  */
 
-#ifndef AA_AMINO_ARCH_AVX_H
-#define AA_AMINO_ARCH_AVX_H
+//#define AA_ALLOC_STACK_MAX
+#include "amino.h"
+#include "amino/test.h"
+#include "amino/vec.h"
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <inttypes.h>
+#include <sys/resource.h>
 
-/* /\** Load a vec4 from memory *\/ */
-/* static inline aa_vec_4d */
-/* aa_vec_4d_ld( const double src[4] ) { */
-/*     //const double *a = __builtin_assume_aligned(src, 32); */
-/*     return *(aa_vec_4d*)src; */
-/*     //aa_vec_4d dst = a; */
-/*     /\* dst[0] = a[0]; *\/ */
-/*     /\* dst[1] = a[1]; *\/ */
-/*     /\* dst[2] = a[2]; *\/ */
-/*     /\* dst[3] = a[3]; *\/ */
-/*     //return dst; */
+double test_qu[8][4];
 
-/*     //return __builtin_ia32_loadupd256(src); */
-/* } */
+static void quat(void)
+{
+    double vr[4], mr[4];
+    aa_vec_4d q0 = aa_vec_4d_ld(test_qu[0]);
+    aa_vec_4d q1 = aa_vec_4d_ld(test_qu[1]);
 
-/* /\** Store a vec4 to memory *\/ */
-/* static inline void */
-/* aa_vec_4d_st( double dst[4], const aa_vec_4d src ) { */
-/*     __builtin_ia32_storeupd256( dst, src ); */
-/* } */
+    // qmul
+    aa_vec_4d_st(vr, aa_vec_qmul(q0,q1) );
+    aa_tf_qmul( test_qu[0], test_qu[1], mr );
+    aveq( "qmul", 4, vr, mr, 0 );
 
+    // qconj
+    aa_vec_4d_st(vr, aa_vec_qconj(q0) );
+    aa_tf_qconj( test_qu[0], mr );
+    aveq( "qconj", 4, vr, mr, 0 );
 
-/** Load a vec3 from memory */
-static inline aa_vec_4d
-aa_vec_3d_ld( const double src[3] ) {
-    aa_vec_2d d2 = __builtin_ia32_loadupd(src);
-    aa_vec_4d d4;
-    d4[0] = d2[0];
-    d4[1] = d2[1];
-    d4[3] = src[3];
-    return d4;
 }
 
+int main( int argc, char **argv ) {
+    (void) argc; (void) argv;
 
-#endif //AA_AMINO_ARCH_AVX_H
+
+    // init
+    srand((unsigned int)time(NULL)); // might break in 2038
+    aa_test_ulimit();
+
+
+    for( size_t i = 0; i < 1000; i++ ) {
+        // random data
+        for( size_t j = 0; j < sizeof(test_qu)/sizeof(test_qu[0]); j++ ) {
+            aa_tf_qurand( test_qu[j] );
+        }
+
+        quat();
+
+    }
+
+}
