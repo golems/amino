@@ -536,10 +536,10 @@ void aa_tf_relx_median( size_t n, const double *R,
     aa_mem_region_local_pop(yp);
 }
 
-double aa_tf_qangle_rel( const double *q, const double *p )
-{
-    double qrel[4];
-    aa_tf_qcmul(q, p, qrel);
-    aa_tf_qminimize(qrel);
-    return  fabs(aa_tf_qangle(qrel));
-}
+/* double aa_tf_qangle_rel( const double *q, const double *p ) */
+/* { */
+/*     double qrel[4]; */
+/*     aa_tf_qcmul(q, p, qrel); */
+/*     aa_tf_qminimize(qrel); */
+/*     return  aa_tf_qangle(qrel); */
+/* } */

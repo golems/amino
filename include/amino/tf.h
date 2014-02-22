@@ -366,6 +366,10 @@ AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRI
  */
 AA_API void aa_tf_qnormalize( double q[AA_RESTRICT 4] );
 
+
+/** Return norm of the quaternion */
+AA_API double aa_tf_qnorm( double q[AA_RESTRICT 4] );
+
 /** Minimize angle represented by the quaternion.  This puts the
  *  quaternion in the right-hand side of the complex plane.  Its w
  *  value will be positive.

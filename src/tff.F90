@@ -927,6 +927,17 @@ contains
     angle = atan2( sqrt(dot_product(q(XYZ_INDEX),q(XYZ_INDEX))), q(W_INDEX) )
   end function aa_tf_qangle
 
+
+  function aa_tf_qangle_rel( a, b ) result(angle) &
+       bind( C, name="aa_tf_qangle_rel" )
+    real(C_DOUBLE), intent(in) :: a(4), b(4)
+    real(C_DOUBLE) :: angle
+    real(C_DOUBLE) :: r(4)
+    call aa_tf_qcmul( a,b,r )
+    call aa_tf_qminimize(r)
+    angle = aa_tf_qangle(r)
+  end function aa_tf_qangle_rel
+
   !> Compute q**a
   pure subroutine aa_tf_qpow( q, a, r ) &
        bind( C, name="aa_tf_qpow" )
