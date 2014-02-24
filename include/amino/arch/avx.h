@@ -72,7 +72,7 @@ aa_vec_3d_ld( const double src[3] ) {
     aa_vec_4d d4;
     d4[0] = d2[0];
     d4[1] = d2[1];
-    d4[3] = src[3];
+    d4[2] = src[2];
     return d4;
 }
 

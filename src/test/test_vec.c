@@ -54,9 +54,11 @@ double test_qu[8][4];
 
 static void quat(void)
 {
-    double vr[4], mr[4];
+    double vr[8], mr[8];
     aa_vec_4d q0 = aa_vec_4d_ld(test_qu[0]);
     aa_vec_4d q1 = aa_vec_4d_ld(test_qu[1]);
+    aa_vec_4d q2 = aa_vec_4d_ld(test_qu[2]);
+    aa_vec_4d q3 = aa_vec_4d_ld(test_qu[3]);
 
     // qmul
     aa_vec_4d_st(vr, aa_vec_qmul(q0,q1) );
@@ -68,6 +70,72 @@ static void quat(void)
     aa_tf_qconj( test_qu[0], mr );
     aveq( "qconj", 4, vr, mr, 0 );
 
+    // rotation
+    aa_vec_4d_st(vr, aa_vec_qrot( q0, q1 ) );
+    aa_tf_qrot( test_qu[0], test_qu[1], mr );
+    aveq( "qrot", 3, vr, mr, 1e-9 );
+
+    // cross
+    aa_vec_4d_st(vr, aa_vec_cross( q0, q1 ) );
+    aa_tf_cross( test_qu[0], test_qu[1], mr );
+    aveq( "cross", 3, vr, mr, 1e-9 );
+
+    /* QUATERNION-VECTOR */
+
+    // tf
+    aa_vec_4d_st(vr, aa_vec_qv_tf( q0, q1, q2 ) );
+    aa_tf_tf_qv( test_qu[0], test_qu[1], test_qu[2], mr );
+    aveq( "qv-tf", 3, vr, mr, 1e-9 );
+
+    // mul
+    {
+        aa_vec_4d tmp1, tmp2;
+        AA_VEC_QV_MUL( q0, q1, q2, q3, tmp1, tmp2 );
+        aa_vec_4d_st( vr, tmp1 );
+        aa_vec_4d_st( vr+4, tmp2 );
+        aa_tf_qv_chain( test_qu[0], test_qu[1],
+                        test_qu[2], test_qu[3],
+                        mr, mr+4 );
+        aveq( "qv-mul", 7, vr, mr, 1e-9 );
+    }
+}
+
+static void mat(void)
+{
+    double T[12];
+    aa_tf_quat2rotmat(test_qu[0], T);
+    AA_MEM_CPY( T+9, test_qu[1], 3 );
+    //aa_vec_4d q0 = aa_vec_4d_ld(test_qu[0]);
+    aa_vec_4d q1 = aa_vec_4d_ld(test_qu[1]);
+    aa_vec_4d q2 = aa_vec_4d_ld(test_qu[2]);
+
+    double vr1[3], mr1[3];
+
+    aa_vec_4d vR0, vR1, vR2;
+    AA_VEC_ROTMAT_LD( vR0, vR1, vR2, T );
+
+    aa_vec_4d Tc0, Tc1, Tc2, Tc3;
+    AA_VEC_TFMAT_LD( Tc0, Tc1, Tc2, Tc3, T );
+
+    // store
+    {
+        double T1[12];
+        aa_vec_rotmat_st(T1, vR0, vR1, vR2 );
+        aveq( "rotmat-st", 9, T, T1, 0 );
+
+        aa_vec_tfmat_st(T1, Tc0, Tc1, Tc2, Tc3 );
+        aveq( "tfmat-st", 12, T, T1, 0 );
+    }
+
+    // rotate
+    aa_tf_9( T, test_qu[1], mr1 );
+    aa_vec_3d_st( vr1, aa_vec_rotmat_tf( vR0, vR1, vR2, q1 ) );
+    aveq( "rotmat-tf", 3, vr1, mr1, 1e-9 );
+
+    // transform
+    aa_tf_12( T, test_qu[2], mr1 );
+    aa_vec_3d_st( vr1, aa_vec_tfmat_tf( Tc0, Tc1, Tc2, Tc3, q2 ) );
+    aveq( "tfmat-tf", 3, vr1, mr1, 1e-9 );
 }
 
 int main( int argc, char **argv ) {
@@ -86,6 +154,7 @@ int main( int argc, char **argv ) {
         }
 
         quat();
+        mat();
 
     }
 
