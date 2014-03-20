@@ -50,7 +50,7 @@
                (:file "foreign" :depends-on ("type"))
                (:file "wrappers" :depends-on ("foreign"))
                (:file "op" :depends-on ("package"))
-               (:file "generic" :depends-on ("wrappers" "op"))
+               (:file "generic" :depends-on ("wrappers" "op" "tf-type"))
                (:file "mem" :depends-on ("foreign"))
                (:file "io" :depends-on ("mem"))
                ;; TF
