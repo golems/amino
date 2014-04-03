@@ -142,8 +142,6 @@ AM_CONDITIONAL([HAVE_JAVAC],   [test "x$JAVAC" != x])
 
 AC_LANG([C])
 
-AC_CONFIG_FILES([Makefile])
-AC_OUTPUT
 
 
 AC_MSG_NOTICE([=========================])
@@ -155,3 +153,15 @@ AC_MSG_NOTICE([Fortran compiler:  $FC])
 AC_MSG_NOTICE([Java compiler:     $JAVAC])
 AC_MSG_NOTICE([prefix:            $prefix])
 AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
+
+
+AS_IF([test "x$CC" = "x"],
+      [AC_MSG_ERROR([No C compiler detected])])
+AS_IF([test "x$CXX" = "x"],
+      [AC_MSG_ERROR([No C++ compiler detected])])
+AS_IF([test "x$FC" = "x"],
+      [AC_MSG_ERROR([No Fortran compiler detected])])
+
+
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
