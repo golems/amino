@@ -899,6 +899,18 @@ contains
     r(XYZ_INDEX) = ew*sc * q(XYZ_INDEX)
   end Subroutine aa_tf_qexp
 
+  !! Pure quaternion exponential
+  pure Subroutine aa_tf_qpexp( q, r ) &
+       bind( C, name="aa_tf_qpexp" )
+    real(C_DOUBLE), Dimension(4), intent(out) :: r
+    real(C_DOUBLE), Dimension(3), intent(in) :: q
+    real(C_DOUBLE) :: sc, c
+    call aa_tf_sinccos2( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)), sc, c)
+    r(W_INDEX) = c
+    r(XYZ_INDEX) = sc * q(XYZ_INDEX)
+  end Subroutine aa_tf_qpexp
+
+
   pure subroutine aa_tf_qln( q, r ) &
        bind( C, name="aa_tf_qln" )
     real(C_DOUBLE), Dimension(4), intent(out) :: r
@@ -1602,9 +1614,11 @@ contains
     real(C_DOUBLE), intent(in) :: dq(4), q0(4)
     real(C_DOUBLE), intent(in), value :: dt
     real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE)  :: w(3)
-    call aa_tf_qdiff2vel(q0, dq, w )
-    call aa_tf_qsvel( q0, w, dt, q1 );
+    real(C_DOUBLE)  :: w(4), r(4)
+    call aa_tf_qmulc(dq,q0,w)
+    w = dt*w
+    call aa_tf_qpexp(w,r)
+    call aa_tf_qmul(r,q0,q1)
   end subroutine aa_tf_qsdiff
 
   subroutine aa_tf_quat_davenport_matrix( n, w, qq, ldqq,  M ) &

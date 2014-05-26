@@ -304,7 +304,7 @@ static void quat() {
 
     // integrate
 
-    double qn_rk1[4], qn_vrk1[4], qn_vrk4[4], qn_vexp[4],w0[3] = {0};
+    double qn_rk1[4], qn_vrk1[4], qn_vrk4[4], qn_vexp[4], qn_dq[4], w0[3] = {0};
     double dt = .02;
 
 
@@ -312,9 +312,11 @@ static void quat() {
     aa_tf_qvelrk1( q1, w, dt, qn_vrk1 );
     aa_tf_qvelrk4( q1, w, dt, qn_vrk4 );
     aa_tf_qsvel( q1, w, dt, qn_vexp );
+    aa_tf_qsdiff( q1, dq, dt, qn_dq );
     aveq("qvelrk1", 4, qn_rk1, qn_vrk1, .001 );
     aveq("qvelrk4", 4, qn_rk1, qn_vrk4, .001 );
     aveq("qvelexp", 4, qn_vrk4, qn_vexp, .0001);
+    aveq("qvelsdiff", 4, qn_vexp, qn_dq, .001 );
     aa_tf_qsvel( q1, w0, dt, qn_vexp );
     aveq("qvelsvel0", 4, q1, qn_vexp, .000 );
 

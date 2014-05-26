@@ -577,6 +577,18 @@ AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
                          double dt,
                          double q1[AA_RESTRICT 4] );
 
+/** Integrate unit quaternion from quaternion derivative.
+ *
+ * \param q0 Initial rotation quaternion
+ * \param dq Quaternion derivative
+ * \param dt Time step
+ * \param q1 Final rotation quaternion
+ **/
+AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
+                         const double dq[AA_RESTRICT 4],
+                         double dt,
+                         double q1[AA_RESTRICT 4] );
+
 
 /** Unit quaternion for angle about x axis */
 AA_API void aa_tf_xangle2quat( double theta_x, double q[AA_RESTRICT 4] );
