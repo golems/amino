@@ -26,6 +26,10 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_FUNCS([sincos])
 
+AC_LANG([Fortran])
+AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
+AC_LANG([C])
+
 # Check for thread local storage
 AX_TLS
 
