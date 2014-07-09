@@ -480,46 +480,7 @@
 (defun tf-translation (tf)
   (matrix-block tf 0 3 3 1))
 
-(defun make-tf (&key r (x 0d0) (y 0d0) (z 0d0))
-  (let* ((tf (make-transformation-matrix))
-         (a (matrix-data tf)))
-    (setf (aref a 9) (coerce x 'double-float)
-          (aref a 10) (coerce y 'double-float)
-          (aref a 11) (coerce z 'double-float))
-    (if r
-        (dotimes (i 9)
-          (setf (aref a i)
-                (aref (matrix-data r) i)))
-        (setf (aref a 0) 1d0
-              (aref a 4) 1d0
-              (aref a 8) 1d0))
-    tf))
-
-
-
 (defstruct tf-tag
   tf
   parent
   child)
-
-
-(defun build-tf (&key
-                 (r (quaternion-4 0d0 0d0 0d0 1d0))
-                 (x 0d0)
-                 (y 0d0)
-                 (z 0d0)
-                 (xyz (vec3 x y z)))
-  (make-quaternion-translation :quaternion r
-                               :translation xyz))
-
-;; (defun tf (a b)
-;;   (declare (type matrix a b))
-;;   (cond
-;;     ((transformation-matrix-p a)
-;;      (cond
-;;        ((transformation-matrix-p b)
-;;         (tf-12chain a b))
-;;        ((vector-3-p b)
-;;         (tf-12 a b))
-;;        (t (error "Can't transform ~A * ~A" a b))))
-;;     (t (error "Can't transform ~A * ~A" a b))))

@@ -174,6 +174,15 @@
                                                   (aref x 1)
                                                   (aref x 2))))
 
+(defun tf (rotation translation)
+  (make-quaternion-translation :quaternion (quaternion rotation)
+                               :translation (etypecase translation
+                                              ((simple-array double-float (3))
+                                               (vec3 (aref translation 0)
+                                                     (aref translation 1)
+                                                     (aref translation 2)))
+                                              (vec3 translation))))
+
 (defmethod vec-array ((obj quaternion-translation) &optional (array (make-vec 7)) (start 0))
   (replace array (real-array-data (quaternion-translation-quaternion obj)) :start1 start)
   (replace array (real-array-data (quaternion-translation-translation obj)) :start1 (+ start 4)))
