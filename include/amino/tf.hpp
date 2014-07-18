@@ -315,6 +315,13 @@ struct DualQuat : aa_tf_duqu {
                            v.data))
     {}
 
+    DualQuat conj()
+    {
+        DualQuat S;
+        aa_tf_duqu_conj(this->data, S.data);
+        return S;
+    }
+
     aa_tf_vec3 translation() {
         aa_tf_vec3 V;
         aa_tf_duqu_trans( this->data, V.data );
@@ -357,39 +364,56 @@ struct DualQuat : aa_tf_duqu {
         aa_tf_xyz2duqu(x, y, z, S.data);
         return S;
     }
+    static aa_tf_duqu from_dx(double *s, double *dx )
+    {
+        DualQuat S;
+        aa_tf_duqu_vel2diff( s, dx, S.data );
+        return S;
+    }
 };
 
 
-struct QuatVec : aa_tf_qv {
-    QuatVec() {}
+struct QuatTran : aa_tf_qv {
+    QuatTran() {}
 
-    QuatVec(const struct aa_tf_qv *S) :    aa_tf_qv(from_qv(S->r.data, S->v.data)) {}
-    QuatVec(const struct aa_tf_qv &S) :    aa_tf_qv(from_qv(S.r.data, S.v.data))  {}
-    QuatVec(const struct aa_tf_quat *_r, const struct aa_tf_vec3 *_v) :
+    QuatTran(const struct aa_tf_qv *S) :    aa_tf_qv(from_qv(S->r.data, S->v.data)) {}
+    QuatTran(const struct aa_tf_qv &S) :    aa_tf_qv(from_qv(S.r.data, S.v.data))  {}
+    QuatTran(const struct aa_tf_quat *_r, const struct aa_tf_vec3 *_v) :
         aa_tf_qv(from_qv(_r->data, _v->data))
     {}
-    QuatVec(const struct aa_tf_quat &_r, const struct aa_tf_vec3 &_v) :
+    QuatTran(const struct aa_tf_quat &_r, const struct aa_tf_vec3 &_v) :
         aa_tf_qv(from_qv(_r.data, _v.data))
     {}
-    QuatVec(const struct aa_tf_duqu *S) :  aa_tf_qv(from_duqu(S->data))  {}
-    QuatVec(const struct aa_tf_duqu &S) :  aa_tf_qv(from_duqu(S.data))   {}
-    QuatVec(const struct aa_tf_tfmat *T) : aa_tf_qv(from_tfmat(T->data)) {}
-    QuatVec(const struct aa_tf_tfmat &T) : aa_tf_qv(from_tfmat(T.data))  {}
+    QuatTran(const struct aa_tf_duqu *S) :  aa_tf_qv(from_duqu(S->data))  {}
+    QuatTran(const struct aa_tf_duqu &S) :  aa_tf_qv(from_duqu(S.data))   {}
+    QuatTran(const struct aa_tf_tfmat *T) : aa_tf_qv(from_tfmat(T->data)) {}
+    QuatTran(const struct aa_tf_tfmat &T) : aa_tf_qv(from_tfmat(T.data))  {}
+
+    QuatTran conj()
+    {
+        QuatTran qv;
+        aa_tf_qutr_conj(this->data, qv.data);
+        return qv;
+    }
 
     static aa_tf_qv from_qv(const double a_r[4], const double a_v[3])
     {
-        QuatVec qv;
+        QuatTran qv;
         memcpy(qv.r.data, a_r, 4*sizeof(qv.r.data[0]));
         memcpy(qv.v.data, a_v, 3*sizeof(qv.v.data[0]));
         return qv;
     }
+    static aa_tf_qv from_qv(const double e[7])
+    {
+        return from_qv(e, e+4);
+    }
     static aa_tf_qv from_duqu(const double s[8]) {
-        QuatVec qv;
+        QuatTran qv;
         aa_tf_duqu2qv( s, qv.r.data, qv.v.data );
         return qv;
     }
     static aa_tf_qv from_tfmat(const double t[12]) {
-        QuatVec qv;
+        QuatTran qv;
         aa_tf_tfmat2duqu( t, qv.data );
         return qv;
     }
