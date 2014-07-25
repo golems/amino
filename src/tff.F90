@@ -91,6 +91,63 @@ module amino_tf
      end subroutine aa_tf_quat_davenport
   end interface aa_tf_quat_davenport
 
+  !! Matrix interfaces
+
+  interface aa_tf_rotmat_mul
+     pure subroutine aa_tf_rotmat_mul( R1, R2, R3 ) &
+          bind(C,name="aa_tf_rotmat_mul")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: R1(3,3), R2(3,3)
+       real(C_DOUBLE), intent(out) :: R3(3,3)
+     end subroutine aa_tf_rotmat_mul
+  end interface aa_tf_rotmat_mul
+
+  interface aa_tf_tfmat_mul
+     pure subroutine aa_tf_tfmat_mul( T1, T2, T3 ) &
+          bind(C,name="aa_tf_tfmat_mul")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: T1(3,4), T2(3,4)
+       real(C_DOUBLE), intent(out) :: T3(3,4)
+     end subroutine aa_tf_tfmat_mul
+  end interface aa_tf_tfmat_mul
+
+  interface aa_tf_tfmat2_mul
+     pure subroutine aa_tf_tfmat2_mul( R1, v1, R2, v2, R3, v3 ) &
+          bind(C,name="aa_tf_tfmat2_mul")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: R1(3,3), R2(3,3), v1(3), v2(3)
+       real(C_DOUBLE), intent(out) :: R3(3,3), v3(3)
+     end subroutine aa_tf_tfmat2_mul
+  end interface aa_tf_tfmat2_mul
+
+
+  interface aa_tf_rotmat_rot
+     pure subroutine aa_tf_rotmat_rot( R, p1, p2 ) &
+          bind(C,name="aa_tf_rotmat_rot")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: R(3,3), p1(3)
+       real(C_DOUBLE), intent(out) :: p2(3)
+     end subroutine aa_tf_rotmat_rot
+  end interface aa_tf_rotmat_rot
+
+  interface aa_tf_tfmat_tf
+     pure subroutine aa_tf_tfmat_tf( T, p1, p2 ) &
+          bind(C,name="aa_tf_tfmat_tf")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: T(3,4), p1(3)
+       real(C_DOUBLE), intent(out) :: p2(3)
+     end subroutine aa_tf_tfmat_tf
+  end interface aa_tf_tfmat_tf
+
+  interface aa_tf_tfmat2_tf
+     pure subroutine aa_tf_tfmat2_tf( R, v, p1, p2 ) &
+          bind(C,name="aa_tf_tfmat2_tf")
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: R(3,3), v(3), p1(3)
+       real(C_DOUBLE), intent(out) :: p2(3)
+     end subroutine aa_tf_tfmat2_tf
+  end interface aa_tf_tfmat2_tf
+
 
   type aa_tf_dual_t
      real(C_DOUBLE) :: r
@@ -138,26 +195,17 @@ contains
     real(C_DOUBLE), intent(in)  :: R1(3,3)
     real(C_DOUBLE), intent(in)  :: p1(3)
     real(C_DOUBLE), intent(out) :: p(3)
-    p(1) = R1(1,1)*p1(1) + R1(1,2)*p1(2) + R1(1,3)*p1(3)
-    p(2) = R1(2,1)*p1(1) + R1(2,2)*p1(2) + R1(2,3)*p1(3)
-    p(3) = R1(3,1)*p1(1) + R1(3,2)*p1(2) + R1(3,3)*p1(3)
+    call aa_tf_rotmat_rot( R1, p1, p );
+    ! p(1) = R1(1,1)*p1(1) + R1(1,2)*p1(2) + R1(1,3)*p1(3)
+    ! p(2) = R1(2,1)*p1(1) + R1(2,2)*p1(2) + R1(2,3)*p1(3)
+    ! p(3) = R1(3,1)*p1(1) + R1(3,2)*p1(2) + R1(3,3)*p1(3)
   end subroutine aa_tf_9
 
   pure Subroutine aa_tf_9mul(R1, R2, R3) &
        bind( C, name="aa_tf_9mul" )
     real(C_DOUBLE), intent(in), dimension(3,3) :: R1, R2
     real(C_DOUBLE), intent(out), dimension(3,3) :: R3
-    R3(1,1) =  R1(1,1)*R2(1,1) + R1(1,2)*R2(2,1) + R1(1,3)*R2(3,1);
-    R3(2,1) =  R1(2,1)*R2(1,1) + R1(2,2)*R2(2,1) + R1(2,3)*R2(3,1);
-    R3(3,1) =  R1(3,1)*R2(1,1) + R1(3,2)*R2(2,1) + R1(3,3)*R2(3,1);
-
-    R3(1,2) =  R1(1,1)*R2(1,2) + R1(1,2)*R2(2,2) + R1(1,3)*R2(3,2);
-    R3(2,2) =  R1(2,1)*R2(1,2) + R1(2,2)*R2(2,2) + R1(2,3)*R2(3,2);
-    R3(3,2) =  R1(3,1)*R2(1,2) + R1(3,2)*R2(2,2) + R1(3,3)*R2(3,2);
-
-    R3(1,3) =  R1(1,1)*R2(1,3) + R1(1,2)*R2(2,3) + R1(1,3)*R2(3,3);
-    R3(2,3) =  R1(2,1)*R2(1,3) + R1(2,2)*R2(2,3) + R1(2,3)*R2(3,3);
-    R3(3,3) =  R1(3,1)*R2(1,3) + R1(3,2)*R2(2,3) + R1(3,3)*R2(3,3);
+    call aa_tf_rotmat_mul(R1, R2, R3)
   End subroutine aa_tf_9mul
 
   pure subroutine aa_tf_93( R1, v1, p1, p) &
@@ -166,8 +214,9 @@ contains
     real(C_DOUBLE), intent(in)  :: v1(3)
     real(C_DOUBLE), intent(in)  :: p1(3)
     real(C_DOUBLE), intent(out) :: p(3)
-    call aa_tf_9( R1, p1, p )
-    p = p + v1
+    call aa_tf_tfmat2_tf( R1, v1, p1, p )
+    ! call aa_tf_9( R1, p1, p )
+    ! p = p + v1
   end subroutine aa_tf_93
 
   pure subroutine aa_tf_tf_qv( q, v, p1, p2) &
@@ -186,8 +235,7 @@ contains
     real(C_DOUBLE), intent(in)  :: v2(3)
     real(C_DOUBLE), intent(out) :: R3(3,3)
     real(C_DOUBLE), intent(out) :: v3(3)
-    call aa_tf_9mul( R1, R2, R3 )
-    call aa_tf_93(R1, v1, v2, v3)
+    call aa_tf_tfmat2_mul( R1,v1, R2,v2, R3,v3 )
   end subroutine aa_tf_93chain
 
   pure subroutine aa_tf_qv_chain( q1, v1, q2, v2, q3, v3 ) &
@@ -213,27 +261,25 @@ contains
     real(C_DOUBLE), intent(in)  :: T1(3,4)
     real(C_DOUBLE), intent(in)  :: T2(3,4)
     real(C_DOUBLE), intent(out) :: T3(3,4)
-    ! call aa_tf_93chain( &
-    !      T1(R_INDEX), T1(T_INDEX), &
-    !      T2(R_INDEX), T2(T_INDEX), &
-    !      T3(R_INDEX), T3(T_INDEX) )
+
+    call aa_tf_tfmat_mul( T1, T2, T3 )
 
     !! Factorized
-    T3(1,1) =  T1(1,1)*T2(1,1) + T1(1,2)*T2(2,1) + T1(1,3)*T2(3,1);
-    T3(2,1) =  T1(2,1)*T2(1,1) + T1(2,2)*T2(2,1) + T1(2,3)*T2(3,1);
-    T3(3,1) =  T1(3,1)*T2(1,1) + T1(3,2)*T2(2,1) + T1(3,3)*T2(3,1);
+    ! T3(1,1) =  T1(1,1)*T2(1,1) + T1(1,2)*T2(2,1) + T1(1,3)*T2(3,1);
+    ! T3(2,1) =  T1(2,1)*T2(1,1) + T1(2,2)*T2(2,1) + T1(2,3)*T2(3,1);
+    ! T3(3,1) =  T1(3,1)*T2(1,1) + T1(3,2)*T2(2,1) + T1(3,3)*T2(3,1);
 
-    T3(1,2) =  T1(1,1)*T2(1,2) + T1(1,2)*T2(2,2) + T1(1,3)*T2(3,2);
-    T3(2,2) =  T1(2,1)*T2(1,2) + T1(2,2)*T2(2,2) + T1(2,3)*T2(3,2);
-    T3(3,2) =  T1(3,1)*T2(1,2) + T1(3,2)*T2(2,2) + T1(3,3)*T2(3,2);
+    ! T3(1,2) =  T1(1,1)*T2(1,2) + T1(1,2)*T2(2,2) + T1(1,3)*T2(3,2);
+    ! T3(2,2) =  T1(2,1)*T2(1,2) + T1(2,2)*T2(2,2) + T1(2,3)*T2(3,2);
+    ! T3(3,2) =  T1(3,1)*T2(1,2) + T1(3,2)*T2(2,2) + T1(3,3)*T2(3,2);
 
-    T3(1,3) =  T1(1,1)*T2(1,3) + T1(1,2)*T2(2,3) + T1(1,3)*T2(3,3);
-    T3(2,3) =  T1(2,1)*T2(1,3) + T1(2,2)*T2(2,3) + T1(2,3)*T2(3,3);
-    T3(3,3) =  T1(3,1)*T2(1,3) + T1(3,2)*T2(2,3) + T1(3,3)*T2(3,3);
+    ! T3(1,3) =  T1(1,1)*T2(1,3) + T1(1,2)*T2(2,3) + T1(1,3)*T2(3,3);
+    ! T3(2,3) =  T1(2,1)*T2(1,3) + T1(2,2)*T2(2,3) + T1(2,3)*T2(3,3);
+    ! T3(3,3) =  T1(3,1)*T2(1,3) + T1(3,2)*T2(2,3) + T1(3,3)*T2(3,3);
 
-    T3(1,4) = T1(1,1)*T2(1,4) + T1(1,2)*T2(2,4) + T1(1,3)*T2(3,4) + T1(1,4);
-    T3(2,4) = T1(2,1)*T2(1,4) + T1(2,2)*T2(2,4) + T1(2,3)*T2(3,4) + T1(2,4);
-    T3(3,4) = T1(3,1)*T2(1,4) + T1(3,2)*T2(2,4) + T1(3,3)*T2(3,4) + T1(3,4);
+    ! T3(1,4) = T1(1,1)*T2(1,4) + T1(1,2)*T2(2,4) + T1(1,3)*T2(3,4) + T1(1,4);
+    ! T3(2,4) = T1(2,1)*T2(1,4) + T1(2,2)*T2(2,4) + T1(2,3)*T2(3,4) + T1(2,4);
+    ! T3(3,4) = T1(3,1)*T2(1,4) + T1(3,2)*T2(2,4) + T1(3,3)*T2(3,4) + T1(3,4);
 
   end subroutine aa_tf_12chain
 
@@ -242,8 +288,9 @@ contains
     real(C_DOUBLE), intent(in)  :: T(3,4)
     real(C_DOUBLE), intent(in)  :: p1(3)
     real(C_DOUBLE), intent(out) :: p(3)
+    call aa_tf_tfmat_tf( T, p1, p )
 
-    call aa_tf_93( T(:,1:3), T(:,4), p1, p )
+    !call aa_tf_93( T(:,1:3), T(:,4), p1, p )
   end subroutine aa_tf_12
 
 

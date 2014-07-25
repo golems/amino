@@ -65,7 +65,14 @@ typedef struct aa_tf_vec3 {
 
 /// A rotation matrix, column major
 typedef struct aa_tf_rotmat {
-    double data[9];
+    union {
+        struct {
+            struct aa_tf_vec3 col0;
+            struct aa_tf_vec3 col1;
+            struct aa_tf_vec3 col2;
+        };
+        double data[9];
+    };
 } aa_tf_rotmat_t;
 
 typedef struct aa_tf_axang {
@@ -298,6 +305,70 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
 /************/
 
 AA_API void aa_tf_skewsym_scal2( double a, double b, const double u[3], double R[9] );
+
+
+
+/* Multiply */
+AA_API void aa_tf_rotmat_mul( const double R0[AA_RESTRICT 9],
+                              const double R1[AA_RESTRICT 9],
+                              double R[AA_RESTRICT 9] );
+
+AA_API void aa_tf_tfmat_mul( const double T0[AA_RESTRICT 12],
+                             const double T1[AA_RESTRICT 12],
+                             double T[AA_RESTRICT 12] );
+
+AA_API void aa_tf_tfmat2_mul( const double R0[AA_RESTRICT 9],
+                              const double v0[AA_RESTRICT 3],
+                              const double R1[AA_RESTRICT 9],
+                              const double v1[AA_RESTRICT 3],
+                              double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
+
+
+/* Inverting Multiply */
+
+AA_API void aa_tf_rotmat_imul( const double R0[AA_RESTRICT 9],
+                               const double R1[AA_RESTRICT 9],
+                               double R[AA_RESTRICT 9] );
+
+AA_API void aa_tf_rotmat_muli( const double R0[AA_RESTRICT 9],
+                               const double R1[AA_RESTRICT 9],
+                               double R[AA_RESTRICT 9] );
+
+AA_API void aa_tf_tfmat_imul( const double T0[AA_RESTRICT 12],
+                              const double T1[AA_RESTRICT 12],
+                              double T[AA_RESTRICT 12] );
+
+AA_API void aa_tf_tfmat_muli( const double T0[AA_RESTRICT 12],
+                              const double T1[AA_RESTRICT 12],
+                              double T[AA_RESTRICT 12] );
+
+AA_API void aa_tf_tfmat2_imul( const double R0[AA_RESTRICT 9],
+                               const double v0[AA_RESTRICT 3],
+                               const double R1[AA_RESTRICT 9],
+                               const double v1[AA_RESTRICT 3],
+                               double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
+
+AA_API void aa_tf_tfmat2_muli( const double R0[AA_RESTRICT 9],
+                               const double v0[AA_RESTRICT 3],
+                               const double R1[AA_RESTRICT 9],
+                               const double v1[AA_RESTRICT 3],
+                               double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
+
+/* Transform */
+
+AA_API void aa_tf_rotmat_rot( const double R[AA_RESTRICT 9],
+                              const double p0[AA_RESTRICT 3],
+                              double p1[AA_RESTRICT 3] );
+
+AA_API void aa_tf_tfmat_tf( const double T[AA_RESTRICT 12],
+                      const double p0[AA_RESTRICT 3],
+                      double p1[AA_RESTRICT 3] );
+
+AA_API void aa_tf_tfmat2_tf( const double R[AA_RESTRICT 9],
+                             const double v[AA_RESTRICT 3],
+                             const double p0[AA_RESTRICT 3],
+                             double p1[AA_RESTRICT 4] );
+
 
 /// tests if R is a rotation matrix
 AA_API int aa_tf_isrotmat( const double R[AA_RESTRICT 9] );

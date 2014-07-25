@@ -55,6 +55,7 @@ libamino_la_SOURCES =                  \
 	src/la.c                       \
 	src/la2.c                      \
 	src/tf.c                       \
+	src/tf/tfmatrix.c              \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \
