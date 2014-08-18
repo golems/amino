@@ -69,6 +69,9 @@ libamino_la_SOURCES =                  \
 	src/cv.c
 
 libamino_la_LIBADD =                   \
+	-llapack                       \
+	-lblas                         \
+	-lgfortran                     \
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la

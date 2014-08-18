@@ -1,3 +1,9 @@
+amino (0.20140818) unstable; urgency=low
+
+  * Numerous updates
+
+ -- Neil Dantam <ntd@gatech.edu>  Mon, 18 Aug 2013 17:00:00 -0400
+
 amino (0.20120916) unstable; urgency=low
 
   * Port amino.mac to GCL maxima

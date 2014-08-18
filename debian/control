@@ -1,8 +1,8 @@
 Source: amino
 Priority: extra
 Maintainer: Neil Dantam <ntd@gatech.edu>
-Build-Depends: debhelper (>= 7), autotools-dev, gfortran, libblas-dev, liblapack-dev
-Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 9), autotools-dev, gfortran, libblas-dev, liblapack-dev
+Standards-Version: 3.9.4
 Section: libs
 Homepage: http://github.com/golems/amino
 
@@ -19,7 +19,8 @@ Description: Robotics utility library
 Package: libamino0
 Section: libs
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}
+Pre-Depends: multiarch-support
 Description: Robotics utility library
  Amino is package of basic utilities for robotics software.  It
  includes mathematical and linear algebra routines, memory management,
