@@ -117,10 +117,6 @@ amino_tf.mod: $(libamino_tf_la_OBJECTS)
 # dependent objects dependent on the appropriate module
 $(libamino_la_la_OBJECTS): amino_mem.mod
 $(libamino_tf_la_OBJECTS): amino_la.mod
-$(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
-
-foo:
-	echo $(la_test_OBJECTS)
 
 
 ## JAVA ##
@@ -169,36 +165,49 @@ endif
 
 
 ## TESTS ##
-
-TESTS = aa_test la_test aa_regress q_test aa_fuzz testcpp
-noinst_PROGRAMS = aa_test la_test aa_fuzz aa_regress q_test testcpp
 noinst_LTLIBRARIES += libtestutil.la
-
 libtestutil_la_SOURCES = src/test/testutil.c
 
+TESTS = aa_test
+noinst_PROGRAMS = aa_test
 aa_test_SOURCES = src/test/aa_test.c
 aa_test_LDADD = libamino.la -lblas -llapack libtestutil.la
 
+TESTS += q_test
+noinst_PROGRAMS += q_test
 q_test_SOURCES = src/test/q_test.c
 q_test_LDADD = libamino.la -lblas -llapack libtestutil.la
 
+TESTS += aa_regress
+noinst_PROGRAMS += aa_regress
 aa_regress_SOURCES = src/test/aa_regress.c
 aa_regress_LDADD = libamino.la -lblas -llapack libtestutil.la
 
+TESTS += la_test
+noinst_PROGRAMS += la_test
 la_test_SOURCES = src/test/la_test.F90
 la_test_LDADD = libamino.la -lblas -llapack libtestutil.la
 
+$(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
+
+foo:
+	echo $(la_test_OBJECTS)
+
+TESTS += aa_fuzz
+noinst_PROGRAMS += aa_fuzz
 aa_fuzz_SOURCES = src/test/aa_fuzz.c
 aa_fuzz_LDADD = libamino.la -lblas -llapack libtestutil.la
 
+TESTS += testcpp
+noinst_PROGRAMS += testcpp
 testcpp_SOURCES = src/test/testcpp.cpp
 testcpp_LDADD = libamino.la -lblas -llapack libtestutil.la
 
 
-noinst_PROGRAMS += test_vec
-test_vec_SOURCES = src/test/test_vec.c
-test_vec_LDADD = libamino.la -lblas -llapack libtestutil.la
-test_vec_CFLAGS = $(CFLAGS) -march=native
+# noinst_PROGRAMS += test_vec
+# test_vec_SOURCES = src/test/test_vec.c
+# test_vec_LDADD = libamino.la -lblas -llapack libtestutil.la
+# test_vec_CFLAGS = $(CFLAGS) -march=native
 
 ## PREPROCESSING ##
 
