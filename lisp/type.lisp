@@ -50,6 +50,12 @@
 ;;;   - Cols
 (in-package :amino)
 
+(defconstant π pi)
+(defconstant π/2 (/ pi 2))
+(defconstant π/4 (/ pi 4))
+(defconstant -π (- pi))
+(defconstant -π/2 (- (/ pi 2)))
+
 (defconstant +x+ 0)
 (defconstant +y+ 1)
 (defconstant +z+ 2)
