@@ -87,3 +87,5 @@ amino*.tar.gz
 /doc/javadoc
 /amino-*
 /test_vec
+/src/tf/.deps/.dirstamp
+/src/tf/.dirstamp

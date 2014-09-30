@@ -201,6 +201,11 @@ noinst_PROGRAMS += aa_fuzz
 aa_fuzz_SOURCES = src/test/aa_fuzz.c
 aa_fuzz_LDADD = libamino.la -lblas -llapack libtestutil.la
 
+TESTS += aa_fuzz_tf
+noinst_PROGRAMS += aa_fuzz_tf
+aa_fuzz_tf_SOURCES = src/test/aa_fuzz_tf.c
+aa_fuzz_tf_LDADD = libamino.la -lblas -llapack libtestutil.la
+
 TESTS += testcpp
 noinst_PROGRAMS += testcpp
 testcpp_SOURCES = src/test/testcpp.cpp
