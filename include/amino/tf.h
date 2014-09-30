@@ -468,6 +468,25 @@ AA_API void aa_tf_qexp( const double q[AA_RESTRICT 4],
 AA_API void aa_tf_qln( const double q[AA_RESTRICT 4],
                        double r[AA_RESTRICT 4] );
 
+/** Derivative of the Unit Quaternion Logarithm.
+ *
+ * \param q A unit quaternion
+ * \param dq The derivative of q
+ * \param dln The derivative of ln(dq)
+ */
+AA_API void aa_tf_qduln( const double q[AA_RESTRICT 4],
+                         const double dq[AA_RESTRICT 4],
+                         double dln[AA_RESTRICT 3] );
+
+/** Derivative of the Pure Quaternion Exponential.
+ *
+ * \param e A pure quaternion
+ * \param de The derivative of e
+ * \param dq The derivative of exp(e)
+ */
+AA_API void aa_tf_qdpexp( const double e[AA_RESTRICT 3],
+                          const double de[AA_RESTRICT 3],
+                          double dq[AA_RESTRICT 4] );
 
 /** Return the angle of the quaternion.
  *

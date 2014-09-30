@@ -1364,6 +1364,59 @@ contains
     call aa_tf_qmul_vq( v2, q, dq_dt )
   end subroutine aa_tf_qvel2diff
 
+  !! Derivative of the Unit a Quaternion Logarithm
+  subroutine aa_tf_qduln( q, dq, dln ) &
+       bind( C, name="aa_tf_qduln" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q, dq
+    real(C_DOUBLE), dimension(3), intent(out) :: dln
+
+    real(C_DOUBLE) :: vv, qnorm, vnorm, phi, s, c, alpha, beta, gamma
+
+    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+    qnorm = sqrt( vv + q(W_INDEX)**2 )
+    vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
+    phi = atan2( vnorm, q(W_INDEX) ) ! always positive
+    c = cos(phi)
+
+    if( phi < sqrt(sqrt(epsilon(phi))) ) then
+       alpha = aa_tf_invsinc_series(phi)
+       beta = aa_tf_horner3( phi**2, -1d0/3, 1d0/30, 53d0/2520 )
+    else
+       s = sin(phi)
+       alpha = s/phi
+       beta = phi*c**2 / s**3 - c / s**2
+    end if
+
+    gamma = dq(W_INDEX) * (1-alpha*c) + dot_product(q(XYZ_INDEX),dq(XYZ_INDEX)) * beta
+
+    dln = alpha * dq(XYZ_INDEX) + gamma * q(XYZ_INDEX)
+  end subroutine aa_tf_qduln
+
+
+  ! Derivative of Pure Quaternion Exponential
+  subroutine aa_tf_qdpexp( e, de, dq ) &
+       bind( C, name="aa_tf_qdpexp" )
+    real(C_DOUBLE), dimension(3), intent(in) :: e, de
+    real(C_DOUBLE), dimension(4), intent(out) :: dq
+
+    real(C_DOUBLE) :: vv, phi, sinc, k, dd
+    vv = dot_product(e,e)
+    phi = sqrt(vv)
+    dd = dot_product(e, de)
+
+    if( phi < sqrt(sqrt(epsilon(phi))) ) then
+       sinc = aa_tf_sinc_series(phi)
+       k = aa_tf_horner3( vv, -1d0/3, 1d0/30, -1d0/840 )
+    else
+       sinc = sin(phi)/phi
+       k = cos(phi)/phi**2 - sin(phi)/phi**3
+    end if
+
+    dq(XYZ_INDEX) = sinc*de + k*dd*e
+    dq(W_INDEX) = -dd*sinc
+
+  end subroutine aa_tf_qdpexp
+
 
   subroutine aa_tf_rotvec_qjac( v, G ) &
        bind( C, name="aa_tf_rotvec_qjac" )
@@ -1422,6 +1475,8 @@ contains
 
     real(C_DOUBLE) :: y(3), dy(3), phi2, phi, sinc, k, ydy
 
+    ! Derivative of pure exponential
+
     y = v / 2
     dy = dv / 2
     phi2 = dot_product(y,y)
@@ -1446,6 +1501,7 @@ contains
     ! dq = matmul( G, dv )
 
   end subroutine aa_tf_rotvec_diff2qdiff
+
 
   subroutine aa_tf_rotvec_diff2vel( v, dv, w ) &
        bind( C, name="aa_tf_rotvec_diff2vel" )
