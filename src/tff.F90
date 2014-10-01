@@ -1364,34 +1364,114 @@ contains
     call aa_tf_qmul_vq( v2, q, dq_dt )
   end subroutine aa_tf_qvel2diff
 
+
+  !! Jacobian of the unit quaternion logarithm
+  subroutine aa_tf_qjuln( q, J ) &
+       bind( C, name="aa_tf_qjuln" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q
+    real(C_DOUBLE), dimension(3,4), intent(out) :: J
+    real(C_DOUBLE) :: vv, vnorm, phi, s, s2, s3, isc,x,y,z
+    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+    vnorm = sqrt(vv)
+    phi = atan2( vnorm, q(W_INDEX) ) ! always positive
+    s = vnorm
+    s2 = vv
+    s3 = s**3
+    isc = phi/s
+    x = q(1)
+    y = q(2)
+    z = q(3)
+    !print *,sqrt(1-q(W_INDEX)**2)
+    !print *,s
+
+    J(1,1) = isc - phi*x**2/s3
+    J(2,1) = - phi*x*y/s3
+    J(3,1) = - phi*x*z/s3
+
+    J(1,2) = -phi*x*y/s3
+    J(2,2) = isc - phi*y**2/s3
+    J(3,2) = -phi*y*z/s3
+
+    J(1,3) = -phi*x*z/s3
+    J(2,3) = -phi*y*z/s3
+    J(3,3) = isc - phi*z**2/s3
+
+    J(1,4) = -x/s2
+    J(2,4) = -y/s2
+    J(3,4) = -z/s2
+  end subroutine aa_tf_qjuln
+
+  subroutine aa_tf_qdulnj( q, dq, dln ) &
+       bind( C, name="aa_tf_qdulnj" )
+    real(C_DOUBLE), dimension(4), intent(in) :: q, dq
+    real(C_DOUBLE), dimension(3), intent(out) :: dln
+    real(C_DOUBLE), dimension(3,4) :: J
+    call aa_tf_qjuln(q,J)
+    dln = matmul(J,dq)
+  end subroutine aa_tf_qdulnj
+
   !! Derivative of the Unit a Quaternion Logarithm
   subroutine aa_tf_qduln( q, dq, dln ) &
        bind( C, name="aa_tf_qduln" )
     real(C_DOUBLE), dimension(4), intent(in) :: q, dq
     real(C_DOUBLE), dimension(3), intent(out) :: dln
+    real(C_DOUBLE) :: phi, s, c, alpha, beta
 
-    real(C_DOUBLE) :: vv, qnorm, vnorm, phi, s, c, alpha, beta, gamma
-
-    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    qnorm = sqrt( vv + q(W_INDEX)**2 )
-    vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
-    phi = atan2( vnorm, q(W_INDEX) ) ! always positive
-    c = cos(phi)
+    s = sqrt(dot_product(q(XYZ_INDEX), q(XYZ_INDEX)))
+    c = q(W_INDEX)
+    phi = atan2( s, c ) ! always positive
 
     if( phi < sqrt(sqrt(epsilon(phi))) ) then
        alpha = aa_tf_invsinc_series(phi)
-       beta = aa_tf_horner3( phi**2, -1d0/3, 1d0/30, 53d0/2520 )
+       beta = aa_tf_horner3( phi**2, -1d0/3, 2d0/15, -2d0/63 )
     else
-       s = sin(phi)
-       alpha = s/phi
-       beta = phi*c**2 / s**3 - c / s**2
+       alpha = phi/s
+       beta = (-1/s**2 + phi*c/s**3)
     end if
 
-    gamma = dq(W_INDEX) * (1-alpha*c) + dot_product(q(XYZ_INDEX),dq(XYZ_INDEX)) * beta
-
-    dln = alpha * dq(XYZ_INDEX) + gamma * q(XYZ_INDEX)
+    dln = alpha * dq(XYZ_INDEX) + dq(W_INDEX)*beta * q(XYZ_INDEX)
   end subroutine aa_tf_qduln
 
+
+  !! Jacobian of the unit quaternion logarithm
+  subroutine aa_tf_qjpexp( u, J ) &
+       bind( C, name="aa_tf_qjpexp" )
+    real(C_DOUBLE), dimension(3), intent(in) :: u
+    real(C_DOUBLE), dimension(4,3), intent(out) :: J
+    real(C_DOUBLE) :: x,y,z, v, vv, v3, s,c
+    x = u(1)
+    y = u(2)
+    z = u(3)
+    vv = dot_product(u,u)
+    v = sqrt(vv)
+    v3 = v**3
+    s = sin(v)
+    c = cos(v)
+
+    J(1,1) = c*x*x/vv - s*x*x/v3 + s/v
+    J(2,1) = c*x*y/vv - s*x*y/v3
+    J(3,1) = c*x*z/vv - s*x*z/v3
+    J(4,1) = -s*x/v
+
+    J(1,2) = c*y*x/vv - s*y*x/v3
+    J(2,2) = c*y*y/vv - s*y*y/v3 + s/v
+    J(3,2) = c*y*z/vv - s*y*z/v3
+    J(4,2) = -s*y/v
+
+    J(1,3) = c*x*z/vv - s*x*z/v3
+    J(2,3) = c*y*z/vv - s*y*z/v3
+    J(3,3) = c*z*z/vv - s*z*z/v3 + s/v
+    J(4,3) = -s*z/v
+  end subroutine aa_tf_qjpexp
+
+  subroutine aa_tf_qdpexpj( e, de, dq ) &
+       bind( C, name="aa_tf_qdpexpj" )
+    real(C_DOUBLE), dimension(3), intent(in) :: e, de
+    real(C_DOUBLE), dimension(4), intent(out) :: dq
+    real(C_DOUBLE), dimension(4,3) :: J
+    call aa_tf_qjpexp(e,J)
+    dq = matmul(J,de)
+  end subroutine aa_tf_qdpexpj
 
   ! Derivative of Pure Quaternion Exponential
   subroutine aa_tf_qdpexp( e, de, dq ) &

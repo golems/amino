@@ -59,19 +59,16 @@ void rand_tf( double _E[7], double S[8],  double T[12] ) {
     if( T ) aa_tf_duqu2tfmat( S, T );
 }
 
-static void rotvec() {
-    double e[3],  R[9], q[4], vr[3], vq[3];
-    aa_vrand(3,e);
+static void rotvec(double *q) {
+    double e[3], R[9], vr[3];
 
-    aa_tf_rotvec2quat(e, q);
     aa_tf_quat2rotmat(q, R);
     assert( aa_tf_isrotmat(R) );
-
+    aa_tf_quat2rotvec(q, e);
 
     aa_tf_rotmat2rotvec(R, vr);
-    aa_tf_quat2rotvec(q, vq);
 
-    aveq("rotvec", 3, vq, vr, .001 );
+    aveq("rotvec", 3, e, vr, .001 );
 
     {
         double ee[9], eln[3], qe[4], rln[3];
@@ -94,7 +91,7 @@ static void rotvec() {
 
 typedef void (*fun_type)(double,double,double, double*b);
 
-static void euler_helper( double e[4], fun_type e2r, fun_type e2q ) {
+static void euler_helper( const double e[4], fun_type e2r, fun_type e2q ) {
     double R[9],  q[4];
     e2r(e[0], e[1], e[2], R);
     aa_tf_isrotmat(R) ;
@@ -108,9 +105,7 @@ static void euler_helper( double e[4], fun_type e2r, fun_type e2q ) {
     aveq("euler-vecs", 3, vq, vr, .001 );
 }
 
-static void euler() {
-    double e[3];
-    aa_vrand(3,e);
+static void euler(const double *e) {
 
     euler_helper( e, &aa_tf_eulerxyz2rotmat, &aa_tf_eulerxyz2quat );
     euler_helper( e, &aa_tf_eulerxzy2rotmat, &aa_tf_eulerxzy2quat );
@@ -133,9 +128,7 @@ static void euler() {
 
 }
 
-static void euler1() {
-    double a[1];
-    aa_vrand(1, a);
+static void euler1(const double *a) {
     double g = a[0];
     double Rx[9], Ry[9], Rz[9];
     double eRx[9], eRy[9], eRz[9];
@@ -154,28 +147,25 @@ static void euler1() {
 }
 
 
-static void chain() {
-    double S1[8], S2[8], S3[8];
-    double E1[7], E2[7], E3[7], ES[8];
-    double T1[12], T2[12], T3[12], TS[8];
+static void chain(double E[2][7],
+                  double S[2][8],
+                  double T[2][12] ) {
+    double E3[7], S3[8], ES[8], T3[12], TS[8];
     double qv[7], qvS[8];
 
-    rand_tf(E1, S1, T1);
-    rand_tf(E2, S2, T2);
-
     // rotation
-    aa_tf_qmul( S1, S2, S3 );
-    aa_tf_9mul( T1, T2, T3 );
+    aa_tf_qmul( S[0], S[1], S3 );
+    aa_tf_9mul( T[0], T[1], T3 );
     aa_tf_rotmat2quat( T3, TS );
     aa_tf_qminimize( S3 );
     aa_tf_qminimize( TS );
     aveq("chain-rot q/9", 4, S3, TS, 1e-6 );
 
     // Transformation
-    aa_tf_12chain( T1, T2, T3 );
-    aa_tf_duqu_mul( S1, S2, S3 );
-    aa_tf_qv_chain( S1, T1+9, S2, T2+9, qv, qv+4 );
-    aa_tf_qutr_mul( E1, E2, E3 );
+    aa_tf_12chain( T[0], T[1], T3 );
+    aa_tf_duqu_mul( S[0], S[1], S3 );
+    aa_tf_qv_chain( S[0], T[0]+9, S[1], T[1]+9, qv, qv+4 );
+    aa_tf_qutr_mul( E[0], E[1], E3 );
     aa_tf_tfmat2duqu( T3, TS );
     aa_tf_qv2duqu( qv, qv+4, qvS );
     aa_tf_qutr2duqu( E3, ES );
@@ -189,10 +179,10 @@ static void chain() {
 }
 
 
-static void quat() {
-    double q1[4], q2[4], u;
-    aa_tf_qurand( q1 );
-    aa_tf_qurand( q2 );
+static void quat(double E[2][7]) {
+    double u;
+    double *q1 = E[0];
+    double *q2 = E[0];
     u = aa_frand();
 
     {
@@ -230,8 +220,8 @@ static void quat() {
     // average
     {
         double qq[8], p[4], s[4];
-        memcpy( qq, q1, sizeof(q1) );
-        memcpy( qq+4, q2, sizeof(q2) );
+        AA_MEM_CPY( qq, q1, 4 );
+        AA_MEM_CPY( qq+4, q2, 4 );
         double w[2] = {.5,.5};
         aa_tf_quat_davenport( 2, w, qq, 4, p );
         aa_tf_qslerp( .5, q1, q2, s );
@@ -636,9 +626,10 @@ static void theta2quat() {
 }
 
 
-static void rotmat() {
-    double q[4], R[9], w[3], dR[9], dRw[3];
-    aa_tf_qurand( q );
+static void rotmat(double *q) {
+    //double q[4], R[9], w[3], dR[9], dRw[3];
+    //aa_tf_qurand( q );
+    double R[9], w[3], dR[9], dRw[3];
     aa_vrand( 3, w );
     aa_tf_quat2rotmat(q, R);
     aa_tf_rotmat_vel2diff( R, w, dR );
@@ -726,32 +717,75 @@ void qvmul(void)  {
 }
 
 
-void tf_conj(void) {
-    double S0[8], S1[8], S2[8], SE[7];
-    double E0[8], E1[8], E2[8];
-    rand_tf(E0, S0, NULL);
-    rand_tf(E1, S1, NULL);
+void tf_conj(double E[2][7],
+             double S[2][8] )
+{
+    double S2[8], SE[7], E2[8];
 
-    aa_tf_duqu_conj(S0, S2);
-    aa_tf_qutr_conj(E0, E2);
+    aa_tf_duqu_conj(S[0], S2);
+    aa_tf_qutr_conj(E[0], E2);
     aa_tf_duqu2qutr(S2, SE);
     aveq( "duqu/qutr conj", 7, E2, SE, 1e-7 );
 
 
-    aa_tf_duqu_mul(S0, S1, S2);
-    aa_tf_qutr_mul(E0, E1, E2);
+    aa_tf_duqu_mul(S[0], S[1], S2);
+    aa_tf_qutr_mul(E[0], E[1], E2);
     aa_tf_duqu2qutr(S2, SE);
     aveq( "duqu/qutr mul", 7, E2, SE, 1e-7 );
 
-    aa_tf_duqu_mulc(S0, S1, S2);
-    aa_tf_qutr_mulc(E0, E1, E2);
+    aa_tf_duqu_mulc(S[0], S[1], S2);
+    aa_tf_qutr_mulc(E[0], E[1], E2);
     aa_tf_duqu2qutr(S2, SE);
     aveq( "duqu/qutr mulc", 7, E2, SE, 1e-7 );
 
-    aa_tf_duqu_cmul(S0, S1, S2);
-    aa_tf_qutr_cmul(E0, E1, E2);
+    aa_tf_duqu_cmul(S[0], S[1], S2);
+    aa_tf_qutr_cmul(E[0], E[1], E2);
     aa_tf_duqu2qutr(S2, SE);
     aveq( "duqu/qutr cmul", 7, E2, SE, 1e-7 );
+}
+
+static void qdiff(double E[2][7], double dx[2][6] )
+{
+    double *q0 = E[0];
+    double *q1 = E[1];
+    double *w0 = dx[0]+3;
+    double *w1 = dx[1]+3;
+
+    // Velocity and Quaternion Derivatives
+    double dq0[4], dq1[4];
+    aa_tf_qvel2diff(q0, w0, dq0);
+    aa_tf_qvel2diff(q1, w1, dq1);
+    {
+        double wt0[3], wt1[3];
+        aa_tf_qdiff2vel( q0, dq0, wt0 );
+        aa_tf_qdiff2vel( q1, dq1, wt1 );
+        aveq("qvel/diff 0", 3, w0, wt0, 1e-7 );
+        aveq("qvel/diff 1", 3, w1, wt1, 1e-7 );
+    }
+
+    // Log and Exponential Derivatives
+    {
+        double u[3], du[3], duj[3];
+        double e[4], de[4], dej[4];
+        aa_tf_qln( q0, u );
+        aa_tf_qexp(u, e);
+        aveq( "qln/exp", 4, q0, e, 1e-7 );
+
+        aa_tf_qduln( q0, dq0, du );
+        aa_tf_qdulnj( q0, dq0, duj );
+        aveq( "dln/dlnj", 3, du, duj, 1e-7 );
+
+        aa_tf_qdpexp( u, du, de );
+        aa_tf_qdpexpj( u, du, dej );
+        aveq( "dexp/dexpj", 4, de, dej, 1e-7 );
+
+        aveq( "qdln/qdexpq", 4, dq0, de, 1e-7 );
+
+
+        //aa_tf_qdpexpj( ln0, dlnj0, de0 );
+        //aveq( "qdln/dexp", 4, dq0, de0, 1e-4 );
+    }
+
 }
 
 int main( void ) {
@@ -760,20 +794,30 @@ int main( void ) {
     aa_test_ulimit();
 
     for( size_t i = 0; i < 1000; i++ ) {
-        rotvec();
-        euler();
-        euler1();
-        chain();
-        quat();
+        /* Random Data */
+        static const size_t k=2;
+        double E[2][7], S[2][8], T[2][12], dx[2][6];
+        for( size_t j = 0; j < k; j ++ ) {
+            rand_tf(E[j], S[j], T[j]);
+            aa_vrand(6,dx[j]);
+        }
+        //printf("%d\n",i);
+        /* Run Tests */
+        rotvec(E[0]);
+        euler(dx[0]);
+        euler1(dx[0]);
+        chain(E,S,T);
+        quat(E);
         duqu();
         rel_q();
         rel_d();
         slerp();
         theta2quat();
-        rotmat();
+        rotmat(E[0]);
         tfmat();
         integrate();
-        tf_conj();
+        tf_conj(E, S);
+        qdiff(E,dx);
     }
 
     return 0;

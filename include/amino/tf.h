@@ -478,6 +478,10 @@ AA_API void aa_tf_qduln( const double q[AA_RESTRICT 4],
                          const double dq[AA_RESTRICT 4],
                          double dln[AA_RESTRICT 3] );
 
+AA_API void aa_tf_qdulnj( const double q[AA_RESTRICT 4],
+                         const double dq[AA_RESTRICT 4],
+                         double dln[AA_RESTRICT 3] );
+
 /** Derivative of the Pure Quaternion Exponential.
  *
  * \param e A pure quaternion
@@ -485,6 +489,10 @@ AA_API void aa_tf_qduln( const double q[AA_RESTRICT 4],
  * \param dq The derivative of exp(e)
  */
 AA_API void aa_tf_qdpexp( const double e[AA_RESTRICT 3],
+                          const double de[AA_RESTRICT 3],
+                          double dq[AA_RESTRICT 4] );
+
+AA_API void aa_tf_qdpexpj( const double e[AA_RESTRICT 3],
                           const double de[AA_RESTRICT 3],
                           double dq[AA_RESTRICT 4] );
 
