@@ -93,6 +93,70 @@ module amino_tf
 
   !! Matrix interfaces
 
+  interface aa_tf_9
+     pure subroutine aa_tf_9( R1, p1, p ) &
+          bind( C, name="aa_tf_9" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: R1(3,3)
+       real(C_DOUBLE), intent(in)  :: p1(3)
+       real(C_DOUBLE), intent(out) :: p(3)
+       ! call aa_tf_rotmat_rot( R1, p1, p );
+       ! p(1) = R1(1,1)*p1(1) + R1(1,2)*p1(2) + R1(1,3)*p1(3)
+       ! p(2) = R1(2,1)*p1(1) + R1(2,2)*p1(2) + R1(2,3)*p1(3)
+       ! p(3) = R1(3,1)*p1(1) + R1(3,2)*p1(2) + R1(3,3)*p1(3)
+     end subroutine aa_tf_9
+  end interface aa_tf_9
+
+  interface aa_tf_9mul
+     pure Subroutine aa_tf_9mul(R1, R2, R3) &
+          bind( C, name="aa_tf_9mul" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), dimension(3,3) :: R1, R2
+       real(C_DOUBLE), intent(out), dimension(3,3) :: R3
+       ! call aa_tf_rotmat_mul(R1, R2, R3)
+     End subroutine aa_tf_9mul
+  end interface aa_tf_9mul
+
+
+  interface aa_tf_93
+     pure subroutine aa_tf_93( R1, v1, p1, p) &
+          bind( C, name="aa_tf_93" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: R1(3,3)
+       real(C_DOUBLE), intent(in)  :: v1(3)
+       real(C_DOUBLE), intent(in)  :: p1(3)
+       real(C_DOUBLE), intent(out) :: p(3)
+       ! call aa_tf_tfmat2_tf( R1, v1, p1, p )
+       ! ! call aa_tf_9( R1, p1, p )
+       ! ! p = p + v1
+     end subroutine aa_tf_93
+  end interface aa_tf_93
+
+  interface aa_tf_tf_qv
+     pure subroutine aa_tf_tf_qv( q, v, p1, p2) &
+          bind( C, name="aa_tf_tf_qv" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: q(4), v(3), p1(3)
+       real(C_DOUBLE), intent(out) :: p2(3)
+       ! call aa_tf_qrot( q, p1, p2 )
+       ! p2 = p2 + v
+     end subroutine aa_tf_tf_qv
+  end interface aa_tf_tf_qv
+
+  interface aa_tf_93chain
+     pure subroutine aa_tf_93chain( R1, v1, R2, v2, R3, v3 ) &
+          bind( C, name="aa_tf_93chain" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: R1(3,3)
+       real(C_DOUBLE), intent(in)  :: v1(3)
+       real(C_DOUBLE), intent(in)  :: R2(3,3)
+       real(C_DOUBLE), intent(in)  :: v2(3)
+       real(C_DOUBLE), intent(out) :: R3(3,3)
+       real(C_DOUBLE), intent(out) :: v3(3)
+       ! call aa_tf_tfmat2_mul( R1,v1, R2,v2, R3,v3 )
+     end subroutine aa_tf_93chain
+  end interface aa_tf_93chain
+
   interface aa_tf_rotmat_mul
      pure subroutine aa_tf_rotmat_mul( R1, R2, R3 ) &
           bind(C,name="aa_tf_rotmat_mul")
@@ -148,6 +212,160 @@ module amino_tf
      end subroutine aa_tf_tfmat2_tf
   end interface aa_tf_tfmat2_tf
 
+  interface aa_tf_duqu2tfmat
+     subroutine aa_tf_duqu2tfmat( d, t ) &
+          bind( C, name="aa_tf_duqu2tfmat" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), dimension(8) :: d
+       real(C_DOUBLE), intent(out), dimension(3,4) :: t
+       ! call aa_tf_quat2rotmat( d(DQ_REAL), t(R_INDEX) )
+       ! call aa_tf_duqu_trans( d, t(T_INDEX) )
+     end subroutine aa_tf_duqu2tfmat
+  end interface aa_tf_duqu2tfmat
+
+  interface aa_tf_tfmat2duqu
+     subroutine aa_tf_tfmat2duqu( t, d ) &
+          bind( C, name="aa_tf_tfmat2duqu" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(out), dimension(8) :: d
+       real(C_DOUBLE), intent(in), dimension(3,4) :: t
+       real(C_DOUBLE) :: q(4)
+       ! call aa_tf_rotmat2quat( t(1:3,1:3), q )
+       ! call aa_tf_qv2duqu(q, t(1:3,4), d)
+     end subroutine aa_tf_tfmat2duqu
+  end interface aa_tf_tfmat2duqu
+
+
+  interface aa_tf_duqu_vel2twist
+     subroutine aa_tf_duqu_vel2twist( d, dx, t ) &
+          bind( C, name="aa_tf_duqu_vel2twist" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: d(8), dx(6)
+       real(C_DOUBLE), intent(out) :: t(8)
+       ! real(C_DOUBLE) :: p(3)
+       ! ! t = omega + \eps * ( cross(x,omega) + dx )
+       ! t(DQ_REAL_XYZ) = dx(4:6)
+       ! t(DQ_REAL_W) = 0d0
+       ! call aa_tf_duqu_trans( d, p )
+       ! call aa_tf_cross( p, dx(4:6), t(DQ_DUAL_XYZ) )
+       ! t(DQ_DUAL_XYZ) = t(DQ_DUAL_XYZ) + dx(1:3)
+       ! t(DQ_DUAL_W) = 0d0
+     end subroutine aa_tf_duqu_vel2twist
+  end interface aa_tf_duqu_vel2twist
+
+  interface aa_tf_duqu_twist2vel
+     subroutine aa_tf_duqu_twist2vel( d, t, dx ) &
+          bind( C, name="aa_tf_duqu_twist2vel" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: d(8), t(8)
+       real(C_DOUBLE), intent(out) :: dx(6)
+       ! real(C_DOUBLE) :: p(3), pxw(3)
+       ! ! dx = Omega - [0, p x omega ]
+       ! dx(4:6) = t(1:3)
+       ! call aa_tf_duqu_trans( d, p )
+       ! call aa_tf_cross( p, t(1:3), pxw )
+       ! dx(1:3) = t(5:7) - pxw
+     end subroutine aa_tf_duqu_twist2vel
+  end interface aa_tf_duqu_twist2vel
+
+  interface aa_tf_duqu_twist2diff
+     subroutine aa_tf_duqu_twist2diff( d, t, dd ) &
+          bind( C, name="aa_tf_duqu_twist2diff" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: d(8), t(8)
+       real(C_DOUBLE), intent(out) :: dd(8)
+       ! ! dd = twist * d / 2
+       ! call aa_tf_duqu_mul( t, d, dd )
+       ! dd = dd / 2d0
+     end subroutine aa_tf_duqu_twist2diff
+  end interface aa_tf_duqu_twist2diff
+
+
+
+  interface aa_tf_duqu_diff2twist
+     subroutine aa_tf_duqu_diff2twist( d, dd, t ) &
+          bind( C, name="aa_tf_duqu_diff2twist" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: d(8), dd(8)
+       real(C_DOUBLE), intent(out) :: t(8)
+       ! real(C_DOUBLE) :: dx(6)
+       ! call aa_tf_duqu_diff2vel(d, dd, dx)
+       ! call aa_tf_duqu_vel2twist(d, dx, t)
+     end subroutine aa_tf_duqu_diff2twist
+  end interface aa_tf_duqu_diff2twist
+
+
+  interface aa_tf_duqu_vel2diff
+     subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
+          bind( C, name="aa_tf_duqu_vel2diff" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: d(8), dx(6)
+       real(C_DOUBLE), intent(out) :: dd(8)
+       real(C_DOUBLE), dimension(8) :: t
+
+       ! call aa_tf_duqu_vel2twist( d, dx, t )
+       ! call aa_tf_duqu_twist2diff( d, t, dd )
+
+       ! ! ! orientation
+       ! ! call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
+       ! ! ! translation
+       ! ! ! dd_dual = (dx*d_real + x*dd_real) / 2
+       ! ! ! dd_dual = dx*r/2 + d*r_conj*dr)
+       ! ! call aa_tf_vqmul( dx(1:3), d(DQ_REAL), a )
+       ! ! call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), b)
+       ! ! call aa_tf_qmul( b, dd(DQ_REAL), c )
+       ! ! dd(DQ_DUAL) = a/2d0 + c
+     end subroutine aa_tf_duqu_vel2diff
+  end interface aa_tf_duqu_vel2diff
+
+
+  interface aa_tf_duqu_diff2vel
+     subroutine aa_tf_duqu_diff2vel( d, dd, dx ) &
+          bind( C, name="aa_tf_duqu_diff2vel" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: d(8), dd(8)
+       real(C_DOUBLE), intent(out) :: dx(6)
+       real(C_DOUBLE) :: t1(4), t2(4)
+       ! ! orientation
+       ! call aa_tf_qdiff2vel( d(DQ_REAL), dd(DQ_REAL), dx(4:6) )
+       ! ! translation
+       ! ! dx/dt = 2 * ( d_dual/dt conj(r) + d_dual conj(d_real/dt) )
+       ! call aa_tf_qmulc( dd(DQ_DUAL), d(DQ_REAL), t1 )
+       ! call aa_tf_qmulc( d(DQ_DUAL), dd(DQ_REAL), t2 )
+       ! dx(1:3) = 2 * (t1(XYZ_INDEX) + t2(XYZ_INDEX))
+     end subroutine aa_tf_duqu_diff2vel
+  end interface aa_tf_duqu_diff2vel
+
+  interface aa_tf_duqu_stwist
+     subroutine aa_tf_duqu_stwist( d0, twist, dt, d1 ) &
+          bind( C, name="aa_tf_duqu_stwist" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: twist(8), d0(8)
+       real(C_DOUBLE), intent(in), value :: dt
+       real(C_DOUBLE), intent(out) :: d1(8)
+       real(C_DOUBLE) :: twist1(8), etwist(8)
+     end subroutine aa_tf_duqu_stwist
+  end interface aa_tf_duqu_stwist
+
+  interface aa_tf_duqu_svel
+     subroutine aa_tf_duqu_svel( d0, dx, dt, d1 ) &
+          bind( C, name="aa_tf_duqu_svel" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: dx(6), d0(8)
+       real(C_DOUBLE), intent(in), value :: dt
+       real(C_DOUBLE), intent(out) :: d1(8)
+     end subroutine aa_tf_duqu_svel
+  end interface aa_tf_duqu_svel
+
+  interface aa_tf_duqu_sdiff
+     subroutine aa_tf_duqu_sdiff( d0, dd, dt, d1 ) &
+          bind( C, name="aa_tf_duqu_sdiff" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: dd(8), d0(8)
+       real(C_DOUBLE), intent(in), value :: dt
+       real(C_DOUBLE), intent(out) :: d1(8)
+     end subroutine aa_tf_duqu_sdiff
+  end interface aa_tf_duqu_sdiff
 
   type aa_tf_dual_t
      real(C_DOUBLE) :: r
@@ -190,53 +408,6 @@ module amino_tf
   End Interface
 
 contains
-  pure subroutine aa_tf_9( R1, p1, p ) &
-       bind( C, name="aa_tf_9" )
-    real(C_DOUBLE), intent(in)  :: R1(3,3)
-    real(C_DOUBLE), intent(in)  :: p1(3)
-    real(C_DOUBLE), intent(out) :: p(3)
-    call aa_tf_rotmat_rot( R1, p1, p );
-    ! p(1) = R1(1,1)*p1(1) + R1(1,2)*p1(2) + R1(1,3)*p1(3)
-    ! p(2) = R1(2,1)*p1(1) + R1(2,2)*p1(2) + R1(2,3)*p1(3)
-    ! p(3) = R1(3,1)*p1(1) + R1(3,2)*p1(2) + R1(3,3)*p1(3)
-  end subroutine aa_tf_9
-
-  pure Subroutine aa_tf_9mul(R1, R2, R3) &
-       bind( C, name="aa_tf_9mul" )
-    real(C_DOUBLE), intent(in), dimension(3,3) :: R1, R2
-    real(C_DOUBLE), intent(out), dimension(3,3) :: R3
-    call aa_tf_rotmat_mul(R1, R2, R3)
-  End subroutine aa_tf_9mul
-
-  pure subroutine aa_tf_93( R1, v1, p1, p) &
-       bind( C, name="aa_tf_93" )
-    real(C_DOUBLE), intent(in)  :: R1(3,3)
-    real(C_DOUBLE), intent(in)  :: v1(3)
-    real(C_DOUBLE), intent(in)  :: p1(3)
-    real(C_DOUBLE), intent(out) :: p(3)
-    call aa_tf_tfmat2_tf( R1, v1, p1, p )
-    ! call aa_tf_9( R1, p1, p )
-    ! p = p + v1
-  end subroutine aa_tf_93
-
-  pure subroutine aa_tf_tf_qv( q, v, p1, p2) &
-       bind( C, name="aa_tf_tf_qv" )
-    real(C_DOUBLE), intent(in)  :: q(4), v(3), p1(3)
-    real(C_DOUBLE), intent(out) :: p2(3)
-    call aa_tf_qrot( q, p1, p2 )
-    p2 = p2 + v
-  end subroutine aa_tf_tf_qv
-
-  pure subroutine aa_tf_93chain( R1, v1, R2, v2, R3, v3 ) &
-       bind( C, name="aa_tf_93chain" )
-    real(C_DOUBLE), intent(in)  :: R1(3,3)
-    real(C_DOUBLE), intent(in)  :: v1(3)
-    real(C_DOUBLE), intent(in)  :: R2(3,3)
-    real(C_DOUBLE), intent(in)  :: v2(3)
-    real(C_DOUBLE), intent(out) :: R3(3,3)
-    real(C_DOUBLE), intent(out) :: v3(3)
-    call aa_tf_tfmat2_mul( R1,v1, R2,v2, R3,v3 )
-  end subroutine aa_tf_93chain
 
   pure subroutine aa_tf_qv_chain( q1, v1, q2, v2, q3, v3 ) &
        bind( C, name="aa_tf_qv_chain" )
@@ -2193,23 +2364,6 @@ contains
 
   end subroutine aa_tf_duqu_trans
 
-  !> Dual quaternion to transformation matrix
-  subroutine aa_tf_duqu2tfmat( d, t ) &
-       bind( C, name="aa_tf_duqu2tfmat" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d
-    real(C_DOUBLE), intent(out), dimension(3,4) :: t
-    call aa_tf_quat2rotmat( d(DQ_REAL), t(R_INDEX) )
-    call aa_tf_duqu_trans( d, t(T_INDEX) )
-  end subroutine aa_tf_duqu2tfmat
-
-  subroutine aa_tf_tfmat2duqu( t, d ) &
-       bind( C, name="aa_tf_tfmat2duqu" )
-    real(C_DOUBLE), intent(out), dimension(8) :: d
-    real(C_DOUBLE), intent(in), dimension(3,4) :: t
-    real(C_DOUBLE) :: q(4)
-    call aa_tf_rotmat2quat( t(1:3,1:3), q )
-    call aa_tf_qv2duqu(q, t(1:3,4), d)
-  end subroutine aa_tf_tfmat2duqu
 
   !> Transform a point using the dual quaternion
   subroutine aa_tf_tf_duqu( d, p0, p1 ) &
@@ -2289,88 +2443,6 @@ contains
   !   dd(DQ_DUAL) = a/2d0 + c
   ! end subroutine aa_tf_duqu_vel2diff
 
-
-  subroutine aa_tf_duqu_vel2twist( d, dx, t ) &
-       bind( C, name="aa_tf_duqu_vel2twist" )
-    real(C_DOUBLE), intent(in) :: d(8), dx(6)
-    real(C_DOUBLE), intent(out) :: t(8)
-    real(C_DOUBLE) :: p(3)
-    ! t = omega + \eps * ( cross(x,omega) + dx )
-    t(DQ_REAL_XYZ) = dx(4:6)
-    t(DQ_REAL_W) = 0d0
-    call aa_tf_duqu_trans( d, p )
-    call aa_tf_cross( p, dx(4:6), t(DQ_DUAL_XYZ) )
-    t(DQ_DUAL_XYZ) = t(DQ_DUAL_XYZ) + dx(1:3)
-    t(DQ_DUAL_W) = 0d0
-  end subroutine aa_tf_duqu_vel2twist
-
-
-  subroutine aa_tf_duqu_twist2vel( d, t, dx ) &
-       bind( C, name="aa_tf_duqu_twist2vel" )
-    real(C_DOUBLE), intent(in) :: d(8), t(8)
-    real(C_DOUBLE), intent(out) :: dx(6)
-    real(C_DOUBLE) :: p(3), pxw(3)
-    ! dx = Omega - [0, p x omega ]
-    dx(4:6) = t(1:3)
-    call aa_tf_duqu_trans( d, p )
-    call aa_tf_cross( p, t(1:3), pxw )
-    dx(1:3) = t(5:7) - pxw
-  end subroutine aa_tf_duqu_twist2vel
-
-  subroutine aa_tf_duqu_twist2diff( d, t, dd ) &
-       bind( C, name="aa_tf_duqu_twist2diff" )
-    real(C_DOUBLE), intent(in) :: d(8), t(8)
-    real(C_DOUBLE), intent(out) :: dd(8)
-    ! dd = twist * d / 2
-    call aa_tf_duqu_mul( t, d, dd )
-    dd = dd / 2d0
-  end subroutine aa_tf_duqu_twist2diff
-
-  subroutine aa_tf_duqu_diff2twist( d, dd, t ) &
-       bind( C, name="aa_tf_duqu_diff2twist" )
-    real(C_DOUBLE), intent(in) :: d(8), dd(8)
-    real(C_DOUBLE), intent(out) :: t(8)
-    real(C_DOUBLE) :: dx(6)
-    call aa_tf_duqu_diff2vel(d, dd, dx)
-    call aa_tf_duqu_vel2twist(d, dx, t)
-  end subroutine aa_tf_duqu_diff2twist
-
-
-  subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
-       bind( C, name="aa_tf_duqu_vel2diff" )
-    real(C_DOUBLE), intent(in) :: d(8), dx(6)
-    real(C_DOUBLE), intent(out) :: dd(8)
-    real(C_DOUBLE), dimension(8) :: t
-
-    call aa_tf_duqu_vel2twist( d, dx, t )
-    call aa_tf_duqu_twist2diff( d, t, dd )
-
-    ! ! orientation
-    ! call aa_tf_qvel2diff( d(DQ_REAL), dx(4:6), dd(DQ_REAL) )
-    ! ! translation
-    ! ! dd_dual = (dx*d_real + x*dd_real) / 2
-    ! ! dd_dual = dx*r/2 + d*r_conj*dr)
-    ! call aa_tf_vqmul( dx(1:3), d(DQ_REAL), a )
-    ! call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), b)
-    ! call aa_tf_qmul( b, dd(DQ_REAL), c )
-    ! dd(DQ_DUAL) = a/2d0 + c
-  end subroutine aa_tf_duqu_vel2diff
-
-  !! Convert spatial velocity to quaternion derivative
-  subroutine aa_tf_duqu_diff2vel( d, dd, dx ) &
-       bind( C, name="aa_tf_duqu_diff2vel" )
-    real(C_DOUBLE), intent(in) :: d(8), dd(8)
-    real(C_DOUBLE), intent(out) :: dx(6)
-    real(C_DOUBLE) :: t1(4), t2(4)
-    ! orientation
-    call aa_tf_qdiff2vel( d(DQ_REAL), dd(DQ_REAL), dx(4:6) )
-    ! translation
-    ! dx/dt = 2 * ( d_dual/dt conj(r) + d_dual conj(d_real/dt) )
-    call aa_tf_qmulc( dd(DQ_DUAL), d(DQ_REAL), t1 )
-    call aa_tf_qmulc( d(DQ_DUAL), dd(DQ_REAL), t2 )
-    dx(1:3) = 2 * (t1(XYZ_INDEX) + t2(XYZ_INDEX))
-  end subroutine aa_tf_duqu_diff2vel
-
   !! Exponential of a dual quaternion
   subroutine aa_tf_duqu_exp( d, e ) &
        bind( C, name="aa_tf_duqu_exp" )
@@ -2444,39 +2516,39 @@ contains
   end subroutine aa_tf_duqu_ln
 
   !! Integrate twist to to get dual quaternion
-  subroutine aa_tf_duqu_stwist( d0, twist, dt, d1 ) &
-       bind( C, name="aa_tf_duqu_stwist" )
-    real(C_DOUBLE), intent(in) :: twist(8), d0(8)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: d1(8)
-    real(C_DOUBLE) :: twist1(8), etwist(8)
-    twist1 = (dt/2d0)*twist
-    call aa_tf_duqu_exp( twist1, etwist )
-    call aa_tf_duqu_mul( etwist, d0, d1 )
-  end subroutine aa_tf_duqu_stwist
+  ! subroutine aa_tf_duqu_stwist( d0, twist, dt, d1 ) &
+  !      bind( C, name="aa_tf_duqu_stwist" )
+  !   real(C_DOUBLE), intent(in) :: twist(8), d0(8)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: d1(8)
+  !   real(C_DOUBLE) :: twist1(8), etwist(8)
+  !   twist1 = (dt/2d0)*twist
+  !   call aa_tf_duqu_exp( twist1, etwist )
+  !   call aa_tf_duqu_mul( etwist, d0, d1 )
+  ! end subroutine aa_tf_duqu_stwist
 
   !! Integrate spatial velocity to to get dual quaternion
-  subroutine aa_tf_duqu_svel( d0, dx, dt, d1 ) &
-       bind( C, name="aa_tf_duqu_svel" )
-    real(C_DOUBLE), intent(in) :: dx(6), d0(8)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: d1(8)
-    real(C_DOUBLE) :: twist(8)
-    call aa_tf_duqu_vel2twist( d0, dx, twist )
-    call aa_tf_duqu_stwist( d0, twist, dt, d1 );
-  end subroutine aa_tf_duqu_svel
+  ! subroutine aa_tf_duqu_svel( d0, dx, dt, d1 ) &
+  !      bind( C, name="aa_tf_duqu_svel" )
+  !   real(C_DOUBLE), intent(in) :: dx(6), d0(8)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: d1(8)
+  !   real(C_DOUBLE) :: twist(8)
+  !   call aa_tf_duqu_vel2twist( d0, dx, twist )
+  !   call aa_tf_duqu_stwist( d0, twist, dt, d1 );
+  ! end subroutine aa_tf_duqu_svel
 
 
   !! Integrate dual quaternion derivative
-  subroutine aa_tf_duqu_sdiff( d0, dd, dt, d1 ) &
-       bind( C, name="aa_tf_duqu_sdiff" )
-    real(C_DOUBLE), intent(in) :: dd(8), d0(8)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: d1(8)
-    real(C_DOUBLE) :: w(8)
-    call aa_tf_duqu_diff2twist( d0, dd, w )
-    call aa_tf_duqu_stwist( d0, w, dt, d1 );
-  end subroutine aa_tf_duqu_sdiff
+  ! subroutine aa_tf_duqu_sdiff( d0, dd, dt, d1 ) &
+  !      bind( C, name="aa_tf_duqu_sdiff" )
+  !   real(C_DOUBLE), intent(in) :: dd(8), d0(8)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: d1(8)
+  !   real(C_DOUBLE) :: w(8)
+  !   call aa_tf_duqu_diff2twist( d0, dd, w )
+  !   call aa_tf_duqu_stwist( d0, w, dt, d1 );
+  ! end subroutine aa_tf_duqu_sdiff
 
 #include "aa_tf_euler.f90"
 #include "tf/qv.f90"

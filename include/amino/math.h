@@ -169,6 +169,13 @@ AA_API double aa_frand();
 AA_API void aa_vrand(size_t n, double *v);
 
 
+/// Evaluate three-term polynomial using horner's rule
+static inline double
+aa_horner3( double x, double a0, double a1, double a2 )
+{
+    return a0 + x * ( a1 + x*a2 );
+}
+
 /********/
 /* Stat */
 /********/

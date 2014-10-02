@@ -157,7 +157,6 @@ typedef struct aa_tf_duqu {
     };
 } aa_tf_duqu_t;
 
-
 /** Spatial velocity */
 struct aa_tf_dx {
     union {
@@ -168,6 +167,9 @@ struct aa_tf_dx {
         double data[6];
     };
 };
+
+#define AA_TF_DX_V 0
+#define AA_TF_DX_W 3
 
 /** Transform and spatial velocity */
 struct aa_tf_qv_dx {
@@ -1026,6 +1028,10 @@ AA_API void aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx
 AA_API void aa_tf_duqu_twist2vel( const double d[AA_RESTRICT 8], const double t[AA_RESTRICT 8],
                                   double dx[AA_RESTRICT 6] ) ;
 
+/** Dual quaternion twist to derivative */
+AA_API void aa_tf_duqu_twist2diff( const double d[AA_RESTRICT 8], const double t[AA_RESTRICT 8],
+                                  double dd[AA_RESTRICT 8] ) ;
+
 /** Dual quaternion derivative from velocity */
 AA_API void aa_tf_duqu_vel2diff( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                                  double dd[AA_RESTRICT 8] ) ;
@@ -1033,6 +1039,11 @@ AA_API void aa_tf_duqu_vel2diff( const double d[AA_RESTRICT 8], const double dx[
 /** Dual quaternion derivative to spatial velocity */
 AA_API void aa_tf_duqu_diff2vel( const double d[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                                  double dx[AA_RESTRICT 6] ) ;
+
+/** Convert dual quaternion derivative to dual quaternion twist */
+
+AA_API void aa_tf_duqu_diff2twist( const double d[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
+                                   double twist[AA_RESTRICT 8] ) ;
 
 /** Dual quaternion twist integration.
  * \param d0 initial position, dual quaternion
@@ -1049,7 +1060,7 @@ AA_API void aa_tf_duqu_stwist( const double d0[AA_RESTRICT 8], const double twis
  * \param dt time step
  * \param d1 final position, dual quaternion
  */
-AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
+AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                              double dt, double d1[AA_RESTRICT 6] ) ;
 
 /** Dual quaternion derivative integration.

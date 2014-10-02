@@ -43,6 +43,46 @@
 #define _GNU_SOURCE
 #include "amino.h"
 
+
+AA_API void
+aa_tf_9( const double R[AA_RESTRICT 9],
+         const double p0[AA_RESTRICT 3],
+         double p1[AA_RESTRICT 4] )
+{
+    aa_tf_rotmat_rot( R, p0, p1 );
+}
+
+AA_API void
+aa_tf_9mul( const double R0[AA_RESTRICT 9],
+            const double R1[AA_RESTRICT 9],
+            double R[AA_RESTRICT 9] )
+{
+    aa_tf_rotmat_mul(R0,R1,R);
+}
+
+AA_API void
+aa_tf_93( const double R[AA_RESTRICT 9],
+          const double v[AA_RESTRICT 3],
+          const double p0[AA_RESTRICT 3],
+          double p1[AA_RESTRICT 4] )
+{
+    aa_tf_tfmat2_tf(R, v, p0, p1 );
+}
+
+
+AA_API void
+aa_tf_93chain( const double R0[AA_RESTRICT 9],
+               const double v0[AA_RESTRICT 3],
+               const double R1[AA_RESTRICT 9],
+               const double v1[AA_RESTRICT 3],
+               double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] )
+{
+    aa_tf_tfmat2_mul( R0, v0,
+                      R1, v1,
+                      R, v );
+}
+
+
 /* Transform */
 
 AA_API void aa_tf_rotmat_rot( const double R[AA_RESTRICT 9],
