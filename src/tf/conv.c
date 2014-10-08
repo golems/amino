@@ -58,3 +58,66 @@ aa_tf_tfmat2duqu( const double T[AA_RESTRICT 12], double d[AA_RESTRICT 8] )
     aa_tf_rotmat2quat( T, q );
     aa_tf_qv2duqu( q, T+9, d );
 }
+
+AA_API void
+aa_tf_xangle2rotmat( double theta, double R[AA_RESTRICT 9] )
+{
+    double s = sin(theta), c = cos(theta);
+    R[0] = 1;
+    R[1] = 0;
+    R[2] = 0;
+
+    R[3] = 0;
+    R[4] = c;
+    R[5] = s;
+
+    R[6] = 0;
+    R[7] = -s;
+    R[8] = c;
+}
+
+AA_API void
+aa_tf_yangle2rotmat( double theta, double R[AA_RESTRICT 9] )
+{
+    double s = sin(theta), c = cos(theta);
+    R[0] = c;
+    R[1] = 0;
+    R[2] = -s;
+
+    R[3] = 0;
+    R[4] = 1;
+    R[5] = 0;
+
+    R[6] = s;
+    R[7] = 0;
+    R[8] = c;
+}
+
+AA_API void
+aa_tf_zangle2rotmat( double theta, double R[AA_RESTRICT 9] )
+{
+    double s = sin(theta), c = cos(theta);
+    R[0] = c;
+    R[1] = s;
+    R[2] = 0;
+
+    R[3] = -s;
+    R[4] = c;
+    R[5] = 0;
+
+    R[6] = 0;
+    R[7] = 0;
+    R[8] = 1;
+}
+
+AA_API void
+aa_tf_quat2rotmat( const double q[AA_RESTRICT 4], double R[AA_RESTRICT 9] )
+{
+    double b[3] = { 2*q[0],
+                    2*q[1],
+                    2*q[2] };
+    double a[3] = { q[3] * b[0],
+                    q[3] * b[1],
+                    q[3] * b[2] };
+    aa_tf_skewsym_scal_c( q, a, b, R );
+}

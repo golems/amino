@@ -48,6 +48,23 @@
 extern "C" {
 #endif
 
+/**********/
+/* Series */
+/**********/
+#define AA_TF_DEF_SERIES(name, a0, a1, a2)                  \
+    static inline double                                    \
+    aa_tf_ ## name ##_series2(double theta2)                \
+    {                                                       \
+        return aa_horner3( theta2, a0, a1, a2 );         \
+    }                                                       \
+    static inline double                                    \
+    aa_tf_ ## name ## _series(double theta)                 \
+    { return aa_tf_ ## name ## _series(theta*theta); }      \
+
+AA_TF_DEF_SERIES( sinc, 1., -1./6, 1./120 )
+AA_TF_DEF_SERIES( cos, 1., -1./2, 1./24 )
+AA_TF_DEF_SERIES( invsinc, 1., 1./6, 7./360 )
+
 /*********/
 /* Types */
 /*********/
@@ -308,6 +325,10 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
 
 AA_API void aa_tf_skewsym_scal2( double a, double b, const double u[3], double R[9] );
 
+AA_API void
+aa_tf_skewsym_scal_c( const double u[AA_RESTRICT 3],
+                      const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
+                      double R[9] );
 
 
 /* Multiply */
@@ -396,13 +417,13 @@ AA_API void aa_tf_rotmat_exp_aa( const double aa[AA_RESTRICT 4], double R[AA_RES
 AA_API void aa_tf_rotmat_expv( const double rv[AA_RESTRICT 3], double R[AA_RESTRICT 9] );
 
 /// Rotation Matrix logarithm
-AA_API void aa_tf_rotmat_lnv( double R[AA_RESTRICT 9], const double v[AA_RESTRICT 3] );
+AA_API void aa_tf_rotmat_lnv( const double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
 
 /// Transformation Matrix exponential
 AA_API void aa_tf_tfmat_expv( const double v[AA_RESTRICT 6], double T[AA_RESTRICT 12] );
 
 /// Transformation Matrix logarithm
-AA_API void aa_tf_tfmat_lnv( double T[AA_RESTRICT 12], const double v[AA_RESTRICT 6] );
+AA_API void aa_tf_tfmat_lnv( const double T[AA_RESTRICT 12], double v[AA_RESTRICT 6] );
 
 /// Velocity to rotation matrix derivative
 AA_API void aa_tf_rotmat_vel2diff( const double R[AA_RESTRICT 9],

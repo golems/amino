@@ -407,362 +407,420 @@ module amino_tf
      MODULE PROCEDURE aa_tf_dual_sqrt
   End Interface
 
-contains
+  interface aa_tf_qv_chain
+     pure subroutine aa_tf_qv_chain( q1, v1, q2, v2, q3, v3 ) &
+          bind( C, name="aa_tf_qv_chain" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: q1(4), v1(3), q2(4), v2(3)
+       real(C_DOUBLE), intent(out) :: q3(4), v3(3)
+       !call aa_tf_qmul( q1, q2, q3 )
+       !call aa_tf_tf_qv(q1, v1, v2, v3)
+     end subroutine aa_tf_qv_chain
+  end interface aa_tf_qv_chain
 
-  pure subroutine aa_tf_qv_chain( q1, v1, q2, v2, q3, v3 ) &
-       bind( C, name="aa_tf_qv_chain" )
-    real(C_DOUBLE), intent(in)  :: q1(4), v1(3), q2(4), v2(3)
-    real(C_DOUBLE), intent(out) :: q3(4), v3(3)
-    call aa_tf_qmul( q1, q2, q3 )
-    call aa_tf_tf_qv(q1, v1, v2, v3)
-  end subroutine aa_tf_qv_chain
+  interface aa_tf_qv_conj
+     pure subroutine aa_tf_qv_conj( q, v, qc, vc ) &
+          bind( C, name="aa_tf_qv_conj" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: q(4), v(3)
+       real(C_DOUBLE), intent(out) :: qc(4), vc(3)
+       !call aa_tf_qconj(q, qc)
+       !call aa_tf_qrot(qc, v, vc)
+       !vc = -vc
+     end subroutine aa_tf_qv_conj
+  end interface aa_tf_qv_conj
 
-  pure subroutine aa_tf_qv_conj( q, v, qc, vc ) &
-       bind( C, name="aa_tf_qv_conj" )
-    real(C_DOUBLE), intent(in)  :: q(4), v(3)
-    real(C_DOUBLE), intent(out) :: qc(4), vc(3)
-    call aa_tf_qconj(q, qc)
-    call aa_tf_qrot(qc, v, vc)
-    vc = -vc
-  end subroutine aa_tf_qv_conj
+  interface aa_tf_12chain
+     pure subroutine aa_tf_12chain( T1, T2, T3 ) &
+          bind( C, name="aa_tf_12chain" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: T1(3,4)
+       real(C_DOUBLE), intent(in)  :: T2(3,4)
+       real(C_DOUBLE), intent(out) :: T3(3,4)
+
+       ! call aa_tf_tfmat_mul( T1, T2, T3 )
+
+       !! Factorized
+       ! T3(1,1) =  T1(1,1)*T2(1,1) + T1(1,2)*T2(2,1) + T1(1,3)*T2(3,1);
+       ! T3(2,1) =  T1(2,1)*T2(1,1) + T1(2,2)*T2(2,1) + T1(2,3)*T2(3,1);
+       ! T3(3,1) =  T1(3,1)*T2(1,1) + T1(3,2)*T2(2,1) + T1(3,3)*T2(3,1);
+
+       ! T3(1,2) =  T1(1,1)*T2(1,2) + T1(1,2)*T2(2,2) + T1(1,3)*T2(3,2);
+       ! T3(2,2) =  T1(2,1)*T2(1,2) + T1(2,2)*T2(2,2) + T1(2,3)*T2(3,2);
+       ! T3(3,2) =  T1(3,1)*T2(1,2) + T1(3,2)*T2(2,2) + T1(3,3)*T2(3,2);
+
+       ! T3(1,3) =  T1(1,1)*T2(1,3) + T1(1,2)*T2(2,3) + T1(1,3)*T2(3,3);
+       ! T3(2,3) =  T1(2,1)*T2(1,3) + T1(2,2)*T2(2,3) + T1(2,3)*T2(3,3);
+       ! T3(3,3) =  T1(3,1)*T2(1,3) + T1(3,2)*T2(2,3) + T1(3,3)*T2(3,3);
+
+       ! T3(1,4) = T1(1,1)*T2(1,4) + T1(1,2)*T2(2,4) + T1(1,3)*T2(3,4) + T1(1,4);
+       ! T3(2,4) = T1(2,1)*T2(1,4) + T1(2,2)*T2(2,4) + T1(2,3)*T2(3,4) + T1(2,4);
+       ! T3(3,4) = T1(3,1)*T2(1,4) + T1(3,2)*T2(2,4) + T1(3,3)*T2(3,4) + T1(3,4);
+
+     end subroutine aa_tf_12chain
+  end interface aa_tf_12chain
+
+  interface aa_tf_12
+     pure subroutine aa_tf_12( T, p1, p) &
+          bind( C, name="aa_tf_12" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in)  :: T(3,4)
+       real(C_DOUBLE), intent(in)  :: p1(3)
+       real(C_DOUBLE), intent(out) :: p(3)
+       ! call aa_tf_tfmat_tf( T, p1, p )
+
+       !call aa_tf_93( T(:,1:3), T(:,4), p1, p )
+     end subroutine aa_tf_12
+  end interface aa_tf_12
+
+  interface aa_tf_xangle2rotmat
+     pure subroutine aa_tf_xangle2rotmat( theta, R ) &
+          bind( C, name="aa_tf_xangle2rotmat" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), value :: theta
+       real(C_DOUBLE), intent(out) :: R(3,3)
+
+       ! R(1,:) = [1d0, 0d0, 0d0]
+       ! R(2:3,1) = 0d0
+
+       ! R(2,2) = cos(theta)
+       ! R(3,2) = sin(theta)
+
+       ! R(2,3) = -sin(theta)
+       ! R(3,3) = cos(theta)
+     end subroutine aa_tf_xangle2rotmat
+  end interface aa_tf_xangle2rotmat
+
+  interface aa_tf_yangle2rotmat
+     pure subroutine aa_tf_yangle2rotmat( theta, R ) &
+          bind( C, name="aa_tf_yangle2rotmat" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), value :: theta
+       real(C_DOUBLE), intent(out) :: R(3,3)
+
+       ! R(2,:) = [0d0, 1d0, 0d0]
+       ! R(1,2) = 0d0
+       ! R(3,2) = 0d0
+
+       ! R(1,1) = cos(theta)
+       ! R(3,1) = -sin(theta)
+
+       ! R(1,3) = sin(theta)
+       ! R(3,3) = cos(theta)
+     end subroutine aa_tf_yangle2rotmat
+  end interface aa_tf_yangle2rotmat
+
+  interface aa_tf_zangle2rotmat
+     pure subroutine aa_tf_zangle2rotmat( theta, R ) &
+          bind( C, name="aa_tf_zangle2rotmat" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in), value :: theta
+       real(C_DOUBLE), intent(out) :: R(3,3)
+
+       ! R(3,:) = [0d0, 0d0, 1d0]
+       ! R(1:2,3) = 0d0
+
+       ! R(1,1) = cos(theta)
+       ! R(2,1) = sin(theta)
+
+       ! R(1,2) = -sin(theta)
+       ! R(2,2) = cos(theta)
+     end subroutine aa_tf_zangle2rotmat
+  end interface aa_tf_zangle2rotmat
 
 
-  pure subroutine aa_tf_12chain( T1, T2, T3 ) &
-       bind( C, name="aa_tf_12chain" )
-    real(C_DOUBLE), intent(in)  :: T1(3,4)
-    real(C_DOUBLE), intent(in)  :: T2(3,4)
-    real(C_DOUBLE), intent(out) :: T3(3,4)
-
-    call aa_tf_tfmat_mul( T1, T2, T3 )
-
-    !! Factorized
-    ! T3(1,1) =  T1(1,1)*T2(1,1) + T1(1,2)*T2(2,1) + T1(1,3)*T2(3,1);
-    ! T3(2,1) =  T1(2,1)*T2(1,1) + T1(2,2)*T2(2,1) + T1(2,3)*T2(3,1);
-    ! T3(3,1) =  T1(3,1)*T2(1,1) + T1(3,2)*T2(2,1) + T1(3,3)*T2(3,1);
-
-    ! T3(1,2) =  T1(1,1)*T2(1,2) + T1(1,2)*T2(2,2) + T1(1,3)*T2(3,2);
-    ! T3(2,2) =  T1(2,1)*T2(1,2) + T1(2,2)*T2(2,2) + T1(2,3)*T2(3,2);
-    ! T3(3,2) =  T1(3,1)*T2(1,2) + T1(3,2)*T2(2,2) + T1(3,3)*T2(3,2);
-
-    ! T3(1,3) =  T1(1,1)*T2(1,3) + T1(1,2)*T2(2,3) + T1(1,3)*T2(3,3);
-    ! T3(2,3) =  T1(2,1)*T2(1,3) + T1(2,2)*T2(2,3) + T1(2,3)*T2(3,3);
-    ! T3(3,3) =  T1(3,1)*T2(1,3) + T1(3,2)*T2(2,3) + T1(3,3)*T2(3,3);
-
-    ! T3(1,4) = T1(1,1)*T2(1,4) + T1(1,2)*T2(2,4) + T1(1,3)*T2(3,4) + T1(1,4);
-    ! T3(2,4) = T1(2,1)*T2(1,4) + T1(2,2)*T2(2,4) + T1(2,3)*T2(3,4) + T1(2,4);
-    ! T3(3,4) = T1(3,1)*T2(1,4) + T1(3,2)*T2(2,4) + T1(3,3)*T2(3,4) + T1(3,4);
-
-  end subroutine aa_tf_12chain
-
-  pure subroutine aa_tf_12( T, p1, p) &
-       bind( C, name="aa_tf_12" )
-    real(C_DOUBLE), intent(in)  :: T(3,4)
-    real(C_DOUBLE), intent(in)  :: p1(3)
-    real(C_DOUBLE), intent(out) :: p(3)
-    call aa_tf_tfmat_tf( T, p1, p )
-
-    !call aa_tf_93( T(:,1:3), T(:,4), p1, p )
-  end subroutine aa_tf_12
-
-
-  !!! Matrices
-  pure subroutine aa_tf_xangle2rotmat( theta, R ) &
-       bind( C, name="aa_tf_xangle2rotmat" )
-    real(C_DOUBLE), intent(in), value :: theta
-    real(C_DOUBLE), intent(out) :: R(3,3)
-
-    R(1,:) = [1d0, 0d0, 0d0]
-    R(2:3,1) = 0d0
-
-    R(2,2) = cos(theta)
-    R(3,2) = sin(theta)
-
-    R(2,3) = -sin(theta)
-    R(3,3) = cos(theta)
-  end subroutine aa_tf_xangle2rotmat
-
-  pure subroutine aa_tf_yangle2rotmat( theta, R ) &
-       bind( C, name="aa_tf_yangle2rotmat" )
-    real(C_DOUBLE), intent(in), value :: theta
-    real(C_DOUBLE), intent(out) :: R(3,3)
-
-    R(2,:) = [0d0, 1d0, 0d0]
-    R(1,2) = 0d0
-    R(3,2) = 0d0
-
-    R(1,1) = cos(theta)
-    R(3,1) = -sin(theta)
-
-    R(1,3) = sin(theta)
-    R(3,3) = cos(theta)
-  end subroutine aa_tf_yangle2rotmat
-
-  pure subroutine aa_tf_zangle2rotmat( theta, R ) &
-       bind( C, name="aa_tf_zangle2rotmat" )
-    real(C_DOUBLE), intent(in), value :: theta
-    real(C_DOUBLE), intent(out) :: R(3,3)
-
-    R(3,:) = [0d0, 0d0, 1d0]
-    R(1:2,3) = 0d0
-
-    R(1,1) = cos(theta)
-    R(2,1) = sin(theta)
-
-    R(1,2) = -sin(theta)
-    R(2,2) = cos(theta)
-  end subroutine aa_tf_zangle2rotmat
 
   ! screw symmetrix matrix for u
-  subroutine aa_tf_skew_sym( u, R ) &
-       bind( C, name="aa_tf_skew_sym" )
-    real(C_DOUBLE), intent(in) ::  u(3)
-    real(C_DOUBLE), intent(out) :: R(3,3)
-    real(C_DOUBLE) :: x,y,z
+  interface aa_tf_skew_sym
+     subroutine aa_tf_skew_sym( u, R ) &
+          bind( C, name="aa_tf_skew_sym" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  u(3)
+       real(C_DOUBLE), intent(out) :: R(3,3)
+       real(C_DOUBLE) :: x,y,z
 
-    x = u(1)
-    y = u(2)
-    z = u(3)
+       ! x = u(1)
+       ! y = u(2)
+       ! z = u(3)
 
-    R(1,1) = 0d0
-    R(2,1) = z
-    R(3,1) = -y
+       ! R(1,1) = 0d0
+       ! R(2,1) = z
+       ! R(3,1) = -y
 
-    R(1,2) = -z
-    R(2,2) = 0d0
-    R(3,2) = x
+       ! R(1,2) = -z
+       ! R(2,2) = 0d0
+       ! R(3,2) = x
 
-    R(1,3) = y
-    R(2,3) = -x
-    R(3,3) = 0d0
-  end subroutine aa_tf_skew_sym
+       ! R(1,3) = y
+       ! R(2,3) = -x
+       ! R(3,3) = 0d0
+     end subroutine aa_tf_skew_sym
+  end interface aa_tf_skew_sym
 
-  subroutine aa_tf_skewsym_scal1( a, u, R ) &
-       bind( C, name="aa_tf_skewsym_scal1" )
-    real(C_DOUBLE), intent(in) ::  u(3), a
-    real(C_DOUBLE), intent(out) :: R(3,3)
-    real(C_DOUBLE) :: x,y,z
+  interface aa_tf_skewsym_scal1
+     subroutine aa_tf_skewsym_scal1( a, u, R ) &
+          bind( C, name="aa_tf_skewsym_scal1" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  u(3), a
+       real(C_DOUBLE), intent(out) :: R(3,3)
+       !real(C_DOUBLE) :: x,y,z
 
-    x = a*u(1)
-    y = a*u(2)
-    z = a*u(3)
+       ! x = a*u(1)
+       ! y = a*u(2)
+       ! z = a*u(3)
 
-    R(1,1) = 0d0
-    R(2,1) = z
-    R(3,1) = -y
+       ! R(1,1) = 0d0
+       ! R(2,1) = z
+       ! R(3,1) = -y
 
-    R(1,2) = -z
-    R(2,2) = 0d0
-    R(3,2) = x
+       ! R(1,2) = -z
+       ! R(2,2) = 0d0
+       ! R(3,2) = x
 
-    R(1,3) = y
-    R(2,3) = -x
-    R(3,3) = 0d0
-  end subroutine aa_tf_skewsym_scal1
+       ! R(1,3) = y
+       ! R(2,3) = -x
+       ! R(3,3) = 0d0
+     end subroutine aa_tf_skewsym_scal1
+  end interface aa_tf_skewsym_scal1
 
+  interface aa_tf_skewsym_scal_c
+     subroutine aa_tf_skewsym_scal_c( u, a, b, R ) &
+          bind( C, name="aa_tf_skewsym_scal_c" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  u(3), a(3), b(3)
+       real(C_DOUBLE), intent(out) :: R(3,3)
+       ! real(C_DOUBLE) :: bu(3), bc(3)
+       ! real(C_DOUBLE) :: cx,cy,cz, dx,dy,dz, ex,ey,ez
 
-  subroutine aa_tf_skewsym_scal_c( u, a, b, R ) &
-       bind( C, name="aa_tf_skewsym_scal_c" )
-    real(C_DOUBLE), intent(in) ::  u(3), a(3), b(3)
-    real(C_DOUBLE), intent(out) :: R(3,3)
-    real(C_DOUBLE) :: bu(3), bc(3)
-    real(C_DOUBLE) :: cx,cy,cz, dx,dy,dz, ex,ey,ez
+       ! bu = b*u
 
-    bu = b*u
+       ! bc(1) = b(1)*u(2)
+       ! bc(2) = b(2)*u(3)
+       ! bc(3) = b(3)*u(1)
 
-    bc(1) = b(1)*u(2)
-    bc(2) = b(2)*u(3)
-    bc(3) = b(3)*u(1)
+       ! cx = 1d0 - bu(3) - bu(2)
+       ! cy = 1d0 - bu(3) - bu(1)
+       ! cz = 1d0 - bu(2) - bu(1)
 
-    cx = 1d0 - bu(3) - bu(2)
-    cy = 1d0 - bu(3) - bu(1)
-    cz = 1d0 - bu(2) - bu(1)
+       ! dx = a(3) + bc(1)
+       ! dy = a(1) + bc(2)
+       ! dz = a(2) + bc(3)
 
-    dx = a(3) + bc(1)
-    dy = a(1) + bc(2)
-    dz = a(2) + bc(3)
+       ! ex = bc(3) - a(2)
+       ! ey = bc(1) - a(3)
+       ! ez = bc(2) - a(1)
 
-    ex = bc(3) - a(2)
-    ey = bc(1) - a(3)
-    ez = bc(2) - a(1)
+       ! R(1,1) = cx
+       ! R(2,1) = dx
+       ! R(3,1) = ex
 
-    R(1,1) = cx
-    R(2,1) = dx
-    R(3,1) = ex
+       ! R(1,2) = ey
+       ! R(2,2) = cy
+       ! R(3,2) = dy
 
-    R(1,2) = ey
-    R(2,2) = cy
-    R(3,2) = dy
+       ! R(1,3) = dz
+       ! R(2,3) = ez
+       ! R(3,3) = cz
+     end subroutine aa_tf_skewsym_scal_c
+  end interface aa_tf_skewsym_scal_c
 
-    R(1,3) = dz
-    R(2,3) = ez
-    R(3,3) = cz
-  end subroutine aa_tf_skewsym_scal_c
+  interface aa_tf_skewsym_scal2
+     subroutine aa_tf_skewsym_scal2( a, b, u, R ) &
+          bind( C, name="aa_tf_skewsym_scal2" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  u(3)
+       real(C_DOUBLE), intent(in), value ::  a, b
+       real(C_DOUBLE), intent(out) :: R(3,3)
+       ! real(C_DOUBLE) :: au(3), bu(3)
+       ! au = a*u
+       ! bu = b*u
+       ! call aa_tf_skewsym_scal_c(u,au,bu,R)
+     end subroutine aa_tf_skewsym_scal2
+  end interface aa_tf_skewsym_scal2
 
-  subroutine aa_tf_skewsym_scal2( a, b, u, R ) &
-       bind( C, name="aa_tf_skewsym_scal2" )
-    real(C_DOUBLE), intent(in) ::  u(3)
-    real(C_DOUBLE), intent(in), value ::  a, b
-    real(C_DOUBLE), intent(out) :: R(3,3)
-    real(C_DOUBLE) :: au(3), bu(3)
-    au = a*u
-    bu = b*u
-    call aa_tf_skewsym_scal_c(u,au,bu,R)
-  end subroutine aa_tf_skewsym_scal2
+  interface aa_tf_quat2rotmat
+     subroutine aa_tf_quat2rotmat( q, R ) &
+          bind( C, name="aa_tf_quat2rotmat" )
 
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: q(4)
+       real(C_DOUBLE), intent(out) :: R(3,3)
+       ! real(C_DOUBLE) :: a(3), b(3)
+       ! b = 2*q(XYZ_INDEX)
+       ! a = q(4)*b
+       ! call aa_tf_skewsym_scal_c(q(XYZ_INDEX),a,b,R)
 
-  subroutine aa_tf_quat2rotmat( q, R ) &
-       bind( C, name="aa_tf_quat2rotmat" )
+       ! real(C_DOUBLE) :: rx,ry,rz,rw
+       ! rx = q(1)
+       ! ry = q(2)
+       ! rz = q(3)
+       ! rw = q(4)
 
-    real(C_DOUBLE), intent(in) :: q(4)
-    real(C_DOUBLE), intent(out) :: R(3,3)
-    real(C_DOUBLE) :: a(3), b(3)
-    b = 2*q(XYZ_INDEX)
-    a = q(4)*b
-    call aa_tf_skewsym_scal_c(q(XYZ_INDEX),a,b,R)
+       ! R(1,1) = -rz**2-ry**2+rx**2+rw**2
+       ! R(1,2) = 2*rx*ry-2*rw*rz
+       ! R(1,3) = 2*rx*rz+2*rw*ry
 
-    ! real(C_DOUBLE) :: rx,ry,rz,rw
-    ! rx = q(1)
-    ! ry = q(2)
-    ! rz = q(3)
-    ! rw = q(4)
+       ! R(2,1) = 2*rw*rz+2*rx*ry
+       ! R(2,2) = -rz**2+ry**2-rx**2+rw**2
+       ! R(2,3) = 2*ry*rz-2*rw*rx
 
-    ! R(1,1) = -rz**2-ry**2+rx**2+rw**2
-    ! R(1,2) = 2*rx*ry-2*rw*rz
-    ! R(1,3) = 2*rx*rz+2*rw*ry
+       ! R(3,1) = 2*rx*rz-2*rw*ry
+       ! R(3,2) = 2*ry*rz+2*rw*rx
+       ! R(3,3) = rz**2-ry**2-rx**2+rw**2
 
-    ! R(2,1) = 2*rw*rz+2*rx*ry
-    ! R(2,2) = -rz**2+ry**2-rx**2+rw**2
-    ! R(2,3) = 2*ry*rz-2*rw*rx
-
-    ! R(3,1) = 2*rx*rz-2*rw*ry
-    ! R(3,2) = 2*ry*rz+2*rw*rx
-    ! R(3,3) = rz**2-ry**2-rx**2+rw**2
-
-  end subroutine aa_tf_quat2rotmat
-
-
-  subroutine aa_tf_unskewsym( R, u ) &
-       bind( C, name="aa_tf_unskewsym" )
-    real(C_DOUBLE), intent(out) ::  u(3)
-    real(C_DOUBLE), intent(in) :: R(3,3)
-    real(C_DOUBLE) :: tr, c
-
-    tr = R(1,1) + R(2,2) + R(3,3)
-    c = sqrt( tr + 1 ) / 2d0
-
-    u(1) = c * (R(3,2) - R(2,3))
-    u(2) = c * (R(1,3) - R(3,1))
-    u(3) = c * (R(2,1) - R(1,2))
-
-  end subroutine aa_tf_unskewsym
+     end subroutine aa_tf_quat2rotmat
+  end interface aa_tf_quat2rotmat
 
 
-  subroutine aa_tf_unskewsym_scal( a, R, u ) &
-       bind( C, name="aa_tf_unskewsym_scal" )
-    real(C_DOUBLE), intent(out) ::  u(3)
-    real(C_DOUBLE), intent(in) :: R(3,3), a
-    u(1) = a * (R(3,2) - R(2,3))
-    u(2) = a * (R(1,3) - R(3,1))
-    u(3) = a * (R(2,1) - R(1,2))
-  end subroutine aa_tf_unskewsym_scal
+  interface aa_tf_unskewsym
+     subroutine aa_tf_unskewsym( R, u ) &
+          bind( C, name="aa_tf_unskewsym" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(out) ::  u(3)
+       real(C_DOUBLE), intent(in) :: R(3,3)
+       ! real(C_DOUBLE) :: tr, c
 
-  subroutine aa_tf_rotmat_exp_aa( axang, E ) &
-       bind( C, name="aa_tf_rotmat_exp_aa" )
-    real(C_DOUBLE), intent(in) ::  axang(4)
-    real(C_DOUBLE), intent(out) :: E(3,3)
-    call aa_tf_skewsym_scal2( sin(axang(4)), 1d0-cos(axang(4)), axang(1:3), E )
-  end subroutine aa_tf_rotmat_exp_aa
+       ! tr = R(1,1) + R(2,2) + R(3,3)
+       ! c = sqrt( tr + 1 ) / 2d0
 
-  subroutine aa_tf_rotmat_expv( rv, E ) &
-       bind( C, name="aa_tf_rotmat_expv" )
-    real(C_DOUBLE), intent(in) ::  rv(3)
-    real(C_DOUBLE), intent(out) :: E(3,3)
-    real(C_DOUBLE) :: sc, cc, theta, theta2
+       ! u(1) = c * (R(3,2) - R(2,3))
+       ! u(2) = c * (R(1,3) - R(3,1))
+       ! u(3) = c * (R(2,1) - R(1,2))
 
-    theta2 = dot_product(rv,rv)
-    theta = sqrt(theta2)
-
-    if ( theta2 < sqrt(epsilon(theta2)) ) then
-       ! taylor series
-       sc = aa_tf_sinc_series2(theta2) ! approx. 1
-       cc = theta * aa_tf_horner3( theta2, 1d0/2, -1d0/24, 1d0/720 )
-    else
-       sc = sin(theta)/theta
-       cc = (1d0-cos(theta)) / theta2
-    end if
-
-    call aa_tf_skewsym_scal2( sc, cc, rv, E )
-  end subroutine aa_tf_rotmat_expv
+     end subroutine aa_tf_unskewsym
+  end interface aa_tf_unskewsym
 
 
-  subroutine aa_tf_rotmat_angle( R, c, s, theta )
-    real(C_DOUBLE), intent(in) ::  R(3,3)
-    real(C_DOUBLE), intent(out) ::  c,s,theta
-    c = ( R(1,1) + R(2,2) + R(3,3) - 1 ) / 2
-    s = sqrt( 1 - c*c ) ! efficiently compute sin, always positive
-    theta = atan2(s,c)  ! always positive
-  end subroutine aa_tf_rotmat_angle
+  interface aa_tf_unskewsym_scal
+     subroutine aa_tf_unskewsym_scal( a, R, u ) &
+          bind( C, name="aa_tf_unskewsym_scal" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(out) ::  u(3)
+       real(C_DOUBLE), intent(in) :: R(3,3)
+       real(C_DOUBLE), intent(in), value :: a
+       ! u(1) = a * (R(3,2) - R(2,3))
+       ! u(2) = a * (R(1,3) - R(3,1))
+       ! u(3) = a * (R(2,1) - R(1,2))
+     end subroutine aa_tf_unskewsym_scal
+  end interface aa_tf_unskewsym_scal
 
-  subroutine aa_tf_rotmat_lnv( R, v ) &
-       bind( C, name="aa_tf_rotmat_lnv" )
-    real(C_DOUBLE), intent(out) ::  v(3)
-    real(C_DOUBLE), intent(in) :: R(3,3)
-    real(C_DOUBLE) :: a, c, s, theta
-    call aa_tf_rotmat_angle(R, c, s, theta )
-    if ( theta < sqrt(sqrt(epsilon(theta))) ) then
-       a = aa_tf_invsinc_series(theta)
-    else
-       a = theta / s
-    end if
-    call aa_tf_unskewsym_scal( a/2d0, R, v )
-  end subroutine aa_tf_rotmat_lnv
+  interface aa_tf_rotmat_exp_aa
+     subroutine aa_tf_rotmat_exp_aa( axang, E ) &
+          bind( C, name="aa_tf_rotmat_exp_aa" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  axang(4)
+       real(C_DOUBLE), intent(out) :: E(3,3)
+       !call aa_tf_skewsym_scal2( sin(axang(4)), 1d0-cos(axang(4)), axang(1:3), E )
+     end subroutine aa_tf_rotmat_exp_aa
+  end interface aa_tf_rotmat_exp_aa
 
-  subroutine aa_tf_tfmat_expv( v, T ) &
-       bind( C, name="aa_tf_tfmat_expv" )
-    real(C_DOUBLE), intent(in) ::  v(6)
-    real(C_DOUBLE), intent(out) :: T(3,4)
-    real(C_DOUBLE) :: sc, cc, ssc, theta2, theta, K(3,3)
+  interface aa_tf_rotmat_expv
+     subroutine aa_tf_rotmat_expv( rv, E ) &
+          bind( C, name="aa_tf_rotmat_expv" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  rv(3)
+       real(C_DOUBLE), intent(out) :: E(3,3)
+       ! real(C_DOUBLE) :: sc, cc, theta, theta2
 
-    theta2 = dot_product(v(4:6),v(4:6))
-    theta = sqrt(theta2)
+       ! theta2 = dot_product(rv,rv)
+       ! theta = sqrt(theta2)
 
-    if ( theta2 < sqrt(epsilon(theta2)) ) then
-       ! taylor series
-       sc = aa_tf_sinc_series2(theta2) ! approx. 1
-       cc = theta * aa_tf_horner3( theta2, 1d0/2, -1d0/24, 1d0/720 )
-       ssc = aa_tf_horner3( theta2, 1d0/6, -1d0/120, 1d0/5040 )
-    else
-       sc = sin(theta)/theta
-       cc = (1d0 - cos(theta)) / theta2
-       ssc = (theta - sin(theta)) / (theta2*theta)
-    end if
+       ! if ( theta2 < sqrt(epsilon(theta2)) ) then
+       !    ! taylor series
+       !    sc = aa_tf_sinc_series2(theta2) ! approx. 1
+       !    cc = theta * aa_tf_horner3( theta2, 1d0/2, -1d0/24, 1d0/720 )
+       ! else
+       !    sc = sin(theta)/theta
+       !    cc = (1d0-cos(theta)) / theta2
+       ! end if
 
-    call aa_tf_skewsym_scal2( sc, cc,  v(4:6), T(:,1:3) )
-    call aa_tf_skewsym_scal2( cc, ssc, v(4:6), K )
+       ! call aa_tf_skewsym_scal2( sc, cc, rv, E )
+     end subroutine aa_tf_rotmat_expv
+  end interface aa_tf_rotmat_expv
 
-    call aa_tf_9(K, v(1:3), T(:,4))
+  interface aa_tf_rotmat_angle
+     subroutine aa_tf_rotmat_angle( R, c, s, theta ) &
+          bind( C, name="aa_tf_rotmat_angle" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  R(3,3)
+       real(C_DOUBLE), intent(out) ::  c,s,theta
+       ! c = ( R(1,1) + R(2,2) + R(3,3) - 1 ) / 2
+       ! s = sqrt( 1 - c*c ) ! efficiently compute sin, always positive
+       ! theta = atan2(s,c)  ! always positive
+     end subroutine aa_tf_rotmat_angle
+  end interface aa_tf_rotmat_angle
 
-  end subroutine aa_tf_tfmat_expv
+  interface aa_tf_rotmat_lnv
+     subroutine aa_tf_rotmat_lnv( R, v ) &
+          bind( C, name="aa_tf_rotmat_lnv" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(out) ::  v(3)
+       real(C_DOUBLE), intent(in) :: R(3,3)
+       ! real(C_DOUBLE) :: a, c, s, theta
+       ! call aa_tf_rotmat_angle(R, c, s, theta )
+       ! if ( theta < sqrt(sqrt(epsilon(theta))) ) then
+       !    a = aa_tf_invsinc_series(theta)
+       ! else
+       !    a = theta / s
+       ! end if
+       ! call aa_tf_unskewsym_scal( a/2d0, R, v )
+     end subroutine aa_tf_rotmat_lnv
+  end interface aa_tf_rotmat_lnv
 
-  subroutine aa_tf_tfmat_lnv( T, v ) &
-       bind( C, name="aa_tf_tfmat_lnv" )
-    real(C_DOUBLE), intent(out) ::  v(6)
-    real(C_DOUBLE), intent(in) :: T(3,4)
-    real(C_DOUBLE) :: theta, c, s, a, b, K(3,3)
+  interface aa_tf_tfmat_expv
+     subroutine aa_tf_tfmat_expv( v, T ) &
+          bind( C, name="aa_tf_tfmat_expv" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) ::  v(6)
+       real(C_DOUBLE), intent(out) :: T(3,4)
+       ! real(C_DOUBLE) :: sc, cc, ssc, theta2, theta, K(3,3)
 
-    call aa_tf_rotmat_angle(T(:,1:3), c, s, theta )
+       ! theta2 = dot_product(v(4:6),v(4:6))
+       ! theta = sqrt(theta2)
 
-    if ( theta < sqrt(sqrt(epsilon(theta))) ) then
-       a = aa_tf_invsinc_series2(theta**2)
-       b = aa_tf_horner3( theta**2, 1d0/12, 1d0/720, 1d0/30240 )
-    else
-       a = theta / s
-       b = ( 2*s - theta*(1+c) ) / ( 2*theta**2 * s )
-    end if
-    call aa_tf_unskewsym_scal( a/2d0, T(:,1:3), v(4:6) )
-    call aa_tf_skewsym_scal2( -0.5d0, b, v(4:6), K )
-    call aa_tf_9( K, T(:,4), v(1:3) )
-  end subroutine aa_tf_tfmat_lnv
+       ! if ( theta2 < sqrt(epsilon(theta2)) ) then
+       !    ! taylor series
+       !    sc = aa_tf_sinc_series2(theta2) ! approx. 1
+       !    cc = theta * aa_tf_horner3( theta2, 1d0/2, -1d0/24, 1d0/720 )
+       !    ssc = aa_tf_horner3( theta2, 1d0/6, -1d0/120, 1d0/5040 )
+       ! else
+       !    sc = sin(theta)/theta
+       !    cc = (1d0 - cos(theta)) / theta2
+       !    ssc = (theta - sin(theta)) / (theta2*theta)
+       ! end if
+
+       ! call aa_tf_skewsym_scal2( sc, cc,  v(4:6), T(:,1:3) )
+       ! call aa_tf_skewsym_scal2( cc, ssc, v(4:6), K )
+
+       ! call aa_tf_9(K, v(1:3), T(:,4))
+
+     end subroutine aa_tf_tfmat_expv
+  end interface aa_tf_tfmat_expv
+
+  interface aa_tf_tfmat_lnv
+     subroutine aa_tf_tfmat_lnv( T, v ) &
+          bind( C, name="aa_tf_tfmat_lnv" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(out) ::  v(6)
+       real(C_DOUBLE), intent(in) :: T(3,4)
+     !   real(C_DOUBLE) :: theta, c, s, a, b, K(3,3)
+
+     !   call aa_tf_rotmat_angle(T(:,1:3), c, s, theta )
+
+     !   if ( theta < sqrt(sqrt(epsilon(theta))) ) then
+     !      a = aa_tf_invsinc_series2(theta**2)
+     !      b = aa_tf_horner3( theta**2, 1d0/12, 1d0/720, 1d0/30240 )
+     !   else
+     !      a = theta / s
+     !      b = ( 2*s - theta*(1+c) ) / ( 2*theta**2 * s )
+     !   end if
+     !   call aa_tf_unskewsym_scal( a/2d0, T(:,1:3), v(4:6) )
+     !   call aa_tf_skewsym_scal2( -0.5d0, b, v(4:6), K )
+     !   call aa_tf_9( K, T(:,4), v(1:3) )
+     end subroutine aa_tf_tfmat_lnv
+  end interface aa_tf_tfmat_lnv
+
+contains
 
   subroutine aa_tf_rotmat_vel2diff( R, w, dR ) &
        bind( C, name="aa_tf_rotmat_vel2diff" )

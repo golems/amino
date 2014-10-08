@@ -42,6 +42,8 @@
 
 #define _GNU_SOURCE
 #include "amino.h"
+#include "amino_internal.h"
+#include <float.h>
 
 
 AA_API void
@@ -83,6 +85,152 @@ aa_tf_93chain( const double R0[AA_RESTRICT 9],
 }
 
 
+/*************/
+/* ROTATIONS */
+/*************/
+
+#define RREF(R,row,col) ((R)[(col)*3 + (row)])
+
+AA_API void
+aa_tf_skew_sym( const double u[AA_RESTRICT 3],
+                double R[AA_RESTRICT 9] )
+{
+    double x=u[0], y=u[1], z=u[2];
+    RREF(R,0,0) = 0;
+    RREF(R,1,0) = z;
+    RREF(R,2,0) = -y;
+
+    RREF(R,0,1) = -z;
+    RREF(R,1,1) = 0;
+    RREF(R,2,1) = x;
+
+    RREF(R,0,2) = y;
+    RREF(R,1,2) = -x;
+    RREF(R,2,2) = 0;
+}
+AA_API void
+aa_tf_skew_sym1( double a, const double u[AA_RESTRICT 3],
+                 double R[AA_RESTRICT 9] )
+{
+    double au[3] = { a*u[0], a*u[1], a*u[2] };
+    aa_tf_skew_sym( au, R );
+
+
+}
+
+
+AA_API void
+aa_tf_skewsym_scal_c( const double u[AA_RESTRICT 3],
+                      const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
+                      double R[AA_RESTRICT 9] )
+{
+    double  bu[3] = { b[0]*u[0],
+                      b[1]*u[1],
+                      b[2]*u[2] };
+
+    double bc[3] = { b[0]*u[1],
+                     b[1]*u[2],
+                     b[2]*u[0] };
+
+    double cx = 1 - bu[2] - bu[1];
+    double cy = 1 - bu[2] - bu[0];
+    double cz = 1 - bu[1] - bu[0];
+
+    double dx = a[2] + bc[0];
+    double dy = a[0] + bc[1];
+    double dz = a[1] + bc[2];
+
+    double ex = bc[2] - a[1];
+    double ey = bc[0] - a[2];
+    double ez = bc[1] - a[0];
+
+    RREF(R,0,0) = cx;
+    RREF(R,1,0) = dx;
+    RREF(R,2,0) = ex;
+
+    RREF(R,0,1) = ey;
+    RREF(R,1,1) = cy;
+    RREF(R,2,1) = dy;
+
+    RREF(R,0,2) = dz;
+    RREF(R,1,2) = ez;
+    RREF(R,2,2) = cz;
+}
+
+
+AA_API void
+aa_tf_skewsym_scal2( double a, double b, const double u[AA_RESTRICT 3],
+                     double R[AA_RESTRICT 9] )
+{
+    double au[3] = {a*u[0], a*u[1], a*u[2]};
+    double bu[3] = {b*u[0], b*u[1], b*u[2]};
+    aa_tf_skewsym_scal_c( u, au, bu, R );
+}
+
+AA_API void
+aa_tf_unskewsym_scal( double c, const double R[AA_RESTRICT 9], double u[AA_RESTRICT 3] )
+{
+    double a[3] = {RREF(R,2,1), RREF(R,0,2), RREF(R,1,0)};
+    double b[3] = {RREF(R,1,2), RREF(R,2,0), RREF(R,0,1)};
+
+    FOR_VEC(i) u[i] = c * ( a[i] - b[i] );
+}
+
+AA_API void
+aa_tf_unskewsym( const double R[AA_RESTRICT 9], double u[AA_RESTRICT 3] )
+{
+    double tr = RREF(R,0,0) + RREF(R,1,1) + RREF(R,2,2);
+    double c = sqrt( tr + 1 ) / 2;
+    aa_tf_unskewsym_scal( c, R, u );
+}
+
+AA_API void
+aa_tf_rotmat_exp_aa( const double aa[AA_RESTRICT 4], double E[9] )
+{
+    double s = sin(aa[W]), c = cos(aa[W]);
+    aa_tf_skewsym_scal2( s, 1-c, aa, E );
+}
+
+AA_API void
+aa_tf_rotmat_expv( const double rv[AA_RESTRICT 4], double E[9] )
+{
+    double theta2 = dot3(rv,rv);
+    double theta = sqrt(theta2);
+    double sc,cc;
+    if( theta2*theta2 < DBL_EPSILON ) {
+        sc = aa_tf_sinc_series2(theta2);
+        cc = theta * aa_horner3( theta2, 1./2, -1./24, 1./720 );
+    } else {
+        double s = sin(theta), c = cos(theta);
+        sc = s/theta;
+        cc = (1-c) / theta2;
+    }
+    aa_tf_skewsym_scal2( sc, cc, rv, E );
+}
+
+AA_API void
+aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double *theta )
+{
+    *c = (RREF(R,0,0) + RREF(R,1,1) + RREF(R,2,2) - 1) / 2;
+    *s = sqrt( 1 - (*c)*(*c) );
+    *theta = atan2(*s, *c);
+}
+
+AA_API void
+aa_tf_rotmat_lnv( const double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] )
+{
+    double isinc, c, s, theta;
+    aa_tf_rotmat_angle( R, &c, &s, &theta );
+    double theta2 = theta*theta;
+    if( theta2*theta2 < DBL_EPSILON ) {
+        isinc = aa_tf_invsinc_series2( theta2 );
+    } else {
+        isinc = theta/s;
+    }
+    aa_tf_unskewsym_scal( isinc/2, R, v );
+}
+
+
 /* Transform */
 
 AA_API void aa_tf_rotmat_rot( const double R[AA_RESTRICT 9],
@@ -95,6 +243,13 @@ AA_API void aa_tf_rotmat_rot( const double R[AA_RESTRICT 9],
 }
 
 AA_API void aa_tf_tfmat_tf( const double T[AA_RESTRICT 12],
+                            const double p0[AA_RESTRICT 3],
+                            double p1[AA_RESTRICT 3] )
+{
+    aa_tf_tfmat2_tf( T,T+9, p0, p1 );
+}
+
+AA_API void aa_tf_12( const double T[AA_RESTRICT 12],
                       const double p0[AA_RESTRICT 3],
                       double p1[AA_RESTRICT 3] )
 {
@@ -130,6 +285,14 @@ AA_API void aa_tf_tfmat_mul( const double T0[AA_RESTRICT 12],
     aa_tf_tfmat2_mul( T0, T0+9,
                       T1, T1+9,
                       T,  T+9 );
+}
+
+AA_API void
+aa_tf_12chain( const double T0[AA_RESTRICT 12],
+               const double T1[AA_RESTRICT 12],
+               double T2[AA_RESTRICT 12] )
+{
+    aa_tf_tfmat_mul( T0, T1, T2 );
 }
 
 AA_API void aa_tf_tfmat2_mul( const double R0[AA_RESTRICT 9],
@@ -172,3 +335,47 @@ AA_API void aa_tf_tfmat2_mul( const double R0[AA_RESTRICT 9],
 /*                                const double R1[AA_RESTRICT 9], */
 /*                                const double v1[AA_RESTRICT 3], */
 /*                                double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] ); */
+
+AA_API void
+aa_tf_tfmat_expv( const double v[AA_RESTRICT 6],
+                  double T[AA_RESTRICT 12] )
+{
+    double theta2 = dot3(v+3, v+3);
+    double theta = sqrt(theta2);
+    double sc, cc, ssc;
+    if( theta2*theta2 < DBL_EPSILON ) {
+        sc = aa_tf_sinc_series2(theta2);
+        cc = theta * aa_horner3( theta2, 1./2, -1./24, 1./720 );
+        ssc = aa_horner3( theta2, 1./6, -1./120, 1./5040 );
+    } else {
+        double s = sin(theta), c = cos(theta);
+        sc = s/theta;
+        cc = (1-c)/theta2;
+        ssc = (1-sc)/theta2;
+    }
+
+    double K[9];
+    aa_tf_skewsym_scal2( sc, cc, v+3, T );
+    aa_tf_skewsym_scal2( cc, ssc, v+3, K );
+    aa_tf_9(K,v, T+9);
+}
+
+AA_API void
+aa_tf_tfmat_lnv( const double T[AA_RESTRICT 12],
+                 double v[AA_RESTRICT 6] )
+{
+    double c,s,theta, a,b;
+    aa_tf_rotmat_angle( T, &c, &s, &theta );
+    double theta2 = theta*theta;
+    if( theta2 < DBL_EPSILON ) {
+        a = aa_tf_invsinc_series2(theta2);
+        b = aa_horner3( theta2, 1./12, 1./720, 1./30240 );
+    } else {
+        a = theta/s;
+        b = (2*s - theta*(1+c)) / (2*theta2*s);
+    }
+    double K[9];
+    aa_tf_unskewsym_scal( a/2, T, v+3 );
+    aa_tf_skewsym_scal2( -.5, b, v+3, K );
+    aa_tf_9( K, T+9, v );
+}

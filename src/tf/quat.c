@@ -42,7 +42,7 @@
 
 #define _GNU_SOURCE
 #include "amino.h"
-
+#include "amino_internal.h"
 
 
 AA_API void
@@ -55,20 +55,29 @@ aa_tf_tf_qv( const double quat[AA_RESTRICT 4],
     for( size_t i = 0; i < 3; i ++ ) p1[i] += v[i];
 }
 
+AA_API void
+aa_tf_qv_chain( const double q1[AA_RESTRICT 4], const double v1[AA_RESTRICT 3],
+                const double q2[AA_RESTRICT 4], const double v2[AA_RESTRICT 3],
+                double q3[AA_RESTRICT 4], double v3[AA_RESTRICT 3] )
+{
+    aa_tf_qmul( q1, q2, q3 );
+    aa_tf_tf_qv( q1, v1, v2, v3 );
+}
+
+AA_API void
+aa_tf_qv_conj( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+               double qc[AA_RESTRICT 4], double vc[AA_RESTRICT 3] )
+{
+    aa_tf_qconj( q, qc );
+    aa_tf_qrot( qc, v, vc );
+    FOR_VEC(i) vc[i] = -vc[i];
+}
+
+
 /********************/
 /* DUAL QUATERNIONS */
 /********************/
 
-#define XYZ AA_TF_QUAT_XYZ
-#define REAL AA_TF_DUQU_REAL
-#define DUAL AA_TF_DUQU_DUAL
-#define REAL_XYZ AA_TF_DUQU_REAL_XYZ
-#define DUAL_XYZ AA_TF_DUQU_DUAL_XYZ
-#define REAL_W AA_TF_DUQU_REAL_W
-#define DUAL_W AA_TF_DUQU_DUAL_W
-
-#define OMEGA AA_TF_DX_W
-#define V AA_TF_DX_V
 
 
 AA_API void
