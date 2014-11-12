@@ -230,6 +230,26 @@ aa_tf_rotmat_lnv( const double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] )
     aa_tf_unskewsym_scal( isinc/2, R, v );
 }
 
+AA_API void
+aa_tf_rotmat_vel2diff( const double R[AA_RESTRICT 9],
+                       const double w[AA_RESTRICT 3],
+                       double dR[AA_RESTRICT 9] )
+{
+    double K[9];
+    aa_tf_skew_sym( w, K );
+    aa_tf_9mul( K, R, dR );
+}
+
+AA_API void
+aa_tf_rotmat_diff2vel( const double R[AA_RESTRICT 9],
+                       const double dR[AA_RESTRICT 9],
+                       double w[AA_RESTRICT 3] )
+{
+    double K[9], Rt[9];
+    aa_la_transpose2( 3, 3, R, Rt );
+    aa_tf_9mul( dR, Rt, K );
+    aa_tf_unskewsym(K, w);
+}
 
 /* Transform */
 

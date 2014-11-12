@@ -820,25 +820,31 @@ module amino_tf
      end subroutine aa_tf_tfmat_lnv
   end interface aa_tf_tfmat_lnv
 
+  interface aa_tf_rotmat_vel2diff
+     subroutine aa_tf_rotmat_vel2diff( R, w, dR ) &
+          bind( C, name="aa_tf_rotmat_vel2diff" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: R(3,3), w(3)
+       real(C_DOUBLE), intent(out) :: dR(3,3)
+       ! real(C_DOUBLE) :: V(3,3)
+       ! call aa_tf_skew_sym( w, V )
+       ! call aa_tf_9mul(V,R,dR)
+     end subroutine aa_tf_rotmat_vel2diff
+  end interface aa_tf_rotmat_vel2diff
+
+  interface aa_tf_rotmat_diff2vel
+     subroutine aa_tf_rotmat_diff2vel( R, dR, w ) &
+          bind( C, name="aa_tf_rotmat_diff2vel" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: R(3,3), dR(3,3)
+       real(C_DOUBLE), intent(out) ::  w(3)
+       ! real(C_DOUBLE) :: V(3,3)
+       ! V = matmul( dR, transpose(R) )
+       ! call aa_tf_unskewsym(V,w)
+     end subroutine aa_tf_rotmat_diff2vel
+  end interface aa_tf_rotmat_diff2vel
+
 contains
-
-  subroutine aa_tf_rotmat_vel2diff( R, w, dR ) &
-       bind( C, name="aa_tf_rotmat_vel2diff" )
-    real(C_DOUBLE), intent(in) :: R(3,3), w(3)
-    real(C_DOUBLE), intent(out) :: dR(3,3)
-    real(C_DOUBLE) :: V(3,3)
-    call aa_tf_skew_sym( w, V )
-    call aa_tf_9mul(V,R,dR)
-  end subroutine aa_tf_rotmat_vel2diff
-
-  subroutine aa_tf_rotmat_diff2vel( R, dR, w ) &
-       bind( C, name="aa_tf_rotmat_diff2vel" )
-    real(C_DOUBLE), intent(in) :: R(3,3), dR(3,3)
-    real(C_DOUBLE), intent(out) ::  w(3)
-    real(C_DOUBLE) :: V(3,3)
-    V = matmul( dR, transpose(R) )
-    call aa_tf_unskewsym(V,w)
-  end subroutine aa_tf_rotmat_diff2vel
 
   subroutine aa_tf_qv2tfmat( q, v, T ) &
        bind( C, name="aa_tf_qv2tfmat" )
