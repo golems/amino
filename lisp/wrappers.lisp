@@ -97,6 +97,16 @@
   (y :vector))
 
 
+;;;;;;;;;;;;;
+;;; LIBC  ;;;
+;;;;;;;;;;;;;
+
+(defcfun atof :double
+  (nptr :string))
+
+(defun parse-float (string)
+  (atof string))
+
 ;; (defcfun "aa_la_d_angle" :double
 ;;   (x :pointer)
 ;;   (incx size-t)

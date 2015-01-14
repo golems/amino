@@ -53,5 +53,7 @@
    :g*
    :matrix->list
    :inverse
+   ;; Misc
+   :parse-float
    )
   (:nicknames :aa))
