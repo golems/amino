@@ -73,6 +73,7 @@ gen(stuff, tf1, tf2, tf3, x1, x2, x3)  := (
   print("  real(C_DOUBLE), value, intent(in)  :: e1, e2, e3"),
   print("  real(C_DOUBLE), intent(out) :: q(4)"),
   qassign( 'q , qmul( qmul( qaxang(e1,x1), qaxang(e2,x2)), qaxang(e3,x3) ) ) ,
+  print("call aa_tf_qnormalize(q)"),
   printf(true, "~&end subroutine aa_tf_euler~a2quat~&", stuff)
   );
 
