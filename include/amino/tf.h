@@ -1,7 +1,8 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * Copyright (c) 2010-2014, Georgia Tech Research Corporation
+ * Copyright (c) 2015, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -23,6 +24,10 @@
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
+ *
+ *   * Neither the name of copyright holder the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -69,6 +74,13 @@ AA_TF_DEF_SERIES( invsinc, 1., 1./6, 7./360 )
 /* Types */
 /*********/
 
+/// Index of vector x element
+#define AA_TF_X 0
+/// Index of vector y element
+#define AA_TF_Y 1
+/// Index of vector z element
+#define AA_TF_Z 2
+
 typedef struct aa_tf_vec3 {
     union {
         struct {
@@ -102,9 +114,16 @@ typedef struct aa_tf_axang {
     };
 } aa_tf_axang_t;
 
-
-#define AA_TF_QUAT_W   3
+/// Index of quaternion vector part
 #define AA_TF_QUAT_XYZ 0
+/// Index of quaternion vector x
+#define AA_TF_QUAT_X (AA_TF_QUAT_XYZ + AA_TF_X)
+/// Index of quaternion vector y
+#define AA_TF_QUAT_Y (AA_TF_QUAT_XYZ + AA_TF_Y)
+/// Index of quaternion vector z
+#define AA_TF_QUAT_Z (AA_TF_QUAT_XYZ + AA_TF_Z)
+/// Index of quaternion scalar part
+#define AA_TF_QUAT_W 3
 
 /// A quaternion, x,y,z,w order
 typedef struct aa_tf_quat {
@@ -122,7 +141,6 @@ typedef struct aa_tf_quat {
         double data[4];
     };
 } aa_tf_quat_t;
-
 
 typedef struct aa_tf_eulerzyx {
     union {
@@ -185,7 +203,9 @@ struct aa_tf_dx {
     };
 };
 
+/// Index of spatial velocity translational part
 #define AA_TF_DX_V 0
+/// Index of spatial velocity translational part
 #define AA_TF_DX_W 3
 
 /** Transform and spatial velocity */
@@ -199,6 +219,26 @@ struct aa_tf_qv_dx {
     };
 };
 
+/// Index of quaternion-translation quaternion part
+#define AA_TF_QUTR_Q  0
+/// Index of quaternion-translation quaternion x
+#define AA_TF_QUTR_QX (AA_TF_QUTR_Q + AA_TF_QUAT_X)
+/// Index of quaternion-translation quaternion y
+#define AA_TF_QUTR_QY (AA_TF_QUTR_Q + AA_TF_QUAT_Y)
+/// Index of quaternion-translation quaternion z
+#define AA_TF_QUTR_QZ (AA_TF_QUTR_Q + AA_TF_QUAT_Z)
+/// Index of quaternion-translation quaternion w
+#define AA_TF_QUTR_QW (AA_TF_QUTR_Q + AA_TF_QUAT_W)
+
+/// Index of quaternion-translation translation part
+#define AA_TF_QUTR_T  4
+/// Index of quaternion-translation translation x
+#define AA_TF_QUTR_TX (AA_TF_QUTR_T + AA_TF_X)
+/// Index of quaternion-translation translation y
+#define AA_TF_QUTR_TY (AA_TF_QUTR_T + AA_TF_Y)
+/// Index of quaternion-translation translation z
+#define AA_TF_QUTR_TZ (AA_TF_QUTR_T + AA_TF_Z)
+
 /// index of dual quaternion real part
 #define AA_TF_DUQU_REAL 0
 /// index of dual quaternion dual part
@@ -208,12 +248,23 @@ struct aa_tf_qv_dx {
 #define AA_TF_DUQU_REAL_W    (AA_TF_DUQU_REAL + AA_TF_QUAT_W)
 /// index of dual quaternion real xyz
 #define AA_TF_DUQU_REAL_XYZ  (AA_TF_DUQU_REAL + AA_TF_QUAT_XYZ)
+/// index of dual quaternion real x
+#define AA_TF_DUQU_REAL_X  (AA_TF_DUQU_REAL + AA_TF_QUAT_X)
+/// index of dual quaternion real y
+#define AA_TF_DUQU_REAL_Y  (AA_TF_DUQU_REAL + AA_TF_QUAT_Y)
+/// index of dual quaternion real z
+#define AA_TF_DUQU_REAL_Z  (AA_TF_DUQU_REAL + AA_TF_QUAT_Z)
 
 /// index of dual quaternion dual w
 #define AA_TF_DUQU_DUAL_W    (AA_TF_DUQU_DUAL + AA_TF_QUAT_W)
 /// index of dual quaternion dual xyz
 #define AA_TF_DUQU_DUAL_XYZ  (AA_TF_DUQU_DUAL + AA_TF_QUAT_XYZ)
-
+/// index of dual quaternion dual x
+#define AA_TF_DUQU_DUAL_X  (AA_TF_DUQU_DUAL + AA_TF_QUAT_X)
+/// index of dual quaternion dual y
+#define AA_TF_DUQU_DUAL_Y  (AA_TF_DUQU_DUAL + AA_TF_QUAT_Y)
+/// index of dual quaternion dual z
+#define AA_TF_DUQU_DUAL_Z  (AA_TF_DUQU_DUAL + AA_TF_QUAT_Z)
 
 /// a small number
 #define AA_TF_EPSILON .0001
