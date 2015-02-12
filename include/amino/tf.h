@@ -489,6 +489,8 @@ AA_API void aa_tf_rotmat_svel( const double R0[AA_RESTRICT 9],
                                const double w[AA_RESTRICT 3], double dt,
                                double R1[AA_RESTRICT 9] );
 
+
+
 /// Integrate rotational velocity
 AA_API void aa_tf_tfmat_svel( const double T0[AA_RESTRICT 12],
                               const double w[AA_RESTRICT 3], double dt,
@@ -757,10 +759,10 @@ AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
  * \param dt Time step
  * \param q1 Final rotation quaternion
  **/
-AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
-                         const double dq[AA_RESTRICT 4],
-                         double dt,
-                         double q1[AA_RESTRICT 4] );
+AA_API void aa_tf_qsdiff( const double q0[AA_RESTRICT 4],
+                          const double dq[AA_RESTRICT 4],
+                          double dt,
+                          double q1[AA_RESTRICT 4] );
 
 
 /** Unit quaternion for angle about x axis */
