@@ -482,17 +482,26 @@ static inline void aa_fzero( double *p, size_t n ) {
 /* Bit Array */
 /**************/
 
+/** An integer type for bit vectors */
 typedef int aa_bits;
 
+/** Number of bits in a aa_bits word */
 #define AA_BITS_BITS (8*sizeof(aa_bits))
 
-/** Size of bit vector in octets */
+/** Number of aa_bits words to store n bits */
 static inline size_t
-aa_bits_size( size_t n )
+aa_bits_words( size_t n )
 {
     size_t words = n / AA_BITS_BITS;
     if( words*sizeof(aa_bits)*8 < n ) words++;
-    return words*sizeof(aa_bits);
+    return words;
+}
+
+/** Size of bit vector in octets */
+static inline size_t
+aa_bits_size( size_t n_bits )
+{
+    return aa_bits_words(n_bits) * sizeof(aa_bits);
 }
 
 #define AA_BITS_JK( i, j, k )                 \
@@ -525,6 +534,34 @@ aa_bits_set( aa_bits *b, size_t i, int val )
         b[j] |=  0x1<<k;
     } else {
         b[j] &= ~ ( 0x1<<k );
+    }
+}
+
+
+static inline void
+aa_bits_and( aa_bits *a, const aa_bits *b, size_t n_bits )
+{
+    size_t n_words = aa_bits_words(n_bits);
+    while( n_words ) {
+        a[n_words] &= b[n_words];
+    }
+}
+
+static inline void
+aa_bits_or( aa_bits *a, const aa_bits *b, size_t n_bits )
+{
+    size_t n_words = aa_bits_words(n_bits);
+    while( n_words ) {
+        a[n_words] |= b[n_words];
+    }
+}
+
+static inline void
+aa_bits_xor( aa_bits *a, const aa_bits *b, size_t n_bits )
+{
+    size_t n_words = aa_bits_words(n_bits);
+    while( n_words ) {
+        a[n_words] ^= b[n_words];
     }
 }
 
