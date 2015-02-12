@@ -40,7 +40,9 @@
  *
  */
 
+#ifdef HAVE_CONFIG
 #include "config.h"
+#endif
 
 #include "amino.h"
 #include <stdarg.h>
