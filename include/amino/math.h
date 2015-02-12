@@ -176,6 +176,16 @@ aa_horner3( double x, double a0, double a1, double a2 )
     return a0 + x * ( a1 + x*a2 );
 }
 
+
+static inline void
+aa_sincos( double x, double *s, double *c )
+{
+    /* This is portable, and GCC will optimize to sincos() anyway*/
+    *s = sin(x);
+    *c = cos(x);
+}
+
+
 /********/
 /* Stat */
 /********/

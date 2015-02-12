@@ -47,15 +47,6 @@
 #include <math.h>
 #include "amino.h"
 
-
-#ifndef HAVE_SINCOS
-void sincos(double b, double *s,  double *c ) {
-    *s = sin(b);
-    *c = cos(b);
-}
-#endif
-
-
 int aa_veq(size_t n, const double *a, const double *b, double tol ) {
     for( size_t i = 0; i < n; i ++ ) {
         if( ! aa_feq( a[i], b[i], tol ) ) return 0;
@@ -91,7 +82,7 @@ AA_API void aa_stat_box_muller(double x1, double x2, double *z1, double *z2) {
     const double a = sqrt( -2.0 * log(x1) );
     double s,c;
     const double b = 2 * M_PI * x2;
-    sincos(b, &s, &c );
+    aa_sincos(b, &s, &c );
     *z1 = a*c;
     *z2 = a*s;
 }
@@ -114,7 +105,7 @@ AA_API double aa_stat_circ_mean( size_t n, const double *x) {
     double as = 0, ac = 0;
     for( size_t i = 0; i < n; i ++ ) {
         double s, c;
-        sincos(x[i], &s, &c);
+        aa_sincos(x[i], &s, &c);
         as += s;
         ac += c;
     }
@@ -125,7 +116,7 @@ AA_API double aa_stat_circ_std( size_t n, const double *x) {
     double as = 0, ac = 0;
     for( size_t i = 0; i < n; i++ ) {
         double s,c;
-        sincos( x[i], &s, &c );
+        aa_sincos( x[i], &s, &c );
         as += s;
         ac += c;
     }
@@ -188,7 +179,7 @@ AA_API size_t aa_stat_excluded_circ_mean_std( size_t n, const double *x,
             if( dx >= dxmin && dx <= dxmax ) {
                 j++;
                 double s, c;
-                sincos(x[i], &s, &c);
+                aa_sincos(x[i], &s, &c);
                 as += s;
                 ac += c;
             }
