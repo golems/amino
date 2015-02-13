@@ -272,7 +272,7 @@ aa_tf_tfmat_svel( const double T0[12], const double dx[6], double dt, double T1[
 
     {
         double cross[3];
-        aa_tf_cross( delta + AA_TF_DX_W, T0+9, cross );
+        aa_tf_cross( delta + AA_TF_DX_W, T0+AA_TF_TFMAT_V, cross );
         for( i = 0; i < 3; i ++ )
             (delta+AA_TF_DX_V)[i] -= cross[i];
     }
@@ -285,6 +285,21 @@ aa_tf_tfmat_svel( const double T0[12], const double dx[6], double dt, double T1[
 }
 
 /* Transform */
+
+AA_API void
+aa_tf_tfmat_diff2vel( const double T[12], const double dT[12], double dx[6] )
+{
+    aa_tf_rotmat_diff2vel( T+AA_TF_TFMAT_R, dT+AA_TF_TFMAT_R, dx+AA_TF_DX_W );
+    AA_MEM_CPY( dx+AA_TF_DX_V,  dT+AA_TF_TFMAT_V, 3 );
+}
+
+AA_API void
+aa_tf_tfmat_vel2diff( const double T[12], const double dx[6], double dT[12] )
+{
+    aa_tf_rotmat_vel2diff( T+AA_TF_TFMAT_R, dx+AA_TF_DX_W, dT+AA_TF_TFMAT_R );
+    AA_MEM_CPY( dT+AA_TF_TFMAT_V, dx+AA_TF_DX_V, 3 );
+}
+
 
 AA_API void aa_tf_rotmat_rot( const double R[AA_RESTRICT 9],
                               const double p0[AA_RESTRICT 3],

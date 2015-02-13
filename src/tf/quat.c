@@ -47,6 +47,78 @@
 /* ORDINARY QUATERNIONS */
 /*----------------------*/
 
+AA_API double
+aa_tf_qnorm( const double q[AA_RESTRICT 4] )
+{
+    return sqrt( (q[0]*q[0] + q[1]*q[1]) + (q[2]*q[2] + q[3]*q[3]) );
+}
+
+AA_API double
+aa_tf_qvnorm( const double q[AA_RESTRICT 4] )
+{
+    const double *v = q + AA_TF_QUAT_XYZ;
+    return sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
+}
+
+AA_API void
+aa_tf_qnormalize( double q[AA_RESTRICT 4] )
+{
+    double n = aa_tf_qnorm(q);
+    size_t i;
+    for( i = 0; i < 4; i ++ ) q[i] /= n;
+}
+
+AA_API void
+aa_tf_qminimize( double q[AA_RESTRICT 4] )
+{
+    size_t i;
+    if( q[AA_TF_QUAT_W] < 0 )
+        for( i = 0; i < 4; i ++ ) q[i] *= -1;
+}
+
+AA_API void
+aa_tf_qminimize2( const double q[AA_RESTRICT 4], double m[AA_RESTRICT 4] )
+{
+    size_t i;
+    if( q[AA_TF_QUAT_W] < 0 )
+        for( i = 0; i < 4; i ++ ) m[i] = -q[i];
+    else
+        AA_MEM_CPY(m,q,4);
+}
+
+AA_API void
+aa_tf_normalize2( const double q[AA_RESTRICT 4], double qn[AA_RESTRICT 4] )
+{
+    size_t i;
+    double n = aa_tf_qnorm(q);
+    for( i = 0; i < 4; i ++ ) qn[i] = q[i]/n;
+}
+
+
+AA_API void
+aa_tf_qconj( const double q[AA_RESTRICT 4], double qc[AA_RESTRICT 4] )
+{
+    size_t i;
+    const double *v = q+AA_TF_QUAT_XYZ;
+    double *vc = qc+AA_TF_QUAT_XYZ;
+    for( i = 0; i < 3; i ++ ) vc[i] = -v[i];
+    qc[AA_TF_QUAT_W] = q[AA_TF_QUAT_W];
+}
+
+AA_API void
+aa_tf_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
+{
+    const size_t x = AA_TF_QUAT_X;
+    const size_t y = AA_TF_QUAT_Y;
+    const size_t z = AA_TF_QUAT_Z;
+    const size_t w = AA_TF_QUAT_W;
+
+    c[x] =    a[x]*b[w] + a[y]*b[z] + a[w]*b[x] - a[z]*b[y];
+    c[y] =    a[z]*b[x] + a[w]*b[y] + a[y]*b[w] - a[x]*b[z];
+    c[z] =    a[w]*b[z] + a[z]*b[w] + a[x]*b[y] - a[y]*b[x];
+    c[w] = - (a[y]*b[y] + a[x]*b[x] + a[z]*b[z] - a[w]*b[w]);
+}
+
 void aa_tf_qv2tfmat( const double q[4], const double v[3], double T[12] )
 {
     aa_tf_quat2rotmat( q, T + AA_TF_TFMAT_R);

@@ -892,120 +892,152 @@ module amino_tf
      end subroutine aa_tf_tfmat_svel
   end interface aa_tf_tfmat_svel
 
+  interface aa_tf_tfmat_vel2diff
+     subroutine aa_tf_tfmat_vel2diff( T, dx, dT ) &
+          bind( C, name="aa_tf_tfmat_vel2diff" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: T(3,4), dx(6)
+       real(C_DOUBLE), intent(out) :: dT(3,4)
+       !call aa_tf_rotmat_vel2diff( T(:,1:3), dx(4:6), dT(:,1:3) )
+       !dT(:,4) = dx(1:3)
+     end subroutine aa_tf_tfmat_vel2diff
+  end interface aa_tf_tfmat_vel2diff
+
+  interface aa_tf_tfmat_diff2vel
+     subroutine aa_tf_tfmat_diff2vel( T, dT, dx ) &
+          bind( C, name="aa_tf_tfmat_diff2vel" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: T(3,4), dT(3,4)
+       real(C_DOUBLE), intent(out) ::  dx(6)
+       !call aa_tf_rotmat_diff2vel( T(:,1:3), dT(:,1:3), dx(4:6) )
+       !dx(1:3) =  dT(:,4)
+     end subroutine aa_tf_tfmat_diff2vel
+  end interface aa_tf_tfmat_diff2vel
+
+  interface aa_tf_qnorm
+     pure function aa_tf_qnorm( q ) result(n) &
+          bind( C, name="aa_tf_qnorm" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(in) :: q
+       real(C_DOUBLE) :: n
+       !n =  sqrt(dot_product(q,q))
+     end function aa_tf_qnorm
+  end interface aa_tf_qnorm
+
+  interface aa_tf_qvnorm
+     pure function aa_tf_qvnorm( q ) result(n) &
+          bind( C, name="aa_tf_qvnorm" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(in) :: q
+       real(C_DOUBLE) :: n
+       !n =  sqrt(dot_product(q(XYZ_INDEX),q(XYZ_INDEX)))
+     end function aa_tf_qvnorm
+  end interface aa_tf_qvnorm
+
+  interface aa_tf_qnormalize
+     pure subroutine aa_tf_qnormalize( q ) &
+          bind( C, name="aa_tf_qnormalize" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(inout) :: q
+       !q = q / aa_tf_qnorm(q)
+     end subroutine aa_tf_qnormalize
+  end interface aa_tf_qnormalize
+
+  interface aa_tf_qminimize
+     pure subroutine aa_tf_qminimize( q ) &
+          bind( C, name="aa_tf_qminimize" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(inout) :: q
+       ! Make W positive. This puts the quaternion in the right hand side
+       ! of the complex plane.  Thus, it will represent a rotation with a
+       ! minimum angle.
+       !if( q(W_INDEX) < 0 ) then
+       !q = -q
+       !end if
+     end subroutine aa_tf_qminimize
+  end interface aa_tf_qminimize
+
+
+  interface aa_tf_qminimize2
+     pure subroutine aa_tf_qminimize2( q, qm ) &
+          bind( C, name="aa_tf_qminimize2" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(in) :: q
+       real(C_DOUBLE), dimension(4), intent(out) :: qm
+       ! if( q(W_INDEX) < 0 ) then
+       !    qm = -q
+       ! else
+       !    qm = q
+       ! end if
+     end subroutine aa_tf_qminimize2
+  end interface aa_tf_qminimize2
+
+  interface aa_tf_qnormalize2
+     pure subroutine aa_tf_qnormalize2( q, qnorm ) &
+          bind( C, name="aa_tf_qnormalize2" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(in) :: q
+       real(C_DOUBLE), dimension(4), intent(out) :: qnorm
+       !qnorm = q
+       !call aa_tf_qnormalize(qnorm)
+     end subroutine aa_tf_qnormalize2
+  end interface aa_tf_qnormalize2
+
+  interface aa_tf_qconj
+     pure subroutine aa_tf_qconj( q, qc ) &
+          bind( C, name="aa_tf_qconj" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(in) :: q
+       real(C_DOUBLE), dimension(4), intent(out) :: qc
+       !qc(XYZ_INDEX) = -q(XYZ_INDEX)
+       !qc(W_INDEX) = q(W_INDEX)
+     end subroutine aa_tf_qconj
+  end interface aa_tf_qconj
+
+
+  interface aa_tf_qmul
+     pure subroutine aa_tf_qmul( a, b, q) &
+          bind( C, name="aa_tf_qmul" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(out) :: q
+       real(C_DOUBLE), dimension(4), intent(in) :: a,b
+
+       !q(1) =   a(1)*b(4) + a(2)*b(3) - a(3)*b(2) + a(4)*b(1)
+       !q(2) = - a(1)*b(3) + a(2)*b(4) + a(3)*b(1) + a(4)*b(2)
+       !q(3) =   a(1)*b(2) - a(2)*b(1) + a(3)*b(4) + a(4)*b(3)
+       !q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
+
+       !q(1) =   a(4)*b(1) - a(3)*b(2) + a(2)*b(3) + a(1)*b(4)
+       !q(2) =   a(3)*b(1) + a(4)*b(2) - a(1)*b(3) + a(2)*b(4)
+       !q(3) = - a(2)*b(1) + a(1)*b(2) + a(4)*b(3) + a(3)*b(4)
+       !q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
+
+       ! q(1) = a(2)*b(3) + a(4)*b(1) + (a(1)*b(4) - a(3)*b(2))
+       ! q(2) = a(2)*b(4) + a(4)*b(2) - (a(1)*b(3) - a(3)*b(1))
+       ! q(3) =  + a(4)*b(3) - a(2)*b(1) +  a(1)*b(2) + a(3)*b(4)
+       ! q(4) =  + a(4)*b(4) - a(2)*b(2) - (a(1)*b(1) + a(3)*b(3))
+
+       ! q(1) = + a(1)*b(4) + (-a(3)*b(2)) + (a(4)*b(1) +   a(2)*b(3))
+       ! q(2) = + a(2)*b(4) +   a(4)*b(2)  + (a(3)*b(1) + (-a(1)*b(3)))
+       ! q(3) =  - (-a(1)*b(2)) + a(3)*b(4) + (   a(4)*b(3)  - a(2)*b(1) )
+       ! q(4) =  -   a(2)*b(2)  + a(4)*b(4) + ( (-a(3)*b(3)) - a(1)*b(1) )
+
+       ! q(1) =    (a(1)*b(4) + (a(2)*b(3)) + a(4)*b(1) - a(3)*b(2))
+       ! q(2) =    (a(3)*b(1) + (a(4)*b(2)) + a(2)*b(4) - a(1)*b(3))
+       ! q(3) =    (a(4)*b(3) + (a(3)*b(4)) + a(1)*b(2) - a(2)*b(1))
+       ! q(4) = - ((a(2)*b(2) + (a(1)*b(1)) + a(3)*b(3) - a(4)*b(4)))
+
+
+       !q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
+       !call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), q(XYZ_INDEX))
+       !q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
+
+     end subroutine aa_tf_qmul
+  end interface aa_tf_qmul
+
 contains
 
-  subroutine aa_tf_tfmat_vel2diff( T, dx, dT ) &
-       bind( C, name="aa_tf_tfmat_vel2diff" )
-    real(C_DOUBLE), intent(in) :: T(3,4), dx(6)
-    real(C_DOUBLE), intent(out) :: dT(3,4)
-    call aa_tf_rotmat_vel2diff( T(:,1:3), dx(4:6), dT(:,1:3) )
-    dT(:,4) = dx(1:3)
-  end subroutine aa_tf_tfmat_vel2diff
-
-  subroutine aa_tf_tfmat_diff2vel( T, dT, dx ) &
-       bind( C, name="aa_tf_tfmat_diff2vel" )
-    real(C_DOUBLE), intent(in) :: T(3,4), dT(3,4)
-    real(C_DOUBLE), intent(out) ::  dx(6)
-    call aa_tf_rotmat_diff2vel( T(:,1:3), dT(:,1:3), dx(4:6) )
-    dx(1:3) =  dT(:,4)
-  end subroutine aa_tf_tfmat_diff2vel
-
   !!! Quaternions
-
-  pure function aa_tf_qnorm( q ) result(n) &
-       bind( C, name="aa_tf_qnorm" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: n
-    n =  sqrt(dot_product(q,q))
-  end function aa_tf_qnorm
-
-  pure function aa_tf_qvnorm( q ) result(n) &
-       bind( C, name="aa_tf_qvnorm" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: n
-    n =  sqrt(dot_product(q(XYZ_INDEX),q(XYZ_INDEX)))
-  end function aa_tf_qvnorm
-
-  pure subroutine aa_tf_qnormalize( q ) &
-       bind( C, name="aa_tf_qnormalize" )
-    real(C_DOUBLE), dimension(4), intent(inout) :: q
-    q = q / aa_tf_qnorm(q)
-  end subroutine aa_tf_qnormalize
-
-  pure subroutine aa_tf_qminimize( q ) &
-       bind( C, name="aa_tf_qminimize" )
-    real(C_DOUBLE), dimension(4), intent(inout) :: q
-    ! Make W positive. This puts the quaternion in the right hand side
-    ! of the complex plane.  Thus, it will represent a rotation with a
-    ! minimum angle.
-    if( q(W_INDEX) < 0 ) then
-       q = -q
-    end if
-  end subroutine aa_tf_qminimize
-
-  pure subroutine aa_tf_qminimize2( q, qm ) &
-       bind( C, name="aa_tf_qminimize2" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(4), intent(out) :: qm
-    if( q(W_INDEX) < 0 ) then
-       qm = -q
-    else
-       qm = q
-    end if
-  end subroutine aa_tf_qminimize2
-
-  pure subroutine aa_tf_qnormalize2( q, qnorm ) &
-       bind( C, name="aa_tf_qnormalize2" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(4), intent(out) :: qnorm
-    qnorm = q
-    call aa_tf_qnormalize(qnorm)
-  end subroutine aa_tf_qnormalize2
-
-  pure subroutine aa_tf_qconj( q, qc ) &
-       bind( C, name="aa_tf_qconj" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(4), intent(out) :: qc
-    qc(XYZ_INDEX) = -q(XYZ_INDEX)
-    qc(W_INDEX) = q(W_INDEX)
-  end subroutine aa_tf_qconj
-
-  pure subroutine aa_tf_qmul( a, b, q) &
-       bind( C, name="aa_tf_qmul" )
-    real(C_DOUBLE), dimension(4), intent(out) :: q
-    real(C_DOUBLE), dimension(4), intent(in) :: a,b
-
-    !q(1) =   a(1)*b(4) + a(2)*b(3) - a(3)*b(2) + a(4)*b(1)
-    !q(2) = - a(1)*b(3) + a(2)*b(4) + a(3)*b(1) + a(4)*b(2)
-    !q(3) =   a(1)*b(2) - a(2)*b(1) + a(3)*b(4) + a(4)*b(3)
-    !q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
-
-    !q(1) =   a(4)*b(1) - a(3)*b(2) + a(2)*b(3) + a(1)*b(4)
-    !q(2) =   a(3)*b(1) + a(4)*b(2) - a(1)*b(3) + a(2)*b(4)
-    !q(3) = - a(2)*b(1) + a(1)*b(2) + a(4)*b(3) + a(3)*b(4)
-    !q(4) = - a(1)*b(1) - a(2)*b(2) - a(3)*b(3) + a(4)*b(4)
-
-    ! q(1) = a(2)*b(3) + a(4)*b(1) + (a(1)*b(4) - a(3)*b(2))
-    ! q(2) = a(2)*b(4) + a(4)*b(2) - (a(1)*b(3) - a(3)*b(1))
-    ! q(3) =  + a(4)*b(3) - a(2)*b(1) +  a(1)*b(2) + a(3)*b(4)
-    ! q(4) =  + a(4)*b(4) - a(2)*b(2) - (a(1)*b(1) + a(3)*b(3))
-
-    ! q(1) = + a(1)*b(4) + (-a(3)*b(2)) + (a(4)*b(1) +   a(2)*b(3))
-    ! q(2) = + a(2)*b(4) +   a(4)*b(2)  + (a(3)*b(1) + (-a(1)*b(3)))
-    ! q(3) =  - (-a(1)*b(2)) + a(3)*b(4) + (   a(4)*b(3)  - a(2)*b(1) )
-    ! q(4) =  -   a(2)*b(2)  + a(4)*b(4) + ( (-a(3)*b(3)) - a(1)*b(1) )
-
-    q(1) =    (a(1)*b(4) + (a(2)*b(3)) + a(4)*b(1) - a(3)*b(2))
-    q(2) =    (a(3)*b(1) + (a(4)*b(2)) + a(2)*b(4) - a(1)*b(3))
-    q(3) =    (a(4)*b(3) + (a(3)*b(4)) + a(1)*b(2) - a(2)*b(1))
-    q(4) = - ((a(2)*b(2) + (a(1)*b(1)) + a(3)*b(3) - a(4)*b(4)))
-
-
-    !q(W_INDEX) = a(W_INDEX)*b(W_INDEX) - dot_product(a(XYZ_INDEX),b(XYZ_INDEX))
-    !call aa_tf_cross(a(XYZ_INDEX), b(XYZ_INDEX), q(XYZ_INDEX))
-    !q(XYZ_INDEX) = q(XYZ_INDEX) + a(W_INDEX)*b(XYZ_INDEX) +  a(XYZ_INDEX)*b(W_INDEX)
-
-  end subroutine aa_tf_qmul
 
   pure subroutine aa_tf_qmulnorm( a, b, q) &
        bind( C, name="aa_tf_qmulnorm" )

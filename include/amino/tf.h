@@ -522,7 +522,7 @@ AA_API void aa_tf_qnormalize( double q[AA_RESTRICT 4] );
 
 
 /** Return norm of the quaternion */
-AA_API double aa_tf_qnorm( double q[AA_RESTRICT 4] );
+AA_API double aa_tf_qnorm( const double q[AA_RESTRICT 4] );
 
 /** Minimize angle represented by the quaternion.  This puts the
  *  quaternion in the right-hand side of the complex plane.  Its w
