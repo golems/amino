@@ -251,6 +251,39 @@ aa_tf_rotmat_diff2vel( const double R[AA_RESTRICT 9],
     aa_tf_unskewsym(K, w);
 }
 
+AA_API void
+aa_tf_rotmat_svel( const double R0[9], const double w[3], double dt, double R1[9] )
+{
+    double delta[3], e[9];
+    size_t i;
+    for( i = 0; i < 3; i ++ ) delta[i] = w[i]*dt;
+    aa_tf_rotmat_expv(delta,e);
+    aa_tf_9mul(e,R0,R1);
+}
+
+AA_API void
+aa_tf_tfmat_svel( const double T0[12], const double dx[6], double dt, double T1[12] )
+{
+    double delta[6];
+    size_t i;
+
+    for( i = 0; i < 6; i ++ )
+        delta[i] = dx[i] * dt;
+
+    {
+        double cross[3];
+        aa_tf_cross( delta + AA_TF_DX_W, T0+9, cross );
+        for( i = 0; i < 3; i ++ )
+            (delta+AA_TF_DX_V)[i] -= cross[i];
+    }
+
+    {
+        double E[12];
+        aa_tf_tfmat_expv( delta, E );
+        aa_tf_12chain( E, T0, T1 );
+    }
+}
+
 /* Transform */
 
 AA_API void aa_tf_rotmat_rot( const double R[AA_RESTRICT 9],

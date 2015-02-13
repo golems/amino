@@ -40,9 +40,18 @@
  *
  */
 
-#define _GNU_SOURCE
 #include "amino.h"
 #include "amino_internal.h"
+
+/*----------------------*/
+/* ORDINARY QUATERNIONS */
+/*----------------------*/
+
+void aa_tf_qv2tfmat( const double q[4], const double v[3], double T[12] )
+{
+    aa_tf_quat2rotmat( q, T + AA_TF_TFMAT_R);
+    AA_MEM_CPY(T+AA_TF_TFMAT_V, v, 3 );
+}
 
 
 AA_API void
