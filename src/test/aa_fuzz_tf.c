@@ -105,6 +105,35 @@ static void euler_helper( const double e[4], fun_type e2r, fun_type e2q ) {
     aveq("euler-vecs", 3, vq, vr, .001 );
 }
 
+static void eulerzyx(const double *q)
+{
+    double qm[4], e_q[3], e_R[3];
+
+    aa_tf_quat2eulerzyx(q,e_q);
+    aa_tf_qminimize2( q, qm );
+
+    {
+        double q_e[4];
+        aa_tf_eulerzyx2quat( e_q[0], e_q[1], e_q[2], q_e );
+        aa_tf_qminimize( q_e );
+        aveq("quat->euler->quat", 4, qm, q_e, .001 );
+    }
+
+    {
+        double R[9], q_e[4];
+        aa_tf_quat2rotmat(q, R);
+        aa_tf_rotmat2eulerzyx(R,e_R);
+        aa_tf_eulerzyx2quat( e_R[0], e_R[1], e_R[2], q_e );
+        aa_tf_qminimize( q_e );
+        aveq("quat->euler->quat/rotmat->euler->quat", 4, qm, q_e, .001 );
+
+        aveq("quat->euler/rotmat->quat", 3, e_q, e_R, .001 );
+    }
+
+    aveq("quat->euler/rotmat->quat", 3, e_q, e_R, .001 );
+
+}
+
 static void euler(const double *e) {
 
     euler_helper( e, &aa_tf_eulerxyz2rotmat, &aa_tf_eulerxyz2quat );
@@ -806,6 +835,7 @@ int main( void ) {
         rotvec(E[0]);
         euler(dx[0]);
         euler1(dx[0]);
+        eulerzyx(E[0]);
         chain(E,S,T);
         quat(E);
         duqu();
@@ -819,6 +849,7 @@ int main( void ) {
         tf_conj(E, S);
         qdiff(E,dx);
     }
+
 
     return 0;
 }

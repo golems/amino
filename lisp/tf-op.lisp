@@ -1,6 +1,7 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
 ;;;; Copyright (c) 2013, Georgia Tech Research Corporation
+;;;; Copyright (c) 2015, Rice University
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -51,6 +52,8 @@
 (defgeneric quaternion (x))
 (defgeneric rotation-matrix (x))
 
+(defgeneric euler-zyx (x))
+
 (defgeneric dual-quaternion (x))
 (defgeneric quaternion-translation (x))
 (defgeneric transformation-matrix (x))
@@ -63,7 +66,7 @@
 (defmethod quaternion ((x quaternion)) x)
 
 (defmethod quaternion ((x (eql nil)))
-  (make-quaternion :data (vec 0d0 0d0 0d0 1d0)))
+  (quaternion* 0d0 0d0 0d0 1d0))
 
 (defmethod quaternion ((x axis-angle))
   (tf-axang2quat x))
@@ -80,11 +83,10 @@
 
 (defmethod quaternion ((x array))
   (check-type x (array double-float (4)))
-  (make-quaternion :data
-                   (vec (aref x 0)
-                        (aref x 1)
-                        (aref x 2)
-                        (aref x 3))))
+  (quaternion* (aref x 0)
+               (aref x 1)
+               (aref x 2)
+               (aref x 3)))
 
 (defmethod quaternion ((x x-angle))
   (tf-xangle2quat (principal-angle-value x)))
@@ -93,6 +95,33 @@
 (defmethod quaternion ((x z-angle))
   (tf-zangle2quat (principal-angle-value x)))
 
+;;; Euler
+
+(defmethod euler-zyx ((x (eql nil)))
+  (euler-zyx* 0d0 0d0 0d0))
+
+(defmethod euler-zyx ((x quaternion))
+  (tf-quat2eulerzyx x))
+
+(defmethod euler-zyx ((x array))
+  (euler-zyx* (aref x 0)
+              (aref x 1)
+              (aref x 2)))
+
+(defmethod euler-zyx ((x x-angle))
+  (euler-zyx* 0d0
+              0d0
+              (x-angle-value x)))
+
+(defmethod euler-zyx ((x y-angle))
+  (euler-zyx* 0d0
+              (y-angle-value x)
+              0d0))
+
+(defmethod euler-zyx ((x z-angle))
+  (euler-zyx (z-angle-value x)
+             0d0
+             0d0))
 
 ;;; Dual-Quaternion
 (defmethod dual-quaternion ((x dual-quaternion)) x)

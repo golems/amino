@@ -1,6 +1,7 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
 ;;;; Copyright (c) 2013, Georgia Tech Research Corporation
+;;;; Copyright (c) 2015, Rice University
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -175,7 +176,7 @@
 (defun quaternion-w (q)
   (aref (quaternion-data q) +w+))
 
-(defun quaternion-4 (x y z w)
+(defun quaternion* (x y z w)
   (make-quaternion :data (vec x y z w)))
 
 (define-foreign-type quaternion-t ()
@@ -221,15 +222,20 @@
                                   (data (make-vec 3) :type  (simple-array double-float (3))))))
 
 (defstruct (euler-zyx (:include euler-angle)))
-(defun euler-zyx (z y x)
+
+(defun euler-zyx* (z y x)
   (make-euler-zyx :data (vec z y x)))
+
+(define-foreign-type euler-zyx-t ()
+  ()
+  (:simple-parser euler-zyx-t)
+  (:actual-type :pointer))
+(defmethod expand-to-foreign-dyn (value var body (type euler-zyx-t))
+  (expand-vector value var body 3))
 
 ;;; Dual Quaternion
 (defstruct (dual-quaternion (:include real-array
                                  (data (make-vec 8) :type  (simple-array double-float (8))))))
-;; (defun dual-quaternion (q v)
-;;   ;; TODO
-;;   (assert 0))
 
 (define-foreign-type dual-quaternion-t ()
   ()

@@ -155,11 +155,26 @@ aa_tf_qv_conj( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
 }
 
 
+void aa_tf_quat2eulerzyx( const double q[restrict 4],
+                          double e[restrict 3] )
+{
+
+    double x = q[AA_TF_QUAT_X];
+    double y = q[AA_TF_QUAT_Y];
+    double z = q[AA_TF_QUAT_Z];
+    double w = q[AA_TF_QUAT_W];
+
+    /* roll*/
+    e[2] = atan2( 2.0*(w*x + y*z), 1.0 - 2.0*(x*x + y*y) );
+    /* pitch*/
+    e[1] = asin( 2.0*(w*y - x*z) );
+    /* yaw*/
+    e[0] = atan2( 2*(w*z + x*y), 1.0 - 2.0*(y*y+z*z) );
+}
+
 /********************/
 /* DUAL QUATERNIONS */
 /********************/
-
-
 
 AA_API void
 aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],

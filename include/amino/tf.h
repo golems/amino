@@ -965,17 +965,14 @@ AA_API void aa_tf_qv2tfmat( const double q[AA_RESTRICT 4], const double v[AA_RES
 /* AA_API void aa_tf_tfq2tfv( const double x[AA_RESTRICT 3], const double quat[AA_RESTRICT 4],  */
 /*                            double vrv[AA_RESTRICT 6] ); */
 
-/* Convert ZYX Euler Angles to Rotation Matrix */
-/* AA_API void aa_tf_eulerzyx2rotmat( const double e[AA_RESTRICT 3], */
-/*                                    double R[AA_RESTRICT 9] ); */
-
 /** Convert Rotation Matrix to ZYX Euler Angles */
 AA_API void aa_tf_rotmat2eulerzyx( const double R[AA_RESTRICT 9],
                                    double e[AA_RESTRICT 3] );
 
 
-/* AA_API void aa_tf_eulerzyx2quat( const double e[AA_RESTRICT 3], */
-/*                                  double q[AA_RESTRICT 4] ); */
+/** Convert quaternion to ZYX Euler Angles */
+AA_API void aa_tf_quat2eulerzyx( const double q[AA_RESTRICT 4],
+                                 double e[AA_RESTRICT 3] );
 
 
 #define AA_TF_DEF_EULER(letters)                                        \

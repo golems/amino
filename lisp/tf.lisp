@@ -1,6 +1,7 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
 ;;;; Copyright (c) 2013, Georgia Tech Research Corporation
+;;;; Copyright (c) 2015, Rice University
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -472,7 +473,12 @@
   (aa-tf-eulerzyx2quat e1 e2 e3 r)
   r)
 
-;;; Convenience
+(defcfun aa-tf-quat2eulerzyx :void
+  (q quaternion-t)
+  (e euler-zyx-t))
+(defun tf-quat2eulerzyx (q &optional (e (make-euler-zyx)))
+  (aa-tf-quat2eulerzyx q e)
+  e)
 
 (defun tf-rotation (tf)
   (matrix-block tf 0 0 3 3))
