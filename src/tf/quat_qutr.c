@@ -41,48 +41,6 @@
  *
  */
 
-/**************/
-/* CONVERSION */
-/**************/
-
-AA_API void
-aa_tf_qutr2duqu( const double E[AA_RESTRICT 7], double S[AA_RESTRICT 8] )
-{
-    aa_tf_qv2duqu( E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V, S );
-}
-
-AA_API void
-aa_tf_duqu2qutr( const double S[AA_RESTRICT 8], double E[AA_RESTRICT 7] )
-{
-    aa_tf_duqu2qv(S,  E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V );
-}
-
-
-void aa_tf_qv2tfmat( const double q[4], const double v[3], double T[12] )
-{
-    aa_tf_quat2rotmat( q, T + AA_TF_TFMAT_R);
-    AA_MEM_CPY(T+AA_TF_TFMAT_V, v, 3 );
-}
-
-AA_API void
-aa_tf_qutr2tfmat( const double E[AA_RESTRICT 7], double T[AA_RESTRICT 12] )
-{
-    aa_tf_qv2tfmat( E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V, T );
-}
-
-AA_API void
-aa_tf_tfmat2qv( const double T[AA_RESTRICT 12], double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] )
-{
-    aa_tf_rotmat2quat(T + AA_TF_TFMAT_R, q);
-    AA_MEM_CPY( v, T+AA_TF_TFMAT_V, 3 );
-}
-
-AA_API void
-aa_tf_tfmat2qutr( const double T[AA_RESTRICT 12], double E[AA_RESTRICT 7] )
-{
-    aa_tf_tfmat2qv( T, E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V );
-}
-
 /*******/
 /* OPS */
 /*******/

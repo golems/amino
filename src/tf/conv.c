@@ -42,6 +42,7 @@
 
 #define _GNU_SOURCE
 #include "amino.h"
+#include "amino_internal.h"
 
 
 AA_API void
@@ -120,4 +121,143 @@ aa_tf_quat2rotmat( const double q[AA_RESTRICT 4], double R[AA_RESTRICT 9] )
                     q[3] * b[1],
                     q[3] * b[2] };
     aa_tf_skewsym_scal_c( q, a, b, R );
+}
+
+
+AA_API void
+aa_tf_xangle2quat( double theta, double _q[AA_RESTRICT 4] )
+{
+    aa_tf_quat_t *q = (aa_tf_quat_t *)_q;
+    q->x = sin(theta/2);
+    q->y = 0;
+    q->z = 0;
+    q->w = cos(theta/2);
+}
+
+AA_API void
+aa_tf_yangle2quat( double theta, double _q[AA_RESTRICT 4] )
+{
+    aa_tf_quat_t *q = (aa_tf_quat_t *)_q;
+    q->x = 0;
+    q->y = sin(theta/2);
+    q->z = 0;
+    q->w = cos(theta/2);
+}
+
+AA_API void
+aa_tf_zangle2quat( double theta, double _q[AA_RESTRICT 4] )
+{
+    aa_tf_quat_t *q = (aa_tf_quat_t *)_q;
+    q->x = 0;
+    q->y = 0;
+    q->z = sin(theta/2);
+    q->w = cos(theta/2);
+}
+
+AA_API void
+aa_tf_rotvec2quat( const double a[AA_RESTRICT 3], double _q[AA_RESTRICT 4] )
+{
+    aa_tf_quat_t *q = (aa_tf_quat_t *)_q;
+    double sc;
+    aa_tf_sinccos2( (a[0]*a[0]+a[1]*a[1]+a[2]*a[2])/4, &sc, &q->w );
+    sc /= 2;
+    FOR_VEC(i) q->v[i] = sc * a[i];
+}
+
+AA_API void
+aa_tf_axang2quat2( const double axis[AA_RESTRICT 3], double angle,
+                   double _q[AA_RESTRICT 4] )
+{
+
+    aa_tf_quat_t *q = (aa_tf_quat_t *)_q;
+    angle /= 2;
+    double s = sin(angle);
+    q->w = cos(angle);
+    FOR_VEC(i) q->v[i] = s * axis[i];
+}
+
+AA_API void
+aa_tf_axang2quat( const double _aa[AA_RESTRICT 4],
+                  double q[AA_RESTRICT 4] )
+{
+    const aa_tf_axang_t *aa = (aa_tf_axang_t *) _aa;
+    aa_tf_axang2quat2( aa->v, aa->angle, q );
+}
+
+
+void aa_tf_quat2eulerzyx( const double q[restrict 4],
+                          double e[restrict 3] )
+{
+    double n = aa_tf_qnorm( q );
+    double x = q[AA_TF_QUAT_X] / n;
+    double y = q[AA_TF_QUAT_Y] / n;
+    double z = q[AA_TF_QUAT_Z] / n;
+    double w = q[AA_TF_QUAT_W] / n;
+
+    /* roll*/
+    e[2] = atan2( 2.0*(w*x + y*z), 1.0 - 2.0*(x*x + y*y) );
+    /* pitch*/
+    e[1] = asin( 2.0*(w*y - x*z) );
+    /* yaw*/
+    e[0] = atan2( 2*(w*z + x*y), 1.0 - 2.0*(y*y+z*z) );
+}
+
+AA_API void
+aa_tf_quat2rotvec( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 3] )
+{
+    double qmin[4], qrv[4];
+    aa_tf_qminimize2( q, qmin );
+    aa_tf_qln(qmin, qrv);
+    FOR_VEC(i) r[i] = 2 * qrv[AA_TF_QUAT_V + i];
+}
+AA_API void
+aa_tf_quat2axang( const double q[AA_RESTRICT 4], double a[AA_RESTRICT 4] )
+{
+    double rv[3];
+    aa_tf_quat2rotvec( q, rv );
+    a[3] = sqrt( rv[0]*rv[0]+rv[1]*rv[1]+rv[2]*rv[2] );
+    if( 0 < fabs(a[3]) ) {
+        FOR_VEC(i) a[i] = rv[i] / a[3];
+    } else {
+        FOR_VEC(i) a[i] = 0;
+    }
+
+}
+
+AA_API void
+aa_tf_qutr2duqu( const double E[AA_RESTRICT 7], double S[AA_RESTRICT 8] )
+{
+    aa_tf_qv2duqu( E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V, S );
+}
+
+AA_API void
+aa_tf_duqu2qutr( const double S[AA_RESTRICT 8], double E[AA_RESTRICT 7] )
+{
+    aa_tf_duqu2qv(S,  E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V );
+}
+
+
+void aa_tf_qv2tfmat( const double q[4], const double v[3], double T[12] )
+{
+    aa_tf_quat2rotmat( q, T + AA_TF_TFMAT_R);
+    AA_MEM_CPY(T+AA_TF_TFMAT_V, v, 3 );
+}
+
+AA_API void
+aa_tf_qutr2tfmat( const double E[AA_RESTRICT 7], double T[AA_RESTRICT 12] )
+{
+    aa_tf_qv2tfmat( E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V, T );
+}
+
+AA_API void
+aa_tf_tfmat2qv( const double T[AA_RESTRICT 12], double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] )
+{
+    aa_tf_rotmat2quat(T + AA_TF_TFMAT_R, q);
+    AA_MEM_CPY( v, T+AA_TF_TFMAT_V, 3 );
+}
+
+AA_API void
+aa_tf_tfmat2qutr( const double T[AA_RESTRICT 12], double E[AA_RESTRICT 7] )
+{
+    aa_tf_tfmat2qv( T, E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V );
 }
