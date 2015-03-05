@@ -49,6 +49,8 @@
 #ifndef AMINO_TF_H
 #define AMINO_TF_H
 
+#include <float.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,15 +62,44 @@ extern "C" {
     static inline double                                    \
     aa_tf_ ## name ##_series2(double theta2)                \
     {                                                       \
-        return aa_horner3( theta2, a0, a1, a2 );         \
+        return aa_horner3( theta2, a0, a1, a2 );            \
     }                                                       \
     static inline double                                    \
     aa_tf_ ## name ## _series(double theta)                 \
-    { return aa_tf_ ## name ## _series(theta*theta); }      \
+    {                                                       \
+        return aa_tf_ ## name ## _series2(theta*theta);     \
+    }                                                       \
 
 AA_TF_DEF_SERIES( sinc, 1., -1./6, 1./120 )
 AA_TF_DEF_SERIES( cos, 1., -1./2, 1./24 )
 AA_TF_DEF_SERIES( invsinc, 1., 1./6, 7./360 )
+
+static inline void
+aa_tf_sinccos2( double theta2, double *sc, double *c )
+{
+    if( theta2 < sqrt(DBL_EPSILON) ) {
+        *sc = aa_tf_sinc_series2(theta2);
+        *c = aa_tf_cos_series2(theta2);
+    } else {
+        double theta = sqrt(theta2);
+        double s = sin(theta);
+        *c = cos(theta);
+        *sc = s / theta;
+    }
+}
+
+static inline void
+aa_tf_sinccos( double theta, double *sc, double *c )
+{
+    if( theta*theta < sqrt(DBL_EPSILON) ) {
+        *sc = aa_tf_sinc_series(theta);
+        *c = aa_tf_cos_series(theta);
+    } else {
+        double s = sin(theta);
+        *c = cos(theta);
+        *sc = s / theta;
+    }
+}
 
 /*********/
 /* Types */
@@ -107,7 +138,10 @@ typedef struct aa_tf_rotmat {
 typedef struct aa_tf_axang {
     union {
         struct {
-            struct aa_tf_vec3 axis;
+            union {
+                struct aa_tf_vec3 axis;
+                double v[3];
+            };
             double angle;
         };
         double data[4];
@@ -115,13 +149,15 @@ typedef struct aa_tf_axang {
 } aa_tf_axang_t;
 
 /// Index of quaternion vector part
-#define AA_TF_QUAT_XYZ 0
+#define AA_TF_QUAT_V 0
+/// Index of quaternion vector part
+#define AA_TF_QUAT_XYZ AA_TF_QUAT_V
 /// Index of quaternion vector x
-#define AA_TF_QUAT_X (AA_TF_QUAT_XYZ + AA_TF_X)
+#define AA_TF_QUAT_X (AA_TF_QUAT_V + AA_TF_X)
 /// Index of quaternion vector y
-#define AA_TF_QUAT_Y (AA_TF_QUAT_XYZ + AA_TF_Y)
+#define AA_TF_QUAT_Y (AA_TF_QUAT_V + AA_TF_Y)
 /// Index of quaternion vector z
-#define AA_TF_QUAT_Z (AA_TF_QUAT_XYZ + AA_TF_Z)
+#define AA_TF_QUAT_Z (AA_TF_QUAT_V + AA_TF_Z)
 /// Index of quaternion scalar part
 #define AA_TF_QUAT_W 3
 
@@ -135,7 +171,10 @@ typedef struct aa_tf_quat {
             double w;
         };
         struct {
-            struct aa_tf_vec3 vec;
+            union {
+                struct aa_tf_vec3 vec;
+                double v[3];
+            };
             double scalar;
         };
         double data[4];
@@ -1096,6 +1135,9 @@ AA_API void aa_tf_zxyz2duqu( double theta, double x, double y, double z,
 /** Convert dual quaternion to orientation unit quaternion and translation vector. */
 AA_API void aa_tf_duqu2qv( const double d[AA_RESTRICT 8],
                            double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] ) ;
+
+/// transformation matrix to  quaternion-translation
+void aa_tf_tfmat2av( const double T[12], double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] ) ;
 
 /** Dual quaternion twist from velocity */
 AA_API void aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],

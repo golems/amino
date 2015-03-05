@@ -408,7 +408,6 @@ void aa_tf_rotmat2eulerzyx( const double R[restrict 9],
     e[2] = g;
 }
 
-
 /* AA_API void aa_tf_eulerzyx2quat( const double e[AA_RESTRICT 3], */
 /*                                  double q[AA_RESTRICT 4] ) { */
 /*     double ca, cb, cg, sa, sb, sg; */

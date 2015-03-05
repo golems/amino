@@ -53,10 +53,25 @@ void rand_tf( double _E[7], double S[8],  double T[12] ) {
     double tmp[7];
     double *E = _E ? _E : tmp;
 
+    /* Convert */
     aa_tf_qutr_rand( E );
+    aa_tf_qutr2duqu( E, S );
+    aa_tf_qutr2tfmat( E, T );
 
-    if( S ) aa_tf_qutr2duqu( E, S );
-    if( T ) aa_tf_duqu2tfmat( S, T );
+    /* Check Conversion */
+    double E_min[7];
+    AA_MEM_CPY(E_min, E, 7 );
+    aa_tf_qminimize( E_min );
+
+    {
+        double Es[7], Et[7];
+        aa_tf_tfmat2qutr( T, Et );
+        aa_tf_duqu2qutr( S, Es );
+        aa_tf_qminimize( Es );
+        aa_tf_qminimize( Et );
+        aveq( "qutr<->duqu", 7, E_min, Es, 1e-5 );
+        aveq( "qutr<->tfmat", 7, E_min, Et, 1e-5 );
+    }
 }
 
 static void rotvec(double *q) {
@@ -179,32 +194,50 @@ static void euler1(const double *a) {
 static void chain(double E[2][7],
                   double S[2][8],
                   double T[2][12] ) {
-    double E3[7], S3[8], ES[8], T3[12], TS[8];
-    double qv[7], qvS[8];
+    double E3[7];
 
     // rotation
-    aa_tf_qmul( S[0], S[1], S3 );
-    aa_tf_9mul( T[0], T[1], T3 );
-    aa_tf_rotmat2quat( T3, TS );
-    aa_tf_qminimize( S3 );
-    aa_tf_qminimize( TS );
-    aveq("chain-rot q/9", 4, S3, TS, 1e-6 );
+    {
+        double q3[4]={0};
+        double R3[9]={0};
+        double qc[4]={0};
+        aa_tf_qmul( E[0], E[1], q3 );
+        aa_tf_9mul( T[0], T[1], R3 );
+        aa_tf_rotmat2quat( R3, qc );
+        aa_tf_qminimize( q3 );
+        aa_tf_qminimize( qc );
+        aveq("chain-rot q/9", 4, q3, qc, 1e-6 );
+    }
 
     // Transformation
-    aa_tf_12chain( T[0], T[1], T3 );
-    aa_tf_duqu_mul( S[0], S[1], S3 );
-    aa_tf_qv_chain( S[0], T[0]+9, S[1], T[1]+9, qv, qv+4 );
     aa_tf_qutr_mul( E[0], E[1], E3 );
-    aa_tf_tfmat2duqu( T3, TS );
-    aa_tf_qv2duqu( qv, qv+4, qvS );
-    aa_tf_qutr2duqu( E3, ES );
-    aa_tf_duqu_minimize( S3 );
-    aa_tf_duqu_minimize( TS );
-    aa_tf_duqu_minimize( qvS );
-    aa_tf_duqu_minimize( ES );
-    aveq("chain-tf T/S", 8, S3, TS, 1e-6 );
-    aveq("chain-tf qv/S", 8, S3, qvS, 1e-6 );
-    aveq("chain-tf qutr/duqu", 8, S3, ES, 1e-6 );
+    aa_tf_qminimize( E3 );
+
+    // duqu
+    {
+        double S3[8]={0}, Ec[7]={0};
+        aa_tf_duqu_mul( S[0], S[1], S3 );
+        aa_tf_duqu2qutr( S3, Ec );
+        aa_tf_qminimize( Ec );
+        aveq("chain-tf qutr/duqu", 7, E3, Ec, 1e-6 );
+    }
+
+    // qutr_norm
+    {
+        double N3[7]={0};
+        aa_tf_qutr_mulnorm(E[0], E[1], N3);
+        aa_tf_qminimize( N3 );
+        aveq("chain-tf qutr/qutrnorm", 7, E3, N3, 1e-6 );
+    }
+
+    // tfmat
+    {
+        double T3[12]={0}, Ec[7]={0};
+        aa_tf_12chain( T[0], T[1], T3 );
+        aa_tf_tfmat2qutr( T3, Ec );
+        aa_tf_qminimize( Ec );
+        aveq("chain-tf qutr/tfmat", 7, E3, Ec, 1e-6 );
+    }
 }
 
 

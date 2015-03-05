@@ -1035,18 +1035,510 @@ module amino_tf
      end subroutine aa_tf_qmul
   end interface aa_tf_qmul
 
+  interface aa_tf_qmulnorm
+     pure subroutine aa_tf_qmulnorm( a, b, q) &
+          bind( C, name="aa_tf_qmulnorm" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(out) :: q
+       real(C_DOUBLE), dimension(4), intent(in) :: a,b
+       ! call aa_tf_qmul(a,b,q)
+       ! call aa_tf_qnormalize(q)
+     end subroutine aa_tf_qmulnorm
+  end interface aa_tf_qmulnorm
+
+
+  !! Multiply conj(a) and b
+  interface aa_tf_qcmul
+     pure subroutine aa_tf_qcmul( a, b, q) &
+          bind( C, name="aa_tf_qcmul" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(out) :: q
+       real(C_DOUBLE), dimension(4), intent(in) :: a,b
+       !q(1) = ( a(3)*b(2) - a(2)*b(3) ) + ( a(4)*b(1) - a(1)*b(4) )
+       !q(2) = ( a(1)*b(3) - a(3)*b(1) ) + ( a(4)*b(2) - a(2)*b(4) )
+       !q(3) = ( a(2)*b(1) - a(1)*b(2) ) + ( a(4)*b(3) - a(3)*b(4) )
+       !q(4) = ( a(4)*b(4) + a(3)*b(3) ) + ( a(1)*b(1) + a(2)*b(2) )
+     end subroutine aa_tf_qcmul
+  end interface aa_tf_qcmul
+
+  !! Multiply a and conj(b)
+  interface aa_tf_qmulc
+     pure subroutine aa_tf_qmulc( a, b, q) &
+          bind( C, name="aa_tf_qmulc" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(out) :: q
+       real(C_DOUBLE), dimension(4), intent(in) :: a,b
+       ! q(1) = ( a(3)*b(2) - a(2)*b(3) ) + ( a(1)*b(4) - a(4)*b(1) )
+       ! q(2) = ( a(1)*b(3) - a(3)*b(1) ) + ( a(2)*b(4) - a(4)*b(2) )
+       ! q(3) = ( a(2)*b(1) - a(1)*b(2) ) + ( a(3)*b(4) - a(4)*b(3) )
+       ! q(4) = ( a(1)*b(1) + a(2)*b(2) ) + ( a(3)*b(3) + a(4)*b(4) )
+     end subroutine aa_tf_qmulc
+  end interface aa_tf_qmulc
+
+  !! Multiply vector and quaternion
+  interface aa_tf_qmul_vq
+     pure subroutine aa_tf_qmul_vq( v, q, y) &
+          bind( C, name="aa_tf_qmul_vq" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), intent(in) :: v(3), q(4)
+       real(C_DOUBLE), intent(out) :: y(4)
+       !y(1) = +  v(2)*q(3) - v(3)*q(2) + v(1)*q(4)
+       !y(2) = +  v(3)*q(1) - v(1)*q(3) + v(2)*q(4)
+       !y(3) = +  v(1)*q(2) - v(2)*q(1) + v(3)*q(4)
+       !y(4) = -  v(1)*q(1) - v(2)*q(2) - v(3)*q(3)
+
+       ! y(1) = + v(1)*q(4) + v(2)*q(3) - v(3)*q(2)
+       ! y(2) = - v(1)*q(3) + v(2)*q(4) + v(3)*q(1)
+       ! y(3) = + v(1)*q(2) - v(2)*q(1) + v(3)*q(4)
+       ! y(4) = - v(1)*q(1) - v(2)*q(2) - v(3)*q(3)
+     end subroutine aa_tf_qmul_vq
+   end interface aa_tf_qmul_vq
+
+
+   interface aa_tf_qmul_qv
+      pure subroutine aa_tf_qmul_qv( q, v, y) &
+           bind( C, name="aa_tf_qmul_qv" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: v(3), q(4)
+        real(C_DOUBLE), intent(out) :: y(4)
+        ! y(1) = + q(2)*v(3) - q(3)*v(2) + q(4)*v(1)
+        ! y(2) = + q(3)*v(1) - q(1)*v(3) + q(4)*v(2)
+        ! y(3) = + q(1)*v(2) - q(2)*v(1) + q(4)*v(3)
+        ! y(4) = - q(1)*v(1) - q(2)*v(2) - q(3)*v(3)
+
+        ! y(1) = + q(4)*v(1) - q(3)*v(2) + q(2)*v(3)
+        ! y(2) = + q(3)*v(1) + q(4)*v(2) - q(1)*v(3)
+        ! y(3) = - q(2)*v(1) + q(1)*v(2) + q(4)*v(3)
+        ! y(4) = - q(1)*v(1) - q(2)*v(2) - q(3)*v(3)
+      end subroutine aa_tf_qmul_qv
+   end interface aa_tf_qmul_qv
+
+   interface aa_tf_qinv
+      pure Subroutine aa_tf_qinv( q, r ) &
+           bind( C, name="aa_tf_qinv" )
+        use ISO_C_BINDING
+        Real(C_DOUBLE), Dimension(4), intent(out) :: r
+        Real(C_DOUBLE), Dimension(4), intent(in) :: q
+        !Call aa_tf_qconj( q, r )
+        !r = r / dot_product(q,q)
+      End Subroutine aa_tf_qinv
+   end interface aa_tf_qinv
+
+   interface aa_tf_cross
+      pure Subroutine aa_tf_cross(a,b,c) &
+           bind( C, name="aa_tf_cross" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in), dimension(3) :: a,b
+        real(C_DOUBLE), intent(out), dimension(3) :: c
+
+        !c(1) =  a(2)*b(3) - a(3)*b(2)
+        !c(2) =  a(3)*b(1) - a(1)*b(3)
+        !c(3) =  a(1)*b(2) - a(2)*b(1)
+
+      End Subroutine aa_tf_cross
+   end interface aa_tf_cross
+
+   interface aa_tf_qrot
+      pure Subroutine aa_tf_qrot( q, v, r ) &
+           bind( C, name="aa_tf_qrot" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(3), intent(out) :: r
+        real(C_DOUBLE), Dimension(4), intent(in) :: q
+        real(C_DOUBLE), Dimension(3), intent(in) :: v
+
+        !! slow implementation
+        ! qv(W_INDEX) = 0d0
+        ! qv(XYZ_INDEX) = v
+        ! Call aa_tf_qconj( q, qi )
+        ! call aa_tf_qmul( q, qv, qr1 )
+        ! call aa_tf_qmul( qr1, qi, qr2 )
+        ! r = qr2(1:3)
+
+        !! Optimized implementation
+        ! real(C_DOUBLE) :: a(3), b(3)
+        ! call aa_tf_cross(q(1:3), v, a)
+        ! a = a + q(4)*v
+        ! call aa_tf_cross(q(1:3), a, b)
+        ! r = b + b + v
+
+      End Subroutine aa_tf_qrot
+   end interface aa_tf_qrot
+
+  !! Pure quaternion exponential
+   interface aa_tf_qpexp
+      pure Subroutine aa_tf_qpexp( q, r ) &
+           bind( C, name="aa_tf_qpexp" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: r
+        real(C_DOUBLE), Dimension(3), intent(in) :: q
+        real(C_DOUBLE) :: sc, c
+        !call aa_tf_sinccos2( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)), sc, c)
+        !r(W_INDEX) = c
+        !r(XYZ_INDEX) = sc * q(XYZ_INDEX)
+      end Subroutine aa_tf_qpexp
+   end interface aa_tf_qpexp
+
+   interface aa_tf_qexp
+      pure Subroutine aa_tf_qexp( q, r ) &
+           bind( C, name="aa_tf_qexp" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: r
+        real(C_DOUBLE), Dimension(4), intent(in) :: q
+        real(C_DOUBLE) :: sc, c, ew
+        !ew = exp(q(W_INDEX))
+        !call aa_tf_sinccos2( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)), sc, c)
+        !r(W_INDEX) = ew*c
+        !r(XYZ_INDEX) = ew*sc * q(XYZ_INDEX)
+      end Subroutine aa_tf_qexp
+   end interface aa_tf_qexp
+
+
+   interface aa_tf_qln
+      pure subroutine aa_tf_qln( q, r ) &
+           bind( C, name="aa_tf_qln" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: r
+        real(C_DOUBLE), Dimension(4), intent(in) :: q
+        !real(C_DOUBLE) :: vv, vnorm, qnorm, theta, a
+
+        ! ! compute qnorm and vnorm efficiently
+        ! vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+        ! qnorm = sqrt( vv + q(W_INDEX)**2 )
+        ! vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
+        ! theta = atan2( vnorm, q(W_INDEX) ) ! always positive
+        ! ! Try to avoid division by very small vnorm
+        ! if ( theta < sqrt(sqrt(epsilon(theta))) ) then
+        !    ! a = theta*qnorm / (vnorm*qnorm) = theta/(sin(theta)*qnorm)
+        !    a = aa_tf_invsinc_series(theta)/qnorm ! approx. 1/qnorm
+        ! else
+        !    a = theta/vnorm
+        ! end if
+        ! r(XYZ_INDEX) = a*q(XYZ_INDEX)
+        ! r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
+
+      end subroutine aa_tf_qln
+   end interface aa_tf_qln
+
+   interface aa_tf_qangle
+      function aa_tf_qangle( q ) result(angle) &
+           bind( C, name="aa_tf_qangle" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: q(4)
+        real(C_DOUBLE) :: angle
+        !angle = atan2( sqrt(dot_product(q(XYZ_INDEX),q(XYZ_INDEX))), q(W_INDEX) )
+      end function aa_tf_qangle
+   end interface aa_tf_qangle
+
+   interface aa_tf_xangle2quat
+      Subroutine aa_tf_xangle2quat( theta, q ) &
+           bind( C, name="aa_tf_xangle2quat" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: q
+        real(C_DOUBLE), intent(in), value :: theta
+        ! q(1) = sin(theta/2)
+        ! q(2) = 0d0
+        ! q(3) = 0d0
+        ! q(W_INDEX) = cos(theta/2)
+      end Subroutine aa_tf_xangle2quat
+   end interface aa_tf_xangle2quat
+
+   interface aa_tf_yangle2quat
+      Subroutine aa_tf_yangle2quat( theta, q ) &
+           bind( C, name="aa_tf_yangle2quat" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: q
+        real(C_DOUBLE), intent(in), value :: theta
+        ! q(1) = 0d0
+        ! q(2) = sin(theta/2)
+        ! q(3) = 0d0
+        ! q(W_INDEX) = cos(theta/2)
+      end Subroutine aa_tf_yangle2quat
+   end interface aa_tf_yangle2quat
+
+   interface aa_tf_zangle2quat
+      Subroutine aa_tf_zangle2quat( theta, q ) &
+           bind( C, name="aa_tf_zangle2quat" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: q
+        real(C_DOUBLE), intent(in), value :: theta
+        ! q(1) = 0d0
+        ! q(2) = 0d0
+        ! q(3) = sin(theta/2)
+        ! q(W_INDEX) = cos(theta/2)
+      end Subroutine aa_tf_zangle2quat
+   end interface aa_tf_zangle2quat
+
+   interface aa_tf_rotvec2quat
+      Subroutine aa_tf_rotvec2quat( a, q ) &
+           bind( C, name="aa_tf_rotvec2quat" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: q
+        real(C_DOUBLE), Dimension(3), intent(in) :: a
+        ! real(C_DOUBLE) :: sc,c, aa
+        ! aa = dot_product(a,a)
+        ! call aa_tf_sinccos2( aa/4, sc, c )
+        ! q(W_INDEX) = c
+        ! q(XYZ_INDEX) = sc/2 * a(XYZ_INDEX)
+      end Subroutine aa_tf_rotvec2quat
+   end interface aa_tf_rotvec2quat
+
+   interface aa_tf_axang2quat2
+      Subroutine aa_tf_axang2quat2( axis, angle, q ) &
+           bind( C, name="aa_tf_axang2quat2" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: q
+        real(C_DOUBLE), Dimension(3), intent(in) :: axis
+        real(C_DOUBLE), intent(in), value :: angle
+        ! q(W_INDEX) = cos(angle/2)
+        ! q(XYZ_INDEX) = sin(angle/2)*axis
+      end Subroutine aa_tf_axang2quat2
+   end interface aa_tf_axang2quat2
+
+   interface aa_tf_axang2quat
+      Subroutine aa_tf_axang2quat( a, q ) &
+           bind( C, name="aa_tf_axang2quat" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: q
+        real(C_DOUBLE), Dimension(4), intent(in) :: a
+        !call aa_tf_axang2quat2(a(1:3), a(4), q)
+      end Subroutine aa_tf_axang2quat
+   end interface aa_tf_axang2quat
+
+
+   !> Compute q**a
+   interface aa_tf_qpow
+      pure subroutine aa_tf_qpow( q, a, r ) &
+           bind( C, name="aa_tf_qpow" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(out) :: r
+        real(C_DOUBLE), Dimension(4), intent(in) :: q
+        real(C_DOUBLE), value, intent(in) :: a
+        ! real(C_DOUBLE) :: qln(4)
+
+        !! r = exp( ln(q) * a )
+        ! call aa_tf_qln( q, qln )
+        ! qln = a*qln
+        ! call aa_tf_qexp(qln, r )
+
+        !! inlined implementation
+        ! ! intermediates
+        ! vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+        ! vnorm = sqrt(vv)
+        ! qnorm = sqrt( vv + q(W_INDEX)**2 )
+        ! !theta = acos( q(W_INDEX) / qnorm )
+        ! theta = atan2( vnorm, q(W_INDEX) )
+        ! pa = qnorm ** a
+        ! ! output
+        ! r(W_INDEX) = pa * cos(a*theta)
+        ! r(XYZ_INDEX) = (pa * sin(a*theta) / vnorm) * q(XYZ_INDEX)
+      end subroutine aa_tf_qpow
+   end interface aa_tf_qpow
+
+   interface aa_tf_quat2rotvec
+      Subroutine aa_tf_quat2rotvec( q, rv ) &
+           bind( C, name="aa_tf_quat2rotvec" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(in) :: q
+        real(C_DOUBLE), Dimension(3), intent(out) :: rv
+        real(C_DOUBLE) :: qmin(4),qrv(4)
+        !! log method
+        ! call aa_tf_qminimize2(q, qmin)
+        ! call aa_tf_qln( qmin, qrv )
+        ! rv = 2*qrv(1:3) ! qrv(4) will be 0 for unit quaternions
+      end Subroutine aa_tf_quat2rotvec
+   end interface aa_tf_quat2rotvec
+
+   interface aa_tf_quat2axang
+      Subroutine aa_tf_quat2axang( q, a ) &
+           bind( C, name="aa_tf_quat2axang" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), Dimension(4), intent(in) :: q
+        real(C_DOUBLE), Dimension(4), intent(out) :: a
+        real(C_DOUBLE) :: rv(3)
+        !real(C_DOUBLE) :: e(4)
+        ! assume unit quaternion
+        !a(4) = 2d0*acos(q(W_INDEX))
+        ! call aa_tf_quat2rotvec( q, rv )
+        ! a(4) = sqrt(dot_product(rv,rv))
+        ! if( 0d0 == a(4) ) then
+        !    a(1:3) = 0d0
+        ! else
+        !    a(1:3) = rv / a(4)
+        ! end if
+        ! vnorm = aa_tf_qvnorm(q)
+        ! if( abs(vnorm) < epsilon(vnorm) ) then
+        !    a = 0d0
+        ! else
+        !    !! log method
+        !    !call aa_tf_qln( q, e )
+        !    !a(4) = 2d0 * aa_tf_qvnorm(e)
+        !    !a(1:3) = e(XYZ_INDEX) / aa_tf_qvnorm(e)
+
+        !    !! optimized method
+        !    a(4) = 2d0 * atan2( vnorm, q(W_INDEX) )
+        !    s = sqrt(1-q(4)**2) ! sin(theta/2)
+        !    a(1:3) = q(XYZ_INDEX) / s
+        ! end if
+      end Subroutine aa_tf_quat2axang
+   end interface aa_tf_quat2axang
+
+
+  !! Integrate rotational velocity
+   interface aa_tf_qsvel
+      subroutine aa_tf_qsvel( q0, w, dt, q1 ) &
+           bind( C, name="aa_tf_qsvel" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: w(3), q0(4)
+        real(C_DOUBLE), intent(in), value :: dt
+        real(C_DOUBLE), intent(out) :: q1(4)
+        real(C_DOUBLE)  :: wq(4), e(4)
+        !! Exponential map method
+        !! q1 = exp(w*dt/2) * q0
+        ! wq(XYZ_INDEX) = w*(dt/2)
+        ! wq(W_INDEX) = 0d0
+        ! call aa_tf_qexp( wq, e )
+        ! call aa_tf_qmul(e,q0, q1)
+      end subroutine aa_tf_qsvel
+   end interface aa_tf_qsvel
+
+
+   !! Integrate rotational velocity
+   interface aa_tf_qsdiff
+      subroutine aa_tf_qsdiff( q0, dq, dt, q1 ) &
+           bind( C, name="aa_tf_qsdiff" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: dq(4), q0(4)
+        real(C_DOUBLE), intent(in), value :: dt
+        real(C_DOUBLE), intent(out) :: q1(4)
+        ! real(C_DOUBLE)  :: w(4), r(4)
+        ! call aa_tf_qmulc(dq,q0,w)
+        ! w = dt*w
+        ! call aa_tf_qpexp(w,r)
+        ! call aa_tf_qmul(r,q0,q1)
+      end subroutine aa_tf_qsdiff
+   end interface aa_tf_qsdiff
+
+   interface  aa_tf_qutr2duqu
+      subroutine aa_tf_qutr2duqu( e, s ) &
+           bind( C, name="aa_tf_qutr2duqu" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: e(7)
+        real(C_DOUBLE), intent(out) :: S(8)
+        ! s(DQ_REAL) = e(QUTR_Q)
+        ! ! d%dual = 1/2 * v * q, Note, this is the same formula as
+        ! ! converting an angular velocity to a quaternion derivative
+        ! call aa_tf_qvel2diff( e(QUTR_Q), e(QUTR_V), S(DQ_DUAL) )
+      end subroutine aa_tf_qutr2duqu
+   end interface aa_tf_qutr2duqu
+
+   interface aa_tf_duqu2qutr
+      subroutine aa_tf_duqu2qutr( s, e ) &
+           bind( C, name="aa_tf_duqu2qutr" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: e(7)
+        real(C_DOUBLE), intent(in) :: S(8)
+        ! e(QUTR_Q) = S(DQ_REAL)
+        ! call aa_tf_duqu_trans(S, e(QUTR_V))
+      end subroutine aa_tf_duqu2qutr
+   end interface aa_tf_duqu2qutr
+
+   interface aa_tf_qutr2tfmat
+      subroutine aa_tf_qutr2tfmat( e, T ) &
+           bind( C, name="aa_tf_qutr2tfmat" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: e(7)
+        real(C_DOUBLE), intent(out) :: T(3,4)
+        ! call aa_tf_quat2rotmat(e(QUTR_Q), T(:,1:3))
+        ! T(:,4) = e(QUTR_V)
+      end subroutine aa_tf_qutr2tfmat
+   end interface aa_tf_qutr2tfmat
+
+   interface aa_tf_tfmat2qutr
+      subroutine aa_tf_tfmat2qutr( T, e ) &
+           bind( C, name="aa_tf_tfmat2qutr" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: e(7)
+        real(C_DOUBLE), intent(in) :: T(3,4)
+        ! call aa_tf_rotmat2quat( T(:,1:3), e(QUTR_Q))
+        ! e(QUTR_V) = T(:,4)
+      end subroutine aa_tf_tfmat2qutr
+   end interface aa_tf_tfmat2qutr
+
+   interface aa_tf_qutr_tf
+      subroutine aa_tf_qutr_tf( e, p0, p1 ) &
+           bind( C, name="aa_tf_qutr_tf" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: e(7), p0(3)
+        real(C_DOUBLE), intent(out) :: p1(3)
+        ! call aa_tf_qrot( e(QUTR_Q), p0, p1 )
+        ! p1 = p1 + e(QUTR_V)
+      end subroutine aa_tf_qutr_tf
+   end interface aa_tf_qutr_tf
+
+   interface aa_tf_qutr_mul
+      subroutine aa_tf_qutr_mul( a, b, c ) &
+           bind( C, name="aa_tf_qutr_mul" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: c(7)
+        real(C_DOUBLE), intent(in) :: a(7), b(7)
+        ! call aa_tf_qmul( a(QUTR_Q), b(QUTR_Q), c(QUTR_Q) )
+        ! call aa_tf_qutr_tf( a, b(QUTR_V), c(QUTR_V) )
+      end subroutine aa_tf_qutr_mul
+   end interface aa_tf_qutr_mul
+
+   interface aa_tf_qutr_mulnorm
+      subroutine aa_tf_qutr_mulnorm( a, b, c ) &
+           bind( C, name="aa_tf_qutr_mulnorm" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: c(7)
+        real(C_DOUBLE), intent(in) :: a(7), b(7)
+        ! call aa_tf_qmulnorm( a(QUTR_Q), b(QUTR_Q), c(QUTR_Q) )
+        ! call aa_tf_qutr_tf( a, b(QUTR_V), c(QUTR_V) )
+      end subroutine aa_tf_qutr_mulnorm
+   end interface aa_tf_qutr_mulnorm
+
+
+   interface aa_tf_qutr_conj
+      subroutine aa_tf_qutr_conj( a, b ) &
+           bind( C, name="aa_tf_qutr_conj" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: b(7)
+        real(C_DOUBLE), intent(in) :: a(7)
+        ! call aa_tf_qv_conj(a(QUTR_Q), a(QUTR_V), b(QUTR_Q), b(QUTR_V))
+      end subroutine aa_tf_qutr_conj
+
+   end interface aa_tf_qutr_conj
+
+
+
+
+interface aa_tf_qutr_mulc
+subroutine aa_tf_qutr_mulc( a, b, c ) &
+     bind( C, name="aa_tf_qutr_mulc" )
+use ISO_C_BINDING
+  real(C_DOUBLE), intent(out) :: c(7)
+  real(C_DOUBLE), intent(in) :: a(7), b(7)
+  real(C_DOUBLE) :: bc(7)
+  !call aa_tf_qutr_conj(b,bc)
+  !call aa_tf_qutr_mul(a, bc, c)
+end subroutine aa_tf_qutr_mulc
+end interface aa_tf_qutr_mulc
+
+interface aa_tf_qutr_cmul
+subroutine aa_tf_qutr_cmul( a, b, c ) &
+     bind( C, name="aa_tf_qutr_cmul" )
+use ISO_C_BINDING
+  real(C_DOUBLE), intent(out) :: c(7)
+  real(C_DOUBLE), intent(in) :: a(7), b(7)
+  real(C_DOUBLE) :: ac(7)
+  !call aa_tf_qutr_conj(a,ac)
+  !call aa_tf_qutr_mul(ac, b, c)
+end subroutine aa_tf_qutr_cmul
+end interface aa_tf_qutr_cmul
+
 contains
 
   !!! Quaternions
-
-  pure subroutine aa_tf_qmulnorm( a, b, q) &
-       bind( C, name="aa_tf_qmulnorm" )
-    real(C_DOUBLE), dimension(4), intent(out) :: q
-    real(C_DOUBLE), dimension(4), intent(in) :: a,b
-    call aa_tf_qmul(a,b,q)
-    call aa_tf_qnormalize(q)
-  end subroutine aa_tf_qmulnorm
-
   pure subroutine aa_tf_qmatrix_l( q, m )
     real(C_DOUBLE), dimension(4), intent(in) :: q
     real(C_DOUBLE), dimension(:,:), intent(out) :: m
@@ -1115,154 +1607,6 @@ contains
     call aa_tf_qmatrix_r(q,m)
   end subroutine aa_tf_qmatrix_r_c
 
-  !! Multiply conj(a) and b
-  pure subroutine aa_tf_qcmul( a, b, q) &
-       bind( C, name="aa_tf_qcmul" )
-    real(C_DOUBLE), dimension(4), intent(out) :: q
-    real(C_DOUBLE), dimension(4), intent(in) :: a,b
-    q(1) = ( a(3)*b(2) - a(2)*b(3) ) + ( a(4)*b(1) - a(1)*b(4) )
-    q(2) = ( a(1)*b(3) - a(3)*b(1) ) + ( a(4)*b(2) - a(2)*b(4) )
-    q(3) = ( a(2)*b(1) - a(1)*b(2) ) + ( a(4)*b(3) - a(3)*b(4) )
-    q(4) = ( a(4)*b(4) + a(3)*b(3) ) + ( a(1)*b(1) + a(2)*b(2) )
-  end subroutine aa_tf_qcmul
-
-  !! Multiply a and conj(b)
-  pure subroutine aa_tf_qmulc( a, b, q) &
-       bind( C, name="aa_tf_qmulc" )
-    real(C_DOUBLE), dimension(4), intent(out) :: q
-    real(C_DOUBLE), dimension(4), intent(in) :: a,b
-    q(1) = ( a(3)*b(2) - a(2)*b(3) ) + ( a(1)*b(4) - a(4)*b(1) )
-    q(2) = ( a(1)*b(3) - a(3)*b(1) ) + ( a(2)*b(4) - a(4)*b(2) )
-    q(3) = ( a(2)*b(1) - a(1)*b(2) ) + ( a(3)*b(4) - a(4)*b(3) )
-    q(4) = ( a(1)*b(1) + a(2)*b(2) ) + ( a(3)*b(3) + a(4)*b(4) )
-  end subroutine aa_tf_qmulc
-
-
-  !! Multiply vector and quaternion
-  pure subroutine aa_tf_qmul_vq( v, q, y) &
-       bind( C, name="aa_tf_qmul_vq" )
-    real(C_DOUBLE), intent(in) :: v(3), q(4)
-    real(C_DOUBLE), intent(out) :: y(4)
-    y(1) = +  v(2)*q(3) - v(3)*q(2) + v(1)*q(4)
-    y(2) = +  v(3)*q(1) - v(1)*q(3) + v(2)*q(4)
-    y(3) = +  v(1)*q(2) - v(2)*q(1) + v(3)*q(4)
-    y(4) = -  v(1)*q(1) - v(2)*q(2) - v(3)*q(3)
-
-    ! y(1) = + v(1)*q(4) + v(2)*q(3) - v(3)*q(2)
-    ! y(2) = - v(1)*q(3) + v(2)*q(4) + v(3)*q(1)
-    ! y(3) = + v(1)*q(2) - v(2)*q(1) + v(3)*q(4)
-    ! y(4) = - v(1)*q(1) - v(2)*q(2) - v(3)*q(3)
-  end subroutine aa_tf_qmul_vq
-
-  pure subroutine aa_tf_qmul_qv( q, v, y) &
-       bind( C, name="aa_tf_qmul_qv" )
-    real(C_DOUBLE), intent(in) :: v(3), q(4)
-    real(C_DOUBLE), intent(out) :: y(4)
-    y(1) = + q(2)*v(3) - q(3)*v(2) + q(4)*v(1)
-    y(2) = + q(3)*v(1) - q(1)*v(3) + q(4)*v(2)
-    y(3) = + q(1)*v(2) - q(2)*v(1) + q(4)*v(3)
-    y(4) = - q(1)*v(1) - q(2)*v(2) - q(3)*v(3)
-
-    ! y(1) = + q(4)*v(1) - q(3)*v(2) + q(2)*v(3)
-    ! y(2) = + q(3)*v(1) + q(4)*v(2) - q(1)*v(3)
-    ! y(3) = - q(2)*v(1) + q(1)*v(2) + q(4)*v(3)
-    ! y(4) = - q(1)*v(1) - q(2)*v(2) - q(3)*v(3)
-  end subroutine aa_tf_qmul_qv
-
-
-  pure Subroutine aa_tf_qinv( q, r ) &
-    bind( C, name="aa_tf_qinv" )
-    Real(C_DOUBLE), Dimension(4), intent(out) :: r
-    Real(C_DOUBLE), Dimension(4), intent(in) :: q
-    Call aa_tf_qconj( q, r )
-    r = r / dot_product(q,q)
-  End Subroutine aa_tf_qinv
-
-  pure Subroutine aa_tf_cross(a,b,c) &
-       bind( C, name="aa_tf_cross" )
-    real(C_DOUBLE), intent(in), dimension(3) :: a,b
-    real(C_DOUBLE), intent(out), dimension(3) :: c
-
-    c(1) =  a(2)*b(3) - a(3)*b(2)
-    c(2) =  a(3)*b(1) - a(1)*b(3)
-    c(3) =  a(1)*b(2) - a(2)*b(1)
-
-  End Subroutine aa_tf_cross
-
-  pure Subroutine aa_tf_qrot( q, v, r ) &
-       bind( C, name="aa_tf_qrot" )
-    real(C_DOUBLE), Dimension(3), intent(out) :: r
-    real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE), Dimension(3), intent(in) :: v
-
-    !! slow implementation
-    ! qv(W_INDEX) = 0d0
-    ! qv(XYZ_INDEX) = v
-    ! Call aa_tf_qconj( q, qi )
-    ! call aa_tf_qmul( q, qv, qr1 )
-    ! call aa_tf_qmul( qr1, qi, qr2 )
-    ! r = qr2(1:3)
-
-    !! Optimized implementation
-    real(C_DOUBLE) :: a(3), b(3)
-    call aa_tf_cross(q(1:3), v, a)
-    a = a + q(4)*v
-    call aa_tf_cross(q(1:3), a, b)
-    r = b + b + v
-
-  End Subroutine aa_tf_qrot
-
-  pure Subroutine aa_tf_qexp( q, r ) &
-       bind( C, name="aa_tf_qexp" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: r
-    real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: sc, c, ew
-    ew = exp(q(W_INDEX))
-    call aa_tf_sinccos2( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)), sc, c)
-    r(W_INDEX) = ew*c
-    r(XYZ_INDEX) = ew*sc * q(XYZ_INDEX)
-  end Subroutine aa_tf_qexp
-
-  !! Pure quaternion exponential
-  pure Subroutine aa_tf_qpexp( q, r ) &
-       bind( C, name="aa_tf_qpexp" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: r
-    real(C_DOUBLE), Dimension(3), intent(in) :: q
-    real(C_DOUBLE) :: sc, c
-    call aa_tf_sinccos2( dot_product(q(XYZ_INDEX),q(XYZ_INDEX)), sc, c)
-    r(W_INDEX) = c
-    r(XYZ_INDEX) = sc * q(XYZ_INDEX)
-  end Subroutine aa_tf_qpexp
-
-
-  pure subroutine aa_tf_qln( q, r ) &
-       bind( C, name="aa_tf_qln" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: r
-    real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE) :: vv, vnorm, qnorm, theta, a
-    ! compute qnorm and vnorm efficiently
-    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    qnorm = sqrt( vv + q(W_INDEX)**2 )
-    vnorm = sqrt(vv) ! for unit quaternions, vnorm = sin(theta)
-    theta = atan2( vnorm, q(W_INDEX) ) ! always positive
-    ! Try to avoid division by very small vnorm
-    if ( theta < sqrt(sqrt(epsilon(theta))) ) then
-       ! a = theta*qnorm / (vnorm*qnorm) = theta/(sin(theta)*qnorm)
-       a = aa_tf_invsinc_series(theta)/qnorm ! approx. 1/qnorm
-    else
-       a = theta/vnorm
-    end if
-    r(XYZ_INDEX) = a*q(XYZ_INDEX)
-    r(W_INDEX) = log(qnorm) ! for unit quaternion, zero
-  end subroutine aa_tf_qln
-
-  function aa_tf_qangle( q ) result(angle) &
-       bind( C, name="aa_tf_qangle" )
-    real(C_DOUBLE), intent(in) :: q(4)
-    real(C_DOUBLE) :: angle
-    angle = atan2( sqrt(dot_product(q(XYZ_INDEX),q(XYZ_INDEX))), q(W_INDEX) )
-  end function aa_tf_qangle
-
 
   function aa_tf_qangle_rel( a, b ) result(angle) &
        bind( C, name="aa_tf_qangle_rel" )
@@ -1274,132 +1618,6 @@ contains
     angle = aa_tf_qangle(r)
   end function aa_tf_qangle_rel
 
-  !> Compute q**a
-  pure subroutine aa_tf_qpow( q, a, r ) &
-       bind( C, name="aa_tf_qpow" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: r
-    real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE), value, intent(in) :: a
-    real(C_DOUBLE) :: qln(4)
-
-    !! r = exp( ln(q) * a )
-    call aa_tf_qln( q, qln )
-    qln = a*qln
-    call aa_tf_qexp(qln, r )
-
-    !! inlined implementation
-    ! ! intermediates
-    ! vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    ! vnorm = sqrt(vv)
-    ! qnorm = sqrt( vv + q(W_INDEX)**2 )
-    ! !theta = acos( q(W_INDEX) / qnorm )
-    ! theta = atan2( vnorm, q(W_INDEX) )
-    ! pa = qnorm ** a
-    ! ! output
-    ! r(W_INDEX) = pa * cos(a*theta)
-    ! r(XYZ_INDEX) = (pa * sin(a*theta) / vnorm) * q(XYZ_INDEX)
-  end subroutine aa_tf_qpow
-
-
-  Subroutine aa_tf_rotvec2quat( a, q ) &
-       bind( C, name="aa_tf_rotvec2quat" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: q
-    real(C_DOUBLE), Dimension(3), intent(in) :: a
-    real(C_DOUBLE) :: sc,c, aa
-    aa = dot_product(a,a)
-    call aa_tf_sinccos2( aa/4, sc, c )
-    q(W_INDEX) = c
-    q(XYZ_INDEX) = sc/2 * a(XYZ_INDEX)
-  end Subroutine aa_tf_rotvec2quat
-
-  Subroutine aa_tf_xangle2quat( theta, q ) &
-       bind( C, name="aa_tf_xangle2quat" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: q
-    real(C_DOUBLE), intent(in), value :: theta
-    q(1) = sin(theta/2)
-    q(2) = 0d0
-    q(3) = 0d0
-    q(W_INDEX) = cos(theta/2)
-  end Subroutine aa_tf_xangle2quat
-
-  Subroutine aa_tf_yangle2quat( theta, q ) &
-       bind( C, name="aa_tf_yangle2quat" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: q
-    real(C_DOUBLE), intent(in), value :: theta
-    q(1) = 0d0
-    q(2) = sin(theta/2)
-    q(3) = 0d0
-    q(W_INDEX) = cos(theta/2)
-  end Subroutine aa_tf_yangle2quat
-
-  Subroutine aa_tf_zangle2quat( theta, q ) &
-       bind( C, name="aa_tf_zangle2quat" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: q
-    real(C_DOUBLE), intent(in), value :: theta
-    q(1) = 0d0
-    q(2) = 0d0
-    q(3) = sin(theta/2)
-    q(W_INDEX) = cos(theta/2)
-  end Subroutine aa_tf_zangle2quat
-
-  Subroutine aa_tf_axang2quat( a, q ) &
-       bind( C, name="aa_tf_axang2quat" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: q
-    real(C_DOUBLE), Dimension(4), intent(in) :: a
-    call aa_tf_axang2quat2(a(1:3), a(4), q)
-  end Subroutine aa_tf_axang2quat
-
-  Subroutine aa_tf_axang2quat2( axis, angle, q ) &
-       bind( C, name="aa_tf_axang2quat2" )
-    real(C_DOUBLE), Dimension(4), intent(out) :: q
-    real(C_DOUBLE), Dimension(3), intent(in) :: axis
-    real(C_DOUBLE), intent(in), value :: angle
-    q(W_INDEX) = cos(angle/2)
-    q(XYZ_INDEX) = sin(angle/2)*axis
-  end Subroutine aa_tf_axang2quat2
-
-  Subroutine aa_tf_quat2rotvec( q, rv ) &
-       bind( C, name="aa_tf_quat2rotvec" )
-    real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE), Dimension(3), intent(out) :: rv
-    real(C_DOUBLE) :: qmin(4),qrv(4)
-    !! log method
-    call aa_tf_qminimize2(q, qmin)
-    call aa_tf_qln( qmin, qrv )
-    rv = 2*qrv(1:3) ! qrv(4) will be 0 for unit quaternions
-  end Subroutine aa_tf_quat2rotvec
-
-
-  Subroutine aa_tf_quat2axang( q, a ) &
-       bind( C, name="aa_tf_quat2axang" )
-    real(C_DOUBLE), Dimension(4), intent(in) :: q
-    real(C_DOUBLE), Dimension(4), intent(out) :: a
-    real(C_DOUBLE) :: rv(3)
-    !real(C_DOUBLE) :: e(4)
-    ! assume unit quaternion
-    !a(4) = 2d0*acos(q(W_INDEX))
-    call aa_tf_quat2rotvec( q, rv )
-    a(4) = sqrt(dot_product(rv,rv))
-    if( 0d0 == a(4) ) then
-       a(1:3) = 0d0
-    else
-       a(1:3) = rv / a(4)
-    end if
-    ! vnorm = aa_tf_qvnorm(q)
-    ! if( abs(vnorm) < epsilon(vnorm) ) then
-    !    a = 0d0
-    ! else
-    !    !! log method
-    !    !call aa_tf_qln( q, e )
-    !    !a(4) = 2d0 * aa_tf_qvnorm(e)
-    !    !a(1:3) = e(XYZ_INDEX) / aa_tf_qvnorm(e)
-
-    !    !! optimized method
-    !    a(4) = 2d0 * atan2( vnorm, q(W_INDEX) )
-    !    s = sqrt(1-q(4)**2) ! sin(theta/2)
-    !    a(1:3) = q(XYZ_INDEX) / s
-    ! end if
-  end Subroutine aa_tf_quat2axang
 
 
   pure subroutine aa_tf_qslerp_param( q1, q2, theta, d1, d2 ) &
@@ -2053,33 +2271,6 @@ contains
 
   end function aa_tf_sinc
 
-  !! Integrate rotational velocity
-  subroutine aa_tf_qsvel( q0, w, dt, q1 ) &
-       bind( C, name="aa_tf_qsvel" )
-    real(C_DOUBLE), intent(in) :: w(3), q0(4)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE)  :: wq(4), e(4)
-    !! Exponential map method
-    !! q1 = exp(w*dt/2) * q0
-    wq(XYZ_INDEX) = w*(dt/2)
-    wq(W_INDEX) = 0d0
-    call aa_tf_qexp( wq, e )
-    call aa_tf_qmul(e,q0, q1)
-  end subroutine aa_tf_qsvel
-
-  !! Integrate rotational velocity
-  subroutine aa_tf_qsdiff( q0, dq, dt, q1 ) &
-       bind( C, name="aa_tf_qsdiff" )
-    real(C_DOUBLE), intent(in) :: dq(4), q0(4)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE)  :: w(4), r(4)
-    call aa_tf_qmulc(dq,q0,w)
-    w = dt*w
-    call aa_tf_qpexp(w,r)
-    call aa_tf_qmul(r,q0,q1)
-  end subroutine aa_tf_qsdiff
 
   subroutine aa_tf_quat_davenport_matrix( n, w, qq, ldqq,  M ) &
        bind( C, name="aa_tf_quat_davenport_matrix" )
