@@ -915,7 +915,7 @@ void aa_tf_qutr_diff2vel
 ( const double e[7], const double de[7], double dx[6] );
 
 /** Quaternion-translation spatial velocity to derivative */
-void aa_tf_qutr_diff2vel
+void aa_tf_qutr_vel2diff
 ( const double e[7], const double dx[6], double de[7] );
 
 /** Integrate a quaternion-translation */

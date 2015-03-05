@@ -41,7 +41,9 @@
  *
  */
 
+/**************/
 /* CONVERSION */
+/**************/
 
 AA_API void
 aa_tf_qutr2duqu( const double E[AA_RESTRICT 7], double S[AA_RESTRICT 8] )
@@ -81,7 +83,9 @@ aa_tf_tfmat2qutr( const double T[AA_RESTRICT 12], double E[AA_RESTRICT 7] )
     aa_tf_tfmat2qv( T, E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V );
 }
 
+/*******/
 /* OPS */
+/*******/
 
 AA_API void
 aa_tf_tf_qv( const double quat[AA_RESTRICT 4],
@@ -169,4 +173,68 @@ aa_tf_qutr_mulc( const double A[AA_RESTRICT 7], const double B[AA_RESTRICT 7], d
     double x[7];
     aa_tf_qutr_conj(B,x);
     aa_tf_qutr_mul(A,x,C);
+}
+
+/************/
+/* CALCULUS */
+/************/
+
+AA_API void
+aa_tf_qv_svel( const double q0[AA_RESTRICT 4], const double v0[AA_RESTRICT 3],
+               const double w[AA_RESTRICT 3], const double dv[AA_RESTRICT 3],
+               double dt,
+               double q1[AA_RESTRICT 4], double v1[AA_RESTRICT 3] )
+{
+    double dx[6], S0[8], S1[8];
+    /* TODO: avoid the memcpy()s */
+    AA_MEM_CPY( dx+AA_TF_DX_W, w, 3 );
+    AA_MEM_CPY( dx+AA_TF_DX_V, dv, 3 );
+    aa_tf_qv2duqu( q0, v0, S0 );
+    aa_tf_duqu_svel( S0, dx, dt, S1 );
+    aa_tf_duqu2qv(S1, q1, v1);
+}
+
+AA_API void
+aa_tf_qv_sdiff( const double q0[AA_RESTRICT 4], const double v0[AA_RESTRICT 3],
+                const double dq[AA_RESTRICT 4], const double dv[AA_RESTRICT 3],
+                double dt,
+                double q1[AA_RESTRICT 4], double v1[AA_RESTRICT 3] )
+{
+    double w[3];
+    aa_tf_qdiff2vel( q0, dq, w );
+    aa_tf_qv_svel( q0, v0, w, dv, dt, q1, v1 );
+}
+
+AA_API void
+aa_tf_qutr_svel( const double E0[AA_RESTRICT 7], const double dx[AA_RESTRICT 6], double dt,
+                 double E1[AA_RESTRICT 7] )
+{
+    aa_tf_qv_svel( E0+AA_TF_QUTR_Q, E0+AA_TF_QUTR_V,
+                   dx+AA_TF_DX_W, dx+AA_TF_DX_V,
+                   dt,
+                   E1+AA_TF_QUTR_Q, E1+AA_TF_QUTR_V );
+}
+
+AA_API void
+aa_tf_qutr_sdiff( const double E0[AA_RESTRICT 7], const double dE[AA_RESTRICT 7], double dt,
+                  double E1[AA_RESTRICT 7] )
+{
+    aa_tf_qv_sdiff( E0+AA_TF_QUTR_Q, E0+AA_TF_QUTR_V,
+                    dE+AA_TF_QUTR_Q, dE+AA_TF_QUTR_V,
+                    dt,
+                    E1+AA_TF_QUTR_Q, E1+AA_TF_QUTR_V );
+}
+
+AA_API void
+aa_tf_qutr_diff2vel( const double E[AA_RESTRICT 7], const double dE[AA_RESTRICT 7], double dx[AA_RESTRICT 6] )
+{
+    aa_tf_qdiff2vel(E+AA_TF_QUTR_Q, dE+AA_TF_QUTR_Q, dx+AA_TF_DX_W );
+    AA_MEM_CPY( dx+AA_TF_DX_V, dE+AA_TF_QUTR_V, 3 );
+}
+
+AA_API void
+aa_tf_qutr_vel2diff( const double E[AA_RESTRICT 7], const double dx[AA_RESTRICT 6], double dE[AA_RESTRICT 7] )
+{
+    aa_tf_qvel2diff(E+AA_TF_QUTR_Q, dx+AA_TF_DX_W, dE+AA_TF_QUTR_Q );
+    AA_MEM_CPY( dE+AA_TF_QUTR_V, dx+AA_TF_DX_V, 3 );
 }

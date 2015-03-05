@@ -41,11 +41,6 @@
 #define QUTR_Q 1:4
 #define QUTR_V 5:7
 
-!!!!!!!!!
-!! OPS !!
-!!!!!!!!!
-
-
 subroutine aa_tf_qutr_wavg( n, w, EE, ldee,  a ) &
      bind( C, name="aa_tf_qutr_wavg" )
   integer(C_SIZE_T), intent(in), value :: n, ldee
@@ -61,47 +56,3 @@ subroutine aa_tf_qutr_wavg( n, w, EE, ldee,  a ) &
      a(5:7) = a(5:7) + w(i) * EE(5:7,i)
   end do
 end subroutine aa_tf_qutr_wavg
-
-!!!!!!!!!!!!!!
-!! CALCULUS !!
-!!!!!!!!!!!!!!
-
-!! Integrate velocity
-subroutine aa_tf_qutr_svel( e0, dx, dt, e1 ) &
-     bind( C, name="aa_tf_qutr_svel" )
-  real(C_DOUBLE), intent(in) :: dx(6), e0(7)
-  real(C_DOUBLE), intent(in), value :: dt
-  real(C_DOUBLE), intent(out) :: e1(7)
-  real(C_DOUBLE)  :: S0(8), S1(8)
-  call aa_tf_qutr2duqu( e0, S0 )
-  call aa_tf_duqu_svel( S0, dx, dt, S1 )
-  call aa_tf_duqu2qutr( S1, e1 )
-end subroutine aa_tf_qutr_svel
-
-
-subroutine aa_tf_qutr_diff2vel( e, de, dx ) &
-     bind( C, name="aa_tf_qutr_diff2vel" )
-  real(C_DOUBLE), intent(in) :: de(7), e(7)
-  real(C_DOUBLE), intent(out) :: dx(6)
-  call aa_tf_qdiff2vel( e(QUTR_Q), de(QUTR_Q), dx(4:6) )
-  dx(1:3) = de(QUTR_V)
-end subroutine aa_tf_qutr_diff2vel
-
-
-subroutine aa_tf_qutr_vel2diff( e, dx, de ) &
-     bind( C, name="aa_tf_qutr_vel2diff" )
-  real(C_DOUBLE), intent(in) :: e(7), dx(6)
-  real(C_DOUBLE), intent(out) :: de(7)
-  call aa_tf_qvel2diff( e(QUTR_Q), dx(4:6), de(QUTR_Q) )
-  de(QUTR_V) =  dx(1:3)
-end subroutine aa_tf_qutr_vel2diff
-
-subroutine aa_tf_qutr_sdiff( e0, de, dt, e1 ) &
-     bind( C, name="aa_tf_qutr_sdiff" )
-  real(C_DOUBLE), intent(in) :: de(7), e0(7)
-  real(C_DOUBLE), intent(in), value :: dt
-  real(C_DOUBLE), intent(out) :: e1(7)
-  real(C_DOUBLE)  :: dx(6)
-  call aa_tf_qutr_diff2vel( e0, de, dx );
-  call aa_tf_qutr_svel( e0, dx, dt, e1 )
-end subroutine aa_tf_qutr_sdiff

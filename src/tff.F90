@@ -1509,32 +1509,78 @@ module amino_tf
 
    end interface aa_tf_qutr_conj
 
+   interface aa_tf_qutr_mulc
+      subroutine aa_tf_qutr_mulc( a, b, c ) &
+           bind( C, name="aa_tf_qutr_mulc" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: c(7)
+        real(C_DOUBLE), intent(in) :: a(7), b(7)
+        real(C_DOUBLE) :: bc(7)
+        !call aa_tf_qutr_conj(b,bc)
+        !call aa_tf_qutr_mul(a, bc, c)
+      end subroutine aa_tf_qutr_mulc
+   end interface aa_tf_qutr_mulc
 
+   interface aa_tf_qutr_cmul
+      subroutine aa_tf_qutr_cmul( a, b, c ) &
+           bind( C, name="aa_tf_qutr_cmul" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: c(7)
+        real(C_DOUBLE), intent(in) :: a(7), b(7)
+        real(C_DOUBLE) :: ac(7)
+        !call aa_tf_qutr_conj(a,ac)
+        !call aa_tf_qutr_mul(ac, b, c)
+      end subroutine aa_tf_qutr_cmul
+   end interface aa_tf_qutr_cmul
 
+   interface aa_tf_qutr_svel
+      subroutine aa_tf_qutr_svel( e0, dx, dt, e1 ) &
+           bind( C, name="aa_tf_qutr_svel" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: dx(6), e0(7)
+        real(C_DOUBLE), intent(in), value :: dt
+        real(C_DOUBLE), intent(out) :: e1(7)
+        real(C_DOUBLE)  :: S0(8), S1(8)
+        ! call aa_tf_qutr2duqu( e0, S0 )
+        ! call aa_tf_duqu_svel( S0, dx, dt, S1 )
+        ! call aa_tf_duqu2qutr( S1, e1 )
+      end subroutine aa_tf_qutr_svel
+   end interface aa_tf_qutr_svel
 
-interface aa_tf_qutr_mulc
-subroutine aa_tf_qutr_mulc( a, b, c ) &
-     bind( C, name="aa_tf_qutr_mulc" )
-use ISO_C_BINDING
-  real(C_DOUBLE), intent(out) :: c(7)
-  real(C_DOUBLE), intent(in) :: a(7), b(7)
-  real(C_DOUBLE) :: bc(7)
-  !call aa_tf_qutr_conj(b,bc)
-  !call aa_tf_qutr_mul(a, bc, c)
-end subroutine aa_tf_qutr_mulc
-end interface aa_tf_qutr_mulc
+   interface aa_tf_qutr_diff2vel
+      subroutine aa_tf_qutr_diff2vel( e, de, dx ) &
+           bind( C, name="aa_tf_qutr_diff2vel" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: de(7), e(7)
+        real(C_DOUBLE), intent(out) :: dx(6)
+        !call aa_tf_qdiff2vel( e(QUTR_Q), de(QUTR_Q), dx(4:6) )
+        !dx(1:3) = de(QUTR_V)
+      end subroutine aa_tf_qutr_diff2vel
+   end interface aa_tf_qutr_diff2vel
 
-interface aa_tf_qutr_cmul
-subroutine aa_tf_qutr_cmul( a, b, c ) &
-     bind( C, name="aa_tf_qutr_cmul" )
-use ISO_C_BINDING
-  real(C_DOUBLE), intent(out) :: c(7)
-  real(C_DOUBLE), intent(in) :: a(7), b(7)
-  real(C_DOUBLE) :: ac(7)
-  !call aa_tf_qutr_conj(a,ac)
-  !call aa_tf_qutr_mul(ac, b, c)
-end subroutine aa_tf_qutr_cmul
-end interface aa_tf_qutr_cmul
+   interface aa_tf_qutr_vel2diff
+      subroutine aa_tf_qutr_vel2diff( e, dx, de ) &
+           bind( C, name="aa_tf_qutr_vel2diff" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: e(7), dx(6)
+        real(C_DOUBLE), intent(out) :: de(7)
+        !call aa_tf_qvel2diff( e(QUTR_Q), dx(4:6), de(QUTR_Q) )
+        !de(QUTR_V) =  dx(1:3)
+      end subroutine aa_tf_qutr_vel2diff
+   end interface aa_tf_qutr_vel2diff
+
+   interface aa_tf_qutr_sdiff
+      subroutine aa_tf_qutr_sdiff( e0, de, dt, e1 ) &
+           bind( C, name="aa_tf_qutr_sdiff" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: de(7), e0(7)
+        real(C_DOUBLE), intent(in), value :: dt
+        real(C_DOUBLE), intent(out) :: e1(7)
+        real(C_DOUBLE)  :: dx(6)
+        !call aa_tf_qutr_diff2vel( e0, de, dx );
+        !call aa_tf_qutr_svel( e0, dx, dt, e1 )
+      end subroutine aa_tf_qutr_sdiff
+   end interface aa_tf_qutr_sdiff
 
 contains
 

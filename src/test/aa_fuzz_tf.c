@@ -715,20 +715,43 @@ static void tfmat() {
     aveq( "tfmat-exp-ln", 6, v, lne, 1e-6 );
 }
 
-static void integrate() {
-    // random tf
-    double dx[6]={0}, e[7];
-    double *v = e+AA_TF_QUTR_V;
-    double *q = e+AA_TF_QUTR_Q;
-    aa_vrand( 3, v );
-    aa_tf_qurand( q );
-    aa_vrand( 6, dx );
+static void integrate(const double *E, const double *S, const double *T, const double *dx) {
+    const double *q = E+AA_TF_QUTR_Q;
+    /* const double *v = E+AA_TF_QUTR_V; */
+    /* const double *dv = dx+AA_TF_DX_V; */
+    const double *w = dx+AA_TF_DX_W;
+    const double *R = T+AA_TF_TFMAT_R;
     double dt = aa_frand() / 100;
 
-    // convert
-    double S[8], T[12];
-    aa_tf_qv2duqu( q, v, S );
-    aa_tf_qv2tfmat( q, v, T );
+    { /* quatenion */
+        double dq[4], wp[3];
+        aa_tf_qvel2diff(q, w, dq);
+        aa_tf_qdiff2vel(q,dq,wp);
+        aveq( "qdiff<->vel", 3, w, wp, 1e-5 );
+
+    }
+
+    { /* rotmat */
+        double dR[9], wp[3];
+        aa_tf_rotmat_vel2diff(R, w, dR);
+        aa_tf_rotmat_diff2vel(R, dR, wp );
+        aveq( "rotmat diff<->vel", 3, w, wp, 1e-5 );
+
+    }
+
+    { /* quaternion translation */
+        double dE[7], dxp[6];
+        aa_tf_qutr_vel2diff( E, dx, dE );
+        aa_tf_qutr_diff2vel( E, dE, dxp );
+        aveq( "qutr diff<->vel", 6, dx, dxp, 1e-5 );
+    }
+
+    { /* dual quaternion */
+        double dS[8], dxp[6];
+        aa_tf_duqu_vel2diff( S, dx, dS );
+        aa_tf_duqu_diff2vel( S, dS, dxp );
+        aveq( "duqu diff<->vel", 6, dx, dxp, 1e-5 );
+    }
 
     // integrate
     double S1[8], q1[4], T1[12], R1[9], E1[7];
@@ -736,7 +759,7 @@ static void integrate() {
     aa_tf_qsvel( q, dx+3, dt, q1 );
     aa_tf_rotmat_svel( T, dx+3, dt, R1 );
     aa_tf_tfmat_svel( T, dx, dt, T1 );
-    aa_tf_qutr_svel( e, dx, dt, E1 );
+    aa_tf_qutr_svel( E, dx, dt, E1 );
 
     // normalize
     double R1q[4], T1q[8], E1q[8];
@@ -878,7 +901,7 @@ int main( void ) {
         theta2quat();
         rotmat(E[0]);
         tfmat();
-        integrate();
+        integrate(E[0], S[0], T[0], dx[0]);
         tf_conj(E, S);
         qdiff(E,dx);
     }
