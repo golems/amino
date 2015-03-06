@@ -41,6 +41,106 @@
  *
  */
 
+
+AA_API void
+aa_tf_duqu_matrix_l( const double S[AA_RESTRICT 8], double *AA_RESTRICT M, size_t ldm )
+{
+    const size_t r = AA_TF_DUQU_REAL;
+    const size_t d = AA_TF_DUQU_DUAL;
+    aa_tf_qmatrix_l(&S[r], &AA_MATREF(M,ldm,r,r), ldm);
+    aa_tf_qmatrix_l(&S[d], &AA_MATREF(M,ldm,d,r), ldm);
+
+    FOR_QUAT(i) AA_MEM_ZERO( &AA_MATREF(M,ldm,r,d+i), 4 );
+    FOR_QUAT(i) AA_MEM_CPY( &AA_MATREF(M,ldm,d,d+i), &AA_MATREF(M,ldm,r,r+i), 4);
+}
+
+AA_API void
+aa_tf_duqu_matrix_r( const double S[AA_RESTRICT 8], double *AA_RESTRICT M, size_t ldm )
+{
+    const size_t r = AA_TF_DUQU_REAL;
+    const size_t d = AA_TF_DUQU_DUAL;
+    aa_tf_qmatrix_r(&S[r], &AA_MATREF(M,ldm,r,r), ldm);
+    aa_tf_qmatrix_r(&S[d], &AA_MATREF(M,ldm,d,r), ldm);
+
+    FOR_QUAT(i) AA_MEM_ZERO( &AA_MATREF(M,ldm,r,d+i), 4 );
+    FOR_QUAT(i) AA_MEM_CPY( &AA_MATREF(M,ldm,d,d+i), &AA_MATREF(M,ldm,r,r+i), 4);
+}
+
+AA_API void
+aa_tf_duqu_mul( const double _a[AA_RESTRICT 8], const double _b[AA_RESTRICT 8],
+                double _c[AA_RESTRICT 8] )
+{
+    const struct aa_tf_duqu *A = (struct aa_tf_duqu *)_a;
+    const struct aa_tf_duqu *B = (struct aa_tf_duqu *)_b;
+    struct aa_tf_duqu *C = (struct aa_tf_duqu *)_c;
+    aa_tf_qmul(A->real.data, B->real.data, C->real.data);
+    aa_tf_qmul(A->real.data, B->dual.data, C->dual.data);
+    aa_tf_qmul_a(A->dual.data, B->real.data, C->dual.data);
+}
+
+
+AA_API void
+aa_tf_duqu_conj( const double _s[AA_RESTRICT 8], double _c[AA_RESTRICT 8] )
+{
+    const struct aa_tf_duqu *S = (struct aa_tf_duqu *)_s;
+    struct aa_tf_duqu *C = (struct aa_tf_duqu *)_c;
+    aa_tf_qconj(S->real.data, C->real.data );
+    aa_tf_qconj(S->dual.data, C->dual.data );
+}
+
+
+AA_API void
+aa_tf_duqu_cmul( const double a[AA_RESTRICT 8], const double b[AA_RESTRICT 8],
+                double c[AA_RESTRICT 8] )
+{
+    double x[8];
+    aa_tf_duqu_conj(a,x);
+    aa_tf_duqu_mul(x,b,c);
+}
+
+AA_API void
+aa_tf_duqu_mulc( const double a[AA_RESTRICT 8], const double b[AA_RESTRICT 8],
+                double c[AA_RESTRICT 8] )
+{
+    double x[8];
+    aa_tf_duqu_conj(b,x);
+    aa_tf_duqu_mul(a,x,c);
+}
+
+
+AA_API void
+aa_tf_duqu_normalize( double S[8] )
+{
+    double n = aa_tf_qnorm(S+AA_TF_DUQU_REAL);
+    FOR_DUQU(i) S[i] /= n;
+}
+
+
+AA_API void
+aa_tf_duqu_norm( const double S[AA_RESTRICT 8],
+                 double * AA_RESTRICT nreal, double * AA_RESTRICT  ndual )
+{
+    *nreal = aa_tf_qnorm(S+AA_TF_DUQU_REAL);
+    *ndual = aa_tf_qdot(S+AA_TF_DUQU_REAL, S+AA_TF_DUQU_DUAL) / *nreal;
+}
+
+
+AA_API void
+aa_tf_duqu_vnorm( const double S[AA_RESTRICT 8],
+                 double * AA_RESTRICT nreal, double * AA_RESTRICT  ndual )
+{
+    *nreal = aa_tf_qvnorm(S+AA_TF_DUQU_REAL);
+    *ndual = aa_tf_qdot(S+AA_TF_DUQU_REAL_X, S+AA_TF_DUQU_DUAL_X) / *nreal;
+}
+
+AA_API void
+aa_tf_duqu_minimize( double S[8] )
+{
+    if( S[AA_TF_DUQU_REAL_W] < 0 ) {
+        FOR_DUQU(i) S[i] *= -1;
+    }
+}
+
 AA_API void
 aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                       double t[AA_RESTRICT 8] )
@@ -114,7 +214,7 @@ aa_tf_duqu_stwist( const double d0[AA_RESTRICT 8], const double twist[AA_RESTRIC
                    double dt, double d1[AA_RESTRICT 6] )
 {
     double twist1[8], etwist[8];
-    for( size_t i = 0; i < 8; i ++ ) twist1[i] = dt/2 * twist[i];
+    FOR_DUQU(i) twist1[i] = dt/2 * twist[i];
     aa_tf_duqu_exp( twist1, etwist );
     aa_tf_duqu_mul( etwist, d0, d1 );
 }

@@ -224,6 +224,16 @@ aa_tf_quat2axang( const double q[AA_RESTRICT 4], double a[AA_RESTRICT 4] )
 
 }
 
+
+void aa_tf_qv2duqu( const double q[4], const double v[3], double S[8] )
+{
+    AA_MEM_CPY(S+AA_TF_DUQU_REAL, q, 4 );
+
+    double v_2[3];
+    FOR_VEC(i) v_2[i] = v[i]/2;
+    aa_tf_qmul_vq(v_2, q, S+AA_TF_DUQU_DUAL);
+}
+
 AA_API void
 aa_tf_qutr2duqu( const double E[AA_RESTRICT 7], double S[AA_RESTRICT 8] )
 {

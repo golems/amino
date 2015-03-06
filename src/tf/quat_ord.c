@@ -129,6 +129,59 @@ aa_tf_qinv( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
 }
 
 AA_API void
+aa_tf_qmatrix_l( const double q[AA_RESTRICT 4], double *AA_RESTRICT M, size_t ldm )
+{
+    DECLARE_QUAT_XYZW;
+
+    AA_MATREF(M,ldm, x,x) =  q[w];
+    AA_MATREF(M,ldm, y,x) =  q[z];
+    AA_MATREF(M,ldm, z,x) = -q[y];
+    AA_MATREF(M,ldm, w,x) = -q[x];
+
+    AA_MATREF(M,ldm, x,y) = -q[z];
+    AA_MATREF(M,ldm, y,y) =  q[w];
+    AA_MATREF(M,ldm, z,y) =  q[x];
+    AA_MATREF(M,ldm, w,y) = -q[y];
+
+    AA_MATREF(M,ldm, x,z) =  q[y];
+    AA_MATREF(M,ldm, y,z) = -q[x];
+    AA_MATREF(M,ldm, z,z) =  q[w];
+    AA_MATREF(M,ldm, w,z) = -q[z];
+
+    AA_MATREF(M,ldm, x,w) =  q[x];
+    AA_MATREF(M,ldm, y,w) =  q[y];
+    AA_MATREF(M,ldm, z,w) =  q[z];
+    AA_MATREF(M,ldm, w,w) =  q[w];
+}
+
+AA_API void
+aa_tf_qmatrix_r( const double q[AA_RESTRICT 4], double *AA_RESTRICT M, size_t ldm )
+{
+    DECLARE_QUAT_XYZW;
+
+    AA_MATREF(M,ldm, x,x) =  q[w];
+    AA_MATREF(M,ldm, y,x) = -q[z];
+    AA_MATREF(M,ldm, z,x) =  q[y];
+    AA_MATREF(M,ldm, w,x) = -q[x];
+
+    AA_MATREF(M,ldm, x,y) =  q[z];
+    AA_MATREF(M,ldm, y,y) =  q[w];
+    AA_MATREF(M,ldm, z,y) = -q[x];
+    AA_MATREF(M,ldm, w,y) = -q[y];
+
+    AA_MATREF(M,ldm, x,z) = -q[y];
+    AA_MATREF(M,ldm, y,z) =  q[x];
+    AA_MATREF(M,ldm, z,z) =  q[w];
+    AA_MATREF(M,ldm, w,z) = -q[z];
+
+    AA_MATREF(M,ldm, x,w) =  q[x];
+    AA_MATREF(M,ldm, y,w) =  q[y];
+    AA_MATREF(M,ldm, z,w) =  q[z];
+    AA_MATREF(M,ldm, w,w) =  q[w];
+}
+
+
+AA_API void
 aa_tf_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
 {
     DECLARE_QUAT_XYZW;
@@ -138,6 +191,18 @@ aa_tf_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double
     c[z] =    a[w]*b[z] + a[z]*b[w] + a[x]*b[y] - a[y]*b[x];
     c[w] = - (a[y]*b[y] + a[x]*b[x] + a[z]*b[z] - a[w]*b[w]);
 }
+
+AA_API void
+aa_tf_qmul_a( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
+{
+    DECLARE_QUAT_XYZW;
+
+    c[x] =  c[x] + a[x]*b[w] + a[y]*b[z] + a[w]*b[x] - a[z]*b[y];
+    c[y] =  c[y] + a[z]*b[x] + a[w]*b[y] + a[y]*b[w] - a[x]*b[z];
+    c[z] =  c[z] + a[w]*b[z] + a[z]*b[w] + a[x]*b[y] - a[y]*b[x];
+    c[w] =  c[w] - a[y]*b[y] - a[x]*b[x] - a[z]*b[z] + a[w]*b[w];
+}
+
 
 AA_API void
 aa_tf_qmulnorm( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
@@ -165,9 +230,9 @@ aa_tf_qmulc_v( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4],
 {
     DECLARE_QUAT_XYZW;
     /* 12 multiplies, 9 adds */
-    v[0] = ( a[z]*b[y] - a[y]*b[z] ) + ( a[x]*b[w] - a[w]*b[x] );
-    v[1] = ( a[x]*b[z] - a[z]*b[x] ) + ( a[y]*b[w] - a[w]*b[y] );
-    v[2] = ( a[y]*b[x] - a[x]*b[y] ) + ( a[z]*b[w] - a[w]*b[z] );
+    v[0] = a[z]*b[y] - a[y]*b[z] + a[x]*b[w] - a[w]*b[x];
+    v[1] = a[x]*b[z] - a[z]*b[x] + a[y]*b[w] - a[w]*b[y];
+    v[2] = a[y]*b[x] - a[x]*b[y] + a[z]*b[w] - a[w]*b[z];
 }
 
 AA_API void
@@ -319,4 +384,67 @@ aa_tf_qvel2diff( const double q[AA_RESTRICT 4], const double w[AA_RESTRICT 3], d
     double w2[3];
     FOR_VEC(i) w2[i] = w[i]/2;
     aa_tf_qmul_vq(w2,q,dq);
+}
+
+AA_API double
+aa_tf_qangle_rel( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )
+{
+    double r[4];
+    aa_tf_qcmul(a,b,r);
+    aa_tf_qminimize(r);
+    return aa_tf_qangle(r);
+}
+
+AA_API void
+aa_tf_qslerp_param( const double q1[AA_RESTRICT 4], const double q2[AA_RESTRICT 4],
+                    double *theta, double *d1, double *d2 )
+{
+    *theta = fabs(aa_tf_quhypangle2(q1,q2));
+    *d1 = sin(*theta);
+    if( *theta > M_PI_2 ) {
+        *theta = M_PI - *theta;
+        *d2 = -*d1;
+    } else {
+        *d2 = *d1;
+    }
+}
+
+
+AA_API void
+aa_tf_qslerp_eval( double tau, const double q1[AA_RESTRICT 4], const double q2[AA_RESTRICT 4],
+                   double theta, double d1, double d2,
+                   double r[AA_RESTRICT 4] )
+{
+    if( 0 < fabs(theta) ) {
+        double s0 = tau*theta;
+        double s1 = sin(theta-s0);
+        double s2 = sin(s0);
+        double a1 = s1/d1;
+        double a2 = s2/d2;
+        FOR_QUAT(i) r[i] = a1*q1[i] + a2*q2[i];
+    } else {
+        AA_MEM_CPY(r,q1,4);
+    }
+}
+
+AA_API void
+aa_tf_qslerp( double tau, const double q1[AA_RESTRICT 4], const double q2[AA_RESTRICT 4],
+              double r[AA_RESTRICT 4] )
+{
+    double theta, d1, d2;
+    aa_tf_qslerp_param( q1, q2, &theta, &d1, &d2 );
+    aa_tf_qslerp_eval( tau, q1, q2, theta, d1, d2, r );
+}
+
+AA_API void
+aa_tf_qslerpalg( double tau, const double q1[AA_RESTRICT 4], const double q2[AA_RESTRICT 4],
+              double r[AA_RESTRICT 4] )
+{
+    /* q1 * (conj(q1) * q2) ^ t  */
+    double q_rel[4], qp[4];
+    aa_tf_qcmul( q1, q2, q_rel );
+    aa_tf_qminimize(q_rel);        /* go the short way */
+    aa_tf_qpow( q_rel, tau, qp );
+    aa_tf_qmul( q1, qp, r );
+    aa_tf_qnormalize(r);
 }

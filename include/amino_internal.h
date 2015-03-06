@@ -58,6 +58,7 @@
 
 #define FOR_VEC(i) for( size_t i = 0; i < 3; i ++ )
 #define FOR_QUAT(i) for( size_t i = 0; i < 4; i ++ )
+#define FOR_DUQU(i) for( size_t i = 0; i < 8; i ++ )
 
 static inline double
 dot3( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )

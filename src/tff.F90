@@ -1707,138 +1707,320 @@ module amino_tf
    end interface aa_tf_tf_duqu
 
 
+   ! !!! Quaternions
+   ! pure subroutine aa_tf_qmatrix_l( q, m )
+   !   real(C_DOUBLE), dimension(4), intent(in) :: q
+   !   real(C_DOUBLE), dimension(:,:), intent(out) :: m
+
+   !   m(1,1) = q(4)
+   !   m(2,1) = q(3)
+   !   m(3,1) = -q(2)
+   !   m(4,1) = -q(1)
+
+   !   m(1,2) = -q(3)
+   !   m(2,2) = q(4)
+   !   m(3,2) = q(1)
+   !   m(4,2) = -q(2)
+
+   !   m(1,3) = q(2)
+   !   m(2,3) = -q(1)
+   !   m(3,3) = q(4)
+   !   m(4,3) = -q(3)
+
+   !   m(1,4) = q(1)
+   !   m(2,4) = q(2)
+   !   m(3,4) = q(3)
+   !   m(4,4) = q(4)
+   ! end subroutine aa_tf_qmatrix_l
+
+   ! Matrix for left quaternion in multiply
+   interface aa_tf_qmatrix_l_c
+      pure subroutine aa_tf_qmatrix_l_c( q, m, ldm) &
+           bind( C, name="aa_tf_qmatrix_l" )
+        use ISO_C_BINDING
+        integer(C_SIZE_T), intent(in), value :: ldm
+        real(C_DOUBLE), dimension(4), intent(in) :: q
+        real(C_DOUBLE), dimension(ldm,4), intent(out) :: m
+        !call aa_tf_qmatrix_l(q,m)
+      end subroutine aa_tf_qmatrix_l_c
+   end interface aa_tf_qmatrix_l_c
+
+
+   ! ! Matrix for right quaternion in multiply
+   ! pure subroutine aa_tf_qmatrix_r(q, m)
+   !   real(C_DOUBLE), dimension(4), intent(in) :: q
+   !   real(C_DOUBLE), dimension(:,:), intent(out) :: m
+
+   !   m(1,1) = q(4)
+   !   m(2,1) = -q(3)
+   !   m(3,1) = q(2)
+   !   m(4,1) = -q(1)
+
+   !   m(1,2) = q(3)
+   !   m(2,2) = q(4)
+   !   m(3,2) = -q(1)
+   !   m(4,2) = -q(2)
+
+   !   m(1,3) = -q(2)
+   !   m(2,3) = q(1)
+   !   m(3,3) = q(4)
+   !   m(4,3) = -q(3)
+
+   !   m(1,4) = q(1)
+   !   m(2,4) = q(2)
+   !   m(3,4) = q(3)
+   !   m(4,4) = q(4)
+   ! end subroutine aa_tf_qmatrix_r
+
+   interface aa_tf_qmatrix_r_c
+      pure subroutine aa_tf_qmatrix_r_c( q, m, ldm ) &
+           bind( C, name="aa_tf_qmatrix_r" )
+        use ISO_C_BINDING
+        integer(C_SIZE_T), intent(in), value :: ldm
+        real(C_DOUBLE), dimension(4), intent(in) :: q
+        real(C_DOUBLE), dimension(ldm,4), intent(out) :: m
+        !call aa_tf_qmatrix_r(q,m)
+      end subroutine aa_tf_qmatrix_r_c
+   end interface aa_tf_qmatrix_r_c
+
+   interface aa_tf_qangle_rel
+      function aa_tf_qangle_rel( a, b ) result(angle) &
+           bind( C, name="aa_tf_qangle_rel" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: a(4), b(4)
+        real(C_DOUBLE) :: angle
+        ! real(C_DOUBLE) :: r(4)
+        ! call aa_tf_qcmul( a,b,r )
+        ! call aa_tf_qminimize(r)
+        ! angle = aa_tf_qangle(r)
+      end function aa_tf_qangle_rel
+   end interface aa_tf_qangle_rel
+
+   interface aa_tf_qslerp_param
+      pure subroutine aa_tf_qslerp_param( q1, q2, theta, d1, d2 ) &
+           bind( C, name="aa_tf_qslerp_param" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out) :: theta, d1, d2
+        real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
+        !theta = abs(aa_la_angle( q1, q2))
+        ! theta = abs(aa_tf_quhypangle2(q1, q2))
+        ! d1 = sin(theta)
+        ! if( theta > PI_2 ) then
+        !    ! Go the short way
+        !    theta = PI - theta
+        !    d2 = -d1
+        ! else
+        !    d2 = d1
+        ! end if
+      end subroutine aa_tf_qslerp_param
+   end interface aa_tf_qslerp_param
+
+   interface aa_tf_qslerp
+      pure subroutine aa_tf_qslerp( tau, q1, q2, r ) &
+           bind( C, name="aa_tf_qslerp" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), dimension(4), intent(out) :: r
+        real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
+        real(C_DOUBLE), value, intent(in) :: tau
+        !real(C_DOUBLE) :: theta, d1,d2,s1, s2
+        ! call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
+        ! if( 0d0 == theta ) then
+        !    r = q1
+        ! else
+        !    s1 = sin( theta - tau*theta )
+        !    s2 = sin( tau*theta )
+        !    r = s1/d1 * q1 + s2/d2 * q2
+        ! end if
+        ! call aa_tf_qnormalize(r)
+
+      end subroutine aa_tf_qslerp
+   end interface aa_tf_qslerp
+
+
+
+   !> Algsubroutine aa_tf_qslerpalgebraic computation of SLERP
+   interface aa_tf_qslerpalg
+      pure subroutine aa_tf_qslerpalg( tau, q1, q2, r ) &
+           bind( C, name="aa_tf_qslerpalg" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), dimension(4), intent(out) :: r
+        real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
+        real(C_DOUBLE), value, intent(in) :: tau
+        ! real(C_DOUBLE), dimension(4) :: qm, qp
+        ! ! q1 * (conj(q1) * q2) ^ t  *
+        ! call aa_tf_qcmul( q1, q2, qm )
+        ! call aa_tf_qminimize(qm)        ! go the short way
+        ! call aa_tf_qpow( qm, tau, qp )
+        ! call aa_tf_qmul( q1, qp, r )
+        ! call aa_tf_qnormalize(r)
+      end subroutine aa_tf_qslerpalg
+   end interface aa_tf_qslerpalg
+
+
+  !> Dual quaternion multiplication
+   interface aa_tf_duqu_mul
+      subroutine aa_tf_duqu_mul( d1, d2, e ) &
+           bind( C, name="aa_tf_duqu_mul" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
+        real(C_DOUBLE), intent(out), dimension(8) :: e
+        ! real(C_DOUBLE), dimension(4) :: t1, t2
+        ! call aa_tf_qmul( d1(DQ_REAL), d2(DQ_REAL), e(DQ_REAL) )
+        ! call aa_tf_qmul( d1(DQ_REAL), d2(DQ_DUAL), t1 )
+        ! call aa_tf_qmul( d1(DQ_DUAL), d2(DQ_REAL), t2 )
+        ! e(DQ_DUAL) = t1 + t2
+      end subroutine aa_tf_duqu_mul
+   end interface aa_tf_duqu_mul
+
+
+   !> Dual quaternion conjugate
+   interface aa_tf_duqu_conj
+      subroutine aa_tf_duqu_conj( d, e ) &
+           bind( C, name="aa_tf_duqu_conj" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in), dimension(8) :: d
+        real(C_DOUBLE), intent(out), dimension(8) :: e
+        !call aa_tf_qconj( d(DQ_REAL), e(DQ_REAL) )
+        !call aa_tf_qconj( d(DQ_DUAL), e(DQ_DUAL) )
+      end subroutine aa_tf_duqu_conj
+   end interface aa_tf_duqu_conj
+
+   interface aa_tf_duqu_cmul
+      subroutine aa_tf_duqu_cmul( d1, d2, e ) &
+           bind( C, name="aa_tf_duqu_cmul" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
+        real(C_DOUBLE), intent(out), dimension(8) :: e
+        !real(C_DOUBLE), dimension(8) :: d1c
+        !call aa_tf_duqu_conj( d1, d1c )
+        !call aa_tf_duqu_mul( d1c, d2, e );
+      end subroutine aa_tf_duqu_cmul
+   end interface aa_tf_duqu_cmul
+
+   interface aa_tf_duqu_mulc
+      subroutine aa_tf_duqu_mulc( d1, d2, e ) &
+           bind( C, name="aa_tf_duqu_mulc" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
+        real(C_DOUBLE), intent(out), dimension(8) :: e
+        !real(C_DOUBLE), dimension(8) :: d2c
+        !call aa_tf_duqu_conj( d2, d2c )
+        !call aa_tf_duqu_mul( d1, d2c, e );
+      end subroutine aa_tf_duqu_mulc
+   end interface aa_tf_duqu_mulc
+
+
+
+   !> Normalize a dual quaternion
+   interface aa_tf_duqu_normalize
+      subroutine aa_tf_duqu_normalize( d ) &
+           bind( C, name="aa_tf_duqu_normalize" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(inout), dimension(8) :: d
+        !d = d / aa_tf_qnorm( d(DQ_REAL) )
+      end subroutine aa_tf_duqu_normalize
+   end interface aa_tf_duqu_normalize
+
+   !> Dual quaternion angle minimization
+   interface aa_tf_duqu_minimize
+      subroutine aa_tf_duqu_minimize( d ) &
+           bind( C, name="aa_tf_duqu_minimize" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(inout), dimension(8) :: d
+        ! if ( d(DQ_REAL_W) < 0 ) then
+        !    d = -d
+        ! end if
+      end subroutine aa_tf_duqu_minimize
+   end interface aa_tf_duqu_minimize
+
+   !> Dual quaternion norm
+   interface aa_tf_duqu_norm
+      subroutine aa_tf_duqu_norm( d, nreal, ndual ) &
+           bind( C, name="aa_tf_duqu_norm" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in), dimension(8) :: d
+        real(C_DOUBLE), intent(out) :: nreal, ndual
+        !nreal = aa_tf_qnorm( d(DQ_REAL) )
+        !ndual = dot_product( d(DQ_REAL), d(DQ_DUAL) ) / nreal
+      end subroutine aa_tf_duqu_norm
+    end interface aa_tf_duqu_norm
+
+
+
+    !> Dual quaternion norm of vector component
+    interface aa_tf_duqu_vnorm
+       subroutine aa_tf_duqu_vnorm( d, nreal, ndual ) &
+            bind( C, name="aa_tf_duqu_vnorm" )
+         use ISO_C_BINDING
+         real(C_DOUBLE), intent(in), dimension(8) :: d
+         real(C_DOUBLE), intent(out) :: nreal, ndual
+         !nreal = aa_tf_qvnorm( d(DQ_REAL) )
+         !ndual = dot_product( d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ) ) / nreal
+       end subroutine aa_tf_duqu_vnorm
+    end interface aa_tf_duqu_vnorm
+
+
+    !> Dual quaternion construction from unit quaternion and translation
+    !> vector.
+    interface aa_tf_qv2duqu
+       subroutine aa_tf_qv2duqu( q, v, d ) &
+            bind( C, name="aa_tf_qv2duqu" )
+         use ISO_C_BINDING
+         real(C_DOUBLE), intent(in), dimension(3) :: q(4), v(3)
+         real(C_DOUBLE), intent(out), dimension(8) :: d
+         ! d(DQ_REAL) = q
+
+         ! ! d%dual = 1/2 * v * q, Note, this is the same formula as
+         ! ! converting an angular velocity to a quaternion derivative
+         ! call aa_tf_qvel2diff( q, v, d(DQ_DUAL))
+
+       end subroutine aa_tf_qv2duqu
+    end interface aa_tf_qv2duqu
+
+
+    ! pure subroutine aa_tf_duqu_matrix_l( S, m )
+    !   real(C_DOUBLE), dimension(8), intent(in) :: S
+    !   real(C_DOUBLE), dimension(:,:), intent(out) :: m
+    !   call aa_tf_qmatrix_l_c(S(DQ_REAL), M(1:4,1:4), int(4,8) )  ! upper left
+    !   M(1:4, 5:8) = real(0,C_DOUBLE)                 ! upper right
+    !   M(5:8, 5:8) = M(1:4,1:4)                       ! lower right
+    !   call aa_tf_qmatrix_l_c(S(DQ_DUAL), M(5:8, 1:4), int(4,8) ) ! lower left
+    ! end subroutine aa_tf_duqu_matrix_l
+    interface aa_tf_duqu_matrix_l_c
+       pure subroutine aa_tf_duqu_matrix_l_c( S, m, ldm ) &
+            bind( C, name="aa_tf_duqu_matrix_l" )
+         use ISO_C_BINDING
+         integer(C_SIZE_T), intent(in), value :: ldm
+         real(C_DOUBLE), dimension(8), intent(in) :: S
+         real(C_DOUBLE), dimension(ldm,8), intent(out) :: m
+         !call aa_tf_duqu_matrix_l(S,m)
+       end subroutine aa_tf_duqu_matrix_l_c
+    end interface aa_tf_duqu_matrix_l_c
+
+
+
+    ! pure subroutine aa_tf_duqu_matrix_r( S, m )
+    !   real(C_DOUBLE), dimension(8), intent(in) :: S
+    !   real(C_DOUBLE), dimension(:,:), intent(out) :: m
+
+    !   call aa_tf_qmatrix_r_c(S(DQ_REAL), M(1:4,1:4), int(4,8) )    ! upper left
+    !   M(1:4, 5:8) = real(0,C_DOUBLE)                ! upper right
+    !   M(5:8, 5:8) = M(1:4,1:4)                      ! lower right
+    !   call aa_tf_qmatrix_r_c(S(DQ_DUAL), M(5:8, 1:4), int(4,8) ) ! lower left
+    ! end subroutine aa_tf_duqu_matrix_r
+
+    interface aa_tf_duqu_matrix_r_c
+       pure subroutine aa_tf_duqu_matrix_r_c( S, m, ldm ) &
+            bind( C, name="aa_tf_duqu_matrix_r" )
+         use ISO_C_BINDING
+         integer(C_SIZE_T), intent(in), value :: ldm
+         real(C_DOUBLE), dimension(8), intent(in) :: S
+         real(C_DOUBLE), dimension(ldm,8), intent(out) :: m
+         !call aa_tf_duqu_matrix_r(S,m)
+       end subroutine aa_tf_duqu_matrix_r_c
+    end interface aa_tf_duqu_matrix_r_c
+
 contains
-
-  !!! Quaternions
-  pure subroutine aa_tf_qmatrix_l( q, m )
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(:,:), intent(out) :: m
-
-    m(1,1) = q(4)
-    m(2,1) = q(3)
-    m(3,1) = -q(2)
-    m(4,1) = -q(1)
-
-    m(1,2) = -q(3)
-    m(2,2) = q(4)
-    m(3,2) = q(1)
-    m(4,2) = -q(2)
-
-    m(1,3) = q(2)
-    m(2,3) = -q(1)
-    m(3,3) = q(4)
-    m(4,3) = -q(3)
-
-    m(1,4) = q(1)
-    m(2,4) = q(2)
-    m(3,4) = q(3)
-    m(4,4) = q(4)
-  end subroutine aa_tf_qmatrix_l
-
-  ! Matrix for left quaternion in multiply
-  pure subroutine aa_tf_qmatrix_l_c( q, m, ldm) &
-       bind( C, name="aa_tf_qmatrix_l" )
-    integer(C_SIZE_T), intent(in), value :: ldm
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(ldm,4), intent(out) :: m
-    call aa_tf_qmatrix_l(q,m)
-  end subroutine aa_tf_qmatrix_l_c
-
-  ! Matrix for right quaternion in multiply
-  pure subroutine aa_tf_qmatrix_r(q, m)
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(:,:), intent(out) :: m
-
-    m(1,1) = q(4)
-    m(2,1) = -q(3)
-    m(3,1) = q(2)
-    m(4,1) = -q(1)
-
-    m(1,2) = q(3)
-    m(2,2) = q(4)
-    m(3,2) = -q(1)
-    m(4,2) = -q(2)
-
-    m(1,3) = -q(2)
-    m(2,3) = q(1)
-    m(3,3) = q(4)
-    m(4,3) = -q(3)
-
-    m(1,4) = q(1)
-    m(2,4) = q(2)
-    m(3,4) = q(3)
-    m(4,4) = q(4)
-  end subroutine aa_tf_qmatrix_r
-
-  pure subroutine aa_tf_qmatrix_r_c( q, m, ldm ) &
-       bind( C, name="aa_tf_qmatrix_r" )
-    integer(C_SIZE_T), intent(in), value :: ldm
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(ldm,4), intent(out) :: m
-    call aa_tf_qmatrix_r(q,m)
-  end subroutine aa_tf_qmatrix_r_c
-
-
-  function aa_tf_qangle_rel( a, b ) result(angle) &
-       bind( C, name="aa_tf_qangle_rel" )
-    real(C_DOUBLE), intent(in) :: a(4), b(4)
-    real(C_DOUBLE) :: angle
-    real(C_DOUBLE) :: r(4)
-    call aa_tf_qcmul( a,b,r )
-    call aa_tf_qminimize(r)
-    angle = aa_tf_qangle(r)
-  end function aa_tf_qangle_rel
-
-
-
-  pure subroutine aa_tf_qslerp_param( q1, q2, theta, d1, d2 ) &
-       bind( C, name="aa_tf_qslerp_param" )
-    real(C_DOUBLE), intent(out) :: theta, d1, d2
-    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
-    !theta = abs(aa_la_angle( q1, q2))
-    theta = abs(aa_tf_quhypangle2(q1, q2))
-    d1 = sin(theta)
-    if( theta > PI_2 ) then
-       ! Go the short way
-       theta = PI - theta
-       d2 = -d1
-    else
-       d2 = d1
-    end if
-  end subroutine aa_tf_qslerp_param
-
-  pure subroutine aa_tf_qslerp( tau, q1, q2, r ) &
-       bind( C, name="aa_tf_qslerp" )
-    real(C_DOUBLE), dimension(4), intent(out) :: r
-    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
-    real(C_DOUBLE), value, intent(in) :: tau
-    real(C_DOUBLE) :: theta, d1,d2,s1, s2
-    call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
-    if( 0d0 == theta ) then
-       r = q1
-    else
-       s1 = sin( theta - tau*theta )
-       s2 = sin( tau*theta )
-       r = s1/d1 * q1 + s2/d2 * q2
-    end if
-    call aa_tf_qnormalize(r)
-  end subroutine aa_tf_qslerp
-
-
-  !> Algebraic computation of SLERP
-  pure subroutine aa_tf_qslerpalg( tau, q1, q2, r ) &
-       bind( C, name="aa_tf_qslerpalg" )
-    real(C_DOUBLE), dimension(4), intent(out) :: r
-    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
-    real(C_DOUBLE), value, intent(in) :: tau
-    real(C_DOUBLE), dimension(4) :: qm, qp
-    ! q1 * (conj(q1) * q2) ^ t  *
-    call aa_tf_qcmul( q1, q2, qm )
-    call aa_tf_qminimize(qm)        ! go the short way
-    call aa_tf_qpow( qm, tau, qp )
-    call aa_tf_qmul( q1, qp, r )
-    call aa_tf_qnormalize(r)
-  end subroutine aa_tf_qslerpalg
 
   !> Spherical Cubic Interpolation
   pure subroutine aa_tf_qsquad( h, q1, q2, s1, s2, r ) &
@@ -2581,147 +2763,6 @@ contains
   !   complex(C_DOUBLE) :: y
   !   y = aa_tf_dual( d(DQ_REAL_W), d(DQ_DUAL_W) )
   ! end function aa_tf_duqu_dual_w
-
-  !> Dual quaternion scalar multplication
-  subroutine aa_tf_duqu_smul( s, d, e ) &
-       bind( C, name="aa_tf_duqu_smul" )
-    real(C_DOUBLE), intent(in), value :: s
-    real(C_DOUBLE), intent(in) :: d(8)
-    real(C_DOUBLE), intent(out) ::e(8)
-    e = s*d
-  end subroutine aa_tf_duqu_smul
-
-  !> Dual quaternion addition
-  subroutine aa_tf_duqu_add( d1, d2, e ) &
-       bind( C, name="aa_tf_duqu_add" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
-    real(C_DOUBLE), intent(out), dimension(8) :: e
-    e = d1+d2
-  end subroutine aa_tf_duqu_add
-
-  !> Dual quaternion multiplication
-  subroutine aa_tf_duqu_mul( d1, d2, e ) &
-       bind( C, name="aa_tf_duqu_mul" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
-    real(C_DOUBLE), intent(out), dimension(8) :: e
-    real(C_DOUBLE), dimension(4) :: t1, t2
-
-    call aa_tf_qmul( d1(DQ_REAL), d2(DQ_REAL), e(DQ_REAL) )
-    call aa_tf_qmul( d1(DQ_REAL), d2(DQ_DUAL), t1 )
-    call aa_tf_qmul( d1(DQ_DUAL), d2(DQ_REAL), t2 )
-    e(DQ_DUAL) = t1 + t2
-  end subroutine aa_tf_duqu_mul
-
-  pure subroutine aa_tf_duqu_matrix_l( S, m )
-    real(C_DOUBLE), dimension(8), intent(in) :: S
-    real(C_DOUBLE), dimension(:,:), intent(out) :: m
-    call aa_tf_qmatrix_l(S(DQ_REAL), M(1:4,1:4) )  ! upper left
-    M(1:4, 5:8) = real(0,C_DOUBLE)                 ! upper right
-    M(5:8, 5:8) = M(1:4,1:4)                       ! lower right
-    call aa_tf_qmatrix_l(S(DQ_DUAL), M(5:8, 1:4) ) ! lower left
-  end subroutine aa_tf_duqu_matrix_l
-
-  pure subroutine aa_tf_duqu_matrix_r( S, m )
-    real(C_DOUBLE), dimension(8), intent(in) :: S
-    real(C_DOUBLE), dimension(:,:), intent(out) :: m
-    call aa_tf_qmatrix_r(S(DQ_REAL), M(:,1:4))    ! upper left
-    M(1:4, 5:8) = real(0,C_DOUBLE)                ! upper right
-    M(5:8, 5:8) = M(1:4,1:4)                      ! lower right
-    call aa_tf_qmatrix_r(S(DQ_DUAL), M(5:8, 1:4)) ! lower left
-  end subroutine aa_tf_duqu_matrix_r
-
-
-  pure subroutine aa_tf_duqu_matrix_l_c( S, m, ldm ) &
-       bind( C, name="aa_tf_duqu_matrix_l" )
-    integer(C_SIZE_T), intent(in), value :: ldm
-    real(C_DOUBLE), dimension(8), intent(in) :: S
-    real(C_DOUBLE), dimension(ldm,8), intent(out) :: m
-    call aa_tf_duqu_matrix_l(S,m)
-  end subroutine aa_tf_duqu_matrix_l_c
-
-  pure subroutine aa_tf_duqu_matrix_r_c( S, m, ldm ) &
-       bind( C, name="aa_tf_duqu_matrix_r" )
-    integer(C_SIZE_T), intent(in), value :: ldm
-    real(C_DOUBLE), dimension(8), intent(in) :: S
-    real(C_DOUBLE), dimension(ldm,8), intent(out) :: m
-    call aa_tf_duqu_matrix_r(S,m)
-  end subroutine aa_tf_duqu_matrix_r_c
-
-
-  !> Dual quaternion conjugate
-  subroutine aa_tf_duqu_conj( d, e ) &
-       bind( C, name="aa_tf_duqu_conj" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d
-    real(C_DOUBLE), intent(out), dimension(8) :: e
-    call aa_tf_qconj( d(DQ_REAL), e(DQ_REAL) )
-    call aa_tf_qconj( d(DQ_DUAL), e(DQ_DUAL) )
-  end subroutine aa_tf_duqu_conj
-
-  subroutine aa_tf_duqu_cmul( d1, d2, e ) &
-       bind( C, name="aa_tf_duqu_cmul" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
-    real(C_DOUBLE), intent(out), dimension(8) :: e
-    real(C_DOUBLE), dimension(8) :: d1c
-    call aa_tf_duqu_conj( d1, d1c )
-    call aa_tf_duqu_mul( d1c, d2, e );
-  end subroutine aa_tf_duqu_cmul
-
-  subroutine aa_tf_duqu_mulc( d1, d2, e ) &
-       bind( C, name="aa_tf_duqu_mulc" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d1, d2
-    real(C_DOUBLE), intent(out), dimension(8) :: e
-    real(C_DOUBLE), dimension(8) :: d2c
-    call aa_tf_duqu_conj( d2, d2c )
-    call aa_tf_duqu_mul( d1, d2c, e );
-  end subroutine aa_tf_duqu_mulc
-
-  !> Normalize a dual quaternion
-  subroutine aa_tf_duqu_normalize( d ) &
-       bind( C, name="aa_tf_duqu_normalize" )
-    real(C_DOUBLE), intent(inout), dimension(8) :: d
-    d = d / aa_tf_qnorm( d(DQ_REAL) )
-  end subroutine aa_tf_duqu_normalize
-
-  !> Dual quaternion angle minimization
-  subroutine aa_tf_duqu_minimize( d ) &
-       bind( C, name="aa_tf_duqu_minimize" )
-    real(C_DOUBLE), intent(inout), dimension(8) :: d
-    if ( d(DQ_REAL_W) < 0 ) then
-       d = -d
-    end if
-  end subroutine aa_tf_duqu_minimize
-
-  !> Dual quaternion norm
-  subroutine aa_tf_duqu_norm( d, nreal, ndual ) &
-       bind( C, name="aa_tf_duqu_norm" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d
-    real(C_DOUBLE), intent(out) :: nreal, ndual
-    nreal = aa_tf_qnorm( d(DQ_REAL) )
-    ndual = dot_product( d(DQ_REAL), d(DQ_DUAL) ) / nreal
-  end subroutine aa_tf_duqu_norm
-
-  !> Dual quaternion norm of vector component
-  subroutine aa_tf_duqu_vnorm( d, nreal, ndual ) &
-       bind( C, name="aa_tf_duqu_vnorm" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d
-    real(C_DOUBLE), intent(out) :: nreal, ndual
-    nreal = aa_tf_qvnorm( d(DQ_REAL) )
-    ndual = dot_product( d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ) ) / nreal
-  end subroutine aa_tf_duqu_vnorm
-
-  !> Dual quaternion construction from unit quaternion and translation
-  !> vector.
-  subroutine aa_tf_qv2duqu( q, v, d ) &
-       bind( C, name="aa_tf_qv2duqu" )
-    real(C_DOUBLE), intent(in), dimension(3) :: q(4), v(3)
-    real(C_DOUBLE), intent(out), dimension(8) :: d
-    d(DQ_REAL) = q
-
-    ! d%dual = 1/2 * v * q, Note, this is the same formula as
-    ! converting an angular velocity to a quaternion derivative
-    call aa_tf_qvel2diff( q, v, d(DQ_DUAL))
-
-  end subroutine aa_tf_qv2duqu
 
   subroutine aa_tf_xyz2duqu( x, y, z, d ) &
        bind( C, name="aa_tf_xyz2duqu" )
