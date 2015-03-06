@@ -231,6 +231,14 @@ aa_tf_qutr2duqu( const double E[AA_RESTRICT 7], double S[AA_RESTRICT 8] )
 }
 
 AA_API void
+aa_tf_duqu2qv( const double S[AA_RESTRICT 8], double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] )
+{
+    AA_MEM_CPY(q, S+AA_TF_DUQU_REAL, 4);
+    aa_tf_duqu_trans( S, v );
+}
+
+
+AA_API void
 aa_tf_duqu2qutr( const double S[AA_RESTRICT 8], double E[AA_RESTRICT 7] )
 {
     aa_tf_duqu2qv(S,  E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V );

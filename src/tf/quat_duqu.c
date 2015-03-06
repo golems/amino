@@ -57,13 +57,15 @@ aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT
 
 AA_API void
 aa_tf_duqu_twist2vel( const double d[AA_RESTRICT 8], const double t[AA_RESTRICT 8],
-                                  double dx[AA_RESTRICT 6] )
+                      double dx[AA_RESTRICT 6] )
 {
-    double p[3], pxw[3];
+    double p[3];
+
     AA_MEM_CPY( &dx[OMEGA], &t[XYZ], 3 );
+
     aa_tf_duqu_trans(d,p);
-    aa_tf_cross(p, &t[REAL_XYZ], pxw );
-    FOR_VEC(i) dx[V+i] = t[DUAL_XYZ+i] - pxw[i];
+    FOR_VEC(i) dx[V+i] = t[DUAL_XYZ+i];
+    aa_tf_cross_a(&t[REAL_XYZ], p, dx+V );
 }
 
 AA_API void
@@ -97,14 +99,14 @@ AA_API void
 aa_tf_duqu_diff2vel( const double d[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                      double dx[AA_RESTRICT 6] )
 {
-    double t1[4], t2[4];
+    double t1[3], t2[3];
     // rotation
     aa_tf_qdiff2vel( &d[REAL], &dd[REAL], &dx[OMEGA] );
     // translation
     // dx/dt = 2 * ( d_dual/dt conj(r) + d_dual conj(d_real/dt) )
-    aa_tf_qmulc( &dd[DUAL], &d[REAL], t1 );
-    aa_tf_qmulc( &d[DUAL], &dd[REAL], t2 );
-    FOR_VEC(i) dx[V+i] = 2 * (t1[XYZ+i] + t2[XYZ+i]);
+    aa_tf_qmulc_v( &dd[DUAL], &d[REAL], t1 );
+    aa_tf_qmulc_v( &d[DUAL], &dd[REAL], t2 );
+    FOR_VEC(i) dx[V+i] = 2 * (t1[i] + t2[i]);
 }
 
 AA_API void
@@ -133,4 +135,25 @@ aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8]
     double w[8];
     aa_tf_duqu_diff2twist(d0, dd, w);
     aa_tf_duqu_stwist(d0, w, dt, d1 );
+}
+
+AA_API void
+aa_tf_duqu_trans( const double S[AA_RESTRICT 8], double v[AA_RESTRICT 3] )
+{
+    aa_tf_qmulc_v(S+AA_TF_DUQU_DUAL, S+AA_TF_DUQU_REAL, v);
+    FOR_VEC(i) v[i] *= 2;
+}
+
+AA_API void
+aa_tf_tf_duqu( const double S[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
+               double p1[AA_RESTRICT 3] )
+{
+    double x[4];
+    const double *r = S+AA_TF_DUQU_REAL;
+    const double *d = S+AA_TF_DUQU_DUAL;
+
+    aa_tf_qmul_qv(r, p0, x);     /* 12mul, 8add */
+    FOR_QUAT(i) x[i] += 2*d[i];  /*  0mul, 4add */
+    aa_tf_qmulc_v(x, r, p1);     /* 12mul, 9add */
+    /* Total: 24 mul, 21 add */
 }

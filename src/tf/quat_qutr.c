@@ -59,8 +59,8 @@ AA_API void
 aa_tf_qutr_tf( const double E[AA_RESTRICT 7], const double p0[AA_RESTRICT 3],
                double p1[AA_RESTRICT 3] )
 {
-    aa_tf_qrot( E+AA_TF_QUTR_Q, p0, p1 );
-    FOR_VEC( i ) p1[i] += E[AA_TF_QUTR_V+i];
+    aa_tf_tf_qv( E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V,
+                 p0, p1 );
 }
 
 

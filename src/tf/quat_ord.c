@@ -138,13 +138,13 @@ aa_tf_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double
     c[z] =    a[w]*b[z] + a[z]*b[w] + a[x]*b[y] - a[y]*b[x];
     c[w] = - (a[y]*b[y] + a[x]*b[x] + a[z]*b[z] - a[w]*b[w]);
 }
+
 AA_API void
 aa_tf_qmulnorm( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
 {
     aa_tf_qmul(a,b,c);
     aa_tf_qnormalize(c);
 }
-
 
 AA_API void
 aa_tf_qcmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
@@ -157,14 +157,25 @@ aa_tf_qcmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], doubl
     c[w] = ( a[w]*b[w] + a[z]*b[z] ) + ( a[x]*b[x] + a[y]*b[y] );
 }
 
+
+/* compute vector part of a*conj(b) */
 AA_API void
-aa_tf_qmulc( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
+aa_tf_qmulc_v( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4],
+               double v[AA_RESTRICT 3] )
 {
     DECLARE_QUAT_XYZW;
+    /* 12 multiplies, 9 adds */
+    v[0] = ( a[z]*b[y] - a[y]*b[z] ) + ( a[x]*b[w] - a[w]*b[x] );
+    v[1] = ( a[x]*b[z] - a[z]*b[x] ) + ( a[y]*b[w] - a[w]*b[y] );
+    v[2] = ( a[y]*b[x] - a[x]*b[y] ) + ( a[z]*b[w] - a[w]*b[z] );
+}
 
-    c[x] = ( a[z]*b[y] - a[y]*b[z] ) + ( a[x]*b[w] - a[w]*b[x] );
-    c[y] = ( a[x]*b[z] - a[z]*b[x] ) + ( a[y]*b[w] - a[w]*b[y] );
-    c[z] = ( a[y]*b[x] - a[x]*b[y] ) + ( a[z]*b[w] - a[w]*b[z] );
+AA_API void
+aa_tf_qmulc( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4],
+             double c[AA_RESTRICT 4] )
+{
+    DECLARE_QUAT_XYZW;
+    aa_tf_qmulc_v(a,b,c+x);
     c[w] = ( a[x]*b[x] + a[y]*b[y] ) + ( a[z]*b[z] + a[w]*b[w] );
 }
 
@@ -176,33 +187,39 @@ aa_tf_qmul_vq( const double v[AA_RESTRICT 3], const double q[AA_RESTRICT 4], dou
     r[x] = +  v[y]*q[z] - v[z]*q[y] + v[x]*q[w];
     r[y] = +  v[z]*q[x] - v[x]*q[z] + v[y]*q[w];
     r[z] = +  v[x]*q[y] - v[y]*q[x] + v[z]*q[w];
-    r[w] = -  v[x]*q[x] - v[y]*q[y] - v[z]*q[z];
+
+    r[AA_TF_QUAT_W] = -aa_tf_vdot(q+AA_TF_QUAT_V,v);
+}
+
+AA_API void
+aa_tf_qmul_qv_v( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3], double r[AA_RESTRICT 3] )
+{
+    DECLARE_QUAT_XYZW;
+    r[0] = + q[y]*v[z] - q[z]*v[y] + q[w]*v[x];
+    r[1] = + q[z]*v[x] - q[x]*v[z] + q[w]*v[y];
+    r[2] = + q[x]*v[y] - q[y]*v[x] + q[w]*v[z];
 }
 
 AA_API void
 aa_tf_qmul_qv( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 2], double r[AA_RESTRICT 4] )
 {
-    DECLARE_QUAT_XYZW;
-
-    r[x] = + q[y]*v[z] - q[z]*v[y] + q[w]*v[x];
-    r[y] = + q[z]*v[x] - q[x]*v[z] + q[w]*v[y];
-    r[z] = + q[x]*v[y] - q[y]*v[x] + q[w]*v[z];
-    r[w] = - q[x]*v[x] - q[y]*v[y] - q[z]*v[z];
+    aa_tf_qmul_qv_v(q,v,r+AA_TF_QUAT_V);
+    r[AA_TF_QUAT_W] = -aa_tf_vdot(q+AA_TF_QUAT_V,v);
 }
 
 
 AA_API void
-aa_tf_qrot( const double _q[AA_RESTRICT 4], const double v[AA_RESTRICT 3], double r[AA_RESTRICT 3] )
+aa_tf_qrot( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+            double r[AA_RESTRICT 3] )
 {
-    const double *q_v  = _q+AA_TF_QUAT_XYZ;
-    const double q_w  = _q[AA_TF_QUAT_W];;
     double a[3];
-    aa_tf_cross( q_v, v, a);
-    FOR_VEC(i) a[i] += q_w * v[i];
-    aa_tf_cross( q_v, a, r);
-    FOR_VEC(i) r[i] += r[i] + v[i];
-}
 
+    aa_tf_qmul_qv_v(q,v,a);
+    FOR_VEC(i) a[i] *= 2;
+
+    FOR_VEC(i) r[i] = v[i];
+    aa_tf_cross_a( q+AA_TF_QUAT_V, a, r);
+}
 
 AA_API void
 aa_tf_qpexp( const double q[AA_RESTRICT 3], double r[AA_RESTRICT 4] )
@@ -272,6 +289,7 @@ aa_tf_qsvel( const double q0[AA_RESTRICT 4], const double w[AA_RESTRICT 3], doub
 {
     double wq[3], e[4];
     FOR_VEC(i) wq[i] = w[i] * dt/2;
+
     aa_tf_qpexp(wq, e);
     aa_tf_qmul(e, q0, q1);
 }
@@ -280,9 +298,25 @@ AA_API void
 aa_tf_qsdiff( const double q0[AA_RESTRICT 4], const double dq[AA_RESTRICT 4], double dt,
               double q1[AA_RESTRICT 4] )
 {
-    double w[4], r[4];
-    aa_tf_qmulc( dq, q0, w );
-    FOR_QUAT(i) w[i] *= dt;
-    aa_tf_qpexp(w,r);
-    aa_tf_qmul(r,q0,q1);
+    double wq[3], e[4];
+    aa_tf_qmulc_v( dq, q0, wq );
+    FOR_VEC(i) wq[i] *= dt;
+
+    aa_tf_qpexp(wq,e);
+    aa_tf_qmul(e,q0,q1);
+}
+
+AA_API void
+aa_tf_qdiff2vel( const double q[AA_RESTRICT 4], const double dq[AA_RESTRICT 4], double w[AA_RESTRICT 3] )
+{
+    aa_tf_qmulc_v(dq,q,w);
+    FOR_VEC(i) w[i] *= 2;
+}
+
+AA_API void
+aa_tf_qvel2diff( const double q[AA_RESTRICT 4], const double w[AA_RESTRICT 3], double dq[AA_RESTRICT 4] )
+{
+    double w2[3];
+    FOR_VEC(i) w2[i] = w[i]/2;
+    aa_tf_qmul_vq(w2,q,dq);
 }

@@ -234,7 +234,7 @@ la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/un
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(INCLUDES) -x c  $< -o $@
 
-tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90 src/tf/qv.f90
+tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90
 	$(CPP) $(INCLUDES) -x c  $< -o $@
 
 

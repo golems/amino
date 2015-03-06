@@ -1582,6 +1582,131 @@ module amino_tf
       end subroutine aa_tf_qutr_sdiff
    end interface aa_tf_qutr_sdiff
 
+
+
+   !! Convert differential quaternion to velocity
+   !! Note, pass the time derivative of the quaternion as dq_dt
+   interface aa_tf_qdiff2vel
+      subroutine aa_tf_qdiff2vel( q, dq_dt, v ) &
+           bind( C, name="aa_tf_qdiff2vel" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), dimension(3), intent(out) :: v
+        real(C_DOUBLE), dimension(4), intent(in) :: q, dq_dt
+        !real(C_DOUBLE), dimension(4) :: qv
+        !! v = 2 * dq/dt * conj(q)
+        !call aa_tf_qmulc(dq_dt, q, qv)
+        !v = 2*qv(XYZ_INDEX)
+      end subroutine aa_tf_qdiff2vel
+   end interface aa_tf_qdiff2vel
+
+   interface aa_tf_qvel2diff
+      subroutine aa_tf_qvel2diff( q, v, dq_dt ) &
+           bind( C, name="aa_tf_qvel2diff" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: v(3), q(4)
+        real(C_DOUBLE), intent(out) :: dq_dt(4)
+        real(C_DOUBLE) :: v2(3)
+        ! dq/dt = 1/2 * v * q
+        !v2 = v/2
+        !call aa_tf_qmul_vq( v2, q, dq_dt )
+      end subroutine aa_tf_qvel2diff
+   end interface aa_tf_qvel2diff
+
+
+   interface aa_tf_duqu2qv
+      subroutine aa_tf_duqu2qv( d, q, v ) &
+           bind( C, name="aa_tf_duqu2qv" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(out), dimension(3) :: q(4), v(3)
+        real(C_DOUBLE), intent(in), dimension(8) :: d
+        !q = d(DQ_REAL)
+        !call aa_tf_duqu_trans( d, v )
+      end subroutine aa_tf_duqu2qv
+   end interface aa_tf_duqu2qv
+
+   !> Dual quaternion translation vector
+   interface aa_tf_duqu_trans
+      subroutine aa_tf_duqu_trans( d, t ) &
+           bind( C, name="aa_tf_duqu_trans" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in), dimension(8) :: d
+        real(C_DOUBLE), intent(out), dimension(3) :: t
+
+        ! t = 2 * d(dual) * d(real)^*, and ignore t(w)
+        ! real(C_DOUBLE) ::  mul(4)
+        ! call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), mul )
+        ! t = 2*mul(XYZ_INDEX)
+
+        !call aa_tf_cross(d(XYZ_INDEX), d(DQ_DUAL_XYZ), t)
+        !t = 2 * ( t + d(DQ_REAL_W)*d(DQ_DUAL_XYZ) - d(DQ_DUAL_W)*d(DQ_REAL_XYZ) )
+
+      end subroutine aa_tf_duqu_trans
+   end interface aa_tf_duqu_trans
+
+   !> Transform a point using the dual quaternion
+   interface aa_tf_tf_duqu
+      subroutine aa_tf_tf_duqu( d, p0, p1 ) &
+           bind( C, name="aa_tf_tf_duqu" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: d(8), p0(3)
+        real(C_DOUBLE), intent(out) :: p1(3)
+        !real(C_DOUBLE) :: a(4), b(4)
+        ! p1 = d * p * d^{-1}
+        ! p1 = (2*dual + real*p0) * conj(real)
+        !call aa_tf_qmul_qv( d(DQ_REAL), p0, a )
+        !a =  a + d(DQ_DUAL) + d(DQ_DUAL)
+        !call aa_tf_qmulc( a, d(DQ_REAL), b )
+        !p1 = b(XYZ_INDEX)
+
+        ! real(C_DOUBLE) :: rx,ry,rz,rw, dx,dy,dz,dw, vx,vy,vz, rxx,ryy,rzz,rww, rvx, rvy, rvz
+
+        ! rx=d(1)
+        ! ry=d(2)
+        ! rz=d(3)
+        ! rw=d(4)
+
+        ! dx=d(5)
+        ! dy=d(6)
+        ! dz=d(7)
+        ! dw=d(8)
+
+        ! vx=p0(1)
+        ! vy=p0(2)
+        ! vz=p0(3)
+
+        ! ! real(C_DOUBLE) :: ax(3), aw
+
+        ! ! ! ax = real_w p + real_x x p + 2 dual_x
+        ! ! call aa_tf_cross( d(DQ_REAL_XYZ), p0, ax )
+        ! ! ax = ax + d(DQ_REAL_W)*p0 + 2*d(DQ_DUAL_XYZ)
+
+        ! ! ! aw = dot( real_x, p ) - 2 dual_w
+        ! ! aw = dot_product( d(DQ_REAL_XYZ), p0 ) - 2*d(DQ_DUAL_W)
+
+        ! ! ! p1 = real_x x ax + real_w ax + aw real_x
+        ! ! call aa_tf_cross( d(DQ_REAL_XYZ), ax, p1 )
+        ! ! p1 = p1 + d(DQ_REAL_W)*ax + aw*d(DQ_REAL_XYZ)
+
+        ! rxx = rx*rx
+        ! ryy = ry*ry
+        ! rzz = rz*rz
+        ! rww = rw*rw
+
+        ! rvx = rx*vx
+        ! rvy = ry*vy
+        ! rvz = rz*vz
+
+        ! p1(1) = rx*(rvz + rvy) + rw*(ry*vz - rz*vy) + rw*dx - dw*rx + dz*ry - dy*rz
+        ! p1(2) = ry*(rvx + rvz) + rw*(rz*vx - rx*vz) + rw*dy - dw*ry + dx*rz - dz*rx
+        ! p1(3) = rz*(rvy + rvx) + rw*(rx*vy - ry*vx) + rw*dz - dw*rz + dy*rx - dx*ry
+
+        ! p1(1) = p1(1) + p1(1) + vx*(rww - rzz + rxx - ryy)
+        ! p1(2) = p1(2) + p1(2) + vy*(rww - rxx + ryy - rzz)
+        ! p1(3) = p1(3) + p1(3) + vz*(rww - ryy + rzz - rxx)
+      end subroutine aa_tf_tf_duqu
+   end interface aa_tf_tf_duqu
+
+
 contains
 
   !!! Quaternions
@@ -1881,29 +2006,6 @@ contains
     ! Final
     call aa_tf_qslerpchaindiff( u, du, q12, dq12, q34, dq34, q, dq )
   end subroutine aa_tf_qslerp3diff
-
-
-  !! Convert differential quaternion to velocity
-  !! Note, pass the time derivative of the quaternion as dq_dt
-  subroutine aa_tf_qdiff2vel( q, dq_dt, v ) &
-       bind( C, name="aa_tf_qdiff2vel" )
-    real(C_DOUBLE), dimension(3), intent(out) :: v
-    real(C_DOUBLE), dimension(4), intent(in) :: q, dq_dt
-    real(C_DOUBLE), dimension(4) :: qv
-    !! v = 2 * dq/dt * conj(q)
-    call aa_tf_qmulc(dq_dt, q, qv)
-    v = 2*qv(XYZ_INDEX)
-  end subroutine aa_tf_qdiff2vel
-
-  subroutine aa_tf_qvel2diff( q, v, dq_dt ) &
-       bind( C, name="aa_tf_qvel2diff" )
-    real(C_DOUBLE), intent(in) :: v(3), q(4)
-    real(C_DOUBLE), intent(out) :: dq_dt(4)
-    real(C_DOUBLE) :: v2(3)
-    ! dq/dt = 1/2 * v * q
-    v2 = v/2
-    call aa_tf_qmul_vq( v2, q, dq_dt )
-  end subroutine aa_tf_qvel2diff
 
 
   !! Jacobian of the unit quaternion logarithm
@@ -2672,14 +2774,6 @@ contains
     call aa_tf_qv2duqu(q,v,d)
   end subroutine aa_tf_zxyz2duqu
 
-  subroutine aa_tf_duqu2qv( d, q, v ) &
-       bind( C, name="aa_tf_duqu2qv" )
-    real(C_DOUBLE), intent(out), dimension(3) :: q(4), v(3)
-    real(C_DOUBLE), intent(in), dimension(8) :: d
-    q = d(DQ_REAL)
-    call aa_tf_duqu_trans( d, v )
-  end subroutine aa_tf_duqu2qv
-
   !> Dual quaternion construction from unit quaternion and translation
   !> vector, with minimized angle
   subroutine aa_tf_qv2duqu_min( q, v, d ) &
@@ -2691,82 +2785,8 @@ contains
     call aa_tf_qv2duqu(qmin, v, d)
   end subroutine aa_tf_qv2duqu_min
 
-  !> Dual quaternion translation vector
- subroutine aa_tf_duqu_trans( d, t ) &
-       bind( C, name="aa_tf_duqu_trans" )
-    real(C_DOUBLE), intent(in), dimension(8) :: d
-    real(C_DOUBLE), intent(out), dimension(3) :: t
-
-    ! t = 2 * d(dual) * d(real)^*, and ignore t(w)
-    real(C_DOUBLE) ::  mul(4)
-    call aa_tf_qmulc( d(DQ_DUAL), d(DQ_REAL), mul )
-    t = 2*mul(XYZ_INDEX)
-
-    !call aa_tf_cross(d(XYZ_INDEX), d(DQ_DUAL_XYZ), t)
-    !t = 2 * ( t + d(DQ_REAL_W)*d(DQ_DUAL_XYZ) - d(DQ_DUAL_W)*d(DQ_REAL_XYZ) )
-
-  end subroutine aa_tf_duqu_trans
 
 
-  !> Transform a point using the dual quaternion
-  subroutine aa_tf_tf_duqu( d, p0, p1 ) &
-       bind( C, name="aa_tf_tf_duqu" )
-    real(C_DOUBLE), intent(in) :: d(8), p0(3)
-    real(C_DOUBLE), intent(out) :: p1(3)
-    real(C_DOUBLE) :: a(4), b(4)
-    ! p1 = d * p * d^{-1}
-    ! p1 = (2*dual + real*p0) * conj(real)
-    call aa_tf_qmul_qv( d(DQ_REAL), p0, a )
-    a =  a + d(DQ_DUAL) + d(DQ_DUAL)
-    call aa_tf_qmulc( a, d(DQ_REAL), b )
-    p1 = b(XYZ_INDEX)
-
-    ! real(C_DOUBLE) :: rx,ry,rz,rw, dx,dy,dz,dw, vx,vy,vz, rxx,ryy,rzz,rww, rvx, rvy, rvz
-
-    ! rx=d(1)
-    ! ry=d(2)
-    ! rz=d(3)
-    ! rw=d(4)
-
-    ! dx=d(5)
-    ! dy=d(6)
-    ! dz=d(7)
-    ! dw=d(8)
-
-    ! vx=p0(1)
-    ! vy=p0(2)
-    ! vz=p0(3)
-
-    ! ! real(C_DOUBLE) :: ax(3), aw
-
-    ! ! ! ax = real_w p + real_x x p + 2 dual_x
-    ! ! call aa_tf_cross( d(DQ_REAL_XYZ), p0, ax )
-    ! ! ax = ax + d(DQ_REAL_W)*p0 + 2*d(DQ_DUAL_XYZ)
-
-    ! ! ! aw = dot( real_x, p ) - 2 dual_w
-    ! ! aw = dot_product( d(DQ_REAL_XYZ), p0 ) - 2*d(DQ_DUAL_W)
-
-    ! ! ! p1 = real_x x ax + real_w ax + aw real_x
-    ! ! call aa_tf_cross( d(DQ_REAL_XYZ), ax, p1 )
-    ! ! p1 = p1 + d(DQ_REAL_W)*ax + aw*d(DQ_REAL_XYZ)
-
-    ! rxx = rx*rx
-    ! ryy = ry*ry
-    ! rzz = rz*rz
-    ! rww = rw*rw
-
-    ! rvx = rx*vx
-    ! rvy = ry*vy
-    ! rvz = rz*vz
-
-    ! p1(1) = rx*(rvz + rvy) + rw*(ry*vz - rz*vy) + rw*dx - dw*rx + dz*ry - dy*rz
-    ! p1(2) = ry*(rvx + rvz) + rw*(rz*vx - rx*vz) + rw*dy - dw*ry + dx*rz - dz*rx
-    ! p1(3) = rz*(rvy + rvx) + rw*(rx*vy - ry*vx) + rw*dz - dw*rz + dy*rx - dx*ry
-
-    ! p1(1) = p1(1) + p1(1) + vx*(rww - rzz + rxx - ryy)
-    ! p1(2) = p1(2) + p1(2) + vy*(rww - rxx + ryy - rzz)
-    ! p1(3) = p1(3) + p1(3) + vz*(rww - ryy + rzz - rxx)
-  end subroutine aa_tf_tf_duqu
 
 
   !! Convert spatial velocity to quaternion derivative
@@ -2894,6 +2914,21 @@ contains
   ! end subroutine aa_tf_duqu_sdiff
 
 #include "aa_tf_euler.f90"
-#include "tf/qv.f90"
+
+  subroutine aa_tf_qutr_wavg( n, w, EE, ldee,  a ) &
+       bind( C, name="aa_tf_qutr_wavg" )
+    integer(C_SIZE_T), intent(in), value :: n, ldee
+    real(C_DOUBLE), intent(in) :: EE(ldee,n), w(n)
+    real(C_DOUBLE), intent(out) :: a(7)
+    integer(C_SIZE_T) :: i
+    !! average translation, davenport q method
+    call aa_tf_quat_davenport( n, w, EE, ldee, a(1:4) )
+    !! TODO: Should we consider coupling between orientation and translation?
+    !! TODO: Kahan summation
+    a(5:7)=real(0,C_DOUBLE)
+    do i=1,n
+       a(5:7) = a(5:7) + w(i) * EE(5:7,i)
+    end do
+  end subroutine aa_tf_qutr_wavg
 
 end module amino_tf
