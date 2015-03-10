@@ -257,3 +257,92 @@ aa_tf_tf_duqu( const double S[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
     aa_tf_qmulc_v(x, r, p1);     /* 12mul, 9add */
     /* Total: 24 mul, 21 add */
 }
+
+static void
+dual_mul( double ar, double ad, double br, double bd, double *cr, double *cd )
+{
+    *cr = ar*br;
+    *cd = ar*bd + ad*br;
+}
+
+AA_API void
+aa_tf_duqu_exp( const double S[AA_RESTRICT 8], double eS[AA_RESTRICT 8] )
+{
+    double nr, c, vv, vd, ar, ad, er, ed;
+
+    vv = aa_tf_vdot( S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_REAL_XYZ );
+
+    if( vv < DBL_EPSILON ) {
+        ar = aa_tf_sinc_series2(vv);
+        c = aa_tf_cos_series2(vv);
+        /* Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3 */
+        ad = aa_horner3( vv, -1.0/3.0, 1.0/30.0, -1.0/840.0 );
+    } else {
+        nr = sqrt(vv);
+        ar = sin(nr)/nr;
+        c = cos(nr);
+        ad = (c-ar)/vv;
+    }
+
+    vd = aa_tf_vdot( S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_DUAL_XYZ );
+    ad *= vd;
+
+    FOR_VEC(i) eS[AA_TF_DUQU_REAL_XYZ+i] = ar*S[AA_TF_DUQU_REAL_XYZ+i];
+    eS[AA_TF_DUQU_REAL_W] = c;
+
+    FOR_VEC(i) eS[AA_TF_DUQU_DUAL_XYZ+i] = ar*S[AA_TF_DUQU_DUAL_XYZ+i] + ad*S[AA_TF_DUQU_REAL_XYZ+i];
+    eS[AA_TF_DUQU_DUAL_W] = -ar*vd;
+
+    if( 0 < fabs(S[AA_TF_DUQU_REAL_W]) ||  0 < fabs(S[AA_TF_DUQU_DUAL_W]) ) {
+        /* dual number exponential */
+        er = exp(S[AA_TF_DUQU_REAL_W]);
+        ed = er * S[AA_TF_DUQU_DUAL_W];
+        /* scale */
+        FOR_QUAT(i) {
+            dual_mul(er, ed,
+                     eS[AA_TF_DUQU_REAL_XYZ+i], eS[AA_TF_DUQU_DUAL_XYZ+i],
+                     &eS[AA_TF_DUQU_REAL_XYZ+i], &eS[AA_TF_DUQU_DUAL_XYZ+i] );
+        }
+    }
+}
+
+
+AA_API void
+aa_tf_duqu_ln( const double S[AA_RESTRICT 8], double lnS[AA_RESTRICT 8] )
+{
+
+    double vv, vd, theta, nr, mr2, mr, ar, ad;
+    vv = aa_tf_vdot(S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_REAL_XYZ);
+    vd = aa_tf_vdot(S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_DUAL_XYZ);
+
+    mr2 = vv + S[AA_TF_DUQU_REAL_W]*S[AA_TF_DUQU_REAL_W];
+    mr = sqrt( mr2 );
+
+    /* Scalar part */
+    lnS[AA_TF_DUQU_REAL_W] = log(mr);
+    lnS[AA_TF_DUQU_DUAL_W] = (vd + S[AA_TF_DUQU_REAL_W]*S[AA_TF_DUQU_DUAL_W]) / mr2;
+
+    /* Vector part */
+    /* ! Dual number computation */
+    /* ! call aa_tf_duqu_vnorm( d, nv%r, nv%d ) */
+    /* ! a = atan2( nv, dh(W_INDEX) ) / nv */
+
+    /* expanded dual computation */
+    nr = sqrt(vv);                   /* nr is positive */
+    theta = atan2( nr, S[AA_TF_DUQU_REAL_W] ); /* theta is always positive */
+
+    /* Try to avoid small number division */
+    if( theta < DBL_EPSILON )  {
+        /* ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) ) */
+        ad = aa_horner3( theta*theta, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / mr;
+        ar = aa_tf_invsinc_series2(theta*theta)/mr;
+    } else {
+        ar = theta/nr;
+        ad = (S[AA_TF_DUQU_REAL_W] - ar*mr2) / vv;
+    }
+    ad = (vd*ad - S[AA_TF_DUQU_DUAL_W]) / mr2;
+    FOR_VEC(i)
+        lnS[AA_TF_DUQU_REAL_XYZ+i] = ar * S[AA_TF_DUQU_REAL_XYZ+i];
+    FOR_VEC(i)
+        lnS[AA_TF_DUQU_DUAL_XYZ+i] = ad * S[AA_TF_DUQU_REAL_XYZ+i] + ar * S[AA_TF_DUQU_DUAL_XYZ+i];
+}

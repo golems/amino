@@ -2020,6 +2020,87 @@ module amino_tf
        end subroutine aa_tf_duqu_matrix_r_c
     end interface aa_tf_duqu_matrix_r_c
 
+
+
+  !! Exponential of a dual quaternion
+    interface aa_tf_duqu_exp
+  subroutine aa_tf_duqu_exp( d, e ) &
+       bind( C, name="aa_tf_duqu_exp" )
+    use ISO_C_BINDING
+    real(C_DOUBLE), intent(in) :: d(8)
+    real(C_DOUBLE), intent(out) :: e(8)
+    ! real(C_DOUBLE) :: nr, c, vv, vd, ar, ad
+    ! type(aa_tf_dual_t) :: expw
+    ! vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
+    ! if( vv < sqrt(epsilon(vv)) ) then
+    !    ar = aa_tf_sinc_series2(vv) ! approx. 1
+    !    c = aa_tf_cos_series2(vv)   ! approx. 1
+    !    ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
+    !    ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
+    ! else
+    !    nr = sqrt(vv)
+    !    ar = sin(nr)/nr
+    !    c = cos(nr)
+    !    ad = (c-ar)/vv
+    ! end if
+    ! vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
+    ! ad = vd*ad
+    ! e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+    ! e(DQ_REAL_W) = c
+    ! e(DQ_DUAL_XYZ) = (ar * d(DQ_DUAL_XYZ)) + (ad * (d(DQ_REAL_XYZ)))
+    ! e(DQ_DUAL_W) = -ar * vd
+
+    ! ! impure part
+    ! if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
+    !    expw = exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
+    !    call aa_tf_dual_scalv( expw%r, expw%d, e )
+    ! end if
+  end subroutine aa_tf_duqu_exp
+end interface aa_tf_duqu_exp
+
+
+interface aa_tf_duqu_ln
+  subroutine aa_tf_duqu_ln( d, e ) &
+       bind( C, name="aa_tf_duqu_ln" )
+    use ISO_C_BINDING
+    real(C_DOUBLE), intent(in) :: d(8)
+    real(C_DOUBLE), intent(out) :: e(8)
+    ! real(C_DOUBLE) :: vv, vd, theta, nr, mr2, mr, ar, ad
+    ! !! Norms
+    ! vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
+    ! vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
+    ! mr2 = vv+d(DQ_REAL_W)**2
+    ! mr = sqrt( mr2 )
+
+    ! !! Scalar part
+    ! !e_w = log(m)
+    ! e(DQ_REAL_W) = log(mr)
+    ! e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
+
+    ! !! Vector part
+    ! ! Dual number computation
+    ! ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
+    ! ! a = atan2( nv, dh(W_INDEX) ) / nv
+
+    ! ! expanded dual computation
+    ! nr = sqrt(vv)                   ! nr is positive
+    ! theta = atan2( nr, d(W_INDEX) ) ! theta is always positive
+
+    ! ! Try to avoid small number division
+    ! if( theta < sqrt(sqrt(epsilon(theta))) ) then
+    !    ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
+    !    ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
+    !    ar = aa_tf_invsinc_series2(theta**2)/mr
+    ! else
+    !    ar = theta/nr
+    !    ad =  (d(W_INDEX) - ar*mr2) / vv
+    ! end if
+    ! ad = (vd*ad - d(DQ_DUAL_W)) / mr2
+    ! e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+    ! e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
+  end subroutine aa_tf_duqu_ln
+end interface aa_tf_duqu_ln
+
 contains
 
   !> Spherical Cubic Interpolation
@@ -2257,8 +2338,7 @@ contains
     dln = alpha * dq(XYZ_INDEX) + dq(W_INDEX)*beta * q(XYZ_INDEX)
   end subroutine aa_tf_qduln
 
-
-  !! Jacobian of the unit quaternion logarithm
+  !! Jacobian of the unit quaternion exponential
   subroutine aa_tf_qjpexp( u, J ) &
        bind( C, name="aa_tf_qjpexp" )
     real(C_DOUBLE), dimension(3), intent(in) :: u
@@ -2827,9 +2907,6 @@ contains
   end subroutine aa_tf_qv2duqu_min
 
 
-
-
-
   !! Convert spatial velocity to quaternion derivative
   ! subroutine aa_tf_duqu_vel2diff( d, dx, dd ) &
   !      bind( C, name="aa_tf_duqu_vel2diff" )
@@ -2846,78 +2923,6 @@ contains
   !   call aa_tf_qmul( b, dd(DQ_REAL), c )
   !   dd(DQ_DUAL) = a/2d0 + c
   ! end subroutine aa_tf_duqu_vel2diff
-
-  !! Exponential of a dual quaternion
-  subroutine aa_tf_duqu_exp( d, e ) &
-       bind( C, name="aa_tf_duqu_exp" )
-    real(C_DOUBLE), intent(in) :: d(8)
-    real(C_DOUBLE), intent(out) :: e(8)
-    real(C_DOUBLE) :: nr, c, vv, vd, ar, ad
-    type(aa_tf_dual_t) :: expw
-    vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
-    if( vv < sqrt(epsilon(vv)) ) then
-       ar = aa_tf_sinc_series2(vv) ! approx. 1
-       c = aa_tf_cos_series2(vv)   ! approx. 1
-       ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
-       ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
-    else
-       nr = sqrt(vv)
-       ar = sin(nr)/nr
-       c = cos(nr)
-       ad = (c-ar)/vv
-    end if
-    vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
-    ad = vd*ad
-    e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
-    e(DQ_REAL_W) = c
-    e(DQ_DUAL_XYZ) = (ar * d(DQ_DUAL_XYZ)) + (ad * (d(DQ_REAL_XYZ)))
-    e(DQ_DUAL_W) = -ar * vd
-
-    ! impure part
-    if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
-       expw = exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
-       call aa_tf_dual_scalv( expw%r, expw%d, e )
-    end if
-  end subroutine aa_tf_duqu_exp
-
-  subroutine aa_tf_duqu_ln( d, e ) &
-       bind( C, name="aa_tf_duqu_ln" )
-    real(C_DOUBLE), intent(in) :: d(8)
-    real(C_DOUBLE), intent(out) :: e(8)
-    real(C_DOUBLE) :: vv, vd, theta, nr, mr2, mr, ar, ad
-    !! Norms
-    vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
-    vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
-    mr2 = vv+d(DQ_REAL_W)**2
-    mr = sqrt( mr2 )
-
-    !! Scalar part
-    !e_w = log(m)
-    e(DQ_REAL_W) = log(mr)
-    e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
-
-    !! Vector part
-    ! Dual number computation
-    ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
-    ! a = atan2( nv, dh(W_INDEX) ) / nv
-
-    ! expanded dual computation
-    nr = sqrt(vv)                   ! nr is positive
-    theta = atan2( nr, d(W_INDEX) ) ! theta is always positive
-
-    ! Try to avoid small number division
-    if( theta < sqrt(sqrt(epsilon(theta))) ) then
-       ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
-       ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
-       ar = aa_tf_invsinc_series2(theta**2)/mr
-    else
-       ar = theta/nr
-       ad =  (d(W_INDEX) - ar*mr2) / vv
-    end if
-    ad = (vd*ad - d(DQ_DUAL_W)) / mr2
-    e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
-    e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
-  end subroutine aa_tf_duqu_ln
 
   !! Integrate twist to to get dual quaternion
   ! subroutine aa_tf_duqu_stwist( d0, twist, dt, d1 ) &
