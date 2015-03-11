@@ -2276,31 +2276,28 @@ contains
        bind( C, name="aa_tf_qjuln" )
     real(C_DOUBLE), dimension(4), intent(in) :: q
     real(C_DOUBLE), dimension(3,4), intent(out) :: J
-    real(C_DOUBLE) :: vv, vnorm, phi, s, s2, s3, isc,x,y,z
-    vv = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    vnorm = sqrt(vv)
-    phi = atan2( vnorm, q(W_INDEX) ) ! always positive
-    s = vnorm
-    s2 = vv
-    s3 = s**3
+    real(C_DOUBLE) :: phi, s, s2, isc, x,y,z, a
+    s2 = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+    s = sqrt(s2)
+    phi = atan2( s, q(W_INDEX) ) ! always positive
     isc = phi/s
+    a = isc / s2
+
     x = q(1)
     y = q(2)
     z = q(3)
-    !print *,sqrt(1-q(W_INDEX)**2)
-    !print *,s
 
-    J(1,1) = isc - phi*x**2/s3
-    J(2,1) = - phi*x*y/s3
-    J(3,1) = - phi*x*z/s3
+    J(1,1) = isc * (-x/s2 * x + 1)
+    J(2,1) = -a*x*y
+    J(3,1) = -a*x*z
 
-    J(1,2) = -phi*x*y/s3
-    J(2,2) = isc - phi*y**2/s3
-    J(3,2) = -phi*y*z/s3
+    J(1,2) = -a*x*y
+    J(2,2) = isc * (-y/s2 * y + 1)
+    J(3,2) = -a*y*z
 
-    J(1,3) = -phi*x*z/s3
-    J(2,3) = -phi*y*z/s3
-    J(3,3) = isc - phi*z**2/s3
+    J(1,3) = -a*x*z
+    J(2,3) = -a*y*z
+    J(3,3) = isc * (-z/s2 * z + 1)
 
     J(1,4) = -x/s2
     J(2,4) = -y/s2
@@ -2321,18 +2318,19 @@ contains
        bind( C, name="aa_tf_qduln" )
     real(C_DOUBLE), dimension(4), intent(in) :: q, dq
     real(C_DOUBLE), dimension(3), intent(out) :: dln
-    real(C_DOUBLE) :: phi, s, c, alpha, beta
+    real(C_DOUBLE) :: phi, s, s2, c, alpha, beta
 
-    s = sqrt(dot_product(q(XYZ_INDEX), q(XYZ_INDEX)))
+    s2 = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+    s = sqrt(s2)
     c = q(W_INDEX)
     phi = atan2( s, c ) ! always positive
 
     if( phi < sqrt(sqrt(epsilon(phi))) ) then
        alpha = aa_tf_invsinc_series(phi)
-       beta = aa_tf_horner3( phi**2, -1d0/3, 2d0/15, -2d0/63 )
+       beta = aa_tf_horner3( phi*phi, -1d0/3, 2d0/15, -2d0/63 )
     else
        alpha = phi/s
-       beta = (-1/s**2 + phi*c/s**3)
+       beta = (alpha*c-1) / s2
     end if
 
     dln = alpha * dq(XYZ_INDEX) + dq(W_INDEX)*beta * q(XYZ_INDEX)
