@@ -2343,30 +2343,35 @@ contains
        bind( C, name="aa_tf_qjpexp" )
     real(C_DOUBLE), dimension(3), intent(in) :: u
     real(C_DOUBLE), dimension(4,3), intent(out) :: J
-    real(C_DOUBLE) :: x,y,z, v, vv, v3, s,c
+    real(C_DOUBLE) :: x,y,z, v, vv, sc, a
     x = u(1)
     y = u(2)
     z = u(3)
     vv = dot_product(u,u)
-    v = sqrt(vv)
-    v3 = v**3
-    s = sin(v)
-    c = cos(v)
 
-    J(1,1) = c*x*x/vv - s*x*x/v3 + s/v
-    J(2,1) = c*x*y/vv - s*x*y/v3
-    J(3,1) = c*x*z/vv - s*x*z/v3
-    J(4,1) = -s*x/v
+    if( vv < epsilon(vv) ) then
+       sc = aa_tf_sinc_series2(vv)
+       a = aa_tf_horner3( vv, -1d0/3, 1d0/30, -1d0/840 )
+    else
+       v = sqrt(vv)
+       sc = sin(v)/v
+       a = (cos(v) - sc)/vv
+    end if
 
-    J(1,2) = c*y*x/vv - s*y*x/v3
-    J(2,2) = c*y*y/vv - s*y*y/v3 + s/v
-    J(3,2) = c*y*z/vv - s*y*z/v3
-    J(4,2) = -s*y/v
+    J(1,1) = a * x*x + sc
+    J(2,1) = a * x*y
+    J(3,1) = a * x*z
+    J(4,1) = -sc*x
 
-    J(1,3) = c*x*z/vv - s*x*z/v3
-    J(2,3) = c*y*z/vv - s*y*z/v3
-    J(3,3) = c*z*z/vv - s*z*z/v3 + s/v
-    J(4,3) = -s*z/v
+    J(1,2) = a * x*y
+    J(2,2) = a * y*y + sc
+    J(3,2) = a * y*z
+    J(4,2) = -sc*y
+
+    J(1,3) = a * x*z
+    J(2,3) = a * y*z
+    J(3,3) = a * z*z + sc
+    J(4,3) = -sc*z
   end subroutine aa_tf_qjpexp
 
   subroutine aa_tf_qdpexpj( e, de, dq ) &
