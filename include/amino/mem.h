@@ -378,26 +378,31 @@ typedef struct aa_mem_rlist {
  * All nodes in the rlist will also come from the same region
  * You can free all nodes by popping the list itself from the region
  */
-struct aa_mem_rlist *aa_mem_rlist_alloc( struct aa_mem_region *reg );
+AA_API struct aa_mem_rlist *
+aa_mem_rlist_alloc( struct aa_mem_region *reg );
 
 /** Push a copy of data at p to the front of the list */
-void aa_mem_rlist_push_cpy( struct aa_mem_rlist *list, void *p, size_t n );
+AA_API void
+aa_mem_rlist_push_cpy( struct aa_mem_rlist *list, void *p, size_t n );
 
 /** Push the pointer p to the front of the list */
-void aa_mem_rlist_push_ptr( struct aa_mem_rlist *list, void *p );
+AA_API void
+aa_mem_rlist_push_ptr( struct aa_mem_rlist *list, void *p );
 
 /** Enqueue a copy of data at p at the back of the list */
-void aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n );
+AA_API void
+aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n );
 
 /** Enqueue a the pointer p at the back of the list */
-void aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p );
+AA_API void
+aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p );
 
 /** Remove front element of the list and return its data pointer.
  *
  * Note, this does not release any memory from the list's underlying
  * region.
  */
-void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
+AA_API void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
 
 #define AA_RLIST_DEF( element_type, list_type )                  \
     typedef struct {                                             \
