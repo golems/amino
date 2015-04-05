@@ -40,6 +40,7 @@
 
 (in-package :amino)
 
+;;; Libraries ;;;
 
 (define-foreign-library libblas
   (:unix "libblas.so")
@@ -93,6 +94,7 @@
 ;;   - Include the inc-FOO or ld-FOO params in the arglist
 ;; - SIZES: (or (:length var) (:rows var) (:cols var))
 ;;   - automatically get these size vars and check validity
+
 
 
 ;;; CALL BY REFERENCING ;;;
@@ -149,6 +151,19 @@
         (transpose-t 'transpose-t))
       type))
 
+(defmacro with-dynamic-vector-foreign ((pointer length) vector &body body)
+  "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY."
+  (with-gensyms (ptr-fun array-fun value data)
+    `(labels ((,ptr-fun (,pointer ,length) ,@body)
+              (,array-fun (,data)
+                (with-pointer-to-vector-data (,pointer ,data)
+                  (,ptr-fun ,pointer (length ,data)))))
+       (let ((,value ,vector))
+         (etypecase ,value
+           ((simple-array double-float (*))
+            (,array-fun ,value))
+           (real-array
+            (,array-fun (real-array-data ,value))))))))
 
 ;;; Foreign Binding ;;;
 
