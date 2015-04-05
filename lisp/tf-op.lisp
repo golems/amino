@@ -46,6 +46,7 @@
 
 (defmethod rotation ((x quaternion-translation))
   (quaternion-translation-quaternion x))
+
 (defmethod translation ((x quaternion-translation))
   (quaternion-translation-translation x))
 
@@ -95,6 +96,24 @@
 (defmethod quaternion ((x z-angle))
   (tf-zangle2quat (principal-angle-value x)))
 
+;;; Translation
+
+(defgeneric vec3 (x))
+
+(defmethod vec3 ((x vec3))
+  x)
+
+(defmethod vec3 ((x array))
+  (check-type x (array t (3)))
+  (vec3* (aref x 0)
+         (aref x 1)
+         (aref x 2)))
+
+(defmethod vec3 ((x list))
+  (vec3* (elt x 0)
+         (elt x 1)
+         (elt x 2)))
+
 ;;; Euler
 
 (defmethod euler-zyx ((x (eql nil)))
@@ -119,9 +138,9 @@
               0d0))
 
 (defmethod euler-zyx ((x z-angle))
-  (euler-zyx (z-angle-value x)
-             0d0
-             0d0))
+  (euler-zyx*  (z-angle-value x)
+               0d0
+               0d0))
 
 ;;; Dual-Quaternion
 (defmethod dual-quaternion ((x dual-quaternion)) x)
@@ -165,7 +184,7 @@
 (defmethod quaternion-translation ((x array))
   (check-type x (array double-float (7)))
   (make-quaternion-translation :quaternion (make-quaternion :data (subseq x 0 4))
-                               :translation (vec3 (aref x 4) (aref x 5) (aref x 6))))
+                               :translation (vec3* (aref x 4) (aref x 5) (aref x 6))))
 
 
 (defmethod quaternion-translation ((x (eql nil)))
@@ -179,6 +198,7 @@
 (defmethod quaternion-translation-2 ((r quaternion) (x vec3))
   (make-quaternion-translation :quaternion r
                                :translation x))
+
 
 (defmethod quaternion-translation-2 ((r principal-angle) (x vec3))
   (make-quaternion-translation :quaternion (quaternion r)
@@ -199,18 +219,19 @@
 (defmethod quaternion-translation-2 ((r array) (x array))
   (check-type x (array double-float (3)))
   (make-quaternion-translation :quaternion (quaternion r)
-                               :translation (vec3 (aref x 0)
-                                                  (aref x 1)
-                                                  (aref x 2))))
+                               :translation (vec3* (aref x 0)
+                                                   (aref x 1)
+                                                   (aref x 2))))
+
+
+(defmethod quaternion-translation-2 ((r (eql nil)) x)
+  (quaternion-translation-2 (vec 0 0 0 1) x))
+
+(defmethod quaternion-translation-2 (r (x (eql nil)))
+  (quaternion-translation-2 r (vec3* 0 0 0)))
 
 (defun tf (rotation translation)
-  (make-quaternion-translation :quaternion (quaternion rotation)
-                               :translation (etypecase translation
-                                              ((simple-array double-float (3))
-                                               (vec3 (aref translation 0)
-                                                     (aref translation 1)
-                                                     (aref translation 2)))
-                                              (vec3 translation))))
+  (quaternion-translation-2 rotation translation))
 
 (defmethod vec-array ((obj quaternion-translation) &optional (array (make-vec 7)) (start 0))
   (replace array (real-array-data (quaternion-translation-quaternion obj)) :start1 start)

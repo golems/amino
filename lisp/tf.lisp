@@ -45,7 +45,7 @@
 
 (defparameter +tf-duqu-ident+ (make-dual-quaternion :data (vec 0 0 0 1
                                                                0 0 0 0)))
-(defparameter +tf-vec-3-ident+ (vec3 0 0 0))
+(defparameter +tf-vec-3-ident+ (vec3* 0 0 0))
 
 ;;; Matrices
 
@@ -53,7 +53,7 @@
   (tf rotation-matrix-t)
   (p0 vector-3-t)
   (p1 vector-3-t))
-(defun tf-9 (tf p0 &optional (p1 (make-point3)))
+(defun tf-9 (tf p0 &optional (p1 (make-vec3)))
   (aa-tf-9 tf p0 p1)
   p1)
 
@@ -62,7 +62,7 @@
   (tf transformation-matrix-t)
   (p0 vector-3-t)
   (p1 vector-3-t))
-(defun tf-12 (tf p0 &optional (p1 (make-point3)))
+(defun tf-12 (tf p0 &optional (p1 (make-vec3)))
   (aa-tf-12 tf p0 p1)
   p1)
 
@@ -156,7 +156,7 @@
   (q quaternion-t)
   (p0 vector-3-t)
   (p1 vector-3-t))
-(defun tf-qrot (q p0 &optional (p1 (make-point3)))
+(defun tf-qrot (q p0 &optional (p1 (make-vec3)))
   "Quaternion spherical linear interpolation"
   (aa-tf-qrot q p0 p1)
   p1)
@@ -302,7 +302,7 @@
 (defcfun aa-tf-duqu-trans :void
   (d dual-quaternion-t)
   (x vector-3-t))
-(defun tf-duqu-trans (d &optional (x (make-point3)))
+(defun tf-duqu-trans (d &optional (x (make-vec3)))
   "Extract dual quaternion translation"
   (aa-tf-duqu-trans d x)
   x)

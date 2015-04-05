@@ -131,7 +131,7 @@
 ;; or should this just be an array deftype?
 (defstruct (vec3 (:include real-array
                            (data (make-vec 3) :type  (simple-array double-float (3))))))
-(defun vec3 (x y z)
+(defun vec3* (x y z)
   (make-vec3 :data (vec x y z)))
 
 (defun vec3-ref (vec i) (aref (vec3-data vec) i))
