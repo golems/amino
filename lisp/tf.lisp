@@ -246,6 +246,15 @@
   (aa-tf-quat2rotvec q r)
   r)
 
+
+(defcfun aa-tf-quat2axang :void
+  (q quaternion-t)
+  (r axis-angle-t))
+(defun tf-quat2axang (q &optional (a (make-axis-angle)))
+  "Convert quaternion to rotation matrix"
+  (aa-tf-quat2axang q a)
+  a)
+
 (defcfun aa-tf-xangle2quat :void
   (theta :double)
   (r quaternion-t))

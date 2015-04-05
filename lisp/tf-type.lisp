@@ -151,7 +151,7 @@
 (defstruct (axis-angle (:include real-array
                                  (data (make-vec 4) :type  (simple-array double-float (4))))))
 
-(defun axis-angle (x y z theta)
+(defun axis-angle* (x y z theta)
   (let ((n (sqrt (+ (* x x) (* y y) (* z z)))))
     (make-axis-angle :data (vec (/ x n) (/ y n) (/ z n) theta))))
 
