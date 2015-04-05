@@ -42,6 +42,7 @@
   (:export
    ;; General types
    :vec
+   :make-vec
    ;; TF Types
    :vec3 :vec3*
    :axis-angle :axis-angle*
