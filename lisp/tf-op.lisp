@@ -105,6 +105,14 @@
 (defmethod axis-angle ((x quaternion))
   (tf-quat2axang x))
 
+
+(defmethod axis-angle ((x x-angle))
+  (axis-angle* 1 0 0 (principal-angle-value x)))
+(defmethod axis-angle ((x y-angle))
+  (axis-angle* 0 1 0 (principal-angle-value x)))
+(defmethod axis-angle ((x z-angle))
+  (axis-angle* 0 0 1 (principal-angle-value x)))
+
 ;;; Translation
 
 (defgeneric vec3 (x))
