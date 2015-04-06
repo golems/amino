@@ -78,15 +78,10 @@
 (defstruct real-array
   (data nil :type  (simple-array double-float (*))))
 
-(defstruct (matrix (:constructor %make-matrix)
+(defstruct (matrix (:include real-array)
+                   (:constructor %make-matrix)
                    (:conc-name %matrix-))
   "Descriptor for a matrix following LAPACK conventions."
-  (data nil :type (or (simple-array double-float (*))
-                      (simple-array float (*))
-                      (simple-array fixnum (*))
-                      (simple-array (signed-byte 32) (*))
-                      (simple-array (signed-byte 64) (*))
-                      (simple-array t (*))))
   (offset 0 :type (integer 0 #.most-positive-fixnum))
   (stride 0 :type (integer 1 #.most-positive-fixnum))
   (cols 0 :type (integer 1 #.most-positive-fixnum))
@@ -110,25 +105,25 @@
 (defun matrix-data (m)
   (etypecase m
     ((simple-array * (*))  m)
+    (matrix (%matrix-data m))
     (real-array (real-array-data m))
     (list (map-into (make-array (length m) :element-type 'double-float)
                     (lambda (k) (coerce k 'double-float))
-                    m))
-    (matrix (%matrix-data m))))
+                    m))))
 
 (defun matrix-offset (m)
   (etypecase m
     ((simple-array * (*))  0)
     (list 0)
-    (real-array 0)
-    (matrix (%matrix-offset m))))
+    (matrix (%matrix-offset m))
+    (real-array 0)))
 
 (defun matrix-stride (m)
   (etypecase m
     ((simple-array * (*))  (length m))
+    (matrix (%matrix-stride m))
     (real-array (length (real-array-data m)))
-    (list (length m))
-    (matrix (%matrix-stride m))))
+    (list (length m))))
 
 (defun matrix-rows (m)
   (etypecase m
@@ -219,14 +214,13 @@
         (m (length (car cols))))
     (let ((matrix (make-matrix m n)))
       (loop
-         with type = (matrix-type matrix)
          for col in cols
          for j from 0
          do (loop
                for x in col
                for i from 0
                do (setf (matref matrix i j)
-                        (coerce x type))))
+                        (coerce x 'double-float))))
       matrix)))
 
 (defun matrix-copy (matrix &optional

@@ -135,6 +135,47 @@
            (real-array
             (,array-fun (real-array-data ,value))))))))
 
+;; (defmacro with-foreign-vector ((pointer increment length) vector &body body)
+;;   "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY."
+;;   (with-gensyms (ptr-fun array-fun value data)
+;;     `(labels ((,ptr-fun (,pointer ,increment ,length) ,@body)
+;;               (,array-fun (,data ,increment)
+;;                 (with-pointer-to-vector-data (,pointer ,data)
+;;                   (,ptr-fun ,pointer (length ,data)))))
+;;        (let ((,value ,vector))
+;;          (etypecase ,value
+;;            ((simple-array double-float (*))
+;;             (,array-fun ,value 1))
+;;            (real-array
+;;             (,array-fun (real-array-data ,value 1))))))))
+
+
+(defmacro with-foreign-matrix ((pointer stride rows columns) matrix
+                               &body body)
+  (with-gensyms (ptr-fun vector-fun value data offset)
+    `(labels ((,ptr-fun (,pointer ,stride ,rows ,columns) ,@body)
+              (,vector-fun (,data)
+                (with-pointer-to-vector-data (,pointer ,data)
+                  (,ptr-fun ,pointer (length ,data) (length ,data) 1))))
+     (let ((,value ,matrix))
+       (etypecase ,value
+         (matrix
+          (let ((,data (matrix-data ,value))
+                (,offset (matrix-offset ,value))
+                (,stride (matrix-stride ,value))
+                (,rows (matrix-rows ,value))
+                (,columns (matrix-cols ,value)))
+            (unless (matrix-counts-in-bounds-p
+                     (length ,data) ,offset ,stride ,rows ,columns)
+              (matrix-storage-error "Argument ~A is out of bounds" ',matrix))
+            (with-pointer-to-vector-data (,pointer ,data)
+              (,ptr-fun (mem-aptr ,pointer :double ,offset)
+                        ,stride ,rows ,columns))))
+         ((simple-array double-float (*))
+          (,vector-fun ,value))
+         (real-array
+          (,vector-fun (real-array-data ,value))))))))
+
 ;;; Foreign Binding ;;;
 
 (defun prefix-gensym (prefix var)
@@ -315,7 +356,7 @@
    'progn
    (loop
       with strname = (string name)
-      for prefix in '(s d)
+      for prefix in '(d) ;'(s d)
       for strprefix = (string-downcase (string prefix))
       for prefix-type = (ecase prefix
                           (d :double)
