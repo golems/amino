@@ -87,12 +87,12 @@ void allocator() {
 
     /*--- Stats ---*/
     printf("Stats:\n"
-           "> start: 0x%x\n"
-           "> head:  0x%x\n"
+           "> start: 0x%lx\n"
+           "> head:  0x%lx\n"
            "> used:  %lu\n",
-           reg.node->d,
-           reg.head,
-           reg.head - reg.node->d
+           (intptr_t)reg.node->d,
+           (intptr_t)reg.head,
+           (intptr_t)reg.head - (intptr_t)reg.node->d
         );
 
 
