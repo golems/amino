@@ -43,34 +43,65 @@
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 1 BLAS ;;;
 ;;;;;;;;;;;;;;;;;;;;
-(def-blas scal :void
-  (n blas-size-t (:length x))
-  (alpha :float)
-  (x :vector :inout))
 
-(def-blas axpy :void
-  (n blas-size-t (:length x) (:length y))
-  (alpha :float)
-  (x :vector)
-  (y :vector :inout))
+;;; scal
+(def-blas-cfun ("dscal_" blas-dscal) :void
+  (n blas-size-t)
+  (alpha :double)
+  (x :vector))
 
-(def-blas dot :float
-  (n blas-size-t (:length x) (:length y))
+(defun dscal (alpha x)
+  (with-foreign-vector (x inc-x n) x :inout
+    (blas-dscal n alpha x inc-x)))
+
+;;; axpy
+(def-blas-cfun ("daxpy_" blas-daxpy) :void
+  (n blas-size-t)
+  (alpha :double)
   (x :vector)
   (y :vector))
 
-(def-blas nrm2 :float
-  (n blas-size-t (:length x))
+(defun daxpy (alpha x y)
+  (with-foreign-vector (x inc-x n-x) x :input
+    (with-foreign-vector (y inc-y n-y) y :inout
+      (check-matrix-dimensions n-x n-y)
+      (blas-daxpy n-x alpha x inc-x y inc-y))))
+
+;;; dot
+(def-blas-cfun ("ddot_" blas-ddot) :double
+  (n blas-size-t)
+  (x :vector)
+  (y :vector))
+
+(defun ddot (x y)
+  (with-foreign-vector (x inc-x n-x) x :input
+    (with-foreign-vector (y inc-y n-y) y :input
+      (check-matrix-dimensions n-x n-y)
+      (blas-ddot n-x x inc-x y inc-y))))
+
+;;; nrm2
+(def-blas-cfun ("dnrm2_" blas-dnrm2) :double
+  (n blas-size-t)
   (x :vector))
 
-(def-blas asum :float
-  (n blas-size-t (:length x))
+(defun dnrm2 (x)
+  (with-foreign-vector (x inc-x n) x :input
+    (blas-dnrm2 n x inc-x)))
+
+;;; asum
+(def-blas-cfun ("dasum_" blas-dasum) :double
+  (n blas-size-t)
   (x :vector))
+
+(defun dasum (x)
+  (with-foreign-vector (x inc-x n) x :input
+    (blas-dasum n x inc-x)))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 2 BLAS ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
+;;; gemv
 (def-blas-cfun ("dgemv_" blas-dgemv) :void
   (trans transpose-t)
   (m blas-size-t)
@@ -82,9 +113,9 @@
   (y :vector))
 
 (defun dgemv (alpha a x beta y &key transpose)
-  (with-foreign-matrix (a ld-a m n) a
-    (with-foreign-vector (x inc-x n-x) x
-      (with-foreign-vector (y inc-y n-y) y
+  (with-foreign-matrix (a ld-a m n) a :input
+    (with-foreign-vector (x inc-x n-x) x :input
+      (with-foreign-vector (y inc-y n-y) y :inout
         (check-matrix-dimensions m n-y)
         (check-matrix-dimensions n n-x)
         (blas-dgemv transpose m n
