@@ -62,7 +62,6 @@
               "libamino_xerbla_nop.so"))
   (t (:default "libamino_xerbla_nop")))
 
-
 (defctype blas-size-t :int)
 (defctype transpose-t :uint8)
 
@@ -96,40 +95,11 @@
 ;;   - automatically get these size vars and check validity
 
 
-
-;;; CALL BY REFERENCING ;;;
-
-(defmacro with-reference ((var value type) &body body)
-  (with-gensyms (ptr)
-    `(let ((,ptr ,value))
-       (cffi:with-foreign-object (,var ',type)
-         (setf (cffi:mem-ref ,var ',type) ,ptr)
-         ,@body))))
-
-(defmacro def-ref-type (name value-type)
-  `(progn
-     (define-foreign-type ,name ()
-       ()
-       (:simple-parser ,name)
-       (:actual-type :pointer))
-     (defmethod expand-to-foreign-dyn (value var body (type ,name))
-       (append (list 'with-reference (list var value ',value-type))
-                     body))))
-
-(def-ref-type int-ref-t :int)
-(def-ref-type double-ref-t :double)
-(def-ref-type float-ref-t :float)
-(def-ref-type size-ref-t size-t)
+;;;;;;;;;;;;;;;;;;
+;;; BLAS TYPES ;;;
+;;;;;;;;;;;;;;;;;;
 (def-ref-type blas-size-ref-t blas-size-t)
 
-(define-foreign-type foreign-array-t ()
-  ()
-  (:simple-parser foreign-array-t)
-  (:actual-type :pointer))
-
-(defmethod expand-to-foreign-dyn (value var body (type foreign-array-t))
-  `(with-pointer-to-vector-data (,var ,value)
-     ,@body))
 
 (define-foreign-type transpose-t ()
   ()
@@ -191,6 +161,8 @@
 
 (defun var-sym (alist name thing)
   (cdr (assoc (cons name thing) alist :test #'equal)))
+
+
 
 (defun bind-counts (var-alist var type body)
   (let ((data (var-sym var-alist var :data))

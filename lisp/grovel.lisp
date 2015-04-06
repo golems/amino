@@ -38,5 +38,5 @@
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
 (progn
-  (in-package :amino)
+  (in-package :amino-ffi)
   (ctype size-t "size_t"))

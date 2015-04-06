@@ -1,27 +1,30 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2013, Georgia Tech Research Corporation
+;;;; Copyright (c) 2012, Georgia Tech Research Corporation
+;;;; Copyright (c) 2015, Rice University
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
 ;;;; Georgia Tech Humanoid Robotics Lab
 ;;;; Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
 ;;;;
-;;;;
 ;;;; This file is provided under the following "BSD-style" License:
-;;;;
 ;;;;
 ;;;;   Redistribution and use in source and binary forms, with or
 ;;;;   without modification, are permitted provided that the following
 ;;;;   conditions are met:
 ;;;;
-;;;;   * Redistributions of source code must retain the above copyright
-;;;;     notice, this list of conditions and the following disclaimer.
-;;;;
+;;;;   * Redistributions of source code must retain the above
+;;;;     copyright notice, this list of conditions and the following
+;;;;     disclaimer.
 ;;;;   * Redistributions in binary form must reproduce the above
 ;;;;     copyright notice, this list of conditions and the following
-;;;;     disclaimer in the documentation and/or other materials provided
-;;;;     with the distribution.
+;;;;     disclaimer in the documentation and/or other materials
+;;;;     provided with the distribution.
+;;;;   * Neither the name of copyright holder the names of its
+;;;;     contributors may be used to endorse or promote products
+;;;;     derived from this software without specific prior written
+;;;;     permission.
 ;;;;
 ;;;;   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
 ;;;;   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -37,42 +40,18 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(defpackage :amino-ffi
-  (:use :cl :cffi :alexandria)
-  (:export
-   ;; macros
-   :def-ref-type
+(in-package :amino)
 
-   ;; foreign types
-   :foreign-array-t
-   :size-t :transpose-t
-   :int-ref-t :double-ref-t :float-ref-t :size-ref-t :blas-size-ref-t))
+;;; Array Type ;;;
 
-(defpackage :amino
-  (:use :cl :cffi :alexandria :amino-ffi)
-  (:export
-   ;; General types
-   :vec
-   :make-vec
-   ;; TF Types
-   :vec3 :vec3*
-   :axis-angle :axis-angle*
-   :quaternion :quaternion* :quaternion-x :quaternion-y :quaternion-z :quaternion-w
-   :rotation-matrix
-   :euler-zyx :euler-zyx*
-   :dual-quaternion :quaternion-translation :transformation-matrix
-   :dual-quaternion-2 :quaternion-translation-2 :transformation-matrix-2
-   :x-angle :y-angle :z-angle
-   :tf
-   :translation
-   :rotation
-   ;; CFFI Translated types
-   ;; Generics
-   :transform
-   :g*
-   :matrix->list
-   :inverse
-   ;; Misc
-   :parse-float
-   )
-  (:nicknames :aa))
+
+;; A non-block variable-sized vector
+(define-foreign-type dynamic-vector-t ()
+  ()
+  (:simple-parser dynamic-vector-t)
+  (:actual-type :pointer))
+
+(define-foreign-type dynamic-vector-size-t ()
+  ()
+  (:simple-parser dynamic-vector-t)
+  (:actual-type size-t))
