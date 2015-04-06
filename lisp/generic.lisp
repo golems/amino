@@ -69,16 +69,6 @@
   (/ a b))
 
 
-;; Scalar-Vector
-(defmethod g* ((a number) (b simple-array))
-  (ecase (array-element-type b)
-    (double-float (dscal (coerce a 'double-float) (vec-copy b)))))
-
-(defmethod g* ((a simple-array) (b number))
-  (g* b a))
-
-
-
 ;; Vector-Vector
 (defmethod g- ((a simple-array) (b simple-array))
   (etypecase a

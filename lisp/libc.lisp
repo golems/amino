@@ -37,75 +37,7 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-
 (in-package :amino)
-
-
-;;;;;;;;;;;;;;;;;;;;
-;;; LEVEL 1 BLAS ;;;
-;;;;;;;;;;;;;;;;;;;;
-(def-blas scal :void
-  (n blas-size-t (:length x))
-  (alpha :float)
-  (x :vector :inout))
-
-(def-blas axpy :void
-  (n blas-size-t (:length x) (:length y))
-  (alpha :float)
-  (x :vector)
-  (y :vector :inout))
-
-(def-blas dot :float
-  (n blas-size-t (:length x) (:length y))
-  (x :vector)
-  (y :vector))
-
-(def-blas nrm2 :float
-  (n blas-size-t (:length x))
-  (x :vector))
-
-(def-blas asum :float
-  (n blas-size-t (:length x))
-  (x :vector))
-
-;;;;;;;;;;;;;;;;;;;;
-;;; LEVEL 2 BLAS ;;;
-;;;;;;;;;;;;;;;;;;;;
-
-(def-blas-cfun ("dgemv_" blas-dgemv) :void
-  (trans transpose-t)
-  (m blas-size-t)
-  (n blas-size-t)
-  (alpha :double)
-  (a :matrix)
-  (x :vector)
-  (beta :double)
-  (y :vector))
-
-(defun dgemv (alpha a x beta y &key transpose)
-  (with-foreign-matrix (a ld-a m n) a
-    (with-foreign-vector (x inc-x n-x) x
-      (with-foreign-vector (y inc-y n-y) y
-        (check-matrix-dimensions m n-y)
-        (check-matrix-dimensions n n-x)
-        (blas-dgemv transpose m n
-                    alpha a ld-a
-                    x inc-x
-                    beta y inc-y)))))
-
-;;;;;;;;;;;;;;;;;;;;
-;;; LEVEL 3 BLAS ;;;
-;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;
-;;; AMINO ;;;
-;;;;;;;;;;;;;
-
-(def-la ("aa_la_d_angle" d-angle) :double
-  (n size-t (:length x) (:length y))
-  (x :vector)
-  (y :vector))
 
 
 ;;;;;;;;;;;;;
