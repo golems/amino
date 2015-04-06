@@ -42,11 +42,12 @@
   (:export
    ;; macros
    :def-ref-type
+   :with-reference
 
    ;; foreign types
    :foreign-array-t
    :size-t :transpose-t
-   :int-ref-t :double-ref-t :float-ref-t :size-ref-t :blas-size-ref-t))
+   :int-ref-t :double-ref-t :float-ref-t :size-ref-t :char-ref-t :blas-size-ref-t))
 
 (defpackage :amino
   (:use :cl :cffi :alexandria :amino-ffi)

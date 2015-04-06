@@ -103,6 +103,10 @@
 (defmethod matrix->list ((matrix real-array))
   (matrix->list (real-array-data matrix)))
 
+;;;;;;;;;;;;;;;;;;;;;
+;;; MATRIX-VECTOR ;;;
+;;;;;;;;;;;;;;;;;;;;;
+
 ;; Misc
 (defmethod dot-product (a b))
 

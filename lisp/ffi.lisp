@@ -38,88 +38,47 @@
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
 
-(in-package :amino)
+(in-package :amino-ffi)
 
 
-;;;;;;;;;;;;;;;;;;;;
-;;; LEVEL 1 BLAS ;;;
-;;;;;;;;;;;;;;;;;;;;
-(def-blas scal :void
-  (n blas-size-t (:length x))
-  (alpha :float)
-  (x :vector :inout))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; CALL BY REFERENCING ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def-blas axpy :void
-  (n blas-size-t (:length x) (:length y))
-  (alpha :float)
-  (x :vector)
-  (y :vector :inout))
+(defmacro with-reference ((var value type) &body body)
+  (with-gensyms (ptr)
+    `(let ((,ptr ,value))
+       (cffi:with-foreign-object (,var ',type)
+         (setf (cffi:mem-ref ,var ',type) ,ptr)
+         ,@body))))
 
-(def-blas dot :float
-  (n blas-size-t (:length x) (:length y))
-  (x :vector)
-  (y :vector))
+(defmacro def-ref-type (name value-type)
+  `(progn
+     (define-foreign-type ,name ()
+       ()
+       (:simple-parser ,name)
+       (:actual-type :pointer))
+     (defmethod expand-to-foreign-dyn (value var body (type ,name))
+       (append (list 'with-reference (list var value ',value-type))
+                     body))))
 
-(def-blas nrm2 :float
-  (n blas-size-t (:length x))
-  (x :vector))
-
-(def-blas asum :float
-  (n blas-size-t (:length x))
-  (x :vector))
-
-;;;;;;;;;;;;;;;;;;;;
-;;; LEVEL 2 BLAS ;;;
-;;;;;;;;;;;;;;;;;;;;
-
-(def-blas-cfun ("dgemv_" blas-dgemv) :void
-  (trans transpose-t)
-  (m blas-size-t)
-  (n blas-size-t)
-  (alpha :double)
-  (a :matrix)
-  (x :vector)
-  (beta :double)
-  (y :vector))
-
-(defun dgemv (alpha a x beta y &key transpose)
-  (with-foreign-matrix (a ld-a m n) a
-    (with-foreign-vector (x inc-x n-x) x
-      (with-foreign-vector (y inc-y n-y) y
-        (check-matrix-dimensions m n-y)
-        (check-matrix-dimensions n n-x)
-        (blas-dgemv transpose m n
-                    alpha a ld-a
-                    x inc-x
-                    beta y inc-y)))))
-
-;;;;;;;;;;;;;;;;;;;;
-;;; LEVEL 3 BLAS ;;;
-;;;;;;;;;;;;;;;;;;;;
+(def-ref-type int-ref-t :int)
+(def-ref-type double-ref-t :double)
+(def-ref-type float-ref-t :float)
+(def-ref-type size-ref-t size-t)
+(def-ref-type char-ref-t :uint8)
 
 
-;;;;;;;;;;;;;
-;;; AMINO ;;;
-;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;
+;;; FOREIGN ARRAY ;;;
+;;;;;;;;;;;;;;;;;;;;;
 
-(def-la ("aa_la_d_angle" d-angle) :double
-  (n size-t (:length x) (:length y))
-  (x :vector)
-  (y :vector))
+;; an un-offset foreign array
+(define-foreign-type foreign-array-t ()
+  ()
+  (:simple-parser foreign-array-t)
+  (:actual-type :pointer))
 
-
-;;;;;;;;;;;;;
-;;; LIBC  ;;;
-;;;;;;;;;;;;;
-
-(defcfun atof :double
-  (nptr :string))
-
-(defun parse-float (string)
-  (atof string))
-
-;; (defcfun "aa_la_d_angle" :double
-;;   (x :pointer)
-;;   (incx size-t)
-;;   (y :pointer)
-;;   (yinc size-t))
+(defmethod expand-to-foreign-dyn (value var body (type foreign-array-t))
+  `(with-pointer-to-vector-data (,var ,value)
+     ,@body))

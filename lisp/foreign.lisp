@@ -63,7 +63,6 @@
   (t (:default "libamino_xerbla_nop")))
 
 (defctype blas-size-t :int)
-(defctype transpose-t :uint8)
 
 (use-foreign-library libblas)
 (use-foreign-library liblapack)
@@ -94,16 +93,24 @@
 ;; - SIZES: (or (:length var) (:rows var) (:cols var))
 ;;   - automatically get these size vars and check validity
 
+(defun check-matrix-bounds (data offset stride rows columns)
+  (unless (matrix-counts-in-bounds-p (length data) offset stride rows columns)
+    (matrix-storage-error "Matrix is out of bounds")))
+
+
+(defun check-matrix-dimensions (&rest dimensions)
+  ;(declare (dynamic-extent dimensions))
+  (unless (apply #'= dimensions)
+    (matrix-dimension-error "Mismatched matrix dimensions")))
 
 ;;;;;;;;;;;;;;;;;;
 ;;; BLAS TYPES ;;;
 ;;;;;;;;;;;;;;;;;;
 (def-ref-type blas-size-ref-t blas-size-t)
 
-
 (define-foreign-type transpose-t ()
   ()
-  (:simple-parser transpose-array-t)
+  (:simple-parser transpose-t)
   (:actual-type :pointer))
 
 (defmethod expand-to-foreign-dyn (value var body (type transpose-t))
@@ -135,20 +142,36 @@
            (real-array
             (,array-fun (real-array-data ,value))))))))
 
-;; (defmacro with-foreign-vector ((pointer increment length) vector &body body)
-;;   "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY."
-;;   (with-gensyms (ptr-fun array-fun value data)
-;;     `(labels ((,ptr-fun (,pointer ,increment ,length) ,@body)
-;;               (,array-fun (,data ,increment)
-;;                 (with-pointer-to-vector-data (,pointer ,data)
-;;                   (,ptr-fun ,pointer (length ,data)))))
-;;        (let ((,value ,vector))
-;;          (etypecase ,value
-;;            ((simple-array double-float (*))
-;;             (,array-fun ,value 1))
-;;            (real-array
-;;             (,array-fun (real-array-data ,value 1))))))))
 
+(defmacro with-foreign-vector ((pointer increment length) vector &body body)
+  "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY."
+  (with-gensyms (ptr-fun array-offset-fun array-fun value data offset stride rows columns)
+    `(labels ((,ptr-fun (,pointer ,increment ,length) ,@body)
+              (,array-offset-fun (,data ,offset ,increment ,length)
+                (with-pointer-to-vector-data (,pointer ,data)
+                  (,ptr-fun (mem-aptr ,pointer :double ,offset)
+                            ,increment ,length)))
+              (,array-fun (,data)
+                (with-pointer-to-vector-data (,pointer ,data)
+                  (,ptr-fun ,pointer 1 (length ,data)))))
+       (let ((,value ,vector))
+         (etypecase ,value
+           (matrix
+            (let ((,data (matrix-data ,value))
+                  (,offset (matrix-offset ,value))
+                  (,stride (matrix-stride ,value))
+                  (,rows (matrix-rows ,value))
+                  (,columns (matrix-cols ,value)))
+              (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
+              (cond ((= 1 ,columns)
+                     (,array-offset-fun ,data ,offset 1 ,rows))
+                    ((= 1 ,rows)
+                     (,array-offset-fun ,data ,stride ,offset ,columns))
+                    (t (matrix-storage-error "Matrix ~A is not a vector" ',vector)))))
+           ((simple-array double-float (*))
+            (,array-fun ,value))
+           (real-array
+            (,array-fun (real-array-data ,value))))))))
 
 (defmacro with-foreign-matrix ((pointer stride rows columns) matrix
                                &body body)
@@ -165,9 +188,7 @@
                 (,stride (matrix-stride ,value))
                 (,rows (matrix-rows ,value))
                 (,columns (matrix-cols ,value)))
-            (unless (matrix-counts-in-bounds-p
-                     (length ,data) ,offset ,stride ,rows ,columns)
-              (matrix-storage-error "Argument ~A is out of bounds" ',matrix))
+            (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
             (with-pointer-to-vector-data (,pointer ,data)
               (,ptr-fun (mem-aptr ,pointer :double ,offset)
                         ,stride ,rows ,columns))))
@@ -189,14 +210,25 @@
      (prefix-gensym "LD" var))))
 
 ;; Bind the C function
-(defmacro def-la-cfun ((c-name lisp-name &key by-reference) result-type &rest args)
+(defmacro def-la-cfun ((c-name lisp-name &key
+                               by-reference
+                               (size-type 'size-t)
+                               (pointer-type 'foreign-array-t))
+                        result-type &rest args)
   `(defcfun (,c-name ,lisp-name) ,result-type
      ,@(loop for (name type &rest checks) in args
           append (case type
                    ((:vector :matrix)
-                    `((,name foreign-array-t)
-                      (,(extra-arg-symbol name type) ,(ref-true-type 'size-t by-reference))))
+                    `((,name ,pointer-type)
+                      (,(extra-arg-symbol name type) ,(ref-true-type size-type by-reference))))
                    (otherwise (list (list name (ref-true-type type by-reference))))))))
+
+(defmacro def-blas-cfun ((name lisp-name) result-type &rest args)
+  `(def-la-cfun (,name ,lisp-name
+                       :by-reference t :size-type blas-size-t :pointer-type :pointer)
+       ,result-type
+     ,@args))
+
 
 ;;; Wrapper Generation ;;;
 
@@ -342,9 +374,12 @@
             ((= 1 (length inout-args)) inout-args)
             (t (list (cons 'values inout-args))))))))
 
-(defmacro def-la ((c-name lisp-name &key by-reference) result-type &rest args)
+(defmacro def-la ((c-name lisp-name &key (size-type 'size-t) by-reference)
+                  result-type &rest args)
   (let ((c-lisp-name (gensym (string lisp-name))))
-    `(progn (def-la-cfun (,c-name ,c-lisp-name :by-reference ,by-reference) ,result-type
+    `(progn (def-la-cfun (,c-name ,c-lisp-name
+                                  :by-reference ,by-reference
+                                  :size-type ,size-type) ,result-type
               ,@args)
             (def-la-wrapper (,c-lisp-name ,lisp-name) ,result-type
               ,@args))))
@@ -371,7 +406,8 @@
         `(def-la (,(string-downcase (concatenate 'string strprefix strname "_"))
                    ,(intern (string-upcase (concatenate 'string strprefix strname))
                             (find-package (symbol-package name)))
-                   :by-reference t)
+                   :by-reference t
+                   :size-type blas-size-t)
              ,(case result-type
                     ((:float :double)
                      prefix-type)

@@ -74,6 +74,18 @@
   (error 'matrix-storage
          :message (apply #'format nil format args)))
 
+(define-condition matrix-dimension (error)
+  ((message
+    :initarg :message)))
+
+(defmethod print-object ((object matrix-dimension) stream)
+  (print-unreadable-object (object stream :type t :identity t)
+    (format stream ": ~A"
+            (slot-value object 'message))))
+
+(defun matrix-dimension-error (format &rest args)
+  (error 'matrix-storage
+         :message (apply #'format nil format args)))
 
 (defstruct real-array
   (data nil :type  (simple-array double-float (*))))
