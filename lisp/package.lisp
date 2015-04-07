@@ -100,6 +100,7 @@
    :translation
    :rotation
    :tf-tag
+   :tf-tag-parent :tf-tag-child :tf-tag-tf
    ;; Generics
    :transform
    :g*
