@@ -44,11 +44,12 @@
   :description "Basic utilities / numerics"
   :depends-on ("cffi")
   :components ((:file "package")
+               (:file "basic-type" :depends-on ("package"))
                ;; FFI
                (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
-               (:file "ffi" :depends-on ("grovel"))
+               (:file "ffi" :depends-on ("grovel" "basic-type"))
                ;; LA
-               (:file "type" :depends-on ("package"))
+               (:file "type" :depends-on ("basic-type"))
                (:file "foreign" :depends-on ("type" "ffi"))
                (:file "blas" :depends-on ("foreign"))
                (:file "libc" :depends-on ("foreign"))

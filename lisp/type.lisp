@@ -61,47 +61,6 @@
 (defconstant +z+ 2)
 (defconstant +w+ 3)
 
-(define-condition matrix-storage (error)
-  ((message
-    :initarg :message)))
-
-(defmethod print-object ((object matrix-storage) stream)
-  (print-unreadable-object (object stream :type t :identity t)
-    (format stream ": ~A"
-            (slot-value object 'message))))
-
-(defun matrix-storage-error (format &rest args)
-  (error 'matrix-storage
-         :message (apply #'format nil format args)))
-
-(define-condition matrix-dimension (error)
-  ((message
-    :initarg :message)))
-
-(defmethod print-object ((object matrix-dimension) stream)
-  (print-unreadable-object (object stream :type t :identity t)
-    (format stream ": ~A"
-            (slot-value object 'message))))
-
-(defun matrix-dimension-error (format &rest args)
-  (error 'matrix-storage
-         :message (apply #'format nil format args)))
-
-(defstruct real-array
-  (data nil :type  (simple-array double-float (*))))
-
-(defstruct (matrix (:include real-array)
-                   (:constructor %make-matrix)
-                   (:conc-name %matrix-))
-  "Descriptor for a matrix following LAPACK conventions."
-  (offset 0 :type (integer 0 #.most-positive-fixnum))
-  (stride 0 :type (integer 1 #.most-positive-fixnum))
-  (cols 0 :type (integer 1 #.most-positive-fixnum))
-  (rows 0 :type (integer 1 #.most-positive-fixnum)))
-
-
-(deftype double-matrix ()
-  `(or matrix list (simple-array double-float (*))))
 
 (defun make-matrix (m n)
   "Make a new matrix with M rows and N cols."
@@ -246,23 +205,6 @@
         (setf (matref copy i j)
               (matref matrix i j))))
     copy))
-
-
-(defun matrix-counts-in-bounds-p (data-length offset stride rows cols)
-  "Check if given counts are within array bounds."
-  (declare (type fixnum data-length offset stride rows cols))
-  (and (>= stride rows)
-       (<= (+ offset
-              (* stride cols))
-           data-length)))
-
-(defun matrix-in-bounds-p (matrix)
-  (matrix-counts-in-bounds-p (length (matrix-data matrix))
-                             (matrix-offset matrix)
-                             (matrix-stride matrix)
-                             (matrix-rows matrix)
-                             (matrix-cols matrix)))
-
 
 (declaim (inline matrix-block))
 (defun matrix-block (matrix i j m n)

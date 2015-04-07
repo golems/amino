@@ -37,20 +37,51 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(defpackage :amino-ffi
+(defpackage :amino-type
   (:use :cl :cffi :alexandria)
+  (:export
+   ;; real-array
+   :real-array
+   :make-real-array
+   :real-array-data
+   ;; matrix
+   :matrix
+   :%make-matrix
+   :%matrix-data
+   :%matrix-offset
+   :%matrix-stride
+   :%matrix-cols
+   :%matrix-rows
+   ;; conditions
+   :matrix-storage-error
+   :matrix-dimension-error
+   :check-matrix-bounds
+   :check-matrix-dimensions
+   ))
+
+
+(defpackage :amino-ffi
+  (:use :cl :cffi :alexandria :amino-type)
   (:export
    ;; macros
    :def-ref-type
    :with-reference
-
+   :with-foreign-matrix
+   :with-foreign-vector
+   :with-foreign-simple-vector
+   :def-la-cfun
+   :def-blas-cfun
    ;; foreign types
-   :foreign-array-t
-   :size-t :transpose-t
-   :int-ref-t :double-ref-t :float-ref-t :size-ref-t :char-ref-t :blas-size-ref-t))
+   :size-t
+   :int-ref-t :double-ref-t :float-ref-t :size-ref-t :char-ref-t
+   ;; BLAS
+   :blas-size-t :blas-size-ref-t
+   :def-blas-cfun
+   :transpose-t
+   ))
 
 (defpackage :amino
-  (:use :cl :cffi :alexandria :amino-ffi)
+  (:use :cl :cffi :alexandria :amino-type :amino-ffi)
   (:export
    ;; General types
    :vec
