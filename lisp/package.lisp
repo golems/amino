@@ -99,7 +99,7 @@
    :tf
    :translation
    :rotation
-   ;; CFFI Translated types
+   :tf-tag
    ;; Generics
    :transform
    :g*

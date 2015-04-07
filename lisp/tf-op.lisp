@@ -92,6 +92,11 @@
                (aref x 2)
                (aref x 3)))
 
+(defmethod quaternion ((x cons))
+  (unless (= 4 (length x))
+    (error "Invalid length for quaternion"))
+  (apply #'quaternion* x))
+
 (defmethod quaternion ((x x-angle))
   (tf-xangle2quat (principal-angle-value x)))
 (defmethod quaternion ((x y-angle))
@@ -122,6 +127,11 @@
 
 (defmethod vec3 ((x (eql nil)))
   (vec3* 0 0 0))
+
+(defmethod vec3 ((x cons))
+  (unless (= 3 (length x))
+    (error "Invalid length for vec3"))
+  (apply #'vec3* x))
 
 (defmethod vec3 ((x array))
   (check-type x (array t (3)))
@@ -330,6 +340,7 @@
     (quaternion-translation-2 qc vc)))
 
 
+;;; Tagged TFs
 
 (defmethod g* ((a tf-tag) (b tf-tag))
   (assert (eql (tf-tag-child a)

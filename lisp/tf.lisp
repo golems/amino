@@ -494,8 +494,3 @@
 
 (defun tf-translation (tf)
   (matrix-block tf 0 3 3 1))
-
-(defstruct tf-tag
-  tf
-  parent
-  child)

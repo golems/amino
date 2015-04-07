@@ -222,3 +222,9 @@
 (defstruct quaternion-translation
   (quaternion (make-quaternion) :type  quaternion)
   (translation (make-vec3) :type  vec3))
+
+
+(defstruct (tf-tag (:constructor tf-tag (parent tf child)))
+  parent
+  tf
+  child)
