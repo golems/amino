@@ -53,32 +53,6 @@
          (let ((,var (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
            ,@body)))))
 
-(defun expand-vector (value var body length)
-  "Get the data pointer for value, checking storage and size"
-  (with-gensyms (x ptr0 body-fun)
-    `(flet ((,body-fun (,var) ,@body))
-       (let ((,x ,value))
-         (etypecase ,x
-           (matrix
-            (if (matrix-vector-n-p ,x ,length 1)
-                ;; valid type
-                (with-pointer-to-vector-data (,ptr0 (matrix-data ,x))
-                  (,body-fun (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
-                ;; invalid type, throw error
-                (matrix-storage-error "Invalid matrix size or storage of ~D: ~A" ,length ,x)))
-           (real-array
-            (if (= ,length (length (real-array-data ,x)))
-                (with-pointer-to-vector-data (,ptr0 (real-array-data ,x))
-                  (,body-fun ,ptr0))
-                (matrix-storage-error "Invalid matrix size of ~D: ~A" ,length ,x)))
-           ((simple-array double-float (*))
-            (if (= (length ,x) ,length)
-                ;; valid type
-                (with-pointer-to-vector-data (,ptr0 ,x)
-                  (,body-fun ,ptr0))
-                ;; invalid type
-                (matrix-storage-error "Invalid matrix size of ~D: ~A" ,length ,x))))))))
-
 ;;; Transformation Matrix
 (defun transformation-matrix-p (x)
   (and (= 3 (matrix-rows x))
@@ -145,7 +119,7 @@
   (:simple-parser vector-3-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type vector-3-t))
-  (expand-vector value var body 3))
+  `(with-foreign-fixed-vector ,var ,value 3 :input ,@body))
 
 ;;; Axis-Angle
 (defstruct (axis-angle (:include real-array
@@ -161,7 +135,7 @@
   (:simple-parser axis-angle-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type axis-angle-t))
-  (expand-vector value var body 4))
+  `(with-foreign-fixed-vector ,var ,value 4 :input ,@body))
 
 
 ;;; Quaternion
@@ -184,7 +158,7 @@
   (:simple-parser quaternion-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
-  (expand-vector value var body 4))
+  `(with-foreign-fixed-vector ,var ,value 4 :input ,@body))
 
 ;; Rotation Vector
 (defstruct (rotation-vector (:include vec3)))
@@ -197,7 +171,7 @@
   (:simple-parser rotation-vector-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type rotation-vector-t))
-  (expand-vector value var body 3))
+  `(with-foreign-fixed-vector ,var ,value 3 :input ,@body))
 
 
 ;; Principal Angle
@@ -231,7 +205,7 @@
   (:simple-parser euler-zyx-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type euler-zyx-t))
-  (expand-vector value var body 3))
+  `(with-foreign-fixed-vector ,var ,value 3 :input ,@body))
 
 ;;; Dual Quaternion
 (defstruct (dual-quaternion (:include real-array
@@ -242,7 +216,7 @@
   (:simple-parser dual-quaternion-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type dual-quaternion-t))
-  (expand-vector value var body 8))
+  `(with-foreign-fixed-vector ,var ,value 8 :input ,@body))
 
 ;;; Implicit dual quaternion
 (defstruct quaternion-translation

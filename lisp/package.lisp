@@ -69,6 +69,7 @@
    :with-foreign-matrix
    :with-foreign-vector
    :with-foreign-simple-vector
+   :with-foreign-fixed-vector
    :def-la-cfun
    :def-blas-cfun
    ;; foreign types

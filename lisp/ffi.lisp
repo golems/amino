@@ -134,6 +134,21 @@ INTENT: One of (or :input :output :inout). When value
        (unless (= 1 ,increment) (matrix-storage-error "Not a simple vector"))
        ,@body)))
 
+(defmacro with-foreign-fixed-vector (pointer vector fixed-length intent &body body)
+  "Bind POINTER corresponding values of VECTOR, then evaluate BODY.
+
+VECTOR must have an increment of 1 and be of the given fixed length.
+
+INTENT: One of (or :input :output :inout). When value
+        is (or :output :inout), return the vector after evaluating
+        BODY.
+"
+  (with-gensyms (actual-length)
+    `(with-foreign-simple-vector (,pointer ,actual-length) ,vector ,intent
+       (unless (= ,actual-length ,fixed-length)
+         (matrix-storage-error "Wrong vector size"))
+       ,@body)))
+
 (defmacro with-foreign-matrix ((pointer stride rows columns) matrix intent
                                &body body)
 "Evaluate BODY with matrix pointer and counts bound to POINTER, STRIDE, ROWS, and COLUNMS.
