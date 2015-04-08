@@ -230,43 +230,74 @@
   child)
 
 
-;;; TF Tree
+;;;;;;;;;;;;;;;
+;;; TF Tree ;;;
+;;;;;;;;;;;;;;;
+
+;; TODO: Store child sets
+;;       Prevent orphaned frames
+
+(defun tf-tree-frame-compare (a b)
+  (if (null a)
+      (if (null b)
+          0
+          -1)
+      (if (null b)
+          1
+          (sycamore-util:string-compare a b))))
+
 (defun make-tf-tree ()
   "Create a new TF tree.
 The tree is a map from the frame name to its relative transform."
-  (sycamore:make-tree-map #'sycamore-util:string-compare))
+  (sycamore:make-tree-map #'tf-tree-frame-compare))
 
-(defun tf-tree-add (tree tf-tag)
+(defun tf-tree-insert (tree tf-tag)
   "Add tagged TF to tree."
   (sycamore:tree-map-insert tree (tf-tag-child tf-tag) tf-tag))
 
-(defun tf-tree-split-add (tree parent tf-raw child)
+(defun tf-tree-remove (tree frame)
+  "Remove FRAME from tree"
+  (sycamore:tree-map-remove tree frame))
+
+(defun tf-tree-find (tree frame)
+  "Find the TF in the tree"
+  (let ((tf (sycamore:tree-map-find tree frame)))
+    (when tf (assert (equal frame (tf-tag-child tf))))
+    tf))
+
+(defun tf-tree-split-insert (tree parent tf-raw child)
   "Add untagged TF to tree.
 
 Tree will store the tagged value"
-  (sycamore:tree-map-insert tree child (tf-tag parent tf-raw child)))
+  (tf-tree-insert tree (tf-tag parent tf-raw child)))
 
-(defun tf-tree-absolute (relative-tree)
+(defun tf-tree-absolute-map (relative-tree &optional frame)
   "Compute the absolute transforms."
   (labels ((rec-insert (absolute-tree frame)
-             (let* ((rel-tf (sycamore:tree-map-find relative-tree frame))
-                    (parent-frame (tf-tag-parent rel-tf))
-                    (absolute-tree (rec absolute-tree parent-frame))
-                    (parent-tf (sycamore:tree-map-find absolute-tree parent-frame)))
-               (assert (equal frame (tf-tag-child rel-tf)))
-               (assert (equal parent-frame (tf-tag-child parent-tf)))
-               (sycamore:tree-map-insert absolute-tree frame (g* parent-tf rel-tf))))
+             (let* ((rel-tf (tf-tree-find relative-tree frame))
+                    (parent-frame (tf-tag-parent rel-tf)))
+               (if (null parent-frame)
+                   (tf-tree-insert absolute-tree rel-tf)
+                   (let* ((absolute-tree (rec absolute-tree parent-frame))
+                          (parent-tf (tf-tree-find absolute-tree parent-frame)))
+                     (tf-tree-insert absolute-tree (g* parent-tf rel-tf))))))
            (rec (absolute-tree frame)
                 (if (null frame)
                     absolute-tree
-                    (let ((abs-tf (sycamore:tree-map-find absolute-tree frame)))
+                    (let ((abs-tf (tf-tree-find absolute-tree frame)))
                       (if abs-tf
-                          (progn
-                            (assert (equal frame (tf-tag-child abs-tf)))
-                            absolute-tree))
-                      (rec-insert absolute-tree frame)))))
-    (sycamore:fold-tree-map (lambda (absolute-tree frame rel-tf)
-                              (assert (equal frame (tf-tag-child rel-tf)))
-                              (rec absolute-tree frame))
-                            (make-tf-tree)
-                            relative-tree)))
+                          absolute-tree
+                          (rec-insert absolute-tree frame))))))
+    (let ((empty-tree (make-tf-tree)))
+      (if frame
+          (rec empty-tree frame)
+          (sycamore:fold-tree-map (lambda (absolute-tree frame rel-tf)
+                                    (assert (equal frame (tf-tag-child rel-tf)))
+                                    (rec absolute-tree frame))
+                                  (make-tf-tree)
+                                  relative-tree)))))
+
+(defun tf-tree-absolute-tf (relative-tree frame)
+  "Compute the absolute transform of FRAME."
+  (let ((absolute-tree (tf-tree-absolute-map relative-tree frame)))
+    (tf-tree-find absolute-tree frame)))

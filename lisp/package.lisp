@@ -101,6 +101,12 @@
    :rotation
    :tf-tag
    :tf-tag-parent :tf-tag-child :tf-tag-tf
+   ;; TF tree
+   :make-tf-tree
+   :tf-tree-insert
+   :tf-tree-remove
+   :tf-tree-find
+   :tf-tree-absolute-tf
    ;; Generics
    :transform
    :g*
