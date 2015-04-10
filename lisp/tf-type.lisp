@@ -237,6 +237,7 @@
 ;; TODO: Store child sets
 ;;       Prevent orphaned frames
 
+
 (defun tf-tree-frame-compare (a b)
   (if (null a)
       (if (null b)
@@ -246,30 +247,50 @@
           1
           (sycamore-util:string-compare a b))))
 
+(defstruct (tf-tree (:constructor %make-tf-tree))
+  (relative-map (sycamore:make-tree-map #'tf-tree-frame-compare)
+                :type sycamore::tree-map)
+  (frame-set( sycamore:make-tree-set #'tf-tree-frame-compare)
+            :type sycamore::tree-set))
+
 (defun make-tf-tree ()
   "Create a new TF tree.
 The tree is a map from the frame name to its relative transform."
-  (sycamore:make-tree-map #'tf-tree-frame-compare))
+  (%make-tf-tree :relative-map (sycamore:make-tree-map #'tf-tree-frame-compare)
+                 :frame-set (sycamore:make-tree-set #'sycamore-util:string-compare)))
+
+(defun tf-tree-split-insert (tree parent tf child)
+  "Add tagged TF to tree."
+  (let ((frame-set (tf-tree-frame-set tree)))
+    ;; Intern parent and child
+    (when parent
+      (multiple-value-setq (frame-set parent)
+        (sycamore:tree-set-intern frame-set parent)))
+    (when child
+      (multiple-value-setq (frame-set child)
+        (sycamore:tree-set-intern frame-set child)))
+    ;; Insert
+    (%make-tf-tree :relative-map (sycamore:tree-map-insert (tf-tree-relative-map tree)
+                                                           child (tf-tag parent tf child))
+                   :frame-set frame-set)))
 
 (defun tf-tree-insert (tree tf-tag)
   "Add tagged TF to tree."
-  (sycamore:tree-map-insert tree (tf-tag-child tf-tag) tf-tag))
+  (tf-tree-split-insert tree
+                        (tf-tag-parent tf-tag)
+                        (tf-tag-tf tf-tag)
+                        (tf-tag-child tf-tag)))
 
 (defun tf-tree-remove (tree frame)
   "Remove FRAME from tree"
-  (sycamore:tree-map-remove tree frame))
+  (%make-tf-tree :relative-map (sycamore:tree-map-remove (tf-tree-relative-map tree) frame)
+                 :frame-set (sycamore:tree-set-remove (tf-tree-frame-set tree) frame)))
 
 (defun tf-tree-find (tree frame)
   "Find the TF in the tree"
-  (let ((tf (sycamore:tree-map-find tree frame)))
+  (let ((tf (sycamore:tree-map-find (tf-tree-relative-map tree) frame)))
     (when tf (assert (equal frame (tf-tag-child tf))))
     tf))
-
-(defun tf-tree-split-insert (tree parent tf-raw child)
-  "Add untagged TF to tree.
-
-Tree will store the tagged value"
-  (tf-tree-insert tree (tf-tag parent tf-raw child)))
 
 (defun tf-tree-absolute-map (relative-tree &optional frame)
   "Compute the absolute transforms."
@@ -295,7 +316,7 @@ Tree will store the tagged value"
                                     (assert (equal frame (tf-tag-child rel-tf)))
                                     (rec absolute-tree frame))
                                   (make-tf-tree)
-                                  relative-tree)))))
+                                  (tf-tree-relative-map relative-tree))))))
 
 (defun tf-tree-absolute-tf (relative-tree frame)
   "Compute the absolute transform of FRAME."
