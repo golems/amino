@@ -42,7 +42,7 @@
 
 (asdf:defsystem amino
   :description "Basic utilities / numerics"
-  :depends-on ("cffi")
+  :depends-on ("cffi" "sycamore")
   :components ((:file "package")
                ;; TYPE
                (:file "basic-type" :depends-on ("package"))
