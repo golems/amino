@@ -108,12 +108,6 @@
 (defun vec3* (x y z)
   (make-vec3 :data (vec x y z)))
 
-(defun vec3-ref (vec i) (aref (vec3-data vec) i))
-
-(defun vec3-x (vec) (vec3-ref vec 0))
-(defun vec3-y (vec) (vec3-ref vec 1))
-(defun vec3-z (vec) (vec3-ref vec 2))
-
 (define-foreign-type vector-3-t ()
   ()
   (:simple-parser vector-3-t)

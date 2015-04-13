@@ -87,6 +87,9 @@
    ;; General types
    :vec
    :make-vec
+   :vecref :vec-x :vec-y :vec-z :vec-w
+   :make-matrix
+   :matref
    ;; TF Types
    :vec3 :vec3*
    :axis-angle :axis-angle*

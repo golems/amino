@@ -144,12 +144,14 @@
   (aref (matrix-data matrix)
         (matrix-index matrix i j)))
 
-(defun vecref (matrix i)
-  "Return I'th element of column vector MATRIX"
-  (etypecase matrix
-    (simple-vector (svref matrix i))
-    (array (aref matrix i))
-    (matrix (matref matrix i 0))))
+(defun vecref (vector i)
+  "Return I'th element of column vector VECTOR"
+  (etypecase vector
+    (simple-vector (svref vector i))
+    (matrix (matref vector i 0))
+    (real-array (aref (real-array-data vector) i))
+    (array (aref vector i))
+    (cons (nth i vector))))
 
 (defun (setf vecref) (value vec i)
   (etypecase vec
@@ -162,6 +164,22 @@
   (setf (aref (matrix-data matrix)
               (matrix-index matrix i j))
         value))
+
+(defun vec-x (vector)
+  "Return the X element of the vector."
+  (vecref vector +x+))
+
+(defun vec-y (vector)
+  "Return the Y element of the vector."
+  (vecref vector +y+))
+
+(defun vec-z (vector)
+  "Return the Z element of the vector."
+  (vecref vector +z+))
+
+(defun vec-w (vector)
+  "Return the W element of the vector."
+  (vecref vector +w+))
 
 (defun row-matrix (&rest rows)
   "Create a matrix from the given rows."
