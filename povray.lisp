@@ -6,13 +6,19 @@
 (defparameter *pov-indent* "")
 (defparameter *pov-indent-width* 3) ;; as used in povray.org docs
 
-(defmacro with-pov-block (output &body body)
-  `(progn
-     (write-char #\{ ,output)
-     (let ((*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
-                                      :initial-element #\Space)))
-       ,@body)
-     (format ,output "~&~A}" *pov-indent*)))
+(defmacro with-pov-indent (old-indent &body body)
+  `(let* ((,old-indent *pov-indent*)
+          (*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
+                                     :initial-element #\Space)))
+     ,@body))
+
+;; (defmacro with-pov-block (output &body body)
+;;   `(progn
+;;      (write-char #\{ ,output)
+;;      (let ((*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
+;;                                       :initial-element #\Space)))
+;;        ,@body)
+;;      (format ,output "~&~A}" *pov-indent*)))
 
 (defstruct (pov-float-vector (:constructor %pov-float-vector (x y z)))
   "Type for a povray vector."
@@ -60,9 +66,7 @@
   list)
 
 (defmethod print-object ((object pov-block) stream)
-  (let* ((old-indent *pov-indent*)
-         (*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
-                                    :initial-element #\Space)))
+  (with-pov-indent old-indent
     (format stream
             "~&~A~A {~&~{~&~A~}~&~A}"
             old-indent
@@ -75,15 +79,15 @@
   list)
 
 (defmethod print-object ((object pov-list) stream)
-  (let* ((old-indent *pov-indent*)
-         (*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
-                                    :initial-element #\Space)))
-    (format stream
-            "~&~A~A {~&~{~&~A~^,~}~&~A}"
-            old-indent
-            (pov-list-name object)
-            (pov-list-list object)
-            old-indent)))
+  (with-pov-indent old-indent
+    (let ((list (pov-list-list object)))
+      (format stream
+              "~&~A~A {~D,~{~A~^,~}~&~A}"
+              old-indent
+              (pov-list-name object)
+              (pov-value (length list))
+              list
+              old-indent))))
 
 (defun pov-mesh2 (&key
                     vertex-vectors
@@ -96,23 +100,44 @@
 VERTEX-VECTORS: List of vertices in the mesh as pov-vertex
 FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 "
+  (declare (ignore normal-vectors normal-indices))
   (let ((args))
-    (when vertex-vectors
-      (push (pov-list "vertex_vectors" vertex-vectors) args))
+    ;; TODO: figure this out
+    ;; (when normal-indices
+    ;;   (push (pov-list "normal_indices" normal-indices) args))
+    ;; (when normal-vectors
+    ;;   (push (pov-list "normal_vectors" normal-vectors) args))
+
     (when face-indices
       (push (pov-list "face_indices" face-indices) args))
-    (when normal-vectors
-      (push (pov-list "normal_vectors" normal-vectors) args))
-    (when normal-indices
-      (push (pov-list "normal" normal-indices) args))
+    (when vertex-vectors
+      (push (pov-list "vertex_vectors" vertex-vectors) args))
 
     (pov-block "mesh2" args)))
 
 
+(defstruct (pov-directive (:constructor pov-directive (type name value)))
+  type
+  name
+  value)
 
+(defun pov-define (name value)
+  (pov-directive "define" name value))
 
+(defmethod print-object ((object pov-directive) stream)
+  (with-pov-indent old-indent
+    (declare (ignore old-indent))
+    (format stream "#~A ~A = ~A"
+            (pov-directive-type object)
+            (pov-directive-name object)
+            (pov-directive-value object))))
 
+(defstruct (pov-sequence (:constructor pov-sequence (statements)))
+  statements)
 
+(defmethod print-object ((object pov-sequence) stream)
+  (loop for x in (pov-sequence-statements object)
+     do (print-object x stream)))
 
 ;; (defun print-vector-handed (vector &optional (output *pov-output*))
 ;;   (ecase *pov-handedness*

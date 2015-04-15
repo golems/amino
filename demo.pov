@@ -25,7 +25,7 @@ pigment {
 
 
 camera {
-    location <5, 3, 5>
+    location <4, 3, 4>
     look_at  <0,    0,  0>
 }
 
@@ -36,7 +36,7 @@ camera {
 light_source
 { <10, 10, 00>, 1
   fade_distance 6 fade_power 2
-  area_light x*3, y*3, 12, 12 circular orient adaptive 0
+  area_light x*3, y*3, 24, 24 circular orient adaptive 0
 }
 
 
@@ -68,17 +68,15 @@ fog { fog_type   2
       turbulence 10
     } //
 
-box {
-    <-1,0,-1>,  // Near lower left corner
-    < 1, 2, 1>   // Far upper right corner
-    texture {
-      //T_Stone25     // Pre-defined from stones.inc
-      //scale 4       // Scale by the same amount in all
-                    // directions
-      Jade
-      finish { phong 1 }
-    }
-}
+//box {
+    //<0,0,0>,  // Near lower left corner
+    //< .5, 1.5, .5>   // Far upper right corner
+    ////material {M_Water}
+    //texture {
+    //Vicks_Bottle_Glass
+    ////finish {ambient .2}
+    //}
+//}
 
 plane { <0, 1, 0>, 0
 
@@ -99,3 +97,39 @@ plane { <0, 1, 0>, 0
     //finish{ phong 0.5 }
 }
 }
+
+#declare mycube =
+mesh2 {
+   vertex_vectors {
+      8,
+      <1.0, 1.0, -1.0>,
+      <1.0, -1.0, -1.0>,
+      <-1.0, -0.9999998, -1.0>,
+      <-0.9999997, 1.0, -1.0>,
+      <1.0, 0.9999995, 1.0>,
+      <0.9999994, -1.000001, 1.0>,
+      <-1.0, -0.9999997, 1.0>,
+      <-1.0, 1.0, 1.0>
+   }
+   face_indices {
+      12,
+      <0, 1, 2>,
+      <7, 6, 5>,
+      <4, 5, 1>,
+      <5, 6, 2>,
+      <2, 6, 7>,
+      <0, 3, 7>,
+      <3, 0, 2>,
+      <4, 7, 5>,
+      <0, 4, 1>,
+      <1, 5, 2>,
+      <3, 2, 7>,
+      <4, 0, 7>
+   }
+}
+
+mesh2 {
+   mycube
+   translate 1*y
+
+ }

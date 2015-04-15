@@ -96,6 +96,9 @@
   (assert (dom:has-attribute node "source"))
   (collada-id-parse dom (dom:get-attribute node "source")))
 
+(defun collada-povray-mangle (collada-identifier)
+  (substitute #\_ #\- collada-identifier))
+
 (defun collada-povray-geometry (dom geometry-node)
   (let* ((mesh  (collada-node-singleton geometry-node "mesh"))
          (polylist  (collada-node-singleton mesh "polylist"))
@@ -126,12 +129,13 @@
                                                  while rest
                                                  collect (car rest))
                                               3)))
-
-    (print (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector vertices)
-                      :normal-vectors (map 'list #'pov-float-vector normals)
-                      :face-indices (map 'list #'pov-integer-vector vertex-indices)
-                      :normal-indices (map 'list #'pov-integer-vector normal-indices)
-                      )))))
+      (assert (dom:has-attribute geometry-node "name"))
+      (pov-define (collada-povray-mangle (dom:get-attribute geometry-node "name"))
+                  (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector vertices)
+                             :normal-vectors (map 'list #'pov-float-vector normals)
+                             :face-indices (map 'list #'pov-integer-vector vertex-indices)
+                             :normal-indices (map 'list #'pov-integer-vector normal-indices)
+                             )))))
 
                ;(map 'list (lambda (x) (apply #'pov-vector x)) normals)
     ;(print (list vertices normals))))
@@ -148,8 +152,9 @@
     (let* ((library-geometry (nameref-singleton dom "library_geometries"))
            (geometries (nameref library-geometry "geometry"))
            )
-      (loop for g across geometries
-         do (collada-povray-geometry dom g)))))
+      (pov-sequence
+       (loop for g across geometries
+          collect (collada-povray-geometry dom g))))))
 
 
          ;; for mesh = (nameref-singleton g "mesh")
