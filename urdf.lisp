@@ -36,44 +36,68 @@
                           :xyz (maybe-floats (path '("origin" "@xyz")))
                           :axis (maybe-floats (path '("axis" "@xyz")))
                           :parent (path '("parent" "@link"))
-                          :child (path '("child" "@link"))
-                          ))))
+                          :child (path '("child" "@link"))))))
 
-         ;; (declare (ignore sub))
-         ;;             (cond
-         ;;               ((string= "origin" elt)
-         ;;                (setf (urdf-joint-rpy joint)
-         ;;                      (parse-string-vector (get-attr "rpy" attrs)))
-         ;;                (setf (urdf-joint-xyz joint)
-         ;;                      (parse-string-vector (get-attr "xyz" attrs))))
-         ;;               ((string= "parent" elt)
-         ;;                (setf (urdf-joint-parent joint) (get-attr "link" attrs)))
-         ;;               ((string= "child" elt)
-         ;;                (setf (urdf-joint-child joint) (get-attr "link" attrs)))
-         ;;               ((string= "axis" elt)
-         ;;                (setf (urdf-joint-axis joint)
-         ;;                      (parse-string-vector (get-attr "xyz" attrs)))))))
-         ;;         (push joint joints))
+(defun urdf-create-frames (urdf-joints link-parent-map)
+  (labels ((origin-rotated-p (rpy)
+             (not (= 0d0 (vecref rpy 0) (vecref rpy 1) (vecref rpy 2))))
+           (origin-frame (origin parent rpy xyz)
+             (make-scene-frame-fixed :name origin
+                                     :parent parent
+                                     :tf (tf (euler-rpy rpy) xyz))))
+    (loop for j in urdf-joints
+       for parent = (gethash (urdf-joint-parent j) link-parent-map)
+       for type = (urdf-joint-type j)
+       for name = (urdf-joint-name j)
+       for rpy = (urdf-joint-rpy j)
+       for xyz = (urdf-joint-xyz j)
+       for axis = (urdf-joint-axis j)
+       for origin = (concatenate 'string name "_origin")
+       nconc
+         (ecase type
+           (:fixed
+            (list
+             (make-scene-frame-fixed :name name
+                                     :parent parent
+                                     :tf (amino:tf (amino:euler-rpy rpy) xyz))))
+           (:revolute
+            (if (origin-rotated-p rpy)
+                (list (origin-frame origin parent rpy xyz)
+                      (make-scene-frame-revolute :name name
+                                                 :parent origin
+                                                 :axis axis
+                                                 :translation (vec3 nil)))
+                (list (make-scene-frame-revolute :name name
+                                                 :parent parent
+                                                 :axis axis
+                                                 :translation (vec3 xyz)))))
+           (:prismatic
+            (if (origin-rotated-p rpy)
+                (list (origin-frame origin parent rpy xyz)
+                      (make-scene-frame-prismatic :name name
+                                                  :parent origin
+                                                  :axis axis
+                                                  :rotation (quaternion nil)))
+                (list (make-scene-frame-prismatic :name name
+                                                  :parent parent
+                                                  :axis axis
+                                                  :rotation (quaternion rpy)))))))))
 
 (defun urdf-parse (&key (dom *urdf-dom*))
-  (let ((robot-node (dom-select-tag dom "robot" :singleton t))
-        (joint-parent (make-hash-table :test #'equal)) ;; joint name -> parent link
-       ; (child-links (make-hash-table :test #-string=))
-        )
-    ;; extract link map
-    (loop for joint in (dom-select-tag robot-node "joint" :direct t)
-       for name = (dom:get-attribute joint "name")
-       for parent-node = (dom-select-tag joint "parent" :direct t :singleton t)
-       for parent-link = (dom:get-attribute parent-node "link")
-       ;for child-node = (dom-select-tag joint "parent" :direct t :singleton t)
-       ;for child-link = (dom:get-attribute child-node "link")
-       do (setf (gethash name joint-parent)
-                parent-link))
-    ;;
-    (print 1)
-    (loop for joint in (dom-select-tag dom "joint")
-         for name = (dom:get-attribute joint "name")
-         for parent = (gethash name joint-parent)
-         do (format t "~&~A => ~A" parent name))
-
-    ))
+  (let* ((urdf-joints (urdf-extract-joints :dom dom))
+         (link-parent-map ; link name -> link's parent joint
+          (fold (lambda (map j)
+                  (setf (gethash (urdf-joint-child j) map)
+                        (urdf-joint-name j))
+                  map)
+                (make-hash-table :test #'equal)
+                urdf-joints)))
+    ;; Create Scene Frames
+    (let* ((frames
+            (urdf-create-frames urdf-joints link-parent-map))
+           (frame-map (fold (lambda (map frame)
+                              (setf (gethash (scene-frame-name frame) map) frame)
+                              map)
+                            (make-hash-table :test #'equal)
+                            frames)))
+        frames)))
