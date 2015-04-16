@@ -201,6 +201,11 @@
 (defmethod expand-to-foreign-dyn (value var body (type euler-zyx-t))
   `(with-foreign-fixed-vector ,var ,value 3 :input ,@body))
 
+
+(defun euler-rpy* (r p y)
+  "Alias for ZYX euler angles."
+  (euler-zyx* y p r))
+
 ;;; Dual Quaternion
 (defstruct (dual-quaternion (:include real-array
                                  (data (make-vec 8) :type  (simple-array double-float (8))))))

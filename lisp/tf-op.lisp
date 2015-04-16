@@ -54,6 +54,7 @@
 (defgeneric rotation-matrix (x))
 
 (defgeneric euler-zyx (x))
+(defgeneric euler-rpy (x))
 
 (defgeneric dual-quaternion (x))
 (defgeneric quaternion-translation (x))
@@ -144,7 +145,7 @@
          (elt x 1)
          (elt x 2)))
 
-;;; Euler
+;;; Euler ZYX
 
 (defmethod euler-zyx ((x (eql nil)))
   (euler-zyx* 0d0 0d0 0d0))
@@ -156,6 +157,9 @@
   (euler-zyx* (aref x 0)
               (aref x 1)
               (aref x 2)))
+
+(defmethod euler-zyx ((x cons))
+  (apply #'euler-zyx* x))
 
 (defmethod euler-zyx ((x x-angle))
   (euler-zyx* 0d0
@@ -171,6 +175,28 @@
   (euler-zyx*  (z-angle-value x)
                0d0
                0d0))
+
+;;; Euler RPY
+;; These are just reversed ZYX angles
+
+(defmethod euler-rpy ((x array))
+  (euler-rpy* (aref x 0)
+              (aref x 1)
+              (aref x 2)))
+
+(defmethod euler-rpy ((x cons))
+  (apply #'euler-rpy* x))
+
+(defmethod euler-rpy ((x (eql nil)))
+  (euler-zyx x))
+(defmethod euler-rpy ((x quaternion))
+  (euler-zyx x))
+(defmethod euler-rpy ((x x-angle))
+  (euler-zyx x))
+(defmethod euler-rpy ((x y-angle))
+  (euler-zyx x))
+(defmethod euler-rpy ((x z-angle))
+  (euler-zyx x))
 
 ;;; Dual-Quaternion
 (defmethod dual-quaternion ((x dual-quaternion)) x)
