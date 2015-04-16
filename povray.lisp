@@ -20,6 +20,13 @@
 ;;        ,@body)
 ;;      (format ,output "~&~A}" *pov-indent*)))
 
+(defstruct (pov-float (:constructor pov-float (value)))
+  (value 0 :type double-float))
+
+(defmethod print-object ((object pov-float) stream)
+  (format stream "~F"
+          (pov-float-value object)))
+
 (defstruct (pov-float-vector (:constructor %pov-float-vector (x y z)))
   "Type for a povray vector."
   (x 0d0 :type double-float)
@@ -89,11 +96,47 @@
               list
               old-indent))))
 
+(defstruct (pov-item (:constructor pov-item (name value)))
+  name
+  value)
+
+(defstruct (pov-rgb (:constructor %pov-rgb (r g b)))
+  "Type for a povray RGB color."
+  (r 0d0 :type double-float)
+  (g 0d0 :type double-float)
+  (b 0d0 :type double-float))
+
+(defun pov-rgb (elements)
+  (apply #'%pov-rgb (subseq elements 0 3)))
+
+(defmethod print-object ((object pov-rgb) stream)
+  (format stream "rgb<~F, ~F, ~F>"
+          (pov-rgb-r object)
+          (pov-rgb-g object)
+          (pov-rgb-b object)))
+
+(defmethod print-object ((object pov-item) stream)
+  (format stream "~&~A~A ~A"
+          *pov-indent* (pov-item-name object) (pov-item-value object)))
+
+(defun pov-texture* (&rest things)
+  (pov-block "texture" things))
+
+(defun pov-texture (things)
+  (pov-block "texture" things))
+
+(defun pov-finish (things)
+  (pov-block "finish" things))
+
+(defun pov-finish* (&rest things)
+  (pov-block "finish" things))
+
 (defun pov-mesh2 (&key
                     vertex-vectors
                     face-indices
                     normal-vectors
                     normal-indices
+                    modifiers
                     )
   "Create a povray mesh2 object.
 
@@ -101,7 +144,7 @@ VERTEX-VECTORS: List of vertices in the mesh as pov-vertex
 FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 "
   (declare (ignore normal-vectors normal-indices))
-  (let ((args))
+  (let ((args modifiers))
     ;; TODO: figure this out
     ;; (when normal-indices
     ;;   (push (pov-list "normal_indices" normal-indices) args))
@@ -121,8 +164,8 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   name
   value)
 
-(defun pov-define (name value)
-  (pov-directive "define" name value))
+(defun pov-declare (name value)
+  (pov-directive "declare" name value))
 
 (defmethod print-object ((object pov-directive) stream)
   (with-pov-indent old-indent

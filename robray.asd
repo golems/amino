@@ -37,6 +37,7 @@
 (asdf:defsystem robray
   :depends-on ("amino" "sycamore" "cl-ppcre" "cxml")
   :components ((:file "robray-package")
-               (:file "povray" :depends-on ("robray-package"))
-               (:file "collada" :depends-on ("povray"))
+               (:file "util" :depends-on ("robray-package"))
+               (:file "povray" :depends-on ("util" "robray-package"))
+               (:file "collada" :depends-on ("util" "povray"))
                ))
