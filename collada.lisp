@@ -8,65 +8,13 @@
 ;;; - asset/unit
 ;;; - asset/up_axis
 
-;;;;;;;;;;;;;;;;;;;
-;;; DOM-HELPERS ;;;
-;;;;;;;;;;;;;;;;;;;
-
-(defun dom-select-if (node function &key direct)
-  (labels ((collect (node)
-             (loop for child across (dom:child-nodes node)
-                when (funcall function child)
-                collect child))
-           (rec (node)
-             (nconc (loop for child across (dom:child-nodes node)
-                       when (dom:element-p child)
-                       nconc (rec child))
-                    (collect node))))
-    (if direct
-        (collect node)
-        (rec node))))
-
-
-(defun dom-singleton (result singleton)
-  (if singleton
-      (progn
-        (assert (= 1 (length result)))
-        (elt result 0))
-      result))
-
-
-(defun dom-select-tag (node tag-name
-                       &key
-                         direct
-                         singleton)
-  (let ((result (dom-select-if node
-                               (lambda (node)
-                                 (and (dom:element-p node)
-                                      (string= tag-name (dom:tag-name node))))
-                               :direct direct)))
-    (dom-singleton result singleton)))
-
-(defun dom-select-path (node path &key singleton)
-  (labels ((rec (nodes path)
-             (if path
-                 (rec (loop for n in nodes
-                         nconc (dom-select-if n (lambda (node)
-                                                  (and (dom:element-p node)
-                                                       (string= (car path) (dom:tag-name node))))
-                                              :direct t))
-                      (cdr path))
-                 nodes)))
-    (let ((result (rec (list node) path)))
-      (dom-singleton result singleton))))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; General Collada Parsing ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun collada-load (file)
   "Create the DOM for a Collada file."
-  (cxml:parse-file file (cxml-dom:make-dom-builder)))
+  (setq *collada-dom* (dom-load file)))
 
 (defun collada-node-text (node)
   (let ((children (dom:child-nodes node)))
@@ -288,16 +236,17 @@
              (add-finish (name finish)
                (push (pov-item name finish)
                      finishes)))
-      ;; TODO: emission, index-of-refraction
     (when (collada-effect-ambient material)
       (add-finish "ambient" (pov-rgb (collada-effect-ambient material))))
     (when (collada-effect-diffuse material)
       (add-finish "diffuse" (avg-rgb (collada-effect-diffuse material))))
-    (when (collada-effect-shininess material)
-      (add-finish "reflection" (pov-float (/ (collada-effect-shininess material)
-                                             100d0))))
     (when (collada-effect-specular material)
       (add-finish "specular" (avg-rgb (collada-effect-specular material))))
+
+      ;; TODO: emission, index-of-refraction, shininess
+    ;; (when (collada-effect-shininess material)
+    ;;   (add-finish "reflection" (pov-float (/ (collada-effect-shininess material)
+    ;;                                          100d0))))
     (pov-finish finishes))))
 
 (defun collada-povray-visual-scene (dom node)

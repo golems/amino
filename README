@@ -2,3 +2,12 @@ Overview
 ========
 
 Robray is a robotics raytracing frontend.
+
+DEPENDENCIES
+============
+
+* cl-ppcre: http://weitz.de/cl-ppcre/
+* Sycamore: https://github.com/ndantam/sycamore
+* Amino: https://github.com/golems/amino
+* CXML: https://common-lisp.net/project/cxml/
+* POV-Ray: http://www.povray.org/

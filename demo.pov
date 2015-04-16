@@ -25,19 +25,23 @@ pigment {
 
 
 camera {
-    location <2, 1.25, 2>
+    location <1.5, 1, 1.5>
     look_at  <0,    0,  0>
 }
 
-//light_source{<1500,3000,-2500> color White}
 
-//global_settings { ambient_light rgb<.1, .1, .1> }
+// The Sun
+global_settings { ambient_light rgb<.5, .5, .5> }
+light_source{<1500,3000,-2500> color White}
 
-light_source
-{ <10, 10, 00>, 1
-  fade_distance 6 fade_power 2
-  area_light x*3, y*3, 24, 24 circular orient adaptive 0
-}
+
+// light_source
+// { <10, 10, 00>
+//   color rgb<1,1,.8>
+//   fade_distance 8 fade_power 2
+//   jitter
+//   area_light x*3, y*3, 24, 24 circular orient adaptive 0
+// }
 
 
 // sky -------------------------------------
