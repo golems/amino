@@ -8,6 +8,56 @@
 ;;; - asset/unit
 ;;; - asset/up_axis
 
+;;;;;;;;;;;;;;;;;;;
+;;; DOM-HELPERS ;;;
+;;;;;;;;;;;;;;;;;;;
+
+(defun dom-select-if (node function &key direct)
+  (labels ((collect (node)
+             (loop for child across (dom:child-nodes node)
+                when (funcall function child)
+                collect child))
+           (rec (node)
+             (nconc (loop for child across (dom:child-nodes node)
+                       when (dom:element-p child)
+                       nconc (rec child))
+                    (collect node))))
+    (if direct
+        (collect node)
+        (rec node))))
+
+
+(defun dom-singleton (result singleton)
+  (if singleton
+      (progn
+        (assert (= 1 (length result)))
+        (elt result 0))
+      result))
+
+
+(defun dom-select-tag (node tag-name
+                       &key
+                         direct
+                         singleton)
+  (let ((result (dom-select-if node
+                               (lambda (node)
+                                 (and (dom:element-p node)
+                                      (string= tag-name (dom:tag-name node))))
+                               :direct direct)))
+    (dom-singleton result singleton)))
+
+(defun dom-select-path (node path &key singleton)
+  (labels ((rec (nodes path)
+             (if path
+                 (rec (loop for n in nodes
+                         nconc (dom-select-if n (lambda (node)
+                                                  (and (dom:element-p node)
+                                                       (string= (car path) (dom:tag-name node))))
+                                              :direct t))
+                      (cdr path))
+                 nodes)))
+    (let ((result (rec (list node) path)))
+      (dom-singleton result singleton))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -17,11 +67,6 @@
 (defun collada-load (file)
   "Create the DOM for a Collada file."
   (cxml:parse-file file (cxml-dom:make-dom-builder)))
-
-(defun collada-node-singleton (node tag-name)
-  (let ((children (dom:get-elements-by-tag-name node tag-name)))
-    (assert (= 1 (length children)))
-    (elt children 0)))
 
 (defun collada-node-text (node)
   (let ((children (dom:child-nodes node)))
@@ -62,10 +107,10 @@
 (defun collada-parse-source (dom node)
   (declare (ignore dom))
   (assert (string= (dom:tag-name node) "source"))
-  (let* ((array-node (collada-node-singleton node "float_array"))
+  (let* ((array-node (dom-select-tag node "float_array" :direct t :singleton t))
          (array-values (collada-node-floats array-node))
-         (technique-node (collada-node-singleton node "technique_common"))
-         (accessor-node (collada-node-singleton technique-node "accessor"))
+         (technique-node (dom-select-tag node "technique_common" :direct t :singleton t))
+         (accessor-node (dom-select-tag technique-node "accessor" :direct t :singleton t))
          (stride (if (dom:has-attribute accessor-node "stride")
                      (parse-integer (dom:get-attribute accessor-node "stride"))
                      1)))
@@ -74,7 +119,7 @@
 
 (defun collada-parse-vertices (dom node)
   (assert (string= (dom:tag-name node) "vertices"))
-  (let ((input (collada-node-singleton node "input")))
+  (let ((input (dom-select-tag node "input" :direct t :singleton t)))
     (assert (and (dom:has-attribute input "semantic")
                  (string= (dom:get-attribute input "semantic")
                           "POSITION")))
@@ -105,14 +150,14 @@
 
 (defun collada-parse-effect (dom node)
   (assert (string= (dom:tag-name node) "effect"))
-  (let* ((profile (collada-node-singleton node "profile_COMMON"))
-         (technique (collada-node-singleton profile "technique"))
-         (phong (collada-node-singleton technique "phong"))
+  (let* ((profile (dom-select-tag node "profile_COMMON" :direct t :singleton t))
+         (technique (dom-select-tag profile "technique" :direct t :singleton t))
+         (phong (dom-select-tag technique "phong" :direct t :singleton t))
          (result (make-collada-effect)))
     (labels ((color-value (node)
-               (collada-parse-color dom (collada-node-singleton node "color")))
+               (collada-parse-color dom (dom-select-tag node "color" :direct t :singleton t)))
              (float-value (node)
-               (collada-parse-float dom (collada-node-singleton node "float"))))
+               (collada-parse-float dom (dom-select-tag node "float" :direct t :singleton t))))
       (loop for child across (dom:child-nodes phong)
          when (dom:element-p child)
          do
@@ -142,7 +187,7 @@
 
 (defun collada-parse-material (dom node)
   (assert (string= (dom:tag-name node) "material"))
-  (let ((instance-effect (collada-node-singleton node "instance_effect")))
+  (let ((instance-effect (dom-select-tag node "instance_effect" :direct t :singleton t)))
     (collada-attr-id-parse dom instance-effect "url")))
 
 
@@ -182,10 +227,10 @@
   (substitute #\_ #\- collada-identifier))
 
 (defun collada-povray-geometry (dom geometry-node modifiers)
-  (let* ((mesh  (collada-node-singleton geometry-node "mesh"))
-         (polylist  (collada-node-singleton mesh "polylist"))
-         (prim  (collada-node-integers (collada-node-singleton polylist "p")))
-         (vcount  (collada-node-integers (collada-node-singleton polylist "vcount")))
+  (let* ((mesh  (dom-select-tag geometry-node "mesh" :direct t :singleton t))
+         (polylist  (dom-select-tag mesh "polylist" :direct t :singleton t))
+         (prim  (collada-node-integers (dom-select-tag polylist "p" :direct t :singleton t)))
+         (vcount  (collada-node-integers (dom-select-tag polylist "vcount" :direct t :singleton t)))
          (inputs (dom:get-elements-by-tag-name polylist "input"))
          (vertices)
          (normals))
@@ -282,8 +327,8 @@
 (defun collada-povray (&key
                          (dom *collada-dom*)
                          file)
-  (let ((result (pov-sequence
-                 (let* ((node (collada-node-singleton dom "library_visual_scenes")))
+  (let* ((result (pov-sequence
+                 (let* ((node (dom-select-tag dom "library_visual_scenes" :singleton t)))
                    (collada-povray-visual-scene dom node)))))
     (if file
         (with-open-file (s file :direction :output :if-exists :supersede)
