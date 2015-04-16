@@ -25,7 +25,7 @@ pigment {
 
 
 camera {
-    location <4, 3, 4>
+    location <2, 1.25, 2>
     look_at  <0,    0,  0>
 }
 
@@ -88,7 +88,7 @@ plane { <0, 1, 0>, 0
        //} // end of texture
 
     texture {
-
+    scale 12*0.0254
    pigment
    {
       checker pigment { Black_Marble }, pigment { White_Marble }
@@ -98,10 +98,11 @@ plane { <0, 1, 0>, 0
 }
 }
 
-#include "/tmp/mesh.inc"
+//#include "/tmp/mesh.inc"
+#include "/tmp/pedestal.inc"
 
 mesh2 {
-   Cube
+   PEDESTAL
    translate 1*y
 
  }

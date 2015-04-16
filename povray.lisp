@@ -42,6 +42,13 @@
 (defun pov-float-vector (elements)
   (apply #'%pov-float-vector elements))
 
+(defun pov-float-vector-right (elements)
+  (%pov-float-vector
+   (elt elements 0)
+   (elt elements 2)
+   (elt elements 1)))
+
+
 (defun pov-integer-vector (elements)
   (apply #'%pov-integer-vector elements))
 

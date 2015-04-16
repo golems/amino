@@ -258,8 +258,8 @@
                                               3)))
       (assert (dom:has-attribute geometry-node "name"))
       (pov-declare (collada-povray-mangle (dom:get-attribute geometry-node "name"))
-                   (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector vertices)
-                              :normal-vectors (map 'list #'pov-float-vector normals)
+                   (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
+                              :normal-vectors (map 'list #'pov-float-vector-right normals)
                               :face-indices (map 'list #'pov-integer-vector vertex-indices)
                               :normal-indices (map 'list #'pov-integer-vector normal-indices)
                              :modifiers modifiers
