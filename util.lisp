@@ -1,5 +1,10 @@
 (in-package :robray)
 
+(defparameter *robray-cache-directory*
+  (concatenate 'string
+               "/tmp/" (sb-posix:getenv "USER") "-cache/robray"))
+
+
 (defmacro string-case (keyform &body cases)
   (let ((value (gensym "value")))
     `(let ((,value ,keyform))
@@ -55,7 +60,11 @@
                                :direct direct)))
     (dom-singleton result singleton)))
 
-(defun dom-select-path (node path &key singleton (undefined-error t))
+(defun dom-select-path (node path
+                        &key
+                          singleton
+                          (undefined-error t)
+                          default)
   (labels ((rec (nodes path)
              (cond
                ((null path) nodes)
@@ -74,14 +83,12 @@
                      (cdr path))))))
     (let* ((result (rec (list node) path))
            (length (length result)))
-      (when (and undefined-error
-                 (zerop length))
-        (error "Could not find ~A in document" path))
       (cond
+        ((zerop length)
+         (when undefined-error
+           (error "Could not find ~A in document" path))
+         default)
         (singleton
-         (if (zerop length)
-             nil
-             (progn
-               (assert (= 1 length))
-               (elt result 0))))
+         (assert (= 1 length))
+         (elt result 0))
         (t result)))))

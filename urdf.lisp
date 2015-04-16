@@ -2,6 +2,24 @@
 
 (defvar *urdf-dom*)
 
+(defparameter *urdf-package-alist*
+  `(("baxter_description" . ,(concatenate 'string (namestring (user-homedir-pathname))
+                                          "ros_ws/src/baxter_common/baxter_description"))))
+
+(defun urdf-resolve-file (filename &optional (package-alist *urdf-package-alist*))
+  (let* ((package (ppcre:regex-replace "^package://([^/]*)/.*"
+                                       filename
+                                       "\\1")))
+    (print package)
+    (if package
+        (let ((package-directory (cdr (assoc package package-alist :test #'string=))))
+          (assert package-directory)
+          (ppcre:regex-replace "^package://([^/]*)"
+                               filename
+                               package-directory))
+        filename)))
+
+
 (defstruct urdf-joint
   name
   rpy
@@ -83,21 +101,59 @@
                                                   :axis axis
                                                   :rotation (quaternion rpy)))))))))
 
+(defun urdf-bind-links (dom scene-graph link-parent-map)
+  (labels ((path (node path &optional default)
+             (dom-select-path node path :singleton t :undefined-error nil :default default)))
+    (loop for link-node in (dom-select-path dom '("robot" "link"))
+       for name = (dom:get-attribute link-node "name")
+       for frame-name = (gethash name link-parent-map)
+       for frame = (scene-graph-lookup scene-graph frame-name)
+       for visual-node = (path link-node '("visual"))
+       do
+         (when visual-node
+           (let* ((rpy (parse-float-sequence (path visual-node '("origin" "@rpy") "0 0 0")))
+                  (xyz (parse-float-sequence (path visual-node '("origin" "@rpy") "0 0 0")))
+                  (mesh-file (path visual-node '("geometry" "mesh" "@filename")))
+                  (box-size (path visual-node '("geometry" "box" "@size")))
+                  (sphere-radius (path visual-node '("geometry" "sphere" "@radius")))
+                  (rgba-text (path visual-node '("material" "color" "@rgba")))
+                  (rgba (when rgba-text (parse-float-sequence rgba-text))))
+             ;; maybe add intermediate frame
+             (unless (and (= 0
+                             (elt rpy 0) (elt rpy 1) (elt rpy 2)
+                             (elt xyz 0) (elt xyz 1) (elt xyz 2)))
+               (let ((new-frame (make-scene-frame-fixed :name (concatenate 'string frame-name "-visual")
+                                                        :parent frame-name
+                                                        :tf (tf (euler-rpy rpy)
+                                                                (vec3 xyz)))))
+                 (scene-graph-add-frame scene-graph new-frame)
+                 (setq frame new-frame
+                       frame-name (scene-frame-name new-frame))))
+             ;; bind geometry
+             (labels ((push-visual (geometry)
+                        (push (make-scene-visual :color (when rgba (subseq rgba 0 3))
+                                                 :alpha (when rgba (elt rgba 3))
+                                                 :geometry geometry)
+                              (scene-frame-visual frame))))
+               (when mesh-file
+                 (push-visual (make-scene-mesh :file mesh-file)))
+               (when sphere-radius
+                 (push-visual (make-scene-sphere :radius (parse-float sphere-radius))))
+               (when box-size
+                 (push-visual (make-scene-box :dimension (parse-float-sequence box-size)))))))))
+  scene-graph)
+
+
 (defun urdf-parse (&key (dom *urdf-dom*))
   (let* ((urdf-joints (urdf-extract-joints :dom dom))
-         (link-parent-map ; link name -> link's parent joint
+         ;; link name => link's parent joint name
+         (link-parent-map
           (fold (lambda (map j)
                   (setf (gethash (urdf-joint-child j) map)
                         (urdf-joint-name j))
                   map)
                 (make-hash-table :test #'equal)
-                urdf-joints)))
-    ;; Create Scene Frames
-    (let* ((frames
-            (urdf-create-frames urdf-joints link-parent-map))
-           (frame-map (fold (lambda (map frame)
-                              (setf (gethash (scene-frame-name frame) map) frame)
-                              map)
-                            (make-hash-table :test #'equal)
-                            frames)))
-        frames)))
+                urdf-joints))
+         ;; Create Scene Frames
+         (scene-graph (scene-graph (urdf-create-frames urdf-joints link-parent-map))))
+    (urdf-bind-links dom scene-graph link-parent-map)))
