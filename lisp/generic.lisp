@@ -69,6 +69,26 @@
   (/ a b))
 
 
+;; scalar-vector
+(defmethod g* ((a number) (b cons))
+  (loop for x in b
+     collect (* a x)))
+
+(defmethod g* ((a cons) (b number))
+  (g* b a))
+
+(defun dscal-copy (alpha x)
+  (dscal (coerce alpha 'double-float)
+         (vec-copy x)))
+
+(defmethod g* ((a number) (b simple-array))
+  (etypecase b
+    ((simple-array double-float (*))
+       (dscal-copy a b))))
+
+(defmethod g* ((a simple-array) (b number))
+  (g* b a))
+
 ;; Vector-Vector
 (defmethod g- ((a simple-array) (b simple-array))
   (etypecase a

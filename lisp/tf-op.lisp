@@ -286,12 +286,17 @@
 
 ;;; Multiplies
 
+(defmethod g* ((a number) (b vec3))
+  (make-vec3 :data (dscal-copy a (vec3-data b))))
+
+(defmethod g* ((a vec3) (b number))
+  (g* b a))
+
 (defmethod g* ((a quaternion) (b quaternion))
   (tf-qmul a b))
 
 (defmethod g* ((a number) (b quaternion))
-  (make-quaternion :data (dscal (coerce a 'double-float)
-                                (vec-copy (quaternion-data b)))))
+  (make-quaternion :data (dscal-copy a b)))
 
 (defmethod g* ((a quaternion) (b axis-angle))
   (tf-qmul a (quaternion b)))
