@@ -43,9 +43,10 @@
     hash))
 
 (defun collada-lookup (dom id &optional (id-map (collada-xml-id-map dom)))
-  (assert (eql #\# (aref id 0)))
-  (gethash (subseq id 1)
-           id-map))
+  (let ((id (if (eql #\# (aref id 0)) ;; eat a leading hash
+                (subseq id 1)
+                id)))
+    (gethash id id-map)))
 
 (defun collada-group-list (list stride)
   (loop for x = list then (nthcdr stride x)
@@ -172,46 +173,103 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun collada-povray-mangle (collada-identifier)
-  (substitute #\_ #\- collada-identifier))
+  (substitute-if #\_
+                 (lambda (x)
+                   (or (eq x #\-)
+                       (eq x #\Space)))
+                 collada-identifier))
 
-(defun collada-povray-geometry (dom geometry-node modifiers)
-  (let* ((mesh  (dom-select-tag geometry-node "mesh" :direct t :singleton t))
-         (polylist  (dom-select-tag mesh "polylist" :direct t :singleton t))
-         (prim  (collada-node-integers (dom-select-tag polylist "p" :direct t :singleton t)))
-         (vcount  (collada-node-integers (dom-select-tag polylist "vcount" :direct t :singleton t)))
-         (inputs (dom:get-elements-by-tag-name polylist "input"))
-         (vertices)
-         (normals))
-    ;; check vcount
-    (dolist (c vcount)
-      (assert (= 3 c) () "Cannot handle non-triangular polygons."))
-    ;; Parse inputs
-    (loop for input across inputs
-       for semantic = (dom:get-attribute input "semantic")
-       for value = (collada-parse dom input)
-       do
-         (cond ((string= semantic "VERTEX")
-                (setq vertices value))
-               ((string= semantic "NORMAL")
-                (setq normals value))
-               (t (error "Unknown input 'semantic' attribute: ~A" semantic))))
-    ;; Parse Prim
-    (let ((vertex-indices (collada-group-list (loop for rest = prim then (cddr rest)
-                                                 while rest
-                                                 collect (car rest))
-                                              3))
-          (normal-indices (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
-                                                 while rest
-                                                 collect (car rest))
-                                              3)))
-      (assert (dom:has-attribute geometry-node "name"))
-      (pov-declare (collada-povray-mangle (dom:get-attribute geometry-node "name"))
-                   (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
-                              :normal-vectors (map 'list #'pov-float-vector-right normals)
-                              :face-indices (map 'list #'pov-integer-vector vertex-indices)
-                              :normal-indices (map 'list #'pov-integer-vector normal-indices)
-                             :modifiers modifiers
-                             )))))
+;; TODO: Put text list before face_indices
+;; TODO: Add texture index to each face
+;; TODO: Collect vertices from multiple poly counts
+(defun collada-povray-geometry (dom geometry-node)
+  (let* ((mesh  (dom-select-tag geometry-node "mesh" :singleton t))
+         (polylists  (dom-select-tag mesh "polylist" :direct t))
+         (input (fold (lambda (set input)
+                        (if (and (dom:has-attribute input "semantic")
+                                 (string-equal (dom:get-attribute input "semantic")
+                                               "VERTEX")
+                                 (dom:has-attribute input "source"))
+                            (tree-set-insert set (dom:get-attribute input "source"))
+                            set))
+                      (make-tree-set #'string-compare)
+                      (dom-select-path mesh '("polylist" "input"))))
+         (vertex-source (if (not (= 1 (tree-set-count input)))
+                            (error "Cannot convert ~D source arrays to povray format" (tree-set-count input))
+                            (car (tree-set-list input))))
+         (vertices (collada-id-parse dom vertex-source))
+         (textures (loop for p in polylists
+                      for material-id = (dom:get-attribute p "material")
+                      collect
+                        (collada-povray-material dom (collada-lookup dom material-id))))
+         (faces (loop for p in polylists
+                   for i from 0
+                   for prim = (collada-node-integers (dom-select-tag p "p" :direct t :singleton t))
+                   for vcount = (collada-node-integers (dom-select-tag p "vcount" :direct t :singleton t))
+                   for vertex-indices = (collada-group-list (loop for rest = prim then (cddr rest)
+                                                               while rest
+                                                               collect (car rest))
+                                                            3)
+                   nconc (progn
+                           (dolist (c vcount)
+                             (assert (= 3 c) () "Cannot handle non-triangular polygons."))
+                           (loop for x in vertex-indices
+                              nconc (list (pov-integer-vector x)
+                                          (pov-value i))))))
+         )
+                   ;; for normal-indices = (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
+                   ;;                                             while rest
+                   ;;                                             collect (car rest))
+                   ;;                                          3)
+
+    (pov-declare (collada-povray-mangle (dom:get-attribute geometry-node "name"))
+                 (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
+                            ;;:normal-vectors (map 'list #'pov-float-vector-right normals)
+                            :face-indices faces
+                            :texture-list textures
+                            ;;:normal-indices (map 'list #'pov-integer-vector normal-indices)
+                            ;;:modifiers modifiers
+                            ))))
+
+    ;;      (print vertex-source)
+    ;;      (print faces)
+    ;;      textures))
+
+    ;;      (prim  (collada-node-integers (dom-select-tag polylist "p" :direct t :singleton t)))
+    ;;      (vcount  (collada-node-integers (dom-select-tag polylist "vcount" :direct t :singleton t)))
+    ;;      (inputs (dom:get-elements-by-tag-name polylist "input"))
+    ;;      (vertices)
+    ;;      (normals))
+    ;; ;; check vcount
+    ;; (dolist (c vcount)
+    ;;   (assert (= 3 c) () "Cannot handle non-triangular polygons."))
+    ;; ;; Parse inputs
+    ;; (loop for input across inputs
+    ;;    for semantic = (dom:get-attribute input "semantic")
+    ;;    for value = (collada-parse dom input)
+    ;;    do
+    ;;      (cond ((string= semantic "VERTEX")
+    ;;             (setq vertices value))
+    ;;            ((string= semantic "NORMAL")
+    ;;             (setq normals value))
+    ;;            (t (error "Unknown input 'semantic' attribute: ~A" semantic))))
+    ;; ;; Parse Prim
+    ;; (let ((vertex-indices (collada-group-list (loop for rest = prim then (cddr rest)
+    ;;                                              while rest
+    ;;                                              collect (car rest))
+    ;;                                           3))
+    ;;       (normal-indices (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
+    ;;                                              while rest
+    ;;                                              collect (car rest))
+    ;;                                           3)))
+    ;;   (assert (dom:has-attribute geometry-node "name"))
+    ;;   (pov-declare (collada-povray-mangle (dom:get-attribute geometry-node "name"))
+    ;;                (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
+    ;;                           :normal-vectors (map 'list #'pov-float-vector-right normals)
+    ;;                           :face-indices (map 'list #'pov-integer-vector vertex-indices)
+    ;;                           :normal-indices (map 'list #'pov-integer-vector normal-indices)
+    ;;                          :modifiers modifiers
+    ;;                          )))))
 
                ;(map 'list (lambda (x) (apply #'pov-vector x)) normals)
     ;(print (list vertices normals))))
@@ -247,40 +305,43 @@
     ;; (when (collada-effect-shininess material)
     ;;   (add-finish "reflection" (pov-float (/ (collada-effect-shininess material)
     ;;                                          100d0))))
-    (pov-finish finishes))))
-
-(defun collada-povray-visual-scene (dom node)
-  (assert (string= "library_visual_scenes" (dom:tag-name node)))
-  (loop
-     for child-node across (dom:get-elements-by-tag-name node "node")
-     for instance-geometry = (dom:get-elements-by-tag-name child-node "instance_geometry")
-     unless (zerop (length instance-geometry))
-     collect
-       (progn
-         (assert (= 1 (length instance-geometry)))
-         (let ((instance-geometry (aref instance-geometry 0)))
-           (assert (dom:has-attribute instance-geometry "url"))
-           (let* ((geometry-node (collada-lookup dom (dom:get-attribute instance-geometry "url")))
-                  (instance-material (dom:get-elements-by-tag-name instance-geometry "instance_material"))
-                  (modifiers))
-             ;; maybe set material
-             (unless (zerop (length instance-material))
-               (let ((instance-material (aref instance-material 0)))
-                 (when (dom:has-attribute instance-material "target")
-                   (push (collada-povray-material dom
-                                                  (collada-lookup dom (dom:get-attribute instance-material
-                                                                                         "target")))
-                         modifiers))))
-             (collada-povray-geometry dom geometry-node modifiers))))))
+    (pov-texture*
+     (pov-finish finishes)))))
 
 (defun collada-povray (&key
                          (dom *collada-dom*)
                          file)
-  (let* ((result (pov-sequence
-                 (let* ((node (dom-select-tag dom "library_visual_scenes" :singleton t)))
-                   (collada-povray-visual-scene dom node)))))
+  (let* ((geometry-node (dom-select-path dom '("COLLADA" "library_geometries" "geometry")  :singleton t))
+         (result (collada-povray-geometry dom geometry-node)))
     (if file
         (with-open-file (s file :direction :output :if-exists :supersede)
           (print result s)
           nil)
         result)))
+
+
+
+
+;; (defun collada-povray-visual-scene (dom node)
+;;   (assert (string= "library_visual_scenes" (dom:tag-name node)))
+;;   (loop
+;;      for child-node across (dom:get-elements-by-tag-name node "node")
+;;      for instance-geometry = (dom:get-elements-by-tag-name child-node "instance_geometry")
+;;      unless (zerop (length instance-geometry))
+;;      collect
+;;        (progn
+;;          (assert (= 1 (length instance-geometry)))
+;;          (let ((instance-geometry (aref instance-geometry 0)))
+;;            (assert (dom:has-attribute instance-geometry "url"))
+;;            (let* ((geometry-node (collada-lookup dom (dom:get-attribute instance-geometry "url")))
+;;                   (instance-material (dom:get-elements-by-tag-name instance-geometry "instance_material"))
+;;                   (modifiers))
+;;              ;; maybe set material
+;;              (unless (zerop (length instance-material))
+;;                (let ((instance-material (aref instance-material 0)))
+;;                  (when (dom:has-attribute instance-material "target")
+;;                    (push (collada-povray-material dom
+;;                                                   (collada-lookup dom (dom:get-attribute instance-material
+;;                                                                                          "target")))
+;;                          modifiers))))
+;;              (collada-povray-geometry dom geometry-node modifiers))))))

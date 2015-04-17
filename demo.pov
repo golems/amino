@@ -26,8 +26,9 @@ pigment {
 
 camera {
     //location <1.5, 1, 1.5>
-    location <4, 2, 4>
-    look_at  <0,    0,  0>
+  location <2.5, 2.0, -0.0>
+  look_at  <0,    0,  0>
+  right x*1920/1080
 }
 
 
@@ -106,13 +107,12 @@ plane { <0, 1, 0>, 0
   }
 }
 
-#include "/tmp/mesh.inc"
-//#include "/tmp/pedestal.inc"
+//#include "/tmp/mesh.inc"
+//#include "/tmp/mesh.inc"
+#include "/tmp/x.inc"
 
 mesh2 {
-  Cube
-  translate 1*y
-  //texture {
-    //color Red
-  //}
+  base_link
+  translate .5*y
+
 }

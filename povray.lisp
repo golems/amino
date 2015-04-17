@@ -88,20 +88,23 @@
             (pov-block-list object)
             old-indent)))
 
-(defstruct (pov-list (:constructor pov-list (name list)))
+(defstruct (pov-list (:constructor %pov-list (name list length)))
   name
+  length
   list)
+
+(defun pov-list (name list &optional (length (length list)))
+  (%pov-list name list length))
 
 (defmethod print-object ((object pov-list) stream)
   (with-pov-indent old-indent
-    (let ((list (pov-list-list object)))
-      (format stream
-              "~&~A~A {~D,~{~A~^,~}~&~A}"
-              old-indent
-              (pov-list-name object)
-              (pov-value (length list))
-              list
-              old-indent))))
+    (format stream
+            "~&~A~A {~D,~{~A~^,~}~&~A}"
+            old-indent
+            (pov-list-name object)
+            (pov-value (pov-list-length object))
+            (pov-list-list object)
+            old-indent)))
 
 (defstruct (pov-item (:constructor pov-item (name value)))
   name
@@ -141,6 +144,7 @@
 (defun pov-mesh2 (&key
                     vertex-vectors
                     face-indices
+                    texture-list
                     normal-vectors
                     normal-indices
                     modifiers
@@ -159,12 +163,21 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
     ;;   (push (pov-list "normal_vectors" normal-vectors) args))
 
     (when face-indices
-      (push (pov-list "face_indices" face-indices) args))
+      (push (pov-list "face_indices"
+                      face-indices
+                      (if texture-list
+                          (/ (length face-indices) 2)
+                          (length face-indices)))
+            args))
+    (when texture-list
+      (push (pov-texture-list texture-list) args))
     (when vertex-vectors
       (push (pov-list "vertex_vectors" vertex-vectors) args))
 
     (pov-block "mesh2" args)))
 
+(defun pov-texture-list (textures)
+  (pov-list "texture_list" textures))
 
 (defstruct (pov-directive (:constructor pov-directive (type name value)))
   type
