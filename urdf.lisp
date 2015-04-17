@@ -10,7 +10,6 @@
   (let* ((package (ppcre:regex-replace "^package://([^/]*)/.*"
                                        filename
                                        "\\1")))
-    (print package)
     (if package
         (let ((package-directory (cdr (assoc package package-alist :test #'string=))))
           (assert package-directory)
@@ -136,7 +135,7 @@
                                                  :geometry geometry)
                               (scene-frame-visual frame))))
                (when mesh-file
-                 (push-visual (make-scene-mesh :file mesh-file)))
+                 (push-visual (make-scene-mesh :file (urdf-resolve-file mesh-file))))
                (when sphere-radius
                  (push-visual (make-scene-sphere :radius (parse-float sphere-radius))))
                (when box-size

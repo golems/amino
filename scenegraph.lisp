@@ -52,3 +52,29 @@
 
 ;; Find the relative transform of the scene frame
 (defgeneric scene-frame-tf (object))
+
+
+(defun scene-graph-resolve-mesh (scene-graph)
+  (let ((mesh-files  ;; filename => (list mesh-nodes)
+         (make-hash-table :test #'equal)))
+    (labels ((resolve-mesh (mesh)
+               (push mesh
+                     (gethash (scene-mesh-file mesh) mesh-files))))
+      ;; collect mesh files
+      (maphash-values (lambda (frame)
+                                        ;(print frame)
+                        (loop
+                           for v in (scene-frame-visual frame)
+                           for g = (scene-visual-geometry v)
+                           when (and g (scene-mesh-p g))
+                           do (resolve-mesh g)))
+                      (scene-graph-frame-map scene-graph)))
+    (maphash-keys (lambda (mesh-file)
+                    (format *standard-output* "~&Converting ~A..." mesh-file)
+                    (let ((dom (dom-load mesh-file)))
+                      (collada-povray :dom dom
+                                      :file (concatenate 'string
+                                                         *robray-cache-directory*
+                                                         "povray"
+                                                         mesh-file ".inc"))))
+                  mesh-files)))
