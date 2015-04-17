@@ -285,7 +285,8 @@
 
 (defun collada-povray-material (dom node)
   (let ((material (collada-parse dom node))
-        (finishes))
+        (finishes)
+        (pigments))
     (labels ((avg-rgb (item)
                (pov-float (/ (+ (first item)
                                 (second item)
@@ -297,7 +298,10 @@
     (when (collada-effect-ambient material)
       (add-finish "ambient" (pov-rgb (collada-effect-ambient material))))
     (when (collada-effect-diffuse material)
-      (add-finish "diffuse" (avg-rgb (collada-effect-diffuse material))))
+      (let ((diffuse (collada-effect-diffuse material)))
+        (add-finish "diffuse" (avg-rgb diffuse))
+        (push (pov-item "color" (pov-rgb diffuse))
+              pigments)))
     (when (collada-effect-specular material)
       (add-finish "specular" (avg-rgb (collada-effect-specular material))))
 
@@ -305,8 +309,12 @@
     ;; (when (collada-effect-shininess material)
     ;;   (add-finish "reflection" (pov-float (/ (collada-effect-shininess material)
     ;;                                          100d0))))
-    (pov-texture*
-     (pov-finish finishes)))))
+    (let ((textures))
+      (when pigments (push (pov-pigment pigments)
+                           textures))
+      (when finishes (push (pov-finish finishes)
+                           textures))
+      (pov-texture textures)))))
 
 (defun collada-povray (&key
                          (dom *collada-dom*)

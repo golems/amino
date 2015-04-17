@@ -116,8 +116,13 @@
   (g 0d0 :type double-float)
   (b 0d0 :type double-float))
 
+(defun pov-rgb* (r g b)
+  (%pov-rgb (coerce r 'double-float)
+            (coerce g 'double-float)
+            (coerce b 'double-float)))
+
 (defun pov-rgb (elements)
-  (apply #'%pov-rgb (subseq elements 0 3)))
+  (apply #'pov-rgb* (subseq elements 0 3)))
 
 (defmethod print-object ((object pov-rgb) stream)
   (format stream "rgb<~F, ~F, ~F>"
@@ -129,17 +134,20 @@
   (format stream "~&~A~A ~A"
           *pov-indent* (pov-item-name object) (pov-item-value object)))
 
-(defun pov-texture* (&rest things)
-  (pov-block "texture" things))
-
 (defun pov-texture (things)
   (pov-block "texture" things))
+(defun pov-texture* (&rest things)
+  (pov-texture things))
 
 (defun pov-finish (things)
   (pov-block "finish" things))
-
 (defun pov-finish* (&rest things)
-  (pov-block "finish" things))
+  (pov-finish things))
+
+(defun pov-pigment (things)
+  (pov-block "pigment" things))
+(defun pov-pigment* (&rest things)
+  (pov-pigment things))
 
 (defun pov-mesh2 (&key
                     vertex-vectors
