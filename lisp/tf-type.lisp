@@ -108,6 +108,14 @@
 (defun vec3* (x y z)
   (make-vec3 :data (vec x y z)))
 
+(defmacro with-vec3 ((x y z) vec3 &body body)
+  (with-gensyms (value)
+    `(let ((,value (vec3 ,vec3)))
+       (let ((,x (vecref ,value +x+))
+             (,y (vecref ,value +y+))
+             (,z (vecref ,value +z+)))
+         ,@body))))
+
 (define-foreign-type vector-3-t ()
   ()
   (:simple-parser vector-3-t)
