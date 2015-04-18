@@ -306,7 +306,7 @@ N: cols in the block."
     (dolist (x args)
       (dotimes (j (vec-length x))
         (setf (vecref y (incf i))
-              (vecref x j))))
+              (coerce (vecref x j) 'double-float))))
     y))
 
 (defun vec-copy (vec &key (start 0) (end (length vec)))

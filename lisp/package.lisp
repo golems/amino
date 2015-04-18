@@ -115,6 +115,9 @@
    ;; Generics
    :transform
    :g*
+   :g+
+   :g-
+   :g/
    :matrix->list
    :inverse
    ;; Misc
