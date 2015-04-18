@@ -111,7 +111,7 @@
        do
          (when visual-node
            (let* ((rpy (parse-float-sequence (path visual-node '("origin" "@rpy") "0 0 0")))
-                  (xyz (parse-float-sequence (path visual-node '("origin" "@rpy") "0 0 0")))
+                  (xyz (parse-float-sequence (path visual-node '("origin" "@xyz") "0 0 0")))
                   (mesh-file (path visual-node '("geometry" "mesh" "@filename")))
                   (box-size (path visual-node '("geometry" "box" "@size")))
                   (sphere-radius (path visual-node '("geometry" "sphere" "@radius")))

@@ -19,6 +19,24 @@
 (defun parse-float-sequence (text)
   (map 'list #'parse-float (ppcre:split " " text)))
 
+(defun output (object place
+               &key
+                 (if-exists :supersede))
+  (cond
+    ((streamp place)
+     (print object place)
+     nil)
+    ((stringp place)
+     (with-open-file (place place :direction :output :if-exists if-exists)
+       (print object place))
+     nil)
+    ((eq place t)
+     (print object *standard-output*)
+     nil)
+    ((null place)
+     object)
+    (t (error "Unknown place type: ~A" place))))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; DOM-HELPERS ;;;
 ;;;;;;;;;;;;;;;;;;;

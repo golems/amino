@@ -40,4 +40,6 @@
                (:file "util" :depends-on ("robray-package"))
                (:file "povray" :depends-on ("util" "robray-package"))
                (:file "collada" :depends-on ("util" "povray"))
+               (:file "scenegraph" :depends-on ("util" "povray" "collada"))
+               (:file "urdf" :depends-on ("util" "povray" "collada" "scenegraph"))
                ))

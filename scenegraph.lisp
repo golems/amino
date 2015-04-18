@@ -1,9 +1,10 @@
 (in-package :robray)
 
-(defstruct scene-graph
-  (frame-map (make-hash-table :test #'equal)))
+(defvar *scene-graph*)
+
 
 (defstruct scene-mesh
+  name
   file)
 
 (defstruct scene-box
@@ -36,6 +37,10 @@
 (defstruct (scene-frame-prismatic (:include scene-frame-joint))
   rotation)
 
+
+(defstruct scene-graph
+  (frame-map (make-hash-table :test #'equal)))
+
 (defun scene-graph-add-frame (scene-graph frame)
   (setf (gethash (scene-frame-name frame) (scene-graph-frame-map scene-graph))
         frame)
@@ -46,6 +51,16 @@
         (make-scene-graph)
         frames))
 
+(defmacro do-scene-graph-frames ((frame-variable scene-graph &optional result) &body body)
+  `(progn
+     (loop for ,frame-variable being the hash-values of (scene-graph-frame-map ,scene-graph)
+        do (progn ,@body))
+     ,result))
+
+(defun fold-scene-graph-frames (function initial-value scene-graph)
+  (let ((value initial-value))
+    (do-scene-graph-frames (frame scene-graph value)
+      (setq value (funcall function value frame)))))
 
 (defun scene-graph-lookup (scene-graph frame-name)
   (gethash frame-name (scene-graph-frame-map scene-graph)))
@@ -54,6 +69,13 @@
 (defgeneric scene-frame-tf (object))
 
 
+(defun scene-mesh-inc (mesh-file)
+  "Return the include file for the mesh file"
+  (concatenate 'string
+               *robray-cache-directory*
+               "/povray"
+               mesh-file ".inc"))
+
 (defun scene-graph-resolve-mesh (scene-graph)
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
@@ -61,20 +83,120 @@
                (push mesh
                      (gethash (scene-mesh-file mesh) mesh-files))))
       ;; collect mesh files
-      (maphash-values (lambda (frame)
-                                        ;(print frame)
-                        (loop
-                           for v in (scene-frame-visual frame)
-                           for g = (scene-visual-geometry v)
-                           when (and g (scene-mesh-p g))
-                           do (resolve-mesh g)))
-                      (scene-graph-frame-map scene-graph)))
-    (maphash-keys (lambda (mesh-file)
-                    (format *standard-output* "~&Converting ~A..." mesh-file)
-                    (let ((dom (dom-load mesh-file)))
-                      (collada-povray :dom dom
-                                      :file (concatenate 'string
-                                                         *robray-cache-directory*
-                                                         "povray"
-                                                         mesh-file ".inc"))))
-                  mesh-files)))
+      (do-scene-graph-frames (frame scene-graph)
+        (loop
+           for v in (scene-frame-visual frame)
+           for g = (scene-visual-geometry v)
+           when (and g (scene-mesh-p g))
+           do (resolve-mesh g))))
+    (maphash (lambda (mesh-file mesh-nodes)
+               (format *standard-output* "~&Converting ~A..." mesh-file)
+               (let* ((dom (dom-load mesh-file))
+                      (inc-file (scene-mesh-inc mesh-file))
+                      (geom-name (collada-geometry-name dom)))
+                 (ensure-directories-exist inc-file)
+                 (collada-povray :dom dom
+                                 :file inc-file)
+                 (dolist (mesh-node mesh-nodes)
+                   (setf (scene-mesh-name mesh-node) geom-name))))
+             mesh-files)))
+
+
+(defun scene-frame-tf-relative (frame configuration-map default-configuration)
+  "Find the relative TF for this frame"
+  (etypecase frame
+    (scene-frame-fixed (scene-frame-fixed-tf frame))
+    (scene-frame-joint
+     (let* ((config (+ (scene-frame-joint-offset frame)
+                       (tree-map-find configuration-map (scene-frame-name frame)
+                                     default-configuration)))
+            (axis (scene-frame-joint-axis frame)))
+       (etypecase frame
+         (scene-frame-revolute
+          (tf (with-vec3 (x y z) axis
+                (axis-angle* x y z config))
+              (scene-frame-revolute-translation frame)))
+         (scene-frame-prismatic
+          (tf (scene-frame-prismatic-rotation frame)
+              (g* config axis))))))))
+
+(defun scene-graph-tf-relative (scene-graph configuration-map
+                                &key (default-configuration 0d0))
+  (fold-scene-graph-frames (lambda (hash frame)
+                             (setf (gethash (scene-frame-name frame) hash)
+                                   (scene-frame-tf-relative frame configuration-map default-configuration))
+                             hash)
+                           (make-hash-table :test #'equal)
+                           scene-graph))
+
+(defun scene-graph-tf-absolute (scene-graph configuration-map
+                                &key (default-configuration 0d0))
+  (let ((tf-relative (scene-graph-tf-relative scene-graph configuration-map
+                                              :default-configuration default-configuration)))
+    (labels ((contains (hash frame)
+               (nth-value 1 (gethash (scene-frame-name frame) hash)))
+             (rec (tf-abs frame)
+               (unless (contains tf-abs frame)
+                 (let ((parent (scene-frame-parent frame))
+                       (name (scene-frame-name frame)))
+                   (if parent
+                       (progn
+                         (rec tf-abs (scene-graph-lookup scene-graph parent))
+                         (setf (gethash name tf-abs)
+                               (g* (gethash parent tf-abs)
+                                   (gethash name tf-relative))))
+                       (setf (gethash name tf-abs)
+                             (gethash name tf-relative)))))
+               tf-abs))
+      (fold-scene-graph-frames #'rec (make-hash-table :test #'equal) scene-graph))))
+
+
+(defun scene-visual-pov (geometry tf)
+  (etypecase geometry
+    (scene-mesh (pov-mesh2 :mesh (scene-mesh-name geometry)
+                           :matrix tf))
+    (scene-box
+     (pov-box-center (scene-box-dimension geometry)
+                     :modifiers (list (pov-matrix tf))))
+    (scene-sphere
+     (pov-sphere (translation tf)
+                 (scene-sphere-radius geometry)))))
+
+(defun scene-graph-pov-frame (scene-graph configuration-map
+                                &key
+                                  output
+                                  include
+                                  (default-configuration 0d0))
+  (let ((tf-abs (scene-graph-tf-absolute scene-graph configuration-map
+                                         :default-configuration default-configuration))
+        (mesh-inc (fold-scene-graph-frames
+                   (lambda (set frame)
+                     (fold (lambda (set visual)
+                             (let ((g (scene-visual-geometry visual)))
+                               (if (scene-mesh-p g)
+                                   (tree-set-insert set
+                                                    (scene-mesh-inc (scene-mesh-file g)))
+                                   set)))
+                           set
+                           (scene-frame-visual frame)))
+                   (make-tree-set #'string-compare)
+                   scene-graph))
+        (pov-things))
+    (labels ((thing (thing)
+               (push thing pov-things))
+             (include (file)
+               (thing (pov-include file))))
+    ;; push frame geometry
+    (do-scene-graph-frames (frame scene-graph)
+      (let* ((name (scene-frame-name frame))
+             (tf (gethash name tf-abs)))
+        (dolist (vis (scene-frame-visual frame))
+          (let ((g (scene-visual-geometry vis)))
+            (thing (scene-visual-pov g tf))))))
+
+    ;; push mesh include files
+      (map-tree-set nil #'include mesh-inc)
+      (map nil #'include (reverse (ensure-list include))))
+    ;; result
+    (output (pov-sequence pov-things)
+            output)))
