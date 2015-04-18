@@ -291,14 +291,22 @@ N: cols in the block."
                 (coerce x 'double-float)))
     vec))
 
-(defun veccat (&rest args)
-  (let* ((n (loop for x in args summing (length x)))
+(defun vec-length (vec)
+  (etypecase vec
+    (list (length vec))
+    (simple-array (length vec))
+    (array (length vec))
+    (matrix (error "Can't find vector length of a matrix"))
+    (real-array (length (real-array-data vec)))))
+
+(defun vec-cat (&rest args)
+  (let* ((n (loop for x in args summing (vec-length x)))
          (y (make-vec n))
          (i -1))
     (dolist (x args)
-      (dotimes (j (length x))
-        (setf (aref y (incf i))
-              (aref x j))))
+      (dotimes (j (vec-length x))
+        (setf (vecref y (incf i))
+              (vecref x j))))
     y))
 
 (defun vec-copy (vec &key (start 0) (end (length vec)))
