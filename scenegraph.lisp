@@ -151,6 +151,21 @@
       (fold-scene-graph-frames #'rec (make-hash-table :test #'equal) scene-graph))))
 
 
+(defun scene-graph-configurations (scene-graph)
+  "Returns the configuration variables in the scene graph."
+  (fold-scene-graph-frames (lambda (list frame)
+                             (if (scene-frame-joint-p frame)
+                                 (cons (scene-frame-name frame) list)
+                                 list))
+                           nil
+                           scene-graph))
+
+
+
+;;;;;;;;;;;;;;
+;;; POVRAY ;;;
+;;;;;;;;;;;;;;
+
 (defun scene-visual-pov (geometry tf)
   (etypecase geometry
     (scene-mesh (pov-mesh2 :mesh (scene-mesh-name geometry)
