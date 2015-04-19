@@ -50,9 +50,27 @@
                              x z y)))))
 
 (defmethod print-object ((object pov-matrix) stream)
-  (with-pov-indent old-indent
-    (format stream "~&~Amatrix <~{~A~^, ~}~&~A>"
-            old-indent (pov-matrix-elements object) old-indent)))
+  (let ((elements (pov-matrix-elements object)))
+    (with-pov-indent old-indent
+      (format stream "~&~Amatrix <~&~A~F, ~F, ~F,~&~A~F, ~F, ~F,~&~A~F, ~F, ~F,~&~A~F, ~F, ~F~&~A>"
+              old-indent
+              *pov-indent*
+              (elt elements 0)
+              (elt elements 1)
+              (elt elements 2)
+              *pov-indent*
+              (elt elements 3)
+              (elt elements 4)
+              (elt elements 5)
+              *pov-indent*
+              (elt elements 6)
+              (elt elements 7)
+              (elt elements 8)
+              *pov-indent*
+              (elt elements 9)
+              (elt elements 10)
+              (elt elements 11)
+              old-indent))))
 
 (defstruct (pov-integer-vector (:constructor %pov-integer-vector (x y z)))
   "Type for a povray vector."
