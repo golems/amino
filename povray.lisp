@@ -7,7 +7,6 @@
 (defparameter *pov-indent-width* 3) ;; as used in povray.org docs
 
 ;; Convert something to a POV-ray object
-(defgeneric pov-object (object))
 
 (defmacro with-pov-indent (old-indent &body body)
   `(let* ((,old-indent *pov-indent*)
@@ -36,44 +35,24 @@
   (y 0d0 :type double-float)
   (z 0d0 :type double-float))
 
-(defparameter *pov-swap-xy* (amino::col-matrix '(1 0 0) '(0 0 1) '(0 1 0)))
-
-(defun rotation-matrix-swap-yz (matrix)
-  (amino::tf-rotmat-mul *pov-swap-xy* matrix))
-
 (defstruct pov-matrix
   elements)
 
-(defgeneric pov-matrix (object))
-
-(defmethod pov-matrix ((tf cons))
-  (assert (= 12 (length tf)))
-  (make-pov-matrix :elements
-                   (loop for x in tf
-                      collect (pov-value (pov-float x)))))
-
-(defmethod pov-matrix ((tf array))
-  (check-type tf (array double-float (12)))
-  (pov-matrix (loop for x across tf collect x)))
-
-
-(defmethod pov-matrix ((tf quaternion-translation))
-  (let* ((matrix-0 (rotation-matrix (rotation tf)))
-         (matrix-swap (amino::tf-rotmat-mul (amino::tf-rotmat-mul *pov-swap-xy* matrix-0)
-                                            *pov-swap-xy*))
+(defun pov-matrix (tf)
+  (let* ((matrix (amino::matrix-data (rotation-matrix (rotation tf))))
          (translation (translation tf)))
-    ;(check-type matrix (simple-array double-float (9)))
-    (pov-matrix (vec-cat (amino::matrix-data matrix-swap)
-                         (vec3* (vec-x translation)
-                                (vec-z translation)
-                                (vec-y translation))))))
+    ;; Swap the Y and Z axes because povray is left-handed
+    (with-vec3 (x y z) translation
+      (make-pov-matrix :elements
+                       (list (aref matrix 0) (aref matrix 2) (aref matrix 1)
+                             (aref matrix 6) (aref matrix 8) (aref matrix 7)
+                             (aref matrix 3) (aref matrix 5) (aref matrix 4)
+                             x z y)))))
 
-;; TODO: remap axes / swap YZ
 (defmethod print-object ((object pov-matrix) stream)
   (with-pov-indent old-indent
     (format stream "~&~Amatrix <~{~A~^, ~}~&~A>"
             old-indent (pov-matrix-elements object) old-indent)))
-
 
 (defstruct (pov-integer-vector (:constructor %pov-integer-vector (x y z)))
   "Type for a povray vector."
@@ -86,19 +65,15 @@
                      (vec-y elements)
                      (vec-z elements)))
 
-
-(defmethod pov-object ((object vec3))
-  (with-vec3 (x y z) object
-    (%pov-float-vector x z y)))
-
 (defun pov-float-vector-right (elements)
-  (pov-object (vec3* (vec-x elements)
-                     (vec-y elements)
-                     (vec-z elements))))
-
+  (%pov-float-vector (vec-x elements)
+                     (vec-z elements)
+                     (vec-y elements)))
 
 (defun pov-integer-vector (elements)
-  (apply #'%pov-integer-vector elements))
+  (%pov-integer-vector (vec-x elements)
+                       (vec-y elements)
+                       (vec-z elements)))
 
 (defmethod print-object ((object pov-float-vector) stream)
   (format stream "~&~A<~F, ~F, ~F>"
@@ -291,13 +266,3 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   (loop for x in (pov-sequence-statements object)
      do (print-object x stream)))
 
-;; (defun print-vector-handed (vector &optional (output *pov-output*))
-;;   (ecase *pov-handedness*
-;;     (:left
-;;      (print-vector-xyz (vec-x vector) (vec-z vector) (vec-y vector)
-;;                        output))
-;;     (:right
-;;      (print-vector-xyz (vec-x vector) (vec-y vector) (vec-z vector)
-;;                        output))))
-
-;(defun print-mesh2 (vertex-vectors normal-vectors
