@@ -266,3 +266,27 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   (loop for x in (pov-sequence-statements object)
      do (print-object x stream)))
 
+(defun pov-render (things
+                   &key
+                     (file "/tmp/robray.pov")
+                     (output "/tmp/robray.png")
+                     (width 1280)
+                     (quality 4)
+                     (height 720))
+  (let ((things (if (listp things)
+                    (pov-sequence things)
+                    things)))
+    ;; write output
+    (output things file)
+    ;; run povray
+    ;povray frame.pov -D +O/tmp/pov.png +A +H1080 +W1920
+    (let ((args (list file
+                      (format nil "+O~A" output)
+                      "-D" ; don't invoke display
+                      "+A" ; anti-alias
+                      (format nil "+Q~D" quality)
+                      (format nil "+W~D" width)
+                      (format nil "+H~D" height))))
+      (format t "~&Running: povray ~{~A~^ ~}" args)
+      (sb-ext:run-program "povray" args :search t)
+      (format t "~&done"))))
