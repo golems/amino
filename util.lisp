@@ -15,6 +15,11 @@
 (defun parse-float-sequence (text)
   (map 'list #'parse-float (ppcre:split " " text)))
 
+(defun output-file (file &optional directory)
+  (if directory
+      (concatenate 'string directory file)
+      file))
+
 (defun output (object place
                &key
                  directory
@@ -24,9 +29,7 @@
      (print object place)
      nil)
     ((stringp place)
-     (with-open-file (place (if directory
-                                (concatenate 'string directory place)
-                                place)
+     (with-open-file (place (output-file place directory)
                             :direction :output :if-exists if-exists)
        (print object place))
      nil)

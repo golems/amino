@@ -72,7 +72,7 @@
 (defun scene-mesh-inc (mesh-file)
   "Return the include file for the mesh file"
   (concatenate 'string
-               *robray-cache-directory*
+               *robray-tmp-directory*
                "/povray"
                mesh-file ".inc"))
 

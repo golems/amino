@@ -99,32 +99,114 @@
 ;;         (values frame-number (+ time-start (* frame
 
 
+(defun frame-files (directory)
+  (directory (concatenate 'string directory "/*.pov")))
+
+(defun animate-encode (&key
+                         (directory *robray-tmp-directory*)
+                         (frames-per-second *frames-per-second*)
+                         (output-file "robray.mp4")
+                         (video-codec "libx264"))
+  ;; avconv -f image2 -r 30 -i frame-%d.png foo.mp4
+  (sb-ext:run-program "avconv"
+                      (list "-f" "image2"
+                            "-r" (write-to-string frames-per-second)
+                            "-i" "frame-%d.png"
+                            "-codec:v" video-codec
+                            "-loglevel" "warning"
+                            "-y"
+                            output-file)
+                      :search t :wait t :directory directory
+                      :output *standard-output*))
+
+
+(defun animate-render (&key
+                         (directory *robray-tmp-directory*)
+                         (wait t)
+                         (jobs 4)
+                         (status-stream t))
+  ;; This function is single threaded, multi-processed.  We start
+  ;; multiple povray child processes to do rendering work.  When a
+  ;; child terminates, the STATUS-HOOK handler starts another child to
+  ;; render the next frame.  After we've started the initial round of
+  ;; children, we wait on a semaphore.  When the last child finished
+  ;; the last frame, it posts on the semaphore.
+  (let* ((file-worklist (frame-files directory))
+         (n (length file-worklist))
+         (i 0)
+         (process-list)
+         (semaphore (when wait (sb-thread:make-semaphore :count 0))))
+    (labels ((process-file (file)
+               (format status-stream "~&~A Starting render of ~A" (percent) file)
+               (push (sb-ext:run-program "povray" (pov-args file
+                                                            :quality .5)
+                                         :search t :wait nil
+                                         :status-hook (status-hook file))
+                     process-list))
+             (percent () (format nil "[~3D%]" (round (* 100 (/ i n)))))
+             (status-hook (file)
+               (lambda (process)
+                 (incf i)
+                 (format status-stream "~&~A Finished render of ~A" (percent) file)
+                 (process-handler process)))
+             (process-handler (process)
+               ;; TODO: check process result
+               (setq process-list (remove process process-list :test #'eq))
+               (cond
+                 (file-worklist
+                  (process-file (pop file-worklist)))
+                 ((and (null process-list)
+                       semaphore)
+                  (sb-thread:signal-semaphore semaphore)))))
+      ;; start jobs
+      (loop
+         for i below jobs
+         while file-worklist
+         do
+           (process-file (pop file-worklist))))
+      ;; Maybe wait
+    (when semaphore
+      (sb-thread:wait-on-semaphore semaphore))))
+
+
 
 (defun scene-graph-animate (configuration-function
                             &key
-                              (output-directory (robray-cache-directory "animation/"))
+                              (render-frames t)
+                              (encode-video t)
+                              (output-directory *robray-tmp-directory*)
                               (time-start 0d0)
                               (time-end 1d0)
                               (scene-graph *scene-graph*)
                               (width *width*)
                               (height *height*)
                               (frames-per-second *frames-per-second*)
-                              include
-                              )
+                              include)
   (declare (ignore width height))
   (ensure-directories-exist output-directory)
-  (let* ((frame-period (coerce (/ 1 frames-per-second) 'double-float)))
-    (format t "~&period:     ~A" frame-period)
-    (loop
-       for frame from 0
-       for time = (+ time-start (* frame frame-period))
-       while (<= time time-end)
-       for configuration = (funcall configuration-function time)
-       do
+  (map nil #'delete-file (frame-files output-directory))
+  ;; Write frames
+  (loop
+     with frame-period = (coerce (/ 1 frames-per-second) 'double-float)
+     for frame from 0
+     for time = (+ time-start (* frame frame-period))
+     while (<= time time-end)
+     for configuration = (funcall configuration-function time)
+     do
+       (let ((frame-file (format nil "frame-~D.pov" frame)))
          (scene-graph-pov-frame scene-graph configuration
-                                :output (format nil "frame-~D.pov" frame)
+                                :output frame-file
                                 :directory output-directory
-                                :include include))))
+                                :include include)))
+  ;; Convert Frames
+  (when render-frames
+    (animate-render :directory output-directory
+                    :wait t)
+    ;; Encode Video
+    (when encode-video
+      (animate-encode :directory output-directory
+                      :frames-per-second frames-per-second))))
+
 
 ;;; Animation Pipeline
 ;;; - Given: configuration variables and fixed frames

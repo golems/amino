@@ -1,11 +1,11 @@
 (in-package :robray)
 
 
-(defparameter *robray-cache-directory*
-  (concatenate 'string
-               "/tmp/"
-               (sb-posix:getenv "USER")
-               "-cache/robray/"))
+(defparameter *robray-tmp-directory* "/tmp/robray/")
+  ;; (concatenate 'string
+  ;;              "/tmp/"
+  ;;              (sb-posix:getenv "USER")
+  ;;              "-cache/robray/"))
 
 (defparameter *width* 1280)
 (defparameter *height* 720)

@@ -290,6 +290,22 @@ RATIO: Floating point quality value in the range [0,1]"
   (clamp (round (* float-quality 11))
          0 11))
 
+
+(defun pov-args (file
+                 &key
+                   output
+                   (antialias t)
+                   (width *width*)
+                   (height *height*)
+                   (quality *quality*))
+  `(,(namestring file)
+    ,@(when output (list (format nil "+O~A" output)))
+    "-D" ; don't invoke display
+    ,@(when antialias (list "+A")) ; anti-alias
+    ,(format nil "+Q~D" (pov-quality quality))
+    ,(format nil "+W~D" width)
+    ,(format nil "+H~D" height)))
+
 (defun pov-render (things
                    &key
                      (file "/tmp/robray.pov")
