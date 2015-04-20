@@ -1,9 +1,5 @@
 (in-package :robray)
 
-(defparameter *robray-cache-directory*
-  (concatenate 'string
-               "/tmp/" (sb-posix:getenv "USER") "-cache/robray"))
-
 
 (defmacro string-case (keyform &body cases)
   (let ((value (gensym "value")))
@@ -21,13 +17,17 @@
 
 (defun output (object place
                &key
+                 directory
                  (if-exists :supersede))
   (cond
     ((streamp place)
      (print object place)
      nil)
     ((stringp place)
-     (with-open-file (place place :direction :output :if-exists if-exists)
+     (with-open-file (place (if directory
+                                (concatenate 'string directory place)
+                                place)
+                            :direction :output :if-exists if-exists)
        (print object place))
      nil)
     ((eq place t)
@@ -110,3 +110,8 @@
          (assert (= 1 length))
          (elt result 0))
         (t result)))))
+
+
+(defun robray-cache-directory (name &key (base-directory *robray-cache-directory*))
+  (let ((result (concatenate 'string base-directory name)))
+    result))

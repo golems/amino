@@ -284,16 +284,23 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   (loop for x in (pov-sequence-statements object)
      do (print-object x stream)))
 
+(defun pov-quality (float-quality)
+  "Return numeric povray quality for proportional to RATIO.
+RATIO: Floating point quality value in the range [0,1]"
+  (clamp (round (* float-quality 11))
+         0 11))
+
 (defun pov-render (things
                    &key
                      (file "/tmp/robray.pov")
                      (output "/tmp/robray.png")
-                     (width 1280)
-                     (quality 4)
-                     (height 720))
+                     (width *width*)
+                     (height *height*)
+                     (quality *quality*))
   (let ((things (if (listp things)
                     (pov-sequence things)
-                    things)))
+                    things))
+        (quality (pov-quality quality)))
     ;; write output
     (output things file)
     ;; run povray

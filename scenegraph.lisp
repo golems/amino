@@ -180,6 +180,7 @@
 (defun scene-graph-pov-frame (scene-graph configuration-map
                                 &key
                                   output
+                                  directory
                                   include
                                   (default-configuration 0d0))
   (let ((tf-abs (scene-graph-tf-absolute scene-graph configuration-map
@@ -214,4 +215,5 @@
       (map nil #'include (reverse (ensure-list include))))
     ;; result
     (output (pov-sequence pov-things)
-            output)))
+            output
+            :directory directory)))
