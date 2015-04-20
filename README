@@ -11,3 +11,4 @@ DEPENDENCIES
 * Amino: https://github.com/golems/amino
 * CXML: https://common-lisp.net/project/cxml/
 * POV-Ray: http://www.povray.org/
+* avconv: https://libav.org/
