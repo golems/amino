@@ -104,6 +104,7 @@
    :tf
    :translation
    :rotation
+   :normalize
    :tf-tag
    :tf-tag-parent :tf-tag-child :tf-tag-tf
    ;; TF tree

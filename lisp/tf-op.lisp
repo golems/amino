@@ -44,6 +44,13 @@
 (defgeneric rotation (x))
 (defgeneric translation (x))
 
+(defgeneric normalize (x))
+
+(defmethod normalize ((x quaternion-translation))
+  (make-quaternion-translation :quaternion (tf-qnormalize (quaternion-translation-quaternion x))
+                               :translation (quaternion-translation-translation x)))
+
+
 (defmethod rotation ((x quaternion-translation))
   (quaternion-translation-quaternion x))
 
