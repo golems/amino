@@ -123,7 +123,7 @@
 (defun animate-render (&key
                          (directory *robray-tmp-directory*)
                          (wait t)
-                         (jobs 4)
+                         (jobs 16)
                          (status-stream t))
   ;; This function is single threaded, multi-processed.  We start
   ;; multiple povray child processes to do rendering work.  When a
@@ -175,6 +175,7 @@
                               (render-frames t)
                               (encode-video t)
                               (output-directory *robray-tmp-directory*)
+                              (pov-file "frame")
                               (time-start 0d0)
                               (time-end 1d0)
                               (scene-graph *scene-graph*)
@@ -194,7 +195,8 @@
      for configuration = (funcall configuration-function time)
      do
        (let ((frame-file (format nil "frame-~D.pov" frame)))
-         (scene-graph-pov-frame scene-graph configuration
+         (scene-graph-pov-frame scene-graph
+                                :configuration-map configuration
                                 :output frame-file
                                 :directory output-directory
                                 :include include)))
@@ -206,6 +208,49 @@
     (when encode-video
       (animate-encode :directory output-directory
                       :frames-per-second frames-per-second))))
+
+
+;;; This version is slower because the file is reparsed for each
+;;; frame, and the re-parsing is serialized
+;; (defun scene-graph-animate-2 (configuration-function
+;;                             &key
+;;                               (render-frames t)
+;;                               (encode-video t)
+;;                               (output-directory *robray-tmp-directory*)
+;;                               (pov-file "frame")
+;;                               (time-start 0d0)
+;;                               (time-end 1d0)
+;;                               (scene-graph *scene-graph*)
+;;                               (width *width*)
+;;                               (height *height*)
+;;                               (frames-per-second *frames-per-second*)
+;;                               include)
+;;   (declare (ignore width height))
+;;   (ensure-directories-exist output-directory)
+;;   (map nil #'delete-file (frame-files output-directory))
+;;   ;; Write pov
+;;   (let ((frame-period (coerce (/ 1 frames-per-second) 'double-float))
+;;         (frame-end (round (* (- time-end time-start)
+;;                              frames-per-second))))
+;;     ;; POV file
+;;     (scene-graph-pov-frame scene-graph
+;;                            :frame-start 0
+;;                            :frame-end (round (* (- time-end time-start)
+;;                                                 frames-per-second))
+;;                            :frame-configuration-function (lambda (frame)
+;;                                                            (funcall configuration-function
+;;                                                                     (+ time-start (* frame frame-period))))
+;;                            :output (format nil "~A.pov" pov-file)
+;;                            :directory output-directory
+;;                            :include include)
+
+;;     ;; Run POV
+;;     (when render-frames
+;;       (sb-ext:run-program "povray" (pov-args (concatenate 'string output-directory
+;;                                                           pov-file ".pov")
+;;                                              :quality .5
+;;                                              :other (list (format nil "+KFF~D" frame-end)))
+;;                           :search t :wait t))))
 
 
 ;;; Animation Pipeline

@@ -5,6 +5,7 @@
 (scene-graph-resolve-mesh *scene-graph*)
 
 (pov-render (scene-graph-pov-frame  *scene-graph*
+                                    :configuration-map
                                     (alist-tree-map `(("right_s0" . ,(* .25 pi))
                                                       ("right_s1" . ,(* -0.25 pi))
                                                       ("right_e0" . ,(* 0.0 pi))
@@ -14,7 +15,7 @@
                                                       ("right_w2" . ,(* 0.0 pi)))
                                                     #'string-compare)
                                     :include "/tmp/demo.inc" )
-            :quality 3
+            :quality 0.0
             :width 1920
             :height 1080
             :file "/tmp/robray.pov"

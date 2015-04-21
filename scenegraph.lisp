@@ -179,50 +179,75 @@
                    (scene-sphere-radius geometry)
                    modifiers)))))
 
-(defun scene-graph-pov-frame (scene-graph configuration-map
+(defun scene-graph-transform-name (frame-name)
+  (concatenate 'string
+               "TF_"
+               (name-mangle frame-name)))
+
+(defun scene-graph-pov-configuration-transform (scene-graph configuration-map)
+  (let ((tf-abs (scene-graph-tf-absolute scene-graph configuration-map
+                                         :default-configuration 0d0))
+        (result))
+    (do-scene-graph-frames (frame scene-graph result)
+      (let ((name (scene-frame-name frame)))
+        (when (scene-frame-visual frame)
+          (push (pov-declare (scene-graph-transform-name name)
+                             (pov-transform* (pov-matrix (gethash name tf-abs))))
+                result))))))
+
+(defun scene-graph-pov-frame-transform (scene-graph frame-configuration-function start end)
+  (pov-switch "frame_number"
+              (loop for frame-number from start to end
+                 collect (pov-case frame-number
+                                   (scene-graph-pov-configuration-transform scene-graph
+                                                                            (funcall frame-configuration-function
+                                                                                     frame-number))))))
+
+(defun scene-graph-pov-frame (scene-graph
                               &key
+                                configuration-map
+                                frame-start
+                                frame-end
+                                frame-configuration-function
                                 output
                                 directory
                                 include
                                 (default-configuration 0d0))
-  (let ((tf-abs (scene-graph-tf-absolute scene-graph configuration-map
-                                         :default-configuration default-configuration))
-        (mesh-inc (fold-scene-graph-frames
-                   (lambda (set frame)
-                     (fold (lambda (set visual)
-                             (let ((g (scene-visual-geometry visual)))
-                               (if (scene-mesh-p g)
-                                   (tree-set-insert set
-                                                    (scene-mesh-inc (scene-mesh-file g)))
-                                   set)))
-                           set
-                           (scene-frame-visual frame)))
-                   (make-tree-set #'string-compare)
-                   scene-graph))
-        (pov-things))
+  (let ((pov-things))
     (labels ((thing (thing)
                (push thing pov-things))
              (include (file)
                (thing (pov-include file)))
              (tf (name)
-               (concatenate 'string "TF_" (name-mangle name))))
+               (scene-graph-transform-name name)))
       ;; push frame geometry
       (do-scene-graph-frames (frame scene-graph)
         (let* ((name (scene-frame-name frame)))
           (dolist (vis (scene-frame-visual frame))
             (let ((g (scene-visual-geometry vis)))
               (thing (scene-visual-pov g (pov-transform* (pov-value (tf name)))))))))
-
       ;; push frame transforms
-      (do-scene-graph-frames (frame scene-graph)
-        (let ((name (scene-frame-name frame)))
-          (when (scene-frame-visual frame)
-            (thing (pov-declare (tf name)
-                                (pov-transform*
-                                 (pov-matrix (gethash name tf-abs))))))))
+      (when configuration-map
+        (map nil #'thing
+             (scene-graph-pov-configuration-transform scene-graph configuration-map)))
+      (when frame-configuration-function
+        (thing (scene-graph-pov-frame-transform scene-graph frame-configuration-function
+                                                frame-start frame-end)))
 
       ;; push mesh include files
-      (map-tree-set nil #'include mesh-inc)
+      (map-tree-set nil #'include
+                    (fold-scene-graph-frames
+                     (lambda (set frame)
+                       (fold (lambda (set visual)
+                               (let ((g (scene-visual-geometry visual)))
+                                 (if (scene-mesh-p g)
+                                     (tree-set-insert set
+                                                      (scene-mesh-inc (scene-mesh-file g)))
+                                     set)))
+                             set
+                             (scene-frame-visual frame)))
+                     (make-tree-set #'string-compare)
+                     scene-graph))
       (map nil #'include (reverse (ensure-list include))))
     ;; result
     (output (pov-sequence pov-things)

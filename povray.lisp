@@ -297,6 +297,30 @@ RATIO: Floating point quality value in the range [0,1]"
   value
   statements)
 
+(defstruct (pov-switch (:constructor pov-switch (value clauses &optional else)))
+  value
+  clauses
+  else)
+
+(defmethod print-object ((object pov-switch) stream)
+  (with-pov-indent old-indent
+    (declare (ignore old-indent))
+    (format stream "~&#switch (~A) ~{~A~}~@[~A~]~&#end"
+            (pov-switch-value object)
+            (pov-switch-clauses object)
+            (pov-switch-else object))))
+
+(defstruct (pov-case (:constructor pov-case (value statements)))
+  value
+  statements)
+
+(defmethod print-object ((object pov-case) stream)
+  (with-pov-indent old-indent
+    (format stream "~&~A#case (~A) ~{~A~}~&~A#break"
+            old-indent
+            (pov-case-value object) (pov-case-statements object)
+            old-indent)))
+
 ;(defmethod print-object
 
 (defun pov-args (file
@@ -305,14 +329,16 @@ RATIO: Floating point quality value in the range [0,1]"
                    (antialias t)
                    (width *width*)
                    (height *height*)
-                   (quality *quality*))
+                   (quality *quality*)
+                   other)
   `(,(namestring file)
     ,@(when output (list (format nil "+O~A" output)))
     "-D" ; don't invoke display
     ,@(when antialias (list "+A")) ; anti-alias
     ,(format nil "+Q~D" (pov-quality quality))
     ,(format nil "+W~D" width)
-    ,(format nil "+H~D" height)))
+    ,(format nil "+H~D" height)
+     ,@other))
 
 (defun pov-render (things
                    &key
