@@ -167,17 +167,9 @@
   (assert (dom:has-attribute node attribute))
   (collada-parse dom (collada-lookup dom (dom:get-attribute node attribute))))
 
-(defun collada-mangle (collada-identifier)
-  "Convert a collada identifer to a conventional identifier"
-  (substitute-if #\_
-                 (lambda (x)
-                   (or (eq x #\-)
-                       (eq x #\Space)))
-                 collada-identifier))
-
 (defun collada-geometry-name (dom)
   "Find the name of the single geometry defined in this collada file"
-  (collada-mangle (dom-select-path dom '("COLLADA" "library_geometries" "geometry" "@name")
+  (name-mangle (dom-select-path dom '("COLLADA" "library_geometries" "geometry" "@name")
                                    :singleton t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -229,7 +221,7 @@
                    ;;                                             collect (car rest))
                    ;;                                          3)
 
-    (pov-declare (collada-mangle (dom:get-attribute geometry-node "name"))
+    (pov-declare (name-mangle (dom:get-attribute geometry-node "name"))
                  (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
                             ;;:normal-vectors (map 'list #'pov-float-vector-right normals)
                             :face-indices faces
@@ -270,7 +262,7 @@
     ;;                                              collect (car rest))
     ;;                                           3)))
     ;;   (assert (dom:has-attribute geometry-node "name"))
-    ;;   (pov-declare (collada-mangle (dom:get-attribute geometry-node "name"))
+    ;;   (pov-declare (name-mangle (dom:get-attribute geometry-node "name"))
     ;;                (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
     ;;                           :normal-vectors (map 'list #'pov-float-vector-right normals)
     ;;                           :face-indices (map 'list #'pov-integer-vector vertex-indices)

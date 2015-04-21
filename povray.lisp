@@ -175,20 +175,21 @@
   (format stream "~&~A~A ~A"
           *pov-indent* (pov-item-name object) (pov-item-value object)))
 
-(defun pov-texture (things)
-  (pov-block "texture" things))
-(defun pov-texture* (&rest things)
-  (pov-texture things))
+(defmacro def-pov-block (name)
+  (let ((name (string-downcase (string name))))
+    (let ((fun (intern (string-upcase (concatenate 'string "pov-" name))))
+          (fun* (intern (string-upcase (concatenate 'string "pov-" name "*")))))
+      `(progn
+         (defun ,fun (things)
+           (pov-block ,name (ensure-list things)))
+         (defun ,fun* (&rest things)
+           (,fun things))))))
 
-(defun pov-finish (things)
-  (pov-block "finish" things))
-(defun pov-finish* (&rest things)
-  (pov-finish things))
+(def-pov-block texture)
+(def-pov-block finish)
+(def-pov-block pigment)
+(def-pov-block transform)
 
-(defun pov-pigment (things)
-  (pov-block "pigment" things))
-(defun pov-pigment* (&rest things)
-  (pov-pigment things))
 
 (defun pov-box (first-corner second-corner &optional modifiers)
   (pov-block "box" (list* first-corner second-corner modifiers)))
@@ -264,7 +265,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 (defmethod print-object ((object pov-directive) stream)
   (with-pov-indent old-indent
     (declare (ignore old-indent))
-    (format stream "#~A ~A = ~A"
+    (format stream "~&#~A ~A = ~A"
             (pov-directive-type object)
             (pov-directive-name object)
             (pov-directive-value object))))
@@ -290,6 +291,13 @@ RATIO: Floating point quality value in the range [0,1]"
   (clamp (round (* float-quality 11))
          0 11))
 
+
+(defstruct (pov-if= (:constructor pov-if= (variable value statements)))
+  variable
+  value
+  statements)
+
+;(defmethod print-object
 
 (defun pov-args (file
                  &key

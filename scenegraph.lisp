@@ -143,8 +143,8 @@
                        (progn
                          (rec tf-abs (scene-graph-lookup scene-graph parent))
                          (setf (gethash name tf-abs)
-                               (g* (gethash parent tf-abs)
-                                   (gethash name tf-relative))))
+                               (normalize (g* (gethash parent tf-abs)
+                                              (gethash name tf-relative)))))
                        (setf (gethash name tf-abs)
                              (gethash name tf-relative)))))
                tf-abs))
@@ -167,22 +167,24 @@
 ;;;;;;;;;;;;;;
 
 (defun scene-visual-pov (geometry tf)
-  (etypecase geometry
-    (scene-mesh (pov-mesh2 :mesh (scene-mesh-name geometry)
-                           :matrix tf))
-    (scene-box
-     (pov-box-center (scene-box-dimension geometry)
-                     :modifiers (list (pov-matrix tf))))
-    (scene-sphere
-     (pov-sphere (translation tf)
-                 (scene-sphere-radius geometry)))))
+  (let ((modifiers (list tf)))
+    (etypecase geometry
+      (scene-mesh (pov-mesh2 :mesh (scene-mesh-name geometry)
+                             :modifiers modifiers))
+      (scene-box
+       (pov-box-center (scene-box-dimension geometry)
+                       :modifiers modifiers))
+      (scene-sphere
+       (pov-sphere (vec3* 0 0 0)
+                   (scene-sphere-radius geometry)
+                   modifiers)))))
 
 (defun scene-graph-pov-frame (scene-graph configuration-map
-                                &key
-                                  output
-                                  directory
-                                  include
-                                  (default-configuration 0d0))
+                              &key
+                                output
+                                directory
+                                include
+                                (default-configuration 0d0))
   (let ((tf-abs (scene-graph-tf-absolute scene-graph configuration-map
                                          :default-configuration default-configuration))
         (mesh-inc (fold-scene-graph-frames
@@ -201,16 +203,25 @@
     (labels ((thing (thing)
                (push thing pov-things))
              (include (file)
-               (thing (pov-include file))))
-    ;; push frame geometry
-    (do-scene-graph-frames (frame scene-graph)
-      (let* ((name (scene-frame-name frame))
-             (tf (gethash name tf-abs)))
-        (dolist (vis (scene-frame-visual frame))
-          (let ((g (scene-visual-geometry vis)))
-            (thing (scene-visual-pov g tf))))))
+               (thing (pov-include file)))
+             (tf (name)
+               (concatenate 'string "TF_" (name-mangle name))))
+      ;; push frame geometry
+      (do-scene-graph-frames (frame scene-graph)
+        (let* ((name (scene-frame-name frame)))
+          (dolist (vis (scene-frame-visual frame))
+            (let ((g (scene-visual-geometry vis)))
+              (thing (scene-visual-pov g (pov-transform* (pov-value (tf name)))))))))
 
-    ;; push mesh include files
+      ;; push frame transforms
+      (do-scene-graph-frames (frame scene-graph)
+        (let ((name (scene-frame-name frame)))
+          (when (scene-frame-visual frame)
+            (thing (pov-declare (tf name)
+                                (pov-transform*
+                                 (pov-matrix (gethash name tf-abs))))))))
+
+      ;; push mesh include files
       (map-tree-set nil #'include mesh-inc)
       (map nil #'include (reverse (ensure-list include))))
     ;; result

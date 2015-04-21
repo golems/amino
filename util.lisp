@@ -40,6 +40,15 @@
      object)
     (t (error "Unknown place type: ~A" place))))
 
+
+(defun name-mangle (identifier)
+  "Convert an identifer to a conventional identifier"
+  (substitute-if #\_
+                 (lambda (x)
+                   (or (eq x #\-)
+                       (eq x #\Space)))
+                 identifier))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; DOM-HELPERS ;;;
 ;;;;;;;;;;;;;;;;;;;
