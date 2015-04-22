@@ -248,7 +248,10 @@
                              (scene-frame-visual frame)))
                      (make-tree-set #'string-compare)
                      scene-graph))
-      (map nil #'include (reverse (ensure-list include))))
+      (map nil #'include (reverse (ensure-list include)))
+      ;; version
+      (thing (pov-version 3.7)))
+
     ;; result
     (output (pov-sequence pov-things)
             output

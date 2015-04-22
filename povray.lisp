@@ -254,6 +254,16 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 (defun pov-texture-list (textures)
   (pov-list "texture_list" textures))
 
+
+(defstruct (pov-version (:constructor pov-version (value)))
+  value)
+
+(defmethod print-object ((object pov-version) stream)
+  (with-pov-indent old-indent
+    (declare (ignore old-indent))
+    (format stream "~&#version ~A;"
+            (pov-version-value object))))
+
 (defstruct (pov-directive (:constructor pov-directive (type name value)))
   type
   name
