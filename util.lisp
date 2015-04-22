@@ -49,6 +49,15 @@
                        (eq x #\Space)))
                  identifier))
 
+(defun frame-name-compare (a b)
+  (if (null a)
+      (if (null b)
+          0
+          -1)
+      (if (null b)
+          1
+          (sycamore-util:string-compare a b))))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; DOM-HELPERS ;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -124,6 +133,6 @@
         (t result)))))
 
 
-(defun robray-cache-directory (name &key (base-directory *robray-cache-directory*))
+(defun robray-cache-directory (name &key (base-directory *robray-tmp-directory*))
   (let ((result (concatenate 'string base-directory name)))
     result))

@@ -39,12 +39,12 @@
 
 
 (defstruct scene-graph
-  (frame-map (make-hash-table :test #'equal)))
+  (frame-map (make-tree-map #'frame-name-compare)))
 
 (defun scene-graph-add-frame (scene-graph frame)
-  (setf (gethash (scene-frame-name frame) (scene-graph-frame-map scene-graph))
-        frame)
-  scene-graph)
+  (make-scene-graph :frame-map (tree-map-insert (scene-graph-frame-map scene-graph)
+                                                (scene-frame-name frame)
+                                                frame)))
 
 (defun scene-graph (frames)
   (fold #'scene-graph-add-frame
@@ -52,18 +52,34 @@
         frames))
 
 (defmacro do-scene-graph-frames ((frame-variable scene-graph &optional result) &body body)
-  `(progn
-     (loop for ,frame-variable being the hash-values of (scene-graph-frame-map ,scene-graph)
-        do (progn ,@body))
-     ,result))
+  (with-gensyms (key)
+    `(progn (map-tree-map :inorder nil (lambda (,key ,frame-variable)
+                                         (declare (ignore ,key))
+                                         ,@body)
+                          (scene-graph-frame-map ,scene-graph))
+            ,result)))
+
+  ;; `(progn
+  ;;    (loop for ,frame-variable being the hash-values of (scene-graph-frame-map ,scene-graph)
+  ;;       do (progn ,@body))
+  ;;    ,result))
 
 (defun fold-scene-graph-frames (function initial-value scene-graph)
-  (let ((value initial-value))
-    (do-scene-graph-frames (frame scene-graph value)
-      (setq value (funcall function value frame)))))
+  (fold-tree-map (lambda (accum key value)
+                   (declare (ignore key))
+                   (funcall function accum value))
+                 initial-value
+                 (scene-graph-frame-map scene-graph)))
+
+  ;; (let ((value initial-value))
+  ;;   (do-scene-graph-frames (frame scene-graph value)
+  ;;     (setq value (funcall function value frame)))))
 
 (defun scene-graph-lookup (scene-graph frame-name)
-  (gethash frame-name (scene-graph-frame-map scene-graph)))
+  (tree-map-find (scene-graph-frame-map scene-graph)
+                 frame-name))
+
+  ;; (gethash frame-name (scene-graph-frame-map scene-graph)))
 
 ;; Find the relative transform of the scene frame
 (defgeneric scene-frame-tf (object))
