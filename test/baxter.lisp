@@ -1,7 +1,10 @@
 (setq *net-alist*
-      '(("localhost" :jobs 8 :threads 1 :nice 0) ;; 4 core (HT), 3.6GHz
-        ("dione" :jobs 6 :threads 2 :nice 0)     ;; 12 core, 1.4GHz
-        ;("zeus" :jobs 8 :threads 1 :nice 1)
+      '(("localhost"  ; 4 core (HT), 3.6GHz
+         :jobs 8 :threads 1 :nice 0)
+        ("dione"      ; 12 core, 1.4GHz
+         :jobs 6 :threads 2 :nice 0)
+        ("zeus"       ; 16 core, 2.4GHz
+         :jobs 6 :threads 2 :nice 1 :povray "/home/ndantam/local/bin/povray")
         ))
 
 (setq *urdf-dom* (urdf-load "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf"))

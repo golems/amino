@@ -2,5 +2,7 @@
 
 remote_host="$1"
 shift
+POVRAY="$1"
+shift
 
-ssh "$remote_host" "cd /tmp/robray && povray $@ -D"
+ssh "$remote_host" "cd /tmp/robray && $POVRAY $@ -D"

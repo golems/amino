@@ -250,8 +250,20 @@
                name))
 
 (defstruct net-args
+  host
+  povray
+  jobs
   threads
   nice)
+
+(defun net-args (host &key (jobs 1) (threads 1) (nice 0) (povray "povray"))
+  (make-net-args :host host
+                 :jobs jobs
+                 :threads threads
+                 :povray povray
+                 :nice nice))
+
+
 
 (defun net-render (&key
                      (directory *robray-tmp-directory*)
@@ -281,8 +293,11 @@
                            :height height
                            :quality quality
                            :threads (net-args-threads args))))
+             (pov-cmd (host)
+               (net-args-povray (gethash host host-args)))
              (pov-local (item status-hook)
-               (sb-ext:run-program "povray" (my-pov-args "localhost" item)
+               (sb-ext:run-program (pov-cmd "localhost")
+                                   (my-pov-args "localhost" item)
                                    :search t :wait nil
                                    :directory directory
                                    :status-hook status-hook))
@@ -300,7 +315,9 @@
                (let ((output (concatenate 'string
                                           directory (pov-output-file (povfile-base item)))))
                  (sb-ext:run-program (find-script "povremote")
-                                     (list* host (my-pov-args host (povfile-base item)))
+                                     (list* host
+                                            (pov-cmd host)
+                                            (my-pov-args host (povfile-base item)))
                                      :search nil :wait nil
                                      :directory directory
                                      :error nil
@@ -338,11 +355,13 @@
       ;; Initialize Hosts
       (dolist (host-vars net-alist)
         (print host-vars)
-        (destructuring-bind (host &key (jobs 1) (threads 1) (nice 1)) host-vars
-          (setf (gethash host host-args)
-                (make-net-args :threads threads :nice nice))
-          (if (string-equal host "localhost")
-              (setf (gethash host compute-available) jobs)
+          (let* ((net-args (apply #'net-args host-vars))
+                 (host (net-args-host net-args))
+                 (jobs (net-args-jobs net-args)))
+            (setf (gethash host host-args) net-args)
+            (if (string-equal host "localhost")
+              (setf (gethash host compute-available)
+                    jobs)
               (upload-inc host jobs))))
       ;; Process
       (net-process semaphore compute-available work-queue #'work-generator))))
