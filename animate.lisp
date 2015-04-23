@@ -284,7 +284,7 @@
     (labels ((povfile-base (item)
                (concatenate 'string
                             (pathname-name item) "." (pathname-type item)))
-             (percent () (format nil "[~3D%]" (round (* 100 (/ i n)))))
+             (percent () (format nil "[~3D%]" (floor (* 100 (/ i n)))))
              (my-pov-args (host item)
                (let ((args (gethash host host-args)))
                  (pov-args item
@@ -332,11 +332,12 @@
                                      :if-output-exists :supersede)))
              (work-generator (host item)
                (lambda (release-host-thunk)
-                 (format status-stream "~&~A ~A rendering ~A" (percent) host item)
+                 (format status-stream "~&~A ~A ~A(~A)"
+                         (percent) (povfile-base item) #\Tab host )
+                 (incf i)
                  (flet ((status-hook (process)
                           (declare (ignore process))
-                          (incf i)
-                          (format status-stream "~&~A ~A finished ~A" (percent) host item)
+                          ;(format status-stream "~&~A ~A finished ~A" (percent) host item)
                           (funcall release-host-thunk)))
                    (if (string= host "localhost")
                      (pov-local item #'status-hook)
