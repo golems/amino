@@ -212,17 +212,17 @@
 
 
 (defun net-process-host (compute-available semaphore)
-  ;; Try to find it
-  (maphash (lambda (host jobs-availble)
-             (unless (zerop jobs-availble)
-               (if (= 1 jobs-availble)
-                   (remhash host compute-available)
-                   (decf (gethash host compute-available)))
-               (return-from net-process-host host)))
-           compute-available)
-  ;; Else wait
-  (sb-thread:wait-on-semaphore semaphore)
-  (net-process-host compute-available semaphore))
+  (loop do
+     ;; Try to find it
+       (maphash (lambda (host jobs-availble)
+                  (unless (zerop jobs-availble)
+                    (if (= 1 jobs-availble)
+                        (remhash host compute-available)
+                        (decf (gethash host compute-available)))
+                    (return-from net-process-host host)))
+                compute-available)
+     ;; Else wait
+       (sb-thread:wait-on-semaphore semaphore)))
 
 (defun net-process (semaphore compute-available work-queue work-generator)
   "WORK-GENERATOR: (lambda (host item)) => (lambda (release-host-thunk))"
@@ -271,13 +271,12 @@
     ;; -
     (labels ((povfile-base (item)
                (concatenate 'string
-                            (pathname-name item)
-                            "."
-                            (pathname-type item)))
+                            (pathname-name item) "." (pathname-type item)))
              (percent () (format nil "[~3D%]" (round (* 100 (/ i n)))))
              (my-pov-args (host item)
                (let ((args (gethash host host-args)))
                  (pov-args item
+                           :output (unless (string-equal host "localhost") "-")
                            :width width
                            :height height
                            :quality quality
@@ -285,28 +284,29 @@
              (pov-local (item status-hook)
                (sb-ext:run-program "povray" (my-pov-args "localhost" item)
                                    :search t :wait nil
-                                   ;:error *error-output*
-                                   ;:output nil
                                    :directory directory
                                    :status-hook status-hook))
+             ;; (copy-result (host item status-hook)
+             ;;   (sb-ext:run-program "scp"
+             ;;                       (list (format nil "~A:/tmp/robray/~A"
+             ;;                                     host
+             ;;                                     (povfile-base (pov-output-file item)))
+             ;;                             (namestring directory))
+             ;;                       :search t :wait nil
+             ;;                       :output status-stream
+             ;;                       :error *error-output*
+             ;;                       :status-hook status-hook))
              (pov-remote (host item status-hook)
-               (sb-ext:run-program (find-script "povremote")
-                                   (list* host (my-pov-args host (povfile-base item)))
-                                   :search nil :wait nil
-                                   ;:error *error-output*
-                                   :status-hook (lambda (process)
-                                                  (declare (ignore process))
-                                                  (copy-result host item status-hook))))
-             (copy-result (host item status-hook)
-               (sb-ext:run-program "scp"
-                                   (list (format nil "~A:/tmp/robray/~A"
-                                                 host
-                                                 (povfile-base (pov-output-file item)))
-                                         (namestring directory))
-                                   :search t :wait nil
-                                   :output status-stream
-                                   :error *error-output*
-                                   :status-hook status-hook))
+               (let ((output (concatenate 'string
+                                          directory (pov-output-file (povfile-base item)))))
+                 (sb-ext:run-program (find-script "povremote")
+                                     (list* host (my-pov-args host (povfile-base item)))
+                                     :search nil :wait nil
+                                     :directory directory
+                                     :error nil
+                                     :output output
+                                     :status-hook status-hook
+                                     :if-output-exists :supersede)))
              (work-generator (host item)
                (lambda (release-host-thunk)
                  (format status-stream "~&~A ~A rendering ~A" (percent) host item)
