@@ -340,15 +340,21 @@ RATIO: Floating point quality value in the range [0,1]"
                    (width *width*)
                    (height *height*)
                    (quality *quality*)
+                   threads
                    other)
   `(,(namestring file)
     ,@(when output (list (format nil "+O~A" output)))
     "-D" ; don't invoke display
+     "-GS"
     ,@(when antialias (list "+A")) ; anti-alias
+    ,@(when threads (list (format nil "+WT~D" threads)))
     ,(format nil "+Q~D" (pov-quality quality))
     ,(format nil "+W~D" width)
     ,(format nil "+H~D" height)
      ,@other))
+
+(defun pov-output-file (pov-file &optional (suffix ".png"))
+  (ppcre:regex-replace "\.pov$" (namestring pov-file) suffix))
 
 (defun pov-render (things
                    &key
@@ -375,3 +381,10 @@ RATIO: Floating point quality value in the range [0,1]"
       (format t "~&Running: povray ~{~A~^ ~}" args)
       (sb-ext:run-program "povray" args :search t)
       (format t "~&done"))))
+
+(defun pov-make-tarball (directory file)
+  (sb-ext:run-program (find-script "make-tarball")
+                      (list file)
+                      :search nil :wait t
+                      :directory directory
+                      :error *error-output*))

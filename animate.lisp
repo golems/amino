@@ -211,6 +211,149 @@
                       :frames-per-second frames-per-second))))
 
 
+(defun net-process-host (compute-available semaphore)
+  ;; Try to find it
+  (maphash (lambda (host jobs-availble)
+             (unless (zerop jobs-availble)
+               (if (= 1 jobs-availble)
+                   (remhash host compute-available)
+                   (decf (gethash host compute-available)))
+               (return-from net-process-host host)))
+           compute-available)
+  ;; Else wait
+  (sb-thread:wait-on-semaphore semaphore)
+  (net-process-host compute-available semaphore))
+
+(defun net-process (semaphore compute-available work-queue work-generator)
+  "WORK-GENERATOR: (lambda (host item)) => (lambda (release-host-thunk))"
+  (let ((active-jobs 0))
+    ;; Start jobs
+    (loop
+       for item = (pop work-queue)
+       while item
+       for host = (net-process-host compute-available semaphore)
+       do (let ((host host))
+            (incf active-jobs)
+            (funcall (funcall work-generator host item)
+                     (lambda ()
+                       (decf active-jobs)
+                       (incf (gethash host compute-available 0))
+                       (sb-thread:signal-semaphore semaphore)))))
+    ;; Wait  for jobs to finish
+    (loop until (zerop active-jobs)
+       do (sb-thread:wait-on-semaphore semaphore))))
+
+(defun find-script (name)
+  (concatenate 'string
+               (namestring (asdf:system-source-directory :robray))
+               "scripts/"
+               name))
+
+(defstruct net-args
+  threads
+  nice)
+
+(defun net-render (&key
+                     (directory *robray-tmp-directory*)
+                     (width *width*)
+                     (height *height*)
+                     (quality *quality*)
+                     (net-alist *net-alist*)
+                     (status-stream *standard-output*))
+  (let ((compute-available (make-string-hash-table))
+        (host-args (make-string-hash-table))
+        (work-queue (frame-files directory))
+        (semaphore (sb-thread:make-semaphore :count 0)))
+    (labels ((povfile-base (item)
+               (concatenate 'string
+                            (pathname-name item)
+                            "."
+                            (pathname-type item)))
+             (my-pov-args (host item)
+               (let ((args (gethash host host-args)))
+                 (pov-args item
+                           :width width
+                           :height height
+                           :quality quality
+                           :threads (net-args-threads args))))
+             (pov-local (item status-hook)
+               (sb-ext:run-program "povray" (my-pov-args "localhost" item)
+                                   :search t :wait nil
+                                   ;:error *error-output*
+                                   ;:output nil
+                                   :directory directory
+                                   :status-hook status-hook))
+             (pov-remote (host item status-hook)
+               (sb-ext:run-program (find-script "povremote")
+                                   (list* host (my-pov-args host (povfile-base item)))
+                                   :search nil :wait nil
+                                   ;:error *error-output*
+                                   :status-hook (lambda (process)
+                                                  (declare (ignore process))
+                                                  (copy-result host item status-hook))))
+             (copy-result (host item status-hook)
+               (sb-ext:run-program "scp"
+                                   (list (format nil "~A:/tmp/robray/~A"
+                                                 host
+                                                 (povfile-base (pov-output-file item)))
+                                         (namestring directory))
+                                   :search t :wait nil
+                                   :output status-stream
+                                   :error *error-output*
+                                   :status-hook status-hook))
+             (work-generator (host item)
+               (lambda (release-host-thunk)
+                 (format status-stream "~&~A rendering ~A" host item)
+                 (flet ((status-hook (process)
+                          (declare (ignore process))
+                          (format status-stream "~&~A finished ~A" host item)
+                          (funcall release-host-thunk)))
+                   (if (string= host "localhost")
+                     (pov-local item #'status-hook)
+                     (pov-remote host item #'status-hook)))))
+             (upload-inc (host jobs)
+               (format status-stream "~&Uploading tarball to ~A" host)
+               (sb-ext:run-program (find-script "upload-tarball")
+                                   (list host)
+                                   :search nil :wait nil
+                                   :directory directory
+                                   :output status-stream
+                                   :error *error-output*
+                                   :status-hook (lambda (process)
+                                                  (declare (ignore process))
+                                                  (format status-stream "~&Finished upload to ~A" host)
+                                                  (setf (gethash host compute-available) jobs)
+                                                  (sb-thread:signal-semaphore semaphore)))))
+      ;; Make tarball
+      (format status-stream "~&Making tarball")
+      (pov-make-tarball directory "robray-data.tar.gz")
+      (format status-stream "~&Tarball done")
+      ;; Initialize Hosts
+      (dolist (host-vars net-alist)
+        (print host-vars)
+        (destructuring-bind (host &key (jobs 1) (threads 1) (nice 1)) host-vars
+          (setf (gethash host host-args)
+                (make-net-args :threads threads :nice nice))
+          (if (string-equal host "localhost")
+              (setf (gethash host compute-available) jobs)
+              (upload-inc host jobs))))
+      ;; Process
+      (net-process semaphore compute-available work-queue #'work-generator))))
+    ;;   ;; start jobs
+    ;;   (loop
+    ;;      for i below jobs
+    ;;      while file-worklist
+    ;;      do
+    ;;        (process-file (pop file-worklist))))
+    ;;   ;; Maybe wait
+    ;; (when semaphore
+    ;;   (sb-thread:wait-on-semaphore semaphore))))
+
+
+
+
+
+
 ;;; This version is slower because the file is reparsed for each
 ;;; frame, and the re-parsing is serialized
 ;; (defun scene-graph-animate-2 (configuration-function

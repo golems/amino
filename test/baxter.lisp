@@ -1,3 +1,9 @@
+(setq *net-alist*
+      '(("localhost" :jobs 8 :threads 1 :nice 0) ;; 4 core (HT), 3.6GHz
+        ("dione" :jobs 6 :threads 2 :nice 0)     ;; 12 core, 1.4GHz
+        ;("zeus" :jobs 8 :threads 1 :nice 1)
+        ))
+
 (setq *urdf-dom* (urdf-load "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf"))
 
 (setq *scene-graph* (urdf-parse))
@@ -22,10 +28,10 @@
             :output "/tmp/robray.png")
 
 
-(scene-graph-animate
+(time (scene-graph-animate
  (keyframe-configuration-function (list
                                    (joint-keyframe 0d0 nil)
-                                   (joint-keyframe 5d0 `(("right_s0" ,(* .25 pi))
+                                   (joint-keyframe 2d0 `(("right_s0" ,(* .25 pi))
                                                          ("right_s1" ,(* -0.25 pi))
                                                          ("right_e0" ,(* 0.0 pi))
                                                          ("right_e1" ,(* 0.25 pi))
@@ -33,5 +39,6 @@
                                                          ("right_w1" ,(* 0.5 pi))
                                                          ("right_w2" ,(* 0.0 pi))))))
  :frames-per-second 15
- :time-end 5d0
- :include "/tmp/demo.inc" )
+ :time-end 2d0
+ :encode-video t
+ :include "/tmp/demo.inc" ))

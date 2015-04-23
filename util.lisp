@@ -1,5 +1,7 @@
 (in-package :robray)
 
+(defun make-string-hash-table ()
+  (make-hash-table :test #'equal))
 
 (defmacro string-case (keyform &body cases)
   (let ((value (gensym "value")))
