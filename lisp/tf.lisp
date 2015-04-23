@@ -118,6 +118,15 @@
   (aa-tf-12rel tf1 tf2 tf)
   tf)
 
+(defcfun aa-tf-rotmat-mul :void
+  (a rotation-matrix-t)
+  (b rotation-matrix-t)
+  (c rotation-matrix-t))
+
+(defun tf-rotmat-mul (a b &optional (c (make-rotation-matrix)))
+  (aa-tf-rotmat-mul a b c)
+  c)
+
 ;;; Quaternions
 (defmacro def-q2 ((c-fun lisp-fun) doc-string)
   `(progn (defcfun ,c-fun :void
