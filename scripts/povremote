@@ -5,4 +5,7 @@ shift
 POVRAY="$1"
 shift
 
+>&2 echo "Rendering on $remote_host"
+>&2 echo ""
+
 ssh "$remote_host" "cd /tmp/robray && $POVRAY $@ -D"

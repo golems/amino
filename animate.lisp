@@ -295,10 +295,15 @@
                            :threads (net-args-threads args))))
              (pov-cmd (host)
                (net-args-povray (gethash host host-args)))
+             (pov-error (item)
+               (concatenate 'string
+                            directory (pathname-name item) ".txt"))
              (pov-local (item status-hook)
                (sb-ext:run-program (pov-cmd "localhost")
                                    (my-pov-args "localhost" item)
                                    :search t :wait nil
+                                   :error (pov-error item)
+                                   :if-error-exists :supersede
                                    :directory directory
                                    :status-hook status-hook))
              ;; (copy-result (host item status-hook)
@@ -320,7 +325,8 @@
                                             (my-pov-args host (povfile-base item)))
                                      :search nil :wait nil
                                      :directory directory
-                                     :error nil
+                                     :error (pov-error item)
+                                     :if-error-exists :supersede
                                      :output output
                                      :status-hook status-hook
                                      :if-output-exists :supersede)))

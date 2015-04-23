@@ -4,7 +4,7 @@
         ("dione"      ; 12 core, 1.4GHz
          :jobs 6 :threads 2 :nice 0)
         ("zeus"       ; 16 core, 2.4GHz
-         :jobs 6 :threads 2 :nice 1 :povray "/home/ndantam/local/bin/povray")
+         :jobs 7 :threads 2 :nice 1 :povray "/home/ndantam/local/bin/povray")
         ))
 
 (setq *urdf-dom* (urdf-load "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf"))

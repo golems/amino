@@ -340,17 +340,19 @@ RATIO: Floating point quality value in the range [0,1]"
                    (width *width*)
                    (height *height*)
                    (quality *quality*)
+                   verbose
                    threads
                    other)
   `(,(namestring file)
-    ,@(when output (list (format nil "+O~A" output)))
-    "-D" ; don't invoke display
+     ,@(when output (list (format nil "+O~A" output)))
+     "-D" ; don't invoke display
      "-GS"
-    ,@(when antialias (list "+A")) ; anti-alias
-    ,@(when threads (list (format nil "+WT~D" threads)))
-    ,(format nil "+Q~D" (pov-quality quality))
-    ,(format nil "+W~D" width)
-    ,(format nil "+H~D" height)
+     ,@(when antialias (list "+A")) ; anti-alias
+     ,@(when threads (list (format nil "+WT~D" threads)))
+     ,(if verbose "+V" "-V")
+     ,(format nil "+Q~D" (pov-quality quality))
+     ,(format nil "+W~D" width)
+     ,(format nil "+H~D" height)
      ,@other))
 
 (defun pov-output-file (pov-file &optional (suffix ".png"))
