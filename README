@@ -1,7 +1,7 @@
 OVERVIEW
 ========
 
-Robray is a robotics raytracing frontend.
+Robray is a robotics ray tracing frontend.
 
 FEATURES
 ========
@@ -18,3 +18,37 @@ DEPENDENCIES
 * CXML: https://common-lisp.net/project/cxml/
 * POV-Ray: http://www.povray.org/
 * avconv: https://libav.org/
+
+PERFORMANCE
+===========
+
+Ray tracing is computationally expensive.  Here are a few notes to
+help performance.
+
+Distribute
+-----------
+Ray tracing is embarassingly parallel, both across multiple frames and
+across pixels within a frame.  The easiest way to render faster is to
+throw more cores at the problem.
+
+Parsing
+-------
+While POV-Ray can use multiple threads to render a frame, parsing the
+input file uses only a single core.  If large meshes are used, this
+can take a noticeable amount of time, and must be repeated for each
+frame.  Consequently, rather than using multiple threads per frame, it
+may often be better to render multiple frames in parallel so that
+parsing is parallelized across the different frames.
+
+POV-Ray Compilation
+-------------------
+Ray tracing is floating-point heavy.  A few compilation flags make a
+small but noticable (~10%) improvement in performance.
+
+* -march=native: optimize for the current CPU.  This may take
+   advantage of FPU instructions available on newer CPUs, e.g., AVX.
+* -ffast-math: optimize floating-point computation in ways that my
+   violate IEEE semantics.  Note that this could flag may slightly
+   change the resulting image.
+* -flto: enable link-time optimization.  This optimizes across
+   multiple translation units.
