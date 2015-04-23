@@ -260,15 +260,21 @@
                      (quality *quality*)
                      (net-alist *net-alist*)
                      (status-stream *standard-output*))
-  (let ((compute-available (make-string-hash-table))
-        (host-args (make-string-hash-table))
-        (work-queue (frame-files directory))
-        (semaphore (sb-thread:make-semaphore :count 0)))
+  (let* ((compute-available (make-string-hash-table))
+         (host-args (make-string-hash-table))
+         (work-queue (frame-files directory))
+         (semaphore (sb-thread:make-semaphore :count 0))
+         (n (length work-queue))
+         (i 0))
+    ;; TODO: better directory use
+    ;; - proper temp directories on remote hosts
+    ;; -
     (labels ((povfile-base (item)
                (concatenate 'string
                             (pathname-name item)
                             "."
                             (pathname-type item)))
+             (percent () (format nil "[~3D%]" (round (* 100 (/ i n)))))
              (my-pov-args (host item)
                (let ((args (gethash host host-args)))
                  (pov-args item
@@ -303,10 +309,11 @@
                                    :status-hook status-hook))
              (work-generator (host item)
                (lambda (release-host-thunk)
-                 (format status-stream "~&~A rendering ~A" host item)
+                 (format status-stream "~&~A ~A rendering ~A" (percent) host item)
                  (flet ((status-hook (process)
                           (declare (ignore process))
-                          (format status-stream "~&~A finished ~A" host item)
+                          (incf i)
+                          (format status-stream "~&~A ~A finished ~A" (percent) host item)
                           (funcall release-host-thunk)))
                    (if (string= host "localhost")
                      (pov-local item #'status-hook)

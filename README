@@ -1,7 +1,13 @@
-Overview
+OVERVIEW
 ========
 
 Robray is a robotics raytracing frontend.
+
+FEATURES
+========
+* Import robot geometry from URDF and Collada
+* Generate POV-ray scene files for animation frames
+* Distribute POV-ray rendering over multiple machines
 
 DEPENDENCIES
 ============

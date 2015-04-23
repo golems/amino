@@ -2,4 +2,4 @@
 
 file="$1"
 
-find -name '*.pov' -o -name '*.inc' | tar czvf "$file" -T -
+find -name '*.pov' -o -name '*.inc' | tar czf "$file" -T -
