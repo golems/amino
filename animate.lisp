@@ -265,6 +265,9 @@
 
 
 
+(defun frame-number (item)
+  (parse-integer (ppcre:regex-replace "^.*-([0-9]+).pov$" (namestring item) "\\1")))
+
 (defun net-render (&key
                      (directory *robray-tmp-directory*)
                      (width *width*)
@@ -274,7 +277,8 @@
                      (status-stream *standard-output*))
   (let* ((compute-available (make-string-hash-table))
          (host-args (make-string-hash-table))
-         (work-queue (frame-files directory))
+         (work-queue (sort (frame-files directory) #'<
+                           :key #'frame-number))
          (semaphore (sb-thread:make-semaphore :count 0))
          (n (length work-queue))
          (i 0))
