@@ -182,9 +182,9 @@
                               (scene-graph *scene-graph*)
                               (width *width*)
                               (height *height*)
+                              (quality *quality*)
                               (frames-per-second *frames-per-second*)
                               include)
-  (declare (ignore width height))
   (ensure-directories-exist output-directory)
   (map nil #'delete-file (frame-files output-directory))
   ;; Write frames
@@ -203,8 +203,10 @@
                                 :include include)))
   ;; Convert Frames
   (when render-frames
-    (animate-render :directory output-directory
-                    :wait t)
+    (net-render :directory output-directory
+                :height height
+                :width width
+                :quality quality)
     ;; Encode Video
     (when encode-video
       (animate-encode :directory output-directory
