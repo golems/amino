@@ -127,6 +127,33 @@
   (aa-tf-rotmat-mul a b c)
   c)
 
+(defcfun aa-tf-rotmat-xy :void
+  (x-axis vector-3-t)
+  (y-axis vector-3-t)
+  (r rotation-matrix-t))
+
+(defcfun aa-tf-rotmat-yz :void
+  (y-axis vector-3-t)
+  (z-axis vector-3-t)
+  (r rotation-matrix-t))
+
+(defcfun aa-tf-rotmat-zx :void
+  (z-axis vector-3-t)
+  (x-axis vector-3-t)
+  (r rotation-matrix-t))
+
+(defun tf-rotmat-xy (x-axis y-axis &optional (rotmat (make-rotation-matrix)))
+  (aa-tf-rotmat-xy x-axis y-axis rotmat)
+  rotmat)
+
+(defun tf-rotmat-yz (y-axis z-axis &optional (rotmat (make-rotation-matrix)))
+  (aa-tf-rotmat-yz y-axis z-axis rotmat)
+  rotmat)
+
+(defun tf-rotmat-zx (z-axis x-axis &optional (rotmat (make-rotation-matrix)))
+  (aa-tf-rotmat-zx z-axis x-axis rotmat)
+  rotmat)
+
 ;;; Quaternions
 (defmacro def-q2 ((c-fun lisp-fun) doc-string)
   `(progn (defcfun ,c-fun :void
