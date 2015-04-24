@@ -170,30 +170,26 @@
       (sb-thread:wait-on-semaphore semaphore))))
 
 
-
-(defun scene-graph-animate (configuration-function
-                            &key
-                              (render-frames t)
-                              (encode-video t)
-                              (output-directory *robray-tmp-directory*)
-                              ;(pov-file "frame")
-                              (time-start 0d0)
-                              (time-end 1d0)
-                              (scene-graph *scene-graph*)
-                              (width *width*)
-                              (height *height*)
-                              (quality *quality*)
-                              (frames-per-second *frames-per-second*)
-                              include)
+(defun scene-graph-frame-animate (frame-configuration-function
+                                  &key
+                                    (render-frames t)
+                                    (encode-video t)
+                                    (output-directory *robray-tmp-directory*)
+                                    ;(pov-file "frame")
+                                    (frame-start 0)
+                                    (scene-graph *scene-graph*)
+                                    (width *width*)
+                                    (height *height*)
+                                    (quality *quality*)
+                                    (frames-per-second *frames-per-second*)
+                                    include)
   (ensure-directories-exist output-directory)
   (map nil #'delete-file (frame-files output-directory))
   ;; Write frames
   (loop
-     with frame-period = (coerce (/ 1 frames-per-second) 'double-float)
-     for frame from 0
-     for time = (+ time-start (* frame frame-period))
-     while (<= time time-end)
-     for configuration = (funcall configuration-function time)
+     for frame from frame-start
+     for configuration = (funcall frame-configuration-function frame)
+     while configuration
      do
        (let ((frame-file (format nil "frame-~D.pov" frame)))
          (scene-graph-pov-frame scene-graph
@@ -212,6 +208,37 @@
       (animate-encode :directory output-directory
                       :frames-per-second frames-per-second))))
 
+
+
+(defun scene-graph-time-animate (configuration-function
+                                 &key
+                                   (render-frames t)
+                                   (encode-video t)
+                                   (output-directory *robray-tmp-directory*)
+                                   (time-start 0d0)
+                                   (time-end 1d0)
+                                   (scene-graph *scene-graph*)
+                                   (width *width*)
+                                   (height *height*)
+                                   (quality *quality*)
+                                   (frames-per-second *frames-per-second*)
+                                   include)
+  (let ((frame-period (coerce (/ 1 frames-per-second) 'double-float)))
+    (scene-graph-frame-animate (lambda (frame)
+                                 (let ((time (+ time-start (* frame frame-period))))
+                                   (if (> time time-end)
+                                       nil
+                                       (funcall configuration-function time))))
+                               :scene-graph scene-graph
+                               :render-frames render-frames
+                               :encode-video encode-video
+                               :output-directory output-directory
+                               :frame-start 0
+                               :width width
+                               :height height
+                               :quality quality
+                               :include include
+                               :frames-per-second frames-per-second)))
 
 (defun net-process-host (compute-available semaphore)
   (loop do

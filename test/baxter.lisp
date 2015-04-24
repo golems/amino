@@ -20,7 +20,7 @@
 
 
 ;; Produce a simple animation
-(time (scene-graph-animate
+(time (scene-graph-time-animate
  (keyframe-configuration-function (list
                                    (joint-keyframe 0d0 nil)
                                    (joint-keyframe 2d0 `(("right_s0" ,(* .25 pi))
