@@ -284,6 +284,7 @@
          (semaphore (sb-thread:make-semaphore :count 0))
          (n (length work-queue))
          (i 0))
+    (map nil #'delete-file (directory (concatenate 'string directory "/*.png")))
     ;; TODO: better directory use
     ;; - proper temp directories on remote hosts
     ;; -
