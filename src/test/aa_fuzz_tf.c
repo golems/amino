@@ -87,6 +87,18 @@ static void rotvec(double *q) {
         aa_tf_quat2rotvec( qe, eln );
         aveq("rotmat_exp_aa", 3, e, eln, 1e-6 );
     }
+
+    {
+        double Rtmp[9];
+        aa_tf_rotmat_xy( R+0, R+3, Rtmp );
+        aveq( "rotmat_xy", 9, R, Rtmp, 1e-6 );
+
+        aa_tf_rotmat_yz( R+3, R+6, Rtmp );
+        aveq( "rotmat_yz", 9, R, Rtmp, 1e-6 );
+
+        aa_tf_rotmat_zx( R+6, R+0, Rtmp );
+        aveq( "rotmat_zx", 9, R, Rtmp, 1e-6 );
+    }
 }
 
 typedef void (*fun_type)(double,double,double, double*b);

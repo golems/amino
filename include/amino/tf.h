@@ -506,6 +506,30 @@ AA_API void aa_tf_tfmat_svel( const double T0[AA_RESTRICT 12],
 AA_API void aa_tf_v9mul( double R[AA_RESTRICT 9],
                          const double R1[AA_RESTRICT 9], const double R2[AA_RESTRICT 9], ... );
 
+
+/**
+ * Construct rotation matrix from an x and y axis of the child frame.
+ */
+AA_API void
+aa_tf_rotmat_xy( const double x_axis[AA_RESTRICT 3],
+                 const double y_axis[AA_RESTRICT 3],
+                 double R[AA_RESTRICT 9] );
+/**
+ * Construct rotation matrix from a y and z axis of the child frame.
+ */
+AA_API void
+aa_tf_rotmat_yz( const double y_axis[AA_RESTRICT 3],
+                 const double z_axis[AA_RESTRICT 3],
+                 double R[AA_RESTRICT 9] );
+
+/**
+ * Construct rotation matrix from a z and x axis of the child frame.
+ */
+AA_API void
+aa_tf_rotmat_zx( const double z_axis[AA_RESTRICT 3],
+                 const double x_axis[AA_RESTRICT 3],
+                 double R[AA_RESTRICT 9] );
+
 /***************/
 /* Quaternions */
 /***************/
