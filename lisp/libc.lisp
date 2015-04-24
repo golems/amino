@@ -37,18 +37,32 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(in-package :amino)
+(in-package :amino-ffi)
 
 
 ;;;;;;;;;;;;;
 ;;; LIBC  ;;;
 ;;;;;;;;;;;;;
 
-(defcfun atof :double
+(defcfun ("atof" libc-atof) :double
   (nptr :string))
 
+
+(defcfun ("malloc" libc-malloc) :pointer
+  (size size-t))
+
+(defcfun ("free" libc-free) :void
+  (ptr :pointer))
+
+(defcfun ("realloc" libc-realloc) :pointer
+  (ptr :pointer)
+  (size size-t))
+
+
+(in-package :amino)
+
 (defun parse-float (string)
-  (atof string))
+  (amino-ffi::libc-atof string))
 
 ;; (defcfun "aa_la_d_angle" :double
 ;;   (x :pointer)

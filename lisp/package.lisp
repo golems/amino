@@ -79,6 +79,10 @@
    :blas-size-t :blas-size-ref-t
    :def-blas-cfun
    :transpose-t
+   ;; libc
+   :libc-malloc
+   :libc-free
+   :libc-realloc
    ))
 
 (defpackage :amino
