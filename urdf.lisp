@@ -1,10 +1,7 @@
 (in-package :robray)
 
 (defvar *urdf-dom*)
-
-(defparameter *urdf-package-alist*
-  `(("baxter_description" . ,(concatenate 'string (namestring (user-homedir-pathname))
-                                          "ros_ws/src/baxter_common/baxter_description"))))
+(defvar *urdf-package-alist*)
 
 (defun urdf-resolve-file (filename &optional (package-alist *urdf-package-alist*))
   (let* ((package (ppcre:regex-replace "^package://([^/]*)/.*"
@@ -143,8 +140,11 @@
   scene-graph)
 
 
-(defun urdf-parse (&key (dom *urdf-dom*))
-  (let* ((urdf-joints (urdf-extract-joints :dom dom))
+(defun urdf-parse (urdf)
+  (let* ((dom (if (stringp urdf)
+                  (urdf-load urdf)
+                  urdf))
+         (urdf-joints (urdf-extract-joints :dom dom))
          ;; link name => link's parent joint name
          (link-parent-map
           (fold (lambda (map j)
@@ -155,4 +155,4 @@
                 urdf-joints))
          ;; Create Scene Frames
          (scene-graph (scene-graph (urdf-create-frames urdf-joints link-parent-map))))
-    (urdf-bind-links dom scene-graph link-parent-map)))
+    (scene-graph-resolve-mesh (urdf-bind-links dom scene-graph link-parent-map))))

@@ -115,7 +115,8 @@
                                  :file inc-file)
                  (dolist (mesh-node mesh-nodes)
                    (setf (scene-mesh-name mesh-node) geom-name))))
-             mesh-files)))
+             mesh-files)
+    scene-graph))
 
 
 (defun scene-frame-tf-relative (frame configuration-map default-configuration)

@@ -275,7 +275,7 @@
                      (width *width*)
                      (height *height*)
                      (quality *quality*)
-                     (net-alist *net-alist*)
+                     (render-host-alist *render-host-alist*)
                      (status-stream *standard-output*))
   (let* ((compute-available (make-string-hash-table))
          (host-args (make-string-hash-table))
@@ -367,7 +367,7 @@
       (pov-make-tarball directory "robray-data.tar.gz")
       (format status-stream "~&Tarball done")
       ;; Initialize Hosts
-      (dolist (host-vars net-alist)
+      (dolist (host-vars render-host-alist)
         (print host-vars)
           (let* ((net-args (apply #'net-args host-vars))
                  (host (net-args-host net-args))
