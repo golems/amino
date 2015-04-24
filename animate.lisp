@@ -294,7 +294,7 @@
              (percent () (format nil "[~3D%]" (floor (* 100 (/ i n)))))
              (my-pov-args (host item)
                (let ((args (gethash host host-args)))
-                 (pov-args item
+                 (pov-args (povfile-base item)
                            :output (unless (string-equal host "localhost") "-")
                            :width width
                            :height height
@@ -329,7 +329,7 @@
                  (sb-ext:run-program (find-script "povremote")
                                      (list* host
                                             (pov-cmd host)
-                                            (my-pov-args host (povfile-base item)))
+                                            (my-pov-args host item))
                                      :search nil :wait nil
                                      :directory directory
                                      :error (pov-error item)
@@ -362,18 +362,19 @@
                                                   (format status-stream "~&Finished upload to ~A" host)
                                                   (setf (gethash host compute-available) jobs)
                                                   (sb-thread:signal-semaphore semaphore)))))
+
       ;; Make tarball
       (format status-stream "~&Making tarball")
       (pov-make-tarball directory "robray-data.tar.gz")
       (format status-stream "~&Tarball done")
       ;; Initialize Hosts
       (dolist (host-vars render-host-alist)
-        (print host-vars)
-          (let* ((net-args (apply #'net-args host-vars))
-                 (host (net-args-host net-args))
-                 (jobs (net-args-jobs net-args)))
-            (setf (gethash host host-args) net-args)
-            (if (string-equal host "localhost")
+        (let* ((net-args (apply #'net-args host-vars))
+               (host (net-args-host net-args))
+               (jobs (net-args-jobs net-args)))
+          (setf (gethash host host-args) net-args)
+          (format status-stream "~&~A: povray ~{~A~^ ~}" host (my-pov-args host (elt work-queue 0)))
+          (if (string-equal host "localhost")
               (setf (gethash host compute-available)
                     jobs)
               (upload-inc host jobs))))

@@ -43,4 +43,5 @@
                (:file "collada" :depends-on ("util" "povray"))
                (:file "scenegraph" :depends-on ("util" "povray" "collada"))
                (:file "urdf" :depends-on ("util" "povray" "collada" "scenegraph"))
+               (:file "animate" :depends-on ("scenegraph" "povray"))
                ))

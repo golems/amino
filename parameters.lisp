@@ -9,7 +9,7 @@
 
 (defparameter *width* (/ 1920 2))
 (defparameter *height* (/ 1080 2))
-(defparameter *quality* 0.5)
+(defparameter *quality* 1.0)
 (defparameter *frames-per-second* 15)
 
 (defvar *render-host-alist*)

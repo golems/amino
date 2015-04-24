@@ -1,3 +1,5 @@
+(in-package :robray)
+
 ;; Define hosts for rendering
 (setq *render-host-alist*
       '(("localhost"  ; 4 core (HT), 3.6GHz
@@ -31,7 +33,7 @@
  :frames-per-second 15
  :time-end 2d0
  :encode-video t
- :include "/tmp/demo.inc" ))
+ :include "baxter.inc" ))
 
 
 
