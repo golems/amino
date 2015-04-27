@@ -79,14 +79,14 @@
   (z 0 :type fixnum))
 
 (defun pov-float-vector (elements)
-  (%pov-float-vector (vec-x elements)
-                     (vec-y elements)
-                     (vec-z elements)))
+  (%pov-float-vector (coerce (vec-x elements) 'double-float)
+                     (coerce (vec-y elements) 'double-float)
+                     (coerce (vec-z elements) 'double-float)))
 
 (defun pov-float-vector-right (elements)
-  (%pov-float-vector (vec-x elements)
-                     (vec-z elements)
-                     (vec-y elements)))
+  (%pov-float-vector (coerce (vec-x elements) 'double-float)
+                     (coerce (vec-z elements) 'double-float)
+                     (coerce (vec-y elements) 'double-float)))
 
 (defun pov-integer-vector (elements)
   (%pov-integer-vector (vec-x elements)
@@ -171,6 +171,41 @@
           (pov-rgb-g object)
           (pov-rgb-b object)))
 
+(defstruct (pov-rgbf (:constructor %pov-rgbf (r g b f)))
+  "Type for a povray RGB color."
+  (r 0d0 :type double-float)
+  (g 0d0 :type double-float)
+  (b 0d0 :type double-float)
+  (f 0d0 :type double-float))
+
+(defun pov-rgbf* (r g b f)
+  (%pov-rgbf (coerce r 'double-float)
+             (coerce g 'double-float)
+             (coerce b 'double-float)
+             (coerce f 'double-float)))
+
+(defun pov-rgbf (elements)
+  (apply #'pov-rgbf* (subseq elements 0 4)))
+
+(defmethod print-object ((object pov-rgbf) stream)
+  (format stream "rgbf<~F, ~F, ~F, ~F>"
+          (pov-rgbf-r object)
+          (pov-rgbf-g object)
+          (pov-rgbf-b object)
+          (pov-rgbf-f object)))
+
+(defun pov-color (color)
+  (etypecase color
+    (list
+     (pov-item "color"
+               (ecase (length color)
+                 (3 (pov-rgb color))
+                 (4 (pov-rgbf color)))))))
+
+(defun pov-alpha (alpha)
+  (pov-item "transmit" (pov-float (- 1d0 alpha))))
+  ;(pov-item "filter" (pov-float (- 1d0 alpha))))
+
 (defmethod print-object ((object pov-item) stream)
   (format stream "~&~A~A ~A"
           *pov-indent* (pov-item-name object) (pov-item-value object)))
@@ -203,8 +238,8 @@
 
 (defun pov-box-center (dimensions
                        &key modifiers)
-  (let* ((first-corner-vec (g* 0.5 dimensions))
-         (second-corner-vec (g* -.05 dimensions)))
+  (let* ((first-corner-vec (g* 0.5d0 dimensions))
+         (second-corner-vec (g* -.5d0 dimensions)))
     (pov-box (pov-float-vector-right first-corner-vec)
              (pov-float-vector-right second-corner-vec)
              modifiers)))

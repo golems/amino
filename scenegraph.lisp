@@ -9,14 +9,18 @@
 
 (defstruct scene-box
   dimension)
+(defun scene-box (dimension)
+  (make-scene-box :dimension dimension))
 
 (defstruct scene-sphere
   radius)
+(defun scene-sphere (radius)
+  (make-scene-sphere :radius radius))
 
 (defstruct scene-visual
   geometry
   color
-  alpha)
+  (alpha 1d0 :type double-float))
 
 (defstruct scene-frame
   name
@@ -183,8 +187,17 @@
 ;;; POVRAY ;;;
 ;;;;;;;;;;;;;;
 
-(defun scene-visual-pov (geometry tf)
-  (let ((modifiers (list tf)))
+(defun scene-visual-pov (visual tf)
+  (let ((geometry (scene-visual-geometry visual))
+        (color (scene-visual-color visual))
+        (alpha (scene-visual-alpha visual))
+        (modifiers (list tf)))
+    (when (or color alpha)
+      (push (pov-pigment (append (when color
+                                   (list (pov-color color)))
+                                 (when alpha
+                                   (list (pov-alpha alpha)))))
+            modifiers))
     (etypecase geometry
       (scene-mesh (pov-mesh2 :mesh (scene-mesh-name geometry)
                              :modifiers modifiers))
@@ -236,13 +249,16 @@
              (include (file)
                (thing (pov-include file)))
              (tf (name)
-               (scene-graph-transform-name name)))
+               (scene-graph-transform-name name))
+             (visual (vis name)
+               (thing (scene-visual-pov vis (pov-transform* (pov-value (tf name)))))))
       ;; push frame geometry
       (do-scene-graph-frames (frame scene-graph)
-        (let* ((name (scene-frame-name frame)))
-          (dolist (vis (scene-frame-visual frame))
-            (let ((g (scene-visual-geometry vis)))
-              (thing (scene-visual-pov g (pov-transform* (pov-value (tf name)))))))))
+        (let ((name (scene-frame-name frame))
+              (vis (scene-frame-visual frame)))
+          (etypecase vis
+            (list (loop for x in vis do (visual x name)))
+            (scene-visual (visual vis name)))))
       ;; push frame transforms
       (when configuration-map
         (map nil #'thing
@@ -262,7 +278,7 @@
                                                       (scene-mesh-inc (scene-mesh-file g)))
                                      set)))
                              set
-                             (scene-frame-visual frame)))
+                             (ensure-list (scene-frame-visual frame))))
                      (make-tree-set #'string-compare)
                      scene-graph))
       (map nil #'include (reverse (ensure-list include)))

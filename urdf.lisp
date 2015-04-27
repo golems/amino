@@ -128,7 +128,8 @@
              ;; bind geometry
              (labels ((push-visual (geometry)
                         (push (make-scene-visual :color (when rgba (subseq rgba 0 3))
-                                                 :alpha (when rgba (elt rgba 3))
+                                                 :alpha (if rgba (elt rgba 3)
+                                                            1d0)
                                                  :geometry geometry)
                               (scene-frame-visual frame))))
                (when mesh-file
