@@ -5,6 +5,8 @@
    scene-frame-fixed
    scene-frame-revolute
    scene-frame-prismatic
+   scene-box
+   scene-sphere
    ;; Scene Graph Manipulation
    scene-graph scene-graph-add-frame scene-graph-remove-frame scene-graph-add-visual
    ))

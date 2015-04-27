@@ -3,6 +3,10 @@
 (defvar *scene-graph*)
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; SCENE FRAMES STRUCTURES ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defstruct scene-mesh
   name
   file)
@@ -69,6 +73,10 @@
                               :offset offset
                               :rotation rotation))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; SCENE GRAPH STRUCTURE ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defstruct scene-graph
   (frame-map (make-tree-map #'frame-name-compare)))
 
@@ -92,6 +100,15 @@
   (fold #'scene-graph-add-frame
         (make-scene-graph)
         frames))
+
+(defun scene-graph-merge (scene-graph-1 scene-graph-2)
+  (make-scene-graph
+   :frame-map
+   (fold-tree-map (lambda (map name frame)
+                    (assert (not (tree-map-find map name)) () "Duplicate frame in merged graphs.")
+                    (tree-map-insert map name frame))
+                  (scene-graph-frame-map scene-graph-1)
+                  (scene-graph-frame-map scene-graph-2))))
 
 (defmacro do-scene-graph-frames ((frame-variable scene-graph &optional result) &body body)
   (with-gensyms (key)
