@@ -101,10 +101,22 @@
                           (scene-graph-frame-map ,scene-graph))
             ,result)))
 
-  ;; `(progn
-  ;;    (loop for ,frame-variable being the hash-values of (scene-graph-frame-map ,scene-graph)
-  ;;       do (progn ,@body))
-  ;;    ,result))
+(defmacro do-scene-graph-visuals (((frame-name-variable visual-variable)
+                                   scene-graph &optional result)
+                                  &body body)
+  (with-gensyms (frame fun)
+    `(do-scene-graph-frames (,frame ,scene-graph ,result)
+       (flet ((,fun (,frame-name-variable ,visual-variable)
+                ,@body))
+         (declare (dynamic-extent (function ,fun)))
+         (let ((,visual-variable (scene-frame-visual ,frame))
+               (,frame-name-variable (scene-frame-name ,frame)))
+           (etypecase ,visual-variable
+             (list
+              (dolist (,visual-variable ,visual-variable)
+                (,fun ,frame-name-variable ,visual-variable)))
+             (scene-visual
+              (,fun ,frame-name-variable ,visual-variable))))))))
 
 (defun fold-scene-graph-frames (function initial-value scene-graph)
   (fold-tree-map (lambda (accum key value)
@@ -113,15 +125,11 @@
                  initial-value
                  (scene-graph-frame-map scene-graph)))
 
-  ;; (let ((value initial-value))
-  ;;   (do-scene-graph-frames (frame scene-graph value)
-  ;;     (setq value (funcall function value frame)))))
 
 (defun scene-graph-lookup (scene-graph frame-name)
   (tree-map-find (scene-graph-frame-map scene-graph)
                  frame-name))
 
-  ;; (gethash frame-name (scene-graph-frame-map scene-graph)))
 
 ;; Find the relative transform of the scene frame
 (defgeneric scene-frame-tf (object))
@@ -141,12 +149,11 @@
                (push mesh
                      (gethash (scene-mesh-file mesh) mesh-files))))
       ;; collect mesh files
-      (do-scene-graph-frames (frame scene-graph)
-        (loop
-           for v in (scene-frame-visual frame)
-           for g = (scene-visual-geometry v)
-           when (and g (scene-mesh-p g))
-           do (resolve-mesh g))))
+      (do-scene-graph-visuals ((frame-name visual) scene-graph)
+        (declare (ignore frame-name))
+        (let ((g (scene-visual-geometry visual)))
+          (when (and g (scene-mesh-p g))
+            (resolve-mesh g)))))
     (maphash (lambda (mesh-file mesh-nodes)
                (format *standard-output* "~&Converting ~A..." mesh-file)
                (let* ((dom (dom-load mesh-file))
@@ -166,6 +173,8 @@
   (etypecase frame
     (scene-frame-fixed (scene-frame-fixed-tf frame))
     (scene-frame-joint
+     (assert configuration-map ()
+             "Cannot find joint frames without configuration variables")
      (let* ((config (+ (scene-frame-joint-offset frame)
                        (tree-map-find configuration-map (scene-frame-name frame)
                                      default-configuration)))
@@ -179,35 +188,61 @@
           (tf (scene-frame-prismatic-rotation frame)
               (g* config axis))))))))
 
-(defun scene-graph-tf-relative (scene-graph configuration-map
-                                &key (default-configuration 0d0))
-  (fold-scene-graph-frames (lambda (hash frame)
-                             (setf (gethash (scene-frame-name frame) hash)
-                                   (scene-frame-tf-relative frame configuration-map default-configuration))
-                             hash)
-                           (make-hash-table :test #'equal)
-                           scene-graph))
 
-(defun scene-graph-tf-absolute (scene-graph configuration-map
-                                &key (default-configuration 0d0))
-  (let ((tf-relative (scene-graph-tf-relative scene-graph configuration-map
+(defun scene-graph-tf-relative (scene-graph frame-name
+                                &key
+                                  configuration-map
+                                  (default-configuration 0d0))
+  (scene-frame-tf-relative (scene-graph-lookup scene-graph frame-name)
+                           configuration-map
+                           default-configuration))
+
+;; (defun scene-graph-tf-relative-map (scene-graph configuration-map
+;;                                     &key (default-configuration 0d0))
+;;   (fold-scene-graph-frames (lambda (hash frame)
+;;                              (setf (gethash (scene-frame-name frame) hash)
+;;                                    (scene-graph-tf-relative scene-graph (scene-frame-name frame)
+;;                                                             :configuration-map configuration-map
+;;                                                             :default-configuration default-configuration))
+;;                              hash)
+;;                            (make-hash-table :test #'equal)
+;;                            scene-graph))
+
+(defun scene-graph-tf-absolute (scene-graph frame-name
+                                &key
+                                  configuration-map
+                                  (tf-absolute-map (make-string-hash-table))
+                                  (default-configuration 0d0))
+  (declare (type hash-table tf-absolute-map))
+  (labels ((rec (frame-name)
+             (cond
+               ((null frame-name) ; global frame
+                (tf nil nil))
+               ((gethash frame-name tf-absolute-map) ; already in hash
+                (gethash frame-name tf-absolute-map))
+               (t
+                (let* ((frame (scene-graph-lookup scene-graph frame-name))
+                       (parent-name (scene-frame-parent frame))
+                       (tf-frame (scene-frame-tf-relative frame
+                                                          configuration-map
+                                                          default-configuration)))
+                  (if parent-name
+                      (g* (rec (scene-frame-parent frame))
+                          tf-frame)
+                      tf-frame))))))
+    (rec frame-name)))
+
+(defun scene-graph-tf-absolute-map (scene-graph configuration-map
+                                    &key (default-configuration 0d0))
+  (labels ((rec (tf-abs frame)
+             (let ((name (scene-frame-name frame)))
+               (setf (gethash name tf-abs)
+                     (scene-graph-tf-absolute scene-graph name
+                                              :configuration-map configuration-map
+                                              :tf-absolute-map tf-abs
                                               :default-configuration default-configuration)))
-    (labels ((contains (hash frame)
-               (nth-value 1 (gethash (scene-frame-name frame) hash)))
-             (rec (tf-abs frame)
-               (unless (contains tf-abs frame)
-                 (let ((parent (scene-frame-parent frame))
-                       (name (scene-frame-name frame)))
-                   (if parent
-                       (progn
-                         (rec tf-abs (scene-graph-lookup scene-graph parent))
-                         (setf (gethash name tf-abs)
-                               (normalize (g* (gethash parent tf-abs)
-                                              (gethash name tf-relative)))))
-                       (setf (gethash name tf-abs)
-                             (gethash name tf-relative)))))
-               tf-abs))
-      (fold-scene-graph-frames #'rec (make-hash-table :test #'equal) scene-graph))))
+             tf-abs))
+    (fold-scene-graph-frames #'rec (make-hash-table :test #'equal) scene-graph)))
 
 
 (defun scene-graph-configurations (scene-graph)
@@ -253,8 +288,8 @@
                (name-mangle frame-name)))
 
 (defun scene-graph-pov-configuration-transform (scene-graph configuration-map)
-  (let ((tf-abs (scene-graph-tf-absolute scene-graph configuration-map
-                                         :default-configuration 0d0))
+  (let ((tf-abs (scene-graph-tf-absolute-map scene-graph configuration-map
+                                             :default-configuration 0d0))
         (result))
     (do-scene-graph-frames (frame scene-graph result)
       (let ((name (scene-frame-name frame)))
@@ -291,12 +326,8 @@
              (visual (vis name)
                (thing (scene-visual-pov vis (pov-transform* (pov-value (tf name)))))))
       ;; push frame geometry
-      (do-scene-graph-frames (frame scene-graph)
-        (let ((name (scene-frame-name frame))
-              (vis (scene-frame-visual frame)))
-          (etypecase vis
-            (list (loop for x in vis do (visual x name)))
-            (scene-visual (visual vis name)))))
+      (do-scene-graph-visuals ((name vis) scene-graph)
+        (visual vis name))
       ;; push frame transforms
       (when configuration-map
         (map nil #'thing
@@ -306,19 +337,14 @@
                                                 frame-start frame-end)))
 
       ;; push mesh include files
-      (map-tree-set nil #'include
-                    (fold-scene-graph-frames
-                     (lambda (set frame)
-                       (fold (lambda (set visual)
-                               (let ((g (scene-visual-geometry visual)))
-                                 (if (scene-mesh-p g)
-                                     (tree-set-insert set
-                                                      (scene-mesh-inc (scene-mesh-file g)))
-                                     set)))
-                             set
-                             (ensure-list (scene-frame-visual frame))))
-                     (make-tree-set #'string-compare)
-                     scene-graph))
+      (let ((mesh-set (make-tree-set #'string-compare)))
+        (do-scene-graph-visuals ((frame-name visual) scene-graph)
+          (declare (ignore frame-name))
+          (let ((geom (scene-visual-geometry visual)))
+            (when (scene-mesh-p geom)
+              (tree-set-insertf mesh-set
+                                (scene-mesh-inc (scene-mesh-file geom))))))
+        (map-tree-set nil #'include mesh-set))
       (map nil #'include (reverse (ensure-list include)))
       ;; version
       (thing (pov-version 3.7)))
