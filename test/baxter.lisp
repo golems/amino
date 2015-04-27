@@ -20,18 +20,15 @@
       (urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf"))
 
 (setq *scene-graph*
-      (scene-graph-add-frame
-       *scene-graph-baxter*
-       (make-scene-frame-fixed :name "table"
-                               :visual (make-scene-visual :geometry (make-scene-box :dimension (list 1 1 .01))
-                                                          :color (list 1 0 0)
-                                                          :alpha .5d0)
+      (scene-graph-add-frame *scene-graph-baxter*
+                             (scene-frame-fixed nil "table"
+                                                :tf (amino:tf nil (vec3* 1 0 0)))))
 
-                               :tf (amino:tf nil (vec3* 1 0 0)))))
-
-
-
-
+(setq *scene-graph*
+      (scene-graph-add-visual *scene-graph* "table"
+                              (make-scene-visual :geometry (make-scene-box :dimension (list 1 1 .01))
+                                                 :color (list 1 0 0)
+                                                 :alpha 0.1d0)))
 
 
 ;; (setq *scene-graph*

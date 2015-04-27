@@ -56,9 +56,8 @@
   (labels ((origin-rotated-p (rpy)
              (not (= 0d0 (vecref rpy 0) (vecref rpy 1) (vecref rpy 2))))
            (origin-frame (origin parent rpy xyz)
-             (make-scene-frame-fixed :name origin
-                                     :parent parent
-                                     :tf (tf (euler-rpy rpy) xyz))))
+             (scene-frame-fixed parent origin
+                                :tf (tf (euler-rpy rpy) xyz))))
     (loop for j in urdf-joints
        for parent = (gethash (urdf-joint-parent j) link-parent-map)
        for type = (urdf-joint-type j)
@@ -71,31 +70,26 @@
          (ecase type
            (:fixed
             (list
-             (make-scene-frame-fixed :name name
-                                     :parent parent
-                                     :tf (amino:tf (amino:euler-rpy rpy) xyz))))
+             (scene-frame-fixed parent name
+                                :tf (amino:tf (amino:euler-rpy rpy) xyz))))
            (:revolute
             (if (origin-rotated-p rpy)
                 (list (origin-frame origin parent rpy xyz)
-                      (make-scene-frame-revolute :name name
-                                                 :parent origin
-                                                 :axis axis
-                                                 :translation (vec3 nil)))
-                (list (make-scene-frame-revolute :name name
-                                                 :parent parent
-                                                 :axis axis
-                                                 :translation (vec3 xyz)))))
+                      (scene-frame-revolute origin name
+                                            :axis axis
+                                            :translation (vec3 nil)))
+                (list (scene-frame-revolute parent name
+                                            :axis axis
+                                            :translation (vec3 xyz)))))
            (:prismatic
             (if (origin-rotated-p rpy)
                 (list (origin-frame origin parent rpy xyz)
-                      (make-scene-frame-prismatic :name name
-                                                  :parent origin
-                                                  :axis axis
-                                                  :rotation (quaternion nil)))
-                (list (make-scene-frame-prismatic :name name
-                                                  :parent parent
-                                                  :axis axis
-                                                  :rotation (quaternion rpy)))))))))
+                      (scene-frame-prismatic origin name
+                                             :axis axis
+                                             :rotation (quaternion nil)))
+                (list (scene-frame-prismatic parent name
+                                             :axis axis
+                                             :rotation (quaternion rpy)))))))))
 
 (defun urdf-bind-links (dom scene-graph link-parent-map)
   (labels ((path (node path &optional default)
@@ -118,26 +112,26 @@
              (unless (and (= 0
                              (elt rpy 0) (elt rpy 1) (elt rpy 2)
                              (elt xyz 0) (elt xyz 1) (elt xyz 2)))
-               (let ((new-frame (make-scene-frame-fixed :name (concatenate 'string frame-name "-visual")
-                                                        :parent frame-name
-                                                        :tf (tf (euler-rpy rpy)
-                                                                (vec3 xyz)))))
-                 (scene-graph-add-frame scene-graph new-frame)
-                 (setq frame new-frame
+               (let ((new-frame (scene-frame-fixed frame-name
+                                                   (concatenate 'string frame-name "-visual")
+                                                   :tf (tf (euler-rpy rpy)
+                                                           (vec3 xyz)))))
+                 (setq scene-graph (scene-graph-add-frame scene-graph new-frame)
+                       frame new-frame
                        frame-name (scene-frame-name new-frame))))
              ;; bind geometry
-             (labels ((push-visual (geometry)
-                        (push (make-scene-visual :color (when rgba (subseq rgba 0 3))
-                                                 :alpha (if rgba (elt rgba 3)
-                                                            1d0)
-                                                 :geometry geometry)
-                              (scene-frame-visual frame))))
+             (labels ((add-visual (geometry)
+                        (setq scene-graph
+                              (scene-graph-add-visual scene-graph frame-name
+                                                      (make-scene-visual :color (when rgba (subseq rgba 0 3))
+                                                                         :alpha (if rgba (elt rgba 3) 1d0)
+                                                                         :geometry geometry)))))
                (when mesh-file
-                 (push-visual (make-scene-mesh :file (urdf-resolve-file mesh-file))))
+                 (add-visual (make-scene-mesh :file (urdf-resolve-file mesh-file))))
                (when sphere-radius
-                 (push-visual (make-scene-sphere :radius (parse-float sphere-radius))))
+                 (add-visual (make-scene-sphere :radius (parse-float sphere-radius))))
                (when box-size
-                 (push-visual (make-scene-box :dimension (parse-float-sequence box-size)))))))))
+                 (add-visual (make-scene-box :dimension (parse-float-sequence box-size)))))))))
   scene-graph)
 
 

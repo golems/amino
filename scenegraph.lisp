@@ -31,6 +31,12 @@
 (defstruct (scene-frame-fixed (:include scene-frame))
   tf)
 
+(defun scene-frame-fixed (parent name &key tf)
+  (make-scene-frame-fixed :name name
+                          :parent parent
+                          :tf tf))
+
+
 (defstruct (scene-frame-joint (:include scene-frame))
   axis
   (offset 0d0 :type double-float))
@@ -38,17 +44,49 @@
 (defstruct (scene-frame-revolute (:include scene-frame-joint))
   translation)
 
+(defun scene-frame-revolute (parent name &key
+                                           axis
+                                           (offset 0d0)
+                                           (translation (vec3* 0d0 0d0 0d0)))
+  (assert axis)
+  (make-scene-frame-revolute :name name
+                             :parent parent
+                             :axis axis
+                             :offset offset
+                             :translation translation))
+
 (defstruct (scene-frame-prismatic (:include scene-frame-joint))
   rotation)
 
+(defun scene-frame-prismatic (parent name &key
+                                            axis
+                                            (offset 0d0)
+                                            (rotation (vec3* 0d0 0d0 0d0)))
+  (assert axis)
+  (make-scene-frame-prismatic :name name
+                              :parent parent
+                              :axis axis
+                              :offset offset
+                              :rotation rotation))
 
 (defstruct scene-graph
   (frame-map (make-tree-map #'frame-name-compare)))
 
 (defun scene-graph-add-frame (scene-graph frame)
+  "Add a frame to the scene."
   (make-scene-graph :frame-map (tree-map-insert (scene-graph-frame-map scene-graph)
                                                 (scene-frame-name frame)
                                                 frame)))
+(defun scene-graph-remove-frame (scene-graph frame-name)
+  "Remove a frame from the scene."
+  (make-scene-graph :frame-map (tree-map-remove (scene-graph-frame-map scene-graph)
+                                                frame-name )))
+
+(defun scene-graph-add-visual (scene-graph frame-name visual)
+  "Bind visual geometry to a frame in the scene."
+  (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
+    (push visual (scene-frame-visual frame))
+    (scene-graph-add-frame scene-graph frame)))
 
 (defun scene-graph (frames)
   (fold #'scene-graph-add-frame

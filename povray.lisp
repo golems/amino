@@ -203,8 +203,8 @@
                  (4 (pov-rgbf color)))))))
 
 (defun pov-alpha (alpha)
-  (pov-item "transmit" (pov-float (- 1d0 alpha))))
-  ;(pov-item "filter" (pov-float (- 1d0 alpha))))
+  (pov-item "transmit"
+            (pov-float (- 1d0 (clamp alpha 0d0 1d0)))))
 
 (defmethod print-object ((object pov-item) stream)
   (format stream "~&~A~A ~A"
