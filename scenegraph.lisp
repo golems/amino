@@ -30,6 +30,17 @@
   (make-scene-cylinder :axis axis
                        :length length
                        :radius radius))
+(defstruct scene-cone
+  axis
+  length
+  start-radius
+  end-radius)
+
+(defun scene-cone (length start-radius end-radius &optional (axis '(0 0 1)))
+  (make-scene-cone :axis axis
+                   :length length
+                   :start-radius start-radius
+                   :end-radius end-radius))
 
 (defstruct scene-visual
   geometry
@@ -309,6 +320,12 @@
                           (scene-cylinder-length geometry)
                           (scene-cylinder-radius geometry)
                           modifiers))
+      (scene-cone
+       (pov-cone-axis (scene-cone-axis geometry)
+                      (scene-cone-length geometry)
+                      (scene-cone-start-radius geometry)
+                      (scene-cone-end-radius geometry)
+                      modifiers))
       (scene-sphere
        (pov-sphere (vec3* 0 0 0)
                    (scene-sphere-radius geometry)

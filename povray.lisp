@@ -246,7 +246,6 @@
                     (pov-value (pov-float radius))
                     modifiers)))
 
-
 (defun pov-cylinder (first-center second-center radius &optional modifiers)
   (pov-block "cylinder"
              (list* first-center
@@ -259,6 +258,21 @@
                 (pov-float-vector-right (g* (* length .5d0) axis))
                 radius
                 modifiers))
+
+
+(defun pov-cone (big-center big-radius small-center small-radius &optional modifiers)
+  (pov-block "cone" (list* big-center (pov-float big-radius)
+                           small-center (pov-float small-radius)
+                           modifiers)))
+
+(defun pov-cone-axis (axis length big-radius small-radius &optional modifiers)
+  (pov-cone (pov-float-vector-right '(0 0 0)) big-radius
+            (pov-float-vector-right (g* axis length)) small-radius
+            modifiers))
+
+
+
+
 
 (defun pov-mesh2 (&key
                     vertex-vectors
