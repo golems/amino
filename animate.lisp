@@ -340,6 +340,7 @@
          (work-queue (sort-frames (frame-files directory)))
          (semaphore (sb-thread:make-semaphore :count 0))
          (n (length work-queue))
+         (directory (ensure-directory directory))
          (i 0))
     (map nil #'delete-file (directory (concatenate 'string directory "/*.png")))
     ;; TODO: better directory use
@@ -370,16 +371,6 @@
                                    :if-error-exists :supersede
                                    :directory directory
                                    :status-hook status-hook))
-             ;; (copy-result (host item status-hook)
-             ;;   (sb-ext:run-program "scp"
-             ;;                       (list (format nil "~A:/tmp/robray/~A"
-             ;;                                     host
-             ;;                                     (povfile-base (pov-output-file item)))
-             ;;                             (namestring directory))
-             ;;                       :search t :wait nil
-             ;;                       :output status-stream
-             ;;                       :error *error-output*
-             ;;                       :status-hook status-hook))
              (pov-remote (host item status-hook)
                (let ((output (concatenate 'string
                                           directory (pov-output-file (povfile-base item)))))
@@ -406,24 +397,26 @@
                    (if (string= host "localhost")
                      (pov-local item #'status-hook)
                      (pov-remote host item #'status-hook)))))
-             (upload-inc (host jobs)
-               (format status-stream "~&Uploading tarball to ~A" host)
-               (sb-ext:run-program (find-script "upload-tarball")
-                                   (list host)
-                                   :search nil :wait nil
-                                   :directory directory
+
+             (rsync-inc (host jobs)
+               (format status-stream "~&Rsyncing to ~A" host)
+               (sb-ext:run-program "rsync"
+                                   (list "-r"
+                                         "--include=*.inc"
+                                         "--include=*.pov"
+                                         "--include=**/"
+                                         "--exclude=*"
+                                         directory
+                                         (format nil "~A:/tmp/robray" host))
+                                   :search t :wait nil
                                    :output status-stream
                                    :error *error-output*
                                    :status-hook (lambda (process)
                                                   (declare (ignore process))
-                                                  (format status-stream "~&Finished upload to ~A" host)
+                                                  (format status-stream "~&Finished rsync to ~A" host)
                                                   (setf (gethash host compute-available) jobs)
                                                   (sb-thread:signal-semaphore semaphore)))))
 
-      ;; Make tarball
-      (format status-stream "~&Making tarball")
-      (pov-make-tarball directory "robray-data.tar.gz")
-      (format status-stream "~&Tarball done")
       ;; Initialize Hosts
       (dolist (host-vars render-host-alist)
         (let* ((net-args (apply #'net-args host-vars))
@@ -434,7 +427,7 @@
           (if (string-equal host "localhost")
               (setf (gethash host compute-available)
                     jobs)
-              (upload-inc host jobs))))
+              (rsync-inc host jobs))))
       ;; Process
       (net-process semaphore compute-available work-queue #'work-generator))))
     ;;   ;; start jobs

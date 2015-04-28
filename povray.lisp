@@ -453,10 +453,3 @@ RATIO: Floating point quality value in the range [0,1]"
                           :search t
                           :directory directory)
       (format t "~&done"))))
-
-(defun pov-make-tarball (directory file)
-  (sb-ext:run-program (find-script "make-tarball")
-                      (list file)
-                      :search nil :wait t
-                      :directory directory
-                      :error *error-output*))

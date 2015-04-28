@@ -136,6 +136,12 @@
          (elt result 0))
         (t result)))))
 
+(defun clean-pathname (path &optional (separator "/"))
+  (let ((regex (format nil "~A+" separator)))
+    (ppcre:regex-replace-all regex (namestring path) separator)))
+
+(defun ensure-directory (path &optional (separator "/"))
+  (clean-pathname (concatenate 'string path separator) separator))
 
 (defun robray-cache-directory (name &key (base-directory *robray-tmp-directory*))
   (let ((result (concatenate 'string base-directory name)))

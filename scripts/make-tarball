@@ -1,5 +1,0 @@
-#!/bin/sh
-
-file="$1"
-
-find -name '*.pov' -o -name '*.inc' | tar czf "$file" -T -

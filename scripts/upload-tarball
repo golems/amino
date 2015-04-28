@@ -1,4 +1,0 @@
-#!/bin/sh
-
-
-ssh "$1" "mkdir -p /tmp/robray && cd /tmp/robray && tar xzf -" < robray-data.tar.gz
