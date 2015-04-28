@@ -25,21 +25,14 @@
   (make-scene-sphere :radius radius))
 
 
-(defstruct scene-cylinder
+(defstruct (scene-cylinder (:constructor scene-cylinder))
   height
   radius)
-(defun scene-cylinder (height radius)
-  (make-scene-cylinder :height height
-                       :radius radius))
-(defstruct scene-cone
+
+(defstruct (scene-cone (:constructor scene-cone))
   height
   start-radius
   end-radius)
-
-(defun scene-cone (height start-radius end-radius)
-  (make-scene-cone :height height
-                   :start-radius start-radius
-                   :end-radius end-radius))
 
 (defstruct scene-visual
   geometry

@@ -52,7 +52,7 @@
   scene-graph)
 
 
-(defun tf-cylinder-axis (axis &optional (translation (vec3* 0d0 0d0 0d0)))
+(defun draw-tf-axis (axis &optional (translation (vec3* 0d0 0d0 0d0)))
   (tf* (quaternion-from-vectors (vec 0d0 0d0 1d0)
                                 axis)
                       translation))
