@@ -45,7 +45,8 @@
 (defstruct scene-visual
   geometry
   color
-  (alpha 1d0 :type double-float))
+  (alpha 1d0 :type double-float)
+  modifiers)
 
 (defstruct scene-frame
   name
@@ -308,6 +309,9 @@
                                    (list (pov-color color)))
                                  (when alpha
                                    (list (pov-alpha alpha)))))
+            modifiers))
+    (when (find :no-shadow (scene-visual-modifiers visual))
+      (push (pov-value "no_shadow" )
             modifiers))
     (etypecase geometry
       (scene-mesh (pov-mesh2 :mesh (scene-mesh-name geometry)
