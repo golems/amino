@@ -232,13 +232,6 @@
 (defun pov-box (first-corner second-corner &optional modifiers)
   (pov-block "box" (list* first-corner second-corner modifiers)))
 
-(defun pov-sphere (center radius &optional modifiers)
-  (pov-block "sphere"
-             (list* (pov-float-vector-right center)
-                    (pov-value (pov-float radius))
-                    modifiers)))
-
-
 (defun pov-box-center (dimensions
                        &key modifiers)
   (let* ((first-corner-vec (g* 0.5d0 dimensions))
@@ -247,6 +240,25 @@
              (pov-float-vector-right second-corner-vec)
              modifiers)))
 
+(defun pov-sphere (center radius &optional modifiers)
+  (pov-block "sphere"
+             (list* (pov-float-vector-right center)
+                    (pov-value (pov-float radius))
+                    modifiers)))
+
+
+(defun pov-cylinder (first-center second-center radius &optional modifiers)
+  (pov-block "cylinder"
+             (list* first-center
+                    second-center
+                    (pov-value (pov-float radius))
+                    modifiers)))
+
+(defun pov-cylinder-axis (axis length radius &optional modifiers)
+  (pov-cylinder (pov-float-vector-right (g* (* length -.5d0) axis))
+                (pov-float-vector-right (g* (* length .5d0) axis))
+                radius
+                modifiers))
 
 (defun pov-mesh2 (&key
                     vertex-vectors

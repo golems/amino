@@ -21,6 +21,16 @@
 (defun scene-sphere (radius)
   (make-scene-sphere :radius radius))
 
+
+(defstruct scene-cylinder
+  axis
+  length
+  radius)
+(defun scene-cylinder (length radius &optional (axis '(0 0 1)))
+  (make-scene-cylinder :axis axis
+                       :length length
+                       :radius radius))
+
 (defstruct scene-visual
   geometry
   color
@@ -294,6 +304,11 @@
       (scene-box
        (pov-box-center (scene-box-dimension geometry)
                        :modifiers modifiers))
+      (scene-cylinder
+       (pov-cylinder-axis (scene-cylinder-axis geometry)
+                          (scene-cylinder-length geometry)
+                          (scene-cylinder-radius geometry)
+                          modifiers))
       (scene-sphere
        (pov-sphere (vec3* 0 0 0)
                    (scene-sphere-radius geometry)
