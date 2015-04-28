@@ -57,7 +57,7 @@
              (not (= 0d0 (vecref rpy 0) (vecref rpy 1) (vecref rpy 2))))
            (origin-frame (origin parent rpy xyz)
              (scene-frame-fixed parent origin
-                                :tf (tf (euler-rpy rpy) xyz))))
+                                :tf (tf* (euler-rpy rpy) xyz))))
     (loop for j in urdf-joints
        for parent = (gethash (urdf-joint-parent j) link-parent-map)
        for type = (urdf-joint-type j)
@@ -71,7 +71,7 @@
            (:fixed
             (list
              (scene-frame-fixed parent name
-                                :tf (amino:tf (amino:euler-rpy rpy) xyz))))
+                                :tf (tf* (amino:euler-rpy rpy) xyz))))
            (:revolute
             (if (origin-rotated-p rpy)
                 (list (origin-frame origin parent rpy xyz)
@@ -114,7 +114,7 @@
                              (elt xyz 0) (elt xyz 1) (elt xyz 2)))
                (let ((new-frame (scene-frame-fixed frame-name
                                                    (concatenate 'string frame-name "-visual")
-                                                   :tf (tf (euler-rpy rpy)
+                                                   :tf (tf* (euler-rpy rpy)
                                                            (vec3 xyz)))))
                  (setq scene-graph (scene-graph-add-frame scene-graph new-frame)
                        frame new-frame

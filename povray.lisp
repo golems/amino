@@ -253,9 +253,9 @@
                     (pov-value (pov-float radius))
                     modifiers)))
 
-(defun pov-cylinder-axis (axis length radius &optional modifiers)
-  (pov-cylinder (pov-float-vector-right (g* (* length -.5d0) axis))
-                (pov-float-vector-right (g* (* length .5d0) axis))
+(defun pov-cylinder-axis (axis radius &optional modifiers)
+  (pov-cylinder (pov-float-vector-right '(0 0 0))
+                (pov-float-vector-right axis)
                 radius
                 modifiers))
 
@@ -265,9 +265,9 @@
                            small-center (pov-float small-radius)
                            modifiers)))
 
-(defun pov-cone-axis (axis length big-radius small-radius &optional modifiers)
+(defun pov-cone-axis (axis big-radius small-radius &optional modifiers)
   (pov-cone (pov-float-vector-right '(0 0 0)) big-radius
-            (pov-float-vector-right (g* axis length)) small-radius
+            (pov-float-vector-right axis) small-radius
             modifiers))
 
 

@@ -7,6 +7,9 @@
 ;;; SCENE FRAMES STRUCTURES ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; GEOMETRY
+
+
 (defstruct scene-mesh
   name
   file)
@@ -23,22 +26,18 @@
 
 
 (defstruct scene-cylinder
-  axis
-  length
+  height
   radius)
-(defun scene-cylinder (length radius &optional (axis '(0 0 1)))
-  (make-scene-cylinder :axis axis
-                       :length length
+(defun scene-cylinder (height radius)
+  (make-scene-cylinder :height height
                        :radius radius))
 (defstruct scene-cone
-  axis
-  length
+  height
   start-radius
   end-radius)
 
-(defun scene-cone (length start-radius end-radius &optional (axis '(0 0 1)))
-  (make-scene-cone :axis axis
-                   :length length
+(defun scene-cone (height start-radius end-radius)
+  (make-scene-cone :height height
                    :start-radius start-radius
                    :end-radius end-radius))
 
@@ -220,12 +219,12 @@
             (axis (scene-frame-joint-axis frame)))
        (etypecase frame
          (scene-frame-revolute
-          (tf (with-vec3 (x y z) axis
+          (tf* (with-vec3 (x y z) axis
                 (axis-angle* x y z config))
-              (scene-frame-revolute-translation frame)))
+               (scene-frame-revolute-translation frame)))
          (scene-frame-prismatic
-          (tf (scene-frame-prismatic-rotation frame)
-              (g* config axis))))))))
+          (tf* (scene-frame-prismatic-rotation frame)
+               (g* config axis))))))))
 
 
 (defun scene-graph-tf-relative (scene-graph frame-name
@@ -256,7 +255,7 @@
   (labels ((rec (frame-name)
              (cond
                ((null frame-name) ; global frame
-                (tf nil nil))
+                (tf nil))
                ((gethash frame-name tf-absolute-map) ; already in hash
                 (gethash frame-name tf-absolute-map))
                (t
@@ -320,13 +319,11 @@
        (pov-box-center (scene-box-dimension geometry)
                        :modifiers modifiers))
       (scene-cylinder
-       (pov-cylinder-axis (scene-cylinder-axis geometry)
-                          (scene-cylinder-length geometry)
+       (pov-cylinder-axis (vec 0 0 (scene-cylinder-height geometry))
                           (scene-cylinder-radius geometry)
                           modifiers))
       (scene-cone
-       (pov-cone-axis (scene-cone-axis geometry)
-                      (scene-cone-length geometry)
+       (pov-cone-axis (vec 0 0 (scene-cone-height geometry))
                       (scene-cone-start-radius geometry)
                       (scene-cone-end-radius geometry)
                       modifiers))
