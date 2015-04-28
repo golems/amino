@@ -58,6 +58,10 @@
   (ptr :pointer)
   (size size-t))
 
+(defcfun ("memcpy" libc-memcpy) :pointer
+  (destination :pointer)
+  (source :pointer)
+  (size size-t))
 
 (in-package :amino)
 

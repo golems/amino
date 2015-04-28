@@ -83,6 +83,7 @@
    :libc-malloc
    :libc-free
    :libc-realloc
+   :libc-memcpy
    ))
 
 (defpackage :amino
