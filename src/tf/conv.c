@@ -121,3 +121,34 @@ aa_tf_quat2rotmat( const double q[AA_RESTRICT 4], double R[AA_RESTRICT 9] )
                     q[3] * b[2] };
     aa_tf_skewsym_scal_c( q, a, b, R );
 }
+
+
+
+
+static double vdot (const double u[3],
+                  const double v[3] )
+{
+    return u[0]*v[0] + u[1]*v[1] + u[2]*v[2];
+}
+
+/* static double vnorm(double v[3] ) */
+/* { */
+
+/*     return sqrt( vdot(v,v) ); */
+/* } */
+
+/* static void vnormalize (double v[3] ) */
+/* { */
+/*     double n = vnorm(v); */
+/*     for( size_t i = 0; i < 3; i ++ ) v[i] /= n; */
+/* } */
+
+AA_API void
+aa_tf_vecs2quat( const double u[AA_RESTRICT 3],
+                 const double v[AA_RESTRICT 3],
+                 double q[AA_RESTRICT 4] )
+{
+    aa_tf_cross( u, v, &q[AA_TF_QUAT_X] );
+    q[AA_TF_QUAT_W] = vdot(u,v) + sqrt( vdot(u,u) * vdot(v,v) );
+    aa_tf_qnormalize(q);
+}

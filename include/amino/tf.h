@@ -937,6 +937,15 @@ AA_API void aa_tf_axang2quat2( const double axis[AA_RESTRICT 3],
                                double q[AA_RESTRICT 4] );
 
 
+/**
+ * Convert rotation between two vectors to a quaternion
+ */
+AA_API void
+aa_tf_vecs2quat( const double u[AA_RESTRICT 3],
+                 const double v[AA_RESTRICT 3],
+                 double q[AA_RESTRICT 4] );
+
+
 /// convert axis-angle to rotation vector
 AA_API void aa_tf_axang2rotvec( const double axang[AA_RESTRICT 4],
                                 double rotvec[AA_RESTRICT 3] );

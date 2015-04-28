@@ -361,7 +361,25 @@ static void quat(double E[2][7]) {
         aveq("rotmat_svel", 4, qn_vexp, qR, 1e-4 );
     }
 
+    // vectors
+    {
+        double *v0 = E[0] + AA_TF_QUTR_T;
+        double *v1 = E[1] + AA_TF_QUTR_T;
+        double q[4], vp[3];
+        aa_tf_vecs2quat( v0, v1, q);
+        aa_tf_qrot(q,v0,vp);
 
+        // normalize result
+        double n0 = sqrt(v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2] );
+        double n1 = sqrt(v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2] );
+        double vp1[3];
+        for( size_t i = 0; i < 3; i ++ ) {
+            vp1[i] = n0*v1[i] / n1;
+        }
+
+        aveq("vecs2quat", 3, vp, vp1, 1e-6 );
+
+    }
 }
 
 
