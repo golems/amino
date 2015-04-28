@@ -31,6 +31,8 @@
      (print object place)
      nil)
     ((stringp place)
+     (when directory
+       (ensure-directories-exist directory))
      (with-open-file (place (output-file place directory)
                             :direction :output :if-exists if-exists)
        (print object place))

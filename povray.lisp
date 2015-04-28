@@ -22,8 +22,11 @@
 ;;        ,@body)
 ;;      (format ,output "~&~A}" *pov-indent*)))
 
-(defstruct (pov-float (:constructor pov-float (value)))
-  (value 0 :type double-float))
+(defstruct (pov-float (:constructor %pov-float (value)))
+  (value 0d0 :type double-float))
+
+(defun pov-float (value)
+  (%pov-float (coerce value 'double-float)))
 
 (defmethod print-object ((object pov-float) stream)
   (format stream "~F"
@@ -399,11 +402,15 @@ RATIO: Floating point quality value in the range [0,1]"
                      (output "/tmp/robray.png")
                      (width *width*)
                      (height *height*)
+                     directory
                      (quality *quality*))
   (let ((things (if (listp things)
                     (pov-sequence things)
                     things))
-        (quality (pov-quality quality)))
+        (quality (pov-quality quality))
+        (file (output-file file directory))
+        (output (output-file output directory)))
+
     ;; write output
     (output things file)
     ;; run povray
@@ -416,7 +423,9 @@ RATIO: Floating point quality value in the range [0,1]"
                       (format nil "+W~D" width)
                       (format nil "+H~D" height))))
       (format t "~&Running: povray ~{~A~^ ~}" args)
-      (sb-ext:run-program "povray" args :search t)
+      (sb-ext:run-program "povray" args
+                          :search t
+                          :directory directory)
       (format t "~&done"))))
 
 (defun pov-make-tarball (directory file)
