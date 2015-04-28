@@ -105,19 +105,47 @@
 (defun animate-encode (&key
                          (directory *robray-tmp-directory*)
                          (frames-per-second *frames-per-second*)
+                         (pad 15)
                          (output-file "robray.mp4")
                          (video-codec "libx264"))
+  ;; pad
+  (let* ((images (directory  (concatenate 'string directory "/frame-*.png")))
+         (last-frame-number (frame-number (car (last (sort-frames images))))))
+    (map nil #'delete-file (directory  (concatenate 'string directory "/vframe-*.png")))
+    (loop for file in images
+       for n = (frame-number file)
+       do (sb-ext:run-program "ln"
+                              (list "-v"
+                                    (namestring file)
+                                    (format nil "vframe-~D.png" n))
+                              :search t :wait t :directory directory
+                              :output *standard-output*))
+    (loop
+       for i from 1 below pad
+       for n = (+ i last-frame-number)
+       ;until (zerop (mod n frames-per-second))
+       do
+         (sb-ext:run-program "cp"
+                             (list "-v"
+                                   (format nil "frame-~D.png" last-frame-number)
+                                   (format nil "vframe-~D.png" n))
+                             :search t :wait t :directory directory
+                             :output *standard-output*)))
   ;; avconv -f image2 -r 30 -i frame-%d.png foo.mp4
-  (sb-ext:run-program "avconv"
-                      (list "-f" "image2"
-                            "-r" (write-to-string frames-per-second)
-                            "-i" "frame-%d.png"
-                            "-codec:v" video-codec
-                            "-loglevel" "warning"
-                            "-y"
-                            output-file)
-                      :search t :wait t :directory directory
-                      :output *standard-output*))
+  (let ((args (list "-f" "image2"
+                    "-r" (write-to-string frames-per-second)
+                    "-i" "vframe-%d.png"
+                    "-codec:v" video-codec
+                    "-loglevel" "warning"
+                    "-y"
+                    output-file)))
+    (format t "~&avconv ~{~A ~}" args)
+    (sb-ext:run-program "avconv"
+                        args
+                        :search t :wait t :directory directory
+                        :output *standard-output*)
+    (map nil #'delete-file (directory  (concatenate 'string directory "/vframe-*.png")))
+    (format t "~&done")))
 
 
 (defun animate-render (&key
@@ -295,7 +323,10 @@
 
 
 (defun frame-number (item)
-  (parse-integer (ppcre:regex-replace "^.*-([0-9]+).pov$" (namestring item) "\\1")))
+  (parse-integer (ppcre:regex-replace "^.*-([0-9]+).(pov|png)$" (namestring item) "\\1")))
+
+(defun sort-frames (frames)
+  (sort frames #'< :key #'frame-number))
 
 (defun net-render (&key
                      (directory *robray-tmp-directory*)
@@ -306,8 +337,7 @@
                      (status-stream *standard-output*))
   (let* ((compute-available (make-string-hash-table))
          (host-args (make-string-hash-table))
-         (work-queue (sort (frame-files directory) #'<
-                           :key #'frame-number))
+         (work-queue (sort-frames (frame-files directory)))
          (semaphore (sb-thread:make-semaphore :count 0))
          (n (length work-queue))
          (i 0))
