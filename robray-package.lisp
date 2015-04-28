@@ -12,6 +12,7 @@
    :scene-cone
    ;; Draw interface
    :draw-options
+   :draw-option
    :draw-geometry
    :draw-tf-axis
 
