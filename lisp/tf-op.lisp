@@ -266,7 +266,10 @@
   (make-quaternion-translation :quaternion (quaternion r)
                                :translation (vec3 x)))
 
-(defun tf (rotation translation)
+(defun tf (transform)
+  (quaternion-translation transform))
+
+(defun tf* (rotation translation)
   (quaternion-translation-2 rotation translation))
 
 (defmethod vec-array ((obj quaternion-translation) &optional (array (make-vec 7)) (start 0))

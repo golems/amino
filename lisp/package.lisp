@@ -107,6 +107,7 @@
    :dual-quaternion-2 :quaternion-translation-2 :transformation-matrix-2
    :x-angle :y-angle :z-angle
    :tf
+   :tf*
    :translation
    :rotation
    :normalize
