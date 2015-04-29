@@ -159,3 +159,22 @@
                                            :axis axis
                                            :translation  (g+ (g* axis (- length end-arrow-length))
                                                              translation)))))))
+
+(defun item-frame-marker (name &key
+                                 length
+                                 width
+                                 (arrow-width (* 2 width))
+                                 (arrow-length (* 1 arrow-width)))
+  (flet ((helper (subname axis color)
+           (item-arrow-axis (draw-subframe name subname)
+                            :options (draw-options :color color)
+                            :axis axis
+                            :length length
+                            :width width
+                            :end-arrow t
+                            :end-arrow-start-width arrow-width
+                            :end-arrow-length arrow-length)))
+
+  (append (helper "x" (vec3* 1 0 0) '(1 0 0) )
+          (helper "y" (vec3* 0 1 0) '(0 1 0) )
+          (helper "z" (vec3* 0 0 1) '(0 0 1) ))))
