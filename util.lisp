@@ -54,13 +54,15 @@
                  identifier))
 
 (defun frame-name-compare (a b)
-  (if (null a)
-      (if (null b)
-          0
-          -1)
-      (if (null b)
-          1
-          (sycamore-util:string-compare a b))))
+  (let ((a (etypecase a
+             (string a)
+             (null "")
+             (symbol (string a))))
+        (b (etypecase b
+             (string b)
+             (null "")
+             (symbol (string b)))))
+    (sycamore-util:string-compare a b))))
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; DOM-HELPERS ;;;

@@ -261,8 +261,8 @@
 
 
 (defun pov-cone (big-center big-radius small-center small-radius &optional modifiers)
-  (pov-block "cone" (list* big-center (pov-float big-radius)
-                           small-center (pov-float small-radius)
+  (pov-block "cone" (list* big-center (pov-value (pov-float big-radius))
+                           small-center (pov-value (pov-float small-radius))
                            modifiers)))
 
 (defun pov-cone-axis (axis big-radius small-radius &optional modifiers)
@@ -394,6 +394,18 @@ RATIO: Floating point quality value in the range [0,1]"
             old-indent
             (pov-case-value object) (pov-case-statements object)
             old-indent)))
+
+(defstruct (pov-line-comment (:constructor %pov-line-comment (value)))
+  (value "" :type string))
+
+(defun pov-line-comment (value)
+  (assert (not (find #\Newline value)))
+  (%pov-line-comment value))
+
+(defmethod print-object ((object pov-line-comment) stream)
+  (format stream "~&~A// ~A ~%"
+          *pov-indent*
+          (pov-line-comment-value object)))
 
 ;(defmethod print-object
 

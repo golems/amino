@@ -168,10 +168,9 @@
 
 (defun scene-mesh-inc (mesh-file)
   "Return the include file for the mesh file"
-  (concatenate 'string
-               *robray-tmp-directory*
-               "/povray"
-               mesh-file ".inc"))
+  (clean-pathname (concatenate 'string
+                               "povray/"
+                               mesh-file ".inc")))
 
 (defun scene-graph-resolve-mesh (scene-graph)
   (let ((mesh-files  ;; filename => (list mesh-nodes)
@@ -258,8 +257,8 @@
                                                           configuration-map
                                                           default-configuration)))
                   (if parent-name
-                      (g* (rec (scene-frame-parent frame))
-                          tf-frame)
+                      (normalize (g* (rec (scene-frame-parent frame))
+                                     tf-frame))
                       tf-frame))))))
     (rec frame-name)))
 
@@ -325,60 +324,28 @@
                    (scene-sphere-radius geometry)
                    modifiers)))))
 
-(defun scene-graph-transform-name (frame-name)
-  (concatenate 'string
-               "TF_"
-               (name-mangle frame-name)))
-
-(defun scene-graph-pov-configuration-transform (scene-graph configuration-map)
-  (let ((tf-abs (scene-graph-tf-absolute-map scene-graph configuration-map
-                                             :default-configuration 0d0))
-        (result))
-    (do-scene-graph-frames (frame scene-graph result)
-      (let ((name (scene-frame-name frame)))
-        (when (scene-frame-visual frame)
-          (push (pov-declare (scene-graph-transform-name name)
-                             (pov-transform* (pov-matrix (gethash name tf-abs))))
-                result))))))
-
-(defun scene-graph-pov-frame-transform (scene-graph frame-configuration-function start end)
-  (pov-switch "frame_number"
-              (loop for frame-number from start to end
-                 collect (pov-case frame-number
-                                   (scene-graph-pov-configuration-transform scene-graph
-                                                                            (funcall frame-configuration-function
-                                                                                     frame-number))))))
-
 (defun scene-graph-pov-frame (scene-graph
                               &key
                                 configuration-map
-                                frame-start
-                                frame-end
-                                frame-configuration-function
                                 output
                                 directory
                                 include
                                 (default-configuration 0d0))
-  (let ((pov-things))
+"Generate the POV-ray scene for the given scene-graph."
+  (let ((pov-things)
+        (tf-abs (scene-graph-tf-absolute-map scene-graph configuration-map
+                                             :default-configuration default-configuration)))
     (labels ((thing (thing)
                (push thing pov-things))
              (include (file)
                (thing (pov-include file)))
-             (tf (name)
-               (scene-graph-transform-name name))
              (visual (vis name)
-               (thing (scene-visual-pov vis (pov-transform* (pov-value (tf name)))))))
+               (thing (scene-visual-pov vis
+                                        (pov-transform* (pov-matrix (gethash name tf-abs)))))
+               (thing (pov-line-comment (format nil "FRAME: ~A" name)))))
       ;; push frame geometry
       (do-scene-graph-visuals ((name vis) scene-graph)
         (visual vis name))
-      ;; push frame transforms
-      (when configuration-map
-        (map nil #'thing
-             (scene-graph-pov-configuration-transform scene-graph configuration-map)))
-      (when frame-configuration-function
-        (thing (scene-graph-pov-frame-transform scene-graph frame-configuration-function
-                                                frame-start frame-end)))
-
       ;; push mesh include files
       (let ((mesh-set (make-tree-set #'string-compare)))
         (do-scene-graph-visuals ((frame-name visual) scene-graph)
