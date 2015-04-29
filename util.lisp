@@ -62,7 +62,7 @@
              (string b)
              (null "")
              (symbol (string b)))))
-    (sycamore-util:string-compare a b))))
+    (sycamore-util:string-compare a b)))
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; DOM-HELPERS ;;;

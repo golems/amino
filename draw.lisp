@@ -79,15 +79,9 @@
   tf
   options)
 
-(defun draw-item (name geometry tf &optional options)
-  (make-draw-item :name name
-                  :geometry geometry
-                  :tf tf
-                  :options options))
-
-(defun draw (scene-graph parent items
-             &key
-               (options *draw-options*))
+(defun draw-items (scene-graph parent items
+                   &key
+                     (options *draw-options*))
   (fold (lambda (scene-graph x)
           (draw-geometry scene-graph parent
                          (draw-item-name x)
@@ -99,20 +93,20 @@
 
 (defun item-cylinder-axis (name &key height radius axis (translation (vec3* 0d0 0d0 0d0))
                                   options)
-  (draw-item name
-             (scene-cylinder :height height
-                             :radius radius)
-             (draw-tf-axis axis translation)
-             options))
+  (make-draw-item :name name
+                  :geometry (scene-cylinder :height height
+                                            :radius radius)
+                  :tf (draw-tf-axis axis translation)
+                  :options options))
 
 (defun item-cone-axis (name &key height start-radius (end-radius 0d0) axis (translation (vec3* 0d0 0d0 0d0))
                               options)
-  (draw-item name
-             (scene-cone :height height
-                         :start-radius start-radius
-                         :end-radius end-radius)
-             (draw-tf-axis axis translation)
-             options))
+  (make-draw-item :name name
+                  :geometry (scene-cone :height height
+                                        :start-radius start-radius
+                                        :end-radius end-radius)
+                  :tf (draw-tf-axis axis translation)
+                  :options options))
 
 (defun item-arrow-axis (name &key
                                axis

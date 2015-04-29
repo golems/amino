@@ -12,9 +12,17 @@
    :scene-cone
    ;; Draw interface
    :draw-options
-   :draw-option
+   :draw-options-default
+   :merge-draw-options
+   :get-draw-option
+
    :draw-geometry
    :draw-tf-axis
+
+   :draw-items
+   :item-cylinder-axis
+   :item-cone-axis
+   :item-frame-axis
 
    ;; Scene Graph Manipulation
    :scene-graph :scene-graph-add-frame :scene-graph-remove-frame :scene-graph-add-visual
