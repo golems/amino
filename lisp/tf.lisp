@@ -47,6 +47,17 @@
                                                                0 0 0 0)))
 (defparameter +tf-vec-3-ident+ (vec3* 0 0 0))
 
+
+(defcfun aa-tf-cross :void
+  (a vector-3-t)
+  (b vector-3-t)
+  (c vector-3-t))
+
+(defun cross (a b &optional (c (make-vec3)))
+  (aa-tf-cross a b c))
+
+
+
 ;;; Matrices
 
 (defcfun aa-tf-9 :void
@@ -321,6 +332,16 @@
 (defun tf-axang2quat (a &optional (r (make-quaternion)))
   (aa-tf-axang2quat a r)
   r)
+
+(defcfun aa-tf-vecs2quat :void
+  (a vector-3-t)
+  (b vector-3-t)
+  (c quaternion-t))
+
+(defun quaternion-from-vectors (u v &optional (q (make-quaternion)))
+  "Find the unit quaternion representing the rotation from U to V."
+  (aa-tf-vecs2quat u v q)
+  q)
 
 ;;; Dual quaternion
 

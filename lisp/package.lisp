@@ -113,6 +113,8 @@
    :normalize
    :tf-tag
    :tf-tag-parent :tf-tag-child :tf-tag-tf
+   :cross
+   :quaternion-from-vectors
    ;; TF tree
    :make-tf-tree
    :tf-tree-insert
