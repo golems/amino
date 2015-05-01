@@ -102,6 +102,9 @@
 (defun frame-files (directory)
   (directory (concatenate 'string directory "/*.pov")))
 
+(defun last-frame-number (files)
+  (frame-number (car (last (sort-frames files)))))
+
 (defun animate-encode (&key
                          (directory *robray-tmp-directory*)
                          (frames-per-second *frames-per-second*)
@@ -205,6 +208,7 @@
                                     (output-directory *robray-tmp-directory*)
                                     ;(pov-file "frame")
                                     (frame-start 0)
+                                    append
                                     (scene-graph *scene-graph*)
                                     (width *width*)
                                     (height *height*)
@@ -212,7 +216,12 @@
                                     (frames-per-second *frames-per-second*)
                                     include)
   (ensure-directories-exist output-directory)
-  (map nil #'delete-file (frame-files output-directory))
+  (let ((frame-files (frame-files output-directory)))
+    (if append
+        (setq frame-start (if frame-files
+                              (1+ (last-frame-number frame-files))
+                              0))
+        (map nil #'delete-file frame-files)))
   ;; Write frames
   (loop
      for frame from frame-start
