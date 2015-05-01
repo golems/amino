@@ -41,8 +41,8 @@
   modifiers)
 
 (defstruct scene-frame
-  name
-  parent
+  (name nil :type frame-name)
+  (parent nil :type frame-name)
   visual
   collision)
 
@@ -94,11 +94,19 @@
 (defstruct scene-graph
   (frame-map (make-tree-map #'frame-name-compare)))
 
+;;; Basic Operations ;;;
+
+(defun scene-graph-lookup (scene-graph frame-name)
+  "Find a frame"
+  (tree-map-find (scene-graph-frame-map scene-graph)
+                 frame-name))
+
 (defun scene-graph-add-frame (scene-graph frame)
   "Add a frame to the scene."
   (make-scene-graph :frame-map (tree-map-insert (scene-graph-frame-map scene-graph)
                                                 (scene-frame-name frame)
                                                 frame)))
+
 (defun scene-graph-remove-frame (scene-graph frame-name)
   "Remove a frame from the scene."
   (make-scene-graph :frame-map (tree-map-remove (scene-graph-frame-map scene-graph)
@@ -107,7 +115,17 @@
 (defun scene-graph-add-visual (scene-graph frame-name visual)
   "Bind visual geometry to a frame in the scene."
   (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
-    (push visual (scene-frame-visual frame))
+    (assert (null (scene-frame-visual frame)))
+    (setf (scene-frame-visual frame)
+          visual)
+    (scene-graph-add-frame scene-graph frame)))
+
+(defun scene-graph-add-collision (scene-graph frame-name geometry)
+  "Bind collision geometry to a frame in the scene."
+  (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
+    (assert (null (scene-frame-collision frame)))
+    (setf (scene-frame-collision frame)
+          geometry)
     (scene-graph-add-frame scene-graph frame)))
 
 (defun scene-graph (frames)
@@ -116,6 +134,7 @@
         frames))
 
 (defun scene-graph-merge (scene-graph-1 scene-graph-2)
+  "Combine two scene graphs."
   (make-scene-graph
    :frame-map
    (fold-tree-map (lambda (map name frame)
@@ -143,9 +162,7 @@
          (let ((,visual-variable (scene-frame-visual ,frame))
                (,frame-name-variable (scene-frame-name ,frame)))
            (etypecase ,visual-variable
-             (list
-              (dolist (,visual-variable ,visual-variable)
-                (,fun ,frame-name-variable ,visual-variable)))
+             (null)
              (scene-visual
               (,fun ,frame-name-variable ,visual-variable))))))))
 
@@ -155,16 +172,6 @@
                    (funcall function accum value))
                  initial-value
                  (scene-graph-frame-map scene-graph)))
-
-
-(defun scene-graph-lookup (scene-graph frame-name)
-  (tree-map-find (scene-graph-frame-map scene-graph)
-                 frame-name))
-
-
-;; Find the relative transform of the scene frame
-(defgeneric scene-frame-tf (object))
-
 
 (defun scene-mesh-inc (mesh-file)
   "Return the include file for the mesh file"
@@ -295,6 +302,50 @@
                                               :default-configuration default-configuration)))
              tf-abs))
     (fold-scene-graph-frames #'rec (make-hash-table :test #'equal) scene-graph)))
+
+
+(defun scene-graph-reparent (scene-graph new-parent frame-name
+                             &key
+                               tf
+                               (tf-absolute-map (make-string-hash-table))
+                               configuration-map
+                               (default-configuration 0d0))
+  "Change the parent of frame FRAME-NAME to NEW-PARENT"
+  (declare (type frame-name new-parent frame-name))
+  (let ((tf (if tf
+                tf
+                (scene-graph-tf-relative scene-graph new-parent frame-name
+                                         :configuration-map configuration-map
+                                         :default-configuration default-configuration
+                                         :tf-absolute-map tf-absolute-map)))
+        (old-frame (scene-graph-lookup scene-graph frame-name)))
+    (check-type old-frame scene-frame-fixed)
+    (let ((new-frame (copy-scene-frame-fixed old-frame)))
+      (setf (scene-frame-parent new-frame) new-parent
+            (scene-frame-fixed-tf new-frame) tf)
+      (scene-graph-add-frame (scene-graph-remove-frame scene-graph frame-name)
+                             new-frame))))
+
+
+(defun scene-graph-add-tf (scene-graph tf-tag &key
+                                                (actual-parent (tf-tag-parent tf-tag))
+                                                (tf-absolute-map (make-string-hash-table))
+                                                configuration-map
+                                                (default-configuration 0d0))
+  "Add a fixed frame to the scene."
+  (let* ((parent (tf-tag-parent tf-tag))
+         (tf-rel (tf-tag-tf tf-tag))
+         (name (tf-tag-child tf-tag))
+         (tf (if (eq parent actual-parent)
+                 tf-rel
+                 (tf-mul (scene-graph-tf-relative scene-graph actual-parent parent
+                                                  :configuration-map configuration-map
+                                                  :default-configuration default-configuration
+                                                  :tf-absolute-map tf-absolute-map)
+                         tf-rel))))
+    (scene-graph-add-frame scene-graph (scene-frame-fixed actual-parent name
+                                                          :tf tf))))
+
 
 
 (defun scene-graph-configurations (scene-graph)

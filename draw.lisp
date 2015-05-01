@@ -61,6 +61,10 @@
                                                      :alpha (get-draw-option options :alpha)
                                                      :modifiers (when (get-draw-option options :no-shadow)
                                                                   '(:no-shadow))))))
+  ;; Add collision
+  (when (and (get-draw-option options :visual) geometry)
+    (setq scene-graph
+          (scene-graph-add-collision scene-graph name geometry)))
   scene-graph)
 
 (defun draw-tf-axis (axis &optional (translation (vec3* 0d0 0d0 0d0)))

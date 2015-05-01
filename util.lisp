@@ -53,6 +53,9 @@
                        (eq x #\Space)))
                  identifier))
 
+(deftype frame-name ()
+  `(or string symbol null))
+
 (defun frame-name-compare (a b)
   (let ((a (etypecase a
              (string a)
