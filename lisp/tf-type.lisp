@@ -100,11 +100,31 @@
 (defun make-rotation-matrix ()
   (make-matrix 3 3))
 
+
+;;; Specialized Real Arrays
+(defmacro def-specialized-array (thing length cffi-type)
+  (let ((make-thing (intern (concatenate 'string "MAKE-" (string thing))))
+        (deep-copy-thing (intern (concatenate 'string "DEEP-COPY-" (string thing))))
+        (thing-data (intern (concatenate 'string (string thing) "-DATA"))))
+    `(progn
+       (defstruct (,thing (:include real-array
+                                    (data (make-vec ,length)
+                                          :type  (simple-array double-float (,length))))))
+       (defun ,deep-copy-thing (thing &optional (result (,make-thing)))
+         (replace (,thing-data result)
+                  (,thing-data thing)))
+       (define-foreign-type ,cffi-type ()
+         ()
+         (:simple-parser ,cffi-type)
+         (:actual-type :pointer))
+       (defmethod expand-to-foreign-dyn (value var body (type ,cffi-type))
+         `(with-foreign-fixed-vector ,var ,value 3 :input ,@body)))))
+
 ;;; Point 3
 
 ;; or should this just be an array deftype?
-(defstruct (vec3 (:include real-array
-                           (data (make-vec 3) :type  (simple-array double-float (3))))))
+(def-specialized-array vec3 3 vector-3-t)
+
 (defun vec3* (x y z)
   (make-vec3 :data (vec x y z)))
 
@@ -116,33 +136,16 @@
              (,z (vecref ,value +z+)))
          ,@body))))
 
-(define-foreign-type vector-3-t ()
-  ()
-  (:simple-parser vector-3-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type vector-3-t))
-  `(with-foreign-fixed-vector ,var ,value 3 :input ,@body))
-
 ;;; Axis-Angle
-(defstruct (axis-angle (:include real-array
-                                 (data (make-vec 4) :type  (simple-array double-float (4))))))
+(def-specialized-array axis-angle 4 axis-angle-t)
 
 (defun axis-angle* (x y z theta)
   (let ((n (sqrt (+ (* x x) (* y y) (* z z)))))
     (make-axis-angle :data (vec (/ x n) (/ y n) (/ z n) theta))))
 
-
-(define-foreign-type axis-angle-t ()
-  ()
-  (:simple-parser axis-angle-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type axis-angle-t))
-  `(with-foreign-fixed-vector ,var ,value 4 :input ,@body))
-
-
 ;;; Quaternion
-(defstruct (quaternion (:include real-array
-                                 (data (make-vec 4) :type  (simple-array double-float (4))))))
+(def-specialized-array quaternion 4 quaternion-t)
+
 (defun quaternion-x (q)
   (aref (quaternion-data q) +x+))
 (defun quaternion-y (q)
@@ -155,26 +158,11 @@
 (defun quaternion* (x y z w)
   (make-quaternion :data (vec x y z w)))
 
-(define-foreign-type quaternion-t ()
-  ()
-  (:simple-parser quaternion-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
-  `(with-foreign-fixed-vector ,var ,value 4 :input ,@body))
-
 ;; Rotation Vector
-(defstruct (rotation-vector (:include vec3)))
+(def-specialized-array rotation-vector 3 rotation-vector-t)
 
 (defun rotation-vector (x y z)
   (make-rotation-vector :data (vec x y z)))
-
-(define-foreign-type rotation-vector-t ()
-  ()
-  (:simple-parser rotation-vector-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type rotation-vector-t))
-  `(with-foreign-fixed-vector ,var ,value 3 :input ,@body))
-
 
 ;; Principal Angle
 (defstruct principal-angle
