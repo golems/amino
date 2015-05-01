@@ -198,8 +198,8 @@
     scene-graph))
 
 
-(defun scene-frame-tf-relative (frame configuration-map default-configuration)
-  "Find the relative TF for this frame"
+(defun scene-frame-tf-local (frame configuration-map default-configuration)
+  "Find the local TF from its parent to FRAME"
   (etypecase frame
     (scene-frame-fixed (scene-frame-fixed-tf frame))
     (scene-frame-joint
@@ -219,13 +219,13 @@
                (g* config axis))))))))
 
 
-(defun scene-graph-tf-relative (scene-graph frame-name
-                                &key
-                                  configuration-map
-                                  (default-configuration 0d0))
-  (scene-frame-tf-relative (scene-graph-lookup scene-graph frame-name)
-                           configuration-map
-                           default-configuration))
+;; (defun scene-graph-tf-relative (scene-graph frame-name
+;;                                 &key
+;;                                   configuration-map
+;;                                   (default-configuration 0d0))
+;;   (scene-frame-tf-relative (scene-graph-lookup scene-graph frame-name)
+;;                            configuration-map
+;;                            default-configuration))
 
 ;; (defun scene-graph-tf-relative-map (scene-graph configuration-map
 ;;                                     &key (default-configuration 0d0))
@@ -251,16 +251,38 @@
                ((gethash frame-name tf-absolute-map) ; already in hash
                 (gethash frame-name tf-absolute-map))
                (t
-                (let* ((frame (scene-graph-lookup scene-graph frame-name))
-                       (parent-name (scene-frame-parent frame))
-                       (tf-frame (scene-frame-tf-relative frame
-                                                          configuration-map
-                                                          default-configuration)))
-                  (if parent-name
-                      (normalize (g* (rec (scene-frame-parent frame))
-                                     tf-frame))
-                      tf-frame))))))
+                (let ((frame (scene-graph-lookup scene-graph frame-name)))
+                  (assert frame () "Frame ~A not found in scene graph"
+                          frame-name)
+                  (let* ((parent-name (scene-frame-parent frame))
+                         (tf-frame (scene-frame-tf-local frame
+                                                         configuration-map
+                                                         default-configuration)))
+                    (if parent-name
+                        (normalize (g* (rec (scene-frame-parent frame))
+                                       tf-frame))
+                        tf-frame)))))))
     (rec frame-name)))
+
+
+(defun scene-graph-tf-relative (scene-graph parent child
+                                &key
+                                  configuration-map
+                                  (default-configuration 0d0)
+                                  (tf-absolute-map (make-string-hash-table)))
+  "Find the relative TF from PARENT to CHILD"
+  (let ((g-tf-parent(scene-graph-tf-absolute scene-graph parent
+                                             :configuration-map configuration-map
+                                             :tf-absolute-map tf-absolute-map
+                                             :default-configuration default-configuration))
+        (g-tf-child (scene-graph-tf-absolute scene-graph child
+                                             :configuration-map configuration-map
+                                             :tf-absolute-map tf-absolute-map
+                                             :default-configuration default-configuration)))
+    (tf-mul (tf-inverse g-tf-parent)
+            g-tf-child)))
+
+
 
 (defun scene-graph-tf-absolute-map (scene-graph configuration-map
                                     &key (default-configuration 0d0))
