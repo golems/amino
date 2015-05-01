@@ -118,7 +118,8 @@
          (:simple-parser ,cffi-type)
          (:actual-type :pointer))
        (defmethod expand-to-foreign-dyn (value var body (type ,cffi-type))
-         `(with-foreign-fixed-vector ,var ,value 3 :input ,@body)))))
+         (list* 'with-foreign-fixed-vector var value ,length :input
+                body)))))
 
 ;;; Point 3
 
