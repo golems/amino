@@ -106,8 +106,6 @@
    :dual-quaternion :quaternion-translation :transformation-matrix
    :dual-quaternion-2 :quaternion-translation-2 :transformation-matrix-2
    :x-angle :y-angle :z-angle
-   :tf
-   :tf*
    :translation
    :rotation
    :normalize
@@ -115,6 +113,12 @@
    :tf-tag-parent :tf-tag-child :tf-tag-tf
    :cross
    :quaternion-from-vectors
+   :tf
+   :tf*
+   :tf-inverse
+   :tf-mul
+   :tf-copy
+   :tf-normalize
    ;; TF tree
    :make-tf-tree
    :tf-tree-insert

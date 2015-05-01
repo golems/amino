@@ -71,6 +71,62 @@
 (defgeneric quaternion-translation-2 (r x))
 (defgeneric transformation-matrix-2 (r x))
 
+(defgeneric vec3 (x))
+
+;;; TF Interface
+(defun make-tf (&key
+                  (quaternion (quaternion* 0d0 0d0 0d0 1d0))
+                  (translation (vec3* 0d0 0d0 0d0)))
+  "Create a transform"
+  (make-quaternion-translation :quaternion quaternion
+                               :translation translation))
+
+
+(defun tf-quaternion (transform)
+  "Return the rotation part as a quaternion"
+  (quaternion-translation-quaternion transform))
+(defun tf-translation (transform)
+  "Return the translation part."
+  (quaternion-translation-translation transform))
+
+
+(defun tf-inverse (transform &optional (inverse (make-tf)))
+  "Compute the inverse of the transform."
+  (aa-tf-qv-conj (tf-quaternion transform)
+                 (tf-translation transform)
+                 (tf-quaternion inverse)
+                 (tf-translation inverse))
+  inverse)
+
+(defun tf (transform)
+  "Convert TRANSFORM to TF type"
+  (quaternion-translation transform))
+
+(defun tf* (rotation translation)
+  "Convert ROTATION and TRANSLATION to TF type"
+  (make-tf :quaternion (quaternion rotation)
+           :translation (vec3 translation)))
+
+(defun tf-mul (tf-0 tf-1 &optional (result (make-tf)))
+  "Multiply TF-0 and TF-1, storing in RESULT."
+  (tf-qutr-mul tf-0 tf-1 result))
+
+(defun tf-copy (transform &optional (result (make-tf)))
+  "Deeply copy TRANFORM into RESULT."
+  (deep-copy-quaternion (tf-quaternion transform)
+                        (tf-quaternion result))
+  (deep-copy-vec3 (tf-translation transform)
+                  (tf-translation result))
+  result)
+
+(defun tf-normalize (transform &optional (result (make-tf)))
+  "Normalize TRANSFORM, storing into RESULT."
+  (deep-copy-vec3 (tf-translation transform)
+                  (tf-translation result))
+  (tf-qnormalize (tf-quaternion transform)
+                 (tf-quaternion result))
+  result)
+
 ;;; Quaternion
 (defmethod quaternion ((x quaternion)) x)
 
@@ -128,7 +184,6 @@
 
 ;;; Translation
 
-(defgeneric vec3 (x))
 
 (defmethod vec3 ((x vec3))
   x)
@@ -265,12 +320,6 @@
 (defmethod quaternion-translation-2 (r x)
   (make-quaternion-translation :quaternion (quaternion r)
                                :translation (vec3 x)))
-
-(defun tf (transform)
-  (quaternion-translation transform))
-
-(defun tf* (rotation translation)
-  (quaternion-translation-2 rotation translation))
 
 (defmethod vec-array ((obj quaternion-translation) &optional (array (make-vec 7)) (start 0))
   (replace array (real-array-data (quaternion-translation-quaternion obj)) :start1 start)
