@@ -428,7 +428,6 @@
           ;(print visual)
           ;(print geometry)
           (when (and visual geometry)
-            (format t "~&Adding ~A" name)
             (thing (scene-visual-pov visual geometry
                                      (pov-transform* (pov-matrix (gethash name tf-abs)))))
             (thing (pov-line-comment (format nil "FRAME: ~A" name))))
