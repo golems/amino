@@ -436,30 +436,25 @@ RATIO: Floating point quality value in the range [0,1]"
 
 (defun pov-render (things
                    &key
-                     (file "/tmp/robray.pov")
-                     (output "/tmp/robray.png")
+                     file
+                     output
                      (width *width*)
                      (height *height*)
-                     directory
+                     (directory *robray-tmp-directory*)
                      (quality *quality*))
   (let ((things (if (listp things)
                     (pov-sequence things)
                     things))
-        (quality (pov-quality quality))
-        (file (output-file file directory))
-        (output (output-file output directory)))
+        (quality (pov-quality quality)))
 
     ;; write output
-    (output things file)
+    (output things file :directory directory)
     ;; run povray
-    ;povray frame.pov -D +O/tmp/pov.png +A +H1080 +W1920
-    (let ((args (list file
-                      (format nil "+O~A" output)
-                      "-D" ; don't invoke display
-                      "+A" ; anti-alias
-                      (format nil "+Q~D" quality)
-                      (format nil "+W~D" width)
-                      (format nil "+H~D" height))))
+    (let ((args (pov-args file
+                                    :output output
+                                    :width width
+                                    :height height
+                                    :quality quality)))
       (format t "~&Running: povray ~{~A~^ ~}" args)
       (sb-ext:run-program "povray" args
                           :search t

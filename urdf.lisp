@@ -91,47 +91,72 @@
                                              :axis axis
                                              :rotation (quaternion rpy)))))))))
 
-(defun urdf-bind-links (dom scene-graph link-parent-map)
+(defun urdf-bind-links (dom scene-graph link-parent-map &key
+                                                          (default-color '(.5 .5 .5))
+                                                          (default-alpha 1d0))
   (labels ((path (node path &optional default)
-             (dom-select-path node path :singleton t :undefined-error nil :default default)))
+             (dom-select-path node path :singleton t :undefined-error nil :default default))
+           (node-geometry (node)
+             (let* ((mesh-file (path node '("geometry" "mesh" "@filename")))
+                    (box-size (path node '("geometry" "box" "@size")))
+                    (sphere-radius (path node '("geometry" "sphere" "@radius")))
+                    (cylinder-radius (path node '("geometry" "cylinder" "@radius")))
+                    (cylinder-length (path node '("geometry" "cylinder" "@length"))))
+               (assert (xor mesh-file box-size sphere-radius (and cylinder-length
+                                                                  cylinder-radius)))
+               (cond (mesh-file
+                      (make-scene-mesh :file (urdf-resolve-file mesh-file)))
+                     (sphere-radius
+                      (make-scene-sphere :radius (parse-float sphere-radius)))
+                     (box-size
+                      (make-scene-box :dimension (parse-float-sequence box-size)))
+                     ((and cylinder-length cylinder-radius)
+                      (scene-cylinder :height (parse-float cylinder-length)
+                                      :radius (parse-float cylinder-radius))))))
+           (node-origin (link-name node suffix geometry)
+             (let* ((frame-name (gethash link-name link-parent-map))
+                    (rpy (parse-float-sequence (path node '("origin" "@rpy") "0 0 0")))
+                    (xyz (parse-float-sequence (path node '("origin" "@xyz") "0 0 0")))
+                    (offset (if (scene-cylinder-p geometry)
+                                (tf* nil (vec3* 0d0 0d0 (/ (scene-cylinder-height geometry) -2)))
+                                (tf* nil nil))))
+               (let ((new-frame (scene-frame-fixed frame-name
+                                                   (concatenate 'string frame-name "-" suffix)
+                                                   :tf (tf-mul (tf* (euler-rpy rpy)
+                                                                    (vec3 xyz))
+                                                               offset))))
+                 (setq scene-graph (scene-graph-add-frame scene-graph new-frame))
+                 (scene-frame-name new-frame)))))
+
     (loop for link-node in (dom-select-path dom '("robot" "link"))
        for name = (dom:get-attribute link-node "name")
-       for frame-name = (gethash name link-parent-map)
-       for frame = (scene-graph-lookup scene-graph frame-name)
        for visual-node = (path link-node '("visual"))
+       for collision-node = (path link-node '("collision"))
+       for rgba-text = (when visual-node (path visual-node '("material" "color" "@rgba")))
+       for rgba = (if rgba-text (parse-float-sequence rgba-text)
+                      (append default-color (list default-alpha)))
+
        do
          (when visual-node
-           (let* ((rpy (parse-float-sequence (path visual-node '("origin" "@rpy") "0 0 0")))
-                  (xyz (parse-float-sequence (path visual-node '("origin" "@xyz") "0 0 0")))
-                  (mesh-file (path visual-node '("geometry" "mesh" "@filename")))
-                  (box-size (path visual-node '("geometry" "box" "@size")))
-                  (sphere-radius (path visual-node '("geometry" "sphere" "@radius")))
-                  (rgba-text (path visual-node '("material" "color" "@rgba")))
-                  (rgba (when rgba-text (parse-float-sequence rgba-text))))
-             ;; maybe add intermediate frame
-             (unless (and (= 0
-                             (elt rpy 0) (elt rpy 1) (elt rpy 2)
-                             (elt xyz 0) (elt xyz 1) (elt xyz 2)))
-               (let ((new-frame (scene-frame-fixed frame-name
-                                                   (concatenate 'string frame-name "-visual")
-                                                   :tf (tf* (euler-rpy rpy)
-                                                           (vec3 xyz)))))
-                 (setq scene-graph (scene-graph-add-frame scene-graph new-frame)
-                       frame new-frame
-                       frame-name (scene-frame-name new-frame))))
+           (let* ((geometry (node-geometry visual-node))
+                  (frame-name (node-origin name visual-node "visual" geometry)))
              ;; bind geometry
-             (labels ((add-visual (geometry)
-                        (setq scene-graph
-                              (scene-graph-add-visual scene-graph frame-name
-                                                      (make-scene-visual :color (when rgba (subseq rgba 0 3))
-                                                                         :alpha (if rgba (elt rgba 3) 1d0)
-                                                                         :geometry geometry)))))
-               (when mesh-file
-                 (add-visual (make-scene-mesh :file (urdf-resolve-file mesh-file))))
-               (when sphere-radius
-                 (add-visual (make-scene-sphere :radius (parse-float sphere-radius))))
-               (when box-size
-                 (add-visual (make-scene-box :dimension (parse-float-sequence box-size)))))))))
+             (setq scene-graph
+                   (scene-graph-add-visual scene-graph frame-name
+                                           (make-scene-visual :color (when rgba (subseq rgba 0 3))
+                                                              :alpha (if rgba (elt rgba 3) 1d0)
+                                                              :geometry geometry)))))
+         (when collision-node
+           (let* ((geometry (node-geometry collision-node))
+                  (frame-name (node-origin name collision-node "collision" geometry)))
+             (setq scene-graph
+                   (scene-graph-add-visual scene-graph frame-name
+                                           (make-scene-visual :color (when rgba (subseq rgba 0 3))
+                                                              :alpha (if rgba (elt rgba 3) 1d0)
+                                                              :geometry nil)))
+             (setq scene-graph
+                   (scene-graph-add-collision scene-graph frame-name
+                                              geometry))))))
   scene-graph)
 
 

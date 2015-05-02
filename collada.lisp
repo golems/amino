@@ -199,6 +199,7 @@
          (vertices (collada-id-parse dom vertex-source))
          (textures (loop for p in polylists
                       for material-id = (dom:get-attribute p "material")
+                      when (not (zerop (length material-id)))
                       collect
                         (collada-povray-material dom (collada-lookup dom material-id))))
          (faces (loop for p in polylists
@@ -213,14 +214,17 @@
                            (dolist (c vcount)
                              (assert (= 3 c) () "Cannot handle non-triangular polygons."))
                            (loop for x in vertex-indices
-                              nconc (list (pov-integer-vector x)
-                                          (pov-value i))))))
+                              nconc (if textures
+                                        (list (pov-integer-vector x)
+                                              (pov-value i))
+                                        (list (pov-integer-vector x)))))))
          )
                    ;; for normal-indices = (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
                    ;;                                             while rest
                    ;;                                             collect (car rest))
                    ;;                                          3)
-
+    (assert (or (zerop (length textures))
+                (= (length textures) (length polylists))))
     (pov-declare (name-mangle (dom:get-attribute geometry-node "name"))
                  (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
                             ;;:normal-vectors (map 'list #'pov-float-vector-right normals)
@@ -317,13 +321,12 @@
 
 (defun collada-povray (&key
                          (dom *collada-dom*)
+                         (directory *robray-tmp-directory*)
                          file)
   (let* ((geometry-node (dom-select-path dom '("COLLADA" "library_geometries" "geometry")  :singleton t))
          (result (collada-povray-geometry dom geometry-node)))
     (if file
-        (with-open-file (s file :direction :output :if-exists :supersede)
-          (print result s)
-          nil)
+        (output result file :directory directory)
         result)))
 
 

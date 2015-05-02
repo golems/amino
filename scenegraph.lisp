@@ -166,6 +166,7 @@
              (scene-visual
               (,fun ,frame-name-variable ,visual-variable))))))))
 
+
 (defun fold-scene-graph-frames (function initial-value scene-graph)
   (fold-tree-map (lambda (accum key value)
                    (declare (ignore key))
@@ -184,18 +185,21 @@
          (make-hash-table :test #'equal)))
     (labels ((resolve-mesh (mesh)
                (push mesh
-                     (gethash (scene-mesh-file mesh) mesh-files))))
+                     (gethash (scene-mesh-file mesh) mesh-files)))
+             (test-geom (g)
+               (when (and g (scene-mesh-p g))
+                 (resolve-mesh g))))
       ;; collect mesh files
-      (do-scene-graph-visuals ((frame-name visual) scene-graph)
-        (declare (ignore frame-name))
-        (let ((g (scene-visual-geometry visual)))
-          (when (and g (scene-mesh-p g))
-            (resolve-mesh g)))))
+      (do-scene-graph-frames (frame scene-graph)
+        (when-let ((v (scene-frame-visual frame)))
+          (test-geom (scene-visual-geometry v)))
+        (test-geom (scene-frame-collision frame))))
     (maphash (lambda (mesh-file mesh-nodes)
                (format *standard-output* "~&Converting ~A..." mesh-file)
                (let* ((dom (dom-load mesh-file))
                       (inc-file (scene-mesh-inc mesh-file))
                       (geom-name (collada-geometry-name dom)))
+                 (format *standard-output* "~&    to  ~A..." inc-file)
                  (ensure-directories-exist inc-file)
                  (collada-povray :dom dom
                                  :file inc-file)
@@ -363,9 +367,8 @@
 ;;; POVRAY ;;;
 ;;;;;;;;;;;;;;
 
-(defun scene-visual-pov (visual tf)
-  (let ((geometry (scene-visual-geometry visual))
-        (color (scene-visual-color visual))
+(defun scene-visual-pov (visual geometry tf)
+  (let ((color (scene-visual-color visual))
         (alpha (scene-visual-alpha visual))
         (modifiers (list tf)))
     (when (or color alpha)
@@ -403,31 +406,36 @@
                                 output
                                 directory
                                 include
+                                use-collision
                                 (default-configuration 0d0))
 "Generate the POV-ray scene for the given scene-graph."
   (let ((pov-things)
         (tf-abs (scene-graph-tf-absolute-map scene-graph configuration-map
-                                             :default-configuration default-configuration)))
+                                             :default-configuration default-configuration))
+        (mesh-set (make-tree-set #'string-compare)))
     (labels ((thing (thing)
                (push thing pov-things))
              (include (file)
-               (thing (pov-include file)))
-             (visual (vis name)
-               (thing (scene-visual-pov vis
-                                        (pov-transform* (pov-matrix (gethash name tf-abs)))))
-               (thing (pov-line-comment (format nil "FRAME: ~A" name)))))
+               (thing (pov-include file))))
       ;; push frame geometry
-      (do-scene-graph-visuals ((name vis) scene-graph)
-        (visual vis name))
-      ;; push mesh include files
-      (let ((mesh-set (make-tree-set #'string-compare)))
-        (do-scene-graph-visuals ((frame-name visual) scene-graph)
-          (declare (ignore frame-name))
-          (let ((geom (scene-visual-geometry visual)))
-            (when (scene-mesh-p geom)
-              (tree-set-insertf mesh-set
-                                (scene-mesh-inc (scene-mesh-file geom))))))
-        (map-tree-set nil #'include mesh-set))
+      (do-scene-graph-frames (frame scene-graph)
+        (let* ((name (scene-frame-name frame))
+               (visual (scene-frame-visual frame))
+               (geometry (if use-collision
+                             (scene-frame-collision frame)
+                             (when visual (scene-visual-geometry visual)))))
+          ;(print name)
+          ;(print visual)
+          ;(print geometry)
+          (when (and visual geometry)
+            (format t "~&Adding ~A" name)
+            (thing (scene-visual-pov visual geometry
+                                     (pov-transform* (pov-matrix (gethash name tf-abs)))))
+            (thing (pov-line-comment (format nil "FRAME: ~A" name))))
+          (when (scene-mesh-p geometry)
+            (tree-set-insertf mesh-set
+                              (scene-mesh-inc (scene-mesh-file geometry))))))
+      (map-tree-set nil #'include mesh-set)
       (map nil #'include (reverse (ensure-list include)))
       ;; version
       (thing (pov-version 3.7)))

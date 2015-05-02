@@ -22,7 +22,7 @@
 (setq *scene-graph*
       (scene-graph-add-frame *scene-graph-baxter*
                              (scene-frame-fixed nil "table"
-                                                :tf (amino:tf nil (vec3* 1 0 0)))))
+                                                :tf (tf* nil (vec3* 1 0 0)))))
 
 (setq *scene-graph*
       (scene-graph-add-visual *scene-graph* "table"
@@ -35,20 +35,20 @@
 ;;       (scene-graph-
 
 ;; Produce a simple animation
-(time (scene-graph-time-animate
- (keyframe-configuration-function (list
-                                   (joint-keyframe 0d0 nil)
-                                   (joint-keyframe 2d0 `(("right_s0" ,(* .25 pi))
-                                                         ("right_s1" ,(* -0.25 pi))
-                                                         ("right_e0" ,(* 0.0 pi))
-                                                         ("right_e1" ,(* 0.25 pi))
-                                                         ("right_w0" ,(* 0.0 pi))
-                                                         ("right_w1" ,(* 0.5 pi))
-                                                         ("right_w2" ,(* 0.0 pi))))))
- :frames-per-second 15
- :time-end 2d0
- :encode-video t
- :include "baxter.inc" ))
+;; (time (scene-graph-time-animate
+;;  (keyframe-configuration-function (list
+;;                                    (joint-keyframe 0d0 nil)
+;;                                    (joint-keyframe 2d0 `(("right_s0" ,(* .25 pi))
+;;                                                          ("right_s1" ,(* -0.25 pi))
+;;                                                          ("right_e0" ,(* 0.0 pi))
+;;                                                          ("right_e1" ,(* 0.25 pi))
+;;                                                          ("right_w0" ,(* 0.0 pi))
+;;                                                          ("right_w1" ,(* 0.5 pi))
+;;                                                          ("right_w2" ,(* 0.0 pi))))))
+;;  :frames-per-second 15
+;;  :time-end 2d0
+;;  :encode-video t
+;;  :include "baxter.inc" ))
 
 
 
@@ -64,9 +64,9 @@
                                                       ("right_w1" . ,(* 0.5 pi))
                                                       ("right_w2" . ,(* 0.0 pi)))
                                                     #'string-compare)
+                                    :use-collision t
                                     :include "/tmp/robray/baxter.inc" )
             :quality 1.0
             ;:width 1920
             ;:height 1080
-            :file "/tmp/robray.pov"
-            :output "/tmp/robray.png")
+            :file "robray.pov")
