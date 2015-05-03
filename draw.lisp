@@ -46,12 +46,12 @@
                       &key
                         geometry
                         tf
+                        (actual-parent parent)
                         (options *draw-options*))
   ;; Add frame
   (setq scene-graph
-        (scene-graph-add-frame scene-graph
-                               (scene-frame-fixed parent name
-                                                  :tf tf)))
+        (scene-graph-add-tf scene-graph (tf-tag parent tf name)
+                            :actual-parent actual-parent))
   ;; Add visual
   (when (and (get-draw-option options :visual) geometry)
     (setq scene-graph
