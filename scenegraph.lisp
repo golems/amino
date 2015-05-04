@@ -11,25 +11,34 @@
 
 
 (defstruct scene-mesh
+  "A scene object defined by a mesh."
   name
   file)
 
 (defstruct scene-box
+  "A box object.
+The center of the box is at the origin, and it is aligned with the frame axes."
   dimension)
 (defun scene-box (dimension)
   (make-scene-box :dimension dimension))
 
 (defstruct scene-sphere
+  "A sphere object.
+The center of the sphere is at the origin."
   radius)
 (defun scene-sphere (radius)
   (make-scene-sphere :radius radius))
 
 
 (defstruct (scene-cylinder (:constructor scene-cylinder))
+  "A cylinder object.
+The cylinder starts at the origin and extends by HEIGHT in the Z direction."
   height
   radius)
 
 (defstruct (scene-cone (:constructor scene-cone))
+  "A cone object.
+The cone starts at the origin and extends by HEIGHT in the Z direction."
   height
   start-radius
   end-radius)
@@ -43,30 +52,37 @@
 ;;; FRAMES ;;;
 
 (defstruct scene-frame
+  "Base struct for frames in the scene."
   (name nil :type frame-name)
   (parent nil :type frame-name)
   visual
   collision
   tf)
 
-(defstruct (scene-frame-fixed (:include scene-frame)))
+(defstruct (scene-frame-fixed (:include scene-frame))
+  "A frame with a fixed transformation")
 
-(defun scene-frame-fixed (parent name &key tf)
+(defun scene-frame-fixed (parent name &key
+                                        (tf (identity-tf)))
+  "Create a new fixed frame."
   (make-scene-frame-fixed :name name
                           :parent parent
                           :tf tf))
 
 
 (defstruct (scene-frame-joint (:include scene-frame))
+  "BAse struct for varying scene frames."
   axis
   (offset 0d0 :type double-float))
 
-(defstruct (scene-frame-revolute (:include scene-frame-joint)))
+(defstruct (scene-frame-revolute (:include scene-frame-joint))
+  "A frame representing a revolute (rotating) joint.")
 
 (defun scene-frame-revolute (parent name &key
                                            axis
                                            (offset 0d0)
-                                           tf)
+                                           (tf (identity-tf)))
+  "Create a new revolute frame."
   (assert axis)
   (make-scene-frame-revolute :name name
                              :parent parent
@@ -74,12 +90,14 @@
                              :offset offset
                              :tf tf))
 
-(defstruct (scene-frame-prismatic (:include scene-frame-joint)))
+(defstruct (scene-frame-prismatic (:include scene-frame-joint))
+  "A frame representing a prismatic (sliding) joint.")
 
 (defun scene-frame-prismatic (parent name &key
                                             axis
                                             (offset 0d0)
-                                            tf)
+                                            (tf (identity-tf)))
+  "Create a new prismatic frame."
   (assert axis)
   (make-scene-frame-prismatic :name name
                               :parent parent

@@ -100,7 +100,7 @@
              (let* ((frame-name (gethash link-name link-parent-map))
                     (rpy (parse-float-sequence (path node '("origin" "@rpy") "0 0 0")))
                     (xyz (parse-float-sequence (path node '("origin" "@xyz") "0 0 0")))
-                    (offset (if (scene-cylinder-p geometry)
+                    (offset (if (scene-cylinder-p geometry) ; URDF cylinders have origin at their center
                                 (tf* nil (vec3* 0d0 0d0 (/ (scene-cylinder-height geometry) -2)))
                                 (tf* nil nil))))
                (let ((new-frame (scene-frame-fixed frame-name
