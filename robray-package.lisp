@@ -25,6 +25,8 @@
    :item-frame-axis
 
    ;; Scene Graph Manipulation
-   :scene-graph :scene-graph-add-frame :scene-graph-remove-frame :scene-graph-add-visual
+   :scene-graph
+   :scene-graph-add-frame :scene-graph-remove-frame
+   :scene-graph-add-visual
    :scene-graph-reparent
    ))

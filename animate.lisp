@@ -207,6 +207,7 @@
                                     (encode-video t)
                                     (output-directory *robray-tmp-directory*)
                                     ;(pov-file "frame")
+                                    use-collision
                                     (frame-start 0)
                                     append
                                     (scene-graph *scene-graph*)
@@ -230,6 +231,7 @@
      do
        (let ((frame-file (format nil "frame-~D.pov" frame)))
          (scene-graph-pov-frame scene-graph
+                                :use-collision use-collision
                                 :configuration-map configuration
                                 :output frame-file
                                 :directory output-directory
