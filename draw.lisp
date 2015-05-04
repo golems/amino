@@ -67,7 +67,7 @@
           (scene-graph-add-collision scene-graph name geometry)))
   scene-graph)
 
-(defun draw-tf-axis (axis &optional (translation (vec3* 0d0 0d0 0d0)))
+(defun draw-tf-axis (axis &optional (translation (identity-vec3)))
   (tf* (quaternion-from-vectors (vec 0d0 0d0 1d0)
                                 axis)
                       translation))
@@ -95,7 +95,7 @@
         scene-graph
         (ensure-list items)))
 
-(defun item-cylinder-axis (name &key height radius axis (translation (vec3* 0d0 0d0 0d0))
+(defun item-cylinder-axis (name &key height radius axis (translation (identity-vec3))
                                   options)
   (make-draw-item :name name
                   :geometry (scene-cylinder :height height
@@ -103,7 +103,7 @@
                   :tf (draw-tf-axis axis translation)
                   :options options))
 
-(defun item-cone-axis (name &key height start-radius (end-radius 0d0) axis (translation (vec3* 0d0 0d0 0d0))
+(defun item-cone-axis (name &key height start-radius (end-radius 0d0) axis (translation (identity-vec3))
                               options)
   (make-draw-item :name name
                   :geometry (scene-cone :height height
@@ -124,7 +124,7 @@
                                (start-arrow-start-width (* 2 width))
                                (start-arrow-end-width 0d0)
                                (start-arrow-length width)
-                               (translation (vec3* 0d0 0d0 0d0))
+                               (translation (identity-vec3))
                                options)
 
   (let ((body-length (- length

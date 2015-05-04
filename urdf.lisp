@@ -53,43 +53,26 @@
                           :child (path '("child" "@link"))))))
 
 (defun urdf-create-frames (urdf-joints link-parent-map)
-  (labels ((origin-rotated-p (rpy)
-             (not (= 0d0 (vecref rpy 0) (vecref rpy 1) (vecref rpy 2))))
-           (origin-frame (origin parent rpy xyz)
-             (scene-frame-fixed parent origin
-                                :tf (tf* (euler-rpy rpy) xyz))))
-    (loop for j in urdf-joints
-       for parent = (gethash (urdf-joint-parent j) link-parent-map)
-       for type = (urdf-joint-type j)
-       for name = (urdf-joint-name j)
-       for rpy = (urdf-joint-rpy j)
-       for xyz = (urdf-joint-xyz j)
-       for axis = (urdf-joint-axis j)
-       for origin = (concatenate 'string name "_origin")
-       nconc
-         (ecase type
-           (:fixed
-            (list
-             (scene-frame-fixed parent name
-                                :tf (tf* (amino:euler-rpy rpy) xyz))))
-           (:revolute
-            (if (origin-rotated-p rpy)
-                (list (origin-frame origin parent rpy xyz)
-                      (scene-frame-revolute origin name
-                                            :axis axis
-                                            :translation (vec3 nil)))
-                (list (scene-frame-revolute parent name
-                                            :axis axis
-                                            :translation (vec3 xyz)))))
-           (:prismatic
-            (if (origin-rotated-p rpy)
-                (list (origin-frame origin parent rpy xyz)
-                      (scene-frame-prismatic origin name
-                                             :axis axis
-                                             :rotation (quaternion nil)))
-                (list (scene-frame-prismatic parent name
-                                             :axis axis
-                                             :rotation (quaternion rpy)))))))))
+  (loop for j in urdf-joints
+     for parent = (gethash (urdf-joint-parent j) link-parent-map)
+     for type = (urdf-joint-type j)
+     for name = (urdf-joint-name j)
+     for rpy = (urdf-joint-rpy j)
+     for xyz = (urdf-joint-xyz j)
+     for axis = (urdf-joint-axis j)
+     for tf = (tf* (amino:euler-rpy rpy) xyz)
+     collect
+       (ecase type
+         (:fixed
+          (scene-frame-fixed parent name :tf tf))
+         (:revolute
+          (scene-frame-revolute parent name
+                                :axis axis
+                                :tf tf))
+         (:prismatic
+          (scene-frame-prismatic parent name
+                                 :axis axis
+                                 :tf tf)))))
 
 (defun urdf-bind-links (dom scene-graph link-parent-map &key
                                                           (default-color '(.5 .5 .5))

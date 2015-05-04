@@ -7,7 +7,7 @@
 ;;; SCENE FRAMES STRUCTURES ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; GEOMETRY
+;;; GEOMETRY ;;;
 
 
 (defstruct scene-mesh
@@ -40,14 +40,16 @@
   (alpha 1d0 :type double-float)
   modifiers)
 
+;;; FRAMES ;;;
+
 (defstruct scene-frame
   (name nil :type frame-name)
   (parent nil :type frame-name)
   visual
-  collision)
-
-(defstruct (scene-frame-fixed (:include scene-frame))
+  collision
   tf)
+
+(defstruct (scene-frame-fixed (:include scene-frame)))
 
 (defun scene-frame-fixed (parent name &key tf)
   (make-scene-frame-fixed :name name
@@ -59,33 +61,31 @@
   axis
   (offset 0d0 :type double-float))
 
-(defstruct (scene-frame-revolute (:include scene-frame-joint))
-  translation)
+(defstruct (scene-frame-revolute (:include scene-frame-joint)))
 
 (defun scene-frame-revolute (parent name &key
                                            axis
                                            (offset 0d0)
-                                           (translation (vec3* 0d0 0d0 0d0)))
+                                           tf)
   (assert axis)
   (make-scene-frame-revolute :name name
                              :parent parent
                              :axis axis
                              :offset offset
-                             :translation translation))
+                             :tf tf))
 
-(defstruct (scene-frame-prismatic (:include scene-frame-joint))
-  rotation)
+(defstruct (scene-frame-prismatic (:include scene-frame-joint)))
 
 (defun scene-frame-prismatic (parent name &key
                                             axis
                                             (offset 0d0)
-                                            (rotation (vec3* 0d0 0d0 0d0)))
+                                            tf)
   (assert axis)
   (make-scene-frame-prismatic :name name
                               :parent parent
                               :axis axis
                               :offset offset
-                              :rotation rotation))
+                              :tf tf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SCENE GRAPH STRUCTURE ;;;
@@ -220,14 +220,15 @@
                        (tree-map-find configuration-map (scene-frame-name frame)
                                      default-configuration)))
             (axis (scene-frame-joint-axis frame)))
-       (etypecase frame
-         (scene-frame-revolute
-          (tf* (with-vec3 (x y z) axis
-                (axis-angle* x y z config))
-               (scene-frame-revolute-translation frame)))
-         (scene-frame-prismatic
-          (tf* (scene-frame-prismatic-rotation frame)
-               (g* config axis))))))))
+       (tf-mul (scene-frame-tf frame)
+               (etypecase frame
+                 (scene-frame-revolute
+                  (tf* (with-vec3 (x y z) axis
+                         (axis-angle* x y z config))
+                       (identity-vec3)))
+                 (scene-frame-prismatic
+                  (tf* (identity-quaternion)
+                       (g* config axis)))))))))
 
 
 ;; (defun scene-graph-tf-relative (scene-graph frame-name
@@ -396,7 +397,7 @@
                       (scene-cone-end-radius geometry)
                       modifiers))
       (scene-sphere
-       (pov-sphere (vec3* 0 0 0)
+       (pov-sphere (identity-vec3)
                    (scene-sphere-radius geometry)
                    modifiers)))))
 
