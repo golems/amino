@@ -47,6 +47,24 @@
                                                                0 0 0 0)))
 (defparameter +tf-vec-3-ident+ (vec3* 0 0 0))
 
+(defparameter +tf-ident+ (make-quaternion-translation :quaternion +tf-quat-ident+
+                                                      :translation +tf-vec-3-ident+))
+
+
+;;; Identities ;;;
+
+(declaim (inline identity-quaternion))
+(defun identity-quaternion ()
+  +tf-quat-ident+)
+
+
+(declaim (inline identity-vec3))
+(defun identity-vec3 ()
+  +tf-vec-3-ident+)
+
+(declaim (inline identity-tf))
+(defun identity-tf ()
+  +tf-ident+)
 
 (defcfun aa-tf-cross :void
   (a vector-3-t)

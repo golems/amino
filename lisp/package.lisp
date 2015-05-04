@@ -119,6 +119,9 @@
    :tf-mul
    :tf-copy
    :tf-normalize
+   :identity-quaternion
+   :identity-vec3
+   :identity-tf
    ;; TF tree
    :make-tf-tree
    :tf-tree-insert
