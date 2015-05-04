@@ -412,10 +412,7 @@ RATIO: Floating point quality value in the range [0,1]"
 (defun pov-args (file
                  &key
                    output
-                   (antialias t)
-                   (width *width*)
-                   (height *height*)
-                   (quality *quality*)
+                   (options *render-options*)
                    verbose
                    threads
                    other)
@@ -423,12 +420,12 @@ RATIO: Floating point quality value in the range [0,1]"
      ,@(when output (list (format nil "+O~A" output)))
      "-D" ; don't invoke display
      "-GS"
-     ,@(when antialias (list "+A")) ; anti-alias
+     ,@(when (get-render-option options :antialias) (list "+A")) ; anti-alias
      ,@(when threads (list (format nil "+WT~D" threads)))
      ,(if verbose "+V" "-V")
-     ,(format nil "+Q~D" (pov-quality quality))
-     ,(format nil "+W~D" width)
-     ,(format nil "+H~D" height)
+     ,(format nil "+Q~D" (pov-quality (get-render-option options :quality)))
+     ,(format nil "+W~D" (get-render-option options :width))
+     ,(format nil "+H~D" (get-render-option options :height))
      ,@other))
 
 (defun pov-output-file (pov-file &optional (suffix ".png"))
@@ -438,23 +435,18 @@ RATIO: Floating point quality value in the range [0,1]"
                    &key
                      file
                      output
-                     (width *width*)
-                     (height *height*)
-                     (directory *robray-tmp-directory*)
-                     (quality *quality*))
+                     (options *render-options*)
+                     (directory *robray-tmp-directory*))
   (let ((things (if (listp things)
                     (pov-sequence things)
-                    things))
-        (quality (pov-quality quality)))
+                    things)))
 
     ;; write output
     (output things file :directory directory)
     ;; run povray
     (let ((args (pov-args file
-                                    :output output
-                                    :width width
-                                    :height height
-                                    :quality quality)))
+                          :output output
+                          :options options)))
       (format t "~&Running: povray ~{~A~^ ~}" args)
       (sb-ext:run-program "povray" args
                           :search t

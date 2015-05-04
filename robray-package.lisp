@@ -24,6 +24,16 @@
    :item-cone-axis
    :item-frame-axis
 
+   ;; Render options
+   :*render-options*
+   :get-render-option
+   :render-options-default
+   :render-options
+   :merge-render-options
+   :render-options-fast
+   :render-options-medium
+   :render-options-full-hd
+
    ;; Scene Graph Manipulation
    :scene-graph
    :scene-graph-add-frame :scene-graph-remove-frame

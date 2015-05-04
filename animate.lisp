@@ -106,8 +106,8 @@
   (frame-number (car (last (sort-frames files)))))
 
 (defun animate-encode (&key
+                         (options *render-options*)
                          (directory *robray-tmp-directory*)
-                         (frames-per-second *frames-per-second*)
                          (pad 15)
                          (output-file "robray.mp4")
                          (video-codec "libx264"))
@@ -136,7 +136,7 @@
                              :output *standard-output*)))
   ;; avconv -f image2 -r 30 -i frame-%d.png foo.mp4
   (let ((args (list "-f" "image2"
-                    "-r" (write-to-string frames-per-second)
+                    "-r" (write-to-string (get-render-option options :frames-per-second))
                     "-i" "vframe-%d.png"
                     "-codec:v" video-codec
                     "-loglevel" "warning"
@@ -153,6 +153,7 @@
 
 (defun animate-render (&key
                          (directory *robray-tmp-directory*)
+                         (options *render-options*)
                          (wait t)
                          (jobs 16)
                          (status-stream t))
@@ -167,7 +168,7 @@
          (i 0)
          (process-list)
          (semaphore (when wait (sb-thread:make-semaphore :count 0)))
-         (pov-args (pov-args "FILE" :quality .5 :other (list "+WT1" ))))
+         (pov-args (pov-args "FILE" :options options :other (list "+WT1" ))))
     (format status-stream "~&povray ~{~A ~}" pov-args)
     (labels ((process-file (file)
                (format status-stream "~&~A Starting render of ~A" (percent) file)
@@ -207,14 +208,10 @@
                                     (encode-video t)
                                     (output-directory *robray-tmp-directory*)
                                     ;(pov-file "frame")
-                                    use-collision
                                     (frame-start 0)
                                     append
                                     (scene-graph *scene-graph*)
-                                    (width *width*)
-                                    (height *height*)
-                                    (quality *quality*)
-                                    (frames-per-second *frames-per-second*)
+                                    (options *render-options*)
                                     include)
   (ensure-directories-exist output-directory)
   (let ((frame-files (frame-files output-directory)))
@@ -231,7 +228,7 @@
      do
        (let ((frame-file (format nil "frame-~D.pov" frame)))
          (scene-graph-pov-frame scene-graph
-                                :use-collision use-collision
+                                :options options
                                 :configuration-map configuration
                                 :output frame-file
                                 :directory output-directory
@@ -239,13 +236,11 @@
   ;; Convert Frames
   (when render-frames
     (net-render :directory output-directory
-                :height height
-                :width width
-                :quality quality)
+                :options options)
     ;; Encode Video
     (when encode-video
       (animate-encode :directory output-directory
-                      :frames-per-second frames-per-second))))
+                      :options options))))
 
 
 
@@ -257,12 +252,9 @@
                                    (time-start 0d0)
                                    (time-end 1d0)
                                    (scene-graph *scene-graph*)
-                                   (width *width*)
-                                   (height *height*)
-                                   (quality *quality*)
-                                   (frames-per-second *frames-per-second*)
+                                   (options *render-options*)
                                    include)
-  (let ((frame-period (coerce (/ 1 frames-per-second) 'double-float)))
+  (let ((frame-period (coerce (get-render-option options :frames-per-second) 'double-float)))
     (scene-graph-frame-animate (lambda (frame)
                                  (let ((time (+ time-start (* frame frame-period))))
                                    (if (> time time-end)
@@ -273,11 +265,8 @@
                                :encode-video encode-video
                                :output-directory output-directory
                                :frame-start 0
-                               :width width
-                               :height height
-                               :quality quality
-                               :include include
-                               :frames-per-second frames-per-second)))
+                               :options options
+                               :include include)))
 
 (defun net-process-host (compute-available semaphore)
   (loop do
@@ -341,9 +330,7 @@
 
 (defun net-render (&key
                      (directory *robray-tmp-directory*)
-                     (width *width*)
-                     (height *height*)
-                     (quality *quality*)
+                     (options *render-options*)
                      (render-host-alist *render-host-alist*)
                      (status-stream *standard-output*))
   (let* ((compute-available (make-string-hash-table))
@@ -365,9 +352,7 @@
                (let ((args (gethash host host-args)))
                  (pov-args (povfile-base item)
                            :output (unless (string-equal host "localhost") "-")
-                           :width width
-                           :height height
-                           :quality quality
+                           :options options
                            :threads (net-args-threads args))))
              (pov-cmd (host)
                (net-args-povray (gethash host host-args)))

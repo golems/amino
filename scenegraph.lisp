@@ -402,11 +402,11 @@
 
 (defun scene-graph-pov-frame (scene-graph
                               &key
+                                options
                                 configuration-map
                                 output
                                 directory
                                 include
-                                use-collision
                                 (default-configuration 0d0))
 "Generate the POV-ray scene for the given scene-graph."
   (let ((pov-things)
@@ -421,7 +421,7 @@
       (do-scene-graph-frames (frame scene-graph)
         (let* ((name (scene-frame-name frame))
                (visual (scene-frame-visual frame))
-               (geometry (if use-collision
+               (geometry (if (get-render-option options :use-collision)
                              (scene-frame-collision frame)
                              (when visual (scene-visual-geometry visual)))))
           ;(print name)

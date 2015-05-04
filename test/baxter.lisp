@@ -64,9 +64,7 @@
                                                       ("right_w1" . ,(* 0.5 pi))
                                                       ("right_w2" . ,(* 0.0 pi)))
                                                     #'string-compare)
-                                    :use-collision t
                                     :include "/tmp/robray/baxter.inc" )
-            :quality 1.0
-            ;:width 1920
-            ;:height 1080
+            :options (render-options-default :height 1080
+                                             :width 1920)
             :file "robray.pov")
