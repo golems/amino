@@ -143,7 +143,8 @@
   scene-graph)
 
 
-(defun urdf-parse (urdf)
+(defun urdf-parse (urdf &key reload-meshes)
+
   (let* ((dom (if (stringp urdf)
                   (urdf-load urdf)
                   urdf))
@@ -158,4 +159,5 @@
                 urdf-joints))
          ;; Create Scene Frames
          (scene-graph (scene-graph (urdf-create-frames urdf-joints link-parent-map))))
-    (scene-graph-resolve-mesh (urdf-bind-links dom scene-graph link-parent-map))))
+    (scene-graph-resolve-mesh (urdf-bind-links dom scene-graph link-parent-map)
+                              :reload reload-meshes)))

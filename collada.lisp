@@ -258,7 +258,6 @@
                             :texture-list textures
                             :normal-vectors (map 'list #'pov-float-vector-right normals)
                             :normal-indices (map 'list #'pov-integer-vector normal-indices)
-                            ;;:modifiers modifiers
                             ))))
 
     ;;      (print vertex-source)

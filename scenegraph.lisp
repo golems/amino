@@ -198,7 +198,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                "povray/"
                                mesh-file ".inc")))
 
-(defun scene-graph-resolve-mesh (scene-graph)
+(defun scene-graph-resolve-mesh (scene-graph &key
+                                               reload
+                                               (directory *robray-tmp-directory*))
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
     (labels ((resolve-mesh (mesh)
@@ -216,11 +218,17 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                (format *standard-output* "~&Converting ~A..." mesh-file)
                (let* ((dom (dom-load mesh-file))
                       (inc-file (scene-mesh-inc mesh-file))
-                      (geom-name (collada-geometry-name dom)))
-                 (format *standard-output* "~&    to  ~A..." inc-file)
-                 (ensure-directories-exist inc-file)
-                 (collada-povray :dom dom
-                                 :file inc-file)
+                      (geom-name (collada-geometry-name dom))
+                      (inc-path (output-file inc-file directory)))
+                 (format *standard-output* "~&    to  ~A..." inc-path)
+                 (when (or reload
+                           (not (probe-file inc-path))
+                           (>= (file-write-date mesh-file)
+                               (file-write-date inc-path)))
+                   (ensure-directories-exist inc-path)
+                   (collada-povray :dom dom
+                                   :file inc-file
+                                   :directory directory))
                  (dolist (mesh-node mesh-nodes)
                    (setf (scene-mesh-name mesh-node) geom-name))))
              mesh-files)
