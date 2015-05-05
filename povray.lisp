@@ -289,17 +289,17 @@
 VERTEX-VECTORS: List of vertices in the mesh as pov-vertex
 FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 "
-  (declare (ignore normal-vectors normal-indices))
   (let ((args modifiers))
     ;; TODO: figure this out
     ;; (when normal-indices
     ;;   (push (pov-list "normal_indices" normal-indices) args))
-    ;; (when normal-vectors
-    ;;   (push (pov-list "normal_vectors" normal-vectors) args))
     (when matrix
       (push (pov-matrix matrix) args))
     (when mesh
       (push (pov-value mesh) args))
+
+    (when normal-indices
+      (push (pov-list "normal_indices" normal-indices) args))
 
     (when face-indices
       (push (pov-list "face_indices"
@@ -310,6 +310,9 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
             args))
     (when texture-list
       (push (pov-texture-list texture-list) args))
+
+    (when normal-vectors
+      (push (pov-list "normal_vectors" normal-vectors) args))
     (when vertex-vectors
       (push (pov-list "vertex_vectors" vertex-vectors) args))
 
@@ -448,7 +451,11 @@ RATIO: Floating point quality value in the range [0,1]"
                           :output output
                           :options options)))
       (format t "~&Running: povray ~{~A~^ ~}" args)
-      (sb-ext:run-program "povray" args
-                          :search t
-                          :directory directory)
-      (format t "~&done"))))
+      (let ((result
+             (sb-ext:run-program "povray" args
+                                 :search t
+                                 :directory directory
+                                 :wait t)))
+        (if (zerop (sb-ext:process-exit-code result))
+            (format t "~&done")
+            (format t "~&Povray rendering failed~%"))))))

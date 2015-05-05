@@ -17,14 +17,17 @@
   (setq *collada-dom* (dom-load file)))
 
 (defun collada-node-text (node)
+  "Return NODE's text."
   (let ((children (dom:child-nodes node)))
     (assert (= 1 (length children)))
     (dom:data (elt children 0))))
 
 (defun collada-text-split (node)
+  "Split NODE's text by spaces."
   (ppcre:split " " (collada-node-text node)))
 
 (defun collada-node-integers (node)
+  "Parse NODE's text into a list of integers."
   (map 'list #'parse-integer (collada-text-split node)))
 
 (defun collada-node-floats (node)
@@ -49,6 +52,7 @@
     (gethash id id-map)))
 
 (defun collada-group-list (list stride)
+  "Group flat list LIST into a list of lists of length STRIDE."
   (loop for x = list then (nthcdr stride x)
      while x
      collect (subseq x 0 stride)))
@@ -184,53 +188,76 @@
 (defun collada-povray-geometry (dom geometry-node)
   (let* ((mesh  (dom-select-tag geometry-node "mesh" :singleton t))
          (polylists  (dom-select-tag mesh "polylist" :direct t))
-         (input (fold (lambda (set input)
-                        (if (and (dom:has-attribute input "semantic")
-                                 (string-equal (dom:get-attribute input "semantic")
-                                               "VERTEX")
-                                 (dom:has-attribute input "source"))
-                            (tree-set-insert set (dom:get-attribute input "source"))
-                            set))
-                      (make-tree-set #'string-compare)
-                      (dom-select-path mesh '("polylist" "input"))))
-         (vertex-source (if (not (= 1 (tree-set-count input)))
-                            (error "Cannot convert ~D source arrays to povray format" (tree-set-count input))
-                            (car (tree-set-list input))))
+         (inputs (dom-select-path mesh '("polylist" "input")))
+         (input-vertex (fold (lambda (set input)
+                               (if (and (dom:has-attribute input "semantic")
+                                        (string-equal (dom:get-attribute input "semantic")
+                                                      "VERTEX")
+                                        (dom:has-attribute input "source"))
+                                   (tree-set-insert set (dom:get-attribute input "source"))
+                                   set))
+                             (make-tree-set #'string-compare)
+                             inputs))
+         (vertex-source (if (not (= 1 (tree-set-count input-vertex)))
+                            (error "Cannot convert ~D source arrays to povray format" (tree-set-count input-vertex))
+                            (car (tree-set-list input-vertex))))
          (vertices (collada-id-parse dom vertex-source))
+         (input-normal (fold (lambda (set input)
+                               (if (and (dom:has-attribute input "semantic")
+                                        (string-equal (dom:get-attribute input "semantic")
+                                                      "NORMAL")
+                                        (dom:has-attribute input "source"))
+                                   (tree-set-insert set (dom:get-attribute input "source"))
+                                   set))
+                             (make-tree-set #'string-compare)
+                             inputs))
+         (normal-source (if (not (= 1 (tree-set-count input-normal)))
+                            (error "Cannot convert ~D source arrays to povray format" (tree-set-count input-normal))
+                            (car (tree-set-list input-normal))))
+         (normals (collada-id-parse dom normal-source))
          (textures (loop for p in polylists
                       for material-id = (dom:get-attribute p "material")
                       when (not (zerop (length material-id)))
                       collect
                         (collada-povray-material dom (collada-lookup dom material-id))))
+         (polylist-prims (loop for p in polylists
+                            for prim = (collada-node-integers (dom-select-tag p "p" :direct t :singleton t))
+                            for vcount = (collada-node-integers (dom-select-tag p "vcount" :direct t :singleton t))
+                            collect (progn
+                                      (dolist (c vcount)
+                                        (assert (= 3 c) () "Cannot handle non-triangular polygons."))
+                                      prim)))
          (faces (loop for p in polylists
                    for i from 0
-                   for prim = (collada-node-integers (dom-select-tag p "p" :direct t :singleton t))
-                   for vcount = (collada-node-integers (dom-select-tag p "vcount" :direct t :singleton t))
+                   for prim in polylist-prims
                    for vertex-indices = (collada-group-list (loop for rest = prim then (cddr rest)
                                                                while rest
                                                                collect (car rest))
                                                             3)
                    nconc (progn
-                           (dolist (c vcount)
-                             (assert (= 3 c) () "Cannot handle non-triangular polygons."))
                            (loop for x in vertex-indices
                               nconc (if textures
                                         (list (pov-integer-vector x)
                                               (pov-value i))
                                         (list (pov-integer-vector x)))))))
+         (normal-indices (loop for p in polylists
+                            for prim  in polylist-prims
+                            for normal-indices = (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
+                                                                        while rest
+                                                                        collect (car rest))
+                                                                     3)
+                            nconc
+                            normal-indices))
          )
-                   ;; for normal-indices = (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
-                   ;;                                             while rest
-                   ;;                                             collect (car rest))
-                   ;;                                          3)
     (assert (or (zerop (length textures))
                 (= (length textures) (length polylists))))
+    ;(print normal-indices)
     (pov-declare (name-mangle (dom:get-attribute geometry-node "name"))
                  (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
-                            ;;:normal-vectors (map 'list #'pov-float-vector-right normals)
                             :face-indices faces
                             :texture-list textures
-                            ;;:normal-indices (map 'list #'pov-integer-vector normal-indices)
+                            :normal-vectors (map 'list #'pov-float-vector-right normals)
+                            :normal-indices (map 'list #'pov-integer-vector normal-indices)
                             ;;:modifiers modifiers
                             ))))
 

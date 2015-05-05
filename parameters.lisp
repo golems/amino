@@ -73,5 +73,6 @@
   (merge-render-options (render-options :quality 1d0
                                         :use-collision nil
                                         :width 1920
+                                        :frames-per-second 30
                                         :height 1080)
                         base-options))

@@ -65,6 +65,5 @@
                                                       ("right_w2" . ,(* 0.0 pi)))
                                                     #'string-compare)
                                     :include "/tmp/robray/baxter.inc" )
-            :options (render-options-default :height 1080
-                                             :width 1920)
+            :options (render-options-full-hd)
             :file "robray.pov")
