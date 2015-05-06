@@ -28,11 +28,10 @@
 
 (defun collada-node-integers (node)
   "Parse NODE's text into a list of integers."
-  (map 'list #'parse-integer (collada-text-split node)))
+  (parse-integer-list (collada-node-text node)))
 
 (defun collada-node-floats (node)
   (map 'list #'parse-float (collada-text-split node)))
-
 
 (defun collada-xml-id-map (dom)
   (let ((hash (make-hash-table :test #'equal)))

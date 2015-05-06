@@ -151,3 +151,41 @@
 (defun robray-cache-directory (name &key (base-directory *robray-tmp-directory*))
   (let ((result (concatenate 'string base-directory name)))
     result))
+
+;; (defun split-spaces (string function)
+;;   (declare ;(optimize (speed 3) (safety 0))
+;;            (type simple-string string)
+;;            (type function function))
+;;   (let ((length (length string)))
+;;     (labels ((find-start (start)
+;;                (loop for i from start
+;;                   until (or (>= i length)
+;;                             (not (amino::char-isblank (aref string i))))
+;;                   finally (return i)))
+;;              (find-end (start)
+;;                (loop for i from start
+;;                   while (and (< i length)
+;;                                (not (amino::char-isblank (aref string i))))
+;;                   finally (return i))))
+;;       (loop
+;;          for start = (find-start 0) then (find-start end)
+;;          for end = (find-end start)
+;;          while (< start length)
+;;          collect (let ((string (subseq string start end)))
+;;                    (funcall function string))))))
+
+
+(defun parse-integer-list (text)
+  (declare (type simple-string text))
+  (loop
+     with length = (length text)
+     with end = 0
+     for start = 0 then end
+     for number = (when (< start length)
+                    (multiple-value-bind (i new-end)
+                        (parse-integer text :start start :junk-allowed t)
+                      (assert (> new-end start))
+                      (setq end new-end)
+                      i))
+     while number
+     collect number))
