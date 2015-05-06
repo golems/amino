@@ -345,15 +345,13 @@
                            textures))
       (pov-texture textures)))))
 
-(defun collada-povray (&key
-                         (dom *collada-dom*)
-                         (directory *robray-tmp-directory*)
-                         file)
-  (let* ((geometry-node (dom-select-path dom '("COLLADA" "library_geometries" "geometry")  :singleton t))
-         (result (collada-povray-geometry dom geometry-node)))
-    (if file
-        (output result file :directory directory)
-        result)))
+(defun collada-povray (input-file &optional output-file)
+  (let ((dom (dom-load input-file)))
+    (when output-file
+      (let* ((geometry-node (dom-select-path dom '("COLLADA" "library_geometries" "geometry")  :singleton t))
+             (result (collada-povray-geometry dom geometry-node)))
+        (output result output-file)))
+    (collada-geometry-name dom)))
 
 
 

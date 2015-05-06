@@ -216,19 +216,17 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
         (test-geom (scene-frame-collision frame))))
     (maphash (lambda (mesh-file mesh-nodes)
                (format *standard-output* "~&Converting ~A..." mesh-file)
-               (let* ((dom (dom-load mesh-file))
-                      (inc-file (scene-mesh-inc mesh-file))
-                      (geom-name (collada-geometry-name dom))
-                      (inc-path (output-file inc-file directory)))
-                 (format *standard-output* "~&    to  ~A..." inc-path)
-                 (when (or reload
-                           (not (probe-file inc-path))
-                           (>= (file-write-date mesh-file)
-                               (file-write-date inc-path)))
-                   (ensure-directories-exist inc-path)
-                   (collada-povray :dom dom
-                                   :file inc-file
-                                   :directory directory))
+               (let* ((inc-file (output-file (scene-mesh-inc mesh-file) directory))
+                      (convert (or reload
+                                   (not (probe-file inc-file))
+                                   (>= (file-write-date mesh-file)
+                                       (file-write-date inc-file))))
+                      (geom-name (progn (ensure-directories-exist inc-file)
+                                        (collada-povray mesh-file
+                                                        (when convert inc-file)))))
+                 (if convert
+                     (format *standard-output* "~&    to  ~A..." inc-file)
+                     (format *standard-output* "~&    cached"))
                  (dolist (mesh-node mesh-nodes)
                    (setf (scene-mesh-name mesh-node) geom-name))))
              mesh-files)
