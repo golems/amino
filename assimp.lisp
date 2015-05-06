@@ -40,6 +40,7 @@
                                                           (z (vec-z thing)))
                                                       (assert (not (zerop (sqrt (+ (* x x)
                                                                                    (* y y)
+                                                                                   1
                                                                                    (* z z)))))))
                                                     (pov-float-vector-right thing))
                                           (ai:normals mesh)))))
@@ -50,21 +51,23 @@
                       for specular = (gethash "$clr.specular" material)
                       ;for opacity = (gethash "$clr.opacity" material)
                       for shininess = (gethash "$mat.shininess" material)
+                      for finishes = (append  (when ambient (list (pov-item "ambient"
+                                                                            (pov-rgb ambient))))
+                                              (when diffuse (list (pov-item "diffuse"
+                                                                            (avg-rgb diffuse))))
+                                              (when specular (list (pov-item "specular"
+                                                                             (avg-rgb specular)))))
+                      for pigments = (append (when diffuse (list (pov-item "color"
+                                                                           (pov-rgb diffuse)))))
                       collect (pov-texture (append
-                                            (when ambient (list (pov-item "ambient"
-                                                                          (pov-rgb ambient))))
-                                            (when diffuse (list (pov-item "diffuse"
-                                                                          (avg-rgb diffuse))
-                                                                (pov-item "color"
-                                                                          (pov-rgb diffuse))))
-                                            (when specular (list (pov-item "specular"
-                                                                           (avg-rgb specular))))))))
+                                            (when pigments (list (pov-pigment pigments))
+                                            (when finishes (list (pov-finish finishes))))))))
          )
     (output (pov-declare (name-mangle name)
                          (pov-mesh2 :vertex-vectors vertices
                                     :face-indices faces
                                     :texture-list textures
-                                    :normal-vectors normals
+                                    ;:normal-vectors normals
                                         ;:normal-indices (loop for i below (length faces)
                                         ;collect (pov-integer-vector (list i i i)))
                                     ))
