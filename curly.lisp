@@ -5,11 +5,19 @@
      while (amino::char-isblank (aref string i))
      finally (return i)))
 
+(defstruct curly-block
+  name
+  statements)
+
 (defparameter +curly-regex-tokens+
   (list (list "{" #\{)
         (list "}" #\})
         (list "\\(" #\()
         (list "\\)" #\))
+        (list "\\[" #\[)
+        (list "\\]" #\])
+        (list "," #\,)
+        (list ";" #\;)
         (list "\\\"[^\\\"]*\\\"" :string
               (lambda (string start end)
                 (subseq string (1+ start) (1- end))))
@@ -66,29 +74,41 @@
     (labels ((next ()
                (multiple-value-bind (type token end)
                    (curly-next-token string start)
+                 (format t "~&token: ~A" (list type token))
                  (setq start end)
                  (values type token)))
              (start ()
+               (print 'start)
                (multiple-value-bind (type token) (next)
                  (when type
-                   (cons token (body)))))
+                   (cons (make-curly-block :name token
+                                           :statements (body))
+                         (start)))))
              (body ()
+               (print 'body)
                (let ((type (next)))
                  (assert (eq #\{ type)))
-               (body-first-item))
+               (body-first-item ))
              (body-first-item ()
+               (print 'body-first)
                (multiple-value-bind (type token) (next)
-                 (if (eq type #\})
-                     nil
-                     (body-next-item token))))
-             (body-next-item (head-token)
+                 (ecase type
+                   (#\} nil) ; empty block
+                   (:identifer ; beginning of block statement
+                    (cons (body-statement (list token))
+                          (body-first-item))))))
+             (body-statement (items)
+               (declare (type list items))
+               ;(format t "~&body statement: ~A" (reverse items))
                (multiple-value-bind (type token) (next)
                  (case type
-                   (#\} (list head-token))
-                   (#\{ (cons (cons head-token (body-first-item))
-                              (body-first-item)))
-                   (otherwise (cons head-token (body-next-item token)))))))
-
+                   (#\; (reverse items))
+                   (#\{
+                    (format t "~&items: ~{~A~^ | ~}" items)
+                    (assert (= 1 (length items)))
+                    (make-curly-block :name (car items)
+                                      :statements (body-first-item)))
+                   (otherwise (body-statement (cons token items)))))))
       (start))))
 
 (defun curly-parse-file (pathname)
