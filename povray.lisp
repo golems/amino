@@ -166,7 +166,14 @@
             (coerce b 'double-float)))
 
 (defun pov-rgb (elements)
-  (apply #'pov-rgb* (subseq elements 0 3)))
+  (multiple-value-call #'pov-rgb*
+    (etypecase elements
+      (list (values (first elements)
+                    (second elements)
+                    (third elements)))
+      (array (values (aref elements 0)
+                     (aref elements 1)
+                     (aref elements 2))))))
 
 (defmethod print-object ((object pov-rgb) stream)
   (format stream "rgb<~F, ~F, ~F>"
@@ -198,12 +205,10 @@
           (pov-rgbf-f object)))
 
 (defun pov-color (color)
-  (etypecase color
-    (list
-     (pov-item "color"
-               (ecase (length color)
-                 (3 (pov-rgb color))
-                 (4 (pov-rgbf color)))))))
+  (pov-item "color"
+            (ecase (length color)
+              (3 (pov-rgb color))
+              (4 (pov-rgbf color)))))
 
 (defun pov-alpha (alpha)
   (pov-item "transmit"

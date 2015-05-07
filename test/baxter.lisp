@@ -16,19 +16,14 @@
 
 ;; Load robot scene graph from URDF
 (defvar *scene-graph-baxter*)
+
+;(time
 (setq *scene-graph-baxter*
-      (urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf"))
+      (urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf" :reload-meshes nil))
 
 (setq *scene-graph*
-      (scene-graph-add-frame *scene-graph-baxter*
-                             (scene-frame-fixed nil "table"
-                                                :tf (tf* nil (vec3* 1 0 0)))))
-
-(setq *scene-graph*
-      (scene-graph-add-visual *scene-graph* "table"
-                              (make-scene-visual :geometry (make-scene-box :dimension (list 1 1 .01))
-                                                 :color (list 1 0 0)
-                                                 :alpha 0.1d0)))
+      (scene-graph-merge *scene-graph-baxter*
+                         (load-curly-scene "/home/ntd/git/robray/test/scene.curly")))
 
 
 ;; (setq *scene-graph*
@@ -65,5 +60,5 @@
                                                       ("right_w2" . ,(* 0.0 pi)))
                                                     #'string-compare)
                                     :include "/tmp/robray/baxter.inc" )
-            :options (render-options-full-hd)
+            :options (render-options-medium)
             :file "robray.pov")
