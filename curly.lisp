@@ -1,61 +1,50 @@
 (in-package :robray)
 
-(defun curly-eat-blank (string start)
-  (loop for i from start below (length string)
-     while (amino::char-isblank (aref string i))
-     finally (return i)))
-
 (defstruct curly-block
   type
   name
   statements)
 
-(defparameter +curly-regex-tokens+
-  (list (list "{" #\{)
-        (list "}" #\})
-        (list "\\(" #\()
-        (list "\\)" #\))
-        (list "\\[" #\[)
-        (list "\\]" #\])
-        (list "," #\,)
-        (list ";" #\;)
-        (list "\\\"[^\\\"]*\\\"" :string
-              (lambda (string start end)
-                (subseq string (1+ start) (1- end))))
-        (list "[a-zA-Z][a-zA-Z0-9_]*" :identifer
-              (lambda (string start end)
-                (let ((token (subseq string start end)))
-                  (cond ((string= token "frame")
-                         :frame)
-                        ((string= token "geometry")
-                         :geometry)
-                        ((string= token "class")
-                         :class)
-                        (t token)))))
-        (list "-?(([0-9]+\\.[0-9]*)|(\\.[0-9]+))" :float
-              (lambda (string start end)
-                (parse-float (subseq string start end))))
-        (list "-?[0-9]+" :integer
-              (lambda (string start end)
-                (parse-integer string :start start :end end)))))
-
+(defparameter +curly-scanners+
+  (map 'list (lambda (thing)
+               (destructuring-bind (regex &rest rest) thing
+                 (cons (ppcre:create-scanner (format nil "^(~A)" regex)) rest)))
+       (list (list "{" #\{)
+             (list "}" #\})
+             (list "\\(" #\()
+             (list "\\)" #\))
+             (list "\\[" #\[)
+             (list "\\]" #\])
+             (list "," #\,)
+             (list ";" #\;)
+             (list "\\\"[^\\\"]*\\\"" :string
+                   (lambda (string start end)
+                     (subseq string (1+ start) (1- end))))
+             (list "[a-zA-Z][a-zA-Z0-9_]*" :identifer
+                   (lambda (string start end)
+                     (let ((token (subseq string start end)))
+                       (cond ((string= token "frame")
+                              :frame)
+                             ((string= token "geometry")
+                              :geometry)
+                             ((string= token "class")
+                              :class)
+                             (t token)))))
+             (list "-?(([0-9]+\\.[0-9]*)|(\\.[0-9]+))" :float
+                   (lambda (string start end)
+                     (parse-float (subseq string start end))))
+             (list "-?[0-9]+" :integer
+                   (lambda (string start end)
+                     (parse-integer string :start start :end end))))))
 
 (defparameter +curly-comment-regex+
   (let ((whitespace "\\s")
         (line-comment "#|//).*(\\n|$")
-        (block-comment "#|//).*(\\n|$")
-        ;(block-comment "/\\*[^(/\\*)]*\\*/")
-        )
+        (block-comment "/\\*[^(/\\*)]*\\*/"))
     (ppcre:create-scanner (format nil "^((~A)|(~A)|(~A))*"
                                   whitespace
                                   line-comment
                                   block-comment))))
-
-(defparameter +curly-scanners+
-  (loop for thing in +curly-regex-tokens+
-     for regex = (car thing)
-     for rest = (cdr thing)
-     collect (cons (ppcre:create-scanner (format nil "^(~A)" regex)) rest)))
 
 (defun curly-next-token (string start)
   "Returns (VALUES TOKEN-VALUE TOKEN-TYPE STRING-START STRING-END)"
