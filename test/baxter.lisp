@@ -19,11 +19,15 @@
 
 ;(time
 (setq *scene-graph-baxter*
-      (urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf" :reload-meshes nil))
+      ;(urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf" :reload-meshes t)
+      (urdf-parse "/home/ntd/baxter_gripper.urdf" :reload-meshes t)
+      )
 
 (setq *scene-graph*
       (scene-graph-merge *scene-graph-baxter*
-                         (load-curly-scene "/home/ntd/git/robray/test/scene.curly")))
+                         ;(load-curly-scene "/home/ntd/git/robray/test/scene.curly")
+                         (urdf-parse "/home/ntd/git/robray/test/scene.urdf")
+                         ))
 
 
 ;; (setq *scene-graph*
@@ -59,6 +63,8 @@
                                                       ("right_w1" . ,(* 0.5 pi))
                                                       ("right_w2" . ,(* 0.0 pi)))
                                                     #'string-compare)
+                                    :options (render-options-default :use-collision nil :options (render-options-medium))
                                     :include "/tmp/robray/baxter.inc" )
-            :options (render-options-medium)
+            :options (render-options-default :use-collision nil
+                                             :options (render-options-medium))
             :file "robray.pov")

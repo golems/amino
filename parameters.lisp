@@ -73,6 +73,14 @@
   (merge-render-options (render-options :quality 1d0
                                         :use-collision nil
                                         :width 1920
-                                        :frames-per-second 30
-                                        :height 1080)
+                                        :height 1080
+                                        :frames-per-second 30)
+                        base-options))
+
+(defun render-options-4k (&optional (base-options *render-options*))
+  (merge-render-options (render-options :quality 1d0
+                                        :use-collision nil
+                                        :width (* 2 1920)
+                                        :height (* 2 1080)
+                                        :frames-per-second 30)
                         base-options))

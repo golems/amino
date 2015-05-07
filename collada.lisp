@@ -362,13 +362,46 @@
                            textures))
       (pov-texture textures)))))
 
+(defun collada-pov-visual-node (dom node)
+  (let ((matrix-node (dom-select-path node '("matrix") :singleton t :undefined-error nil))
+        (name (dom:get-attribute node "id"))
+        (tf (identity-tf)))
+    (when matrix-node
+      (let* ((matrix-elements (collada-node-floats matrix-node))
+             (matrix-rows (collada-group-list matrix-elements 4))
+             (matrix (amino::row-matrix (subseq (first matrix-rows) 0 3)
+                                        (subseq (second matrix-rows) 0 3)
+                                        (subseq (third matrix-rows) 0 3)))
+             (translation (vec3 (loop for i below 3
+                                   for row in matrix-rows
+                                   collect (fourth row)))))
+       (setq tf (tf* (quaternion matrix)
+                      translation))))
+    (pov-declare (concatenate 'string "node_" (name-mangle name))
+                 (pov-block "mesh2"
+                            (list
+                             (pov-value (collada-geometry-name dom))
+                             (pov-matrix tf)
+                             )))))
+
 (defun collada-povray (input-file &optional output-file)
-  (let ((dom (dom-load input-file)))
+  (let* ((dom (dom-load input-file))
+         (nodes (dom-select-path dom '("COLLADA" "library_visual_scenes" "visual_scene" "node")))
+         (visual-node (loop for n in nodes
+                         append (loop for
+                                   geom in (dom-select-path n '("instance_geometry")
+                                                            :undefined-error nil)
+                                   when geom collect n)))
+         (visual-pov (progn
+                       (assert (= 1 (length visual-node)))
+                       (collada-pov-visual-node dom (first visual-node)))))
     (when output-file
       (let* ((geometry-node (dom-select-path dom '("COLLADA" "library_geometries" "geometry")  :singleton t))
-             (result (collada-povray-geometry dom geometry-node)))
-        (output result output-file)))
-    (collada-geometry-name dom)))
+             (geometry-pov (collada-povray-geometry dom geometry-node)))
+        (output (pov-sequence (list geometry-pov
+                                    visual-pov))
+                output-file)))
+    (pov-directive-name visual-pov)))
 
 
 
