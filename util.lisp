@@ -50,7 +50,8 @@
   (substitute-if #\_
                  (lambda (x)
                    (or (eq x #\-)
-                       (eq x #\Space)))
+                       (eq x #\Space)
+                       (eq x #\.)))
                  identifier))
 
 (deftype frame-name ()
@@ -116,6 +117,15 @@
   (labels ((rec (nodes path)
              (cond
                ((null path) nodes)
+               ((consp (car path))
+                (rec (loop
+                        with attr = (caar path)
+                        with value = (cdar path)
+                        for n in nodes
+                        when (progn (and (dom:has-attribute n attr)
+                                         (string= value (dom:get-attribute n attr))))
+                        collect n)
+                     (cdr path)))
                ((eq #\@ (aref (car path) 0))
                 (assert (null (cdr path)))
                 (loop
@@ -131,6 +141,7 @@
                      (cdr path))))))
     (let* ((result (rec (list node) path))
            (length (length result)))
+      ;(print result)
       (cond
         ((zerop length)
          (when undefined-error

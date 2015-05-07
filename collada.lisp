@@ -12,6 +12,8 @@
 ;;; General Collada Parsing ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defparameter +geometry-prefix+ "geom_")
+
 (defun collada-load (file)
   "Create the DOM for a Collada file."
   (setq *collada-dom* (dom-load file)))
@@ -172,18 +174,22 @@
 
 (defun collada-geometry-name (dom)
   "Find the name of the single geometry defined in this collada file"
-  (name-mangle (dom-select-path dom '("COLLADA" "library_geometries" "geometry" "@name")
-                                   :singleton t)))
+  (name-mangle (concatenate 'string
+                            +geometry-prefix+
+                            (dom-select-path dom '("COLLADA" "library_geometries" "geometry" "@name")
+                                             :singleton t))))
+
+
+(defun collada-input-offset (node)
+  (assert (dom:has-attribute node "offset"))
+  (parse-integer (dom:get-attribute node "offset")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; POVRAY CONVERSION ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-;; TODO: Put text list before face_indices
-;; TODO: Add texture index to each face
-;; TODO: Collect vertices from multiple poly counts
+;; TODO: Currently assuming a single array for vertices and normals
 (defun collada-povray-geometry (dom geometry-node)
   (let* ((mesh  (dom-select-tag geometry-node "mesh" :singleton t))
          (polylists  (dom-select-tag mesh "polylist" :direct t))
@@ -226,10 +232,16 @@
                                       (dolist (c vcount)
                                         (assert (= 3 c) () "Cannot handle non-triangular polygons."))
                                       prim)))
+         (prim-stride (loop for p in polylists
+                         for inputs = (dom-select-path p '("input"))
+                         collect (1+ (apply #'max (map 'list #'collada-input-offset inputs)))))
          (faces (loop for p in polylists
+                   for stride in prim-stride
                    for i from 0
+                   for offset = (collada-input-offset (dom-select-path p '("input" ("semantic" . "VERTEX"))
+                                                                       :singleton t))
                    for prim in polylist-prims
-                   for vertex-indices = (collada-group-list (loop for rest = prim then (cddr rest)
+                   for vertex-indices = (collada-group-list (loop for rest = (nthcdr offset prim) then (nthcdr stride rest)
                                                                while rest
                                                                collect (car rest))
                                                             3)
@@ -241,7 +253,11 @@
                                         (list (pov-integer-vector x)))))))
          (normal-indices (loop for p in polylists
                             for prim  in polylist-prims
-                            for normal-indices = (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
+                            for stride in prim-stride
+                            for offset = (collada-input-offset (dom-select-path p '("input" ("semantic" . "NORMAL"))
+                                                                                :singleton t))
+                            for normal-indices = (collada-group-list (loop for rest = (nthcdr offset prim)
+                                                                        then (nthcdr stride rest)
                                                                         while rest
                                                                         collect (car rest))
                                                                      3)
@@ -251,7 +267,9 @@
     (assert (or (zerop (length textures))
                 (= (length textures) (length polylists))))
     ;(print normal-indices)
-    (pov-declare (name-mangle (dom:get-attribute geometry-node "name"))
+    (pov-declare (name-mangle (concatenate 'string
+                                           +geometry-prefix+
+                                           (dom:get-attribute geometry-node "name")))
                  (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
                             :face-indices faces
                             :texture-list textures
