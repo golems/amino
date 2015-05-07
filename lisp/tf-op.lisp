@@ -197,7 +197,7 @@
   (apply #'vec3* x))
 
 (defmethod vec3 ((x array))
-  (check-type x (array t (3)))
+  (assert (= (length x) 3))
   (vec3* (aref x 0)
          (aref x 1)
          (aref x 2)))
