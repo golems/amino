@@ -200,3 +200,7 @@
                       i))
      while number
      collect number))
+
+(defun parse-float-list (text &optional (start 0))
+  (map 'list #'parse-float
+       (ppcre:split " " text :start start)))
