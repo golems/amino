@@ -25,8 +25,8 @@
 
 (setq *scene-graph*
       (scene-graph-merge *scene-graph-baxter*
-                         ;(load-curly-scene "/home/ntd/git/robray/test/scene.curly")
-                         (urdf-parse "/home/ntd/git/robray/test/scene.urdf")
+                         (load-curly-scene "/home/ntd/git/robray/test/scene.robray")
+                         ;(urdf-parse "/home/ntd/git/robray/test/scene.urdf")
                          ))
 
 
