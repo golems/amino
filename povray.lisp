@@ -86,10 +86,13 @@
                      (coerce (vec-y elements) 'double-float)
                      (coerce (vec-z elements) 'double-float)))
 
+(defun %pov-float-vector-right (x y z)
+  (%pov-float-vector x z y))
+
 (defun pov-float-vector-right (elements)
-  (%pov-float-vector (coerce (vec-x elements) 'double-float)
-                     (coerce (vec-z elements) 'double-float)
-                     (coerce (vec-y elements) 'double-float)))
+  (%pov-float-vector-right (coerce (vec-x elements) 'double-float)
+                           (coerce (vec-y elements) 'double-float)
+                           (coerce (vec-z elements) 'double-float)))
 
 (defun pov-integer-vector (elements)
   (%pov-integer-vector (vec-x elements)
@@ -276,15 +279,20 @@
             modifiers))
 
 
+(defun pov-group-array (function array)
+  (let ((n (length array)))
+    (loop for i = 0 then (+ 3 i)
+       while (< i n)
+       collect (funcall function
+                        (aref array i)
+                        (aref array (+ 1 i))
+                        (aref array (+ 2 i))))))
+
 
 
 
 (defun pov-mesh2 (&key
-                    vertex-vectors
-                    face-indices
-                    texture-list
-                    normal-vectors
-                    normal-indices
+                    mesh-data
                     modifiers
                     mesh
                     matrix
@@ -295,36 +303,74 @@ VERTEX-VECTORS: List of vertices in the mesh as pov-vertex
 FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 "
   (let ((args modifiers))
-    ;; TODO: figure this out
-    ;; (when normal-indices
-    ;;   (push (pov-list "normal_indices" normal-indices) args))
     (when matrix
       (push (pov-matrix matrix) args))
     (when mesh
       (push (pov-value mesh) args))
 
-    (when normal-indices
-      (push (pov-list "normal_indices" normal-indices) args))
+    (when mesh-data
+      (when-let ((normal-indices (mesh-data-normal-indices mesh-data)))
+        (push (pov-list "normal_indices"
+                        (pov-group-array #'%pov-integer-vector normal-indices))
+              args))
 
-    (when face-indices
-      (push (pov-list "face_indices"
-                      face-indices
-                      (if texture-list
-                          (/ (length face-indices) 2)
-                          (length face-indices)))
-            args))
-    (when texture-list
-      (push (pov-texture-list texture-list) args))
+      (when-let ((vertex-indices (mesh-data-vertex-indices mesh-data)))
+        (let* ((n (length vertex-indices))
+               (textures (mesh-data-texture-properties mesh-data))
+               (texture-indices (mesh-data-texture-indices mesh-data))
+               (has-texture (and textures texture-indices)))
+          (push (pov-list "face_indices"
+                          (loop for i = 0 then (+ 3 i)
+                             while (< i n)
+                             for face = (%pov-integer-vector (aref vertex-indices i)
+                                                             (aref vertex-indices (+ 1 i))
+                                                             (aref vertex-indices (+ 2 i)))
+                             nconc
+                               (if has-texture
+                                   (list face (pov-value (aref texture-indices i)))
+                                   (list face)))
+                          ;; TODO: textures
+                          (/ (length vertex-indices) 3))
+                args)))
+      (when-let ((textures (mesh-data-texture-properties mesh-data)))
+        (push (pov-texture-list (map 'list #'pov-alist-texture textures))
+              args))
 
-    (when normal-vectors
-      (push (pov-list "normal_vectors" normal-vectors) args))
-    (when vertex-vectors
-      (push (pov-list "vertex_vectors" vertex-vectors) args))
+      (when-let ((normals (mesh-data-normals mesh-data)))
+        (push (pov-list "normal_vectors"
+                        (pov-group-array #'%pov-float-vector-right normals))
+              args))
+      (when-let ((vertices (mesh-data-vertices mesh-data)))
+        (push (pov-list "vertex_vectors"
+                        (pov-group-array #'%pov-float-vector-right vertices))
+              args)))
 
     (pov-block "mesh2" args)))
 
 (defun pov-texture-list (textures)
   (pov-list "texture_list" textures))
+
+
+(defun pov-alist-texture (alist)
+  (let (finishes pigments)
+    (labels ((add-finish (name finish)
+               (push (pov-item name finish)
+                     finishes))
+             (property (key)
+               (cdr (assoc key alist))))
+      (when-let ((ambient (property :ambient)))
+        (add-finish "ambient" (pov-rgb ambient)))
+      (when-let ((diffuse (property :diffuse)))
+        (add-finish "diffuse" diffuse))
+      (when-let ((color (property :color)))
+        (push (pov-item "color" (pov-rgb color)) pigments))
+      (when-let ((specular (property :specular)))
+        (add-finish "specular" specular)))
+
+    (pov-texture (append (when pigments
+                           (list (pov-pigment pigments)))
+                         (when finishes
+                           (list (pov-finish finishes)))))))
 
 
 (defstruct (pov-version (:constructor pov-version (value)))
@@ -452,15 +498,14 @@ RATIO: Floating point quality value in the range [0,1]"
     ;; write output
     (output things file :directory directory)
     ;; run povray
-    (let ((args (pov-args file
-                          :output output
-                          :options options)))
-      (format t "~&Running: povray ~{~A~^ ~}" args)
-      (let ((result
-             (sb-ext:run-program "povray" args
-                                 :search t
-                                 :directory directory
-                                 :wait t)))
-        (if (zerop (sb-ext:process-exit-code result))
+    (let ((args (cons "povray" (pov-args file
+                                         :output output
+                                         :options options))))
+      (format t "~&Running: ~{~A~^ ~}" args)
+      (multiple-value-bind (output error-output status)
+          (uiop/run-program:run-program args
+                                        :directory directory)
+        (declare (ignore output error-output))
+        (if (zerop status)
             (format t "~&done")
             (format t "~&Povray rendering failed~%"))))))

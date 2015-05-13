@@ -46,8 +46,8 @@
               (assert (>= (length line) 2))
               (ecase (aref line 1)
                 (#\Space
-                 (vector-push-extend (parse-float-list line 2) vertices))
-                (#\n (vector-push-extend (parse-float-list line 3) normals))))
+                 (vector-push-extend (parse-float-sequence line 2) vertices))
+                (#\n (vector-push-extend (parse-float-sequence line 3) normals))))
              (#\f (vector-push-extend (parse-wavefront-face line) faces)))))
     (let* ((mesh (pov-mesh2 :vertex-vectors (loop for x across vertices
                                                collect (pov-float-vector-right x))

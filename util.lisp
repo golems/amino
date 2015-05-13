@@ -14,9 +14,6 @@
                            `(t ,@body))
                           (t `((string= ,value ,key) ,@body)))))))))
 
-(defun parse-float-sequence (text)
-  (map 'list #'parse-float (ppcre:split " " text)))
-
 (defun output-file (file &optional directory)
   (if directory
       (concatenate 'string directory file)
@@ -201,6 +198,5 @@
      while number
      collect number))
 
-(defun parse-float-list (text &optional (start 0))
-  (map 'list #'parse-float
-       (ppcre:split " " text :start start)))
+(defun parse-float-sequence (text)
+  (map 'list #'parse-float (ppcre:split " " text)))

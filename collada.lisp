@@ -241,126 +241,88 @@
                    for offset = (collada-input-offset (dom-select-path p '("input" ("semantic" . "VERTEX"))
                                                                        :singleton t))
                    for prim in polylist-prims
-                   for vertex-indices = (collada-group-list (loop for rest = (nthcdr offset prim) then (nthcdr stride rest)
-                                                               while rest
-                                                               collect (car rest))
-                                                            3)
-                   nconc (progn
-                           (loop for x in vertex-indices
-                              nconc (if textures
-                                        (list (pov-integer-vector x)
-                                              (pov-value i))
-                                        (list (pov-integer-vector x)))))))
+                   for vertex-indices =  (loop for rest = (nthcdr offset prim) then (nthcdr stride rest)
+                                            while rest
+                                            collect (car rest))
+                   nconc vertex-indices))
+         (texture-indices (when textures
+                            (loop for p in polylists
+                               for stride in prim-stride
+                               for i from 0
+                               for prim in polylist-prims
+                               nconc (make-list (/ (length prim)
+                                                   stride)
+                                                :initial-element i))))
          (normal-indices (loop for p in polylists
                             for prim  in polylist-prims
                             for stride in prim-stride
                             for offset = (collada-input-offset (dom-select-path p '("input" ("semantic" . "NORMAL"))
                                                                                 :singleton t))
-                            for normal-indices = (collada-group-list (loop for rest = (nthcdr offset prim)
-                                                                        then (nthcdr stride rest)
-                                                                        while rest
-                                                                        collect (car rest))
-                                                                     3)
+                            for normal-indices =  (loop for rest = (nthcdr offset prim)
+                                                     then (nthcdr stride rest)
+                                                     while rest
+                                                     collect (car rest))
                             nconc
                             normal-indices))
          )
     (assert (or (zerop (length textures))
                 (= (length textures) (length polylists))))
     ;(print normal-indices)
-    (pov-declare (name-mangle (concatenate 'string
-                                           +geometry-prefix+
-                                           (dom:get-attribute geometry-node "name")))
-                 (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
-                            :face-indices faces
-                            :texture-list textures
-                            :normal-vectors (map 'list #'pov-float-vector-right normals)
-                            :normal-indices (map 'list #'pov-integer-vector normal-indices)
-                            ))))
 
-    ;;      (print vertex-source)
-    ;;      (print faces)
-    ;;      textures))
+    (let ((mesh-data
+           (make-mesh-data :name (dom:get-attribute geometry-node "name")
+                           :vertices (make-array (* 3 (length vertices))
+                                                  :element-type 'double-float
+                                                  :initial-contents (loop for x in vertices
+                                                                         append x))
+                           :normals (make-array (* 3 (length normals))
+                                               :element-type 'double-float
+                                               :initial-contents (loop for x in normals
+                                                                    append x))
+                           :vertex-indices (make-array (length faces)
+                                                       :element-type 'fixnum
+                                                       :initial-contents faces)
+                           :normal-indices (make-array (length normal-indices)
+                                                       :element-type 'fixnum
+                                                       :initial-contents normal-indices)
+                           :texture-properties textures
+                           :texture-indices (make-array (length texture-indices)
+                                                        :element-type 'fixnum
+                                                        :initial-contents texture-indices))))
+      (pov-declare (name-mangle (concatenate 'string
+                                             +geometry-prefix+
+                                             (dom:get-attribute geometry-node "name")))
+                 (pov-mesh2 :mesh-data mesh-data)))))
 
-    ;;      (prim  (collada-node-integers (dom-select-tag polylist "p" :direct t :singleton t)))
-    ;;      (vcount  (collada-node-integers (dom-select-tag polylist "vcount" :direct t :singleton t)))
-    ;;      (inputs (dom:get-elements-by-tag-name polylist "input"))
-    ;;      (vertices)
-    ;;      (normals))
-    ;; ;; check vcount
-    ;; (dolist (c vcount)
-    ;;   (assert (= 3 c) () "Cannot handle non-triangular polygons."))
-    ;; ;; Parse inputs
-    ;; (loop for input across inputs
-    ;;    for semantic = (dom:get-attribute input "semantic")
-    ;;    for value = (collada-parse dom input)
-    ;;    do
-    ;;      (cond ((string= semantic "VERTEX")
-    ;;             (setq vertices value))
-    ;;            ((string= semantic "NORMAL")
-    ;;             (setq normals value))
-    ;;            (t (error "Unknown input 'semantic' attribute: ~A" semantic))))
-    ;; ;; Parse Prim
-    ;; (let ((vertex-indices (collada-group-list (loop for rest = prim then (cddr rest)
-    ;;                                              while rest
-    ;;                                              collect (car rest))
-    ;;                                           3))
-    ;;       (normal-indices (collada-group-list (loop for rest = (cdr prim) then (cddr rest)
-    ;;                                              while rest
-    ;;                                              collect (car rest))
-    ;;                                           3)))
-    ;;   (assert (dom:has-attribute geometry-node "name"))
-    ;;   (pov-declare (name-mangle (dom:get-attribute geometry-node "name"))
-    ;;                (pov-mesh2 :vertex-vectors (map 'list #'pov-float-vector-right vertices)
-    ;;                           :normal-vectors (map 'list #'pov-float-vector-right normals)
-    ;;                           :face-indices (map 'list #'pov-integer-vector vertex-indices)
-    ;;                           :normal-indices (map 'list #'pov-integer-vector normal-indices)
-    ;;                          :modifiers modifiers
-    ;;                          )))))
-
-               ;(map 'list (lambda (x) (apply #'pov-vector x)) normals)
-    ;(print (list vertices normals))))
-
-
-;; #S(COLLADA-EFFECT
-;;    :EMISSION (0.0d0 0.0d0 0.0d0 1.0d0)
-;;    :AMBIENT (0.0d0 0.0d0 0.0d0 1.0d0)
-;;    :DIFFUSE (0.64d0 0.64d0 0.64d0 1.0d0)
-;;    :SPECULAR (0.5d0 0.5d0 0.5d0 1.0d0)
-;;    :SHININESS 50.0d0
-;;    :INDEX-OF-REFRACTION 1.0d0)
 
 (defun collada-povray-material (dom node)
-  (let ((material (collada-parse dom node))
-        (finishes)
-        (pigments))
+  (let ((alist)
+        (material (collada-parse dom node)))
     (labels ((avg-rgb (item)
                (pov-float (/ (+ (first item)
                                 (second item)
                                 (third item))
                              3d0)))
-             (add-finish (name finish)
-               (push (pov-item name finish)
-                     finishes)))
-    (when (collada-effect-ambient material)
-      (add-finish "ambient" (pov-rgb (collada-effect-ambient material))))
-    (when (collada-effect-diffuse material)
-      (let ((diffuse (collada-effect-diffuse material)))
-        (add-finish "diffuse" (avg-rgb diffuse))
-        (push (pov-item "color" (pov-rgb diffuse))
-              pigments)))
-    (when (collada-effect-specular material)
-      (add-finish "specular" (avg-rgb (collada-effect-specular material))))
+             (add (name thing)
+               (push (cons name thing) alist)))
+    (when-let ((ambient  (collada-effect-ambient material)))
+      (add :ambient ambient))
+    (when-let ((diffuse (collada-effect-diffuse material)))
+      (add :diffuse (avg-rgb diffuse))
+      (add :color diffuse))
+    (when-let ((specular (collada-effect-specular material)))
+      (add :specular (avg-rgb specular))))))
 
       ;; TODO: emission, index-of-refraction, shininess
     ;; (when (collada-effect-shininess material)
     ;;   (add-finish "reflection" (pov-float (/ (collada-effect-shininess material)
     ;;                                          100d0))))
-    (let ((textures))
-      (when pigments (push (pov-pigment pigments)
-                           textures))
-      (when finishes (push (pov-finish finishes)
-                           textures))
-      (pov-texture textures)))))
+    ;; (let ((textures))
+    ;;   (when pigments (push (pov-pigment pigments)
+    ;;                        textures))
+    ;;   (when finishes (push (pov-finish finishes)
+    ;;                        textures))
+    ;;   (pov-texture textures)))))
 
 (defun collada-pov-visual-node (dom node)
   (let ((matrix-node (dom-select-path node '("matrix") :singleton t :undefined-error nil))
