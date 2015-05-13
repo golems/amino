@@ -13,7 +13,8 @@
 (defstruct scene-mesh
   "A scene object defined by a mesh."
   name
-  file)
+  source-file
+  povray-file)
 
 (defstruct scene-box
   "A box object.
@@ -204,8 +205,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
     (labels ((resolve-mesh (mesh)
-               (push mesh
-                     (gethash (scene-mesh-file mesh) mesh-files)))
+               (when-let ((source (and (not (scene-mesh-povray-file mesh))
+                                       (scene-mesh-source-file  mesh))))
+                 (push mesh (gethash source mesh-files))))
              (test-geom (g)
                (when (and g (scene-mesh-p g))
                  (resolve-mesh g))))
@@ -228,7 +230,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                      (format *standard-output* "~&    to  ~A..." inc-file)
                      (format *standard-output* "~&    cached"))
                  (dolist (mesh-node mesh-nodes)
-                   (setf (scene-mesh-name mesh-node) geom-name))))
+                   (setf (scene-mesh-name mesh-node) geom-name
+                         (scene-mesh-povray-file mesh-node) inc-file))))
              mesh-files)
     scene-graph))
 
@@ -458,8 +461,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                      (pov-transform* (pov-matrix (gethash name tf-abs)))))
             (thing (pov-line-comment (format nil "FRAME: ~A" name))))
           (when (scene-mesh-p geometry)
-            (tree-set-insertf mesh-set
-                              (scene-mesh-inc (scene-mesh-file geometry))))))
+            (tree-set-insertf mesh-set (scene-mesh-povray-file geometry)))))
       (map-tree-set nil #'include mesh-set)
       (map nil #'include (reverse (ensure-list include)))
       ;; version

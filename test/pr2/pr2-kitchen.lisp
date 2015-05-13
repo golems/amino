@@ -35,5 +35,5 @@
                           :include "pr2.inc"
                           :render t
                           :options (render-options-default :use-collision nil
-                                                           :options (render-options-medium))
+                                                           :options (render-options-full-hd))
                           :output "robray.pov"))

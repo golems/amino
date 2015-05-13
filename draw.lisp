@@ -11,7 +11,7 @@
 ;;; OPTIONS ;;;
 (defparameter *draw-options*
   '((:no-shadow . nil)
-    (:color . '(0 0 0))
+    (:color . (0 0 0))
     (:alpha . 1d0)
     (:visual . t)
     (:collision . t)))

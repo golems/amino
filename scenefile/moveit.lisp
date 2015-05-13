@@ -112,12 +112,22 @@
                            (translation (vec-line))
                            (quaternion (vec-line))
                            (rgba (vec-line)))
-                       (let ((mesh-data (make-mesh-data :vertices (list-double-vector vertices)
-                                                        :vertex-indices (list-fixnum-vector faces))))
-                         (output (pov-declare (name-mangle name)
-                                              (pov-mesh2 :mesh-data mesh-data))
-                                 "mesh.inc"
-                                 :directory directory))))))
+                       (let* ((mesh-data (make-mesh-data :vertices (list-double-vector vertices)
+                                                         :vertex-indices (list-fixnum-vector faces)
+                                                         :texture-properties `(((:color . ,(subseq rgba 0 3))
+                                                                                (:alpha . ,(elt rgba 3))))))
+                              (name (name-mangle name))
+                              (inc-file (format nil "~A.inc" name))
+                              (povray-file (format nil "moveit/~A" inc-file)))
+                         (ensure-directories-exist directory)
+                         (output (pov-declare name (pov-mesh2 :mesh-data mesh-data))
+                                 inc-file
+                                 :directory directory)
+                         (setq scene-graph
+                           (draw-geometry scene-graph nil name
+                                          :geometry (make-scene-mesh :name name :povray-file povray-file)
+                                          :tf (tf* (quaternion quaternion)
+                                                   (vec3 translation)))))))))
           (let ((scene-name (line)))
             (format t "~&Reading scene '~A'...~%" scene-name))
           (loop for x = (next-object)

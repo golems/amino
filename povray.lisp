@@ -319,6 +319,8 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (textures (mesh-data-texture-properties mesh-data))
                (texture-indices (mesh-data-texture-indices mesh-data))
                (has-texture (and textures texture-indices)))
+
+          (print textures)
           (push (pov-list "face_indices"
                           (loop for i = 0 then (+ 3 i)
                              while (< i n)
@@ -329,9 +331,10 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                                (if has-texture
                                    (list face (pov-value (aref texture-indices i)))
                                    (list face)))
-                          ;; TODO: textures
                           (/ (length vertex-indices) 3))
                 args)))
+
+      ;; TODO: No list when single texture and no texture indices slot
       (when-let ((textures (mesh-data-texture-properties mesh-data)))
         (push (pov-texture-list (map 'list #'pov-alist-texture textures))
               args))

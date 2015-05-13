@@ -88,7 +88,7 @@
                (assert (xor mesh-file box-size sphere-radius (and cylinder-length
                                                                   cylinder-radius)))
                (cond (mesh-file
-                      (make-scene-mesh :file (urdf-resolve-file mesh-file)))
+                      (make-scene-mesh :source-file (urdf-resolve-file mesh-file)))
                      (sphere-radius
                       (make-scene-sphere :radius (parse-float sphere-radius)))
                      (box-size

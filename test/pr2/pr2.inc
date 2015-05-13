@@ -28,7 +28,7 @@ pigment {
 
 camera {
     //location <1.5, 1, 1.5>
-  location <5.0, 2.0, 5>
+  location <4.5, 2.0, 3>
   look_at  <0,    .0,  2>
   right x*16/9 /* Widescreen */
 }
