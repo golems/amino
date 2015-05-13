@@ -65,7 +65,6 @@
                      (parse-integer-list (line)))
                  (next-object ()
                    (let ((line (line)))
-                     (print line)
                      (if (or (null line)
                              (ppcre:scan scanner-eof line))
                          nil
@@ -102,20 +101,21 @@
                                           :options (draw-options-default :color (subseq rgba 0 3)
                                                                          :alpha (elt rgba 3))))))
                  (parse-mesh (name)
-                   (print 'mesh)
                    (destructuring-bind (vertex-count face-count)
                        (int-line)
-                     (let ((vertices (loop for i below vertex-count
-                                          append (vec-line)))
-                           (faces (loop for i below face-count
-                                     append (int-line)))
-                           (translation (vec-line))
-                           (quaternion (vec-line))
-                           (rgba (vec-line)))
+                     (let* ((vertices (loop for i below vertex-count
+                                         append (vec-line)))
+                            (faces (loop for i below face-count
+                                      append (int-line)))
+                            (translation (vec-line))
+                            (quaternion (vec-line))
+                            (rgba (vec-line))
+                            (color (subseq rgba 0 3))
+                            (alpha (elt rgba 3)))
                        (let* ((mesh-data (make-mesh-data :vertices (list-double-vector vertices)
                                                          :vertex-indices (list-fixnum-vector faces)
-                                                         :texture-properties `(((:color . ,(subseq rgba 0 3))
-                                                                                (:alpha . ,(elt rgba 3))))))
+                                                         :texture-properties `(((:color . ,color)
+                                                                                (:alpha . ,alpha)))))
                               (name (name-mangle name))
                               (inc-file (format nil "~A.inc" name))
                               (povray-file (format nil "moveit/~A" inc-file)))
@@ -124,14 +124,14 @@
                                  inc-file
                                  :directory directory)
                          (setq scene-graph
-                           (draw-geometry scene-graph nil name
-                                          :geometry (make-scene-mesh :name name :povray-file povray-file)
-                                          :tf (tf* (quaternion quaternion)
-                                                   (vec3 translation)))))))))
+                               (draw-geometry scene-graph nil name
+                                              :geometry (make-scene-mesh :name name :povray-file povray-file)
+                                              :tf (tf* (quaternion quaternion)
+                                                       (vec3 translation))
+                                              :options (draw-options-default :color color :alpha alpha))))))))
           (let ((scene-name (line)))
             (format t "~&Reading scene '~A'...~%" scene-name))
           (loop for x = (next-object)
-             while x
-             do (print x)))
+             while x))
         (format t "~&   done" )
         scene-graph))))
