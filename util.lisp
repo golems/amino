@@ -211,3 +211,14 @@
   (make-array (length list)
               :element-type 'fixnum
               :initial-contents list))
+
+(declaim (inline array-cat))
+
+(defun array-cat (element-type arguments)
+  (let* ((n (loop for x in arguments summing (length x)))
+         (y (make-array n :element-type element-type))
+         (start 0))
+    (dolist (x arguments)
+      (replace y x :start1 start)
+      (incf start (length x)))
+    y))

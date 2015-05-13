@@ -244,15 +244,16 @@
                    for vertex-indices =  (loop for rest = (nthcdr offset prim) then (nthcdr stride rest)
                                             while rest
                                             collect (car rest))
-                   nconc vertex-indices))
+                   collect vertex-indices))
          (texture-indices (when textures
                             (loop for p in polylists
                                for stride in prim-stride
                                for i from 0
                                for prim in polylist-prims
-                               nconc (make-list (/ (length prim)
-                                                   stride)
-                                                :initial-element i))))
+                               collect (make-array (/ (length prim)
+                                                      stride)
+                                                   :element-type 'fixnum
+                                                   :initial-element i))))
          (normal-indices (loop for p in polylists
                             for prim  in polylist-prims
                             for stride in prim-stride
@@ -262,21 +263,18 @@
                                                      then (nthcdr stride rest)
                                                      while rest
                                                      collect (car rest))
-                            nconc
-                            normal-indices))
+                            collect normal-indices))
          )
     (assert (or (zerop (length textures))
                 (= (length textures) (length polylists))))
-    ;(print normal-indices)
-
     (let ((mesh-data
            (make-mesh-data :name (dom:get-attribute geometry-node "name")
-                           :vertices (list-double-vector (loop for x in vertices append x))
-                           :normals (list-double-vector (loop for x in normals append x))
-                           :vertex-indices (list-fixnum-vector faces)
-                           :normal-indices (list-fixnum-vector normal-indices)
+                           :vertices (array-cat 'double-float vertices)
+                           :normals (array-cat 'double-float normals)
+                           :vertex-indices (array-cat 'fixnum faces)
+                           :normal-indices (array-cat 'fixnum normal-indices)
                            :texture-properties textures
-                           :texture-indices (list-fixnum-vector texture-indices))))
+                           :texture-indices (array-cat 'fixnum texture-indices))))
       (pov-declare (name-mangle (concatenate 'string
                                              +geometry-prefix+
                                              (dom:get-attribute geometry-node "name")))
