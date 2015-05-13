@@ -303,52 +303,55 @@ VERTEX-VECTORS: List of vertices in the mesh as pov-vertex
 FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 "
   (let ((args modifiers))
-    (when matrix
-      (push (pov-matrix matrix) args))
-    (when mesh
-      (push (pov-value mesh) args))
+    (labels ((arg (arg) (push arg args)))
 
-    (when mesh-data
-      (when-let ((normal-indices (mesh-data-normal-indices mesh-data)))
-        (push (pov-list "normal_indices"
-                        (pov-group-array #'%pov-integer-vector normal-indices))
-              args))
+      (when matrix
+        (arg (pov-matrix matrix)))
+      (when mesh
+        (arg (pov-value mesh)))
 
-      (when-let ((vertex-indices (mesh-data-vertex-indices mesh-data)))
-        (let* ((n (length vertex-indices))
-               (textures (mesh-data-texture-properties mesh-data))
-               (texture-indices (mesh-data-texture-indices mesh-data))
-               (has-texture (and textures texture-indices)))
+      (when mesh-data
+        (when-let ((textures (mesh-data-texture-properties mesh-data)))
+          (when (= (length textures) 1)
+            (arg (pov-alist-texture (car textures)))))
 
-          (print textures)
-          (push (pov-list "face_indices"
-                          (loop for i = 0 then (+ 3 i)
-                             while (< i n)
-                             for face = (%pov-integer-vector (aref vertex-indices i)
-                                                             (aref vertex-indices (+ 1 i))
-                                                             (aref vertex-indices (+ 2 i)))
-                             nconc
-                               (if has-texture
-                                   (list face (pov-value (aref texture-indices i)))
-                                   (list face)))
-                          (/ (length vertex-indices) 3))
-                args)))
 
-      ;; TODO: No list when single texture and no texture indices slot
-      (when-let ((textures (mesh-data-texture-properties mesh-data)))
-        (push (pov-texture-list (map 'list #'pov-alist-texture textures))
-              args))
+        (when-let ((normal-indices (mesh-data-normal-indices mesh-data)))
+          (arg (pov-list "normal_indices"
+                          (pov-group-array #'%pov-integer-vector normal-indices))))
 
-      (when-let ((normals (mesh-data-normals mesh-data)))
-        (push (pov-list "normal_vectors"
-                        (pov-group-array #'%pov-float-vector-right normals))
-              args))
-      (when-let ((vertices (mesh-data-vertices mesh-data)))
-        (push (pov-list "vertex_vectors"
-                        (pov-group-array #'%pov-float-vector-right vertices))
-              args)))
+        (when-let ((vertex-indices (mesh-data-vertex-indices mesh-data)))
+          (let* ((n (length vertex-indices))
+                 (textures (mesh-data-texture-properties mesh-data))
+                 (texture-indices (mesh-data-texture-indices mesh-data))
+                 (has-texture (and textures
+                                   texture-indices
+                                   (> (length textures) 1))))
 
-    (pov-block "mesh2" args)))
+            (arg (pov-list "face_indices"
+                           (loop for i = 0 then (+ 3 i)
+                              while (< i n)
+                              for face = (%pov-integer-vector (aref vertex-indices i)
+                                                              (aref vertex-indices (+ 1 i))
+                                                              (aref vertex-indices (+ 2 i)))
+                              nconc
+                                (if has-texture
+                                    (list face (pov-value (aref texture-indices i)))
+                                    (list face)))
+                           (/ (length vertex-indices) 3)))))
+
+        (when-let ((textures (mesh-data-texture-properties mesh-data)))
+          (when (> (length textures) 1)
+            (arg (pov-texture-list (map 'list #'pov-alist-texture textures)))))
+
+        (when-let ((normals (mesh-data-normals mesh-data)))
+          (arg (pov-list "normal_vectors"
+                         (pov-group-array #'%pov-float-vector-right normals))))
+        (when-let ((vertices (mesh-data-vertices mesh-data)))
+          (arg (pov-list "vertex_vectors"
+                          (pov-group-array #'%pov-float-vector-right vertices))))))
+
+      (pov-block "mesh2" args)))
 
 (defun pov-texture-list (textures)
   (pov-list "texture_list" textures))
