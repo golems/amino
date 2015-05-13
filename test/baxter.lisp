@@ -1,5 +1,10 @@
 (in-package :robray)
 
+(defparameter *baxter-source-directory*
+  (concatenate 'string
+               (namestring (asdf:system-source-directory :robray))
+               "/test/"))
+
 ;; Define hosts for rendering
 (setq *render-host-alist*
       '(("localhost"  ; 4 core (HT), 3.6GHz
@@ -19,8 +24,8 @@
 
 ;(time
 (setq *scene-graph-baxter*
-      ;(urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf" :reload-meshes t)
-      (urdf-parse "/home/ntd/baxter_gripper.urdf" :reload-meshes t)
+      (urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf" :reload-meshes t)
+      ;(urdf-parse "/home/ntd/baxter_gripper.urdf" :reload-meshes t)
       )
 
 (setq *scene-graph*
@@ -50,21 +55,21 @@
 ;;  :include "baxter.inc" ))
 
 
+(uiop/stream:copy-file (output-file "baxter.inc" *baxter-source-directory*)
+                       (output-file "baxter.inc" *robray-tmp-directory*))
 
-
-
-(pov-render (scene-graph-pov-frame  *scene-graph*
-                                    :configuration-map
-                                    (alist-tree-map `(("right_s0" . ,(* .25 pi))
-                                                      ("right_s1" . ,(* -0.25 pi))
-                                                      ("right_e0" . ,(* 0.0 pi))
-                                                      ("right_e1" . ,(* 0.25 pi))
-                                                      ("right_w0" . ,(* 0.0 pi))
-                                                      ("right_w1" . ,(* 0.5 pi))
-                                                      ("right_w2" . ,(* 0.0 pi)))
-                                                    #'string-compare)
-                                    :options (render-options-default :use-collision nil :options (render-options-medium))
-                                    :include "/tmp/robray/baxter.inc" )
-            :options (render-options-default :use-collision nil
-                                             :options (render-options-medium))
-            :file "robray.pov")
+(scene-graph-pov-frame  *scene-graph*
+                        :configuration-map
+                        (alist-tree-map `(("right_s0" . ,(* .25 pi))
+                                          ("right_s1" . ,(* -0.25 pi))
+                                          ("right_e0" . ,(* 0.0 pi))
+                                          ("right_e1" . ,(* 0.25 pi))
+                                          ("right_w0" . ,(* 0.0 pi))
+                                          ("right_w1" . ,(* 0.5 pi))
+                                          ("right_w2" . ,(* 0.0 pi)))
+                                        #'string-compare)
+                        :include "baxter.inc"
+                        :render t
+                        :options (render-options-default :use-collision nil
+                                                         :options (render-options-medium))
+                        :output "robray.pov")

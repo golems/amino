@@ -427,10 +427,11 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 (defun scene-graph-pov-frame (scene-graph
                               &key
+                                render
                                 options
                                 configuration-map
                                 output
-                                directory
+                                (directory *robray-tmp-directory*)
                                 include
                                 (default-configuration 0d0))
 "Generate the POV-ray scene for the given scene-graph."
@@ -465,6 +466,16 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
       (thing (pov-version 3.7)))
 
     ;; result
-    (output (pov-sequence pov-things)
-            output
-            :directory directory)))
+    (let ((result (pov-sequence pov-things)))
+      (cond (render
+             (pov-render result
+                         :file output
+                         :directory directory
+                                :options options)
+             nil)
+            (output
+             (output result
+                     output
+                     :directory directory)
+             nil)
+            (t result)))))

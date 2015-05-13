@@ -28,8 +28,8 @@ pigment {
 
 camera {
     //location <1.5, 1, 1.5>
-  location <2.25, 1.0, -0.5>
-  look_at  <0,    .0,  0>
+  location <5.0, 2.0, 5>
+  look_at  <0,    .0,  2>
   right x*16/9 /* Widescreen */
 }
 
@@ -68,7 +68,7 @@ plane { <0, 1, 0>, 0
     }
     //finish{ phong 0.5 }
   }
-  translate <0,-.9,0>
+  translate <0,.0,0>
 
 }
 

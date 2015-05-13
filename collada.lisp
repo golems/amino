@@ -271,24 +271,12 @@
 
     (let ((mesh-data
            (make-mesh-data :name (dom:get-attribute geometry-node "name")
-                           :vertices (make-array (* 3 (length vertices))
-                                                  :element-type 'double-float
-                                                  :initial-contents (loop for x in vertices
-                                                                         append x))
-                           :normals (make-array (* 3 (length normals))
-                                               :element-type 'double-float
-                                               :initial-contents (loop for x in normals
-                                                                    append x))
-                           :vertex-indices (make-array (length faces)
-                                                       :element-type 'fixnum
-                                                       :initial-contents faces)
-                           :normal-indices (make-array (length normal-indices)
-                                                       :element-type 'fixnum
-                                                       :initial-contents normal-indices)
+                           :vertices (list-double-vector (loop for x in vertices append x))
+                           :normals (list-double-vector (loop for x in normals append x))
+                           :vertex-indices (list-fixnum-vector faces)
+                           :normal-indices (list-fixnum-vector normal-indices)
                            :texture-properties textures
-                           :texture-indices (make-array (length texture-indices)
-                                                        :element-type 'fixnum
-                                                        :initial-contents texture-indices))))
+                           :texture-indices (list-fixnum-vector texture-indices))))
       (pov-declare (name-mangle (concatenate 'string
                                              +geometry-prefix+
                                              (dom:get-attribute geometry-node "name")))

@@ -21,15 +21,13 @@
                    (lambda (string start end)
                      (subseq string (1+ start) (1- end))))
              (list "[a-zA-Z][a-zA-Z0-9_]*" :identifer
-                   (lambda (string start end)
-                     (let ((token (subseq string start end)))
-                       (cond ((string= token "frame")
-                              :frame)
-                             ((string= token "geometry")
-                              :geometry)
-                             ((string= token "class")
-                              :class)
-                             (t token)))))
+                   (let ((hash (alist-hash-table '(("frame" . :frame)
+                                                   ("geometry" . :geometry)
+                                                   ("class" . :class))
+                                                 :test #'equal)))
+                     (lambda (string start end)
+                       (let ((token (subseq string start end)))
+                         (gethash token hash token)))))
              (list "-?(([0-9]+\\.[0-9]*)|(\\.[0-9]+))" :float
                    (lambda (string start end)
                      (parse-float (subseq string start end))))
@@ -69,6 +67,7 @@
     (labels ((next ()
                (multiple-value-bind (type token t-start end)
                    (curly-next-token string start)
+                 (declare (ignore t-start))
                  ;; (when type
                  ;;   (format t "~&token: ~A `~A'" token (subseq string t-start end)))
                  (setq start end)
@@ -197,6 +196,7 @@
                              ("color"  (add-prop properties stmt))
                              ("alpha"  (add-prop properties stmt))))))
                  (let ((v
+                        ;; TODO: collision
                         (make-scene-visual :color (gethash "color" properties)
                                            :alpha (gethash "alpha" properties 1d0)
                                            :geometry

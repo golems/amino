@@ -42,3 +42,86 @@
               (vecref color 1)
               (vecref color 2)
               alpha))))
+
+
+(let ((scanner-eof (ppcre:create-scanner "^\\.\\s*$"))
+      (scanner-object (ppcre:create-scanner "^\\*\\s+(\\S+)$")))
+
+  (defun load-moveit-scene (pathname
+                            &key
+                              reload-meshes
+                              (directory *robray-tmp-directory*))
+    (declare (ignore reload-meshes))
+    (with-open-file (stream pathname :direction :input)
+      (let ((lineno 0)
+            (directory (clean-pathname (concatenate 'string directory "/moveit/")))
+            (scene-graph (scene-graph nil)))
+        (labels ((line ()
+                   (incf lineno)
+                   (read-line stream nil nil))
+                 (vec-line ()
+                     (parse-float-sequence (line)))
+                 (int-line ()
+                     (parse-integer-list (line)))
+                 (next-object ()
+                   (let ((line (line)))
+                     (print line)
+                     (if (or (null line)
+                             (ppcre:scan scanner-eof line))
+                         nil
+                         (let ((object-name (ppcre:register-groups-bind (object-name)
+                                                (scanner-object line)
+                                              object-name)))
+                           (unless object-name
+                             (error "Malformed object at line ~D: \"~A\"" lineno line))
+                           (let ((count (parse-integer (line))))
+                             (parse-object object-name count))))))
+                 (parse-object (name count)
+                   (loop
+                      for i below count
+                      for object-name = (if (= 1 count)
+                                            name
+                                            (format nil "~A__~D" name i))
+                      for type = (line)
+                      do (string-case type
+                           ("box" (parse-box object-name))
+                           ("mesh" (parse-mesh object-name))
+                           (otherwise
+                            (error "Unrecognized object type at line ~D: \"~A\"" lineno type))))
+                   name)
+                 (parse-box (name)
+                   (let ((size (vec-line))
+                         (translation (vec-line))
+                         (quaternion (vec-line))
+                         (rgba (vec-line)))
+                     (setq scene-graph
+                           (draw-geometry scene-graph nil name
+                                          :geometry (scene-box size)
+                                          :tf (tf* (quaternion quaternion)
+                                                   (vec3 translation))
+                                          :options (draw-options-default :color (subseq rgba 0 3)
+                                                                         :alpha (elt rgba 3))))))
+                 (parse-mesh (name)
+                   (print 'mesh)
+                   (destructuring-bind (vertex-count face-count)
+                       (int-line)
+                     (let ((vertices (loop for i below vertex-count
+                                          append (vec-line)))
+                           (faces (loop for i below face-count
+                                     append (int-line)))
+                           (translation (vec-line))
+                           (quaternion (vec-line))
+                           (rgba (vec-line)))
+                       (let ((mesh-data (make-mesh-data :vertices (list-double-vector vertices)
+                                                        :vertex-indices (list-fixnum-vector faces))))
+                         (output (pov-declare (name-mangle name)
+                                              (pov-mesh2 :mesh-data mesh-data))
+                                 "mesh.inc"
+                                 :directory directory))))))
+          (let ((scene-name (line)))
+            (format t "~&Reading scene '~A'...~%" scene-name))
+          (loop for x = (next-object)
+             while x
+             do (print x)))
+        (format t "~&   done" )
+        scene-graph))))

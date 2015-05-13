@@ -200,3 +200,14 @@
 
 (defun parse-float-sequence (text)
   (map 'list #'parse-float (ppcre:split " " text)))
+
+
+(defun list-double-vector (list)
+  (make-array (length list)
+              :element-type 'double-float
+              :initial-contents list))
+
+(defun list-fixnum-vector (list)
+  (make-array (length list)
+              :element-type 'fixnum
+              :initial-contents list))
