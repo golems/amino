@@ -2,6 +2,7 @@
 
 import bpy
 import sys
+import os
 
 
 i_start = sys.argv.index("--")
@@ -15,8 +16,19 @@ for ob in bpy.data.objects:
     ob.select = True
     bpy.ops.object.delete()
 
+basename, filetype = os.path.splitext(in_file)
+filetype = filetype.lower()
+
 # Import File
-bpy.ops.wm.collada_import(filepath=in_file)
+if (".dae" == filetype):
+    print("Loading Collada")
+    bpy.ops.wm.collada_import(filepath=in_file)
+elif (".stl" == filetype ):
+    print("Loading STL")
+    bpy.ops.import_mesh.stl(filepath=in_file)
+else:
+    raise Exception("Unknown file type: " + filetype)
+
 
 # Export File
 # right-handed coordinates, like god intended

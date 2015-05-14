@@ -36,16 +36,9 @@
 (progn
   (uiop/stream:copy-file (output-file "pr2.inc" *pr2-source-directory*)
                          (output-file "pr2.inc" *robray-tmp-directory*))
-  (scene-graph-pov-frame  *scene-graph*
-                          ;; :configuration-map
-                          ;; (alist-tree-map `(("right_s0" . ,(* .25 pi))
-                          ;;                   ("right_s1" . ,(* -0.25 pi))
-                          ;;                   ("right_e0" . ,(* 0.0 pi))
-                          ;;                   ("right_e1" . ,(* 0.25 pi))
-                          ;;                   ("right_w0" . ,(* 0.0 pi))
-                          ;;                   ("right_w1" . ,(* 0.5 pi))
-                          ;;                   ("right_w2" . ,(* 0.0 pi)))
-                          ;;                 #'string-compare)
+  (scene-graph-pov-frame  *scene-graph-pr2*
+                          :configuration-map (alist-tree-map nil #'string-compare)
+                          :default-configuration 0d0
                           :include "pr2.inc"
                           :render t
                           :options (render-options-default :use-collision nil

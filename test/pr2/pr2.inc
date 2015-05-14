@@ -28,8 +28,8 @@ pigment {
 
 camera {
     //location <1.5, 1, 1.5>
-  location <4.5, 2.0, 3>
-  look_at  <0,    .0,  2>
+  location <2.5, 2.0, 2>
+  look_at  <0,    .0,  0>
   right x*16/9 /* Widescreen */
 }
 
@@ -51,7 +51,7 @@ sky_sphere{ //<0,0,0>, 1
 
 //     <-2.54,0,-2.54>,  // Near lower left corner
 //     < 2.54, 0, 2.54>   // Far upper right corner
-plane { <0, 1, 0>, 0
+plane { <0, 1, 0>, -1
   //texture {
 
     //pigment{ color rgb<0.22,0.45,0>}

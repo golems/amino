@@ -26,6 +26,30 @@
 (defun ensure-directory (path &optional (separator "/"))
   (clean-pathname (concatenate 'string path separator) separator))
 
+(defun file-dirname (path)
+  (multiple-value-bind (start end reg-start reg-end)
+      (ppcre:scan "^(.*)/[^/]*$" path)
+    (declare (ignore end))
+    (if start
+        (subseq path (aref reg-start 0) (aref reg-end 0))
+        nil)))
+
+(defun file-type (path)
+  (multiple-value-bind (start end reg-start reg-end)
+      (ppcre:scan "^.*\\.([^/\.]+)$" path)
+    (declare (ignore end))
+    (if start
+        (subseq path (aref reg-start 0) (aref reg-end 0))
+        nil)))
+
+(defun file-basename (path)
+  (multiple-value-bind (start end reg-start reg-end)
+      (ppcre:scan "^.*/([^/]+)\\.[^/\.]*$" path)
+    (declare (ignore end))
+    (if start
+        (subseq path (aref reg-start 0) (aref reg-end 0))
+        nil)))
+
 (defun output-file (file &optional directory)
   (etypecase directory
     (null file)
@@ -58,12 +82,15 @@
 
 (defun name-mangle (identifier)
   "Convert an identifer to a conventional identifier"
-  (substitute-if #\_
-                 (lambda (x)
-                   (or (eq x #\-)
-                       (eq x #\Space)
-                       (eq x #\.)))
-                 identifier))
+  (let ((sub (substitute-if #\_
+                            (lambda (x)
+                              (or (eq x #\-)
+                                  (eq x #\Space)
+                                  (eq x #\.)))
+                            identifier)))
+    (if (amino::char-isdigit (aref sub 0))
+        (concatenate 'string "g_" sub)
+        sub)))
 
 
 

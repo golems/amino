@@ -10,7 +10,7 @@
   )
 
 (defparameter +wavefront-obj-scanner-v-vn+
-  (ppcre:create-scanner "f\\s+(\\d+)//(\\d+) (\\d+)//(\\d+) (\\d+)//(\\d+)"))
+  (ppcre:create-scanner "f\\s+(\\d+)/(\\d*)/(\\d+) (\\d+)/(\\d*)/(\\d+) (\\d+)/(\\d*)/(\\d+)"))
 
 (defparameter +wavefront-command-scanner+
   (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)"))
@@ -36,8 +36,8 @@
     (declare (ignore end))
     (when start
       (return-from parse-wavefront-face
-        (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 2 4))
-                                 :normal-index (subseq-list reg-start reg-end '(1 3 5))
+        (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 3 6))
+                                 :normal-index (subseq-list reg-start reg-end '(2 5 8))
                                  :material material))))
   (error "Bad or unimplimented face line: ~A" line)))
 
@@ -92,6 +92,8 @@
                      ("Kd" (rgb-prop :diffuse))
                      ("Ni" (float-prop :index-of-refraction))
                      ("d" (prop :alpha (invert-scale (parse-float data))))
+                     ("map_Kd" ;TODO
+                      )
                      ("illum" ;TODO
                       )
                      (otherwise (error "Unrecognized MTL command ~A" command)))))
@@ -132,6 +134,8 @@
                  ("mtllib"
                   (setq materials (append materials (wavefront-mtl-load data obj-file))))
                  ("usemtl" (setq current-material data))
+                 ("vt" ; TODO
+                  )
                  ("g"; TODO
                   )
                  ("s"; TODO
@@ -159,43 +163,52 @@
                                                    collect (wavefront-obj-face-normal-index f))))))
 
 
-(defun wavefront-povray (obj-file output-file)
+(defun wavefront-povray (obj-file output-file
+                         &key (handedness :right))
   (let* ((mesh-data (wavefront-obj-load obj-file))
          (name (mesh-data-name mesh-data)))
     (output (pov-declare (mesh-data-name mesh-data)
-                         (pov-mesh2 :mesh-data mesh-data :handedness :right))
+                         (pov-mesh2 :mesh-data mesh-data :handedness handedness))
             output-file)
     name))
 
 
 (defun mesh-povray (mesh-file
                     &key
-                      output-file
                       (directory *robray-tmp-directory*))
   ;; Maybe convert
-  (let* ((output-file (if output-file
-                          output-file
-                          (format-pathname "~A/~A.inc" directory mesh-file)))
-         (file-type (string-downcase (pathname-type mesh-file)))
-         (obj-file
-          (string-case file-type
-            ("obj" mesh-file)
-            ("dae"
+  (labels ((handle-obj (obj-file output-file handedness)
+             (let ((name (wavefront-povray obj-file output-file :handedness handedness)))
+               (values name output-file)))
+           (handle-dae (dae-file output-file)
+             (convert dae-file output-file :right))
+           (convert (source-file output-file handedness)
              (format t "~&Converting to obj ~A" mesh-file)
-             (let* ((obj-file (clean-pathname (format-pathname "~A/povray/~A.obj" directory mesh-file)))
+             (let* ((obj-file (clean-pathname (format-pathname "~A/povray/~A.obj"
+                                                               directory source-file)))
                     (args (list "blender" "-b" "-P"
                                 (find-script "meshconv")
-                                "--"
-                               mesh-file
-                               obj-file)))
+                                "--" source-file obj-file)))
                (format t "~&~{~A~^ ~}" args)
                (ensure-directories-exist obj-file)
                (multiple-value-bind (output error-output status)
                    (uiop:run-program args)
                  (declare (ignore output error-output))
                  (assert (zerop status) () "mesh conversion failed"))
-
-               obj-file))
-           (otherwise (error "Unknown file type: ~A" file-type))))
-         (name (wavefront-povray obj-file output-file)))
-    (values name output-file)))
+               (handle-obj obj-file output-file handedness))))
+    (let* ((file-type (string-downcase (file-type mesh-file)))
+           (file-basename (file-basename mesh-file))
+           (file-dirname (file-dirname mesh-file))
+           (output-file (format-pathname "~A/povray/~A/~A.inc"
+                                         directory file-dirname file-basename)))
+    (string-case file-type
+      ("obj" (handle-obj mesh-file output-file :right))
+      ("stl"
+       (let ((dae1 (format-pathname "~A/~A.dae" file-dirname file-basename))
+             (dae2 (format-pathname "~A/~A.DAE" file-dirname file-basename)))
+         (cond ((probe-file dae1) (handle-dae dae1 output-file))
+               ((probe-file dae2) (handle-dae dae2 output-file))
+               (t (convert mesh-file output-file :right)))))
+      ("dae"
+       (handle-dae mesh-file output-file))
+      (otherwise (error "Unknown file type: ~A" file-type))))))
