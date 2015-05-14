@@ -18,13 +18,14 @@
          *urdf-package-alist* :test #'equal)
 
 (defvar *scene-graph-pr2*)
+
 (setq *scene-graph-pr2*
-      (urdf-parse "/tmp/pr2.urdf"))
+      (urdf-parse "/tmp/pr2.urdf" :mesh-up-axis "Y" :mesh-forward-axis "-Z"))
 
 (setq *scene-graph-kitchen*
       (load-moveit-scene (output-file "kitchen.scene" *pr2-source-directory*)))
 
-(setq *scene-graph* *scene-graph-kitchen*)
+(setq *scene-graph* *scene-graph-pr2*)
 
 (setq *scene-graph*
       (draw-items *scene-graph* nil

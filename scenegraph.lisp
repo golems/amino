@@ -201,6 +201,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 (defun scene-graph-resolve-mesh (scene-graph &key
                                                reload
+                                               (mesh-up-axis "Z")
+                                               (mesh-forward-axis "Y")
                                                (directory *robray-tmp-directory*))
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
@@ -219,7 +221,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
     (maphash (lambda (mesh-file mesh-nodes)
                (format *standard-output* "~&Converting ~A..." mesh-file)
                (multiple-value-bind (geom-name inc-file)
-                   (mesh-povray mesh-file :directory directory)
+                   (mesh-povray mesh-file :directory directory
+                                :mesh-up-axis mesh-up-axis
+                                :mesh-forward-axis mesh-forward-axis)
 
                ;; (let* ((inc-file (output-file (scene-mesh-inc mesh-file) directory))
                ;;        (convert (or reload

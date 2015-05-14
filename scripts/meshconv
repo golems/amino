@@ -3,36 +3,41 @@
 import bpy
 import sys
 import os
+import argparse
 
-
+# Parse arguments
 i_start = sys.argv.index("--")
-
-in_file = sys.argv[i_start+1]
-out_file = sys.argv[i_start+2]
+my_args = sys.argv[i_start+1:]
+parser = argparse.ArgumentParser()
+parser.add_argument("infile", help="input mesh file")
+parser.add_argument("-o",action="store")
+parser.add_argument("-u","--up",action="store",default="Z")
+parser.add_argument("-f","--forward",action="store",default="Y")
+args = parser.parse_args(my_args)
 
 # Clear any default objects
 for ob in bpy.data.objects:
-    print(ob)
+    # print(ob)
     ob.select = True
     bpy.ops.object.delete()
 
-basename, filetype = os.path.splitext(in_file)
+basename, filetype = os.path.splitext(args.infile)
 filetype = filetype.lower()
 
 # Import File
 if (".dae" == filetype):
     print("Loading Collada")
-    bpy.ops.wm.collada_import(filepath=in_file)
+    bpy.ops.wm.collada_import(filepath=args.infile)
 elif (".stl" == filetype ):
     print("Loading STL")
-    bpy.ops.import_mesh.stl(filepath=in_file)
+    bpy.ops.import_mesh.stl(filepath=args.infile)
 else:
     raise Exception("Unknown file type: " + filetype)
 
 
 # Export File
 # right-handed coordinates, like god intended
-bpy.ops.export_scene.obj(filepath=out_file, axis_up='Z', axis_forward='Y')
+bpy.ops.export_scene.obj(filepath=args.o, axis_up=args.up, axis_forward=args.forward)
 
 
 # Local Variables:

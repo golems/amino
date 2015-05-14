@@ -175,6 +175,8 @@
 
 (defun mesh-povray (mesh-file
                     &key
+                      (mesh-up-axis "Z")
+                      (mesh-forward-axis "Y")
                       (directory *robray-tmp-directory*))
   ;; Maybe convert
   (labels ((handle-obj (obj-file output-file handedness)
@@ -188,7 +190,11 @@
                                                                directory source-file)))
                     (args (list "blender" "-b" "-P"
                                 (find-script "meshconv")
-                                "--" source-file obj-file)))
+                                "--"
+                                source-file
+                                "-o" obj-file
+                                (format nil "--up=~A" mesh-up-axis)
+                                (format nil "--forward=~A" mesh-forward-axis))))
                (format t "~&~{~A~^ ~}" args)
                (ensure-directories-exist obj-file)
                (multiple-value-bind (output error-output status)
