@@ -198,9 +198,8 @@
      while number
      collect number))
 
-(defun parse-float-sequence (text)
-  (map 'list #'parse-float (ppcre:split " " text)))
-
+(defun parse-float-sequence (text &optional (start 0))
+  (map 'list #'parse-float (ppcre:split "\\s+" text :start start)))
 
 (defun list-double-vector (list)
   (make-array (length list)
@@ -215,10 +214,18 @@
 (declaim (inline array-cat))
 
 (defun array-cat (element-type arguments)
-  (let* ((n (loop for x in arguments summing (length x)))
+  (let* ((n
+          (etypecase arguments
+            (list (loop for x in arguments summing (length x)))
+            (array (loop for x across arguments summing (length x)))))
          (y (make-array n :element-type element-type))
          (start 0))
-    (dolist (x arguments)
-      (replace y x :start1 start)
-      (incf start (length x)))
+    (etypecase arguments
+      (list (dolist (x arguments)
+              (replace y x :start1 start)
+              (incf start (length x))))
+      (array (dotimes (i (length arguments))
+               (let ((x (aref arguments i)))
+                 (replace y x :start1 start)
+                 (incf start (length x))))))
     y))

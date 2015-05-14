@@ -296,13 +296,17 @@
                     modifiers
                     mesh
                     matrix
+                    (handedness :right)
                     )
   "Create a povray mesh2 object.
 
 VERTEX-VECTORS: List of vertices in the mesh as pov-vertex
 FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 "
-  (let ((args modifiers))
+  (let ((args modifiers)
+        (vector-function (ecase handedness
+                           (:right #'%pov-float-vector-right)
+                           (:left #'%pov-float-vector))))
     (labels ((arg (arg) (push arg args)))
 
       (when matrix
@@ -346,10 +350,10 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 
         (when-let ((normals (mesh-data-normals mesh-data)))
           (arg (pov-list "normal_vectors"
-                         (pov-group-array #'%pov-float-vector-right normals))))
+                         (pov-group-array vector-function normals))))
         (when-let ((vertices (mesh-data-vertices mesh-data)))
           (arg (pov-list "vertex_vectors"
-                          (pov-group-array #'%pov-float-vector-right vertices))))))
+                          (pov-group-array vector-function vertices))))))
 
       (pov-block "mesh2" args)))
 

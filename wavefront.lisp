@@ -15,9 +15,9 @@
 (defun parse-wavefront-face (line)
   (labels ((subseq-list (reg-start reg-end items)
              (loop for i in items
-                collect (parse-integer line
-                                       :start (aref reg-start i)
-                                       :end (aref reg-end i)))))
+                collect (1- (parse-integer line
+                                           :start (aref reg-start i)
+                                           :end (aref reg-end i))))))
   (multiple-value-bind (start end reg-start reg-end)
       (ppcre:scan +wavefront-obj-scanner-v-vn+ line)
     (declare (ignore end))
@@ -27,7 +27,7 @@
                                  :normal-index (subseq-list reg-start reg-end '(1 3 5))))))
   (error "Bad or unimplimented face line: ~A" line)))
 
-(defun parse-wavefront-obj (input-file output-file)
+(defun wavefront-load (input-file)
   (let ((name)
         (vertices        ;(vector (vec x y z)...)
          (make-array 10 :adjustable t :fill-pointer 0))
@@ -49,14 +49,22 @@
                  (vector-push-extend (parse-float-sequence line 2) vertices))
                 (#\n (vector-push-extend (parse-float-sequence line 3) normals))))
              (#\f (vector-push-extend (parse-wavefront-face line) faces)))))
-    (let* ((mesh (pov-mesh2 :vertex-vectors (loop for x across vertices
-                                               collect (pov-float-vector-right x))
-                            :normal-vectors (loop for x across normals
-                                               collect (pov-float-vector-right x))
-                            :face-indices (loop for f across faces
-                                             collect (pov-integer-vector (wavefront-obj-face-vertex-index f)))
-                            :normal-indices (loop for f across faces collect
-                                                 (pov-integer-vector (wavefront-obj-face-normal-index f)))))
-           (result (pov-declare (name-mangle name) mesh)))
-      (output result output-file)))
-  (values))
+   (make-mesh-data  :name name
+                    :vertices (array-cat 'double-float vertices)
+                    :normals (array-cat 'double-float normals)
+                    :vertex-indices (array-cat 'fixnum
+                                               (loop for f across faces
+                                                  collect (wavefront-obj-face-vertex-index f)))
+                    :normal-indices (array-cat 'fixnum
+                                               (loop for f across faces
+                                                  collect (wavefront-obj-face-normal-index f))))))
+
+
+(defun wavefront-povray (input-file output-file
+                         &key
+                           (directory *robray-tmp-directory*))
+  (let ((mesh-data (wavefront-load input-file)))
+    (output (pov-declare (name-mangle (mesh-data-name mesh-data))
+                         (pov-mesh2 :mesh-data mesh-data :handedness :right))
+            output-file
+            :directory directory)))
