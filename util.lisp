@@ -14,10 +14,25 @@
                            `(t ,@body))
                           (t `((string= ,value ,key) ,@body)))))))))
 
+
+(defun clean-pathname (path &optional (separator "/"))
+  (let ((regex (format nil "~A+" separator)))
+    (ppcre:regex-replace-all regex (namestring path) separator)))
+
+(declaim (inline format-pathname))
+(defun format-pathname (control &rest args)
+  (clean-pathname (apply #'format nil control args)))
+
+(defun ensure-directory (path &optional (separator "/"))
+  (clean-pathname (concatenate 'string path separator) separator))
+
 (defun output-file (file &optional directory)
-  (if directory
-      (concatenate 'string directory file)
-      file))
+  (etypecase directory
+    (null file)
+    (string (concatenate 'string (ensure-directory directory)
+                         file))
+    (pathname (output-file file (namestring directory)))
+    (list (output-file file (make-pathname :directory directory)))))
 
 (defun output (object place
                &key
@@ -28,11 +43,10 @@
      (print object place)
      nil)
     ((stringp place)
-     (when directory
-       (ensure-directories-exist directory))
-     (with-open-file (place (output-file place directory)
-                            :direction :output :if-exists if-exists)
-       (print object place))
+     (let ((file (output-file place directory)))
+       (ensure-directories-exist file)
+       (with-open-file (place file :direction :output :if-exists if-exists)
+         (print object place)))
      nil)
     ((eq place t)
      (print object *standard-output*)
@@ -50,6 +64,13 @@
                        (eq x #\Space)
                        (eq x #\.)))
                  identifier))
+
+
+
+(defun robray-cache-directory (name &key (base-directory *robray-tmp-directory*))
+  (let ((result (concatenate 'string base-directory name)))
+    result))
+
 
 (deftype frame-name ()
   `(or string symbol null))
@@ -149,17 +170,6 @@
          (elt result 0))
         (t result)))))
 
-(defun clean-pathname (path &optional (separator "/"))
-  (let ((regex (format nil "~A+" separator)))
-    (ppcre:regex-replace-all regex (namestring path) separator)))
-
-(defun ensure-directory (path &optional (separator "/"))
-  (clean-pathname (concatenate 'string path separator) separator))
-
-(defun robray-cache-directory (name &key (base-directory *robray-tmp-directory*))
-  (let ((result (concatenate 'string base-directory name)))
-    result))
-
 ;; (defun split-spaces (string function)
 ;;   (declare ;(optimize (speed 3) (safety 0))
 ;;            (type simple-string string)
@@ -229,3 +239,12 @@
                  (replace y x :start1 start)
                  (incf start (length x))))))
     y))
+
+(defun invert-scale (x)
+    (- 1d0 (clamp x 0d0 1d0)))
+
+(defun find-script (name)
+  (concatenate 'string
+               (namestring (asdf:system-source-directory :robray))
+               "scripts/"
+               name))

@@ -250,8 +250,7 @@
                                for stride in prim-stride
                                for i from 0
                                for prim in polylist-prims
-                               collect (make-array (/ (length prim)
-                                                      stride)
+                               collect (make-array  (/ (length prim) stride 3)
                                                    :element-type 'fixnum
                                                    :initial-element i))))
          (normal-indices (loop for p in polylists
@@ -285,10 +284,10 @@
   (let ((alist)
         (material (collada-parse dom node)))
     (labels ((avg-rgb (item)
-               (pov-float (/ (+ (first item)
-                                (second item)
-                                (third item))
-                             3d0)))
+               (/ (+ (first item)
+                     (second item)
+                     (third item))
+                  3d0))
              (add (name thing)
                (push (cons name thing) alist)))
     (when-let ((ambient  (collada-effect-ambient material)))

@@ -1,5 +1,12 @@
 (in-package :robray)
 
+
+(defparameter *ros-distribution* "indigo")
+
+(defparameter *baxter-description*
+  (format nil "/opt/ros/~A/share/baxter_description/" *ros-distribution*))
+
+
 (defparameter *baxter-source-directory*
   (concatenate 'string
                (namestring (asdf:system-source-directory :robray))
@@ -14,18 +21,18 @@
         ("zeus"       ; 16 core, 2.4GHz
          :jobs 7 :threads 2 :nice 1 :povray "/home/ndantam/local/bin/povray")
         ))
+
 ;; Define search path for URDF
-(setq *urdf-package-alist*
-      `(("baxter_description" . ,(concatenate 'string (namestring (user-homedir-pathname))
-                                              "ros_ws/src/baxter_common/baxter_description"))))
+(pushnew (cons "baxter_description" *baxter-description*)
+         *urdf-package-alist* :test #'equal)
 
 ;; Load robot scene graph from URDF
 (defvar *scene-graph-baxter*)
 
 ;(time
 (setq *scene-graph-baxter*
-      (urdf-parse "/home/ntd/ros_ws/src/baxter_common/baxter_description/urdf/baxter.urdf" :reload-meshes t)
-      ;(urdf-parse "/home/ntd/baxter_gripper.urdf" :reload-meshes t)
+      ;(urdf-parse (format nil "~A/urdf/baxter.urdf" *baxter-description*) :reload-meshes t)
+      (urdf-parse "/home/ntd/baxter_gripper.urdf" :reload-meshes t)
       )
 
 (setq *scene-graph*

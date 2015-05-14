@@ -1,11 +1,25 @@
 (in-package :robray)
 
+
+(defparameter *ros-distribution* "indigo")
+
+(defparameter *pr2-description*
+  (format nil "/opt/ros/~A/share/pr2_description/" *ros-distribution*))
+
+
 (defparameter *pr2-source-directory*
   (concatenate 'string
                (namestring (asdf:system-source-directory :robray))
                "/test/pr2/"))
 
 (defvar *scene-graph-kitchen*)
+
+(pushnew (cons "pr2_description" *pr2-description*)
+         *urdf-package-alist* :test #'equal)
+
+(defvar *scene-graph-pr2*)
+(setq *scene-graph-pr2*
+      (urdf-parse "/tmp/pr2.urdf"))
 
 (setq *scene-graph-kitchen*
       (load-moveit-scene (output-file "kitchen.scene" *pr2-source-directory*)))

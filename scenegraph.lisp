@@ -218,17 +218,21 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
         (test-geom (scene-frame-collision frame))))
     (maphash (lambda (mesh-file mesh-nodes)
                (format *standard-output* "~&Converting ~A..." mesh-file)
-               (let* ((inc-file (output-file (scene-mesh-inc mesh-file) directory))
-                      (convert (or reload
-                                   (not (probe-file inc-file))
-                                   (>= (file-write-date mesh-file)
-                                       (file-write-date inc-file))))
-                      (geom-name (progn (ensure-directories-exist inc-file)
-                                        (collada-povray mesh-file
-                                                        (when convert inc-file)))))
-                 (if convert
-                     (format *standard-output* "~&    to  ~A..." inc-file)
-                     (format *standard-output* "~&    cached"))
+               (multiple-value-bind (geom-name inc-file)
+                   (mesh-povray mesh-file :directory directory)
+
+               ;; (let* ((inc-file (output-file (scene-mesh-inc mesh-file) directory))
+               ;;        (convert (or reload
+               ;;                     (not (probe-file inc-file))
+               ;;                     (>= (file-write-date mesh-file)
+               ;;                         (file-write-date inc-file))))
+               ;;        (geom-name (progn (ensure-directories-exist inc-file)
+               ;;                          (collada-povray mesh-file
+               ;;                                          (when convert inc-file)))))
+               ;;   (if convert
+               ;;       (format *standard-output* "~&    to  ~A..." inc-file)
+               ;;       (format *standard-output* "~&    cached"))
+
                  (dolist (mesh-node mesh-nodes)
                    (setf (scene-mesh-name mesh-node) geom-name
                          (scene-mesh-povray-file mesh-node) inc-file))))

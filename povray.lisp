@@ -320,6 +320,16 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
             (arg (pov-alist-texture (car textures)))))
 
 
+        (when-let ((texture-indices (mesh-data-texture-indices mesh-data))
+                   (face-indices (mesh-data-vertex-indices mesh-data)))
+          (let ((lt (length texture-indices))
+                (lf (length face-indices)))
+            (assert (= lt (/ lf 3))
+                    ()
+                    "Length mismatch between vector indices (~D) and vertex-indices (~D)"
+                    lt lf)))
+
+
         (when-let ((normal-indices (mesh-data-normal-indices mesh-data)))
           (arg (pov-list "normal_indices"
                           (pov-group-array #'%pov-integer-vector normal-indices))))
@@ -331,16 +341,16 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                  (has-texture (and textures
                                    texture-indices
                                    (> (length textures) 1))))
-
             (arg (pov-list "face_indices"
                            (loop for i = 0 then (+ 3 i)
+                              for j from 0
                               while (< i n)
                               for face = (%pov-integer-vector (aref vertex-indices i)
                                                               (aref vertex-indices (+ 1 i))
                                                               (aref vertex-indices (+ 2 i)))
                               nconc
                                 (if has-texture
-                                    (list face (pov-value (aref texture-indices i)))
+                                    (list face (pov-value (aref texture-indices j)))
                                     (list face)))
                            (/ (length vertex-indices) 3)))))
 
@@ -363,19 +373,30 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 
 (defun pov-alist-texture (alist)
   (let (finishes pigments)
-    (labels ((add-finish (name finish)
+    (labels ((avg-rgb (rgb)
+               (pov-float (etypecase rgb
+                            ((or single-float double-float) rgb)
+                            (sequence (/ (+ (elt rgb 0)
+                                            (elt rgb 1)
+                                            (elt rgb 2))
+                                         3)))))
+               (add-finish (name finish)
                (push (pov-item name finish)
                      finishes))
              (property (key)
                (cdr (assoc key alist))))
-      (when-let ((ambient (property :ambient)))
+      (if-let ((ambient (property :ambient)))
         (add-finish "ambient" (pov-rgb ambient)))
       (when-let ((diffuse (property :diffuse)))
-        (add-finish "diffuse" diffuse))
+        (add-finish "diffuse" (avg-rgb diffuse))
+        (when (and (or (listp diffuse)
+                       (vectorp diffuse))
+                   (not (assoc :color alist)))
+          (push (pov-item "color" (pov-rgb diffuse)) pigments)))
       (when-let ((color (property :color)))
         (push (pov-item "color" (pov-rgb color)) pigments))
       (when-let ((specular (property :specular)))
-        (add-finish "specular" specular)))
+        (add-finish "specular" (avg-rgb specular))))
 
     (pov-texture (append (when pigments
                            (list (pov-pigment pigments)))

@@ -300,11 +300,6 @@
     (loop until (zerop active-jobs)
        do (sb-thread:wait-on-semaphore semaphore))))
 
-(defun find-script (name)
-  (concatenate 'string
-               (namestring (asdf:system-source-directory :robray))
-               "scripts/"
-               name))
 
 (defstruct net-args
   host

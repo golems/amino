@@ -1,0 +1,28 @@
+#!/usr/bin/env blender -b -P
+
+import bpy
+import sys
+
+
+i_start = sys.argv.index("--")
+
+in_file = sys.argv[i_start+1]
+out_file = sys.argv[i_start+2]
+
+# Clear any default objects
+for ob in bpy.data.objects:
+    print(ob)
+    ob.select = True
+    bpy.ops.object.delete()
+
+# Import File
+bpy.ops.wm.collada_import(filepath=in_file)
+
+# Export File
+# right-handed coordinates, like god intended
+bpy.ops.export_scene.obj(filepath=out_file, axis_up='Z', axis_forward='Y')
+
+
+# Local Variables:
+# mode: python
+# End:

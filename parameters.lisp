@@ -7,6 +7,9 @@
   ;;              (sb-posix:getenv "USER")
   ;;              "-cache/robray/"))
 
+(defun mesh-directory (directory)
+  (clean-pathname (concatenate 'string (namestring directory) "/povray/")))
+
 (defparameter *width* (/ 1920 2))
 (defparameter *height* (/ 1080 2))
 (defparameter *quality* 1.0)
