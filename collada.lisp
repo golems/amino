@@ -268,8 +268,8 @@
                 (= (length textures) (length polylists))))
     (let ((mesh-data
            (make-mesh-data :name (dom:get-attribute geometry-node "name")
-                           :vertices (array-cat 'double-float vertices)
-                           :normals (array-cat 'double-float normals)
+                           :vertex-vectors (array-cat 'double-float vertices)
+                           :normal-vectors (array-cat 'double-float normals)
                            :vertex-indices (array-cat 'fixnum faces)
                            :normal-indices (array-cat 'fixnum normal-indices)
                            :texture-properties textures

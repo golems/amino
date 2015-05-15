@@ -407,7 +407,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (let ((color (scene-visual-color visual))
         (alpha (scene-visual-alpha visual))
         (modifiers (list tf)))
-    (when (or color alpha)
+    (when (and (or color alpha)
+               (not (scene-mesh-p geometry)))
+      ;; TODO: figure out how to not clobber the mesh texture
       (push (pov-pigment (append (when color
                                    (list (pov-color color)))
                                  (when alpha

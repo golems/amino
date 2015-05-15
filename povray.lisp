@@ -38,6 +38,19 @@
   (y 0d0 :type double-float)
   (z 0d0 :type double-float))
 
+
+(defstruct (pov-uv-vector (:constructor %pov-uv-vector (u v)))
+  "Type for a povray vector."
+  (u 0d0 :type double-float)
+  (v 0d0 :type double-float))
+
+(defmethod print-object ((object pov-uv-vector) stream)
+  (format stream "~&~A<~F, ~F>"
+          *pov-indent*
+          (pov-uv-vector-u object)
+          (pov-uv-vector-v object)))
+
+
 (defstruct pov-matrix
   elements)
 
@@ -315,64 +328,90 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
         (arg (pov-value mesh)))
 
       (when mesh-data
-        (when-let ((textures (mesh-data-texture-properties mesh-data)))
+        (let* ((textures (mesh-data-texture-properties mesh-data))
+               (texture-indices (mesh-data-texture-indices mesh-data))
+               (vertex-indices (mesh-data-vertex-indices mesh-data))
+               (face-count (/ (length vertex-indices) 3)))
+
           (when (= (length textures) 1)
-            (arg (pov-alist-texture (car textures)))))
+            (arg (pov-alist-texture (car textures))))
 
+          (let ((normal-indices (mesh-data-normal-indices mesh-data)))
+            (when (>  (length normal-indices) 0)
+              (arg (pov-list "normal_indices"
+                             (pov-group-array #'%pov-integer-vector normal-indices)))))
 
-        (when-let ((texture-indices (mesh-data-texture-indices mesh-data))
-                   (face-indices (mesh-data-vertex-indices mesh-data)))
-          (let ((lt (length texture-indices))
-                (lf (length face-indices)))
-            (assert (= lt (/ lf 3))
-                    ()
-                    "Length mismatch between vector indices (~D) and vertex-indices (~D)"
-                    lt lf)))
+          (let ((uv-indices (mesh-data-uv-indices mesh-data)))
+            (format t "~&uv-len: ~A" (length uv-indices))
+            (when (>  (length uv-indices) 0)
+              (assert (= face-count
+                         (/ (length uv-indices) 3)))
+              (arg (pov-list "uv_indices"
+                             (pov-group-array #'%pov-integer-vector uv-indices)))))
 
+          (when vertex-indices
+            (let* ((n (length vertex-indices))
+                   (has-texture (and textures
+                                     texture-indices
+                                     (> (length textures) 1))))
+              (when has-texture
+                (assert (= (length texture-indices)
+                           (/ (length vertex-indices) 3))))
+              (arg (pov-list "face_indices"
+                             (loop for i = 0 then (+ 3 i)
+                                for j from 0
+                                while (< i n)
+                                for face = (%pov-integer-vector (aref vertex-indices i)
+                                                                (aref vertex-indices (+ 1 i))
+                                                                (aref vertex-indices (+ 2 i)))
+                                nconc
+                                  (if has-texture
+                                      (list face (pov-value (aref texture-indices j)))
+                                      (list face)))
+                             face-count))))
 
-        (when-let ((normal-indices (mesh-data-normal-indices mesh-data)))
-          (arg (pov-list "normal_indices"
-                          (pov-group-array #'%pov-integer-vector normal-indices))))
-
-        (when-let ((vertex-indices (mesh-data-vertex-indices mesh-data)))
-          (let* ((n (length vertex-indices))
-                 (textures (mesh-data-texture-properties mesh-data))
-                 (texture-indices (mesh-data-texture-indices mesh-data))
-                 (has-texture (and textures
-                                   texture-indices
-                                   (> (length textures) 1))))
-            (arg (pov-list "face_indices"
-                           (loop for i = 0 then (+ 3 i)
-                              for j from 0
-                              while (< i n)
-                              for face = (%pov-integer-vector (aref vertex-indices i)
-                                                              (aref vertex-indices (+ 1 i))
-                                                              (aref vertex-indices (+ 2 i)))
-                              nconc
-                                (if has-texture
-                                    (list face (pov-value (aref texture-indices j)))
-                                    (list face)))
-                           (/ (length vertex-indices) 3)))))
-
-        (when-let ((textures (mesh-data-texture-properties mesh-data)))
           (when (> (length textures) 1)
-            (arg (pov-texture-list (map 'list #'pov-alist-texture textures)))))
+            (arg (pov-texture-list (map 'list #'pov-alist-texture textures))))
 
-        (when-let ((normals (mesh-data-normals mesh-data)))
-          (arg (pov-list "normal_vectors"
-                         (pov-group-array vector-function normals))))
-        (when-let ((vertices (mesh-data-vertices mesh-data)))
-          (arg (pov-list "vertex_vectors"
-                          (pov-group-array vector-function vertices))))))
+          (when-let ((normals (mesh-data-normal-vectors mesh-data)))
+            (arg (pov-list "normal_vectors"
+                           (pov-group-array vector-function normals))))
 
-      (pov-block "mesh2" args)))
+          (when-let ((uv-vectors (mesh-data-uv-vectors mesh-data)))
+            (arg (pov-list "uv_vectors"
+                           (loop with n = (length uv-vectors)
+                              for i = 0 then (+ 2 i)
+                              while (< i n)
+                              collect (%pov-uv-vector (aref uv-vectors i)
+                                                      (aref uv-vectors (+ 1 i)))))))
+
+          (when-let ((vertices (mesh-data-vertex-vectors mesh-data)))
+            (arg (pov-list "vertex_vectors"
+                           (pov-group-array vector-function vertices))))))
+
+      (pov-block "mesh2" args))))
 
 (defun pov-texture-list (textures)
   (pov-list "texture_list" textures))
 
 
+(defun pov-image-map (file &optional modifiers)
+  (let* ((type-ext (string-downcase (file-type file)))
+         (type (string-case type-ext
+                 (("gif" "jpeg" "ppm" "pgm" "png" "tiff" "sys")
+                  type-ext)
+                 ("jpg" "jpeg")
+                 ("tif" "tiff")
+                 (otherwise (error "Unrecognized file type for image map: ~A" file)))))
+    (pov-block "image_map"
+               (list* (pov-item type (format nil "\"~A\"" file))
+                      modifiers))))
+
 (defun pov-alist-texture (alist)
-  (let (finishes pigments)
+  (let ((finishes nil)
+        (pigments nil)
+        (has-image-map (assoc :image-map alist)))
+
     (labels ((avg-rgb (rgb)
                (pov-float (etypecase rgb
                             ((or single-float double-float) rgb)
@@ -380,24 +419,36 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                                             (elt rgb 1)
                                             (elt rgb 2))
                                          3)))))
-               (add-finish (name finish)
-               (push (pov-item name finish)
-                     finishes))
-             (property (key)
-               (cdr (assoc key alist))))
-      (if-let ((ambient (property :ambient)))
-        (add-finish "ambient" (pov-rgb ambient)))
-      (when-let ((diffuse (property :diffuse)))
-        (add-finish "diffuse" (avg-rgb diffuse))
-        (when (and (or (listp diffuse)
-                       (vectorp diffuse))
-                   (not (assoc :color alist)))
-          (push (pov-item "color" (pov-rgb diffuse)) pigments)))
-      (when-let ((color (property :color)))
-        (push (pov-item "color" (pov-rgb color)) pigments))
-      (when-let ((specular (property :specular)))
-        (add-finish "specular" (avg-rgb specular))))
-
+             (add-finish (name finish)
+               (push (pov-item name finish) finishes))
+             (add-pigment (name pigment)
+               (unless has-image-map
+                 (push (pov-item name pigment) pigments))))
+      (loop for (property . value) in alist
+         do (case property
+              (:ambient
+               (add-finish "ambient" (pov-rgb value)))
+              (:diffuse
+               (add-finish "diffuse" (avg-rgb value))
+               ;; color information can also in the diffuse property
+               (when (and (or (listp value)
+                              (vectorp value))
+                          (not (assoc :color alist)))
+                 (add-pigment "color" (pov-rgb value))))
+              (:color
+               (add-pigment "color" (pov-rgb value)))
+              (:alpha
+               (unless has-image-map
+                 (push (pov-alpha value) pigments)))
+              (:specular
+               (add-finish "specular" (avg-rgb value)))
+              (:index-of-refraction ; TODO
+               )
+              (:image-map
+               (push (pov-image-map value) pigments)
+               ;; TODO: assumed uv mapping
+               (push (pov-value "uv_mapping") pigments))
+              (otherwise (error "Unknown texture property: ~A" (cons property value))))))
     (pov-texture (append (when pigments
                            (list (pov-pigment pigments)))
                          (when finishes

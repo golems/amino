@@ -28,8 +28,8 @@ pigment {
 
 camera {
     //location <1.5, 1, 1.5>
-  location <3.5, 1.75, 3>
-  look_at  <0,    .0,  2>
+  location <2.0, 1.75, 2.0>
+  look_at  <0,    .5,  0>
   right x*16/9 /* Widescreen */
 }
 
@@ -160,7 +160,7 @@ plane { <0, 1, 0>, 0
 
 
 
-global_settings { ambient_light rgb<.2, .2, .2> }
+global_settings { ambient_light rgb<.5, .5, .5> }
 light_source{<10,20,-15>
   // Sun
   color White

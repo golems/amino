@@ -12,6 +12,10 @@
                         (cond
                           ((eq key 'otherwise)
                            `(t ,@body))
+                          ((listp key)
+                           `((or ,@(loop for subkey in key
+                                      collect `(string= ,value ,subkey)))
+                             ,@body))
                           (t `((string= ,value ,key) ,@body)))))))))
 
 

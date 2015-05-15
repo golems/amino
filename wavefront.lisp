@@ -4,13 +4,23 @@
   vertex-index
   normal-index
   texture-index
+  uv-index
   smooth
   group
   material
   )
 
 (defparameter +wavefront-obj-scanner-v-vn+
-  (ppcre:create-scanner "f\\s+(\\d+)/(\\d*)/(\\d+) (\\d+)/(\\d*)/(\\d+) (\\d+)/(\\d*)/(\\d+)"))
+  (ppcre:create-scanner "^f\\s+(\\d+)//(\\d+)\\s+(\\d+)//(\\d+)\\s+(\\d+)//(\\d+)\\s*$"))
+
+(defparameter +wavefront-obj-scanner-v-vt-vn+
+  (ppcre:create-scanner
+   "^f\\s+(\\d+)/(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)/(\\d+)\\s*$"))
+
+
+(defparameter +wavefront-obj-scanner-v-vt+
+  (ppcre:create-scanner
+   "^f\\s+(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)\\s*$"))
 
 (defparameter +wavefront-command-scanner+
   (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)"))
@@ -25,21 +35,45 @@
           nil
           stripped))))
 
-(defun parse-wavefront-face (line material)
+(defun parse-wavefront-face (line material lineno)
   (labels ((subseq-list (reg-start reg-end items)
              (loop for i in items
-                collect (1- (parse-integer line
-                                           :start (aref reg-start i)
-                                           :end (aref reg-end i))))))
-  (multiple-value-bind (start end reg-start reg-end)
-      (ppcre:scan +wavefront-obj-scanner-v-vn+ line)
-    (declare (ignore end))
-    (when start
-      (return-from parse-wavefront-face
-        (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 3 6))
-                                 :normal-index (subseq-list reg-start reg-end '(2 5 8))
-                                 :material material))))
-  (error "Bad or unimplimented face line: ~A" line)))
+                for s = (aref reg-start i)
+                for e = (aref reg-end i)
+                collect (1- (parse-integer line :start s :end e)))))
+
+    ;; V/Vt/Vn
+    (multiple-value-bind (start end reg-start reg-end)
+        (ppcre:scan +wavefront-obj-scanner-v-vt-vn+ line)
+      (declare (ignore end))
+      (when start
+        (return-from parse-wavefront-face
+          (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 3 6))
+                                   :uv-index     (subseq-list reg-start reg-end '(1 4 7))
+                                   :normal-index (subseq-list reg-start reg-end '(2 5 8))
+                                   :material material))))
+
+    ;; V//Vn
+    (multiple-value-bind (start end reg-start reg-end)
+        (ppcre:scan +wavefront-obj-scanner-v-vn+ line)
+      (declare (ignore end))
+      (when start
+        (return-from parse-wavefront-face
+          (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 2 4))
+                                   :normal-index (subseq-list reg-start reg-end '(1 3 5))
+                                   :material material))))
+
+    ;; V/Vt
+    (multiple-value-bind (start end reg-start reg-end)
+        (ppcre:scan +wavefront-obj-scanner-v-vt+ line)
+      (declare (ignore end))
+      (when start
+        (return-from parse-wavefront-face
+          (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 2 4))
+                                   :uv-index (subseq-list reg-start reg-end '(1 3 5))
+                                   :material material))))
+
+  (error "Bad or unimplimented face on line ~D: \"~A\"" lineno line)))
 
 
 ;; See: https://corona-renderer.com/wiki/standalone/mtl
@@ -91,9 +125,10 @@
                      ;("Ka" (prop :ambient '(.1 .1 .1))
                      ("Kd" (rgb-prop :diffuse))
                      ("Ni" (float-prop :index-of-refraction))
-                     ("d" (prop :alpha (invert-scale (parse-float data))))
-                     ("map_Kd" ;TODO
-                      )
+                     ("d" (prop :alpha  (parse-float data)))
+                     ("map_Kd"
+                      ;; TODO: copy to temp
+                      (prop :image-map data))
                      ("illum" ;TODO
                       )
                      (otherwise (error "Unrecognized MTL command ~A" command)))))
@@ -110,6 +145,8 @@
         (normals         ;(vector (vec x y z)...)
          (make-array 10 :adjustable t :fill-pointer 0))
         (faces  ;(vector (array x y z)...)
+         (make-array 10 :adjustable t :fill-pointer 0))
+        (uv
          (make-array 10 :adjustable t :fill-pointer 0))
         (materials)
         (current-material))
@@ -130,12 +167,13 @@
                   (vector-push-extend (parse-float-sequence data) vertices))
                  ("vn"
                   (vector-push-extend (parse-float-sequence data) normals))
-                 ("f" (vector-push-extend (parse-wavefront-face line current-material) faces))
+                 ("f" (vector-push-extend (parse-wavefront-face line current-material lineno)
+                                          faces))
                  ("mtllib"
                   (setq materials (append materials (wavefront-mtl-load data obj-file))))
                  ("usemtl" (setq current-material data))
-                 ("vt" ; TODO
-                  )
+                 ("vt"
+                  (vector-push-extend (parse-float-sequence data) uv))
                  ("g"; TODO
                   )
                  ("s"; TODO
@@ -146,8 +184,9 @@
              (assert (or (null line) matched) ()
                      "Error on line ~D" lineno))))
     (make-mesh-data  :name (name-mangle name)
-                     :vertices (array-cat 'double-float vertices)
-                     :normals (array-cat 'double-float normals)
+                     :vertex-vectors (array-cat 'double-float vertices)
+                     :normal-vectors (array-cat 'double-float normals)
+                     :uv-vectors (array-cat 'double-float uv)
                      :texture-properties (map 'list #'cdr materials)
                      :texture-indices (map-into (make-array (length faces) :element-type 'fixnum)
                                                 (lambda (f)
@@ -155,6 +194,9 @@
                                                     (position-if (lambda (x) (string= (car x) material))
                                                                  materials)))
                                                 faces)
+                     :uv-indices (array-cat 'fixnum
+                                            (loop for f across faces
+                                               collect (wavefront-obj-face-uv-index f)))
                      :vertex-indices (array-cat 'fixnum
                                                 (loop for f across faces
                                                   collect (wavefront-obj-face-vertex-index f)))

@@ -112,7 +112,7 @@
                             (rgba (vec-line))
                             (color (subseq rgba 0 3))
                             (alpha (elt rgba 3)))
-                       (let* ((mesh-data (make-mesh-data :vertices (list-double-vector vertices)
+                       (let* ((mesh-data (make-mesh-data :vertex-vectors (list-double-vector vertices)
                                                          :vertex-indices (list-fixnum-vector faces)
                                                          :texture-properties `(((:color . ,color)
                                                                                 (:alpha . ,alpha)))))
