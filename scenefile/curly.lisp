@@ -8,16 +8,7 @@
 ;;; Scanner element:
 ;;;    (list regex (or type (lambda (string start end))))
 ;;;    If the second element is a function, its result is
-;;;    (values (token-value token-type token-start token-end))
-
-
-(declaim (inline token))
-(defun token (value type start end)
-  (values value type start end))
-
-(defmacro with-token ((value type start end) token &body body)
-  `(multiple-value-bind (,value ,type ,start ,end) ,token
-     ,@body))
+;;;    (values (token-value token-type token-end))
 
 (defparameter +integer-regex+
   '(:regex "-?\\d+"))
@@ -47,10 +38,9 @@
     ;; string
     ("\\\"[^\\\"]*\\\""
      ,(lambda (string start end)
-              (token (subseq string (1+ start) (1- end))
-                     :string
-                     start
-                     end)))
+              (values (subseq string (1+ start) (1- end))
+                      :string
+                      end)))
     ("[a-zA-Z][a-zA-Z0-9_]*"
      ,(let ((hash (alist-hash-table '(("frame" . :frame)
                                       ("geometry" . :geometry)
@@ -59,27 +49,26 @@
            (lambda (string start end)
              (let* ((token-string (subseq string start end))
                     (type (gethash token-string hash :identifier)))
-               (token (if (eq type :identifier)
-                          token-string
-                          type)
-                      type
-                      start
-                      end)))))
+               (values (if (eq type :identifier)
+                           token-string
+                           type)
+                       type
+                       end)))))
 
     ;; Non floating point integer
     ;; uses positive lookahead to find a non-floating-point suffix
     ("-?\\d+(?=[^\\d.eEdD]|$)"
      ,(lambda (string start end)
-              (token (parse-integer string :start start :end end)
-                     :integer start end)))
+              (values (parse-integer string :start start :end end)
+                      :integer end)))
 
     ;; Floating point number
     (;"-?((\\d+\\.\\d*)|(\\.\\d+))"
      ,+float-regex+
      ,(lambda (string start end)
-              (token (parse-float (subseq string start end))
-                     :float
-                     start end)))
+              (values (parse-float (subseq string start end))
+                      :float
+                      end)))
     ))
 
 

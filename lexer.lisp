@@ -32,8 +32,8 @@
                          (if (functionp type-or-handler)
                              type-or-handler
                              (lambda (string start end)
-                               (declare (ignore string))
-                               (values type type start end)))))))
+                               (declare (ignore string start))
+                               (values type type end)))))))
     (%make-lexer :scanner (ppcre:create-scanner big-regex)
                  :regex big-regex
                  :handlers (make-array (length token-regexes)
@@ -53,5 +53,7 @@
                             until k
                             finally (return i))))))
         (assert (and i (aref reg-start i)))
-        (funcall (aref (lexer-handlers lexer) i)
-                 string (aref reg-start i) (aref reg-end i))))))
+        (multiple-value-bind (value type end)
+            (funcall (aref (lexer-handlers lexer) i)
+                     string (aref reg-start i) (aref reg-end i))
+          (values value type start end))))))
