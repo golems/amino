@@ -3,6 +3,7 @@
 (defstruct curly-block
   type
   name
+  line
   statements)
 
 ;;; Scanner element:
@@ -72,9 +73,6 @@
     ))
 
 
-(defparameter +curly-lexer+ (make-lexer +curly-token-regex+))
-
-
 (defparameter +curly-comment-regex+
   (let ((whitespace "\\s")
         (line-comment "#|//).*(\\n|$")
@@ -84,39 +82,41 @@
             line-comment
             block-comment)))
 
-(let ((comment-scanner
-       (ppcre:create-scanner +curly-comment-regex+)))
-  (defun curly-next-token (string start)
-    "Returns (VALUES TOKEN-VALUE TOKEN-TYPE STRING-START STRING-END)"
-    (multiple-value-bind (comment-start comment-end)
-        (ppcre:scan comment-scanner string :start start)
-      (assert (= start comment-start))
-      (let ((start comment-end))
-        ;; check end
-        (when (= comment-end (length string))
-          (return-from curly-next-token (values nil nil nil nil)))
-        ;; find token
-        (lexer-lex +curly-lexer+ string start)))))
+(defparameter +curly-lexer+ (make-lexer +curly-token-regex+
+                                        +curly-comment-regex+))
+(defun curly-next-token (string start line)
+  "Returns (VALUES TOKEN-VALUE TOKEN-TYPE STRING-START STRING-END)"
+  ;; check end
+  (if (>= start (length string))
+     (values nil nil nil nil nil)
+     ;; find token
+     (lexer-lex +curly-lexer+ string start line)))
 
 (defun curly-tokenize (string)
   (loop with start = 0
-     for (value type t-start end) = (multiple-value-list (curly-next-token string start))
+     for line from 1
+     for (value type t-start end) = (multiple-value-list (curly-next-token string start line))
      while value
      do (setq start end)
-     collect (list value type (subseq string t-start end))))
+     collect (print (list value type (subseq string t-start end)))))
 
 (defun curly-tokenize-file (file)
   (curly-tokenize (read-file-into-string file)))
 
-(defun curly-parse-string (string)
-  (let ((start 0))
-    (labels ((next ()
-               (multiple-value-bind (value type t-start end)
-                   (curly-next-token string start)
+(defun curly-parse-string (string &optional name)
+  (let ((start 0)
+        (line 1))
+    (labels ((parse-error (found wanted)
+               (error "Parse error ~A:~D, found ~A, wanted ~A"
+                      (or name "line") line found wanted))
+             (next ()
+               (multiple-value-bind (value type t-start end t-line)
+                   (curly-next-token string start line)
                  (declare (ignore t-start))
                  ;; (when value
                  ;;   (format t "~&token: ~A `~A'" value (subseq string t-start end)))
-                 (setq start end)
+                 (setq start end
+                       line t-line)
                  (values type value)))
              (start ()
                ;(print 'start)
@@ -127,7 +127,7 @@
                           (start)))
                    ((null type)
                     nil)
-                   (t (error "Unknown type: ~A" type)))))
+                   (t (parse-error type "frame or EOF")))))
              (body ()
                ;(print 'body)
                (let ((type (next)))
@@ -137,10 +137,12 @@
                (multiple-value-bind (type token) (next)
                  (assert (eq :identifier type))
                  (make-curly-block :type :frame
+                                   :line line
                                    :name token
                                    :statements (body))))
              (geometry ()
                (make-curly-block :type :geometry
+                                 :line line
                                  :name nil
                                  :statements (body)))
              (body-first-item ()
@@ -166,6 +168,8 @@
                    (#\{
                     (assert (= 1 (length items)))
                     (make-curly-block :name (car items)
+                                      :type (car items)
+                                      :line line
                                       :statements (body-first-item)))
 
                    (#\[
@@ -186,13 +190,8 @@
       (start))))
 
 (defun curly-parse-file (pathname)
-  (let ((string
-         (with-open-file (stream pathname)
-           (with-output-to-string (string)
-             (loop for char = (read-char stream nil nil)
-                while char
-                do (write-char char string))))))
-    (curly-parse-string string)))
+  (curly-parse-string (read-file-into-string pathname)
+                      pathname))
 
 
 (defun load-curly-scene (pathname)
@@ -205,9 +204,14 @@
                (setf (gethash (first stmt) hash)
                      (second stmt)))
              (add-block (cb parent)
-               (ecase (curly-block-type cb)
+               (case (curly-block-type cb)
                  (:frame (add-frame cb parent))
-                 (:geometry (add-object cb parent))))
+                 (:geometry (add-object cb parent))
+                 (otherwise (error "Parse error ~A:~D, unrecognized block type ~A"
+                                   pathname
+                                   (curly-block-line cb)
+                                   (curly-block-type cb)))))
+
              (add-frame (cb parent)
                (let ((name (curly-block-name cb))
                      (properties (make-hash-table :test #'equal)))

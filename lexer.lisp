@@ -16,11 +16,13 @@
            (cons head (map 'list #'strip-registers body)))))))
 
 (defstruct (lexer (:constructor %make-lexer))
-  scanner
-  regex
+  token-scanner
+  token-regex
+  skip-scanner
+  skip-regex
   handlers)
 
-(defun make-lexer (token-regexes)
+(defun make-lexer (token-regexes &optional skip-regex)
   (let ((big-regex `(:sequence
                      :start-anchor
                      (:alternation ,@(loop for (regex thing) in token-regexes
@@ -34,26 +36,41 @@
                              (lambda (string start end)
                                (declare (ignore string start))
                                (values type type end)))))))
-    (%make-lexer :scanner (ppcre:create-scanner big-regex)
-                 :regex big-regex
+    (%make-lexer :token-scanner (ppcre:create-scanner big-regex)
+                 :token-regex big-regex
+                 :skip-regex skip-regex
+                 :skip-scanner (when skip-regex (ppcre:create-scanner skip-regex))
                  :handlers (make-array (length token-regexes)
                                         :initial-contents handlers))))
 
-(defun lexer-lex (lexer string start
+(defun lexer-lex (lexer string start line
                   &key
                     (match :first))
   (unless (>= start (length string))
-    (multiple-value-bind (r-start end reg-start reg-end)
-        (ppcre:scan (lexer-scanner lexer) string :start start)
-      (declare (ignore end))
-      (assert (= r-start start))
-      (let ((i (ecase match
-                 (:first (loop for k across reg-start
-                            for i from 0
-                            until k
-                            finally (return i))))))
-        (assert (and i (aref reg-start i)))
-        (multiple-value-bind (value type end)
-            (funcall (aref (lexer-handlers lexer) i)
-                     string (aref reg-start i) (aref reg-end i))
-          (values value type start end))))))
+    ;; Skip
+    (let ((token-start (if-let ((skip-scanner (lexer-skip-scanner lexer)))
+                         (multiple-value-bind (skip-start skip-end)
+                             (ppcre:scan skip-scanner string :start start)
+                           (if skip-start
+                               (progn (assert (= start skip-start))
+                                      skip-end)
+                               start))
+                         start)))
+      ;; Match Token Rgex
+      (unless (>= token-start (length string))
+        (multiple-value-bind (r-start end reg-start reg-end)
+            (ppcre:scan (lexer-token-scanner lexer) string :start token-start)
+          (declare (ignore end))
+          (assert (= r-start token-start))
+          ;; Extract type and value
+          (let ((i (ecase match
+                     (:first (loop for k across reg-start
+                                for i from 0
+                                until k
+                                finally (return i))))))
+            (assert (and i (aref reg-start i)))
+            (multiple-value-bind (value type end)
+                (funcall (aref (lexer-handlers lexer) i)
+                         string (aref reg-start i) (aref reg-end i))
+              (values value type token-start end
+                      (+ line (count #\Newline string :start start :end end))))))))))
