@@ -28,7 +28,9 @@
                  ,+float-regex+))
 
 (defparameter +curly-token-regex+
-  `(("{" #\{)
+  `(
+    ;; Punctuation
+    ("{" #\{)
     ("}" #\})
     ("\\(" #\()
     ("\\)" #\))
@@ -36,25 +38,14 @@
     ("\\]" #\])
     ("," #\,)
     (";" #\;)
-    ;; string
-    ("\\\"[^\\\"]*\\\""
-     ,(lambda (string start end)
-              (values (subseq string (1+ start) (1- end))
-                      :string
-                      end)))
+    ;; Keywords
+    ("frame(?!\\w)" :frame)
+    ("geometry(?!\\w)" :geometry)
+    ("class(?!\\w)" :class)
+    ;; identifiers
     ("[a-zA-Z][a-zA-Z0-9_]*"
-     ,(let ((hash (alist-hash-table '(("frame" . :frame)
-                                      ("geometry" . :geometry)
-                                      ("class" . :class))
-                                    :test #'equal)))
-           (lambda (string start end)
-             (let* ((token-string (subseq string start end))
-                    (type (gethash token-string hash :identifier)))
-               (values (if (eq type :identifier)
-                           token-string
-                           type)
-                       type
-                       end)))))
+     ,(lambda (string start end)
+              (values (subseq string start end) :identifier end)))
 
     ;; Non floating point integer
     ;; uses positive lookahead to find a non-floating-point suffix
@@ -70,20 +61,27 @@
               (values (parse-float (subseq string start end))
                       :float
                       end)))
-    ))
+    ;; string
+    ("\\\"[^\\\"]*\\\""
+     ,(lambda (string start end)
+              (values (subseq string (1+ start) (1- end))
+                      :string
+                      end)))))
 
 
 (defparameter +curly-comment-regex+
-  (let ((whitespace "\\s")
-        (line-comment "#|//).*(\\n|$")
-        (block-comment "/\\*[^(/\\*)]*\\*/"))
-    (format nil "^((~A)|(~A)|(~A))*"
-            whitespace
-            line-comment
-            block-comment)))
+  `(:greedy-repetition
+    0 nil
+    (:alternation :whitespace-char-class
+                  ;; line comment
+                  (:regex "(#|//)[\\n$]*(\\n|$)")
+                  ;; block comment
+                  (:sequence "/*" (:regex "(.*?)") "*/"))))
 
 (defparameter +curly-lexer+ (make-lexer +curly-token-regex+
                                         +curly-comment-regex+))
+
+
 (defun curly-next-token (string start line)
   "Returns (VALUES TOKEN-VALUE TOKEN-TYPE STRING-START STRING-END)"
   ;; check end
