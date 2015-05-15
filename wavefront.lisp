@@ -1,5 +1,7 @@
 (in-package :robray)
 
+;;(declaim (optimize (speed 3) (safety 0)))
+
 (defstruct wavefront-obj-face
   vertex-index
   normal-index
@@ -26,6 +28,7 @@
   (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)"))
 
 (defun wavefront-strip-comment (line)
+  (declare (type simple-string line))
   (when line
     (let* ((i (position #\# line))
            (stripped (if i
@@ -36,7 +39,9 @@
           stripped))))
 
 (defun parse-wavefront-face (line material lineno)
+  (declare (type simple-string line))
   (labels ((subseq-list (reg-start reg-end items)
+             (declare (type simple-vector reg-start reg-end))
              (loop for i in items
                 for s = (aref reg-start i)
                 for e = (aref reg-end i)
@@ -183,26 +188,29 @@
                  (otherwise (error "Unrecognized command ~A on line ~D" command lineno))))
              (assert (or (null line) matched) ()
                      "Error on line ~D" lineno))))
-    (make-mesh-data  :name (name-mangle name)
-                     :vertex-vectors (array-cat 'double-float vertices)
-                     :normal-vectors (array-cat 'double-float normals)
-                     :uv-vectors (array-cat 'double-float uv)
-                     :texture-properties (map 'list #'cdr materials)
-                     :texture-indices (map-into (make-array (length faces) :element-type 'fixnum)
-                                                (lambda (f)
-                                                  (let ((material (wavefront-obj-face-material f)))
-                                                    (position-if (lambda (x) (string= (car x) material))
-                                                                 materials)))
-                                                faces)
-                     :uv-indices (array-cat 'fixnum
-                                            (loop for f across faces
-                                               collect (wavefront-obj-face-uv-index f)))
-                     :vertex-indices (array-cat 'fixnum
-                                                (loop for f across faces
-                                                  collect (wavefront-obj-face-vertex-index f)))
-                     :normal-indices (array-cat 'fixnum
-                                                (loop for f across faces
-                                                   collect (wavefront-obj-face-normal-index f))))))
+    (let* ((material-index-hash (make-hash-table :test #'equal))
+           (texture-properties
+            (loop for i from 0 for (material . texture) in materials
+               do (setf (gethash material material-index-hash) i)
+               collect texture)))
+      (make-mesh-data  :name (name-mangle name)
+                       :vertex-vectors (array-cat 'double-float vertices)
+                       :normal-vectors (array-cat 'double-float normals)
+                       :uv-vectors (array-cat 'double-float uv)
+                       :texture-properties texture-properties
+                       :texture-indices (map-into (make-array (length faces) :element-type 'fixnum)
+                                                  (lambda (f) (gethash (wavefront-obj-face-material f)
+                                                                       material-index-hash))
+                                                  faces)
+                       :uv-indices (array-cat 'fixnum
+                                              (loop for f across faces
+                                                 collect (wavefront-obj-face-uv-index f)))
+                       :vertex-indices (array-cat 'fixnum
+                                                  (loop for f across faces
+                                                     collect (wavefront-obj-face-vertex-index f)))
+                       :normal-indices (array-cat 'fixnum
+                                                  (loop for f across faces
+                                                     collect (wavefront-obj-face-normal-index f)))))))
 
 
 (defun wavefront-povray (obj-file output-file
