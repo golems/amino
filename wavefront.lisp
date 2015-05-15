@@ -206,12 +206,14 @@
 
 
 (defun wavefront-povray (obj-file output-file
-                         &key (handedness :right))
+                         &key
+                           (handedness :right)
+                           (directory *robray-tmp-directory*))
   (let* ((mesh-data (wavefront-obj-load obj-file))
          (name (mesh-data-name mesh-data)))
     (output (pov-declare (mesh-data-name mesh-data)
                          (pov-mesh2 :mesh-data mesh-data :handedness handedness))
-            output-file)
+            output-file :directory directory)
     name))
 
 
@@ -222,7 +224,9 @@
                       (directory *robray-tmp-directory*))
   ;; Maybe convert
   (labels ((handle-obj (obj-file output-file handedness)
-             (let ((name (wavefront-povray obj-file output-file :handedness handedness)))
+             (let ((name (wavefront-povray obj-file output-file
+                                           :handedness handedness
+                                           :directory directory)))
                (values name output-file)))
            (handle-dae (dae-file output-file)
              (convert dae-file output-file :right))
@@ -247,8 +251,8 @@
     (let* ((file-type (string-downcase (file-type mesh-file)))
            (file-basename (file-basename mesh-file))
            (file-dirname (file-dirname mesh-file))
-           (output-file (format-pathname "~A/povray/~A/~A.inc"
-                                         directory file-dirname file-basename)))
+           (output-file (format-pathname "povray/~A/~A.inc"
+                                         file-dirname file-basename)))
     (string-case file-type
       ("obj" (handle-obj mesh-file output-file :right))
       ("stl"
