@@ -1,6 +1,6 @@
 (in-package :robray)
 
-
+(defvar *urdf-package-alist* nil)
 (defparameter *ros-distribution* "indigo")
 
 (defparameter *baxter-description*

@@ -19,6 +19,22 @@
   `(multiple-value-bind (,value ,type ,start ,end) ,token
      ,@body))
 
+(defparameter +integer-regex+
+  '(:regex "-?\\d+"))
+
+(defparameter +float-regex+
+  (let ((exponent '(:regex "[eEdDsS]-?\\d+")))
+    `(:sequence (:regex "-?")
+                (:alternation (:sequence (:alternation (:regex "\\d+\\.\\d*")
+                                                       (:regex "\\.\\d+"))
+                                         (:greedy-repetition 0 1 ,exponent))
+                              (:sequence (:regex "\\d+")
+                                         ,exponent)))))
+
+(defparameter +number-regex+
+  `(:alternation ,+integer-regex+
+                 ,+float-regex+))
+
 (defparameter +curly-token-regex+
   `(("{" #\{)
     ("}" #\})
@@ -49,16 +65,80 @@
                       type
                       start
                       end)))))
-    ("-?(([0-9]+\\.[0-9]*)|(\\.[0-9]+))"
+
+    ;; Non floating point integer
+    ;; uses positive lookahead to find a non-floating-point suffix
+    ("-?\\d+(?=[^\\d.eEdD]|$)"
+     ,(lambda (string start end)
+              (token (parse-integer string :start start :end end)
+                     :integer start end)))
+
+    ;; Floating point number
+    (;"-?((\\d+\\.\\d*)|(\\.\\d+))"
+     ,+float-regex+
      ,(lambda (string start end)
               (token (parse-float (subseq string start end))
                      :float
                      start end)))
-    ("-?[0-9]+"
-     ,(lambda (string start end)
-              (token (parse-integer string :start start :end end)
-                     :integer start (1+ (position-if #'amino::char-isdigit string
-                                                     :start start :end end :from-end t)))))))
+    ))
+
+(defun ensure-regex-tree (regex)
+  (etypecase regex
+    (string (ppcre:parse-string regex))
+    (cons regex)))
+
+(defun strip-registers (tree)
+  (etypecase tree
+    (atom tree)
+    (cons
+     (destructuring-bind (head &rest body) tree
+       (if (eq head :register)
+           (progn (assert (= 1 (length body)))
+                  (strip-registers (car body)))
+           (cons head (map 'list #'strip-registers body)))))))
+
+(defstruct (lexer (:constructor %make-lexer))
+  scanner
+  regex
+  handlers)
+
+(defun make-lexer (token-regexes)
+  (let ((big-regex `(:sequence
+                     :start-anchor
+                     (:alternation ,@(loop for (regex thing) in token-regexes
+                                        collect (list :register
+                                                      (strip-registers (ensure-regex-tree regex)))))))
+        (handlers (loop for (regex type-or-handler) in token-regexes
+                     collect
+                       (let ((type type-or-handler))
+                         (if (functionp type-or-handler)
+                             type-or-handler
+                             (lambda (string start end)
+                               (declare (ignore string))
+                               (values type type start end)))))))
+    (%make-lexer :scanner (ppcre:create-scanner big-regex)
+                 :regex big-regex
+                 :handlers (make-array (length token-regexes)
+                                        :initial-contents handlers))))
+
+(defparameter +curly-lexer+ (make-lexer +curly-token-regex+))
+
+(defun lexer-lex (lexer string start
+                  &key
+                    (match :first))
+  (unless (>= start (length string))
+    (multiple-value-bind (r-start end reg-start reg-end)
+        (ppcre:scan (lexer-scanner +curly-lexer+) string :start start)
+      (declare (ignore end))
+      (assert (= r-start start))
+      (let ((i (ecase match
+                 (:first (loop for k across reg-start
+                            for i from 0
+                            until k
+                            finally (return i))))))
+        (assert (and i (aref reg-start i)))
+        (funcall (aref (lexer-handlers lexer) i)
+                 string (aref reg-start i) (aref reg-end i))))))
 
 (defparameter +curly-comment-regex+
   (let ((whitespace "\\s")
@@ -69,30 +149,19 @@
             line-comment
             block-comment)))
 
-(let ((token-scanners
-       (map 'list (lambda (thing)
-                    (destructuring-bind (regex &rest rest) thing
-                      (cons (ppcre:create-scanner (format nil "^(~A)" regex)) rest)))
-            +curly-token-regex+))
-      (comment-scanner
+(let ((comment-scanner
        (ppcre:create-scanner +curly-comment-regex+)))
-
   (defun curly-next-token (string start)
     "Returns (VALUES TOKEN-VALUE TOKEN-TYPE STRING-START STRING-END)"
     (multiple-value-bind (comment-start comment-end)
         (ppcre:scan comment-scanner string :start start)
       (assert (= start comment-start))
       (let ((start comment-end))
-        (loop for (scanner type-thing) in token-scanners
-           do (multiple-value-bind (start end)
-                  (ppcre:scan scanner string :start start)
-                (when start
-                  (with-token (value type start end)
-                      (if (functionp type-thing)
-                          (funcall type-thing string start end)
-                          (token type-thing type-thing start end))
-                    ;(print (list value type start end))
-                    (return (values value type start end))))))))))
+        ;; check end
+        (when (= comment-end (length string))
+          (return-from curly-next-token (values nil nil nil nil)))
+        ;; find token
+        (lexer-lex +curly-lexer+ string start)))))
 
 (defun curly-tokenize (string)
   (loop with start = 0
@@ -103,7 +172,6 @@
 
 (defun curly-tokenize-file (file)
   (curly-tokenize (read-file-into-string file)))
-
 
 (defun curly-parse-string (string)
   (let ((start 0))
