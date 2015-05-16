@@ -42,6 +42,7 @@
     ("frame(?!\\w)" :frame)
     ("geometry(?!\\w)" :geometry)
     ("class(?!\\w)" :class)
+    ("object(?!\\w)" :object)
     ;; identifiers
     ("[a-zA-Z][a-zA-Z0-9_]*"
      ,(lambda (string start end)
@@ -119,22 +120,23 @@
              (start ()
                ;(print 'start)
                (multiple-value-bind (type token) (next)
-                 (cond
-                   ((eq token :frame)
-                    (cons (frame)
-                          (start)))
-                   ((null type)
-                    nil)
-                   (t (parse-error type "frame or EOF")))))
+                 (when type
+                   (case type
+                     ((:frame :object)
+                      (cons (named-block token)
+                            (start)))
+                     (otherwise (parse-error type "frame, object, or EOF"))))))
              (body ()
                ;(print 'body)
                (let ((type (next)))
-                 (assert (eq #\{ type)))
+                 (unless (eq #\{ type)
+                   (parse-error type "{")))
                (body-first-item ))
-             (frame ()
+             (named-block (block-type)
                (multiple-value-bind (type token) (next)
-                 (assert (eq :identifier type))
-                 (make-curly-block :type :frame
+                 (unless (eq :identifier type)
+                   (parse-error type "identifier"))
+                 (make-curly-block :type block-type
                                    :line line
                                    :name token
                                    :statements (body))))
@@ -146,33 +148,34 @@
              (body-first-item ()
                ;(print 'body-first)
                (multiple-value-bind (type token) (next)
-                 (cond
-                   ((eq type #\})
-                    nil) ; empty block
-                   ((eq token :geometry)
-                    (cons (geometry)
-                          (body-first-item)))
-                   ((eq type :identifier) ; beginning of block statement
-                    (cons (body-statement (list token))
-                          (body-first-item)))
-                   (t (error "Unknown statement type: ~A" type)))))
+                 (unless (eq type #\})
+                   (cons (case type
+                           (:geometry
+                            (geometry))
+                           ((:frame :object)
+                            (named-block token))
+                           (:identifier ; beginning of block statement
+                            (body-statement (list token)))
+                           (t (parse-error type "identifier, frame, object, geometry, or }")))
+                     (body-first-item)))))
              (body-statement (items)
                (declare (type list items))
                ;(format t "~&body statement: ~A" (reverse items))
                (multiple-value-bind (type token) (next)
-                 (declare (ignore type))
-                 (case token
+                 (case type
                    (#\; (reverse items))
-                   (#\{
-                    (assert (= 1 (length items)))
-                    (make-curly-block :name (car items)
-                                      :type (car items)
-                                      :line line
-                                      :statements (body-first-item)))
+                   ;; (#\{
+                   ;;  (assert (= 1 (length items)))
+                   ;;  (make-curly-block :name (car items)
+                   ;;                    :type (car items)
+                   ;;                    :line line
+                   ;;                    :statements (body-first-item)))
 
                    (#\[
                     (body-statement (cons (array nil) items)))
-                   (otherwise (body-statement (cons token items))))))
+                   ((:identifier :integer :float :string)
+                    (body-statement (cons token items)))
+                   (otherwise (parse-error type "a value")))))
              (array (elements)
                (multiple-value-bind (type token) (next)
                  (case type
@@ -181,9 +184,10 @@
              (array-delim (elements)
                (multiple-value-bind (type token) (next)
                  (declare (ignore token))
-                 (ecase type
+                 (case type
                    (#\] (apply #'vec (reverse elements)))
-                   (#\, (array elements))))))
+                   (#\, (array elements))
+                   (otherwise (parse-error type "} or ,"))))))
 
       (start))))
 
