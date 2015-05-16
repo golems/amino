@@ -423,7 +423,11 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (push (pov-item name finish) finishes))
              (add-pigment (name pigment)
                (unless has-image-map
-                 (push (pov-item name pigment) pigments))))
+                 (push (pov-item name pigment) pigments)))
+             (alpha ()
+               (when-let ((assoc-alpha (assoc :alpha alist)))
+                 (unless has-image-map
+                   (push (pov-alpha (cdr assoc-alpha)) pigments)))))
       (loop for (property . value) in alist
          do (case property
               (:ambient
@@ -434,12 +438,12 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (when (and (or (listp value)
                               (vectorp value))
                           (not (assoc :color alist)))
+                 (alpha)
                  (add-pigment "color" (pov-rgb value))))
+              (:alpha) ;; handled in color case
               (:color
+               (alpha)
                (add-pigment "color" (pov-rgb value)))
-              (:alpha
-               (unless has-image-map
-                 (push (pov-alpha value) pigments)))
               (:specular
                (add-finish "specular" (avg-rgb value)))
               (:index-of-refraction ; TODO
@@ -449,10 +453,10 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                ;; TODO: assumed uv mapping
                (push (pov-value "uv_mapping") pigments))
               (otherwise (error "Unknown texture property: ~A" (cons property value))))))
-    (pov-texture (append (when pigments
-                           (list (pov-pigment pigments)))
-                         (when finishes
-                           (list (pov-finish finishes)))))))
+    (pov-texture (nconc (when pigments
+                          (list (pov-pigment pigments)))
+                        (when finishes
+                          (list (pov-finish finishes)))))))
 
 
 (defstruct (pov-version (:constructor pov-version (value)))
