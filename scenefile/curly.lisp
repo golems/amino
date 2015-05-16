@@ -75,13 +75,12 @@
     0 nil
     (:alternation :whitespace-char-class
                   ;; line comment
-                  (:regex "(#|//)[\\n$]*(\\n|$)")
+                  (:regex "(#|(//)).*?(\\n|$)")
                   ;; block comment
                   (:sequence "/*" (:regex "(.*?)") "*/"))))
 
 (defparameter +curly-lexer+ (make-lexer +curly-token-regex+
                                         +curly-comment-regex+))
-
 
 (defun curly-next-token (string start line)
   "Returns (VALUES TOKEN-VALUE TOKEN-TYPE STRING-START STRING-END)"
