@@ -17,11 +17,15 @@
 
 (setq robray-font-lock-keywords
       (list
-       '("^[ \t]*\\(frame\\)\\>[ \t]*\\(\\sw+\\)?"
+       '("[ \t]*\\(frame\\)\\>[ \t]*\\(\\sw+\\)?"
          (1 font-lock-keyword-face) (2 font-lock-variable-name-face nil t))
-       '("^[ \t]*\\(parent\\)\\>[ \t]*\\(\\sw+\\)?"
+       '("[ \t]*\\(parent\\)\\>[ \t]*\\(\\sw+\\)?"
          (1 font-lock-type-face) (2 font-lock-variable-name-face nil t))
-       (cons (regexp-opt '("class" "geometry") 'words)
+       '("[ \t]*\\(class\\)\\>[ \t]*\\(\\sw+\\)?"
+         (1 font-lock-keyword-face) (2 font-lock-type-face nil t))
+       '("[ \t]*\\(isa\\)\\>[ \t]*\\(\\sw+\\)?"
+         (1 font-lock-keyword-face) (2 font-lock-type-face nil t))
+       (cons (regexp-opt '("geometry" "isa") 'words)
              'font-lock-keyword-face)
        (cons (regexp-opt '("translation" "quaternion" "shape" "color" "alpha"
                            "dimension" "radius" "height" "start_radius" "end_radius") 'words)

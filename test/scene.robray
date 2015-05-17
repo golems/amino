@@ -1,11 +1,23 @@
 
+/* Classes */
+class table {
+    shape box;
+    color [.6, .3, .6];
+    alpha 0.5;
+}
+
+class block {
+    shape box;
+    color [0, 1, 0];
+    alpha 0.5;
+    dimension [.1, .1, .1];
+}
+
 /* Tables */
 frame front_table {
     translation [.8, 0, 0];
     geometry {
-        shape box;
-        color [.6, .3, .6];
-        alpha 0.5;
+        isa table;
         dimension [1, 3, .01];
     }
 }
@@ -13,9 +25,7 @@ frame front_table {
 frame side_table1 {
     translation [-.7, -1, 0];
     geometry {
-        shape box;
-        color [.6, .3, .6];
-        alpha 0.5;
+        isa table;
         dimension [2, 1, .01];
     }
 }
@@ -23,9 +33,7 @@ frame side_table1 {
 frame side_table2 {
     translation [-.7, 1, 0];
     geometry {
-        shape box;
-        color [.6, .3, .6];
-        alpha 0.5;
+        isa table;
         dimension [2, 1, .01];
     }
 }
@@ -35,10 +43,8 @@ frame block_a {
     parent front_table;
     translation [0, -.2, 0.0551];
     geometry {
-        shape box;
-        color [0, 1, 0];
-        alpha 0.5;
-        dimension [.1, .1, .1];
+        isa block;
+        color [1, 0, 0];
     }
 }
 
@@ -46,9 +52,7 @@ frame block_b {
     parent front_table;
     translation [0, -.45, 0.0551];
     geometry {
-        shape box;
-        color [0, 0, 1];
-        alpha 0.5;
-        dimension [.1, .1, .1];
+        isa block;
+        color [0, 1, 0];
     }
 }

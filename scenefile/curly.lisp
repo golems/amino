@@ -43,6 +43,7 @@
     ("geometry(?!\\w)" :geometry)
     ("class(?!\\w)" :class)
     ("object(?!\\w)" :object)
+    ;("isa(?!\\w)" :isa)
     ;; identifiers
     ("[a-zA-Z][a-zA-Z0-9_]*"
      ,(lambda (string start end)
@@ -121,7 +122,7 @@
                (multiple-value-bind (type token) (next)
                  (when type
                    (case type
-                     ((:frame :object)
+                     ((:frame :object :class)
                       (cons (named-block token)
                             (start)))
                      (otherwise (parse-error type "frame, object, or EOF"))))))
@@ -198,66 +199,122 @@
 (defun load-curly-scene (pathname)
   (let ((curly (curly-parse-file pathname))
         (frames)
-        (geoms))
-
-    (labels ((add-prop (hash stmt)
+        (geoms)
+        (classes (make-tree-map #'string-compare)))
+    ;; TODO: classes
+    ;; TODO: include files
+    ;; TODO: namespaces
+    ;; TODO: affordances
+    (labels ((add-prop (properties stmt)
                (assert (= 2 (length stmt)))
-               (setf (gethash (first stmt) hash)
-                     (second stmt)))
+               (acons (first stmt) (second stmt)
+                      properties))
+             (get-prop (properties key &optional default)
+               (let ((assoc (assoc key properties :test #'equal)))
+                 (if assoc (cdr assoc) default)))
+             (make-prop () nil)
+             (get-class (stmt)
+               (assert (= 2 (length stmt)))
+               (multiple-value-bind (class present)
+                   (tree-map-find classes (second stmt))
+                 (unless present (error "Class ~A not found" (second stmt)))
+                 class))
+             (class-properties (properties class-properties)
+               (apply #'append
+                      properties
+                      class-properties))
              (add-block (cb parent)
+               ;(print 'add-block)
                (case (curly-block-type cb)
                  (:frame (add-frame cb parent))
-                 (:geometry (add-object cb parent))
+                 (:geometry (add-geom cb parent))
+                 (:class
+                  (unless (null parent)
+                    (error "Cannot nest class in ~A" parent))
+                  (add-class cb))
                  (otherwise (error "Parse error ~A:~D, unrecognized block type ~A"
                                    pathname
                                    (curly-block-line cb)
                                    (curly-block-type cb)))))
-
+             (add-class (cb)
+               ;(print 'adding-class)
+               (let ((name (curly-block-name cb))
+                     (properties (make-prop)))
+                 (when (tree-map-contains classes name)
+                   (error "Duplicate class ~A" name))
+                 (dolist (stmt (curly-block-statements cb))
+                   (typecase stmt
+                     (null)
+                     (cons (string-case (car stmt)
+                             (("quaternion" "translation" "type" "axis" "offset" "parent"
+                                            "shape" "dimension" "color" "alpha")
+                              (setq properties (add-prop properties stmt)))
+                             ("isa"
+                              (push (get-class stmt) classes))
+                             (otherwise (error "Parse error, unrecognized property ~A in class ~A"
+                                               (car stmt) name))))
+                     (t (error "Parse error, unrecognized statement in class ~A"
+                               name))))
+                 (setq classes
+                       (tree-map-insert classes name properties))))
              (add-frame (cb parent)
                (let ((name (curly-block-name cb))
-                     (properties (make-hash-table :test #'equal)))
+                     (properties (make-prop))
+                     (classes))
                  (dolist (stmt (curly-block-statements cb))
                    (etypecase stmt
                      (null)
                      (cons (string-case (car stmt)
-                             ("axis" (add-prop properties stmt))
-                             ("quaternion"  (add-prop properties stmt))
-                             ("translation"  (add-prop properties stmt))
-                             ("parent"  (add-prop properties stmt))
-                             ;("color"  (add-prop properties stmt))
-                             ;("alpha"  (add-prop properties stmt))
-                             ("type"  (add-prop properties stmt))
-                             ("offset"  (add-prop properties stmt))))
+                             (("axis" "quaternion" "translation" "type" "offset")
+                              (setq properties
+                                    (add-prop properties stmt)))
+                             ("parent"
+                              (unless (null parent)
+                                (error "Cannot reparent frame ~A" name))
+                              (setq properties (add-prop properties stmt)))
+                             ("isa"
+                              (push (get-class stmt) classes))
+                             (otherwise (error "Unknown property in frame ~A" name))))
                      (curly-block
                       (add-block stmt name))))
-                 (let ((frame (string-case (gethash "type" properties "fixed")
-                                ("fixed" (scene-frame-fixed (gethash "parent" properties parent)
-                                                            name
-                                                            :tf (tf* (gethash "quaternion" properties)
-                                                                     (gethash "translation" properties)))))))
-                   (push frame frames))))
-             (add-object (cb parent)
-               (let ((properties (make-hash-table :test #'equal)))
+                 (insert-frame name (class-properties properties (reverse classes)) parent)))
+             (insert-frame (name properties parent)
+               (let* ((frame-type (get-prop properties "type" "fixed"))
+                      (frame (string-case frame-type
+                               ("fixed" (scene-frame-fixed (get-prop properties "parent" parent)
+                                                           name
+                                                           :tf (tf* (get-prop properties "quaternion")
+                                                                    (get-prop properties "translation"))))
+                               (otherwise (error "Unhandled frame type ~A in frame ~A" frame-type name)))))
+                 (push frame frames)))
+             (add-geom (cb parent)
+               (let ((properties (make-prop))
+                     (classes))
                  (dolist (stmt (curly-block-statements cb))
                    (etypecase stmt
                      (null)
                      (cons (string-case (car stmt)
-                             ("shape" (add-prop properties stmt))
-                             ("dimension"  (add-prop properties stmt))
-                             ("color"  (add-prop properties stmt))
-                             ("alpha"  (add-prop properties stmt))))))
-                 (let ((v
-                        ;; TODO: collision
-                        (make-scene-visual :color (gethash "color" properties)
-                                           :alpha (gethash "alpha" properties 1d0)
-                                           :geometry
-                                           (string-case (gethash "shape" properties)
-                                             ("box"
-                                              (scene-box (gethash "dimension" properties)))
-                                             (t (error "Unknown shape: ~A" (gethash "shape" properties)))))))
-                   (push (cons (gethash "parent" properties parent)
-                               v)
-                         geoms)))))
+                             (("shape" "dimension" "color" "alpha")
+                              (setq properties (add-prop properties stmt)))
+                             ("isa"
+                              (push (get-class stmt) classes))
+                             (otherwise (error "Unknown property in geometry at line ~D"
+                                               (curly-block-line cb)))))))
+                 (insert-geom (class-properties properties (reverse classes))
+                              parent)))
+             (insert-geom (properties parent)
+               (let ((v ;; TODO: collision
+                      (make-scene-visual :color (get-prop properties "color")
+                                         :alpha (get-prop properties "alpha" 1d0)
+                                         :geometry
+                                         (string-case (get-prop properties "shape")
+                                           ("box"
+                                            (scene-box (get-prop properties "dimension")))
+                                           (t (error "Unknown shape: ~A" (get-prop properties "shape")))))))
+                 (push (cons (get-prop properties "parent" parent)
+                             v)
+                       geoms)))
+             )
       (dolist (c curly)
         (add-block c nil)))
     (let ((sg (scene-graph frames)))
