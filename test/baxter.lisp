@@ -38,11 +38,7 @@
 
 (setq *scene-graph*
       (scene-graph-merge *scene-graph-baxter*
-                         (load-curly-scene "/home/ntd/git/robray/test/scene.robray")
-                         ;(urdf-parse "/home/ntd/git/robray/test/scene.urdf")
-                         ))
-
-
+                         (load-curly-scene (output-file "scene.robray" *baxter-source-directory*))))
 
 (setq *scene-graph*
       (draw-items *scene-graph* "right_endpoint"

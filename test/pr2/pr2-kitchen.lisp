@@ -6,10 +6,10 @@
 (defparameter *pr2-description*
   (format nil "/opt/ros/~A/share/pr2_description/" *ros-distribution*))
 
-  (defparameter *pr2-source-directory*
-    (concatenate 'string
-                 (namestring (asdf:system-source-directory :robray))
-                 "/test/pr2/"))
+(defparameter *pr2-source-directory*
+  (concatenate 'string
+               (namestring (asdf:system-source-directory :robray))
+               "/test/pr2/"))
 
 (defvar *scene-graph-kitchen*)
 
