@@ -201,7 +201,6 @@
         (frames)
         (geoms)
         (classes (make-tree-map #'string-compare)))
-    ;; TODO: classes
     ;; TODO: include files
     ;; TODO: namespaces
     ;; TODO: affordances
@@ -309,15 +308,13 @@
                   for value = (get-prop properties name)
                   when value collect (cons kw value)))
              (insert-geom (properties parent)
-               (let ((v ;; TODO: collision
-                      (scene-geometry (string-case (get-prop properties "shape")
-                                        ("box"
-                                         (scene-box (get-prop properties "dimension")))
-                                        (t (error "Unknown shape: ~A" (get-prop properties "shape"))))
-                                      (property-options properties)))) ;; FIXME
-                 (push (cons (get-prop properties "parent" parent)
-                             v)
-                       geoms))))
+               (let ((geometry (scene-geometry (string-case (get-prop properties "shape")
+                                                 ("box"
+                                                  (scene-box (get-prop properties "dimension")))
+                                                 (t (error "Unknown shape: ~A" (get-prop properties "shape"))))
+                                               (property-options properties)))
+                     (parent (get-prop properties "parent" parent)))
+                 (push (cons parent geometry) geoms))))
       (dolist (c curly)
         (add-block c nil)))
     (let ((sg (scene-graph frames)))

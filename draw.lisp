@@ -1,13 +1,5 @@
 (in-package :robray)
 
-(defvar *genframe-count*)
-
-(defun draw-genframe (&optional (thing "ROBRAY_GENFRAME__"))
-  (unless (boundp '*genframe-count*)
-    (setq *genframe-count* 0))
-  (format nil "~A~D" thing (incf *genframe-count*)))
-
-
 ;;; OPTIONS ;;;
 (defparameter *draw-options*
   '((:no-shadow . nil)
@@ -119,31 +111,31 @@
                         (if end-arrow end-arrow-length 0))))
 
     (nconc (when start-arrow
-             (list (robray::item-cone-axis (robray::draw-subframe name "start-arrow")
-                                           :options options
-                                           :height start-arrow-length
-                                           :start-radius (/ start-arrow-start-width 2)
-                                           :end-radius (/ start-arrow-end-width 2)
-                                           :axis axis
-                                           :translation  (g+ (g* axis start-arrow-length)
+             (list (item-cone-axis (robray::draw-subframe name "start-arrow")
+                                   :options options
+                                   :height start-arrow-length
+                                   :start-radius (/ start-arrow-start-width 2)
+                                   :end-radius (/ start-arrow-end-width 2)
+                                   :axis axis
+                                   :translation  (g+ (g* axis start-arrow-length)
                                                              translation))))
-           (list (robray::item-cylinder-axis (robray::draw-subframe name "body")
-                                             :options options
-                                             :height body-length :radius (/ width 2)
-                                             :axis axis
-                                             :translation (if start-arrow
-                                                              (g+ (g* start-arrow-length axis)
-                                                                  translation)
-                                                              translation)))
+           (list (item-cylinder-axis (robray::draw-subframe name "body")
+                                     :options options
+                                     :height body-length :radius (/ width 2)
+                                     :axis axis
+                                     :translation (if start-arrow
+                                                      (g+ (g* start-arrow-length axis)
+                                                          translation)
+                                                      translation)))
            (when end-arrow
-             (list (robray::item-cone-axis (robray::draw-subframe name "end-arrow")
-                                           :options options
-                                           :height end-arrow-length
-                                           :start-radius (/ end-arrow-start-width 2)
-                                           :end-radius (/ end-arrow-end-width 2)
-                                           :axis axis
-                                           :translation  (g+ (g* axis (- length end-arrow-length))
-                                                             translation)))))))
+             (list (item-cone-axis (robray::draw-subframe name "end-arrow")
+                                   :options options
+                                   :height end-arrow-length
+                                   :start-radius (/ end-arrow-start-width 2)
+                                   :end-radius (/ end-arrow-end-width 2)
+                                   :axis axis
+                                   :translation  (g+ (g* axis (- length end-arrow-length))
+                                                     translation)))))))
 
 (defun item-frame-marker (name &key
                                  length
