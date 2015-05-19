@@ -30,10 +30,11 @@
 (defvar *scene-graph-baxter*)
 
 ;(time
-(setq *scene-graph-baxter*
-      ;(urdf-parse (format nil "~A/urdf/baxter.urdf" *baxter-description*) :reload-meshes t)
-      (urdf-parse "/home/ntd/baxter_gripper.urdf" :reload-meshes t)
-      )
+(unless *scene-graph-baxter*
+  (setq *scene-graph-baxter*
+        (urdf-parse "/home/ntd/baxter_gripper.urdf"
+                    ;;(format nil "~A/urdf/baxter.urdf" *baxter-description*)
+                    :reload-meshes t)))
 
 (setq *scene-graph*
       (scene-graph-merge *scene-graph-baxter*
