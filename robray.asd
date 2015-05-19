@@ -48,6 +48,8 @@
                (:file "lexer" :depends-on ("util"))
                (:file "scenefile/curly" :depends-on ("scenegraph" "mesh" "lexer"))
                (:file "scenefile/moveit" :depends-on ("scenegraph" "mesh"))
+               (:file "scenefile/scenefile"
+                      :depends-on ("scenefile/urdf" "scenefile/curly" "scenefile/moveit"))
                (:file "animate" :depends-on ("scenegraph" "povray"))
                (:file "draw" :depends-on ("scenegraph"))
                ))

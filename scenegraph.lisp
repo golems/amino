@@ -336,8 +336,10 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 
 
-(defun scene-graph-tf-absolute-map (scene-graph configuration-map
-                                    &key (default-configuration 0d0))
+(defun scene-graph-tf-absolute-map (scene-graph
+                                    &key
+                                      configuration-map
+                                      (default-configuration 0d0))
   (labels ((rec (tf-abs frame)
              (let ((name (scene-frame-name frame)))
                (setf (gethash name tf-abs)
@@ -455,7 +457,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                 (default-configuration 0d0))
 "Generate the POV-ray scene for the given scene-graph."
   (let ((pov-things)
-        (tf-abs (scene-graph-tf-absolute-map scene-graph configuration-map
+        (tf-abs (scene-graph-tf-absolute-map scene-graph
+                                             :configuration-map configuration-map
                                              :default-configuration default-configuration))
         (mesh-set (make-tree-set #'string-compare))
         (use-collision (get-render-option options :use-collision)))

@@ -18,13 +18,14 @@
 
 (defvar *scene-graph-pr2*)
 
-(unless *scene-graph-pr2*
+(unless (and (boundp '*scene-graph-pr2*)
+             *scene-graph-pr2*)
   (setq *scene-graph-pr2*
-        (urdf-parse "/tmp/pr2.urdf" :mesh-up-axis "Y" :mesh-forward-axis "-Z")))
+        (load-scene-file "/tmp/pr2.urdf" :mesh-up-axis "Y" :mesh-forward-axis "-Z")))
 
 (setq *scene-graph-kitchen*
-      (load-moveit-scene (output-file "kitchen.scene" *pr2-source-directory*)))
-
+      (load-scene-file (output-file "kitchen.scene" *pr2-source-directory*)
+                       :type :moveit))
 
 (setq *scene-graph*
        (scene-graph-merge *scene-graph-pr2* *scene-graph-kitchen*))
