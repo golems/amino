@@ -1,5 +1,9 @@
 (in-package :robray)
 
+(defun alist-get-default (alist key default-alist)
+  (cdr (or (assoc key alist)
+           (assoc key default-alist))))
+
 (defun make-string-hash-table ()
   (make-hash-table :test #'equal))
 

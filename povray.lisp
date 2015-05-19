@@ -411,7 +411,6 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   (let ((finishes nil)
         (pigments nil)
         (has-image-map (assoc :image-map alist)))
-
     (labels ((avg-rgb (rgb)
                (pov-float (etypecase rgb
                             ((or single-float double-float) rgb)
@@ -428,7 +427,11 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (when-let ((assoc-alpha (assoc :alpha alist)))
                  (unless has-image-map
                    (push (pov-alpha (cdr assoc-alpha)) pigments)))))
-      (loop for (property . value) in alist
+      (loop
+         for property in '(:ambient :diffuse :color :specular :index-of-refraction :image-map)
+         for pair = (assoc property alist)
+         for value = (cdr pair)
+         when pair
          do (case property
               (:ambient
                (add-finish "ambient" (pov-rgb value)))
@@ -440,7 +443,6 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                           (not (assoc :color alist)))
                  (alpha)
                  (add-pigment "color" (pov-rgb value))))
-              (:alpha) ;; handled in color case
               (:color
                (alpha)
                (add-pigment "color" (pov-rgb value)))
@@ -451,8 +453,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
               (:image-map
                (push (pov-image-map value) pigments)
                ;; TODO: assumed uv mapping
-               (push (pov-value "uv_mapping") pigments))
-              (otherwise (error "Unknown texture property: ~A" (cons property value))))))
+               (push (pov-value "uv_mapping") pigments)))))
     (pov-texture (nconc (when pigments
                           (list (pov-pigment pigments)))
                         (when finishes

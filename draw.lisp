@@ -48,24 +48,9 @@
                         tf
                         (actual-parent parent)
                         (options *draw-options*))
-  ;; Add frame
-  (setq scene-graph
-        (scene-graph-add-tf scene-graph (tf-tag parent tf name)
-                            :actual-parent actual-parent))
-  ;; Add visual
-  (when (and (get-draw-option options :visual) geometry)
-    (setq scene-graph
-          (scene-graph-add-visual scene-graph name
-                                  (make-scene-visual :geometry geometry
-                                                     :color (get-draw-option options :color)
-                                                     :alpha (get-draw-option options :alpha)
-                                                     :modifiers (when (get-draw-option options :no-shadow)
-                                                                  '(:no-shadow))))))
-  ;; Add collision
-  (when (and (get-draw-option options :visual) geometry)
-    (setq scene-graph
-          (scene-graph-add-collision scene-graph name geometry)))
-  scene-graph)
+  (scene-graph-add-tf scene-graph (tf-tag parent tf name)
+                      :actual-parent actual-parent
+                      :geometry (scene-geometry geometry options)))
 
 (defun draw-tf-axis (axis &optional (translation (identity-vec3)))
   (tf* (quaternion-from-vectors (vec 0d0 0d0 1d0)
@@ -87,6 +72,8 @@
                    &key
                      (options *draw-options*))
   (fold (lambda (scene-graph x)
+          ;(print scene-graph)
+          ;(print (draw-item-name x))
           (draw-geometry scene-graph parent
                          (draw-item-name x)
                          :options (merge-draw-options (draw-item-options x) options)

@@ -302,23 +302,26 @@
                                                (curly-block-line cb)))))))
                  (insert-geom (class-properties properties (reverse classes))
                               parent)))
+             (property-options (properties)
+               (loop
+                  for name in '("color" "alpha")
+                  for kw in   '(:color  :alpha)
+                  for value = (get-prop properties name)
+                  when value collect (cons kw value)))
              (insert-geom (properties parent)
                (let ((v ;; TODO: collision
-                      (make-scene-visual :color (get-prop properties "color")
-                                         :alpha (get-prop properties "alpha" 1d0)
-                                         :geometry
-                                         (string-case (get-prop properties "shape")
-                                           ("box"
-                                            (scene-box (get-prop properties "dimension")))
-                                           (t (error "Unknown shape: ~A" (get-prop properties "shape")))))))
+                      (scene-geometry (string-case (get-prop properties "shape")
+                                        ("box"
+                                         (scene-box (get-prop properties "dimension")))
+                                        (t (error "Unknown shape: ~A" (get-prop properties "shape"))))
+                                      (property-options properties)))) ;; FIXME
                  (push (cons (get-prop properties "parent" parent)
                              v)
-                       geoms)))
-             )
+                       geoms))))
       (dolist (c curly)
         (add-block c nil)))
     (let ((sg (scene-graph frames)))
       (fold (lambda (sg g)
-              (scene-graph-add-visual sg (car g) (cdr g)))
+              (scene-graph-add-geometry sg (car g) (cdr g)))
             sg
             geoms))))

@@ -44,11 +44,28 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   start-radius
   end-radius)
 
-(defstruct scene-visual
-  geometry
-  color
-  (alpha 1d0 :type double-float)
-  modifiers)
+
+(defparameter *scene-geometry-options*
+  '((:no-shadow . nil)
+    (:color . (0 0 0))
+    (:alpha . 1d0)
+    (:visual . t)
+    (:collision . t)))
+
+(defun scene-geometry-option (options key)
+  (alist-get-default options key *scene-geometry-options*))
+
+(defstruct scene-geometry
+  shape
+  options
+  (collision t)
+  (visual t))
+
+(defun scene-geometry (shape options)
+  (make-scene-geometry :shape shape
+                       :options options
+                       :collision (scene-geometry-option options :collision)
+                       :visual (scene-geometry-option options :visual)))
 
 ;;; FRAMES ;;;
 
@@ -56,19 +73,22 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   "Base struct for frames in the scene."
   (name nil :type frame-name)
   (parent nil :type frame-name)
-  visual
-  collision
-  tf)
+  tf
+  geometry)
 
 (defstruct (scene-frame-fixed (:include scene-frame))
   "A frame with a fixed transformation")
 
 (defun scene-frame-fixed (parent name &key
+                                        geometry
                                         (tf (identity-tf)))
   "Create a new fixed frame."
   (make-scene-frame-fixed :name name
                           :parent parent
-                          :tf tf))
+                          :tf tf
+                          :geometry (etypecase geometry
+                                      (list geometry)
+                                      (scene-geometry (list geometry)))))
 
 
 (defstruct (scene-frame-joint (:include scene-frame))
@@ -131,20 +151,10 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (make-scene-graph :frame-map (tree-map-remove (scene-graph-frame-map scene-graph)
                                                 frame-name )))
 
-(defun scene-graph-add-visual (scene-graph frame-name visual)
-  "Bind visual geometry to a frame in the scene."
-  (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
-    (assert (null (scene-frame-visual frame)))
-    (setf (scene-frame-visual frame)
-          visual)
-    (scene-graph-add-frame scene-graph frame)))
-
-(defun scene-graph-add-collision (scene-graph frame-name geometry)
+(defun scene-graph-add-geometry (scene-graph frame-name geometry)
   "Bind collision geometry to a frame in the scene."
   (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
-    (assert (null (scene-frame-collision frame)))
-    (setf (scene-frame-collision frame)
-          geometry)
+    (push geometry (scene-frame-geometry frame))
     (scene-graph-add-frame scene-graph frame)))
 
 (defun scene-graph (frames)
@@ -170,20 +180,15 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                           (scene-graph-frame-map ,scene-graph))
             ,result)))
 
-(defmacro do-scene-graph-visuals (((frame-name-variable visual-variable)
-                                   scene-graph &optional result)
-                                  &body body)
-  (with-gensyms (frame fun)
-    `(do-scene-graph-frames (,frame ,scene-graph ,result)
-       (flet ((,fun (,frame-name-variable ,visual-variable)
-                ,@body))
-         (declare (dynamic-extent (function ,fun)))
-         (let ((,visual-variable (scene-frame-visual ,frame))
-               (,frame-name-variable (scene-frame-name ,frame)))
-           (etypecase ,visual-variable
-             (null)
-             (scene-visual
-              (,fun ,frame-name-variable ,visual-variable))))))))
+(defmacro do-scene-graph-geometry (((frame geometry) scene-graph &optional result)
+                                   &body body)
+  (with-gensyms (fun)
+    `(flet ((,fun (,frame ,geometry)
+              ,@body))
+       (do-scene-graph-frames (,frame ,scene-graph ,result)
+         (loop
+            for ,geometry in (scene-frame-geometry ,frame)
+            do (,fun ,frame ,geometry))))))
 
 
 (defun fold-scene-graph-frames (function initial-value scene-graph)
@@ -204,20 +209,20 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                                (mesh-up-axis "Z")
                                                (mesh-forward-axis "Y")
                                                (directory *robray-tmp-directory*))
+  (print 'resolve-mesh)
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
     (labels ((resolve-mesh (mesh)
                (when-let ((source (and (not (scene-mesh-povray-file mesh))
                                        (scene-mesh-source-file  mesh))))
                  (push mesh (gethash source mesh-files))))
-             (test-geom (g)
-               (when (and g (scene-mesh-p g))
-                 (resolve-mesh g))))
+             (test-shape (shape)
+               (when (and shape (scene-mesh-p shape))
+                 (resolve-mesh shape))))
       ;; collect mesh files
-      (do-scene-graph-frames (frame scene-graph)
-        (when-let ((v (scene-frame-visual frame)))
-          (test-geom (scene-visual-geometry v)))
-        (test-geom (scene-frame-collision frame))))
+      (do-scene-graph-geometry ((frame geometry) scene-graph)
+        (declare (ignore frame))
+        (test-shape (scene-geometry-shape geometry))))
     (maphash (lambda (mesh-file mesh-nodes)
                (format *standard-output* "~&Converting ~A..." mesh-file)
                (multiple-value-bind (geom-name inc-file)
@@ -368,6 +373,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 
 (defun scene-graph-add-tf (scene-graph tf-tag &key
+                                                geometry
                                                 (actual-parent (tf-tag-parent tf-tag))
                                                 (tf-absolute-map (make-string-hash-table))
                                                 configuration-map
@@ -384,7 +390,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                                   :tf-absolute-map tf-absolute-map)
                          tf-rel))))
     (scene-graph-add-frame scene-graph (scene-frame-fixed actual-parent name
-                                                          :tf tf))))
+                                                          :tf tf
+                                                          :geometry geometry))))
 
 
 
@@ -403,39 +410,38 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 ;;; POVRAY ;;;
 ;;;;;;;;;;;;;;
 
-(defun scene-visual-pov (visual geometry tf)
-  (let ((color (scene-visual-color visual))
-        (alpha (scene-visual-alpha visual))
-        (modifiers (list tf)))
-    (when (and (or color alpha)
-               (not (scene-mesh-p geometry)))
-      ;; TODO: figure out how to not clobber the mesh texture
-      (push (pov-pigment (append (when color
-                                   (list (pov-color color)))
-                                 (when alpha
-                                   (list (pov-alpha alpha)))))
+(defun scene-visual-pov (geometry tf)
+  (declare (type scene-geometry geometry))
+  (let* ((options (scene-geometry-options geometry))
+         (modifiers (list tf))
+         (shape (scene-geometry-shape geometry)))
+    (when (and options
+               ;; Don't clobber mesh texture
+               ;; TODO: there's probably a better way to do this
+               (not (scene-mesh-p shape)))
+      (push (pov-alist-texture options)
             modifiers))
-    (when (find :no-shadow (scene-visual-modifiers visual))
-      (push (pov-value "no_shadow" )
+    (when (find :no-shadow options)
+      (push (pov-value "no_shadow")
             modifiers))
-    (etypecase geometry
-      (scene-mesh (pov-mesh2 :mesh (scene-mesh-name geometry)
+    (etypecase shape
+      (scene-mesh (pov-mesh2 :mesh (scene-mesh-name shape)
                              :modifiers modifiers))
       (scene-box
-       (pov-box-center (scene-box-dimension geometry)
+       (pov-box-center (scene-box-dimension shape)
                        :modifiers modifiers))
       (scene-cylinder
-       (pov-cylinder-axis (vec 0 0 (scene-cylinder-height geometry))
-                          (scene-cylinder-radius geometry)
+       (pov-cylinder-axis (vec 0 0 (scene-cylinder-height shape))
+                          (scene-cylinder-radius shape)
                           modifiers))
       (scene-cone
-       (pov-cone-axis (vec 0 0 (scene-cone-height geometry))
-                      (scene-cone-start-radius geometry)
-                      (scene-cone-end-radius geometry)
+       (pov-cone-axis (vec 0 0 (scene-cone-height shape))
+                      (scene-cone-start-radius shape)
+                      (scene-cone-end-radius shape)
                       modifiers))
       (scene-sphere
        (pov-sphere (identity-vec3)
-                   (scene-sphere-radius geometry)
+                   (scene-sphere-radius shape)
                    modifiers)))))
 
 (defun scene-graph-pov-frame (scene-graph
@@ -451,27 +457,26 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (let ((pov-things)
         (tf-abs (scene-graph-tf-absolute-map scene-graph configuration-map
                                              :default-configuration default-configuration))
-        (mesh-set (make-tree-set #'string-compare)))
+        (mesh-set (make-tree-set #'string-compare))
+        (use-collision (get-render-option options :use-collision)))
+    ;(format t "~& col: ~A" use-collision)
     (labels ((thing (thing)
                (push thing pov-things))
              (include (file)
                (thing (pov-include file))))
       ;; push frame geometry
-      (do-scene-graph-frames (frame scene-graph)
-        (let* ((name (scene-frame-name frame))
-               (visual (scene-frame-visual frame))
-               (geometry (if (get-render-option options :use-collision)
-                             (scene-frame-collision frame)
-                             (when visual (scene-visual-geometry visual)))))
-          ;(print name)
-          ;(print visual)
-          ;(print geometry)
-          (when (and visual geometry)
-            (thing (scene-visual-pov visual geometry
+      (do-scene-graph-geometry ((frame geometry) scene-graph)
+        ;(format t "~&converting frame: ~A" (scene-frame-name frame))
+        (when (if use-collision
+                  (scene-geometry-collision geometry)
+                  (scene-geometry-visual geometry))
+          (let ((shape (scene-geometry-shape geometry))
+                (name (scene-frame-name frame)))
+            (thing (scene-visual-pov geometry
                                      (pov-transform* (pov-matrix (gethash name tf-abs)))))
-            (thing (pov-line-comment (format nil "FRAME: ~A" name))))
-          (when (scene-mesh-p geometry)
-            (tree-set-insertf mesh-set (scene-mesh-povray-file geometry)))))
+            (thing (pov-line-comment (format nil "FRAME: ~A" name)))
+            (when (scene-mesh-p shape)
+              (tree-set-insertf mesh-set (scene-mesh-povray-file shape))))))
       (map-tree-set nil #'include mesh-set)
       (map nil #'include (reverse (ensure-list include)))
       ;; version

@@ -12,17 +12,22 @@
   ;; translation
   ;; quaternion
   ;; RGBA
-  (do-scene-graph-visuals ((frame-name  visual) scene-graph)
-    (format stream "~&* ~A" frame-name)
-    (format stream "~&1")
-    (let ((g (scene-visual-geometry visual)))
-      (etypecase g
-        (scene-box
-         (with-vec3 (x y z) (scene-box-dimension g)
-           (format stream "~&box~&~F ~F ~F" x y z)))))
-    (let* ((tf (scene-graph-tf-absolute scene-graph frame-name))
+  (do-scene-graph-geometry ((frame geometry) scene-graph)
+    (let* ((shape (scene-geometry-shape geometry))
+           (frame-name (scene-frame-name frame))
+           (tf (scene-graph-tf-absolute scene-graph frame-name))
            (v (tf-translation tf))
-           (q (tf-quaternion tf)))
+           (q (tf-quaternion tf))
+           (options (scene-geometry-options geometry))
+           (color (scene-geometry-option options :color))
+           (alpha (scene-geometry-option options :alpha)))
+      ;; shape
+      (format stream "~&* ~A" frame-name)
+      (format stream "~&1")
+      (etypecase shape
+        (scene-box
+         (with-vec3 (x y z) (scene-box-dimension shape)
+           (format stream "~&box~&~F ~F ~F" x y z))))
       ;; translation
       (format stream "~&~F ~F ~F"
               (vecref v 0)
@@ -33,9 +38,7 @@
               (quaternion-x q)
               (quaternion-y q)
               (quaternion-z q)
-              (quaternion-w q)))
-    (let ((color (scene-visual-color visual))
-          (alpha (scene-visual-alpha visual)))
+              (quaternion-w q))
       ;; quaternion
       (format stream "~&~F ~F ~F ~F"
               (vecref color 0)

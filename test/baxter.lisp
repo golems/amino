@@ -42,24 +42,14 @@
                          ))
 
 
-;; (setq *scene-graph*
-;;       (scene-graph-
 
-;; Produce a simple animation
-;; (time (scene-graph-time-animate
-;;  (keyframe-configuration-function (list
-;;                                    (joint-keyframe 0d0 nil)
-;;                                    (joint-keyframe 2d0 `(("right_s0" ,(* .25 pi))
-;;                                                          ("right_s1" ,(* -0.25 pi))
-;;                                                          ("right_e0" ,(* 0.0 pi))
-;;                                                          ("right_e1" ,(* 0.25 pi))
-;;                                                          ("right_w0" ,(* 0.0 pi))
-;;                                                          ("right_w1" ,(* 0.5 pi))
-;;                                                          ("right_w2" ,(* 0.0 pi))))))
-;;  :frames-per-second 15
-;;  :time-end 2d0
-;;  :encode-video t
-;;  :include "baxter.inc" ))
+(setq *scene-graph*
+      (draw-items *scene-graph* "right_endpoint"
+                  (item-frame-marker (draw-subframe "right_endpoint" "marker")
+                                     :length .15
+                                     :width .015)
+                  :options (draw-options :no-shadow t :alpha .5
+                                         :visual t :collision nil)))
 
 
 (uiop/stream:copy-file (output-file "baxter.inc" *baxter-source-directory*)
@@ -80,3 +70,24 @@
                         :options (render-options-default :use-collision nil
                                                          :options (render-options-medium))
                         :output "robray.pov")
+
+
+
+;; (setq *scene-graph*
+;;       (scene-graph-
+
+;; Produce a simple animation
+;; (time (scene-graph-time-animate
+;;  (keyframe-configuration-function (list
+;;                                    (joint-keyframe 0d0 nil)
+;;                                    (joint-keyframe 2d0 `(("right_s0" ,(* .25 pi))
+;;                                                          ("right_s1" ,(* -0.25 pi))
+;;                                                          ("right_e0" ,(* 0.0 pi))
+;;                                                          ("right_e1" ,(* 0.25 pi))
+;;                                                          ("right_w0" ,(* 0.0 pi))
+;;                                                          ("right_w1" ,(* 0.5 pi))
+;;                                                          ("right_w2" ,(* 0.0 pi))))))
+;;  :frames-per-second 15
+;;  :time-end 2d0
+;;  :encode-video t
+;;  :include "baxter.inc" ))

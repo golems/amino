@@ -86,7 +86,7 @@
                                                           (default-alpha 1d0))
   (labels ((path (node path &optional default)
              (dom-select-path node path :singleton t :undefined-error nil :default default))
-           (node-geometry (node)
+           (node-shape (node)
              (let* ((mesh-file (path node '("geometry" "mesh" "@filename")))
                     (box-size (path node '("geometry" "box" "@size")))
                     (sphere-radius (path node '("geometry" "sphere" "@radius")))
@@ -116,7 +116,13 @@
                                                                     (vec3 xyz))
                                                                offset))))
                  (setq scene-graph (scene-graph-add-frame scene-graph new-frame))
-                 (scene-frame-name new-frame)))))
+                 (scene-frame-name new-frame))))
+           (node-options (&key rgba visual collision)
+             `(,@(when rgba
+                       `((:color . ,(subseq rgba 0 3))
+                         (:alpha . ,(elt rgba 3))))
+                 (:visual . ,visual)
+                 (:collision . ,collision))))
 
     (loop for link-node in (dom-select-path dom '("robot" "link"))
        for name = (dom:get-attribute link-node "name")
@@ -128,25 +134,20 @@
 
        do
          (when visual-node
-           (let* ((geometry (node-geometry visual-node))
-                  (frame-name (node-origin name visual-node "visual" geometry)))
+           (let* ((shape (node-shape visual-node))
+                  (frame-name (node-origin name visual-node "visual" shape))
+                  (options (node-options :rgba rgba :visual t)))
              ;; bind geometry
              (setq scene-graph
-                   (scene-graph-add-visual scene-graph frame-name
-                                           (make-scene-visual :color (when rgba (subseq rgba 0 3))
-                                                              :alpha (if rgba (elt rgba 3) 1d0)
-                                                              :geometry geometry)))))
+                   (scene-graph-add-geometry scene-graph frame-name
+                                             (scene-geometry shape options)))))
          (when collision-node
-           (let* ((geometry (node-geometry collision-node))
-                  (frame-name (node-origin name collision-node "collision" geometry)))
+           (let* ((shape (node-shape collision-node))
+                  (frame-name (node-origin name collision-node "collision" shape))
+                  (options (node-options :rgba rgba :collision t)))
              (setq scene-graph
-                   (scene-graph-add-visual scene-graph frame-name
-                                           (make-scene-visual :color (when rgba (subseq rgba 0 3))
-                                                              :alpha (if rgba (elt rgba 3) 1d0)
-                                                              :geometry nil)))
-             (setq scene-graph
-                   (scene-graph-add-collision scene-graph frame-name
-                                              geometry))))))
+                   (scene-graph-add-geometry scene-graph frame-name
+                                             (scene-geometry shape options)))))))
   scene-graph)
 
 
