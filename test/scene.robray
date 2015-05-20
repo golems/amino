@@ -19,7 +19,7 @@ class table {
 
 class block {
     shape box;
-    isa moveable;s
+    isa moveable;
     color [0, 1, 0];
     alpha 0.5;
     dimension [.1, .1, .1];
