@@ -58,6 +58,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defstruct scene-geometry
   shape
   options
+  type
   (collision t)
   (visual t))
 
@@ -67,6 +68,10 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                        :collision (scene-geometry-option options :collision)
                        :visual (scene-geometry-option options :visual)))
 
+(defun scene-geometry-isa (geometry type)
+  (let ((tree (scene-geometry-type geometry)))
+    (when tree (tree-set-member-p tree type))))
+
 ;;; FRAMES ;;;
 
 (defstruct scene-frame
@@ -75,6 +80,11 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (parent nil :type frame-name)
   tf
   geometry)
+
+(defun scene-frame-geometry-isa (frame type)
+  (find-if (lambda (g)
+             (scene-geometry-isa g type))
+           (scene-frame-geometry frame)))
 
 (defstruct (scene-frame-fixed (:include scene-frame))
   "A frame with a fixed transformation")
@@ -189,6 +199,16 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
          (loop
             for ,geometry in (scene-frame-geometry ,frame)
             do (,fun ,frame ,geometry))))))
+
+(defmacro do-scene-graph-geometry-types (((frame geometry) (scene-graph type) &optional result)
+                                         &body body)
+  (with-gensyms (fun typevar)
+    `(flet ((,fun (,frame ,geometry)
+              ,@body))
+       (let ((,typevar ,type))
+         (do-scene-graph-geometry ((,frame ,geometry) ,scene-graph ,result)
+           (when (scene-geometry-isa ,geometry ,typevar)
+             (,fun ,frame ,geometry)))))))
 
 
 (defun fold-scene-graph-frames (function initial-value scene-graph)

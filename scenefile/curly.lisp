@@ -203,7 +203,6 @@
         (classes (make-tree-map #'string-compare)))
     ;; TODO: include files
     ;; TODO: namespaces
-    ;; TODO: affordances
     (labels ((add-prop (properties stmt)
                (assert (= 2 (length stmt)))
                (acons (first stmt) (second stmt)
@@ -238,7 +237,8 @@
              (add-class (cb)
                ;(print 'adding-class)
                (let ((name (curly-block-name cb))
-                     (properties (make-prop)))
+                     (properties (make-prop))
+                     (parent-classes))
                  (when (tree-map-contains classes name)
                    (error "Duplicate class ~A" name))
                  (dolist (stmt (curly-block-statements cb))
@@ -249,17 +249,19 @@
                                             "shape" "dimension" "color" "alpha")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
-                              (push (get-class stmt) classes))
+                              (setq properties (add-prop properties stmt))
+                              (push (get-class stmt) parent-classes))
                              (otherwise (error "Parse error, unrecognized property ~A in class ~A"
                                                (car stmt) name))))
                      (t (error "Parse error, unrecognized statement in class ~A"
                                name))))
                  (setq classes
-                       (tree-map-insert classes name properties))))
+                       (tree-map-insert classes name
+                                        (class-properties properties parent-classes)))))
              (add-frame (cb parent)
                (let ((name (curly-block-name cb))
                      (properties (make-prop))
-                     (classes))
+                     (parent-classes))
                  (dolist (stmt (curly-block-statements cb))
                    (etypecase stmt
                      (null)
@@ -272,11 +274,11 @@
                                 (error "Cannot reparent frame ~A" name))
                               (setq properties (add-prop properties stmt)))
                              ("isa"
-                              (push (get-class stmt) classes))
+                              (push (get-class stmt) parent-classes))
                              (otherwise (error "Unknown property in frame ~A" name))))
                      (curly-block
                       (add-block stmt name))))
-                 (insert-frame name (class-properties properties (reverse classes)) parent)))
+                 (insert-frame name (class-properties properties (reverse parent-classes)) parent)))
              (insert-frame (name properties parent)
                (let* ((frame-type (get-prop properties "type" "fixed"))
                       (frame (string-case frame-type
@@ -296,11 +298,18 @@
                              (("shape" "dimension" "color" "alpha")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
+                              (setq properties (add-prop properties stmt))
                               (push (get-class stmt) classes))
                              (otherwise (error "Unknown property in geometry at line ~D"
                                                (curly-block-line cb)))))))
-                 (insert-geom (class-properties properties (reverse classes))
+                 (insert-geom (class-properties properties classes)
                               parent)))
+             (property-classes (properties)
+               (let ((list (loop for (key . value) in properties
+                              when (string= key "isa")
+                              collect value)))
+                 (when list
+                   (apply #'tree-set #'string-compare list))))
              (property-options (properties)
                (loop
                   for name in '("color" "alpha")
@@ -314,6 +323,7 @@
                                                  (t (error "Unknown shape: ~A" (get-prop properties "shape"))))
                                                (property-options properties)))
                      (parent (get-prop properties "parent" parent)))
+                 (setf (scene-geometry-type geometry) (property-classes properties))
                  (push (cons parent geometry) geoms))))
       (dolist (c curly)
         (add-block c nil)))

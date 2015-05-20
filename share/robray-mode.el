@@ -28,7 +28,7 @@
        (cons (regexp-opt '("geometry") 'words)
              'font-lock-keyword-face)
        (cons (regexp-opt '("translation" "quaternion" "shape" "color" "alpha"
-                           "dimension" "radius" "height" "start_radius" "end_radius") 'words)
+                           "dimension" "radius" "height" "start_radius" "end_radius" "affords") 'words)
              'font-lock-type-face)
        (cons (regexp-opt '("mesh" "box" "cone" "cylinder" "sphere") 'words)
              'font-lock-constant-face)))
