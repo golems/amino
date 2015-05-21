@@ -102,11 +102,6 @@
 
 
 
-(defun robray-cache-directory (name &key (base-directory *robray-tmp-directory*))
-  (let ((result (concatenate 'string base-directory name)))
-    result))
-
-
 (deftype frame-name ()
   `(or string symbol null))
 
@@ -279,7 +274,11 @@
     (- 1d0 (clamp x 0d0 1d0)))
 
 (defun find-script (name)
-  (concatenate 'string
-               (namestring (asdf:system-source-directory :robray))
-               "scripts/"
-               name))
+  (let ((pathname
+         (clean-pathname (concatenate 'string
+                                      (namestring (asdf:system-source-directory :robray))
+                                      "/share/exec/"
+                                      name))))
+    (assert (probe-file pathname) ()
+            "Script '~A' not found" name)
+    pathname))

@@ -9,7 +9,7 @@
 (defparameter *pr2-source-directory*
   (concatenate 'string
                (namestring (asdf:system-source-directory :robray))
-               "/test/pr2/"))
+               "/demo/pr2/"))
 
 (defvar *scene-graph-kitchen*)
 

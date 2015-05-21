@@ -35,21 +35,29 @@
 ;;     (asdf:operate 'asdf:load-op 'cffi-grovel))
 
 (asdf:defsystem robray
+  :license :bsd-3
+  :description "Robotics Raytracining Frontend"
+  :source-control "https://github.com/KavrakiLab/robray"
+  ;:homepage "http://ndantam.github.io/cl-ntdoc"
+  :author ("Neil T. Dantam" )
+  :version "0.1"
   :depends-on ("amino" "sycamore" "cl-ppcre" "cxml")
-  :components ((:file "robray-package")
-               (:file "util" :depends-on ("robray-package"))
-               (:file "mesh" :depends-on ("util"))
-               (:file "wavefront" :depends-on ("mesh"))
-               (:file "parameters" :depends-on ("robray-package"))
-               (:file "povray" :depends-on ("util" "parameters" "robray-package" "mesh"))
+  :components ((:file "src/robray-package")
+               (:file "src/util" :depends-on ("src/robray-package"))
+               (:file "src/mesh" :depends-on ("src/util"))
+               (:file "src/wavefront" :depends-on ("src/mesh"))
+               (:file "src/parameters" :depends-on ("src/robray-package"))
+               (:file "src/povray" :depends-on ("src/util" "src/parameters" "src/robray-package" "src/mesh"))
                ;;(:file "collada" :depends-on ("util" "povray" "mesh"))
-               (:file "scenegraph" :depends-on ("util" "povray" "mesh"))
-               (:file "scenefile/urdf" :depends-on ("util" "povray" "scenegraph" "wavefront"))
-               (:file "lexer" :depends-on ("util"))
-               (:file "scenefile/curly" :depends-on ("scenegraph" "mesh" "lexer"))
-               (:file "scenefile/moveit" :depends-on ("scenegraph" "mesh"))
-               (:file "scenefile/scenefile"
-                      :depends-on ("scenefile/urdf" "scenefile/curly" "scenefile/moveit"))
-               (:file "animate" :depends-on ("scenegraph" "povray"))
-               (:file "draw" :depends-on ("scenegraph"))
-               ))
+               (:file "src/scenegraph" :depends-on ("src/util" "src/povray" "src/mesh"))
+               (:file "src/scenefile/urdf" :depends-on ("src/util" "src/povray" "src/scenegraph" "src/wavefront"))
+               (:file "src/lexer" :depends-on ("src/util"))
+               (:file "src/scenefile/curly" :depends-on ("src/scenegraph" "src/mesh" "src/lexer"))
+               (:file "src/scenefile/moveit" :depends-on ("src/scenegraph" "src/mesh"))
+               (:file "src/scenefile/scenefile"
+                      :depends-on ("src/scenefile/urdf" "src/scenefile/curly" "src/scenefile/moveit"))
+               (:file "src/animate" :depends-on ("src/scenegraph" "src/povray"))
+               (:file "src/draw" :depends-on ("src/scenegraph"))
+               )
+  :long-description "Robotics Raytracining Frontend"
+  )

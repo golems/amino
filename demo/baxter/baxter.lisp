@@ -10,7 +10,7 @@
 (defparameter *baxter-source-directory*
   (concatenate 'string
                (namestring (asdf:system-source-directory :robray))
-               "/test/"))
+               "/demo/baxter/"))
 
 ;; Define hosts for rendering
 (setq *render-host-alist*
