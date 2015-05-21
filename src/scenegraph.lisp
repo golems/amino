@@ -140,26 +140,34 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 ;;; SCENE GRAPH STRUCTURE ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun scene-frame-compare (frame-a frame-b)
+  (labels ((name (frame)
+             (etypecase frame
+               (string frame)
+               (scene-frame (scene-frame-name frame)))))
+    (declare (dynamic-extent #'name))
+    (frame-name-compare (name frame-a)
+                        (name frame-b))))
+
 (defstruct scene-graph
-  (frame-map (make-tree-map #'frame-name-compare)))
+  (frames (make-tree-set #'scene-frame-compare)))
 
 ;;; Basic Operations ;;;
 
 (defun scene-graph-lookup (scene-graph frame-name)
   "Find a frame"
-  (tree-map-find (scene-graph-frame-map scene-graph)
+  (tree-set-find (scene-graph-frames scene-graph)
                  frame-name))
 
 (defun scene-graph-add-frame (scene-graph frame)
   "Add a frame to the scene."
-  (make-scene-graph :frame-map (tree-map-insert (scene-graph-frame-map scene-graph)
-                                                (scene-frame-name frame)
-                                                frame)))
+  (make-scene-graph :frames (tree-set-replace (scene-graph-frames scene-graph)
+                                              frame)))
 
 (defun scene-graph-remove-frame (scene-graph frame-name)
   "Remove a frame from the scene."
-  (make-scene-graph :frame-map (tree-map-remove (scene-graph-frame-map scene-graph)
-                                                frame-name )))
+  (make-scene-graph :frames (tree-set-remove (scene-graph-frames scene-graph)
+                                             frame-name)))
 
 (defun scene-graph-add-geometry (scene-graph frame-name geometry)
   "Bind collision geometry to a frame in the scene."
@@ -174,27 +182,24 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 (defun scene-graph-merge (scene-graph-1 scene-graph-2)
   "Combine two scene graphs."
-  (make-scene-graph
-   :frame-map
-   (fold-tree-map (lambda (map name frame)
-                    (assert (not (tree-map-find map name)) () "Duplicate frame in merged graphs.")
-                    (tree-map-insert map name frame))
-                  (scene-graph-frame-map scene-graph-1)
-                  (scene-graph-frame-map scene-graph-2))))
+  (let* ((set-1 (scene-graph-frames scene-graph-1))
+         (set-2 (scene-graph-frames scene-graph-2))
+         (intersection (tree-set-intersection set-1 set-2)))
+    (assert (zerop (tree-set-count intersection)) ()
+            "Duplicate frames in merged trees: ~A"
+            (map-tree-set 'list #'scene-frame-name intersection))
+    (make-scene-graph :frames (tree-set-union set-1 set-2))))
 
 (defmacro do-scene-graph-frames ((frame-variable scene-graph &optional result) &body body)
-  (with-gensyms (key)
-    `(progn (map-tree-map :inorder nil (lambda (,key ,frame-variable)
-                                         (declare (ignore ,key))
-                                         ,@body)
-                          (scene-graph-frame-map ,scene-graph))
-            ,result)))
+  `(do-tree-set (,frame-variable (scene-graph-frames ,scene-graph) ,result)
+     ,@body))
 
 (defmacro do-scene-graph-geometry (((frame geometry) scene-graph &optional result)
                                    &body body)
   (with-gensyms (fun)
     `(flet ((,fun (,frame ,geometry)
               ,@body))
+       (declare (dynamic-extent #',fun))
        (do-scene-graph-frames (,frame ,scene-graph ,result)
          (loop
             for ,geometry in (scene-frame-geometry ,frame)
@@ -205,6 +210,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (with-gensyms (fun typevar)
     `(flet ((,fun (,frame ,geometry)
               ,@body))
+       (declare (dynamic-extent #',fun))
        (let ((,typevar ,type))
          (do-scene-graph-geometry ((,frame ,geometry) ,scene-graph ,result)
            (when (scene-geometry-isa ,geometry ,typevar)
@@ -212,11 +218,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 
 (defun fold-scene-graph-frames (function initial-value scene-graph)
-  (fold-tree-map (lambda (accum key value)
-                   (declare (ignore key))
-                   (funcall function accum value))
-                 initial-value
-                 (scene-graph-frame-map scene-graph)))
+  (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
 (defun scene-mesh-inc (mesh-file)
   "Return the include file for the mesh file"
