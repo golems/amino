@@ -246,9 +246,10 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
         (declare (ignore frame))
         (test-shape (scene-geometry-shape geometry))))
     (maphash (lambda (mesh-file mesh-nodes)
-               (format *standard-output* "~&Converting ~A..." mesh-file)
+               ;(format *standard-output* "~&Converting ~A..." mesh-file)
                (multiple-value-bind (geom-name inc-file)
                    (mesh-povray mesh-file :directory directory
+                                :reload reload
                                 :mesh-up-axis mesh-up-axis
                                 :mesh-forward-axis mesh-forward-axis)
 

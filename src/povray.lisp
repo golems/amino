@@ -342,7 +342,6 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                              (pov-group-array #'%pov-integer-vector normal-indices)))))
 
           (let ((uv-indices (mesh-data-uv-indices mesh-data)))
-            (format t "~&uv-len: ~A" (length uv-indices))
             (when (>  (length uv-indices) 0)
               (assert (= face-count
                          (/ (length uv-indices) 3)))
