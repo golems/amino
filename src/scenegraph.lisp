@@ -502,7 +502,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                      (pov-transform* (pov-matrix (gethash name tf-abs)))))
             (thing (pov-line-comment (format nil "FRAME: ~A" name)))
             (when (scene-mesh-p shape)
-              (tree-set-insertf mesh-set (scene-mesh-povray-file shape))))))
+              (setf (tree-set-find mesh-set)
+                    (scene-mesh-povray-file shape))))))
       (map-tree-set nil #'include mesh-set)
       (map nil #'include (reverse (ensure-list include)))
       ;; version

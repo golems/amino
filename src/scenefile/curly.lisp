@@ -255,9 +255,8 @@
                                                (car stmt) name))))
                      (t (error "Parse error, unrecognized statement in class ~A"
                                name))))
-                 (setq classes
-                       (tree-map-insert classes name
-                                        (class-properties properties parent-classes)))))
+                 (setf (tree-map-find classes name)
+                       (class-properties properties parent-classes))))
              (add-frame (cb parent)
                (let ((name (curly-block-name cb))
                      (properties (make-prop))
