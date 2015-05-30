@@ -86,6 +86,11 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
              (scene-geometry-isa g type))
            (scene-frame-geometry frame)))
 
+(defun scene-frame-geometry-collision (frame)
+  (loop for g in (scene-frame-geometry frame)
+     when (scene-geometry-collision g)
+     collect g))
+
 (defstruct (scene-frame-fixed (:include scene-frame))
   "A frame with a fixed transformation")
 
