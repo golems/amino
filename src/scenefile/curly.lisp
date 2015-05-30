@@ -134,12 +134,15 @@
                (body-first-item ))
              (named-block (block-type)
                (multiple-value-bind (type token) (next)
-                 (unless (eq :identifier type)
-                   (parse-error type "identifier"))
-                 (make-curly-block :type block-type
-                                   :line line
-                                   :name token
-                                   :statements (body))))
+                 (let ((name (case type
+                               (:identifier token)
+                               (:string token)
+                               (otherwise
+                                (parse-error type "identifier or string")))))
+                   (make-curly-block :type block-type
+                                     :line line
+                                     :name name
+                                     :statements (body)))))
              (geometry ()
                (make-curly-block :type :geometry
                                  :line line
