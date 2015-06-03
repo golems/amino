@@ -9,14 +9,10 @@
 
 ;; Convert something to a POV-ray object
 
-(defmacro with-pov-indent (old-indent &body body)
-  `(let* ((,old-indent *pov-indent*)
-          (*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
+(defmacro with-pov-indent (&body body)
+  `(let* ((*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
                                      :initial-element #\Space))
-          (*pov-newline-indent* (let ((tmp (make-string (+ 1 *pov-indent-width* (length *pov-indent*))
-                                                        :initial-element #\Space)))
-                                  (setf (schar tmp 0) #\Newline)
-                                  tmp)))
+          (*pov-newline-indent* (rope +rope-newline+ *pov-indent*)))
      ,@body))
 
 ;; (defmacro with-pov-block (output &body body)
@@ -88,8 +84,9 @@
                              x z y)))))
 
 (defmethod print-object ((object pov-matrix) stream)
-  (let ((elements (pov-matrix-elements object)))
-    (with-pov-indent old-indent
+  (let ((elements (pov-matrix-elements object))
+        (old-indent *pov-indent*))
+    (with-pov-indent
       (format stream "~&~Amatrix <~&~A~F, ~F, ~F,~&~A~F, ~F, ~F,~&~A~F, ~F, ~F,~&~A~F, ~F, ~F~&~A>"
               old-indent
               *pov-indent*
@@ -112,8 +109,7 @@
 
 (defmethod object-rope ((object pov-matrix))
   (let ((elements (pov-matrix-elements object)))
-    (with-pov-indent old-indent
-      (declare (ignore old-indent))
+    (with-pov-indent
       (let ((sep-1 (rope '|,| *pov-newline-indent*))
             (sep-0 '|, |))
         (rope '|matrix <|
@@ -200,20 +196,20 @@
   list)
 
 (defmethod print-object ((object pov-block) stream)
-  (with-pov-indent old-indent
-    (format stream
-            "~&~A~A {~&~{~&~A~}~&~A}"
-            old-indent
-            (pov-block-name object)
-            (pov-block-list object)
-            old-indent)))
+  (let ((old-indent *pov-indent*))
+    (with-pov-indent
+      (format stream
+              "~&~A~A {~&~{~&~A~}~&~A}"
+              old-indent
+              (pov-block-name object)
+              (pov-block-list object)
+              old-indent))))
 
 (defmethod object-rope ((object pov-block))
   (let ((rope (rope *pov-newline-indent*
                     (pov-block-name object)
                     '| {|)))
-    (rope (with-pov-indent old-indent
-            (declare (ignore old-indent))
+    (rope (with-pov-indent
             (fold (lambda (rope thing) (rope rope
                                              *pov-newline-indent*
                                              (object-rope thing)))
@@ -231,21 +227,21 @@
   (%pov-list name list length))
 
 (defmethod print-object ((object pov-list) stream)
-  (with-pov-indent old-indent
-    (format stream
-            "~&~A~A {~D,~{~A~^,~}~&~A}"
-            old-indent
-            (pov-list-name object)
-            (pov-value (pov-list-length object))
-            (pov-list-list object)
-            old-indent)))
+  (let ((old-indent *pov-indent*))
+    (with-pov-indent
+      (format stream
+              "~&~A~A {~D,~{~A~^,~}~&~A}"
+              old-indent
+              (pov-list-name object)
+              (pov-value (pov-list-length object))
+              (pov-list-list object)
+              old-indent))))
 
 (defmethod object-rope ((object pov-list))
   (let ((rope (rope *pov-newline-indent*
                     (pov-list-name object)
                     '| { |)))
-    (rope (with-pov-indent old-indent
-            (declare (ignore old-indent))
+    (rope (with-pov-indent
             (let ((sep (rope '|,| *pov-newline-indent*)))
               (fold (lambda (rope thing) (rope rope
                                                sep
@@ -572,8 +568,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   value)
 
 (defmethod print-object ((object pov-version) stream)
-  (with-pov-indent old-indent
-    (declare (ignore old-indent))
+  (with-pov-indent
     (format stream "~&#version ~A;"
             (pov-version-value object))))
 
@@ -591,16 +586,14 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   (pov-directive "declare" name value))
 
 (defmethod print-object ((object pov-directive) stream)
-  (with-pov-indent old-indent
-    (declare (ignore old-indent))
+  (with-pov-indent
     (format stream "~&#~A ~A = ~A"
             (pov-directive-type object)
             (pov-directive-name object)
             (pov-directive-value object))))
 
 (defmethod object-rope ((object pov-directive))
-  (with-pov-indent old-indent
-    (declare (ignore old-indent))
+  (with-pov-indent
     (rope '|#| (pov-directive-type object) '| |
           (pov-directive-name object)
           '| = |
@@ -620,15 +613,15 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   statements)
 
 (defmethod print-object ((object pov-sequence) stream)
-  (loop for x in (pov-sequence-statements object)
-     do (print-object x stream)))
+  (let ((*rope-print* :string))
+    (loop for x in (pov-sequence-statements object)
+       do (print-object x stream))))
 
-(let ((newline (format nil "~%")))
-  (defmethod object-rope ((object pov-sequence))
-    (fold (lambda (rope object)
-            (rope rope newline (object-rope object)))
-          ""
-          (pov-sequence-statements object))))
+(defmethod object-rope ((object pov-sequence))
+  (fold (lambda (rope object)
+          (rope rope +rope-newline+ (object-rope object)))
+        ""
+        (pov-sequence-statements object)))
 
 (defun pov-quality (float-quality)
   "Return numeric povray quality for proportional to RATIO.
@@ -648,8 +641,7 @@ RATIO: Floating point quality value in the range [0,1]"
   else)
 
 (defmethod print-object ((object pov-switch) stream)
-  (with-pov-indent old-indent
-    (declare (ignore old-indent))
+  (with-pov-indent
     (format stream "~&#switch (~A) ~{~A~}~@[~A~]~&#end"
             (pov-switch-value object)
             (pov-switch-clauses object)
@@ -660,11 +652,12 @@ RATIO: Floating point quality value in the range [0,1]"
   statements)
 
 (defmethod print-object ((object pov-case) stream)
-  (with-pov-indent old-indent
-    (format stream "~&~A#case (~A) ~{~A~}~&~A#break"
-            old-indent
-            (pov-case-value object) (pov-case-statements object)
-            old-indent)))
+  (let ((old-indent *pov-indent*))
+    (with-pov-indent
+      (format stream "~&~A#case (~A) ~{~A~}~&~A#break"
+              old-indent
+              (pov-case-value object) (pov-case-statements object)
+              old-indent))))
 
 (defstruct (pov-line-comment (:constructor %pov-line-comment (value)))
   (value "" :type string))
