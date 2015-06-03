@@ -512,7 +512,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
       (map-tree-set nil #'include mesh-set)
       (map nil #'include (reverse (ensure-list include)))
       ;; version
-      (thing (pov-version 3.7)))
+      (thing (pov-version "3.7")))
 
     ;; result
     (let ((result (pov-sequence pov-things)))

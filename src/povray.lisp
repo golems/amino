@@ -4,8 +4,23 @@
 (defparameter *pov-handedness* :left)
 
 (defparameter *pov-indent* "")
-(defparameter *pov-newline-indent* (format nil "~%"))
+(defparameter *pov-newline-indent* +rope-newline+)
 (defparameter *pov-indent-width* 3) ;; as used in povray.org docs
+
+(defun pov-print (object stream)
+  (write-sequence (rope-string (object-rope object))
+                  stream))
+
+(defun pov-rope-reduce (sequence separator)
+  (rope-map #'object-rope sequence :separator separator))
+
+(defun float-string (f)
+  (declare (type double-float f))
+  (format nil "~F" f))
+
+(defun int-string (i)
+  (declare (type fixnum i))
+  (format nil "~D" i))
 
 ;; Convert something to a POV-ray object
 
@@ -15,14 +30,6 @@
           (*pov-newline-indent* (rope +rope-newline+ *pov-indent*)))
      ,@body))
 
-;; (defmacro with-pov-block (output &body body)
-;;   `(progn
-;;      (write-char #\{ ,output)
-;;      (let ((*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
-;;                                       :initial-element #\Space)))
-;;        ,@body)
-;;      (format ,output "~&~A}" *pov-indent*)))
-
 (defstruct (pov-float (:constructor %pov-float (value)))
   (value 0d0 :type double-float))
 
@@ -30,16 +37,10 @@
   (%pov-float (coerce value 'double-float)))
 
 (defmethod print-object ((object pov-float) stream)
-  (format stream "~F"
-          (pov-float-value object)))
+  (pov-print object stream))
 
-(defun float-string (f)
-  (declare (type double-float f))
-  (format nil "~F" f))
-
-(defun int-string (i)
-  (declare (type fixnum i))
-  (format nil "~D" i))
+(defmethod object-rope ((object pov-float))
+  (float-string (pov-float-value object)))
 
 (defmethod object-rope  ((object pov-float))
   (rope (float-string (pov-float-value object))))
@@ -50,6 +51,47 @@
   (y 0d0 :type double-float)
   (z 0d0 :type double-float))
 
+(defun pov-float-vector (elements)
+  (%pov-float-vector (coerce (vec-x elements) 'double-float)
+                     (coerce (vec-y elements) 'double-float)
+                     (coerce (vec-z elements) 'double-float)))
+
+(defun %pov-float-vector-right (x y z)
+  (%pov-float-vector x z y))
+
+(defun pov-float-vector-right (elements)
+  (%pov-float-vector-right (coerce (vec-x elements) 'double-float)
+                           (coerce (vec-y elements) 'double-float)
+                           (coerce (vec-z elements) 'double-float)))
+
+(defmethod print-object ((object pov-float-vector) stream)
+  (pov-print object stream))
+
+(defmethod object-rope ((object pov-float-vector))
+  (rope '|<|
+        (float-string (pov-float-vector-x object)) '|, |
+        (float-string (pov-float-vector-y object)) '|, |
+        (float-string (pov-float-vector-z object)) '|>|))
+
+(defstruct (pov-integer-vector (:constructor %pov-integer-vector (x y z)))
+  "Type for a povray vector."
+  (x 0 :type fixnum)
+  (y 0 :type fixnum)
+  (z 0 :type fixnum))
+
+(defun pov-integer-vector (elements)
+  (%pov-integer-vector (vec-x elements)
+                       (vec-y elements)
+                       (vec-z elements)))
+
+(defmethod print-object ((object pov-integer-vector) stream)
+  (pov-print object stream))
+
+(defmethod object-rope ((object pov-integer-vector))
+  (rope '|<|
+        (int-string (pov-integer-vector-x object)) '|, |
+        (int-string (pov-integer-vector-y object)) '|, |
+        (int-string (pov-integer-vector-z object)) '|>|))
 
 (defstruct (pov-uv-vector (:constructor %pov-uv-vector (u v)))
   "Type for a povray vector."
@@ -57,10 +99,7 @@
   (v 0d0 :type double-float))
 
 (defmethod print-object ((object pov-uv-vector) stream)
-  (format stream "~&~A<~F, ~F>"
-          *pov-indent*
-          (pov-uv-vector-u object)
-          (pov-uv-vector-v object)))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-uv-vector))
   (rope '|<|
@@ -84,28 +123,7 @@
                              x z y)))))
 
 (defmethod print-object ((object pov-matrix) stream)
-  (let ((elements (pov-matrix-elements object))
-        (old-indent *pov-indent*))
-    (with-pov-indent
-      (format stream "~&~Amatrix <~&~A~F, ~F, ~F,~&~A~F, ~F, ~F,~&~A~F, ~F, ~F,~&~A~F, ~F, ~F~&~A>"
-              old-indent
-              *pov-indent*
-              (elt elements 0)
-              (elt elements 1)
-              (elt elements 2)
-              *pov-indent*
-              (elt elements 3)
-              (elt elements 4)
-              (elt elements 5)
-              *pov-indent*
-              (elt elements 6)
-              (elt elements 7)
-              (elt elements 8)
-              *pov-indent*
-              (elt elements 9)
-              (elt elements 10)
-              (elt elements 11)
-              old-indent))))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-matrix))
   (let ((elements (pov-matrix-elements object)))
@@ -130,63 +148,11 @@
               (float-string (elt elements 10)) sep-0
               (float-string (elt elements 11)) '| >|)))))
 
-(defstruct (pov-integer-vector (:constructor %pov-integer-vector (x y z)))
-  "Type for a povray vector."
-  (x 0 :type fixnum)
-  (y 0 :type fixnum)
-  (z 0 :type fixnum))
-
-(defun pov-float-vector (elements)
-  (%pov-float-vector (coerce (vec-x elements) 'double-float)
-                     (coerce (vec-y elements) 'double-float)
-                     (coerce (vec-z elements) 'double-float)))
-
-(defun %pov-float-vector-right (x y z)
-  (%pov-float-vector x z y))
-
-(defun pov-float-vector-right (elements)
-  (%pov-float-vector-right (coerce (vec-x elements) 'double-float)
-                           (coerce (vec-y elements) 'double-float)
-                           (coerce (vec-z elements) 'double-float)))
-
-(defun pov-integer-vector (elements)
-  (%pov-integer-vector (vec-x elements)
-                       (vec-y elements)
-                       (vec-z elements)))
-
-(defmethod print-object ((object pov-float-vector) stream)
-  (format stream "~&~A<~F, ~F, ~F>"
-          *pov-indent*
-          (pov-float-vector-x object)
-          (pov-float-vector-y object)
-          (pov-float-vector-z object)))
-
-(defmethod object-rope ((object pov-float-vector))
-  (rope '|<|
-        (float-string (pov-float-vector-x object)) '|, |
-        (float-string (pov-float-vector-y object)) '|, |
-        (float-string (pov-float-vector-z object)) '|>|))
-
-(defmethod print-object ((object pov-integer-vector) stream)
-  (format stream "~&~A<~D, ~D, ~D>"
-          *pov-indent*
-          (pov-integer-vector-x object)
-          (pov-integer-vector-y object)
-          (pov-integer-vector-z object)))
-
-(defmethod object-rope ((object pov-integer-vector))
-  (rope '|<|
-        (int-string (pov-integer-vector-x object)) '|, |
-        (int-string (pov-integer-vector-y object)) '|, |
-        (int-string (pov-integer-vector-z object)) '|>|))
-
 (defstruct (pov-value (:constructor pov-value (value)))
   value)
 
 (defmethod print-object ((object pov-value) stream)
-  (format stream "~&~A~A"
-          *pov-indent*
-          (pov-value-value object)))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-value))
   (rope  (format nil "~A" (pov-value-value object))))
@@ -196,27 +162,15 @@
   list)
 
 (defmethod print-object ((object pov-block) stream)
-  (let ((old-indent *pov-indent*))
-    (with-pov-indent
-      (format stream
-              "~&~A~A {~&~{~&~A~}~&~A}"
-              old-indent
-              (pov-block-name object)
-              (pov-block-list object)
-              old-indent))))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-block))
-  (let ((rope (rope *pov-newline-indent*
-                    (pov-block-name object)
-                    '| {|)))
-    (rope (with-pov-indent
-            (fold (lambda (rope thing) (rope rope
-                                             *pov-newline-indent*
-                                             (object-rope thing)))
-                  rope
-                  (pov-block-list object)))
-          *pov-newline-indent*
-          '|}|)))
+  (let ((old-indent *pov-newline-indent*))
+    (with-pov-indent
+      (rope (rope (pov-block-name object) '| {|
+                  *pov-newline-indent*)
+            (pov-rope-reduce (pov-block-list object) *pov-newline-indent*)
+            (rope old-indent '|}|)))))
 
 (defstruct (pov-list (:constructor %pov-list (name list length)))
   name
@@ -227,38 +181,24 @@
   (%pov-list name list length))
 
 (defmethod print-object ((object pov-list) stream)
-  (let ((old-indent *pov-indent*))
-    (with-pov-indent
-      (format stream
-              "~&~A~A {~D,~{~A~^,~}~&~A}"
-              old-indent
-              (pov-list-name object)
-              (pov-value (pov-list-length object))
-              (pov-list-list object)
-              old-indent))))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-list))
-  (let ((rope (rope *pov-newline-indent*
-                    (pov-list-name object)
-                    '| { |)))
-    (rope (with-pov-indent
-            (let ((sep (rope '|,| *pov-newline-indent*)))
-              (fold (lambda (rope thing) (rope rope
-                                               sep
-                                               (object-rope thing)))
-                  (rope rope
-                         (int-string (pov-list-length object)))
-                  (pov-list-list object))))
-          *pov-newline-indent*
-          '|}|)))
+ (let ((old-indent *pov-newline-indent*))
+    (with-pov-indent
+      (let ((sep (rope '|,| *pov-newline-indent*)))
+        (rope (rope (pov-list-name object) '| {|)
+              (rope *pov-newline-indent* (int-string (pov-list-length object))
+                    sep)
+              (pov-rope-reduce (pov-list-list object) sep)
+              (rope old-indent '|}|))))))
 
 (defstruct (pov-item (:constructor pov-item (name value)))
   name
   value)
 
 (defmethod print-object ((object pov-item) stream)
-  (format stream "~&~A~A ~A"
-          *pov-indent* (pov-item-name object) (pov-item-value object)))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-item))
   (rope (pov-item-name object)
@@ -287,10 +227,7 @@
                      (aref elements 2))))))
 
 (defmethod print-object ((object pov-rgb) stream)
-  (format stream "rgb<~F, ~F, ~F>"
-          (pov-rgb-r object)
-          (pov-rgb-g object)
-          (pov-rgb-b object)))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-rgb))
   (rope '|rgb<|
@@ -316,11 +253,7 @@
   (apply #'pov-rgbf* (subseq elements 0 4)))
 
 (defmethod print-object ((object pov-rgbf) stream)
-  (format stream "rgbf<~F, ~F, ~F, ~F>"
-          (pov-rgbf-r object)
-          (pov-rgbf-g object)
-          (pov-rgbf-b object)
-          (pov-rgbf-f object)))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-rgbf))
   (rope '|rgbf<|
@@ -396,7 +329,6 @@
             (pov-float-vector-right axis) small-radius
             modifiers))
 
-
 (defun pov-group-array (function array)
   (let ((n (length array)))
     (loop for i = 0 then (+ 3 i)
@@ -405,9 +337,6 @@
                         (aref array i)
                         (aref array (+ 1 i))
                         (aref array (+ 2 i))))))
-
-
-
 
 (defun pov-mesh2 (&key
                     mesh-data
@@ -568,9 +497,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   value)
 
 (defmethod print-object ((object pov-version) stream)
-  (with-pov-indent
-    (format stream "~&#version ~A;"
-            (pov-version-value object))))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-version))
   (rope '|#version |
@@ -586,11 +513,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   (pov-directive "declare" name value))
 
 (defmethod print-object ((object pov-directive) stream)
-  (with-pov-indent
-    (format stream "~&#~A ~A = ~A"
-            (pov-directive-type object)
-            (pov-directive-name object)
-            (pov-directive-value object))))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-directive))
   (with-pov-indent
@@ -603,25 +526,21 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
   file)
 
 (defmethod print-object ((object pov-include) stream)
-  (format stream "~&#include ~S"
-          (pov-include-file object)))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-include))
-  (rope '|#include | (pov-include-file object)))
+  (rope '|#include "| (pov-include-file object)
+        '|"|))
 
 (defstruct (pov-sequence (:constructor pov-sequence (statements)))
   statements)
 
 (defmethod print-object ((object pov-sequence) stream)
-  (let ((*rope-print* :string))
-    (loop for x in (pov-sequence-statements object)
-       do (print-object x stream))))
+  (pov-print object stream))
 
 (defmethod object-rope ((object pov-sequence))
-  (fold (lambda (rope object)
-          (rope rope +rope-newline+ (object-rope object)))
-        ""
-        (pov-sequence-statements object)))
+  (pov-rope-reduce (pov-sequence-statements object)
+                   +rope-newline+))
 
 (defun pov-quality (float-quality)
   "Return numeric povray quality for proportional to RATIO.
@@ -670,6 +589,9 @@ RATIO: Floating point quality value in the range [0,1]"
   (format stream "~&~A// ~A ~%"
           *pov-indent*
           (pov-line-comment-value object)))
+
+(defmethod object-rope ((object pov-line-comment))
+  (rope '|// | (pov-line-comment-value object)))
 
 ;(defmethod print-object
 
