@@ -330,13 +330,17 @@
             modifiers))
 
 (defun pov-group-array (function array)
-  (let ((n (length array)))
+  (let* ((n (length array))
+         (result (make-array (/ n 3))))
     (loop for i = 0 then (+ 3 i)
+       for j from 0
        while (< i n)
-       collect (funcall function
-                        (aref array i)
-                        (aref array (+ 1 i))
-                        (aref array (+ 2 i))))))
+       do (setf (aref result j)
+                (funcall function
+                         (aref array i)
+                         (aref array (+ 1 i))
+                         (aref array (+ 2 i)))))
+    result))
 
 (defun pov-mesh2 (&key
                     mesh-data
