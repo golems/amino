@@ -4,7 +4,7 @@
 (defparameter *pov-handedness* :left)
 
 (defparameter *pov-indent* "")
-(defparameter *pov-newline-indent* +rope-newline+)
+(defparameter *pov-newline-indent* #\Newline)
 (defparameter *pov-indent-width* 3) ;; as used in povray.org docs
 
 (defun pov-print (object stream)
@@ -27,7 +27,7 @@
 (defmacro with-pov-indent (&body body)
   `(let* ((*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
                                      :initial-element #\Space))
-          (*pov-newline-indent* (rope +rope-newline+ *pov-indent*)))
+          (*pov-newline-indent* (rope #\Newline *pov-indent*)))
      ,@body))
 
 (defstruct (pov-float (:constructor %pov-float (value)))
@@ -540,7 +540,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 
 (defmethod object-rope ((object pov-sequence))
   (pov-rope-reduce (pov-sequence-statements object)
-                   +rope-newline+))
+                   #\Newline))
 
 (defun pov-quality (float-quality)
   "Return numeric povray quality for proportional to RATIO.
