@@ -6,10 +6,10 @@
   (labels ((vector-append (vector-list)
              (apply #'concatenate 'list vector-list))
            (avg-rgb (item)
-             (pov-float (/ (+ (vecref item 0)
-                              (vecref item 1)
-                              (vecref item 2))
-                           3d0))))
+             (/ (+ (vecref item 0)
+                   (vecref item 1)
+                   (vecref item 2))
+                3d0)))
   (let* ((root (ai:import-into-lisp input-file
                                     :processing-flags '(:ai-process-gen-normals
                                                         :ai-process-optimize-meshes

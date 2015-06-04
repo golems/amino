@@ -14,87 +14,80 @@
 (defun pov-rope-reduce (sequence separator)
   (rope-map #'object-rope sequence :separator separator))
 
-;; Convert something to a POV-ray object
-
 (defmacro with-pov-indent (&body body)
   `(let* ((*pov-indent* (make-string (+ *pov-indent-width* (length *pov-indent*))
                                      :initial-element #\Space))
           (*pov-newline-indent* (rope #\Newline *pov-indent*)))
      ,@body))
 
-(defstruct (pov-float (:constructor %pov-float (value)))
-  (value 0d0 :type double-float))
+;;; Simple types ;;;
 
-(defun pov-float (value)
-  (%pov-float (coerce value 'double-float)))
-
-(defmethod print-object ((object pov-float) stream)
-  (pov-print object stream))
-
-(defmethod object-rope ((object pov-float))
-  (rope (pov-float-value object)))
-
-(defstruct (pov-float-vector (:constructor %pov-float-vector (x y z)))
-  "Type for a povray vector."
-  (x 0d0 :type double-float)
-  (y 0d0 :type double-float)
-  (z 0d0 :type double-float))
-
-(defun pov-float-vector (elements)
-  (%pov-float-vector (coerce (vec-x elements) 'double-float)
-                     (coerce (vec-y elements) 'double-float)
-                     (coerce (vec-z elements) 'double-float)))
-
-(defun %pov-float-vector-right (x y z)
-  (%pov-float-vector x z y))
-
-(defun pov-float-vector-right (elements)
-  (%pov-float-vector-right (coerce (vec-x elements) 'double-float)
-                           (coerce (vec-y elements) 'double-float)
-                           (coerce (vec-z elements) 'double-float)))
-
-(defmethod print-object ((object pov-float-vector) stream)
-  (pov-print object stream))
-
-(defmethod object-rope ((object pov-float-vector))
+(defun pov-vector (function &rest args)
+  (declare (dynamic-extent args))
   (rope '|<|
-        (pov-float-vector-x object) '|, |
-        (pov-float-vector-y object) '|, |
-        (pov-float-vector-z object) '|>|))
+        (rope-map function args :separator '|, |)
+        '|>|))
 
-(defstruct (pov-integer-vector (:constructor %pov-integer-vector (x y z)))
-  "Type for a povray vector."
-  (x 0 :type fixnum)
-  (y 0 :type fixnum)
-  (z 0 :type fixnum))
+(defun %pov-integer-vector (x y z)
+  (pov-vector #'identity x y z))
 
 (defun pov-integer-vector (elements)
   (%pov-integer-vector (vec-x elements)
                        (vec-y elements)
                        (vec-z elements)))
 
-(defmethod print-object ((object pov-integer-vector) stream)
-  (pov-print object stream))
+(defun pov-float (f)
+  (coerce f 'double-float))
 
-(defmethod object-rope ((object pov-integer-vector))
-  (rope '|<|
-        (pov-integer-vector-x object) '|, |
-        (pov-integer-vector-y object) '|, |
-        (pov-integer-vector-z object) '|>|))
+(defun %pov-float-vector (x y z)
+  (pov-vector #'pov-float x y z))
 
-(defstruct (pov-uv-vector (:constructor %pov-uv-vector (u v)))
-  "Type for a povray vector."
-  (u 0d0 :type double-float)
-  (v 0d0 :type double-float))
+(defun pov-float-vector (elements)
+  (with-vec3 (x y z) elements
+    (%pov-float-vector x y z)))
 
-(defmethod print-object ((object pov-uv-vector) stream)
-  (pov-print object stream))
+(defun %pov-float-vector-right (x y z)
+  (%pov-float-vector x z y))
 
-(defmethod object-rope ((object pov-uv-vector))
-  (rope '|<|
-        (pov-uv-vector-u object) '|, |
-        (pov-uv-vector-v object)
-        '|>|))
+(defun pov-float-vector-right (elements)
+  (with-vec3 (x y z) elements
+    (%pov-float-vector-right x y z)))
+
+(defun pov-uv-vector (u v)
+  (pov-vector #'identity u v))
+
+(defun pov-item (name value)
+  (rope name '| | value))
+
+(defun %pov-rgb (r g b)
+  (rope '|rgb|
+        (%pov-float-vector r g b)))
+
+(defun pov-rgb* (r g b)
+  (%pov-rgb r g b))
+
+(defun pov-rgb (elements)
+  (multiple-value-call #'pov-rgb*
+    (etypecase elements
+      (list (values (first elements)
+                    (second elements)
+                    (third elements)))
+      (array (values (aref elements 0)
+                     (aref elements 1)
+                     (aref elements 2))))))
+
+(defun %pov-rgbf (r g b f)
+  (rope '|rgbf|
+        (pov-vector #'pov-float r g b f)))
+
+(defun pov-rgbf* (r g b f)
+  (%pov-rgbf r g b f))
+
+(defun pov-rgbf (elements)
+  (apply #'pov-rgbf* (subseq elements 0 4)))
+
+
+;;; Complex Types ;;;
 
 (defstruct pov-matrix
   elements)
@@ -136,15 +129,6 @@
               (elt elements 10) sep-0
               (elt elements 11) '| >|)))))
 
-(defstruct (pov-value (:constructor pov-value (value)))
-  value)
-
-(defmethod print-object ((object pov-value) stream)
-  (pov-print object stream))
-
-(defmethod object-rope ((object pov-value))
-  (rope  (format nil "~A" (pov-value-value object))))
-
 (defstruct (pov-block (:constructor pov-block (name list)))
   name
   list)
@@ -181,76 +165,6 @@
               (pov-rope-reduce (pov-list-list object) sep)
               (rope old-indent '|}|))))))
 
-(defstruct (pov-item (:constructor pov-item (name value)))
-  name
-  value)
-
-(defmethod print-object ((object pov-item) stream)
-  (pov-print object stream))
-
-(defmethod object-rope ((object pov-item))
-  (rope (pov-item-name object)
-        '| |
-        (pov-item-value object)))
-
-(defstruct (pov-rgb (:constructor %pov-rgb (r g b)))
-  "Type for a povray RGB color."
-  (r 0d0 :type double-float)
-  (g 0d0 :type double-float)
-  (b 0d0 :type double-float))
-
-(defun pov-rgb* (r g b)
-  (%pov-rgb (coerce r 'double-float)
-            (coerce g 'double-float)
-            (coerce b 'double-float)))
-
-(defun pov-rgb (elements)
-  (multiple-value-call #'pov-rgb*
-    (etypecase elements
-      (list (values (first elements)
-                    (second elements)
-                    (third elements)))
-      (array (values (aref elements 0)
-                     (aref elements 1)
-                     (aref elements 2))))))
-
-(defmethod print-object ((object pov-rgb) stream)
-  (pov-print object stream))
-
-(defmethod object-rope ((object pov-rgb))
-  (rope '|rgb<|
-        (pov-rgb-r object) '|, |
-        (pov-rgb-g object) '|, |
-        (pov-rgb-b object)
-        '|>|))
-
-(defstruct (pov-rgbf (:constructor %pov-rgbf (r g b f)))
-  "Type for a povray RGB color."
-  (r 0d0 :type double-float)
-  (g 0d0 :type double-float)
-  (b 0d0 :type double-float)
-  (f 0d0 :type double-float))
-
-(defun pov-rgbf* (r g b f)
-  (%pov-rgbf (coerce r 'double-float)
-             (coerce g 'double-float)
-             (coerce b 'double-float)
-             (coerce f 'double-float)))
-
-(defun pov-rgbf (elements)
-  (apply #'pov-rgbf* (subseq elements 0 4)))
-
-(defmethod print-object ((object pov-rgbf) stream)
-  (pov-print object stream))
-
-(defmethod object-rope ((object pov-rgbf))
-  (rope '|rgbf<|
-        (pov-rgbf-r object) '|, |
-        (pov-rgbf-g object) '|, |
-        (pov-rgbf-b object) '|, |
-        (pov-rgbf-f object)
-        '|>|))
-
 (defun pov-color (color)
   (pov-item "color"
             (ecase (length color)
@@ -259,7 +173,7 @@
 
 (defun pov-alpha (alpha)
   (pov-item "transmit"
-            (pov-float (- 1d0 (clamp alpha 0d0 1d0)))))
+            (- 1d0 (clamp alpha 0d0 1d0))))
 
 (defmacro def-pov-block (name)
   (let ((name (string-downcase (string name))))
@@ -290,14 +204,14 @@
 (defun pov-sphere (center radius &optional modifiers)
   (pov-block "sphere"
              (list* (pov-float-vector-right center)
-                    (pov-value (pov-float radius))
+                    radius
                     modifiers)))
 
 (defun pov-cylinder (first-center second-center radius &optional modifiers)
   (pov-block "cylinder"
              (list* first-center
                     second-center
-                    (pov-value (pov-float radius))
+                    radius
                     modifiers)))
 
 (defun pov-cylinder-axis (axis radius &optional modifiers)
@@ -308,8 +222,8 @@
 
 
 (defun pov-cone (big-center big-radius small-center small-radius &optional modifiers)
-  (pov-block "cone" (list* big-center (pov-value (pov-float big-radius))
-                           small-center (pov-value (pov-float small-radius))
+  (pov-block "cone" (list* big-center big-radius
+                           small-center small-radius
                            modifiers)))
 
 (defun pov-cone-axis (axis big-radius small-radius &optional modifiers)
@@ -351,7 +265,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
       (when matrix
         (arg (pov-matrix matrix)))
       (when mesh
-        (arg (pov-value mesh)))
+        (arg mesh))
 
       (when mesh-data
         (let* ((textures (mesh-data-texture-properties mesh-data))
@@ -391,7 +305,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                                                                 (aref vertex-indices (+ 2 i)))
                                 nconc
                                   (if has-texture
-                                      (list face (pov-value (aref texture-indices j)))
+                                      (list face (aref texture-indices j))
                                       (list face)))
                              face-count))))
 
@@ -407,8 +321,8 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                            (loop with n = (length uv-vectors)
                               for i = 0 then (+ 2 i)
                               while (< i n)
-                              collect (%pov-uv-vector (aref uv-vectors i)
-                                                      (aref uv-vectors (+ 1 i)))))))
+                              collect (pov-uv-vector (aref uv-vectors i)
+                                                     (aref uv-vectors (+ 1 i)))))))
 
           (when-let ((vertices (mesh-data-vertex-vectors mesh-data)))
             (arg (pov-list "vertex_vectors"
@@ -437,12 +351,12 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
         (pigments nil)
         (has-image-map (assoc :image-map alist)))
     (labels ((avg-rgb (rgb)
-               (pov-float (etypecase rgb
-                            ((or single-float double-float) rgb)
-                            (sequence (/ (+ (elt rgb 0)
-                                            (elt rgb 1)
-                                            (elt rgb 2))
-                                         3)))))
+               (etypecase rgb
+                 ((or single-float double-float) rgb)
+                 (sequence (/ (+ (elt rgb 0)
+                                 (elt rgb 1)
+                                 (elt rgb 2))
+                              3))))
              (add-finish (name finish)
                (push (pov-item name finish) finishes))
              (add-pigment (name pigment)
@@ -478,7 +392,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
               (:image-map
                (push (pov-image-map value) pigments)
                ;; TODO: assumed uv mapping
-               (push (pov-value "uv_mapping") pigments)))))
+               (push "uv_mapping" pigments)))))
     (pov-texture (nconc (when pigments
                           (list (pov-pigment pigments)))
                         (when finishes
