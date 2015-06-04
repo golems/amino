@@ -14,14 +14,6 @@
 (defun pov-rope-reduce (sequence separator)
   (rope-map #'object-rope sequence :separator separator))
 
-(defun float-string (f)
-  (declare (type double-float f))
-  (format nil "~F" f))
-
-(defun int-string (i)
-  (declare (type fixnum i))
-  (format nil "~D" i))
-
 ;; Convert something to a POV-ray object
 
 (defmacro with-pov-indent (&body body)
@@ -40,10 +32,7 @@
   (pov-print object stream))
 
 (defmethod object-rope ((object pov-float))
-  (float-string (pov-float-value object)))
-
-(defmethod object-rope  ((object pov-float))
-  (rope (float-string (pov-float-value object))))
+  (rope (pov-float-value object)))
 
 (defstruct (pov-float-vector (:constructor %pov-float-vector (x y z)))
   "Type for a povray vector."
@@ -69,9 +58,9 @@
 
 (defmethod object-rope ((object pov-float-vector))
   (rope '|<|
-        (float-string (pov-float-vector-x object)) '|, |
-        (float-string (pov-float-vector-y object)) '|, |
-        (float-string (pov-float-vector-z object)) '|>|))
+        (pov-float-vector-x object) '|, |
+        (pov-float-vector-y object) '|, |
+        (pov-float-vector-z object) '|>|))
 
 (defstruct (pov-integer-vector (:constructor %pov-integer-vector (x y z)))
   "Type for a povray vector."
@@ -89,9 +78,9 @@
 
 (defmethod object-rope ((object pov-integer-vector))
   (rope '|<|
-        (int-string (pov-integer-vector-x object)) '|, |
-        (int-string (pov-integer-vector-y object)) '|, |
-        (int-string (pov-integer-vector-z object)) '|>|))
+        (pov-integer-vector-x object) '|, |
+        (pov-integer-vector-y object) '|, |
+        (pov-integer-vector-z object) '|>|))
 
 (defstruct (pov-uv-vector (:constructor %pov-uv-vector (u v)))
   "Type for a povray vector."
@@ -103,9 +92,8 @@
 
 (defmethod object-rope ((object pov-uv-vector))
   (rope '|<|
-        (float-string (pov-uv-vector-u object))
-        '|, |
-        (float-string (pov-uv-vector-v object))
+        (pov-uv-vector-u object) '|, |
+        (pov-uv-vector-v object)
         '|>|))
 
 (defstruct pov-matrix
@@ -132,21 +120,21 @@
             (sep-0 '|, |))
         (rope '|matrix <|
               *pov-newline-indent*
-              (float-string (elt elements 0)) sep-0
-              (float-string (elt elements 1)) sep-0
-              (float-string (elt elements 2)) sep-1
+              (elt elements 0) sep-0
+              (elt elements 1) sep-0
+              (elt elements 2) sep-1
 
-              (float-string (elt elements 3)) sep-0
-              (float-string (elt elements 4)) sep-0
-              (float-string (elt elements 5)) sep-1
+              (elt elements 3) sep-0
+              (elt elements 4) sep-0
+              (elt elements 5) sep-1
 
-              (float-string (elt elements 6)) sep-0
-              (float-string (elt elements 7)) sep-0
-              (float-string (elt elements 8)) sep-1
+              (elt elements 6) sep-0
+              (elt elements 7) sep-0
+              (elt elements 8) sep-1
 
-              (float-string (elt elements 9)) sep-0
-              (float-string (elt elements 10)) sep-0
-              (float-string (elt elements 11)) '| >|)))))
+              (elt elements 9) sep-0
+              (elt elements 10) sep-0
+              (elt elements 11) '| >|)))))
 
 (defstruct (pov-value (:constructor pov-value (value)))
   value)
@@ -188,7 +176,7 @@
     (with-pov-indent
       (let ((sep (rope '|,| *pov-newline-indent*)))
         (rope (rope (pov-list-name object) '| {|)
-              (rope *pov-newline-indent* (int-string (pov-list-length object))
+              (rope *pov-newline-indent* (pov-list-length object)
                     sep)
               (pov-rope-reduce (pov-list-list object) sep)
               (rope old-indent '|}|))))))
@@ -203,7 +191,7 @@
 (defmethod object-rope ((object pov-item))
   (rope (pov-item-name object)
         '| |
-        (object-rope (pov-item-value object))))
+        (pov-item-value object)))
 
 (defstruct (pov-rgb (:constructor %pov-rgb (r g b)))
   "Type for a povray RGB color."
@@ -231,9 +219,9 @@
 
 (defmethod object-rope ((object pov-rgb))
   (rope '|rgb<|
-        (float-string (pov-rgb-r object)) '|, |
-        (float-string (pov-rgb-g object)) '|, |
-        (float-string (pov-rgb-b object))
+        (pov-rgb-r object) '|, |
+        (pov-rgb-g object) '|, |
+        (pov-rgb-b object)
         '|>|))
 
 (defstruct (pov-rgbf (:constructor %pov-rgbf (r g b f)))
@@ -257,10 +245,10 @@
 
 (defmethod object-rope ((object pov-rgbf))
   (rope '|rgbf<|
-        (float-string (pov-rgbf-r object)) '|, |
-        (float-string (pov-rgbf-g object)) '|, |
-        (float-string (pov-rgbf-b object)) '|, |
-        (float-string (pov-rgbf-f object))
+        (pov-rgbf-r object) '|, |
+        (pov-rgbf-g object) '|, |
+        (pov-rgbf-b object) '|, |
+        (pov-rgbf-f object)
         '|>|))
 
 (defun pov-color (color)
@@ -524,7 +512,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
     (rope '|#| (pov-directive-type object) '| |
           (pov-directive-name object)
           '| = |
-          (object-rope (pov-directive-value object)))))
+          (pov-directive-value object))))
 
 (defstruct (pov-include (:constructor pov-include (file)))
   file)
