@@ -22,25 +22,34 @@
 
 ;;; Simple types ;;;
 
+(defun pov-float (f)
+  (format nil "~F" f))
+(defun pov-int (i)
+  (format nil "~D" i))
+
+(defun pov-bracket (rope)
+  (rope '< rope '>))
+
 (defun pov-vector (function &rest args)
   (declare (dynamic-extent args))
-  (rope '|<|
-        (rope-map function args :separator '|, |)
-        '|>|))
+  (pov-bracket
+        (rope-map function args :separator '|, |)))
 
 (defun %pov-integer-vector (x y z)
-  (pov-vector #'identity x y z))
+  (pov-bracket (rope (pov-int x) '|, |
+                     (pov-int y) '|, |
+                     (pov-int z) )))
+
 
 (defun pov-integer-vector (elements)
   (%pov-integer-vector (vec-x elements)
                        (vec-y elements)
                        (vec-z elements)))
 
-(defun pov-float (f)
-  (coerce f 'double-float))
-
 (defun %pov-float-vector (x y z)
-  (pov-vector #'pov-float x y z))
+  (pov-bracket (rope (pov-float x) '|, |
+                     (pov-float y) '|, |
+                     (pov-float z) )))
 
 (defun pov-float-vector (elements)
   (with-vec3 (x y z) elements
@@ -54,7 +63,7 @@
     (%pov-float-vector-right x y z)))
 
 (defun pov-uv-vector (u v)
-  (pov-vector #'identity u v))
+  (pov-vector #'object-rope u v))
 
 (defun pov-item (name value)
   (rope name '| | value))
