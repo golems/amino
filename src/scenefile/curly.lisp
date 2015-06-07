@@ -283,12 +283,22 @@
                  (insert-frame name (class-properties properties (reverse parent-classes)) parent)))
              (insert-frame (name properties parent)
                (let* ((frame-type (get-prop properties "type" "fixed"))
-                      (frame (string-case frame-type
-                               ("fixed" (scene-frame-fixed (get-prop properties "parent" parent)
-                                                           name
-                                                           :tf (tf* (get-prop properties "quaternion")
-                                                                    (get-prop properties "translation"))))
-                               (otherwise (error "Unhandled frame type ~A in frame ~A" frame-type name)))))
+                      (tf (tf* (get-prop properties "quaternion")
+                               (get-prop properties "translation")))
+                      (parent (get-prop properties "parent" parent))
+                      (frame (if (string= frame-type "fixed")
+                                 (scene-frame-fixed parent name :tf tf)
+                                 (let ((axis (get-prop properties "axis"))
+                                       (offset (get-prop properties "offset" 0d0)))
+                                   (funcall (string-case frame-type
+                                              ("prismatic" #'scene-frame-prismatic)
+                                              ("revolute" #'scene-frame-revolute)
+                                              (otherwise (error "Unhandled frame type ~A in frame ~A"
+                                                                frame-type name)))
+                                            parent name
+                                            :axis axis
+                                            :offset offset
+                                            :tf tf)))))
                  (push frame frames)))
              (add-geom (cb parent)
                (let ((properties (make-prop))
