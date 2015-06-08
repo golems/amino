@@ -132,8 +132,13 @@
                      ("Ni" (float-prop :index-of-refraction))
                      ("d" (prop :alpha  (parse-float data)))
                      ("map_Kd"
-                      ;; TODO: copy to temp
-                      (prop :image-map data))
+                      ;; TODO: local path names
+                      (let* ((dir (file-dirname data))
+                             (base (file-basename data))
+                             (ext (pov-image-map-type (string-downcase (file-type data))))
+                             (cache-file (pov-cache-file (format-pathname "~A/~A.~A" dir base ext))))
+                        (uiop/stream:copy-file data cache-file)
+                        (prop :image-map cache-file)))
                      ("illum" ;TODO
                       )
                      (otherwise (error "Unrecognized MTL command ~A" command)))))
@@ -298,8 +303,8 @@
            (handle-dae (dae-file output-file)
              (convert dae-file output-file))
            (convert (source-file output-file)
-             (let ((obj-file (format-pathname "~A/povray/~A.obj"
-                                              directory source-file)))
+             (let ((obj-file (pov-cache-file (rope source-file ".obj")
+                                             directory)))
                (wavefront-convert source-file obj-file
                                   :reload  reload
                                   :mesh-up-axis mesh-up-axis

@@ -227,9 +227,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 (defun scene-mesh-inc (mesh-file)
   "Return the include file for the mesh file"
-  (clean-pathname (concatenate 'string
-                               "povray/"
-                               mesh-file ".inc")))
+  (pov-cache-file (rope mesh-file ".inc")))
 
 (defun scene-graph-resolve-mesh (scene-graph &key
                                                reload

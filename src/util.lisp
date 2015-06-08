@@ -73,20 +73,20 @@
   (cond
     ((streamp place)
      (print object place)
-     nil)
-    ((stringp place)
-     (let ((file (output-file place directory)))
+     (values))
+    ((eq place t)
+     (print object *standard-output*)
+     (values))
+    ((null place)
+     object)
+    ((ropep place)
+     (let ((file (output-file (rope-string place)
+                              directory)))
        (ensure-directories-exist file)
        (with-open-file (place file :direction :output :if-exists if-exists)
          (print object place)))
-     nil)
-    ((eq place t)
-     (print object *standard-output*)
-     nil)
-    ((null place)
-     object)
+     (values))
     (t (error "Unknown place type: ~A" place))))
-
 
 (defun name-mangle (identifier)
   "Convert an identifer to a conventional identifier"
@@ -99,8 +99,6 @@
     (if (amino::char-isdigit (aref sub 0))
         (concatenate 'string "g_" sub)
         sub)))
-
-
 
 (deftype frame-name ()
   `(or string symbol null))

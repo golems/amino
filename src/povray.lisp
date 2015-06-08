@@ -20,6 +20,13 @@
           (*pov-newline-indent* (rope #\Newline *pov-indent*)))
      ,@body))
 
+(defun pov-cache-file (original-file &optional (directory *robray-tmp-directory*))
+  (format-pathname "~A/povray/~A"
+                   directory
+                   (if (pathnamep original-file)
+                       (namestring original-file)
+                       (rope-string original-file))))
+
 ;;; Simple types ;;;
 
 (defun pov-float (f)
@@ -342,17 +349,19 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 (defun pov-texture-list (textures)
   (pov-list "texture_list" textures))
 
+(defun pov-image-map-type (type-ext)
+  (let ((type-ext (string-downcase type-ext)))
+    (string-case type-ext
+      (("gif" "jpeg" "ppm" "pgm" "png" "tiff" "sys")
+       type-ext)
+      ("jpg" "jpeg")
+      ("tif" "tiff")
+      (otherwise (error "Unrecognized file type for image map: ~A" type-ext)))))
 
 (defun pov-image-map (file &optional modifiers)
-  (let* ((type-ext (string-downcase (file-type file)))
-         (type (string-case type-ext
-                 (("gif" "jpeg" "ppm" "pgm" "png" "tiff" "sys")
-                  type-ext)
-                 ("jpg" "jpeg")
-                 ("tif" "tiff")
-                 (otherwise (error "Unrecognized file type for image map: ~A" file)))))
+  (let ((type (pov-image-map-type (file-type file))))
     (pov-block "image_map"
-               (list* (pov-item type (format nil "\"~A\"" file))
+               (list* (pov-item type (rope #\" file #\"))
                       modifiers))))
 
 (defun pov-alist-texture (alist)
