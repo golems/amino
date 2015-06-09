@@ -54,42 +54,45 @@
 (defun draw-subframe (parent name)
   (format nil "~A/~A" parent name))
 
-(defstruct draw-item
-  name
-  geometry
-  tf
-  options)
-
 (defun draw-items (scene-graph parent items
                    &key
                      (options *draw-options*))
   (fold (lambda (scene-graph x)
-          ;(print scene-graph)
-          ;(print (draw-item-name x))
-          (draw-geometry scene-graph parent
-                         (draw-item-name x)
-                         :options (merge-draw-options (draw-item-options x) options)
-                         :geometry (draw-item-geometry x)
-                         :tf (draw-item-tf x)))
+          (let ((frame (copy-structure x)))
+            (unless (scene-frame-parent frame)
+              (setf (scene-frame-parent frame)
+                    parent))
+            (setf (scene-frame-geometry frame)
+                  (map 'list (lambda (g)
+                               (scene-geometry (scene-geometry-shape g)
+                                               (merge-draw-options (merge-draw-options (scene-geometry-options g)
+                                                                                       options))))
+                       (scene-frame-geometry frame)))
+            (scene-graph scene-graph frame)))
         scene-graph
         (ensure-list items)))
 
+(defun item-shape (parent name &key tf shape options)
+  (scene-frame-fixed parent name
+                     :geometry (scene-geometry shape options)
+                     :tf tf))
+
 (defun item-cylinder-axis (name &key height radius axis (translation (identity-vec3))
                                   options)
-  (make-draw-item :name name
-                  :geometry (scene-cylinder :height height
-                                            :radius radius)
-                  :tf (draw-tf-axis axis translation)
-                  :options options))
+  (item-shape nil name
+              :tf (draw-tf-axis axis translation)
+              :shape (scene-cylinder :height height :radius radius)
+              :options options))
+
 
 (defun item-cone-axis (name &key height start-radius (end-radius 0d0) axis (translation (identity-vec3))
                               options)
-  (make-draw-item :name name
-                  :geometry (scene-cone :height height
-                                        :start-radius start-radius
-                                        :end-radius end-radius)
-                  :tf (draw-tf-axis axis translation)
-                  :options options))
+  (item-shape nil name
+              :tf (draw-tf-axis axis translation)
+              :options options
+              :shape (scene-cone :height height
+                                 :start-radius start-radius
+                                 :end-radius end-radius)))
 
 (defun item-arrow-axis (name &key
                                axis

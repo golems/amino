@@ -166,7 +166,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (tree-set-find (scene-graph-frames scene-graph)
                  frame-name))
 
-(defun scene-graph-add-frame (scene-graph frame)
+(defun %scene-graph-add-frame (scene-graph frame)
   "Add a frame to the scene."
   (make-scene-graph :frames (tree-set-replace (scene-graph-frames scene-graph)
                                               frame)))
@@ -180,7 +180,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   "Bind collision geometry to a frame in the scene."
   (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
     (push geometry (scene-frame-geometry frame))
-    (scene-graph-add-frame scene-graph frame)))
+    (%scene-graph-add-frame scene-graph frame)))
 
 (defun %scene-graph-merge (scene-graph-1 scene-graph-2)
   "Combine two scene graphs."
@@ -196,7 +196,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (labels ((rec (scene-graph thing)
              (etypecase thing
                (scene-frame
-                (scene-graph-add-frame scene-graph thing))
+                (%scene-graph-add-frame scene-graph thing))
                (scene-graph
                 (%scene-graph-merge scene-graph thing))
                (list
@@ -206,6 +206,10 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 (defun scene-graph (&rest things)
   (%scene-graph things))
+
+(defmacro scene-graph-f (place &rest things)
+  `(setq ,place
+         (scene-graph ,place ,@things)))
 
 (defmacro do-scene-graph-frames ((frame-variable scene-graph &optional result) &body body)
   `(do-tree-set (,frame-variable (scene-graph-frames ,scene-graph) ,result)
@@ -431,7 +435,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
     (let ((new-frame (copy-scene-frame-fixed old-frame)))
       (setf (scene-frame-parent new-frame) new-parent
             (scene-frame-fixed-tf new-frame) tf)
-      (scene-graph-add-frame (scene-graph-remove-frame scene-graph frame-name)
+      (%scene-graph-add-frame (scene-graph-remove-frame scene-graph frame-name)
                              new-frame))))
 
 
@@ -452,7 +456,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                                   :default-configuration default-configuration
                                                   :tf-absolute-map tf-absolute-map)
                          tf-rel))))
-    (scene-graph-add-frame scene-graph (scene-frame-fixed actual-parent name
+    (%scene-graph-add-frame scene-graph (scene-frame-fixed actual-parent name
                                                           :tf tf
                                                           :geometry geometry))))
 

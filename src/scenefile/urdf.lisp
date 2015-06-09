@@ -115,7 +115,7 @@
                                                    :tf (tf-mul (tf* (euler-rpy rpy)
                                                                     (vec3 xyz))
                                                                offset))))
-                 (setq scene-graph (scene-graph-add-frame scene-graph new-frame))
+                 (scene-graph-f scene-graph new-frame)
                  (scene-frame-name new-frame))))
            (node-options (&key rgba visual collision)
              `(,@(when rgba
