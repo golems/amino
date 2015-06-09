@@ -56,6 +56,15 @@
                             collect (cons (first rest) (second rest)))))
     (apply #'tree-set #'keyframe-pair-compare keyframe-pairs)))
 
+(defun keyframe-set-start (keyframes)
+  (joint-keyframe-time (car (tree-set-min keyframes))))
+
+(defun keyframe-set-end (keyframes)
+  (joint-keyframe-time (cdr (tree-set-max keyframes))))
+
+(defun keyframe-set-end-config (keyframes)
+  (joint-keyframe-configurations (cdr (tree-set-max keyframes))))
+
 (defun keyframe-pair-find (keyframes time)
   (let* ((dummy-keyframe (make-keyframe :time time))
          (dummy-pair (cons dummy-keyframe dummy-keyframe)))
@@ -63,31 +72,47 @@
     (tree-set-find keyframes dummy-pair)))
 
 
+
 (defun linterp (time t0 x0 t1 x1)
-  (+ x0 (* time (/ (- x1 x0)
-                   (- t1 t0)))))
+;  (print (list time t0 x0 t1 x1))
+  (+ x0 (* (- time t0)
+           (/ (- x1 x0)
+              (- t1 t0)))))
 
 (defun keyframe-configuration-function (keyframes)
-  (let ((set (keyframe-set keyframes)))
+  (let ((set (etypecase keyframes
+               (list (keyframe-set keyframes))
+               (tree-set keyframes))))
     (lambda (time)
-      (let* ((pair (or (keyframe-pair-find set time)
-                       (tree-set-max set)))
-             (start-keyframe (car pair))
-             (start-map (joint-keyframe-configurations start-keyframe))
-             (start-time (keyframe-time start-keyframe))
-             (end-keyframe (cdr pair))
-             (end-map (joint-keyframe-configurations end-keyframe))
-             (end-time (keyframe-time end-keyframe)))
-        (fold-tree-map (lambda (map name end-value)
-                         (let ((start-value (tree-map-find start-map name 0d0)))
-                           (tree-map-insert map name
-                                            (linterp time
-                                                     start-time start-value
-                                                     end-time end-value))))
-                       (make-tree-map #'string-compare)
-                       end-map)))))
+      (let ((pair (keyframe-pair-find set time)))
+        (when pair
+          ;(print pair)
+          (let* ((start-keyframe (car pair))
+                 (start-map (joint-keyframe-configurations start-keyframe))
+                 (start-time (keyframe-time start-keyframe))
+                 (end-keyframe (cdr pair))
+                 (end-map (joint-keyframe-configurations end-keyframe))
+                 (end-time (keyframe-time end-keyframe)))
+            (assert (>= time start-time))
+            (assert (<= time end-time))
+            (fold-tree-map (lambda (map name end-value)
+                             (let ((start-value (tree-map-find start-map name 0d0)))
+                               (tree-map-insert map name
+                                                (linterp time
+                                                         start-time start-value
+                                                         end-time end-value))))
+                           (make-tree-map #'string-compare)
+                           end-map)))))))
 
-
+(defun load-keyframes (path &key
+                              frames
+                              (initial-time 0d0)
+                              time-step
+                              default-map)
+  (keyframe-set
+   (loop for x in (load-trajectory path)
+      for time = initial-time then (+ time time-step)
+      collect (joint-keyframe time (pairlist-configuration-map frames x default-map)))))
 
 
 ;; (defun animate-timed-frame-function (&key
@@ -227,6 +252,8 @@
      while configuration
      do
        (let ((frame-file (format nil "frame-~D.pov" frame)))
+         ;(print frame-file)
+         ;(print configuration)
          (scene-graph-pov-frame scene-graph
                                 :options options
                                 :configuration-map configuration
@@ -246,6 +273,7 @@
 
 (defun scene-graph-time-animate (configuration-function
                                  &key
+                                   append
                                    (render-frames t)
                                    (encode-video t)
                                    (output-directory *robray-tmp-directory*)
@@ -254,12 +282,14 @@
                                    (scene-graph *scene-graph*)
                                    (options *render-options*)
                                    include)
-  (let ((frame-period (coerce (get-render-option options :frames-per-second) 'double-float)))
+  (let ((frame-period (/ 1 (coerce (get-render-option options :frames-per-second) 'double-float))))
     (scene-graph-frame-animate (lambda (frame)
                                  (let ((time (+ time-start (* frame frame-period))))
+                                   ;(format t "~&f: ~D, t: ~F" frame time)
                                    (if (> time time-end)
                                        nil
                                        (funcall configuration-function time))))
+                               :append append
                                :scene-graph scene-graph
                                :render-frames render-frames
                                :encode-video encode-video
@@ -395,6 +425,13 @@
                                    (list "-r"
                                          "--include=*.inc"
                                          "--include=*.pov"
+                                         "--include=povray/**.png"
+                                         "--include=povray/**.tiff"
+                                         "--include=povray/**.jpeg"
+                                         "--include=povray/**.png"
+                                         "--include=povray/**.ppm"
+                                         "--include=povray/**.pgm"
+                                         "--include=povray/**.sys"
                                          "--include=**/"
                                          "--exclude=*"
                                          directory

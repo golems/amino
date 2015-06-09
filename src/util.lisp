@@ -280,3 +280,10 @@
     (assert (probe-file pathname) ()
             "Script '~A' not found" name)
     pathname))
+
+(defun load-trajectory (pathname)
+  (let ((data (with-open-file (in pathname :direction :input)
+                (loop for line = (read-line in nil nil)
+                   while line
+                   collect (parse-float-sequence line)))))
+    data))

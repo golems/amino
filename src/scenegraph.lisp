@@ -225,6 +225,16 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun fold-scene-graph-frames (function initial-value scene-graph)
   (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
+
+(defun scene-graph-joints (scene-graph)
+  (fold-scene-graph-frames (lambda (list frame)
+                             (etypecase frame
+                               (scene-frame-fixed list)
+                               ((or scene-frame-prismatic scene-frame-revolute)
+                                (cons (scene-frame-name frame) list))))
+                           nil
+                           scene-graph))
+
 (defun scene-mesh-inc (mesh-file)
   "Return the include file for the mesh file"
   (pov-cache-file (rope mesh-file ".inc")))
@@ -274,6 +284,19 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
              mesh-files)
     scene-graph))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Computing Transforms ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun alist-configuration-map (alist &optional default-map)
+  (fold (lambda (map item)
+          (tree-map-insert map (car item) (cdr item)))
+        (or default-map (make-tree-map #'frame-name-compare))
+        alist))
+
+(defun pairlist-configuration-map (names values &optional default-map)
+  (alist-configuration-map (pairlis names values) default-map))
 
 (defun scene-frame-tf-local (frame configuration-map default-configuration)
   "Find the local TF from its parent to FRAME"
