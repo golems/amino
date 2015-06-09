@@ -29,15 +29,18 @@
 ;; Load robot scene graph from URDF
 (defvar *scene-graph-baxter*)
 
-;(time
-(setq *scene-graph-baxter*
-      (load-scene-file ;;"/home/ntd/baxter_gripper.urdf"
-                       (format nil "~A/urdf/baxter.urdf" *baxter-description*)
-                       :reload-meshes nil))
+(time
+;(sb-sprof:with-profiling (:mode :cpu :report :flat :loop nil)
+  (prog1 nil
+    (setq *scene-graph-baxter*
+          (load-scene-file ;;"/home/ntd/baxter_gripper.urdf"
+           (format nil "~A/urdf/baxter.urdf" *baxter-description*)
+           :reload-meshes t))
+    ))
 
 (setq *scene-graph*
-      (scene-graph-merge *scene-graph-baxter*
-                         (load-scene-file (output-file "scene.robray" *baxter-source-directory*))))
+      (scene-graph *scene-graph-baxter*
+                   (load-scene-file (output-file "scene.robray" *baxter-source-directory*))))
 
 (setq *scene-graph*
       (draw-items *scene-graph* "right_endpoint"

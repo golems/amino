@@ -28,7 +28,7 @@
                        :type :moveit))
 
 (setq *scene-graph*
-       (scene-graph-merge *scene-graph-pr2* *scene-graph-kitchen*))
+       (scene-graph *scene-graph-pr2* *scene-graph-kitchen*))
 
 (setq *scene-graph*
       (draw-items *scene-graph* nil

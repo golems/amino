@@ -182,11 +182,6 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
     (push geometry (scene-frame-geometry frame))
     (scene-graph-add-frame scene-graph frame)))
 
-(defun scene-graph (frames)
-  (fold #'scene-graph-add-frame
-        (make-scene-graph)
-        frames))
-
 (defun %scene-graph-merge (scene-graph-1 scene-graph-2)
   "Combine two scene graphs."
   (let* ((set-1 (scene-graph-frames scene-graph-1))
@@ -197,10 +192,20 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
             (map-tree-set 'list #'scene-frame-name intersection))
     (make-scene-graph :frames (tree-set-union set-1 set-2))))
 
-(defun scene-graph-merge (&rest args)
-  (fold #'%scene-graph-merge
-        (car args)
-        (cdr args)))
+(defun %scene-graph (things)
+  (labels ((rec (scene-graph thing)
+             (etypecase thing
+               (scene-frame
+                (scene-graph-add-frame scene-graph thing))
+               (scene-graph
+                (%scene-graph-merge scene-graph thing))
+               (list
+                (%scene-graph-merge scene-graph
+                                    (%scene-graph thing))))))
+    (fold #'rec (make-scene-graph) things)))
+
+(defun scene-graph (&rest things)
+  (%scene-graph things))
 
 (defmacro do-scene-graph-frames ((frame-variable scene-graph &optional result) &body body)
   `(do-tree-set (,frame-variable (scene-graph-frames ,scene-graph) ,result)
@@ -251,7 +256,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                                (mesh-up-axis "Z")
                                                (mesh-forward-axis "Y")
                                                (directory *robray-tmp-directory*))
-  (print 'resolve-mesh)
+  ;(print 'resolve-mesh)
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
     (labels ((resolve-mesh (mesh)
