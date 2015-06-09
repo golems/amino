@@ -22,6 +22,6 @@
                          :reload-meshes reload-meshes
                          :mesh-up-axis mesh-up-axis
                          :mesh-forward-axis mesh-forward-axis))
-      (:curly (load-curly-scene filename))
+      (:curly (load-curly-scene filename :reload-meshes reload-meshes))
       (:moveit (load-moveit-scene filename
                                   :reload-meshes reload-meshes)))))

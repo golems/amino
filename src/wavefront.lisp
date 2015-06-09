@@ -84,7 +84,7 @@
 ;; See: https://corona-renderer.com/wiki/standalone/mtl
 
 (defun wavefront-mtl-load (mtl-file obj-file)
-  (let ((mtl-file (output-file mtl-file (pathname-directory obj-file)))
+  (let ((mtl-file (file-resolve mtl-file (file-dirname obj-file)))
         (material-alist)
         (current-alist)
         (current-mtl)
@@ -133,11 +133,13 @@
                      ("d" (prop :alpha  (parse-float data)))
                      ("map_Kd"
                       ;; TODO: local path names
-                      (let* ((dir (file-dirname data))
-                             (base (file-basename data))
-                             (ext (pov-image-map-type (string-downcase (file-type data))))
+                      (let* ((source-file (file-resolve data (file-dirname mtl-file)))
+                             (dir (file-dirname source-file))
+                             (base (file-basename source-file))
+                             (ext (pov-image-map-type (string-downcase (file-type source-file))))
                              (cache-file (pov-cache-file (format-pathname "~A/~A.~A" dir base ext))))
-                        (uiop/stream:copy-file data cache-file)
+                        (ensure-directories-exist cache-file)
+                        (uiop/stream:copy-file source-file cache-file)
                         (prop :image-map cache-file)))
                      ("illum" ;TODO
                       )
@@ -163,8 +165,7 @@
                  (unless (string= command "o")
                    (error "Invalid command on line ~D" lineno))
                  (setq name data)))))
-    (assert name () "No mesh name in '~A'" obj-file)
-    name))
+    (or name (file-basename obj-file))))
 
 (defun wavefront-obj-load (obj-file)
   (let ((name)
@@ -189,8 +190,9 @@
                  (+wavefront-command-scanner+ line)
                (setq matched t)
                (string-case command
-                 ("o"  (assert (null name) () "Multiple objects not implemented")
-                       (setq name data))
+                 ("o"  (if (null name)
+                           (setq name data)
+                           (progn (warn "Multiple objects not implemented"))))
                  ("v"
                   (vector-push-extend (parse-float-sequence data) vertices))
                  ("vn"
@@ -216,7 +218,7 @@
             (loop for i from 0 for (material . texture) in materials
                do (setf (gethash material material-index-hash) i)
                collect texture)))
-      (make-mesh-data  :name (name-mangle name)
+      (make-mesh-data  :name (name-mangle (or name (file-basename obj-file)))
                        :vertex-vectors (array-cat 'double-float vertices)
                        :normal-vectors (array-cat 'double-float normals)
                        :uv-vectors (array-cat 'double-float uv)
