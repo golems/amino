@@ -285,7 +285,7 @@
   (let ((frame-period (/ 1 (coerce (get-render-option options :frames-per-second) 'double-float))))
     (scene-graph-frame-animate (lambda (frame)
                                  (let ((time (+ time-start (* frame frame-period))))
-                                   ;(format t "~&f: ~D, t: ~F" frame time)
+                                   (format t "~&f: ~D, t: ~F" frame time)
                                    (if (> time time-end)
                                        nil
                                        (funcall configuration-function time))))
@@ -379,25 +379,29 @@
                            :output (unless (string-equal host "localhost") "-")
                            :options options
                            :threads (net-args-threads args))))
-             (pov-cmd (host)
-               (net-args-povray (gethash host host-args)))
              (pov-error (item)
                (concatenate 'string
                             directory (pathname-name item) ".txt"))
              (pov-local (item status-hook)
-               (sb-ext:run-program (pov-cmd "localhost")
-                                   (my-pov-args "localhost" item)
-                                   :search t :wait nil
-                                   :error (pov-error item)
-                                   :if-error-exists :supersede
-                                   :directory directory
-                                   :status-hook status-hook))
+               (let ((args (gethash "localhost" host-args)))
+                 (sb-ext:run-program "nice"
+                                     (list* "-n"
+                                            (format nil "~D" (net-args-nice args))
+                                            (net-args-povray args)
+                                            (my-pov-args "localhost" item))
+                                     :search t :wait nil
+                                     :error (pov-error item)
+                                     :if-error-exists :supersede
+                                     :directory directory
+                                     :status-hook status-hook)))
              (pov-remote (host item status-hook)
-               (let ((output (concatenate 'string
+               (let ((args (gethash host host-args))
+                     (output (concatenate 'string
                                           directory (pov-output-file (povfile-base item)))))
                  (sb-ext:run-program (find-script "povremote")
                                      (list* host
-                                            (pov-cmd host)
+                                            (net-args-povray args)
+                                            (format nil "~D" (net-args-nice args))
                                             (my-pov-args host item))
                                      :search nil :wait nil
                                      :directory directory
