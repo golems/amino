@@ -145,6 +145,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 ;;; SCENE GRAPH STRUCTURE ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: dot output
+
 (defun scene-frame-compare (frame-a frame-b)
   (labels ((name (frame)
              (etypecase frame
@@ -185,7 +187,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
         (make-scene-graph)
         frames))
 
-(defun scene-graph-merge (scene-graph-1 scene-graph-2)
+(defun %scene-graph-merge (scene-graph-1 scene-graph-2)
   "Combine two scene graphs."
   (let* ((set-1 (scene-graph-frames scene-graph-1))
          (set-2 (scene-graph-frames scene-graph-2))
@@ -194,6 +196,11 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
             "Duplicate frames in merged trees: ~A"
             (map-tree-set 'list #'scene-frame-name intersection))
     (make-scene-graph :frames (tree-set-union set-1 set-2))))
+
+(defun scene-graph-merge (&rest args)
+  (fold #'%scene-graph-merge
+        (car args)
+        (cdr args)))
 
 (defmacro do-scene-graph-frames ((frame-variable scene-graph &optional result) &body body)
   `(do-tree-set (,frame-variable (scene-graph-frames ,scene-graph) ,result)

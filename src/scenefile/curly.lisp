@@ -201,6 +201,7 @@
 
 (defun load-curly-scene (pathname)
   (let ((curly (curly-parse-file pathname))
+        (file-directory (file-dirname pathname))
         (frames)
         (geoms)
         (classes (make-tree-map #'string-compare)))
@@ -307,12 +308,14 @@
                    (etypecase stmt
                      (null)
                      (cons (string-case (car stmt)
-                             (("shape" "dimension" "color" "alpha")
+                             (("shape" "color" "alpha" "mesh"
+                                       "dimension" "radius" "height" "start-radius" "end-radius")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
                               (push (get-class stmt) classes))
-                             (otherwise (error "Unknown property in geometry at line ~D"
+                             (otherwise (error "Unknown property '~A' in geometry at line ~D"
+                                               (car stmt)
                                                (curly-block-line cb)))))))
                  (insert-geom (class-properties properties classes)
                               parent)))
@@ -329,18 +332,26 @@
                   for value = (get-prop properties name)
                   when value collect (cons kw value)))
              (insert-geom (properties parent)
-               (let ((geometry (scene-geometry (string-case (get-prop properties "shape")
-                                                 ("box"
-                                                  (scene-box (get-prop properties "dimension")))
-                                                 (t (error "Unknown shape: ~A" (get-prop properties "shape"))))
-                                               (property-options properties)))
-                     (parent (get-prop properties "parent" parent)))
+               (let* ((shape-prop (get-prop properties "shape"))
+                      (mesh-prop (get-prop properties "mesh"))
+                      (shape (cond
+                               (shape-prop (string-case shape-prop
+                                             ("box"
+                                              (scene-box (get-prop properties "dimension")))
+                                             ("cylinder"
+                                              (scene-cylinder :height (get-prop properties "height")
+                                                              :radius (get-prop properties "radius")))
+                                             (otherwise (error "Unknown shape: ~A" (get-prop properties "shape")))))
+                               (mesh-prop (make-scene-mesh :source-file (file-resolve mesh-prop file-directory)))
+                               (t (error "foo"))))
+                      (geometry (scene-geometry shape (property-options properties)))
+                      (parent (get-prop properties "parent" parent)))
                  (setf (scene-geometry-type geometry) (property-classes properties))
                  (push (cons parent geometry) geoms))))
       (dolist (c curly)
         (add-block c nil)))
-    (let ((sg (scene-graph frames)))
-      (fold (lambda (sg g)
-              (scene-graph-add-geometry sg (car g) (cdr g)))
-            sg
-            geoms))))
+    (scene-graph-resolve-mesh
+     (fold (lambda (sg g)
+             (scene-graph-add-geometry sg (car g) (cdr g)))
+           (scene-graph frames)
+           geoms))))

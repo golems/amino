@@ -58,6 +58,7 @@
         (subseq path (aref reg-start 0) (aref reg-end 0))
         nil)))
 
+
 (defun output-file (file &optional directory)
   (etypecase directory
     (null file)
@@ -65,6 +66,13 @@
                          file))
     (pathname (output-file file (namestring directory)))
     (list (output-file file (make-pathname :directory directory)))))
+
+(defun file-resolve (path directory)
+  ;; All the world's POSIX, dammit
+  (if (eq #\/ (schar path 0))
+      path
+      (output-file path directory)))
+
 
 (defun output (object place
                &key
