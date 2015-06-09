@@ -481,6 +481,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
             modifiers))
     (when (find :no-shadow options)
       (push '|no_shadow| modifiers))
+    (let ((scale (alist-get-default options :scale nil)))
+      (when scale (push (pov-item "scale" scale)
+                        modifiers)))
     (etypecase shape
       (scene-mesh (pov-mesh2 :mesh (scene-mesh-name shape)
                              :modifiers modifiers))

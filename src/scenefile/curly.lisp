@@ -199,7 +199,8 @@
                       pathname))
 
 
-(defun load-curly-scene (pathname)
+(defun load-curly-scene (pathname &key
+                                    reload-meshes)
   (let ((curly (curly-parse-file pathname))
         (file-directory (file-dirname pathname))
         (frames)
@@ -309,7 +310,7 @@
                      (null)
                      (cons (string-case (car stmt)
                              (("shape" "color" "alpha" "mesh"
-                                       "dimension" "radius" "height" "start-radius" "end-radius")
+                                       "dimension" "radius" "height" "start-radius" "end-radius" "scale")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
@@ -327,8 +328,8 @@
                    (apply #'tree-set #'string-compare list))))
              (property-options (properties)
                (loop
-                  for name in '("color" "alpha")
-                  for kw in   '(:color  :alpha)
+                  for name in '("color" "alpha" "scale")
+                  for kw in   '(:color  :alpha :scale)
                   for value = (get-prop properties name)
                   when value collect (cons kw value)))
              (insert-geom (properties parent)
@@ -354,4 +355,5 @@
      (fold (lambda (sg g)
              (scene-graph-add-geometry sg (car g) (cdr g)))
            (scene-graph frames)
-           geoms))))
+           geoms)
+     :reload reload-meshes)))
