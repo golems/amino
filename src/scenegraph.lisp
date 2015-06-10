@@ -95,7 +95,15 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   (let ((tree (scene-geometry-type geometry)))
     (when tree (tree-set-member-p tree type))))
 
+;;;;;;;;;;;;;;
 ;;; FRAMES ;;;
+;;;;;;;;;;;;;;
+
+(deftype frame-name ()
+  `rope)
+
+(defun frame-name-compare (a b)
+  (rope-compare-lexographic a b))
 
 (defstruct scene-frame
   "Base struct for frames in the scene."
@@ -129,40 +137,48 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                       (scene-geometry (list geometry)))))
 
 
+(deftype configuration-map ()
+  `tree-map)
+
 (defstruct (scene-frame-joint (:include scene-frame))
-  "BAse struct for varying scene frames."
-  axis
-  (offset 0d0 :type double-float))
+  "Base struct for varying scene frames."
+  (configuration-name nil :type frame-name)
+  (configuration-offset 0d0 :type double-float)
+  (axis (vec3* 0d0 0d0 1d0) :type vec3))
 
 (defstruct (scene-frame-revolute (:include scene-frame-joint))
   "A frame representing a revolute (rotating) joint.")
 
 (defun scene-frame-revolute (parent name &key
                                            axis
-                                           (offset 0d0)
+                                           (configuration-name name)
+                                           (configuration-offset 0d0)
                                            (tf (identity-tf)))
   "Create a new revolute frame."
   (assert axis)
   (make-scene-frame-revolute :name name
+                             :configuration-name configuration-name
+                             :configuration-offset (coerce configuration-offset 'double-float)
                              :parent parent
-                             :axis axis
-                             :offset offset
-                             :tf tf))
+                             :axis (vec3 axis)
+                             :tf (tf tf)))
 
 (defstruct (scene-frame-prismatic (:include scene-frame-joint))
   "A frame representing a prismatic (sliding) joint.")
 
 (defun scene-frame-prismatic (parent name &key
                                             axis
-                                            (offset 0d0)
+                                            (configuration-name name)
+                                            (configuration-offset 0d0)
                                             (tf (identity-tf)))
   "Create a new prismatic frame."
   (assert axis)
   (make-scene-frame-prismatic :name name
+                              :configuration-name configuration-name
+                              :configuration-offset (coerce configuration-offset 'double-float)
                               :parent parent
-                              :axis axis
-                              :offset offset
-                              :tf tf))
+                              :axis (vec3 axis)
+                              :tf (tf tf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SCENE GRAPH STRUCTURE ;;;
@@ -337,6 +353,14 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun pairlist-configuration-map (names values &optional default-map)
   (alist-configuration-map (pairlis names values) default-map))
 
+
+(defun scene-frame-configuration (frame configuration-map default-configuration)
+  (let ((variable (tree-map-find configuration-map
+                                 (scene-frame-joint-configuration-name frame)
+                                 default-configuration))
+        (offset (scene-frame-joint-configuration-offset frame)))
+    (+  variable offset)))
+
 (defun scene-frame-tf-local (frame configuration-map default-configuration)
   "Find the local TF from its parent to FRAME"
   (etypecase frame
@@ -344,10 +368,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
     (scene-frame-joint
      (assert configuration-map ()
              "Cannot find joint frames without configuration variables")
-     (let* ((config (+ (scene-frame-joint-offset frame)
-                       (tree-map-find configuration-map (scene-frame-name frame)
-                                     default-configuration)))
-            (axis (scene-frame-joint-axis frame)))
+     (let ((config (scene-frame-configuration frame configuration-map default-configuration))
+           (axis (scene-frame-joint-axis frame)))
        (tf-mul (scene-frame-tf frame)
                (etypecase frame
                  (scene-frame-revolute

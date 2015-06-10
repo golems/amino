@@ -108,20 +108,6 @@
         (concatenate 'string "g_" sub)
         sub)))
 
-(deftype frame-name ()
-  `(or string symbol null))
-
-(defun frame-name-compare (a b)
-  (let ((a (etypecase a
-             (string a)
-             (null "")
-             (symbol (string a))))
-        (b (etypecase b
-             (string b)
-             (null "")
-             (symbol (string b)))))
-    (sycamore-util:string-compare a b)))
-
 ;;;;;;;;;;;;;;;;;;;
 ;;; DOM-HELPERS ;;;
 ;;;;;;;;;;;;;;;;;;;
