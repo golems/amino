@@ -18,23 +18,13 @@
 
 (defvar *scene-graph-pr2*)
 
-(unless (and (boundp '*scene-graph-pr2*)
-             *scene-graph-pr2*)
-  (setq *scene-graph-pr2*
-        (load-scene-file "/tmp/pr2.urdf" :mesh-up-axis "Y" :mesh-forward-axis "-Z")))
-
-(setq *scene-graph-kitchen*
-      (load-scene-file (output-file "kitchen.scene" *pr2-source-directory*)
-                       :type :moveit))
-
-(setq *scene-graph*
-       (scene-graph *scene-graph-pr2* *scene-graph-kitchen*))
-
-(setq *scene-graph*
-      (draw-items *scene-graph* nil
-                  (item-frame-marker "origin_marker"
-                                     :length 1
-                                     :width .1)))
+(defparameter *scene-graph*
+  (scene-graph (load-scene-file "/tmp/pr2.urdf" :mesh-up-axis "Y" :mesh-forward-axis "-Z")
+               (load-scene-file (output-file "kitchen.scene" *pr2-source-directory*)
+                                :type :moveit)
+               (item-frame-marker nil "origin_marker"
+                                  :length 1
+                                  :width .1)))
 
 (progn
   (uiop/stream:copy-file (output-file "pr2.inc" *pr2-source-directory*)

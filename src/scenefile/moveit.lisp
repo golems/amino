@@ -96,9 +96,9 @@
                          (translation (vec-line))
                          (quaternion (vec-line))
                          (rgba (vec-line)))
-                     (setq scene-graph
-                           (draw-geometry scene-graph nil name
-                                          :geometry (scene-box size)
+                     (scene-graph-f scene-graph
+                                    (item-shape nil name
+                                          :shape (scene-box size)
                                           :tf (tf* (quaternion quaternion)
                                                    (vec3 translation))
                                           :options (draw-options-default :color (subseq rgba 0 3)
@@ -126,12 +126,12 @@
                          (output (pov-declare name (pov-mesh2 :mesh-data mesh-data))
                                  inc-file
                                  :directory directory)
-                         (setq scene-graph
-                               (draw-geometry scene-graph nil name
-                                              :geometry (make-scene-mesh :name name :povray-file povray-file)
-                                              :tf (tf* (quaternion quaternion)
-                                                       (vec3 translation))
-                                              :options (draw-options-default :color color :alpha alpha))))))))
+                         (scene-graph-f scene-graph
+                                        (item-shape nil name
+                                                    :shape (make-scene-mesh :name name :povray-file povray-file)
+                                                    :tf (tf* (quaternion quaternion)
+                                                             (vec3 translation))
+                                                    :options (draw-options-default :color color :alpha alpha))))))))
           (let ((scene-name (line)))
             (format t "~&Reading scene '~A'...~%" scene-name))
           (loop for x = (next-object)

@@ -27,19 +27,29 @@
          *urdf-package-alist* :test #'equal)
 
 ;; Load robot scene graph from URDF
-(defparameter *scene-graph-baxter*
+(defparameter *scene-graph*
   (scene-graph
+
+   ;; robot
    (load-scene-file (format-pathname "~A/urdf/baxter.urdf" *baxter-description*)
                     :reload-meshes nil)
-   (load-scene-file (output-file "scene.robray" *baxter-source-directory*))))
 
-(setq *scene-graph*
-      (draw-items *scene-graph* "right_endpoint"
-                  (item-frame-marker (draw-subframe "right_endpoint" "marker")
-                                     :length .15
-                                     :width .015)
-                  :options (draw-options :no-shadow t :alpha .5
-                                         :visual t :collision nil)))
+   ;; scene
+   (load-scene-file (output-file "scene.robray" *baxter-source-directory*))
+
+   ;; markers
+   (item-frame-marker "right_endpoint" (draw-subframe "right_endpoint" "marker")
+                      :length .15
+                      :width .015
+                      :options (draw-options :no-shadow t :alpha .5
+                                             :visual t :collision nil))
+
+   (item-frame-marker "left_endpoint" (draw-subframe "left_endpoint" "marker")
+                      :length .15
+                      :width .015
+                      :options (draw-options :no-shadow t :alpha .5
+                                             :visual t :collision nil))))
+
 
 
 (uiop/stream:copy-file (output-file "baxter.inc" *baxter-source-directory*)

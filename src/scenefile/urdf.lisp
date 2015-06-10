@@ -1,7 +1,7 @@
 (in-package :robray)
 
 (defvar *urdf-dom*)
-(defvar *urdf-package-alist*)
+(defvar *urdf-package-alist* nil)
 
 (defun urdf-resolve-file (filename &optional (package-alist *urdf-package-alist*))
   (let* ((package (ppcre:regex-replace "^package://([^/]*)/.*"
