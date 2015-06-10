@@ -44,6 +44,17 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   start-radius
   end-radius)
 
+(defparameter *scene-font* :monospace)
+
+(defstruct scene-text
+  (value nil :type rope)
+  (font *scene-font* :type rope)
+  (thickness 1)
+  (offset 0d0))
+
+(defun scene-text (value &key (thickness 1))
+  (make-scene-text :value value
+                   :thickness thickness))
 
 (defparameter *draw-options*
   '((:no-shadow . nil)
@@ -533,12 +544,16 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                (not (scene-mesh-p shape)))
       (push (pov-alist-texture options)
             modifiers))
-    (when (find :no-shadow options)
+    (when (draw-option options :no-shadow)
       (push '|no_shadow| modifiers))
     (let ((scale (alist-get-default options :scale nil)))
       (when scale (push (pov-item "scale" scale)
                         modifiers)))
     (etypecase shape
+      (scene-text (pov-text (scene-text-value shape)
+                            :font (scene-text-font shape)
+                            :thickness (scene-text-thickness shape)
+                            :modifiers modifiers))
       (scene-mesh (pov-mesh2 :mesh (scene-mesh-name shape)
                              :modifiers modifiers))
       (scene-box

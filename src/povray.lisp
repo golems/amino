@@ -105,6 +105,7 @@
 
 ;;; Complex Types ;;;
 
+
 (defstruct pov-matrix
   elements)
 
@@ -246,6 +247,30 @@
   (pov-cone (pov-float-vector-right '(0 0 0)) big-radius
             (pov-float-vector-right axis) small-radius
             modifiers))
+
+
+(defun pov-quote (text)
+  ;; TODO: escape string
+  (rope #\" text #\"))
+
+(defun pov-text (value &key
+                         (font :monospace)
+                         (thickness 1)
+                         (offset 0)
+                         modifiers)
+  (let ((font (case font
+                ((:monospace :fixed) '|crystal.ttf|)
+                (:serif '|timrom.ttf|)
+                ((:sans :sans-serif) '|cyrvetic.ttf|)
+                (otherwise font))))
+    (pov-block '|text|
+               (list* (rope '|ttf| #\Space
+                            (pov-quote font) #\Space
+                            (pov-quote value) #\Space
+                            (format nil "~F, ~F"
+                                    thickness offset))
+                      modifiers))))
+
 
 (defun pov-group-array (function array)
   (let* ((n (length array))
