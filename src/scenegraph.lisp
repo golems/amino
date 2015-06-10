@@ -45,15 +45,38 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   end-radius)
 
 
-(defparameter *scene-geometry-options*
+(defparameter *draw-options*
   '((:no-shadow . nil)
     (:color . (0 0 0))
     (:alpha . 1d0)
     (:visual . t)
     (:collision . t)))
 
-(defun scene-geometry-option (options key)
-  (alist-get-default options key *scene-geometry-options*))
+(defun draw-option (options key)
+  (alist-get-default options key *draw-options*))
+
+(defun draw-options-default (&key
+                               (options *draw-options*)
+                               (no-shadow (get-draw-option options :no-shadow))
+                               (color (get-draw-option options :color))
+                               (alpha (get-draw-option options :alpha))
+                               (visual (get-draw-option options :visual))
+                               (collision (get-draw-option options :collision)))
+  (list* (cons :no-shadow no-shadow)
+         (cons :color color)
+         (cons :alpha alpha)
+         (cons :visual visual)
+         (cons :collision collision)
+         options))
+
+(defun draw-options (&rest options-plist)
+  (plist-alist options-plist))
+
+(defun merge-draw-options (new-options &optional (base-options *draw-options*))
+  (append new-options base-options))
+
+
+
 
 (defstruct scene-geometry
   shape
@@ -65,8 +88,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun scene-geometry (shape options)
   (make-scene-geometry :shape shape
                        :options options
-                       :collision (scene-geometry-option options :collision)
-                       :visual (scene-geometry-option options :visual)))
+                       :collision (draw-option options :collision)
+                       :visual (draw-option options :visual)))
 
 (defun scene-geometry-isa (geometry type)
   (let ((tree (scene-geometry-type geometry)))

@@ -19,8 +19,8 @@
            (v (tf-translation tf))
            (q (tf-quaternion tf))
            (options (scene-geometry-options geometry))
-           (color (scene-geometry-option options :color))
-           (alpha (scene-geometry-option options :alpha)))
+           (color (draw-option options :color))
+           (alpha (draw-option options :alpha)))
       ;; shape
       (format stream "~&* ~A" frame-name)
       (format stream "~&1")

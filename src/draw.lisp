@@ -1,37 +1,5 @@
 (in-package :robray)
 
-;;; OPTIONS ;;;
-(defparameter *draw-options*
-  '((:no-shadow . nil)
-    (:color . (0 0 0))
-    (:alpha . 1d0)
-    (:visual . t)
-    (:collision . t)))
-
-(defun get-draw-option (draw-options option)
-  (cdr (assoc option draw-options)))
-
-(defun draw-options-default (&key
-                               (options *draw-options*)
-                               (no-shadow (get-draw-option options :no-shadow))
-                               (color (get-draw-option options :color))
-                               (alpha (get-draw-option options :alpha))
-                               (visual (get-draw-option options :visual))
-                               (collision (get-draw-option options :collision)))
-  (list* (cons :no-shadow no-shadow)
-         (cons :color color)
-         (cons :alpha alpha)
-         (cons :visual visual)
-         (cons :collision collision)
-         options))
-
-(defun draw-options (&rest options-plist)
-  (plist-alist options-plist))
-
-(defun merge-draw-options (new-options &optional (base-options *draw-options*))
-  (append new-options base-options))
-
-
 ;;; GEOMETRY DRAWING ;;;
 
 (defun draw-tf-axis (axis &optional (translation (identity-vec3)))
