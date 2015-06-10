@@ -42,28 +42,23 @@
 (defun draw-subframe (parent name)
   (format nil "~A/~A" parent name))
 
-(defun item-shape (parent name &key tf shape options)
-  (scene-frame-fixed parent name
-                     :geometry (scene-geometry shape options)
-                     :tf tf))
-
 (defun item-cylinder-axis (parent name &key height radius axis (translation (identity-vec3))
                                   options)
-  (item-shape parent name
-              :tf (draw-tf-axis axis translation)
-              :shape (scene-cylinder :height height :radius radius)
-              :options options))
+  (scene-frame-fixed parent name
+                     :tf (draw-tf-axis axis translation)
+                     :geometry (scene-geometry (scene-cylinder :height height :radius radius)
+                                               options)))
 
 
 (defun item-cone-axis (parent name
                        &key height start-radius (end-radius 0d0) axis (translation (identity-vec3))
                          options)
-  (item-shape parent name
-              :tf (draw-tf-axis axis translation)
-              :options options
-              :shape (scene-cone :height height
-                                 :start-radius start-radius
-                                 :end-radius end-radius)))
+  (scene-frame-fixed parent name
+                     :tf (draw-tf-axis axis translation)
+                     :geometry (scene-geometry (scene-cone :height height
+                                                           :start-radius start-radius
+                                                           :end-radius end-radius)
+                                               options)))
 
 (defun item-arrow-axis (parent name
                         &key
