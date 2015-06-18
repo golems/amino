@@ -37,7 +37,8 @@ else:
 
 # Export File
 # right-handed coordinates, like god intended
-bpy.ops.export_scene.obj(filepath=args.o, axis_up=args.up, axis_forward=args.forward)
+bpy.ops.export_scene.obj(filepath=args.o, axis_up=args.up, axis_forward=args.forward,
+                         use_normals=True,use_triangles=True)
 
 
 # Local Variables:
