@@ -3,6 +3,10 @@
 (defvar *urdf-dom*)
 (defvar *urdf-package-alist* nil)
 
+(defun urdf-package-add (name directory)
+  (pushnew (cons name directory)
+           *urdf-package-alist* :test #'equal))
+
 (defun urdf-resolve-file (filename &optional (package-alist *urdf-package-alist*))
   (let* ((package (ppcre:regex-replace "^package://([^/]*)/.*"
                                        filename
