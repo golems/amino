@@ -159,7 +159,8 @@
          when (eq #\o (aref line 0))
          do
            (if name
-               (error "Duplicate mesh name on line ~D" lineno)
+               (progn (warn "Duplicate mesh name on line ~D" lineno)
+                      (setq name (file-basename obj-file)))
                (ppcre:register-groups-bind (command data)
                    (+wavefront-command-scanner+ line)
                  (unless (string= command "o")
@@ -192,7 +193,8 @@
                (string-case command
                  ("o"  (if (null name)
                            (setq name data)
-                           (progn (warn "Multiple objects not implemented"))))
+                           (progn (warn "Multiple objects not implemented")
+                                  (setq name (file-basename obj-file)))))
                  ("v"
                   (vector-push-extend (parse-float-sequence data) vertices))
                  ("vn"
