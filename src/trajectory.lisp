@@ -11,7 +11,7 @@
         collect (parse-float-sequence line)))))
 
 
-(defun %load-trajectory (stream names time time-step default-map)
+(defun %load-trajectory (stream names time time-step default-map clip-start)
   ;; find header
   (let ((lineno 0))
     (unless names
@@ -41,12 +41,15 @@
                           (values (car line-data)
                                   (cdr line-data)))
                     (joint-keyframe time
-                                    (pairlist-configuration-map names config default-map))))))))
+                                    (pairlist-configuration-map names config default-map))))))
+    :clip-start clip-start))
 
-(defun load-trajectory (place &key names default-map (time 0d0) time-step)
-  (etypecase place
-    (rope
-     (with-open-file (stream (rope-string place) :direction :input)
-       (%load-trajectory stream names time time-step default-map)))
-    (stream
-     (%load-trajectory place names time time-step default-map))))
+(defun load-trajectory (place &key names default-map (time 0d0) time-step clip-start)
+  (labels ((helper (stream)
+             (%load-trajectory stream names time time-step default-map clip-start)))
+    (etypecase place
+      (rope
+       (with-open-file (stream (rope-string place) :direction :input)
+         (helper stream)))
+      (stream
+       (helper place)))))

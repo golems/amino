@@ -151,6 +151,21 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (deftype configuration-map ()
   `tree-map)
 
+(defun configuration-map-equal (a b)
+  (let ((a (tree-map-alist a))
+        (b (tree-map-alist b)))
+    (when (= (length a)
+             (length b))
+      (loop
+         for x in a
+         for y in b
+         do (unless (and (zerop (frame-name-compare (car a) (car b)))
+                         (= (cdr a) (cdr b)))
+              (return-from configuration-map-equal nil)))
+      t)))
+
+
+
 (defstruct (scene-frame-joint (:include scene-frame))
   "Base struct for varying scene frames."
   (configuration-name nil :type frame-name)

@@ -48,9 +48,14 @@
        1)
       (t 0))))
 
-(defun keyframe-set (keyframes)
+(defun keyframe-set (keyframes &key
+                                 clip-start)
   ;; TODO: fill in unspecified variables
-  (let* ((keyframes (sort (copy-list keyframes) #'< :key #'keyframe-time))
+  (let* ((keyframes (loop for rest on (sort (copy-list keyframes) #'< :key #'keyframe-time)
+                       while (and clip-start
+                                  (configuration-map-equal (joint-keyframe-configurations (first rest))
+                                                           (joint-keyframe-configurations (second rest))))
+                       finally (return rest)))
          (keyframe-pairs (loop for rest on keyframes
                             while (cdr rest)
                             collect (cons (first rest) (second rest)))))
