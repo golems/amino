@@ -79,12 +79,14 @@
            (/ (- x1 x0)
               (- t1 t0)))))
 
-(defun keyframe-configuration-function (keyframes)
+(defun keyframe-configuration-function (keyframes &key
+                                                    (time-offset 0d0))
   (let ((set (etypecase keyframes
                (list (keyframe-set keyframes))
                (tree-set keyframes))))
     (lambda (time)
-      (let ((pair (keyframe-pair-find set time)))
+      (let* ((time (+ time time-offset))
+             (pair (keyframe-pair-find set time)))
         (when pair
           ;(print pair)
           (let* ((start-keyframe (car pair))
@@ -110,7 +112,7 @@
                               time-step
                               default-map)
   (keyframe-set
-   (loop for x in (load-trajectory path)
+   (loop for x in (load-trajectory-data path)
       for time = initial-time then (+ time time-step)
       collect (joint-keyframe time (pairlist-configuration-map frames x default-map)))))
 
@@ -278,7 +280,7 @@
                                    (encode-video t)
                                    (output-directory *robray-tmp-directory*)
                                    (time-start 0d0)
-                                   (time-end 1d0)
+                                   ;(time-end 1d0)
                                    (scene-graph *scene-graph*)
                                    (options *render-options*)
                                    include)
@@ -286,9 +288,7 @@
     (scene-graph-frame-animate (lambda (frame)
                                  (let ((time (+ time-start (* frame frame-period))))
                                    (format t "~&f: ~D, t: ~F" frame time)
-                                   (if (> time time-end)
-                                       nil
-                                       (funcall configuration-function time))))
+                                   (funcall configuration-function time)))
                                :append append
                                :scene-graph scene-graph
                                :render-frames render-frames

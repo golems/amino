@@ -25,7 +25,11 @@
 
 (defun clean-pathname (path &optional (separator "/"))
   (let ((regex (format nil "~A+" separator)))
-    (ppcre:regex-replace-all regex (namestring path) separator)))
+    (ppcre:regex-replace-all regex
+                             (etypecase path
+                               (pathname (namestring path))
+                               (rope (rope-string path) ))
+                             separator)))
 
 (declaim (inline format-pathname))
 (defun format-pathname (control &rest args)
@@ -58,6 +62,8 @@
         (subseq path (aref reg-start 0) (aref reg-end 0))
         nil)))
 
+(defun file-rope (&rest elements)
+  (rope-map #'identity elements :separator '/))
 
 (defun output-file (file &optional directory)
   (etypecase directory
@@ -230,8 +236,12 @@
      while number
      collect number))
 
+(let ((scanner (ppcre:create-scanner "\\s+")))
+  (defun split-spaces (text &optional (start 0))
+    (ppcre:split scanner text :start start)))
+
 (defun parse-float-sequence (text &optional (start 0))
-  (map 'list #'parse-float (ppcre:split "\\s+" text :start start)))
+  (map 'list #'parse-float (split-spaces text start)))
 
 (defun list-double-vector (list)
   (make-array (length list)
@@ -275,9 +285,20 @@
             "Script '~A' not found" name)
     pathname))
 
-(defun load-trajectory (pathname)
-  (let ((data (with-open-file (in pathname :direction :input)
-                (loop for line = (read-line in nil nil)
-                   while line
-                   collect (parse-float-sequence line)))))
-    data))
+;; (defun load-trajectory (pathname)
+;;   (let ((data (with-open-file (in pathname :direction :input)
+;;                 (loop for line = (read-line in nil nil)
+;;                    while line
+;;                    collect (parse-float-sequence line)))))
+;;     data))
+
+(defun strip-hash-comment (line)
+  (declare (type simple-string line))
+  (when line
+    (let* ((i (position #\# line))
+           (stripped (if i
+                         (subseq line 0 i)
+                         line)))
+      (if (ppcre:scan "^\\s*$" stripped)
+          nil
+          stripped))))

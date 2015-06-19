@@ -27,17 +27,6 @@
 (defparameter +wavefront-command-scanner+
   (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)"))
 
-(defun wavefront-strip-comment (line)
-  (declare (type simple-string line))
-  (when line
-    (let* ((i (position #\# line))
-           (stripped (if i
-                         (subseq line 0 i)
-                         line)))
-      (if (ppcre:scan "^\\s*$" stripped)
-          nil
-          stripped))))
-
 (defun parse-wavefront-face (line material lineno)
   (declare (type simple-string line))
   (labels ((subseq-list (reg-start reg-end items)
@@ -110,7 +99,7 @@
            for lineno from 0
            while line
            do
-             (let ((line (wavefront-strip-comment line))
+             (let ((line (strip-hash-comment line))
                    (matched nil))
                (ppcre:register-groups-bind (command data)
                    (+wavefront-command-scanner+ line)
@@ -185,7 +174,7 @@
          for lineno from 0
          while line
          do
-           (let ((line (wavefront-strip-comment line))
+           (let ((line (strip-hash-comment line))
                  (matched nil))
              (ppcre:register-groups-bind (command data)
                  (+wavefront-command-scanner+ line)
