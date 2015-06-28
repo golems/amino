@@ -18,7 +18,7 @@
    :draw-options
    :draw-options-default
    :merge-draw-options
-   :get-draw-option
+   :draw-option
 
    :draw-tf-axis
 

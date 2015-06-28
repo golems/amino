@@ -68,11 +68,11 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 
 (defun draw-options-default (&key
                                (options *draw-options*)
-                               (no-shadow (get-draw-option options :no-shadow))
-                               (color (get-draw-option options :color))
-                               (alpha (get-draw-option options :alpha))
-                               (visual (get-draw-option options :visual))
-                               (collision (get-draw-option options :collision)))
+                               (no-shadow (draw-option options :no-shadow))
+                               (color (draw-option options :color))
+                               (alpha (draw-option options :alpha))
+                               (visual (draw-option options :visual))
+                               (collision (draw-option options :collision)))
   (list* (cons :no-shadow no-shadow)
          (cons :color color)
          (cons :alpha alpha)
