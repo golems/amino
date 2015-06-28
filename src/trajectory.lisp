@@ -41,8 +41,8 @@
                           (values (car line-data)
                                   (cdr line-data)))
                     (joint-keyframe time
-                                    (pairlist-configuration-map names config default-map))))))
-    :clip-start clip-start))
+                                    (pairlist-configuration-map names config default-map)))))
+     :clip-start clip-start)))
 
 (defun load-trajectory (place &key names default-map (time 0d0) time-step clip-start)
   (labels ((helper (stream)
