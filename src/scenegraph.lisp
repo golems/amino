@@ -159,8 +159,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
       (loop
          for x in a
          for y in b
-         do (unless (and (zerop (frame-name-compare (car a) (car b)))
-                         (= (cdr a) (cdr b)))
+         do (unless (and (zerop (frame-name-compare (car x) (car y)))
+                         (= (cdr x) (cdr y)))
               (return-from configuration-map-equal nil)))
       t)))
 
