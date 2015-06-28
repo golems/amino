@@ -110,7 +110,7 @@
                                   (eq x #\Space)
                                   (eq x #\.)))
                             identifier)))
-    (if (amino::char-isdigit (aref sub 0))
+    (if (digit-char-p (aref sub 0))
         (concatenate 'string "g_" sub)
         sub)))
 
