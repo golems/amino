@@ -444,7 +444,7 @@
                                          "--include=**/"
                                          "--exclude=*"
                                          directory
-                                         (format nil "~A:/tmp/robray" host))
+                                         (format nil "~A:~A" host *robray-tmp-directory*))
                                    :search t :wait nil
                                    :output status-stream
                                    :error *error-output*

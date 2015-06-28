@@ -1,11 +1,11 @@
 (in-package :robray)
 
+(defparameter *robray-tmp-root* "/tmp")
 
-(defparameter *robray-tmp-directory* "/tmp/robray/")
-  ;; (concatenate 'string
-  ;;              "/tmp/"
-  ;;              (sb-posix:getenv "USER")
-  ;;              "-cache/robray/"))
+(defparameter *robray-tmp-directory*
+  (format-pathname "~A/robray-~A"
+                   *robray-tmp-root*
+                   (sb-posix:getenv "USER")))
 
 (defun mesh-directory (directory)
   (clean-pathname (concatenate 'string (namestring directory) "/povray/")))
