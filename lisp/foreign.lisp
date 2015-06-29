@@ -43,10 +43,12 @@
 ;;; Libraries ;;;
 
 (define-foreign-library libblas
+  (:unix "libopenblas.so")
   (:unix "libblas.so")
   (t (:default "libblas")))
 
 (define-foreign-library liblapack
+  (:unix "libopenblas.so")
   (:unix "liblapack.so")
   (t (:default "liblapack")))
 
