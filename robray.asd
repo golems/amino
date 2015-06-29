@@ -58,6 +58,7 @@
                       :depends-on ("src/scenefile/urdf" "src/scenefile/curly" "src/scenefile/moveit"))
                (:file "src/animate" :depends-on ("src/scenegraph" "src/povray"))
                (:file "src/draw" :depends-on ("src/scenegraph"))
+               (:file "src/trajectory" :depends-on ("src/scenegraph"))
                )
   :long-description "Robotics Raytracining Frontend"
   )
