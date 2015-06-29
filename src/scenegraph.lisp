@@ -165,6 +165,12 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
       t)))
 
 
+(defun prefix-configuration-map (prefix map)
+  (fold-tree-map (lambda (map key value)
+                   (tree-map-insert map (rope prefix key) value))
+                 (make-tree-map #'frame-name-compare)
+                 map))
+
 
 (defstruct (scene-frame-joint (:include scene-frame))
   "Base struct for varying scene frames."
@@ -215,7 +221,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun scene-frame-compare (frame-a frame-b)
   (labels ((name (frame)
              (etypecase frame
-               (string frame)
+               (rope frame)
                (scene-frame (scene-frame-name frame)))))
     (declare (dynamic-extent #'name))
     (frame-name-compare (name frame-a)
@@ -306,6 +312,17 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun fold-scene-graph-frames (function initial-value scene-graph)
   (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
+(defun prefix-scene-graph (prefix scene-graph)
+  (let ((frames))
+    (do-scene-graph-frames (frame scene-graph (scene-graph frames))
+      (let ((frame (copy-structure frame))
+            (parent (scene-frame-parent frame)))
+        (setf (scene-frame-name frame)
+              (rope prefix (scene-frame-name frame)))
+        (when parent
+          (setf (scene-frame-parent frame)
+                (rope prefix parent)))
+        (push frame frames)))))
 
 (defun scene-graph-joints (scene-graph)
   (fold-scene-graph-frames (lambda (list frame)
