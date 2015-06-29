@@ -71,8 +71,6 @@ libamino_la_SOURCES =                  \
 	src/cv.c
 
 libamino_la_LIBADD =                   \
-	-llapack                       \
-	-lblas                         \
 	-lgfortran                     \
 	libamino_mem.la                \
 	libamino_la.la                 \
@@ -176,22 +174,22 @@ libtestutil_la_SOURCES = src/test/testutil.c
 TESTS = aa_test
 noinst_PROGRAMS = aa_test
 aa_test_SOURCES = src/test/aa_test.c
-aa_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_test_LDADD = libamino.la libtestutil.la
 
 TESTS += q_test
 noinst_PROGRAMS += q_test
 q_test_SOURCES = src/test/q_test.c
-q_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+q_test_LDADD = libamino.la libtestutil.la
 
 TESTS += aa_regress
 noinst_PROGRAMS += aa_regress
 aa_regress_SOURCES = src/test/aa_regress.c
-aa_regress_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_regress_LDADD = libamino.la libtestutil.la
 
 TESTS += la_test
 noinst_PROGRAMS += la_test
 la_test_SOURCES = src/test/la_test.F90
-la_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+la_test_LDADD = libamino.la libtestutil.la
 
 $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 
@@ -201,17 +199,17 @@ foo:
 TESTS += aa_fuzz
 noinst_PROGRAMS += aa_fuzz
 aa_fuzz_SOURCES = src/test/aa_fuzz.c
-aa_fuzz_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_fuzz_LDADD = libamino.la  libtestutil.la
 
 TESTS += aa_fuzz_tf
 noinst_PROGRAMS += aa_fuzz_tf
 aa_fuzz_tf_SOURCES = src/test/aa_fuzz_tf.c
-aa_fuzz_tf_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_fuzz_tf_LDADD = libamino.la libtestutil.la
 
 TESTS += testcpp
 noinst_PROGRAMS += testcpp
 testcpp_SOURCES = src/test/testcpp.cpp
-testcpp_LDADD = libamino.la -lblas -llapack libtestutil.la
+testcpp_LDADD = libamino.la libtestutil.la
 
 
 # noinst_PROGRAMS += test_vec

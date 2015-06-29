@@ -25,6 +25,9 @@ AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
 AC_SEARCH_LIBS([clock_gettime],[rt])
 AC_CHECK_LIB([m],[sqrt])
 
+AC_SEARCH_LIBS([dgemm_],[openblas blas])
+AC_SEARCH_LIBS([dgesvd_],[lapack])
+
 AC_LANG([Fortran])
 AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
 AC_LANG([C])
