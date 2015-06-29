@@ -1,5 +1,5 @@
 /src/mac/mac.f
-/.deps
+.deps
 /build/aa_test
 /build/aa_testpp
 /Makefile.in
@@ -25,6 +25,7 @@ amino*.tar.gz
 /.libs
 *.la
 *.lo
+*.o
 /debian/files
 /debian/tmp
 /debian/libamino0
