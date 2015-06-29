@@ -25,10 +25,9 @@
    :time time
    :configurations
    (etypecase configurations
-     (list (alist-tree-map (alist-fixup-pairs configurations)
-                           #'string-compare))
+     (list (alist-configuration-map configurations))
      (tree-map  configurations)
-     (hash-table (hash-table-tree-map configurations #'string-compare)))))
+     (hash-table (hash-table-tree-map configurations #'frame-name-compare)))))
 
 (defun keyframe-pair-compare (a b)
   (let ((a-start (keyframe-time (car a)))
@@ -108,7 +107,7 @@
                                                 (linterp time
                                                          start-time start-value
                                                          end-time end-value))))
-                           (make-tree-map #'string-compare)
+                           (make-tree-map #'frame-name-compare)
                            end-map)))))))
 
 (defun load-keyframes (path &key

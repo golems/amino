@@ -322,6 +322,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
         (when parent
           (setf (scene-frame-parent frame)
                 (rope prefix parent)))
+        (when (scene-frame-joint-p frame)
+          (setf (scene-frame-joint-configuration-name frame)
+                (rope prefix (scene-frame-joint-configuration-name frame))))
         (push frame frames)))))
 
 (defun scene-graph-joints (scene-graph)
