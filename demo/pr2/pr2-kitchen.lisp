@@ -1,21 +1,12 @@
 (in-package :robray)
 
 
-(defparameter *ros-distribution* "indigo")
-
-(defparameter *pr2-description*
-  (format nil "/opt/ros/~A/share/pr2_description/" *ros-distribution*))
-
 (defparameter *pr2-source-directory*
   (concatenate 'string
                (namestring (asdf:system-source-directory :robray))
                "/demo/pr2/"))
 
 (defvar *scene-graph-kitchen*)
-
-(pushnew (cons "pr2_description" *pr2-description*)
-         *urdf-package-alist* :test #'equal)
-
 (defvar *scene-graph-pr2*)
 
 (defparameter *scene-graph*

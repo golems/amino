@@ -321,6 +321,7 @@
                  (when (or reload
                            (null (nth-value 1 (gethash file *config-load-time*)))
                            (> time (gethash file *config-load-time* )))
+                   (format t "~&; loading file '~A'" file)
                    (load file)
                    (setf (gethash file *config-load-time*)
                          time

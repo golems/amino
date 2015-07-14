@@ -1,37 +1,15 @@
 (in-package :robray)
 
-(defvar *urdf-package-alist* nil)
-(defparameter *ros-distribution* "indigo")
-
-(defparameter *baxter-description*
-  (format nil "/opt/ros/~A/share/baxter_description/" *ros-distribution*))
-
-
 (defparameter *baxter-source-directory*
   (concatenate 'string
                (namestring (asdf:system-source-directory :robray))
                "/demo/baxter/"))
 
-;; Define hosts for rendering
-(setq *render-host-alist*
-      '(("localhost"  ; 4 core (HT), 3.6GHz
-         :jobs 8 :threads 1 :nice 0)
-        ("dione"      ; 12 core, 1.4GHz
-         :jobs 6 :threads 2 :nice 0)
-        ("zeus"       ; 16 core, 2.4GHz
-         :jobs 7 :threads 2 :nice 1 :povray "/home/ndantam/local/bin/povray")
-        ))
-
-;; Define search path for URDF
-(pushnew (cons "baxter_description" *baxter-description*)
-         *urdf-package-alist* :test #'equal)
-
 ;; Load robot scene graph from URDF
 (defparameter *scene-graph*
   (scene-graph
-
    ;; robot
-   (load-scene-file (format-pathname "~A/urdf/baxter.urdf" *baxter-description*)
+   (load-scene-file (urdf-resolve-file "package://baxter_description/urdf/baxter.urdf")
                     :reload-meshes nil)
    ;; Text Label
    (scene-frame-fixed nil "textroot"
