@@ -302,3 +302,27 @@
       (if (ppcre:scan "^\\s*$" stripped)
           nil
           stripped))))
+
+(defparameter *config-load-time* (make-hash-table :test #'equal))
+
+(defparameter *config-directories*
+  `(,(format-pathname "~A/share/config" (asdf:system-source-directory :robray))
+    "/etc/robray"
+    "/usr/local/etc/robray"
+    ,(format-pathname "~A/~A" (namestring (user-homedir-pathname)) ".robray")
+    ,(format-pathname "~A/~A" (namestring (user-homedir-pathname)) ".config/robray")))
+
+(defun load-config (&optional reload)
+  (labels ((try-dir (dir)
+             (map nil #'try-load (directory (format-pathname "~A/*.lisp" dir))))
+           (try-load (file)
+             (when (probe-file file)
+               (let ((time (file-write-date file)))
+                 (when (or reload
+                           (null (nth-value 1 (gethash file *config-load-time*)))
+                           (> time (gethash file *config-load-time* )))
+                   (load file)
+                   (setf (gethash file *config-load-time*)
+                         time
+                         reload t))))))
+    (map nil #'try-dir *config-directories*)))
