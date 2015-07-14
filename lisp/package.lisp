@@ -119,6 +119,8 @@
    :tf-mul
    :tf-copy
    :tf-normalize
+   :tf-translation
+   :tf-rotation
    :identity-quaternion
    :identity-vec3
    :identity-tf
