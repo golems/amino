@@ -16,9 +16,7 @@
                           (mesh-up-axis "Z")
                           (mesh-forward-axis "Y"))
 
-  (let* ((filename (if (pathnamep filename)
-                       filename
-                       (rope-string filename)))
+  (let* ((filename (rope-string (rope filename)))
          (type (or type (scene-file-type filename))))
     (ecase type
       (:urdf (urdf-parse filename
