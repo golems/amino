@@ -16,7 +16,10 @@
                           (mesh-up-axis "Z")
                           (mesh-forward-axis "Y"))
 
-  (let ((type (or type (scene-file-type filename))))
+  (let* ((filename (if (pathnamep filename)
+                       filename
+                       (rope-string filename)))
+         (type (or type (scene-file-type filename))))
     (ecase type
       (:urdf (urdf-parse filename
                          :reload-meshes reload-meshes
