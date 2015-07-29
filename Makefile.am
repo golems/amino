@@ -151,7 +151,7 @@ javadir = $(datadir)/java
 java_DATA = org.golems.amino.jar
 
 lib_LTLIBRARIES += libaminoj.la
-libaminoj_la_CPPFLAGS = $(CPPFLAGS) $(JNICPPFLAGS)
+libaminoj_la_CPPFLAGS = $(AM_CPPFLAGS) $(CPPFLAGS) $(JNICPPFLAGS)
 libaminoj_la_SOURCES = java/aminoj.c
 libaminoj_la_LIBADD = libamino.la
 
