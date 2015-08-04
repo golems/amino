@@ -25,7 +25,7 @@
          (1 font-lock-keyword-face) (2 font-lock-type-face nil t))
        '("\\<\\(isa\\)\\>\\s-+\\(\\sw+\\)?"
          (1 font-lock-keyword-face) (2 font-lock-type-face nil t))
-       (cons (regexp-opt '("geometry") 'words)
+       (cons (regexp-opt '("geometry" "include") 'words)
              'font-lock-keyword-face)
        (cons (regexp-opt '("translation" "quaternion" "shape" "color" "alpha"
                            "dimension" "radius" "height" "start_radius" "end_radius" "affords"

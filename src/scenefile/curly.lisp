@@ -43,6 +43,7 @@
     ("geometry(?!\\w)" :geometry)
     ("class(?!\\w)" :class)
     ("object(?!\\w)" :object)
+    ("include(?!\\w)" :include)
     ;("isa(?!\\w)" :isa)
     ;; identifiers
     ("[a-zA-Z][a-zA-Z0-9_]*"
@@ -102,12 +103,13 @@
 (defun curly-tokenize-file (file)
   (curly-tokenize (read-file-into-string file)))
 
-(defun curly-parse-string (string &optional name)
+(defun curly-parse-string (string &optional pathname)
   (let ((start 0)
-        (line 1))
+        (line 1)
+        (directory (file-dirname pathname)))
     (labels ((parse-error (found wanted)
                (error "Parse error ~A:~D, found ~A, wanted ~A"
-                      (or name "line") line found wanted))
+                      (or pathname "line") line found wanted))
              (next ()
                (multiple-value-bind (value type t-start end t-line)
                    (curly-next-token string start line)
@@ -125,7 +127,16 @@
                      ((:frame :object :class)
                       (cons (named-block token)
                             (start)))
+                     (:include
+                      (append (include)
+                              (start)))
                      (otherwise (parse-error type "frame, object, or EOF"))))))
+             (include ()
+               (multiple-value-bind (type token) (next)
+                 (case type
+                   (:string
+                    (curly-parse-file (concatenate 'string directory "/" token)))
+                   (otherwise (parse-error type :string)))))
              (body ()
                ;(print 'body)
                (let ((type (next)))
@@ -206,7 +217,6 @@
         (frames)
         (geoms)
         (classes (make-tree-map #'string-compare)))
-    ;; TODO: include files
     ;; TODO: namespaces
     (labels ((add-prop (properties stmt)
                (assert (= 2 (length stmt)))
