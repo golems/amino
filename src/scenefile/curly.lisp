@@ -64,6 +64,18 @@
               (values (parse-float (subseq string start end))
                       :float
                       end)))
+    ("π/2"
+     ,(lambda (string start end)
+              (declare (ignore start string))
+              (values (/ pi 2d0) :float end)))
+    ("π/4"
+     ,(lambda (string start end)
+              (declare (ignore start string))
+              (values (/ pi 4d0) :float end)))
+    ("π"
+     ,(lambda (string start end)
+              (declare (ignore start string))
+              (values pi :float end)))
     ;; string
     ("\\\"[^\\\"]*\\\""
      ,(lambda (string start end)
@@ -218,6 +230,8 @@
         (geoms)
         (classes (make-tree-map #'string-compare)))
     ;; TODO: namespaces
+    ;; TODO: arithmetic
+    ;; TODO: variables
     (labels ((add-prop (properties stmt)
                (assert (= 2 (length stmt)))
                (acons (first stmt) (second stmt)
@@ -225,6 +239,13 @@
              (get-prop (properties key &optional default)
                (let ((assoc (assoc key properties :test #'equal)))
                  (if assoc (cdr assoc) default)))
+             (get-orientation (properties)
+               (let ((q (get-prop properties "quaternion"))
+                     (rpy (get-prop properties "rpy")))
+                 (cond
+                   (q q)
+                   (rpy (aa:euler-rpy rpy))
+                   (t aa::+TF-QUAT-IDENT+))))
              (make-prop () nil)
              (get-class (stmt)
                (assert (= 2 (length stmt)))
@@ -260,8 +281,10 @@
                    (typecase stmt
                      (null)
                      (cons (string-case (car stmt)
-                             (("quaternion" "translation" "type" "axis" "offset" "parent"
-                                            "shape" "dimension" "color" "alpha")
+                             (("quaternion" "rpy"
+                               "translation"
+                               "type" "axis" "offset" "parent"
+                               "shape" "dimension" "color" "alpha")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
@@ -280,7 +303,7 @@
                    (etypecase stmt
                      (null)
                      (cons (string-case (car stmt)
-                             (("axis" "quaternion" "translation" "type" "offset")
+                             (("axis" "quaternion" "rpy" "translation" "type" "offset")
                               (setq properties
                                     (add-prop properties stmt)))
                              ("parent"
@@ -289,13 +312,14 @@
                               (setq properties (add-prop properties stmt)))
                              ("isa"
                               (push (get-class stmt) parent-classes))
-                             (otherwise (error "Unknown property in frame ~A" name))))
+                             (otherwise (error "Unknown property '~A' in frame ~A"
+                                               (car stmt) name))))
                      (curly-block
                       (add-block stmt name))))
                  (insert-frame name (class-properties properties (reverse parent-classes)) parent)))
              (insert-frame (name properties parent)
                (let* ((frame-type (get-prop properties "type" "fixed"))
-                      (tf (tf* (get-prop properties "quaternion")
+                      (tf (tf* (get-orientation properties)
                                (get-prop properties "translation")))
                       (parent (get-prop properties "parent" parent))
                       (frame (if (string= frame-type "fixed")
