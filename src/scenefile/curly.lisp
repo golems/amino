@@ -76,8 +76,8 @@
               (values pi :float end)))
     ("\\*" :binop *)
     ("\\+" :binop +)
-    ("\\-" :binop -)
     ("/" :binop /)
+    ("\\-" -)
     ;; string
     ("\\\"[^\\\"]*\\\""
      ,(lambda (string start end)
@@ -227,13 +227,14 @@
              (expr-next (e)
                (multiple-value-bind (type token) (next)
                  (case type
-                   (:binop (expr-val (cons token e)))
+                   ((:binop -) (expr-val (cons token e)))
                    (otherwise (values (expr-result e)
                                       type token)))))
              (expr-val (e)
                (multiple-value-bind (type token) (next)
                  (case type
                    ((:float :integer :identifier) (expr-next (cons token e)))
+                   (- (expr-val (list* '_  e)))
                    (otherwise (values (expr-result e)
                                       type token)))))
              (array (elements)
@@ -259,8 +260,9 @@
       (start))))
 
 (defun curly-parse-file (pathname)
-  (curly-parse-string (read-file-into-string pathname)
-                      pathname))
+  (let ((pathname (rope-string pathname)))
+    (curly-parse-string (read-file-into-string pathname)
+                        pathname)))
 
 
 (defun curly-eval (defs e)

@@ -34,61 +34,65 @@
 
 (in-package :robray)
 
-
 (defun inexp-precedence (op)
   (case op
       ((+ -) 1)
       ((* /) 2)
-      ((^ **) 3)))
+      ((^ **) 3)
+      ((_) 4)))
 
 (defun inexp-left (op)
   (ecase op
     ((+ - * /) t)
-    ((^ **) nil)))
+    ((^ ** _) nil)))
 
 (defun inexp-opp (k)
-  (find k '(+ - * / ^ **)))
+  (case k
+    ((+ - * / ^ ** _) t)
+    (otherwise nil)))
 
 (defun inexp-rpn (list)
   (let (stack)
     (dolist (e list)
       (if (inexp-opp e)
-          (let ((a (pop stack))
-                (b (pop stack)))
-            (cond
-              ((find e '(+  *))
-               (push (list e a b) stack))
-              ((find e '(-  /))
-               (push (list e b a) stack))
-              ((find e '(^  **))
-               (push (list 'expt b a) stack))
-              (t (error "unknown op: ~A" e))))
+          (let ((a (pop stack)))
+            (case e
+              ((+  * / -)
+               (push (list e (pop stack) a) stack))
+              (_
+               (push (list '- a) stack))
+              ((^  **)
+               (push (list 'expt (pop stack) a) stack))
+              (otherwise (error "unknown op: ~A" e))))
           (push e stack)))
     (assert (and stack (null (cdr stack)))
             () "bad rpn stack: ~A" stack)
     (car stack)))
 
 (defun inexp-shunt (list)
-  (cond
-    ((atom list) (list list))
-    ((inexp-opp (cadr list))
-      (let (out stack)
-        (dolist (k list)
-          (cond
-            ((listp k) (push (inexp-parse k) out))
-            ((inexp-opp k)
-             (loop
-                while (and stack (if (inexp-left k)
-                                     (<= (inexp-precedence k)
-                                         (inexp-precedence (car stack)))
-                                     (< (inexp-precedence k)
-                                        (inexp-precedence (car stack)))))
-                do (push (pop stack) out))
-             (push k stack))
-            (t (push k out))))
-        (dolist (k stack) (push k out))
-        (reverse out)))
-    (t (list (cons (car list) (mapcar #'inexp-parse (cdr list)))))))
+  (let (out stack)
+    (dolist (k list)
+      (cond
+        ((listp k)
+         (setq out
+               (append (reverse (inexp-shunt k)) out)))
+        ((inexp-opp k)
+         (loop ; apply greater precendence operators
+            with prec = (inexp-precedence k)
+            with left = (inexp-left k)
+            while (and stack (if left
+                                 (<= prec (inexp-precedence (car stack)))
+                                 (< prec (inexp-precedence (car stack)))))
+            do (push (pop stack) out))
+         (push k stack))
+        (t (push k out))))
+    (dolist (k stack) (push k out))
+    (reverse out)))
+
+  ;; (cond
+  ;;   ((atom list) (list list))
+  ;;   ((inexp-opp (cadr list))
+;    (t (list (cons (car list) (mapcar #'inexp-parse (cdr list)))))))
 
 (defun inexp-parse (list)
   (if (atom list)
