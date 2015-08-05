@@ -34,7 +34,7 @@
                            "type" "axis" "offset" "scale") 'words)
              'font-lock-type-face)
        (cons (regexp-opt '("mesh" "box" "cone" "cylinder" "sphere"
-                           "fixed" "prismatic" "revolute" "π")
+                           "fixed" "prismatic" "revolute" "π" "pi" "deg")
                          'words)
              'font-lock-constant-face)))
 

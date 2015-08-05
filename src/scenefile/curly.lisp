@@ -50,6 +50,14 @@
     ("object(?!\\w)" :object)
     ("include(?!\\w)" :include)
     ("def(?!\\w)" :def)
+    ("π|pi(?!\\w)"
+     ,(lambda (string start end)
+              (declare (ignore start string))
+              (values pi :float end)))
+    ("deg(?!\\w)"
+     ,(lambda (string start end)
+              (declare (ignore start string))
+              (values (/ pi 180d0) :float end)))
     ;("isa(?!\\w)" :isa)
     ;; identifiers
     ("[a-zA-Z][a-zA-Z0-9_]*"
@@ -70,10 +78,6 @@
               (values (parse-float (subseq string start end))
                       :float
                       end)))
-    ("π"
-     ,(lambda (string start end)
-              (declare (ignore start string))
-              (values pi :float end)))
     ("\\*" :binop *)
     ("\\+" :binop +)
     ("/" :binop /)
