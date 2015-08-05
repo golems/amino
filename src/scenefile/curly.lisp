@@ -64,18 +64,14 @@
               (values (parse-float (subseq string start end))
                       :float
                       end)))
-    ("π/2"
-     ,(lambda (string start end)
-              (declare (ignore start string))
-              (values (/ pi 2d0) :float end)))
-    ("π/4"
-     ,(lambda (string start end)
-              (declare (ignore start string))
-              (values (/ pi 4d0) :float end)))
     ("π"
      ,(lambda (string start end)
               (declare (ignore start string))
               (values pi :float end)))
+    ("\\*" :binop *)
+    ("\\+" :binop +)
+    ("\\-" :binop -)
+    ("/" :binop /)
     ;; string
     ("\\\"[^\\\"]*\\\""
      ,(lambda (string start end)
@@ -202,24 +198,70 @@
                    ((:identifier :integer :float :string)
                     (body-statement (cons token items)))
                    (otherwise (parse-error type "a value")))))
+
+             (expr ()
+               (expr-val nil))
+             (expr-result (e)
+               (if (null (cdr e))
+                   (car e)
+                   (inexp-parse (reverse e))))
+             (expr-next (e)
+               (multiple-value-bind (type token) (next)
+                 (case type
+                   (:binop (expr-val (cons token e)))
+                   (otherwise (values (expr-result e)
+                                      type token)))))
+             (expr-val (e)
+               (multiple-value-bind (type token) (next)
+                 (case type
+                   ((:float :integer) (expr-next (cons token e)))
+                   (otherwise (values (expr-result e)
+                                      type token)))))
              (array (elements)
-               (multiple-value-bind (type token) (next)
-                 (case type
-                   (#\] (apply #'vec (reverse elements)))
-                   (otherwise (array-delim (cons token elements))))))
-             (array-delim (elements)
-               (multiple-value-bind (type token) (next)
+               (multiple-value-bind (e type token) (expr)
                  (declare (ignore token))
-                 (case type
-                   (#\] (apply #'vec (reverse elements)))
-                   (#\, (array elements))
-                   (otherwise (parse-error type "} or ,"))))))
+                 ;(print e)
+                 (let ((elements (if e
+                                     (cons e elements)
+                                     elements)))
+                   (case type
+                     (#\] (apply #'vector (reverse elements)))
+                     (#\, (array elements))
+                     (otherwise (parse-error type "] or ,"))))))
+             ;; (array-delim (elements)
+             ;;   (multiple-value-bind (type token) (next)
+             ;;     (declare (ignore token))
+             ;;     (case type
+             ;;       (#\] (apply #'vec (reverse elements)))
+             ;;       (#\, (array elements))
+             ;;       (otherwise (parse-error type "} or ,")))))
+             )
 
       (start))))
 
 (defun curly-parse-file (pathname)
   (curly-parse-string (read-file-into-string pathname)
                       pathname))
+
+
+(defun curly-eval (e)
+  (labels ((recurse (args)
+             (map 'list #'curly-eval args)))
+    (etypecase e
+      (number e)
+      (string e)
+      (list
+       (destructuring-case e
+         ((+ &rest args)
+          (apply #'+ (recurse args)))
+         ((- &rest args)
+          (apply #'- (recurse args)))
+         ((/ &rest args)
+          (apply #'/ (recurse args)))
+         ((* &rest args)
+          (apply #'* (recurse args)))))
+      (vector
+       (apply #'vec (recurse e))))))
 
 
 (defun load-curly-scene (pathname &key
@@ -234,7 +276,7 @@
     ;; TODO: variables
     (labels ((add-prop (properties stmt)
                (assert (= 2 (length stmt)))
-               (acons (first stmt) (second stmt)
+               (acons (first stmt) (curly-eval (second stmt))
                       properties))
              (get-prop (properties key &optional default)
                (let ((assoc (assoc key properties :test #'equal)))

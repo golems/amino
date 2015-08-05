@@ -52,7 +52,8 @@
                (:file "src/scenegraph" :depends-on ("src/util" "src/povray" "src/mesh"))
                (:file "src/scenefile/urdf" :depends-on ("src/util" "src/povray" "src/scenegraph" "src/wavefront"))
                (:file "src/lexer" :depends-on ("src/util"))
-               (:file "src/scenefile/curly" :depends-on ("src/scenegraph" "src/mesh" "src/lexer"))
+               (:file "src/inex" :depends-on ("src/util"))
+               (:file "src/scenefile/curly" :depends-on ("src/scenegraph" "src/mesh" "src/lexer" "src/inex"))
                (:file "src/scenefile/moveit" :depends-on ("src/scenegraph" "src/mesh"))
                (:file "src/scenefile/scenefile"
                       :depends-on ("src/scenefile/urdf" "src/scenefile/curly" "src/scenefile/moveit"))

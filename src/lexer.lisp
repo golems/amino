@@ -28,14 +28,15 @@
                      (:alternation ,@(loop for (regex thing) in token-regexes
                                         collect (list :register
                                                       (strip-registers (ensure-regex-tree regex)))))))
-        (handlers (loop for (regex type-or-handler) in token-regexes
+        (handlers (loop for (regex type-or-handler token) in token-regexes
                      collect
-                       (let ((type type-or-handler))
-                         (if (functionp type-or-handler)
-                             type-or-handler
+                       (if (functionp type-or-handler)
+                           type-or-handler
+                           (let* ((type type-or-handler)
+                                  (token (or token type)))
                              (lambda (string start end)
                                (declare (ignore string start))
-                               (values type type end)))))))
+                               (values (or token type) type end)))))))
     (%make-lexer :token-scanner (ppcre:create-scanner big-regex)
                  :token-regex big-regex
                  :skip-regex skip-regex
