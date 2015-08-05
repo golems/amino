@@ -6,6 +6,11 @@
   line
   statements)
 
+
+(defstruct curly-def
+  name
+  value)
+
 ;;; Scanner element:
 ;;;    (list regex (or type (lambda (string start end))))
 ;;;    If the second element is a function, its result is
@@ -44,6 +49,7 @@
     ("class(?!\\w)" :class)
     ("object(?!\\w)" :object)
     ("include(?!\\w)" :include)
+    ("def(?!\\w)" :def)
     ;("isa(?!\\w)" :isa)
     ;; identifiers
     ("[a-zA-Z][a-zA-Z0-9_]*"
@@ -138,7 +144,20 @@
                      (:include
                       (append (include)
                               (start)))
+                     (:def (cons (def)
+                                 (start)))
                      (otherwise (parse-error type "frame, object, or EOF"))))))
+             (def ()
+               (multiple-value-bind (type token) (next)
+                 (case type
+                   (:identifier (def-value token))
+                   (otherwise (parse-error type :identifier)))))
+             (def-value (name)
+               (multiple-value-bind (e type token) (expr)
+                 (declare (ignore token))
+                 (case type
+                   (#\; (make-curly-def :name name :value e))
+                   (otherwise (parse-error type #\;)))))
              (include ()
                (multiple-value-bind (type token) (next)
                  (case type
@@ -214,7 +233,7 @@
              (expr-val (e)
                (multiple-value-bind (type token) (next)
                  (case type
-                   ((:float :integer) (expr-next (cons token e)))
+                   ((:float :integer :identifier) (expr-next (cons token e)))
                    (otherwise (values (expr-result e)
                                       type token)))))
              (array (elements)
@@ -244,12 +263,16 @@
                       pathname))
 
 
-(defun curly-eval (e)
+(defun curly-eval (defs e)
   (labels ((recurse (args)
-             (map 'list #'curly-eval args)))
+             (map 'list (lambda (e)
+                          (curly-eval defs e))
+                  args)))
     (etypecase e
       (number e)
-      (string e)
+      (string (if-let ((a (assoc e defs :test #'equal)))
+                (cdr a)
+                e))
       (list
        (destructuring-case e
          ((+ &rest args)
@@ -270,13 +293,16 @@
         (file-directory (file-dirname pathname))
         (frames)
         (geoms)
+        (defs)
         (classes (make-tree-map #'string-compare)))
     ;; TODO: namespaces
-    ;; TODO: arithmetic
-    ;; TODO: variables
-    (labels ((add-prop (properties stmt)
+    (labels ((add-def (def)
+               (push (cons (curly-def-name def)
+                           (curly-def-value def))
+                     defs))
+             (add-prop (properties stmt)
                (assert (= 2 (length stmt)))
-               (acons (first stmt) (curly-eval (second stmt))
+               (acons (first stmt) (curly-eval defs (second stmt))
                       properties))
              (get-prop (properties key &optional default)
                (let ((assoc (assoc key properties :test #'equal)))
@@ -299,6 +325,10 @@
                (apply #'append
                       properties
                       class-properties))
+             (add-thing (thing)
+               (etypecase thing
+                 (curly-block (add-block thing nil))
+                 (curly-def (add-def thing))))
              (add-block (cb parent)
                ;(print 'add-block)
                (case (curly-block-type cb)
@@ -426,7 +456,7 @@
                  (setf (scene-geometry-type geometry) (property-classes properties))
                  (push (cons parent geometry) geoms))))
       (dolist (c curly)
-        (add-block c nil)))
+        (add-thing c)))
     (scene-graph-resolve-mesh
      (fold (lambda (sg g)
              (scene-graph-add-geometry sg (car g) (cdr g)))
