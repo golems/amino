@@ -304,7 +304,7 @@
     ;; TODO: namespaces
     (labels ((add-def (def)
                (push (cons (curly-def-name def)
-                           (curly-def-value def))
+                           (curly-eval defs (curly-def-value def)))
                      defs))
              (add-prop (properties stmt)
                (assert (= 2 (length stmt)))
