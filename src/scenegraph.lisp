@@ -279,14 +279,14 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                 (%scene-graph-add-frame scene-graph thing))
                (scene-graph
                 (%scene-graph-merge scene-graph thing))
+               (list
+                (%scene-graph-merge scene-graph
+                                    (%scene-graph thing)))
                ((or pathname string)
                 (%scene-graph-merge scene-graph
                                     (load-thing thing)))
                (rope
-                (rec scene-graph (rope-string thing)))
-               (list
-                (%scene-graph-merge scene-graph
-                                    (%scene-graph thing))))))
+                (rec scene-graph (rope-string thing))))))
     (fold #'rec (make-scene-graph) things)))
 
 (defun scene-graph (&rest things)
