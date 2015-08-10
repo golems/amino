@@ -41,6 +41,7 @@
    :scene-graph-f
    :scene-graph-remove-frame
    :scene-graph-reparent
+   :*scene-directory*
    :load-scene-file
 
    ;; variables

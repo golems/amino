@@ -263,6 +263,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
             (map-tree-set 'list #'scene-frame-name intersection))
     (make-scene-graph :frames (tree-set-union set-1 set-2))))
 
+
+(defvar *scene-directory* (make-pathname))
+
 (defun %scene-graph (things)
   (labels ((rec (scene-graph thing)
              (etypecase thing
@@ -270,6 +273,10 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                 (%scene-graph-add-frame scene-graph thing))
                (scene-graph
                 (%scene-graph-merge scene-graph thing))
+               (pathname
+                (load-scene-file (merge-pathnames *scene-directory* thing)))
+               (rope
+                (load-scene-file (merge-pathnames *scene-directory* (rope-string thing))))
                (list
                 (%scene-graph-merge scene-graph
                                     (%scene-graph thing))))))

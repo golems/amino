@@ -70,6 +70,7 @@
     (null file)
     (string (concatenate 'string (ensure-directory directory)
                          file))
+    (rope (output-file file (rope-string directory)))
     (pathname (output-file file (namestring directory)))
     (list (output-file file (make-pathname :directory directory)))))
 
