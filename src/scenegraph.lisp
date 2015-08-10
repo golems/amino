@@ -267,16 +267,23 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defvar *scene-directory* (make-pathname))
 
 (defun %scene-graph (things)
-  (labels ((rec (scene-graph thing)
+  (labels ((load-thing (thing)
+             (load-scene-file
+              (let ((dir (pathname-directory thing)))
+                (if (and dir (eq :absolute (car dir)))
+                    thing
+                    (merge-pathnames *scene-directory* thing)))))
+           (rec (scene-graph thing)
              (etypecase thing
                (scene-frame
                 (%scene-graph-add-frame scene-graph thing))
                (scene-graph
                 (%scene-graph-merge scene-graph thing))
-               (pathname
-                (load-scene-file (merge-pathnames *scene-directory* thing)))
+               ((or pathname string)
+                (%scene-graph-merge scene-graph
+                                    (load-thing thing)))
                (rope
-                (load-scene-file (merge-pathnames *scene-directory* (rope-string thing))))
+                (rec scene-graph (rope-string thing)))
                (list
                 (%scene-graph-merge scene-graph
                                     (%scene-graph thing))))))
