@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac
 EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
              src/la_impl.c                       \
              src/la_mod.F90 src/la_implf.F90     \
@@ -71,8 +71,6 @@ libamino_la_SOURCES =                  \
 	src/cv.c
 
 libamino_la_LIBADD =                   \
-	-llapack                       \
-	-lblas                         \
 	-lgfortran                     \
 	libamino_mem.la                \
 	libamino_la.la                 \
@@ -153,7 +151,7 @@ javadir = $(datadir)/java
 java_DATA = org.golems.amino.jar
 
 lib_LTLIBRARIES += libaminoj.la
-libaminoj_la_CPPFLAGS = $(CPPFLAGS) $(JNICPPFLAGS)
+libaminoj_la_CPPFLAGS = $(AM_CPPFLAGS) $(CPPFLAGS) $(JNICPPFLAGS)
 libaminoj_la_SOURCES = java/aminoj.c
 libaminoj_la_LIBADD = libamino.la
 
@@ -176,22 +174,22 @@ libtestutil_la_SOURCES = src/test/testutil.c
 TESTS = aa_test
 noinst_PROGRAMS = aa_test
 aa_test_SOURCES = src/test/aa_test.c
-aa_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_test_LDADD = libamino.la libtestutil.la
 
 TESTS += q_test
 noinst_PROGRAMS += q_test
 q_test_SOURCES = src/test/q_test.c
-q_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+q_test_LDADD = libamino.la libtestutil.la
 
 TESTS += aa_regress
 noinst_PROGRAMS += aa_regress
 aa_regress_SOURCES = src/test/aa_regress.c
-aa_regress_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_regress_LDADD = libamino.la libtestutil.la
 
 TESTS += la_test
 noinst_PROGRAMS += la_test
 la_test_SOURCES = src/test/la_test.F90
-la_test_LDADD = libamino.la -lblas -llapack libtestutil.la
+la_test_LDADD = libamino.la libtestutil.la
 
 $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 
@@ -201,17 +199,17 @@ foo:
 TESTS += aa_fuzz
 noinst_PROGRAMS += aa_fuzz
 aa_fuzz_SOURCES = src/test/aa_fuzz.c
-aa_fuzz_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_fuzz_LDADD = libamino.la  libtestutil.la
 
 TESTS += aa_fuzz_tf
 noinst_PROGRAMS += aa_fuzz_tf
 aa_fuzz_tf_SOURCES = src/test/aa_fuzz_tf.c
-aa_fuzz_tf_LDADD = libamino.la -lblas -llapack libtestutil.la
+aa_fuzz_tf_LDADD = libamino.la libtestutil.la
 
 TESTS += testcpp
 noinst_PROGRAMS += testcpp
 testcpp_SOURCES = src/test/testcpp.cpp
-testcpp_LDADD = libamino.la -lblas -llapack libtestutil.la
+testcpp_LDADD = libamino.la libtestutil.la
 
 
 # noinst_PROGRAMS += test_vec
@@ -222,20 +220,20 @@ testcpp_LDADD = libamino.la -lblas -llapack libtestutil.la
 ## PREPROCESSING ##
 
 clapack_doc.c: doc/clapack_doc.c include/amino/clapack.h include/amino/clapack_impl.h
-	$(CPP) $(INCLUDES) -CC $< -o $@
+	$(CPP) $(AM_CPPFLAGS) -CC $< -o $@
 lapack_doc.c: doc/lapack_doc.c include/amino/lapack.h include/amino/lapack_impl.h
-	$(CPP) $(INCLUDES) -CC $< -o $@
+	$(CPP) $(AM_CPPFLAGS) -CC $< -o $@
 la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
-	$(CPP) $(INCLUDES) -CC $< -o $@
+	$(CPP) $(AM_CPPFLAGS) -CC $< -o $@
 
 la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
-	$(CPP) $(INCLUDES) -x c  $< -o $@
+	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
 
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
-	$(CPP) $(INCLUDES) -x c  $< -o $@
+	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
 
 tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90
-	$(CPP) $(INCLUDES) -x c  $< -o $@
+	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
 
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90

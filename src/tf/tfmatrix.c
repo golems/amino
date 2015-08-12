@@ -88,6 +88,47 @@ aa_tf_93chain( const double R0[AA_RESTRICT 9],
 /*************/
 /* ROTATIONS */
 /*************/
+static void
+vnormalize2( const double x[AA_RESTRICT 3],
+             double x_norm[AA_RESTRICT 3] )
+{
+    double n = sqrt( x[0]*x[0] + x[1]*x[1] + x[2]*x[2] );
+    for( size_t i = 0; i < 3; i ++ ) x_norm[i] = x[i] / n;
+}
+
+
+AA_API void
+aa_tf_rotmat_xy( const double x_axis[AA_RESTRICT 3],
+                 const double y_axis[AA_RESTRICT 3],
+                 double R[AA_RESTRICT 9] )
+{
+    vnormalize2( x_axis, R+0 );
+    vnormalize2( y_axis, R+3 );
+    aa_tf_cross( R+0, R+3, R+6 );
+}
+
+AA_API void
+aa_tf_rotmat_yz( const double y_axis[AA_RESTRICT 3],
+                 const double z_axis[AA_RESTRICT 3],
+                 double R[AA_RESTRICT 9] )
+{
+    vnormalize2( y_axis, R+3 );
+    vnormalize2( z_axis, R+6 );
+    aa_tf_cross( R+3, R+6, R+0 );
+
+}
+
+AA_API void
+aa_tf_rotmat_zx( const double z_axis[AA_RESTRICT 3],
+                 const double x_axis[AA_RESTRICT 3],
+                 double R[AA_RESTRICT 9] )
+{
+    vnormalize2( z_axis, R+6 );
+    vnormalize2( x_axis, R+0 );
+    aa_tf_cross( R+6, R+0, R+3 );
+
+}
+
 
 #define RREF(R,row,col) ((R)[(col)*3 + (row)])
 

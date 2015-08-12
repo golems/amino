@@ -1,11 +1,11 @@
-;;;; -*- Lisp -*-
+;;;; -*- mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2009-2011, Georgia Tech Research Corporation
+;;;; Copyright (c) 2013, Georgia Tech Research Corporation
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
 ;;;; Georgia Tech Humanoid Robotics Lab
-;;;; Under Direction of Prof. Mike Stilman
+;;;; Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
 ;;;;
 ;;;;
 ;;;; This file is provided under the following "BSD-style" License:
@@ -37,31 +37,9 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(cl:eval-when (:load-toplevel :execute)
-    (asdf:operate 'asdf:load-op 'cffi-grovel))
+(in-package :amino)
 
-(asdf:defsystem amino
-  :description "Basic utilities / numerics"
-  :depends-on ("cffi" "sycamore")
-  :components ((:file "package")
-               ;; TYPE
-               (:file "basic-type" :depends-on ("package"))
-               ;; FFI
-               (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
-               (:file "ffi" :depends-on ("grovel" "basic-type"))
-               ;; LA
-               (:file "basic-ops" :depends-on ("basic-type"))
-               (:file "foreign" :depends-on ("basic-ops" "ffi"))
-               (:file "blas" :depends-on ("foreign"))
-               (:file "libc" :depends-on ("foreign"))
-               (:file "amino-la" :depends-on ("foreign"))
-               (:file "op" :depends-on ("package"))
-               (:file "generic" :depends-on ("op" "tf-type"))
-               (:file "blas-generic" :depends-on ("generic" "blas"))
-               (:file "mem" :depends-on ("foreign"))
-               (:file "io" :depends-on ("mem"))
-               ;; TF
-               (:file "tf-type" :depends-on ("foreign"))
-               (:file "tf" :depends-on ("tf-type"))
-               (:file "tf-op" :depends-on ("tf" "generic"))
-               ))
+;; (def-la ("aa_la_d_angle" d-angle) :double
+;;   (n size-t (:length x) (:length y))
+;;   (x :vector)
+;;   (y :vector))

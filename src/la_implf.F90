@@ -211,7 +211,7 @@ pure function AA_FMOD(la,norm2)( x ) result(a)
   ssq = real(1,AA_FSIZE)
   scl = real(0,AA_FSIZE)
   do i=1,size(x)
-     if ( real(0,AA_FSIZE) /= x(i) ) then
+     if ( real(0,AA_FSIZE) < abs(x(i)) ) then
         if( scl < abs(x(i)) ) then
            ssq = real(1,AA_FSIZE) + ssq * (scl/abs(x(i)))**2
            scl = abs(x(i))

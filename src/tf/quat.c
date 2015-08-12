@@ -43,6 +43,10 @@
 #include "amino.h"
 #include "amino_internal.h"
 
+/*----------------------*/
+/* ORDINARY QUATERNIONS */
+/*----------------------*/
+
 AA_API void
 aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3], double c[AA_RESTRICT 3] )
 {

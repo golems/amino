@@ -44,6 +44,13 @@
 (defgeneric rotation (x))
 (defgeneric translation (x))
 
+(defgeneric normalize (x))
+
+(defmethod normalize ((x quaternion-translation))
+  (make-quaternion-translation :quaternion (tf-qnormalize (quaternion-translation-quaternion x))
+                               :translation (quaternion-translation-translation x)))
+
+
 (defmethod rotation ((x quaternion-translation))
   (quaternion-translation-quaternion x))
 
@@ -54,6 +61,7 @@
 (defgeneric rotation-matrix (x))
 
 (defgeneric euler-zyx (x))
+(defgeneric euler-rpy (x))
 
 (defgeneric dual-quaternion (x))
 (defgeneric quaternion-translation (x))
@@ -62,6 +70,62 @@
 (defgeneric dual-quaternion-2 (r x))
 (defgeneric quaternion-translation-2 (r x))
 (defgeneric transformation-matrix-2 (r x))
+
+(defgeneric vec3 (x))
+
+;;; TF Interface
+(defun make-tf (&key
+                  (quaternion (quaternion* 0d0 0d0 0d0 1d0))
+                  (translation (vec3* 0d0 0d0 0d0)))
+  "Create a transform"
+  (make-quaternion-translation :quaternion quaternion
+                               :translation translation))
+
+
+(defun tf-quaternion (transform)
+  "Return the rotation part as a quaternion"
+  (quaternion-translation-quaternion transform))
+(defun tf-translation (transform)
+  "Return the translation part."
+  (quaternion-translation-translation transform))
+
+
+(defun tf-inverse (transform &optional (inverse (make-tf)))
+  "Compute the inverse of the transform."
+  (aa-tf-qv-conj (tf-quaternion transform)
+                 (tf-translation transform)
+                 (tf-quaternion inverse)
+                 (tf-translation inverse))
+  inverse)
+
+(defun tf (transform)
+  "Convert TRANSFORM to TF type"
+  (quaternion-translation transform))
+
+(defun tf* (rotation translation)
+  "Convert ROTATION and TRANSLATION to TF type"
+  (make-tf :quaternion (quaternion rotation)
+           :translation (vec3 translation)))
+
+(defun tf-mul (tf-0 tf-1 &optional (result (make-tf)))
+  "Multiply TF-0 and TF-1, storing in RESULT."
+  (tf-qutr-mul tf-0 tf-1 result))
+
+(defun tf-copy (transform &optional (result (make-tf)))
+  "Deeply copy TRANFORM into RESULT."
+  (deep-copy-quaternion (tf-quaternion transform)
+                        (tf-quaternion result))
+  (deep-copy-vec3 (tf-translation transform)
+                  (tf-translation result))
+  result)
+
+(defun tf-normalize (transform &optional (result (make-tf)))
+  "Normalize TRANSFORM, storing into RESULT."
+  (deep-copy-vec3 (tf-translation transform)
+                  (tf-translation result))
+  (tf-qnormalize (tf-quaternion transform)
+                 (tf-quaternion result))
+  result)
 
 ;;; Quaternion
 (defmethod quaternion ((x quaternion)) x)
@@ -92,6 +156,11 @@
                (aref x 2)
                (aref x 3)))
 
+(defmethod quaternion ((x cons))
+  (unless (= 4 (length x))
+    (error "Invalid length for quaternion"))
+  (apply #'quaternion* x))
+
 (defmethod quaternion ((x x-angle))
   (tf-xangle2quat (principal-angle-value x)))
 (defmethod quaternion ((x y-angle))
@@ -115,7 +184,6 @@
 
 ;;; Translation
 
-(defgeneric vec3 (x))
 
 (defmethod vec3 ((x vec3))
   x)
@@ -123,8 +191,13 @@
 (defmethod vec3 ((x (eql nil)))
   (vec3* 0 0 0))
 
+(defmethod vec3 ((x cons))
+  (unless (= 3 (length x))
+    (error "Invalid length for vec3"))
+  (apply #'vec3* x))
+
 (defmethod vec3 ((x array))
-  (check-type x (array t (3)))
+  (assert (= (length x) 3))
   (vec3* (aref x 0)
          (aref x 1)
          (aref x 2)))
@@ -134,7 +207,7 @@
          (elt x 1)
          (elt x 2)))
 
-;;; Euler
+;;; Euler ZYX
 
 (defmethod euler-zyx ((x (eql nil)))
   (euler-zyx* 0d0 0d0 0d0))
@@ -146,6 +219,9 @@
   (euler-zyx* (aref x 0)
               (aref x 1)
               (aref x 2)))
+
+(defmethod euler-zyx ((x cons))
+  (apply #'euler-zyx* x))
 
 (defmethod euler-zyx ((x x-angle))
   (euler-zyx* 0d0
@@ -161,6 +237,28 @@
   (euler-zyx*  (z-angle-value x)
                0d0
                0d0))
+
+;;; Euler RPY
+;; These are just reversed ZYX angles
+
+(defmethod euler-rpy ((x array))
+  (euler-rpy* (aref x 0)
+              (aref x 1)
+              (aref x 2)))
+
+(defmethod euler-rpy ((x cons))
+  (apply #'euler-rpy* x))
+
+(defmethod euler-rpy ((x (eql nil)))
+  (euler-zyx x))
+(defmethod euler-rpy ((x quaternion))
+  (euler-zyx x))
+(defmethod euler-rpy ((x x-angle))
+  (euler-zyx x))
+(defmethod euler-rpy ((x y-angle))
+  (euler-zyx x))
+(defmethod euler-rpy ((x z-angle))
+  (euler-zyx x))
 
 ;;; Dual-Quaternion
 (defmethod dual-quaternion ((x dual-quaternion)) x)
@@ -223,9 +321,6 @@
   (make-quaternion-translation :quaternion (quaternion r)
                                :translation (vec3 x)))
 
-(defun tf (rotation translation)
-  (quaternion-translation-2 rotation translation))
-
 (defmethod vec-array ((obj quaternion-translation) &optional (array (make-vec 7)) (start 0))
   (replace array (real-array-data (quaternion-translation-quaternion obj)) :start1 start)
   (replace array (real-array-data (quaternion-translation-translation obj)) :start1 (+ start 4)))
@@ -250,12 +345,17 @@
 
 ;;; Multiplies
 
+(defmethod g* ((a number) (b vec3))
+  (make-vec3 :data (dscal-copy a (vec3-data b))))
+
+(defmethod g* ((a vec3) (b number))
+  (g* b a))
+
 (defmethod g* ((a quaternion) (b quaternion))
   (tf-qmul a b))
 
 (defmethod g* ((a number) (b quaternion))
-  (make-quaternion :data (dscal (coerce a 'double-float)
-                                (vec-copy (quaternion-data b)))))
+  (make-quaternion :data (dscal-copy a b)))
 
 (defmethod g* ((a quaternion) (b axis-angle))
   (tf-qmul a (quaternion b)))
@@ -330,11 +430,12 @@
     (quaternion-translation-2 qc vc)))
 
 
+;;; Tagged TFs
 
 (defmethod g* ((a tf-tag) (b tf-tag))
   (assert (eql (tf-tag-child a)
                (tf-tag-parent b)))
-  (make-tf-tag :tf (g* (tf-tag-tf a)
-                       (tf-tag-tf b))
-               :parent (tf-tag-parent a)
-               :child (tf-tag-child b)))
+  (tf-tag (tf-tag-parent a)
+          (g* (tf-tag-tf a)
+              (tf-tag-tf b))
+          (tf-tag-child b)))

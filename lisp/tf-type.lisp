@@ -53,32 +53,6 @@
          (let ((,var (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
            ,@body)))))
 
-(defun expand-vector (value var body length)
-  "Get the data pointer for value, checking storage and size"
-  (with-gensyms (x ptr0 body-fun)
-    `(flet ((,body-fun (,var) ,@body))
-       (let ((,x ,value))
-         (etypecase ,x
-           (matrix
-            (if (matrix-vector-n-p ,x ,length 1)
-                ;; valid type
-                (with-pointer-to-vector-data (,ptr0 (matrix-data ,x))
-                  (,body-fun (inc-pointer ,ptr0 (* 8 (matrix-offset ,x)))))
-                ;; invalid type, throw error
-                (matrix-storage-error "Invalid matrix size or storage of ~D: ~A" ,length ,x)))
-           (real-array
-            (if (= ,length (length (real-array-data ,x)))
-                (with-pointer-to-vector-data (,ptr0 (real-array-data ,x))
-                  (,body-fun ,ptr0))
-                (matrix-storage-error "Invalid matrix size of ~D: ~A" ,length ,x)))
-           ((simple-array double-float (*))
-            (if (= (length ,x) ,length)
-                ;; valid type
-                (with-pointer-to-vector-data (,ptr0 ,x)
-                  (,body-fun ,ptr0))
-                ;; invalid type
-                (matrix-storage-error "Invalid matrix size of ~D: ~A" ,length ,x))))))))
-
 ;;; Transformation Matrix
 (defun transformation-matrix-p (x)
   (and (= 3 (matrix-rows x))
@@ -126,47 +100,53 @@
 (defun make-rotation-matrix ()
   (make-matrix 3 3))
 
+
+;;; Specialized Real Arrays
+(defmacro def-specialized-array (thing length cffi-type)
+  (let ((make-thing (intern (concatenate 'string "MAKE-" (string thing))))
+        (deep-copy-thing (intern (concatenate 'string "DEEP-COPY-" (string thing))))
+        (thing-data (intern (concatenate 'string (string thing) "-DATA"))))
+    `(progn
+       (defstruct (,thing (:include real-array
+                                    (data (make-vec ,length)
+                                          :type  (simple-array double-float (,length))))))
+       (defun ,deep-copy-thing (thing &optional (result (,make-thing)))
+         (replace (,thing-data result)
+                  (,thing-data thing)))
+       (define-foreign-type ,cffi-type ()
+         ()
+         (:simple-parser ,cffi-type)
+         (:actual-type :pointer))
+       (defmethod expand-to-foreign-dyn (value var body (type ,cffi-type))
+         (list* 'with-foreign-fixed-vector var value ,length :input
+                body)))))
+
 ;;; Point 3
 
 ;; or should this just be an array deftype?
-(defstruct (vec3 (:include real-array
-                           (data (make-vec 3) :type  (simple-array double-float (3))))))
+(def-specialized-array vec3 3 vector-3-t)
+
 (defun vec3* (x y z)
   (make-vec3 :data (vec x y z)))
 
-(defun vec3-ref (vec i) (aref (vec3-data vec) i))
-
-(defun vec3-x (vec) (vec3-ref vec 0))
-(defun vec3-y (vec) (vec3-ref vec 1))
-(defun vec3-z (vec) (vec3-ref vec 2))
-
-(define-foreign-type vector-3-t ()
-  ()
-  (:simple-parser vector-3-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type vector-3-t))
-  (expand-vector value var body 3))
+(defmacro with-vec3 ((x y z) vec3 &body body)
+  (with-gensyms (value)
+    `(let ((,value (vec3 ,vec3)))
+       (let ((,x (vecref ,value +x+))
+             (,y (vecref ,value +y+))
+             (,z (vecref ,value +z+)))
+         ,@body))))
 
 ;;; Axis-Angle
-(defstruct (axis-angle (:include real-array
-                                 (data (make-vec 4) :type  (simple-array double-float (4))))))
+(def-specialized-array axis-angle 4 axis-angle-t)
 
 (defun axis-angle* (x y z theta)
   (let ((n (sqrt (+ (* x x) (* y y) (* z z)))))
     (make-axis-angle :data (vec (/ x n) (/ y n) (/ z n) theta))))
 
-
-(define-foreign-type axis-angle-t ()
-  ()
-  (:simple-parser axis-angle-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type axis-angle-t))
-  (expand-vector value var body 4))
-
-
 ;;; Quaternion
-(defstruct (quaternion (:include real-array
-                                 (data (make-vec 4) :type  (simple-array double-float (4))))))
+(def-specialized-array quaternion 4 quaternion-t)
+
 (defun quaternion-x (q)
   (aref (quaternion-data q) +x+))
 (defun quaternion-y (q)
@@ -179,26 +159,11 @@
 (defun quaternion* (x y z w)
   (make-quaternion :data (vec x y z w)))
 
-(define-foreign-type quaternion-t ()
-  ()
-  (:simple-parser quaternion-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type quaternion-t))
-  (expand-vector value var body 4))
-
 ;; Rotation Vector
-(defstruct (rotation-vector (:include vec3)))
+(def-specialized-array rotation-vector 3 rotation-vector-t)
 
 (defun rotation-vector (x y z)
   (make-rotation-vector :data (vec x y z)))
-
-(define-foreign-type rotation-vector-t ()
-  ()
-  (:simple-parser rotation-vector-t)
-  (:actual-type :pointer))
-(defmethod expand-to-foreign-dyn (value var body (type rotation-vector-t))
-  (expand-vector value var body 3))
-
 
 ;; Principal Angle
 (defstruct principal-angle
@@ -231,7 +196,12 @@
   (:simple-parser euler-zyx-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type euler-zyx-t))
-  (expand-vector value var body 3))
+  `(with-foreign-fixed-vector ,var ,value 3 :input ,@body))
+
+
+(defun euler-rpy* (r p y)
+  "Alias for ZYX euler angles."
+  (euler-zyx* y p r))
 
 ;;; Dual Quaternion
 (defstruct (dual-quaternion (:include real-array
@@ -242,9 +212,109 @@
   (:simple-parser dual-quaternion-t)
   (:actual-type :pointer))
 (defmethod expand-to-foreign-dyn (value var body (type dual-quaternion-t))
-  (expand-vector value var body 8))
+  `(with-foreign-fixed-vector ,var ,value 8 :input ,@body))
 
 ;;; Implicit dual quaternion
 (defstruct quaternion-translation
   (quaternion (make-quaternion) :type  quaternion)
   (translation (make-vec3) :type  vec3))
+
+
+(defstruct (tf-tag (:constructor tf-tag (parent tf child)))
+  parent
+  tf
+  child)
+
+
+;;;;;;;;;;;;;;;
+;;; TF Tree ;;;
+;;;;;;;;;;;;;;;
+
+;; TODO: Store child sets
+;;       Prevent orphaned frames
+
+
+(defun tf-tree-frame-compare (a b)
+  (if (null a)
+      (if (null b)
+          0
+          -1)
+      (if (null b)
+          1
+          (sycamore-util:string-compare a b))))
+
+(defstruct (tf-tree (:constructor %make-tf-tree))
+  (relative-map (sycamore:make-tree-map #'tf-tree-frame-compare)
+                :type sycamore::tree-map)
+  (frame-set( sycamore:make-tree-set #'tf-tree-frame-compare)
+            :type sycamore::tree-set))
+
+(defun make-tf-tree ()
+  "Create a new TF tree.
+The tree is a map from the frame name to its relative transform."
+  (%make-tf-tree :relative-map (sycamore:make-tree-map #'tf-tree-frame-compare)
+                 :frame-set (sycamore:make-tree-set #'sycamore-util:string-compare)))
+
+(defun tf-tree-split-insert (tree parent tf child)
+  "Add tagged TF to tree."
+  (let ((frame-set (tf-tree-frame-set tree)))
+    ;; Intern parent and child
+    (when parent
+      (multiple-value-setq (frame-set parent)
+        (sycamore:tree-set-intern frame-set parent)))
+    (when child
+      (multiple-value-setq (frame-set child)
+        (sycamore:tree-set-intern frame-set child)))
+    ;; Insert
+    (%make-tf-tree :relative-map (sycamore:tree-map-insert (tf-tree-relative-map tree)
+                                                           child (tf-tag parent tf child))
+                   :frame-set frame-set)))
+
+(defun tf-tree-insert (tree tf-tag)
+  "Add tagged TF to tree."
+  (tf-tree-split-insert tree
+                        (tf-tag-parent tf-tag)
+                        (tf-tag-tf tf-tag)
+                        (tf-tag-child tf-tag)))
+
+(defun tf-tree-remove (tree frame)
+  "Remove FRAME from tree"
+  (%make-tf-tree :relative-map (sycamore:tree-map-remove (tf-tree-relative-map tree) frame)
+                 :frame-set (sycamore:tree-set-remove (tf-tree-frame-set tree) frame)))
+
+(defun tf-tree-find (tree frame)
+  "Find the TF in the tree"
+  (let ((tf (sycamore:tree-map-find (tf-tree-relative-map tree) frame)))
+    (when tf (assert (equal frame (tf-tag-child tf))))
+    tf))
+
+(defun tf-tree-absolute-map (relative-tree &optional frame)
+  "Compute the absolute transforms."
+  (labels ((rec-insert (absolute-tree frame)
+             (let* ((rel-tf (tf-tree-find relative-tree frame))
+                    (parent-frame (tf-tag-parent rel-tf)))
+               (if (null parent-frame)
+                   (tf-tree-insert absolute-tree rel-tf)
+                   (let* ((absolute-tree (rec absolute-tree parent-frame))
+                          (parent-tf (tf-tree-find absolute-tree parent-frame)))
+                     (tf-tree-insert absolute-tree (g* parent-tf rel-tf))))))
+           (rec (absolute-tree frame)
+                (if (null frame)
+                    absolute-tree
+                    (let ((abs-tf (tf-tree-find absolute-tree frame)))
+                      (if abs-tf
+                          absolute-tree
+                          (rec-insert absolute-tree frame))))))
+    (let ((empty-tree (make-tf-tree)))
+      (if frame
+          (rec empty-tree frame)
+          (sycamore:fold-tree-map (lambda (absolute-tree frame rel-tf)
+                                    (assert (equal frame (tf-tag-child rel-tf)))
+                                    (rec absolute-tree frame))
+                                  (make-tf-tree)
+                                  (tf-tree-relative-map relative-tree))))))
+
+(defun tf-tree-absolute-tf (relative-tree frame)
+  "Compute the absolute transform of FRAME."
+  (let ((absolute-tree (tf-tree-absolute-map relative-tree frame)))
+    (tf-tree-find absolute-tree frame)))

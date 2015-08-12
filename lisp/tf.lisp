@@ -47,6 +47,35 @@
                                                                0 0 0 0)))
 (defparameter +tf-vec-3-ident+ (vec3* 0 0 0))
 
+(defparameter +tf-ident+ (make-quaternion-translation :quaternion +tf-quat-ident+
+                                                      :translation +tf-vec-3-ident+))
+
+
+;;; Identities ;;;
+
+(declaim (inline identity-quaternion))
+(defun identity-quaternion ()
+  +tf-quat-ident+)
+
+
+(declaim (inline identity-vec3))
+(defun identity-vec3 ()
+  +tf-vec-3-ident+)
+
+(declaim (inline identity-tf))
+(defun identity-tf ()
+  +tf-ident+)
+
+(defcfun aa-tf-cross :void
+  (a vector-3-t)
+  (b vector-3-t)
+  (c vector-3-t))
+
+(defun cross (a b &optional (c (make-vec3)))
+  (aa-tf-cross a b c))
+
+
+
 ;;; Matrices
 
 (defcfun aa-tf-9 :void
@@ -117,6 +146,42 @@
 (defun tf-rel (tf1 tf2 &optional (tf (make-transformation-matrix)))
   (aa-tf-12rel tf1 tf2 tf)
   tf)
+
+(defcfun aa-tf-rotmat-mul :void
+  (a rotation-matrix-t)
+  (b rotation-matrix-t)
+  (c rotation-matrix-t))
+
+(defun tf-rotmat-mul (a b &optional (c (make-rotation-matrix)))
+  (aa-tf-rotmat-mul a b c)
+  c)
+
+(defcfun aa-tf-rotmat-xy :void
+  (x-axis vector-3-t)
+  (y-axis vector-3-t)
+  (r rotation-matrix-t))
+
+(defcfun aa-tf-rotmat-yz :void
+  (y-axis vector-3-t)
+  (z-axis vector-3-t)
+  (r rotation-matrix-t))
+
+(defcfun aa-tf-rotmat-zx :void
+  (z-axis vector-3-t)
+  (x-axis vector-3-t)
+  (r rotation-matrix-t))
+
+(defun tf-rotmat-xy (x-axis y-axis &optional (rotmat (make-rotation-matrix)))
+  (aa-tf-rotmat-xy x-axis y-axis rotmat)
+  rotmat)
+
+(defun tf-rotmat-yz (y-axis z-axis &optional (rotmat (make-rotation-matrix)))
+  (aa-tf-rotmat-yz y-axis z-axis rotmat)
+  rotmat)
+
+(defun tf-rotmat-zx (z-axis x-axis &optional (rotmat (make-rotation-matrix)))
+  (aa-tf-rotmat-zx z-axis x-axis rotmat)
+  rotmat)
 
 ;;; Quaternions
 (defmacro def-q2 ((c-fun lisp-fun) doc-string)
@@ -285,6 +350,16 @@
 (defun tf-axang2quat (a &optional (r (make-quaternion)))
   (aa-tf-axang2quat a r)
   r)
+
+(defcfun aa-tf-vecs2quat :void
+  (a vector-3-t)
+  (b vector-3-t)
+  (c quaternion-t))
+
+(defun quaternion-from-vectors (u v &optional (q (make-quaternion)))
+  "Find the unit quaternion representing the rotation from U to V."
+  (aa-tf-vecs2quat u v q)
+  q)
 
 ;;; Dual quaternion
 
@@ -494,8 +569,3 @@
 
 (defun tf-translation (tf)
   (matrix-block tf 0 3 3 1))
-
-(defstruct tf-tag
-  tf
-  parent
-  child)

@@ -61,40 +61,6 @@
 (defconstant +z+ 2)
 (defconstant +w+ 3)
 
-(define-condition matrix-storage (error)
-  ((message
-    :initarg :message)))
-
-(defmethod print-object ((object matrix-storage) stream)
-  (print-unreadable-object (object stream :type t :identity t)
-    (format stream ": ~A"
-            (slot-value object 'message))))
-
-(defun matrix-storage-error (format &rest args)
-  (error 'matrix-storage
-         :message (apply #'format nil format args)))
-
-
-(defstruct real-array
-  (data nil :type  (simple-array double-float (*))))
-
-(defstruct (matrix (:constructor %make-matrix)
-                   (:conc-name %matrix-))
-  "Descriptor for a matrix following LAPACK conventions."
-  (data nil :type (or (simple-array double-float (*))
-                      (simple-array float (*))
-                      (simple-array fixnum (*))
-                      (simple-array (signed-byte 32) (*))
-                      (simple-array (signed-byte 64) (*))
-                      (simple-array t (*))))
-  (offset 0 :type (integer 0 #.most-positive-fixnum))
-  (stride 0 :type (integer 1 #.most-positive-fixnum))
-  (cols 0 :type (integer 1 #.most-positive-fixnum))
-  (rows 0 :type (integer 1 #.most-positive-fixnum)))
-
-
-(deftype double-matrix ()
-  `(or matrix list (simple-array double-float (*))))
 
 (defun make-matrix (m n)
   "Make a new matrix with M rows and N cols."
@@ -110,25 +76,25 @@
 (defun matrix-data (m)
   (etypecase m
     ((simple-array * (*))  m)
+    (matrix (%matrix-data m))
     (real-array (real-array-data m))
     (list (map-into (make-array (length m) :element-type 'double-float)
                     (lambda (k) (coerce k 'double-float))
-                    m))
-    (matrix (%matrix-data m))))
+                    m))))
 
 (defun matrix-offset (m)
   (etypecase m
     ((simple-array * (*))  0)
     (list 0)
-    (real-array 0)
-    (matrix (%matrix-offset m))))
+    (matrix (%matrix-offset m))
+    (real-array 0)))
 
 (defun matrix-stride (m)
   (etypecase m
     ((simple-array * (*))  (length m))
+    (matrix (%matrix-stride m))
     (real-array (length (real-array-data m)))
-    (list (length m))
-    (matrix (%matrix-stride m))))
+    (list (length m))))
 
 (defun matrix-rows (m)
   (etypecase m
@@ -178,12 +144,14 @@
   (aref (matrix-data matrix)
         (matrix-index matrix i j)))
 
-(defun vecref (matrix i)
-  "Return I'th element of column vector MATRIX"
-  (etypecase matrix
-    (simple-vector (svref matrix i))
-    (array (aref matrix i))
-    (matrix (matref matrix i 0))))
+(defun vecref (vector i)
+  "Return I'th element of column vector VECTOR"
+  (etypecase vector
+    (simple-vector (svref vector i))
+    (matrix (matref vector i 0))
+    (real-array (aref (real-array-data vector) i))
+    (array (aref vector i))
+    (cons (nth i vector))))
 
 (defun (setf vecref) (value vec i)
   (etypecase vec
@@ -196,6 +164,22 @@
   (setf (aref (matrix-data matrix)
               (matrix-index matrix i j))
         value))
+
+(defun vec-x (vector)
+  "Return the X element of the vector."
+  (vecref vector +x+))
+
+(defun vec-y (vector)
+  "Return the Y element of the vector."
+  (vecref vector +y+))
+
+(defun vec-z (vector)
+  "Return the Z element of the vector."
+  (vecref vector +z+))
+
+(defun vec-w (vector)
+  "Return the W element of the vector."
+  (vecref vector +w+))
 
 (defun row-matrix (&rest rows)
   "Create a matrix from the given rows."
@@ -219,14 +203,13 @@
         (m (length (car cols))))
     (let ((matrix (make-matrix m n)))
       (loop
-         with type = (matrix-type matrix)
          for col in cols
          for j from 0
          do (loop
                for x in col
                for i from 0
                do (setf (matref matrix i j)
-                        (coerce x type))))
+                        (coerce x 'double-float))))
       matrix)))
 
 (defun matrix-copy (matrix &optional
@@ -240,23 +223,6 @@
         (setf (matref copy i j)
               (matref matrix i j))))
     copy))
-
-
-(defun matrix-counts-in-bounds-p (data-length offset stride rows cols)
-  "Check if given counts are within array bounds."
-  (declare (type fixnum data-length offset stride rows cols))
-  (and (>= stride rows)
-       (<= (+ offset
-              (* stride cols))
-           data-length)))
-
-(defun matrix-in-bounds-p (matrix)
-  (matrix-counts-in-bounds-p (length (matrix-data matrix))
-                             (matrix-offset matrix)
-                             (matrix-stride matrix)
-                             (matrix-rows matrix)
-                             (matrix-cols matrix)))
-
 
 (declaim (inline matrix-block))
 (defun matrix-block (matrix i j m n)
@@ -325,14 +291,22 @@ N: cols in the block."
                 (coerce x 'double-float)))
     vec))
 
-(defun veccat (&rest args)
-  (let* ((n (loop for x in args summing (length x)))
+(defun vec-length (vec)
+  (etypecase vec
+    (list (length vec))
+    (simple-array (length vec))
+    (array (length vec))
+    (matrix (error "Can't find vector length of a matrix"))
+    (real-array (length (real-array-data vec)))))
+
+(defun vec-cat (&rest args)
+  (let* ((n (loop for x in args summing (vec-length x)))
          (y (make-vec n))
          (i -1))
     (dolist (x args)
-      (dotimes (j (length x))
-        (setf (aref y (incf i))
-              (aref x j))))
+      (dotimes (j (vec-length x))
+        (setf (vecref y (incf i))
+              (coerce (vecref x j) 'double-float))))
     y))
 
 (defun vec-copy (vec &key (start 0) (end (length vec)))

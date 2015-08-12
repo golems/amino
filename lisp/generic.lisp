@@ -69,15 +69,25 @@
   (/ a b))
 
 
-;; Scalar-Vector
+;; scalar-vector
+(defmethod g* ((a number) (b cons))
+  (loop for x in b
+     collect (* a x)))
+
+(defmethod g* ((a cons) (b number))
+  (g* b a))
+
+(defun dscal-copy (alpha x)
+  (dscal (coerce alpha 'double-float)
+         (vec-copy x)))
+
 (defmethod g* ((a number) (b simple-array))
-  (ecase (array-element-type b)
-    (double-float (dscal (coerce a 'double-float) (vec-copy b)))))
+  (etypecase b
+    ((simple-array double-float (*))
+       (dscal-copy a b))))
 
 (defmethod g* ((a simple-array) (b number))
   (g* b a))
-
-
 
 ;; Vector-Vector
 (defmethod g- ((a simple-array) (b simple-array))
@@ -102,6 +112,10 @@
 
 (defmethod matrix->list ((matrix real-array))
   (matrix->list (real-array-data matrix)))
+
+;;;;;;;;;;;;;;;;;;;;;
+;;; MATRIX-VECTOR ;;;
+;;;;;;;;;;;;;;;;;;;;;
 
 ;; Misc
 (defmethod dot-product (a b))
