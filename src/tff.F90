@@ -1707,31 +1707,6 @@ module amino_tf
    end interface aa_tf_tf_duqu
 
 
-   ! !!! Quaternions
-   ! pure subroutine aa_tf_qmatrix_l( q, m )
-   !   real(C_DOUBLE), dimension(4), intent(in) :: q
-   !   real(C_DOUBLE), dimension(:,:), intent(out) :: m
-
-   !   m(1,1) = q(4)
-   !   m(2,1) = q(3)
-   !   m(3,1) = -q(2)
-   !   m(4,1) = -q(1)
-
-   !   m(1,2) = -q(3)
-   !   m(2,2) = q(4)
-   !   m(3,2) = q(1)
-   !   m(4,2) = -q(2)
-
-   !   m(1,3) = q(2)
-   !   m(2,3) = -q(1)
-   !   m(3,3) = q(4)
-   !   m(4,3) = -q(3)
-
-   !   m(1,4) = q(1)
-   !   m(2,4) = q(2)
-   !   m(3,4) = q(3)
-   !   m(4,4) = q(4)
-   ! end subroutine aa_tf_qmatrix_l
 
    ! Matrix for left quaternion in multiply
    interface aa_tf_qmatrix_l_c
@@ -1745,32 +1720,6 @@ module amino_tf
       end subroutine aa_tf_qmatrix_l_c
    end interface aa_tf_qmatrix_l_c
 
-
-   ! ! Matrix for right quaternion in multiply
-   ! pure subroutine aa_tf_qmatrix_r(q, m)
-   !   real(C_DOUBLE), dimension(4), intent(in) :: q
-   !   real(C_DOUBLE), dimension(:,:), intent(out) :: m
-
-   !   m(1,1) = q(4)
-   !   m(2,1) = -q(3)
-   !   m(3,1) = q(2)
-   !   m(4,1) = -q(1)
-
-   !   m(1,2) = q(3)
-   !   m(2,2) = q(4)
-   !   m(3,2) = -q(1)
-   !   m(4,2) = -q(2)
-
-   !   m(1,3) = -q(2)
-   !   m(2,3) = q(1)
-   !   m(3,3) = q(4)
-   !   m(4,3) = -q(3)
-
-   !   m(1,4) = q(1)
-   !   m(2,4) = q(2)
-   !   m(3,4) = q(3)
-   !   m(4,4) = q(4)
-   ! end subroutine aa_tf_qmatrix_r
 
    interface aa_tf_qmatrix_r_c
       pure subroutine aa_tf_qmatrix_r_c( q, m, ldm ) &
@@ -2102,6 +2051,59 @@ interface aa_tf_duqu_ln
 end interface aa_tf_duqu_ln
 
 contains
+
+   ! ! Matrix for right quaternion in multiply
+   pure subroutine aa_tf_qmatrix_r(q, m)
+     real(C_DOUBLE), dimension(4), intent(in) :: q
+     real(C_DOUBLE), dimension(:,:), intent(out) :: m
+
+     m(1,1) = q(4)
+     m(2,1) = -q(3)
+     m(3,1) = q(2)
+     m(4,1) = -q(1)
+
+     m(1,2) = q(3)
+     m(2,2) = q(4)
+     m(3,2) = -q(1)
+     m(4,2) = -q(2)
+
+     m(1,3) = -q(2)
+     m(2,3) = q(1)
+     m(3,3) = q(4)
+     m(4,3) = -q(3)
+
+     m(1,4) = q(1)
+     m(2,4) = q(2)
+     m(3,4) = q(3)
+     m(4,4) = q(4)
+   end subroutine aa_tf_qmatrix_r
+
+
+   ! !!! Quaternions
+   pure subroutine aa_tf_qmatrix_l( q, m )
+     real(C_DOUBLE), dimension(4), intent(in) :: q
+     real(C_DOUBLE), dimension(:,:), intent(out) :: m
+
+     m(1,1) = q(4)
+     m(2,1) = q(3)
+     m(3,1) = -q(2)
+     m(4,1) = -q(1)
+
+     m(1,2) = -q(3)
+     m(2,2) = q(4)
+     m(3,2) = q(1)
+     m(4,2) = -q(2)
+
+     m(1,3) = q(2)
+     m(2,3) = -q(1)
+     m(3,3) = q(4)
+     m(4,3) = -q(3)
+
+     m(1,4) = q(1)
+     m(2,4) = q(2)
+     m(3,4) = q(3)
+     m(4,4) = q(4)
+   end subroutine aa_tf_qmatrix_l
 
   !> Spherical Cubic Interpolation
   pure subroutine aa_tf_qsquad( h, q1, q2, s1, s2, r ) &
