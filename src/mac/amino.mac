@@ -193,6 +193,15 @@ spatial_jacobian(tfs, axes, tfe) := block(
       map(lambda([tf, a_local], jacobian_column(tf . a_local, tf_get_tran(tf), pe)),
         pyr, axes))));
 
+/* Routine to generate a Companion Matrix to a polynomial p
+   wrt. variable v. */
+comp_mat(p, v) := block(
+  h : hipow(p, v),
+  m : zeromatrix(h, h),
+  for i: 1 thru h do block(
+      if h >= i + 1 then m[i + 1][i] : 1.0,
+      m[i][h] : -coeff(p, v, i - 1)
+    ), m);
 
 /* Local Variables: */
 /* mode: maxima */

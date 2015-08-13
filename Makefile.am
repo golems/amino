@@ -6,7 +6,8 @@ EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
              src/mem_mod.F90 src/mem_impl.F90    \
              src/tff.F90                         \
              src/mac/tf.mac                      \
-             src/mac/aa_tf_euler.f90
+             src/mac/aa_tf_euler.f90             \
+             src/mac/ls.mac src/mac/aa_ls_se3.f90
 
 dist_pkgdata_DATA = src/mac/amino.mac
 
@@ -83,11 +84,16 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	cd $(top_srcdir)/src/mac && maxima --very-quiet -b gen.mac
 	@echo [maxima end]
 
-BUILT_SOURCES = src/mac/aa_tf_euler.f90
+BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/aa_ls_se3.f90
 
 src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
 	@echo [maxima start]
 	cd $(top_srcdir)/src/mac && maxima --very-quiet -b euler.mac
+	@echo [maxima end]
+
+src/mac/aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
+	@echo [maxima start]
+	cd $(top_srcdir)/src/mac && maxima --very-quiet -b ls.mac
 	@echo [maxima end]
 
 src/mac/mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
@@ -226,7 +232,7 @@ lapack_doc.c: doc/lapack_doc.c include/amino/lapack.h include/amino/lapack_impl.
 la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
 	$(CPP) $(AM_CPPFLAGS) -CC $< -o $@
 
-la_mod.f90: src/la_mod.F90 src/la_implf.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
+la_mod.f90: src/la_mod.F90 src/la_implf.F90 src/mac/aa_ls_se3.f90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
 
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
