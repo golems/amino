@@ -16,7 +16,6 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC_C99
 AC_PROG_CXX
 AM_PROG_CC_C_O
-AC_PROG_FC
 AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
 
@@ -28,7 +27,23 @@ AC_CHECK_LIB([m],[sqrt])
 AC_SEARCH_LIBS([dgemm_],[openblas blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])
 
+
+
+AC_ARG_WITH([fortran],
+            AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
+            [],
+            [with_fortran=yes])
+AC_ARG_WITH([f2c],
+            AS_HELP_STRING([--with-f2c], [Use F2C])
+            [],
+            [with_f2c=yes])
+
+AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
+AM_CONDITIONAL([USE_F2C],     [test "x$with_f2c" = xyes])
+
+AC_PROG_FC
 AC_LANG([Fortran])
+
 AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
 AC_LANG([C])
 
@@ -104,6 +119,8 @@ APPEND_FCFLAG([-Wintrinsic-shadow])
 AC_ARG_ENABLE([debug],
         AS_HELP_STRING([--enable-debug], [Build for debugging]))
 
+
+
 AS_IF([test "x$enable_debug" = "xyes"],[
     AC_LANG([Fortran])
     APPEND_FCFLAG([-fbounds-check])
@@ -155,6 +172,7 @@ AC_MSG_NOTICE([= CONFIGURATION SUMMARY =])
 AC_MSG_NOTICE([=========================])
 AC_MSG_NOTICE([C compiler:        $CC])
 AC_MSG_NOTICE([C++ compiler:      $CXX])
+AC_MSG_NOTICE([Use Fortran        $with_fortran])
 AC_MSG_NOTICE([Fortran compiler:  $FC])
 AC_MSG_NOTICE([Java compiler:     $JAVAC])
 AC_MSG_NOTICE([prefix:            $prefix])

@@ -71,11 +71,6 @@ libamino_la_SOURCES =                  \
 	src/heap.c                     \
 	src/cv.c
 
-libamino_la_LIBADD =                   \
-	-lgfortran                     \
-	libamino_mem.la                \
-	libamino_la.la                 \
-	libamino_tf.la
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
@@ -113,6 +108,10 @@ noinst_LTLIBRARIES =                   \
 	libamino_la.la                 \
 	libamino_tf.la
 
+## FORTRAN ##
+
+if USE_FORTRAN
+
 # each convenience library depends on the fortran source for that module
 libamino_mem_la_SOURCES = mem_mod.f90
 libamino_la_la_SOURCES = la_mod.f90
@@ -127,6 +126,18 @@ amino_tf.mod: $(libamino_tf_la_OBJECTS)
 $(libamino_la_la_OBJECTS): amino_mem.mod
 $(libamino_tf_la_OBJECTS): amino_la.mod
 
+libamino_la_LIBADD =                   \
+	-lgfortran                     \
+	libamino_mem.la                \
+	libamino_la.la                 \
+	libamino_tf.la
+else
+
+if USE_F2C
+
+endif
+
+endif
 
 ## JAVA ##
 JSOURCES =                                        \
