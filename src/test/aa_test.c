@@ -42,13 +42,14 @@
 
 //#define AA_ALLOC_STACK_MAX
 #include "amino.h"
+#include "amino/test.h"
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <inttypes.h>
 #include <sys/resource.h>
 
-void randtf(double T[12], double q[4], double R[9], double v[3]) {
+static void randtf(double T[12], double q[4], double R[9], double v[3]) {
     double axa[4];
     aa_vrand(3,v);
     aa_vrand(4,axa); axa[3] *= M_PI;
@@ -57,29 +58,6 @@ void randtf(double T[12], double q[4], double R[9], double v[3]) {
     aa_tf_quat2rotmat( q, R );
     AA_MEM_CPY( T+9, v, 3 );
 }
-
-
-static void afeq( double a, double b, double tol ) {
-    assert( aa_feq(a,b,tol) );
-}
-
-static void aveq( const char * name,
-                  size_t n, double *a, double *b, double tol ) {
-    if( !aa_veq(n, a, b, tol) ) {
-        fprintf( stderr, "FAILED: %s\n",name);
-        fprintf( stderr, "a: ");
-        aa_dump_vec( stderr, a, n );
-        fprintf( stderr, "b: ");
-        aa_dump_vec( stderr, b, n );
-
-        assert( 0 );
-    }
-}
-
-static void aneq( double a, double b, double tol ) {
-    assert( !aa_feq(a,b,tol) );
-}
-
 
 aa_mem_region_t g_region;
 

@@ -49,7 +49,7 @@
 #include <inttypes.h>
 #include <sys/resource.h>
 
-void rand_tf( double _E[7], double S[8],  double T[12] ) {
+static void rand_tf( double _E[7], double S[8],  double T[12] ) {
     double tmp[7];
     double *E = _E ? _E : tmp;
 
