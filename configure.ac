@@ -129,6 +129,17 @@ AS_IF([test "x$enable_debug" = "xyes"],[
     APPEND_CFLAG([-fstack-check])
 ])
 
+
+## Java ##
+
+AC_ARG_WITH([java],
+            AS_HELP_STRING([--without-java], [Disable java support]),
+            [],
+            [with_java=yes])
+
+
+AS_IF( [test "x$with_java" = xyes],
+[
 AS_IF( [test "x$JAVAPREFIX" = x],
        [
         AS_IF( [test "x$JAVA" = x],  [AC_CHECK_PROGS(JAVA, java kaffe)],  )
@@ -158,6 +169,7 @@ AS_IF([test "x$JAVAC" = "x"],
            JNICPPFLAGS="$JNICPPFLAGS -I$JNI_INCLUDE_DIR"
        done
       ])
+])
 
 AC_SUBST([JNICPPFLAGS])
 AM_CONDITIONAL([HAVE_JAVAC],   [test "x$JAVAC" != x])
