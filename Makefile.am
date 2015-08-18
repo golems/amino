@@ -203,10 +203,12 @@ noinst_PROGRAMS += aa_regress
 aa_regress_SOURCES = src/test/aa_regress.c
 aa_regress_LDADD = libamino.la libtestutil.la
 
+if USE_FORTRAN
 TESTS += la_test
 noinst_PROGRAMS += la_test
 la_test_SOURCES = src/test/la_test.F90
 la_test_LDADD = libamino.la libtestutil.la
+endif
 
 $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 
@@ -228,6 +230,10 @@ noinst_PROGRAMS += testcpp
 testcpp_SOURCES = src/test/testcpp.cpp
 testcpp_LDADD = libamino.la libtestutil.la
 
+TESTS += la_ctest
+noinst_PROGRAMS += la_ctest
+la_ctest_SOURCES = src/test/la_ctest.c
+la_ctest_LDADD = libamino.la libtestutil.la
 
 # noinst_PROGRAMS += test_vec
 # test_vec_SOURCES = src/test/test_vec.c

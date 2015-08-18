@@ -56,6 +56,11 @@ void afeq( double a, double b, double tol ) {
     assert( aa_feq(a,b,tol) );
 }
 
+void test_feq( const char *name, double a, double b, double tol )
+{
+    test(name, aa_feq(a,b,tol));
+}
+
 void aveq( const char * name,
                   size_t n, const double *a, const double *b, double tol ) {
     if( !aa_veq(n, a, b, tol) ) {

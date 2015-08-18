@@ -81,6 +81,7 @@ end function AA_FMOD(la,cross_fun)
 !! \param[in] x first vector
 !! \param[in] y second vector
 !! \param[out] z result
+!! TODO: increment vectors, test
 pure subroutine AA_FMOD_C_BEGIN(la, cross, x, y, z)
   AA_FTYPE(AA_FSIZE), intent(out) :: z(3)
   AA_FTYPE(AA_FSIZE), intent(in) :: x(3), y(3)
