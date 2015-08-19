@@ -574,7 +574,7 @@ AA_API void aa_la_dpinv( size_t m, size_t n, double k,  const double *A, double 
  *
  *  \f[ A^\ddagger \leftarrow \sum_{i=0}^r \frac{\sigma_i}{{\sigma_i}^2+k} v_i {u_i}^T \f]
  *
- * The denominator \f ${\sigma_i}^2 \f$ goes to zero near
+ * The denominator \f${\sigma_i}^2 \f$ goes to zero near
  * singularities.  This function fixes the minimum value of the
  * denominator at parameter s2_min.
  *
@@ -607,7 +607,7 @@ AA_API void aa_la_dls( size_t m, size_t n, double k,  const double *A, const dou
 
 /** Least Squares with Nullspace projection.
  *
- * \f[ x = A^* b + (I-A^\* A)x_p \f]
+ * \f[ x = A^* b + (I-A^* A) x_p \f]
  *
  * See "Introduction to inverse kinematics with jacobian transpose,
  * pseudoinverse and damped least squares methods". Buss, S.R. 2004

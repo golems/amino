@@ -51,10 +51,29 @@ AC_LANG([C])
 AX_TLS
 
 # Doxygen
-DX_HTML_FEATURE(ON)
-DX_PDF_FEATURE(OFF)
-DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN(amino)
+m4_ifdef([DX_INIT_DOXYGEN],
+         [DX_HTML_FEATURE(ON)
+          DX_PDF_FEATURE(OFF)
+          DX_MAN_FEATURE(OFF)
+          DX_PS_FEATURE(OFF)
+          DX_CHM_FEATURE(OFF)
+          DX_CHI_FEATURE(OFF)
+          DX_MAN_FEATURE(OFF)
+          DX_RTF_FEATURE(OFF)
+          DX_XML_FEATURE(OFF)
+          DX_PDF_FEATURE(OFF)
+          DX_INIT_DOXYGEN(amino)],
+         [AM_CONDITIONAL([DX_COND_doc],   false)
+          AM_CONDITIONAL([DX_COND_html],  false)
+          AM_CONDITIONAL([DX_COND_chm],   false)
+          AM_CONDITIONAL([DX_COND_chi],   false)
+          AM_CONDITIONAL([DX_COND_rtf],   false)
+          AM_CONDITIONAL([DX_COND_xml],   false)
+          AM_CONDITIONAL([DX_COND_ps],    false)
+          AM_CONDITIONAL([DX_COND_pdf],   false)
+          AM_CONDITIONAL([DX_COND_latex], false)
+          AM_CONDITIONAL([DX_COND_man],   false)
+         ])
 
 # Enable maximum warnings
 AX_CFLAGS_WARN_ALL
