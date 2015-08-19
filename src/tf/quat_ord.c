@@ -742,3 +742,26 @@ AA_API void aa_tf_qslerpchaindiff(
         dq[i] = (dq1[i]*a + q1[i]*da) + (dq2[i]*b + q2[i]*db);
     }
 }
+
+AA_API void aa_tf_quat_davenport_matrix (
+    size_t n, const double *w,
+    const double *qq, size_t ldqq,
+    double *M )
+{
+    AA_MEM_ZERO(M,4*4);
+    for( size_t i = 0; i < n; i ++ ) {
+        const double *q = AA_MATCOL(qq,ldqq,i);
+        cblas_dgemm( CblasColMajor,
+                     CblasNoTrans, CblasTrans,
+                     4, 4, 1,
+                     w[i], q, 4,
+                     q, 4,
+                     1.0, M, 4 );
+        /* cblas_dsyrk( CblasColMajor, (enum CBLAS_UPLO)0, CblasNoTrans, */
+        /*              4, 1, */
+        /*              w[i], q, 4, */
+        /*              1.0, M, 4 ); */
+    }
+    /* printf("\n"); */
+    /* aa_dump_mat( stdout, M, 4, 4 ); */
+}

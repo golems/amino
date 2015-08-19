@@ -471,6 +471,8 @@ AA_API void aa_tf_quat_davenport
     }
 
     double wr[4]={0}, wi[4]={0}, Vr[16];
+
+    /* TODO: M is symmetric.  Use a faster eigenvector routine. */
     aa_la_d_eev( 4, M, 4, wr, wi,
                  NULL, 0, Vr, 4 );
     /* printf("wr: "); aa_dump_vec(stdout, wr, 4 ); */

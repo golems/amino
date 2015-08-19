@@ -374,6 +374,21 @@ void AA_NAME(la,colmean)
                         x, 1);
 }
 
+
+void AA_NAME(la,rowmean)
+( size_t m, size_t n,
+  const AA_TYPE *A, size_t lda,
+  AA_TYPE *x)
+{
+    memset( x, 0, sizeof(x[0])*n );
+    for( size_t i=0; i < m; i++ ) {
+        AA_CBLAS_NAME(axpy)( (int)n, 1.0, A+i, (int)lda,
+                             x, 1 );
+    }
+    AA_CBLAS_NAME(scal)((int)n, ((AA_TYPE)1.0)/(AA_TYPE)m,
+                        x, 1);
+}
+
 void AA_NAME(la,colcov)
 ( size_t m, size_t n,
   const AA_TYPE *A, size_t lda,

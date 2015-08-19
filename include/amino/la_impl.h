@@ -164,7 +164,7 @@ AA_FDEC(void, la, colmean,
  *
  * \sa aa_la_d_rowmean
  */
-AA_FDEC(AA_TYPE, la, rowmean,
+AA_FDEC(void, la, rowmean,
         size_t m, size_t n,
         const AA_TYPE *A, size_t lda,
         AA_TYPE *x);

@@ -336,12 +336,12 @@ pure subroutine AA_FMOD(la,rowmean)( A, x )
 end subroutine AA_FMOD(la,rowmean)
 
 !> Mean of rows, C interface
-pure subroutine AA_FMOD_C_BEGIN(la, rowmean, m, n, A, lda, x )
-  integer(C_SIZE_T), intent(in), value :: m,n,lda
-  real(AA_FSIZE), intent(in) :: A(lda,n)
-  real(AA_FSIZE), intent(out) :: x(n)
-  call AA_FMOD(la,rowmean)(A(1:m,:),x)
-end subroutine AA_FMOD_C_END(la,rowmean)
+! pure subroutine AA_FMOD_C_BEGIN(la, rowmean, m, n, A, lda, x )
+!   integer(C_SIZE_T), intent(in), value :: m,n,lda
+!   real(AA_FSIZE), intent(in) :: A(lda,n)
+!   real(AA_FSIZE), intent(out) :: x(n)
+!   call AA_FMOD(la,rowmean)(A(1:m,:),x)
+! end subroutine AA_FMOD_C_END(la,rowmean)
 
 !! Colcov
 

@@ -2717,7 +2717,7 @@ module amino_tf
 
 
   subroutine aa_tf_quat_davenport_matrix( n, w, qq, ldqq,  M ) &
-       bind( C, name="aa_tf_quat_davenport_matrix" )
+       bind( C, name="aa_tf_quat_davenport_matrix_f" )
 
     integer(C_SIZE_T), intent(in), value :: n, ldqq
     real(C_DOUBLE), intent(in) :: w(n), qq(ldqq,n)
