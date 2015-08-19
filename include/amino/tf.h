@@ -101,6 +101,16 @@ aa_tf_sinccos( double theta, double *sc, double *c )
     }
 }
 
+static inline double
+aa_tf_sinc( double theta )
+{
+    if( fabs(theta) < sqrt(sqrt(DBL_EPSILON)) ) {
+        return aa_tf_sinc_series(theta);
+    } else {
+        return sin(theta)/theta;
+    }
+}
+
 /*********/
 /* Types */
 /*********/

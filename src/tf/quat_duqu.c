@@ -346,3 +346,20 @@ aa_tf_duqu_ln( const double S[AA_RESTRICT 8], double lnS[AA_RESTRICT 8] )
     FOR_VEC(i)
         lnS[AA_TF_DUQU_DUAL_XYZ+i] = ad * S[AA_TF_DUQU_REAL_XYZ+i] + ar * S[AA_TF_DUQU_DUAL_XYZ+i];
 }
+
+AA_API void aa_tf_xyz2duqu (
+    double x, double y, double z,
+    double d[AA_RESTRICT 8] )
+{
+    // TODO: test case
+    d[AA_TF_DUQU_REAL_X] = 0;
+    d[AA_TF_DUQU_REAL_Y] = 0;
+    d[AA_TF_DUQU_REAL_Z] = 0;
+    d[AA_TF_DUQU_REAL_W] = 1;
+
+    d[AA_TF_DUQU_DUAL_X] = x/2;
+    d[AA_TF_DUQU_DUAL_Y] = y/2;
+    d[AA_TF_DUQU_DUAL_Z] = z/2;
+    d[AA_TF_DUQU_DUAL_W] = 0;
+
+}

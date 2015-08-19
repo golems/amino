@@ -1401,6 +1401,17 @@ module amino_tf
       end subroutine aa_tf_qsvel
    end interface aa_tf_qsvel
 
+   interface aa_tf_qrk1
+      subroutine aa_tf_qrk1( q0, dq, dt, q1 ) &
+           bind( C, name="aa_tf_qrk1" )
+        use ISO_C_BINDING
+        real(C_DOUBLE), intent(in) :: dq(4), q0(4)
+        real(C_DOUBLE), intent(in), value :: dt
+        real(C_DOUBLE), intent(out) :: q1(4)
+        !   q1 = q0 + dt * dq         ! euler integration
+        !   call aa_tf_qnormalize(q1)
+      end subroutine aa_tf_qrk1
+   end interface aa_tf_qrk1
 
    !! Integrate rotational velocity
    interface aa_tf_qsdiff
@@ -1970,87 +1981,105 @@ module amino_tf
     end interface aa_tf_duqu_matrix_r_c
 
 
+    !! Angle between two unit quaternions
+    interface aa_tf_quhypangle2
+       pure function aa_tf_quhypangle2(x, y) result(theta) &
+            bind(C,name="aa_tf_quhypangle2")
+         use ISO_C_BINDING
+         real(C_DOUBLE), dimension(4), intent(in) :: x, y
+         real(C_DOUBLE) :: theta
+         !   real(C_DOUBLE) :: s, c
+         !   real(C_DOUBLE) :: a(4), b(4)
+         !   a = x-y
+         !   b = x+y
+         !   s = aa_tf_qnorm(a)
+         !   c = aa_tf_qnorm(b)
+         !   theta = 2d0 * atan2(s, c)
+       end function aa_tf_quhypangle2
 
-  !! Exponential of a dual quaternion
+    end interface aa_tf_quhypangle2
+
+    !! Exponential of a dual quaternion
     interface aa_tf_duqu_exp
-  subroutine aa_tf_duqu_exp( d, e ) &
-       bind( C, name="aa_tf_duqu_exp" )
-    use ISO_C_BINDING
-    real(C_DOUBLE), intent(in) :: d(8)
-    real(C_DOUBLE), intent(out) :: e(8)
-    ! real(C_DOUBLE) :: nr, c, vv, vd, ar, ad
-    ! type(aa_tf_dual_t) :: expw
-    ! vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
-    ! if( vv < sqrt(epsilon(vv)) ) then
-    !    ar = aa_tf_sinc_series2(vv) ! approx. 1
-    !    c = aa_tf_cos_series2(vv)   ! approx. 1
-    !    ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
-    !    ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
-    ! else
-    !    nr = sqrt(vv)
-    !    ar = sin(nr)/nr
-    !    c = cos(nr)
-    !    ad = (c-ar)/vv
-    ! end if
-    ! vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
-    ! ad = vd*ad
-    ! e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
-    ! e(DQ_REAL_W) = c
-    ! e(DQ_DUAL_XYZ) = (ar * d(DQ_DUAL_XYZ)) + (ad * (d(DQ_REAL_XYZ)))
-    ! e(DQ_DUAL_W) = -ar * vd
+       subroutine aa_tf_duqu_exp( d, e ) &
+            bind( C, name="aa_tf_duqu_exp" )
+         use ISO_C_BINDING
+         real(C_DOUBLE), intent(in) :: d(8)
+         real(C_DOUBLE), intent(out) :: e(8)
+         ! real(C_DOUBLE) :: nr, c, vv, vd, ar, ad
+         ! type(aa_tf_dual_t) :: expw
+         ! vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
+         ! if( vv < sqrt(epsilon(vv)) ) then
+         !    ar = aa_tf_sinc_series2(vv) ! approx. 1
+         !    c = aa_tf_cos_series2(vv)   ! approx. 1
+         !    ! Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3
+         !    ad = aa_tf_horner3( vv, -1d0/3d0, 1d0/30d0, -1d0/840 )
+         ! else
+         !    nr = sqrt(vv)
+         !    ar = sin(nr)/nr
+         !    c = cos(nr)
+         !    ad = (c-ar)/vv
+         ! end if
+         ! vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
+         ! ad = vd*ad
+         ! e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+         ! e(DQ_REAL_W) = c
+         ! e(DQ_DUAL_XYZ) = (ar * d(DQ_DUAL_XYZ)) + (ad * (d(DQ_REAL_XYZ)))
+         ! e(DQ_DUAL_W) = -ar * vd
 
-    ! ! impure part
-    ! if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
-    !    expw = exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
-    !    call aa_tf_dual_scalv( expw%r, expw%d, e )
-    ! end if
-  end subroutine aa_tf_duqu_exp
-end interface aa_tf_duqu_exp
+         ! ! impure part
+         ! if ( 0d0 /= d(DQ_REAL_W) .or. 0d0 /= d(DQ_DUAL_W) ) then
+         !    expw = exp( aa_tf_dual_t( d(DQ_REAL_W), d(DQ_DUAL_W) ) )
+         !    call aa_tf_dual_scalv( expw%r, expw%d, e )
+         ! end if
+       end subroutine aa_tf_duqu_exp
+    end interface aa_tf_duqu_exp
 
 
-interface aa_tf_duqu_ln
-  subroutine aa_tf_duqu_ln( d, e ) &
-       bind( C, name="aa_tf_duqu_ln" )
-    use ISO_C_BINDING
-    real(C_DOUBLE), intent(in) :: d(8)
-    real(C_DOUBLE), intent(out) :: e(8)
-    ! real(C_DOUBLE) :: vv, vd, theta, nr, mr2, mr, ar, ad
-    ! !! Norms
-    ! vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
-    ! vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
-    ! mr2 = vv+d(DQ_REAL_W)**2
-    ! mr = sqrt( mr2 )
+    interface aa_tf_duqu_ln
+       subroutine aa_tf_duqu_ln( d, e ) &
+            bind( C, name="aa_tf_duqu_ln" )
+         use ISO_C_BINDING
+         real(C_DOUBLE), intent(in) :: d(8)
+         real(C_DOUBLE), intent(out) :: e(8)
+         ! real(C_DOUBLE) :: vv, vd, theta, nr, mr2, mr, ar, ad
+         ! !! Norms
+         ! vv = dot_product(d(DQ_REAL_XYZ), d(DQ_REAL_XYZ))
+         ! vd = dot_product(d(DQ_REAL_XYZ), d(DQ_DUAL_XYZ))
+         ! mr2 = vv+d(DQ_REAL_W)**2
+         ! mr = sqrt( mr2 )
 
-    ! !! Scalar part
-    ! !e_w = log(m)
-    ! e(DQ_REAL_W) = log(mr)
-    ! e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
+         ! !! Scalar part
+         ! !e_w = log(m)
+         ! e(DQ_REAL_W) = log(mr)
+         ! e(DQ_DUAL_W) = (vd + d(DQ_REAL_W)*d(DQ_DUAL_W))/mr2
 
-    ! !! Vector part
-    ! ! Dual number computation
-    ! ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
-    ! ! a = atan2( nv, dh(W_INDEX) ) / nv
+         ! !! Vector part
+         ! ! Dual number computation
+         ! ! call aa_tf_duqu_vnorm( d, nv%r, nv%d )
+         ! ! a = atan2( nv, dh(W_INDEX) ) / nv
 
-    ! ! expanded dual computation
-    ! nr = sqrt(vv)                   ! nr is positive
-    ! theta = atan2( nr, d(W_INDEX) ) ! theta is always positive
+         ! ! expanded dual computation
+         ! nr = sqrt(vv)                   ! nr is positive
+         ! theta = atan2( nr, d(W_INDEX) ) ! theta is always positive
 
-    ! ! Try to avoid small number division
-    ! if( theta < sqrt(sqrt(epsilon(theta))) ) then
-    !    ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
-    !    ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
-    !    ar = aa_tf_invsinc_series2(theta**2)/mr
-    ! else
-    !    ar = theta/nr
-    !    ad =  (d(W_INDEX) - ar*mr2) / vv
-    ! end if
-    ! ad = (vd*ad - d(DQ_DUAL_W)) / mr2
-    ! e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
-    ! e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
-  end subroutine aa_tf_duqu_ln
-end interface aa_tf_duqu_ln
+         ! ! Try to avoid small number division
+         ! if( theta < sqrt(sqrt(epsilon(theta))) ) then
+         !    ! ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) )
+         !    ad = aa_tf_horner3( theta**2, -2d0/3d0, -1d0/5d0, -17d0/420d0 ) / mr
+         !    ar = aa_tf_invsinc_series2(theta**2)/mr
+         ! else
+         !    ar = theta/nr
+         !    ad =  (d(W_INDEX) - ar*mr2) / vv
+         ! end if
+         ! ad = (vd*ad - d(DQ_DUAL_W)) / mr2
+         ! e(DQ_REAL_XYZ) = ar * d(DQ_REAL_XYZ)
+         ! e(DQ_DUAL_XYZ) = ad * d(DQ_REAL_XYZ) + ar * d(DQ_DUAL_XYZ)
+       end subroutine aa_tf_duqu_ln
+    end interface aa_tf_duqu_ln
 
-contains
+
+  contains
 
    ! ! Matrix for right quaternion in multiply
    pure subroutine aa_tf_qmatrix_r(q, m)
@@ -2154,7 +2183,7 @@ contains
   !! Note, this is not a time deriviative, but derivative by the slerp parameter tau
   !! Use the chain rule if you need the time derivative (ie, to find a velocity)
   pure subroutine aa_tf_qslerpdiff( tau, q1, q2, r ) &
-       bind( C, name="aa_tf_qslerpdiff" )
+       bind( C, name="aa_tf_qslerpdiff_f" )
     real(C_DOUBLE), dimension(4), intent(out) :: r
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
@@ -2168,7 +2197,7 @@ contains
 
   !! Derivative of a SLERPed quaternion, computed algebraicly
   pure subroutine aa_tf_qslerpdiffalg( tau, q1, q2, dq ) &
-       bind( C, name="aa_tf_qslerpdiffalg" )
+       bind( C, name="aa_tf_qslerpdiffalg_f" )
     real(C_DOUBLE), dimension(4), intent(out) :: dq
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2
     real(C_DOUBLE), value, intent(in) :: tau
@@ -2182,18 +2211,18 @@ contains
   end subroutine aa_tf_qslerpdiffalg
 
   !! Angle between two unit quaternions
-  pure function aa_tf_quhypangle2(x, y) result(theta) &
-       bind(C,name="aa_tf_quhypangle2")
-    real(C_DOUBLE), dimension(4), intent(in) :: x, y
-    real(C_DOUBLE) :: theta
-    real(C_DOUBLE) :: s, c
-    real(C_DOUBLE) :: a(4), b(4)
-    a = x-y
-    b = x+y
-    s = aa_tf_qnorm(a)
-    c = aa_tf_qnorm(b)
-    theta = 2d0 * atan2(s, c)
-  end function aa_tf_quhypangle2
+  ! pure function aa_tf_quhypangle2(x, y) result(theta) &
+  !      bind(C,name="aa_tf_quhypangle2")
+  !   real(C_DOUBLE), dimension(4), intent(in) :: x, y
+  !   real(C_DOUBLE) :: theta
+  !   real(C_DOUBLE) :: s, c
+  !   real(C_DOUBLE) :: a(4), b(4)
+  !   a = x-y
+  !   b = x+y
+  !   s = aa_tf_qnorm(a)
+  !   c = aa_tf_qnorm(b)
+  !   theta = 2d0 * atan2(s, c)
+  ! end function aa_tf_quhypangle2
 
 
   !! Chain Rule Derivative of a SLERPed quaternion
@@ -2273,139 +2302,139 @@ contains
   end subroutine aa_tf_qslerp3diff
 
 
-  !! Jacobian of the unit quaternion logarithm
-  subroutine aa_tf_qjuln( q, J ) &
-       bind( C, name="aa_tf_qjuln" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q
-    real(C_DOUBLE), dimension(3,4), intent(out) :: J
-    real(C_DOUBLE) :: phi, s, s2, isc, x,y,z, a
-    s2 = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    s = sqrt(s2)
-    phi = atan2( s, q(W_INDEX) ) ! always positive
-    isc = phi/s
-    a = isc / s2
+  ! !! Jacobian of the unit quaternion logarithm
+  ! subroutine aa_tf_qjuln( q, J ) &
+  !      bind( C, name="aa_tf_qjuln" )
+  !   real(C_DOUBLE), dimension(4), intent(in) :: q
+  !   real(C_DOUBLE), dimension(3,4), intent(out) :: J
+  !   real(C_DOUBLE) :: phi, s, s2, isc, x,y,z, a
+  !   s2 = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+  !   s = sqrt(s2)
+  !   phi = atan2( s, q(W_INDEX) ) ! always positive
+  !   isc = phi/s
+  !   a = isc / s2
 
-    x = q(1)
-    y = q(2)
-    z = q(3)
+  !   x = q(1)
+  !   y = q(2)
+  !   z = q(3)
 
-    J(1,1) = isc * (-x/s2 * x + 1)
-    J(2,1) = -a*x*y
-    J(3,1) = -a*x*z
+  !   J(1,1) = isc * (-x/s2 * x + 1)
+  !   J(2,1) = -a*x*y
+  !   J(3,1) = -a*x*z
 
-    J(1,2) = -a*x*y
-    J(2,2) = isc * (-y/s2 * y + 1)
-    J(3,2) = -a*y*z
+  !   J(1,2) = -a*x*y
+  !   J(2,2) = isc * (-y/s2 * y + 1)
+  !   J(3,2) = -a*y*z
 
-    J(1,3) = -a*x*z
-    J(2,3) = -a*y*z
-    J(3,3) = isc * (-z/s2 * z + 1)
+  !   J(1,3) = -a*x*z
+  !   J(2,3) = -a*y*z
+  !   J(3,3) = isc * (-z/s2 * z + 1)
 
-    J(1,4) = -x/s2
-    J(2,4) = -y/s2
-    J(3,4) = -z/s2
-  end subroutine aa_tf_qjuln
+  !   J(1,4) = -x/s2
+  !   J(2,4) = -y/s2
+  !   J(3,4) = -z/s2
+  ! end subroutine aa_tf_qjuln
 
-  subroutine aa_tf_qdulnj( q, dq, dln ) &
-       bind( C, name="aa_tf_qdulnj" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q, dq
-    real(C_DOUBLE), dimension(3), intent(out) :: dln
-    real(C_DOUBLE), dimension(3,4) :: J
-    call aa_tf_qjuln(q,J)
-    dln = matmul(J,dq)
-  end subroutine aa_tf_qdulnj
+  ! subroutine aa_tf_qdulnj( q, dq, dln ) &
+  !      bind( C, name="aa_tf_qdulnj" )
+  !   real(C_DOUBLE), dimension(4), intent(in) :: q, dq
+  !   real(C_DOUBLE), dimension(3), intent(out) :: dln
+  !   real(C_DOUBLE), dimension(3,4) :: J
+  !   call aa_tf_qjuln(q,J)
+  !   dln = matmul(J,dq)
+  ! end subroutine aa_tf_qdulnj
 
   !! Derivative of the Unit a Quaternion Logarithm
-  subroutine aa_tf_qduln( q, dq, dln ) &
-       bind( C, name="aa_tf_qduln" )
-    real(C_DOUBLE), dimension(4), intent(in) :: q, dq
-    real(C_DOUBLE), dimension(3), intent(out) :: dln
-    real(C_DOUBLE) :: phi, s, s2, c, alpha, beta
+  ! subroutine aa_tf_qduln( q, dq, dln ) &
+  !      bind( C, name="aa_tf_qduln" )
+  !   real(C_DOUBLE), dimension(4), intent(in) :: q, dq
+  !   real(C_DOUBLE), dimension(3), intent(out) :: dln
+  !   real(C_DOUBLE) :: phi, s, s2, c, alpha, beta
 
-    s2 = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
-    s = sqrt(s2)
-    c = q(W_INDEX)
-    phi = atan2( s, c ) ! always positive
+  !   s2 = dot_product(q(XYZ_INDEX), q(XYZ_INDEX))
+  !   s = sqrt(s2)
+  !   c = q(W_INDEX)
+  !   phi = atan2( s, c ) ! always positive
 
-    if( phi < sqrt(sqrt(epsilon(phi))) ) then
-       alpha = aa_tf_invsinc_series(phi)
-       beta = aa_tf_horner3( phi*phi, -1d0/3, 2d0/15, -2d0/63 )
-    else
-       alpha = phi/s
-       beta = (alpha*c-1) / s2
-    end if
+  !   if( phi < sqrt(sqrt(epsilon(phi))) ) then
+  !      alpha = aa_tf_invsinc_series(phi)
+  !      beta = aa_tf_horner3( phi*phi, -1d0/3, 2d0/15, -2d0/63 )
+  !   else
+  !      alpha = phi/s
+  !      beta = (alpha*c-1) / s2
+  !   end if
 
-    dln = alpha * dq(XYZ_INDEX) + dq(W_INDEX)*beta * q(XYZ_INDEX)
-  end subroutine aa_tf_qduln
+  !   dln = alpha * dq(XYZ_INDEX) + dq(W_INDEX)*beta * q(XYZ_INDEX)
+  ! end subroutine aa_tf_qduln
 
-  !! Jacobian of the unit quaternion exponential
-  subroutine aa_tf_qjpexp( u, J ) &
-       bind( C, name="aa_tf_qjpexp" )
-    real(C_DOUBLE), dimension(3), intent(in) :: u
-    real(C_DOUBLE), dimension(4,3), intent(out) :: J
-    real(C_DOUBLE) :: x,y,z, v, vv, sc, a
-    x = u(1)
-    y = u(2)
-    z = u(3)
-    vv = dot_product(u,u)
+  ! !! Jacobian of the unit quaternion exponential
+  ! subroutine aa_tf_qjpexp( u, J ) &
+  !      bind( C, name="aa_tf_qjpexp" )
+  !   real(C_DOUBLE), dimension(3), intent(in) :: u
+  !   real(C_DOUBLE), dimension(4,3), intent(out) :: J
+  !   real(C_DOUBLE) :: x,y,z, v, vv, sc, a
+  !   x = u(1)
+  !   y = u(2)
+  !   z = u(3)
+  !   vv = dot_product(u,u)
 
-    if( vv < epsilon(vv) ) then
-       sc = aa_tf_sinc_series2(vv)
-       a = aa_tf_horner3( vv, -1d0/3, 1d0/30, -1d0/840 )
-    else
-       v = sqrt(vv)
-       sc = sin(v)/v
-       a = (cos(v) - sc)/vv
-    end if
+  !   if( vv < epsilon(vv) ) then
+  !      sc = aa_tf_sinc_series2(vv)
+  !      a = aa_tf_horner3( vv, -1d0/3, 1d0/30, -1d0/840 )
+  !   else
+  !      v = sqrt(vv)
+  !      sc = sin(v)/v
+  !      a = (cos(v) - sc)/vv
+  !   end if
 
-    J(1,1) = a * x*x + sc
-    J(2,1) = a * x*y
-    J(3,1) = a * x*z
-    J(4,1) = -sc*x
+  !   J(1,1) = a * x*x + sc
+  !   J(2,1) = a * x*y
+  !   J(3,1) = a * x*z
+  !   J(4,1) = -sc*x
 
-    J(1,2) = a * x*y
-    J(2,2) = a * y*y + sc
-    J(3,2) = a * y*z
-    J(4,2) = -sc*y
+  !   J(1,2) = a * x*y
+  !   J(2,2) = a * y*y + sc
+  !   J(3,2) = a * y*z
+  !   J(4,2) = -sc*y
 
-    J(1,3) = a * x*z
-    J(2,3) = a * y*z
-    J(3,3) = a * z*z + sc
-    J(4,3) = -sc*z
-  end subroutine aa_tf_qjpexp
+  !   J(1,3) = a * x*z
+  !   J(2,3) = a * y*z
+  !   J(3,3) = a * z*z + sc
+  !   J(4,3) = -sc*z
+  ! end subroutine aa_tf_qjpexp
 
-  subroutine aa_tf_qdpexpj( e, de, dq ) &
-       bind( C, name="aa_tf_qdpexpj" )
-    real(C_DOUBLE), dimension(3), intent(in) :: e, de
-    real(C_DOUBLE), dimension(4), intent(out) :: dq
-    real(C_DOUBLE), dimension(4,3) :: J
-    call aa_tf_qjpexp(e,J)
-    dq = matmul(J,de)
-  end subroutine aa_tf_qdpexpj
+  ! subroutine aa_tf_qdpexpj( e, de, dq ) &
+  !      bind( C, name="aa_tf_qdpexpj" )
+  !   real(C_DOUBLE), dimension(3), intent(in) :: e, de
+  !   real(C_DOUBLE), dimension(4), intent(out) :: dq
+  !   real(C_DOUBLE), dimension(4,3) :: J
+  !   call aa_tf_qjpexp(e,J)
+  !   dq = matmul(J,de)
+  ! end subroutine aa_tf_qdpexpj
 
   ! Derivative of Pure Quaternion Exponential
-  subroutine aa_tf_qdpexp( e, de, dq ) &
-       bind( C, name="aa_tf_qdpexp" )
-    real(C_DOUBLE), dimension(3), intent(in) :: e, de
-    real(C_DOUBLE), dimension(4), intent(out) :: dq
+  ! subroutine aa_tf_qdpexp( e, de, dq ) &
+  !      bind( C, name="aa_tf_qdpexp" )
+  !   real(C_DOUBLE), dimension(3), intent(in) :: e, de
+  !   real(C_DOUBLE), dimension(4), intent(out) :: dq
 
-    real(C_DOUBLE) :: vv, phi, sinc, k, dd
-    vv = dot_product(e,e)
-    phi = sqrt(vv)
-    dd = dot_product(e, de)
+  !   real(C_DOUBLE) :: vv, phi, sinc, k, dd
+  !   vv = dot_product(e,e)
+  !   phi = sqrt(vv)
+  !   dd = dot_product(e, de)
 
-    if( phi < sqrt(sqrt(epsilon(phi))) ) then
-       sinc = aa_tf_sinc_series(phi)
-       k = aa_tf_horner3( vv, -1d0/3, 1d0/30, -1d0/840 )
-    else
-       sinc = sin(phi)/phi
-       k = cos(phi)/phi**2 - sin(phi)/phi**3
-    end if
+  !   if( phi < sqrt(sqrt(epsilon(phi))) ) then
+  !      sinc = aa_tf_sinc_series(phi)
+  !      k = aa_tf_horner3( vv, -1d0/3, 1d0/30, -1d0/840 )
+  !   else
+  !      sinc = sin(phi)/phi
+  !      k = cos(phi)/phi**2 - sin(phi)/phi**3
+  !   end if
 
-    dq(XYZ_INDEX) = sinc*de + k*dd*e
-    dq(W_INDEX) = -dd*sinc
+  !   dq(XYZ_INDEX) = sinc*de + k*dd*e
+  !   dq(W_INDEX) = -dd*sinc
 
-  end subroutine aa_tf_qdpexp
+  ! end subroutine aa_tf_qdpexp
 
 
   subroutine aa_tf_rotvec_qjac( v, G ) &
@@ -2504,59 +2533,59 @@ contains
   end subroutine aa_tf_rotvec_diff2vel
 
 
-  subroutine aa_tf_qrk1( q0, dq, dt, q1 ) &
-       bind( C, name="aa_tf_qrk1" )
-    real(C_DOUBLE), intent(in) :: dq(4), q0(4)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: q1(4)
-    q1 = q0 + dt * dq         ! euler integration
-    call aa_tf_qnormalize(q1)
-  end subroutine aa_tf_qrk1
+  ! subroutine aa_tf_qrk1( q0, dq, dt, q1 ) &
+  !      bind( C, name="aa_tf_qrk1" )
+  !   real(C_DOUBLE), intent(in) :: dq(4), q0(4)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: q1(4)
+  !   q1 = q0 + dt * dq         ! euler integration
+  !   call aa_tf_qnormalize(q1)
+  ! end subroutine aa_tf_qrk1
 
 
-  !! Integrate rotational velocity, Runge-Kutta 2 (euler integration)
-  subroutine aa_tf_qvelrk1( q0, v, dt, q1 ) &
-       bind( C, name="aa_tf_qvelrk1" )
-    real(C_DOUBLE), intent(in) :: v(3), q0(4)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE), dimension(4) :: dq
-    call aa_tf_qvel2diff(q0, v, dq)
-    call aa_tf_qrk1( q0, dq, dt, q1 )
-  end subroutine aa_tf_qvelrk1
+  ! !! Integrate rotational velocity, Runge-Kutta 2 (euler integration)
+  ! subroutine aa_tf_qvelrk1( q0, v, dt, q1 ) &
+  !      bind( C, name="aa_tf_qvelrk1" )
+  !   real(C_DOUBLE), intent(in) :: v(3), q0(4)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: q1(4)
+  !   real(C_DOUBLE), dimension(4) :: dq
+  !   call aa_tf_qvel2diff(q0, v, dq)
+  !   call aa_tf_qrk1( q0, dq, dt, q1 )
+  ! end subroutine aa_tf_qvelrk1
 
 
   !! Integrate rotational velocity, Runge-Kutta 4
-  subroutine aa_tf_qvelrk4( q0, v, dt, q1 ) &
-       bind( C, name="aa_tf_qvelrk4" )
-    real(C_DOUBLE), intent(in) :: v(3), q0(4)
-    real(C_DOUBLE), intent(in), value :: dt
-    real(C_DOUBLE), intent(out) :: q1(4)
-    real(C_DOUBLE) :: dq(4,4), qtmp(4)
+  ! subroutine aa_tf_qvelrk4( q0, v, dt, q1 ) &
+  !      bind( C, name="aa_tf_qvelrk4" )
+  !   real(C_DOUBLE), intent(in) :: v(3), q0(4)
+  !   real(C_DOUBLE), intent(in), value :: dt
+  !   real(C_DOUBLE), intent(out) :: q1(4)
+  !   real(C_DOUBLE) :: dq(4,4), qtmp(4)
 
-    ! k1
-    call aa_tf_qvel2diff(q0, v, dq(:,1))
-    ! k2
-    call term(dq(:,1), dt/2, dq(:,2))
-    ! k3
-    call term(dq(:,2), dt/2, dq(:,3))
-    ! k4
-    call term(dq(:,3), dt, dq(:,4))
+  !   ! k1
+  !   call aa_tf_qvel2diff(q0, v, dq(:,1))
+  !   ! k2
+  !   call term(dq(:,1), dt/2, dq(:,2))
+  !   ! k3
+  !   call term(dq(:,2), dt/2, dq(:,3))
+  !   ! k4
+  !   call term(dq(:,3), dt, dq(:,4))
 
-    ! combine
-    qtmp = dq(:,1) + dq(:,4) + 2 * ( dq(:,2) + dq(:,3) )
-    call aa_tf_qrk1( q0, qtmp, dt/6, q1 )
+  !   ! combine
+  !   qtmp = dq(:,1) + dq(:,4) + 2 * ( dq(:,2) + dq(:,3) )
+  !   call aa_tf_qrk1( q0, qtmp, dt/6, q1 )
 
-  contains
-    subroutine term( dq0, dt, dq1 )
-      real(C_DOUBLE), intent(in) ::  dq0(4)
-      real(C_DOUBLE), intent(in), value :: dt
-      real(C_DOUBLE), intent(out) :: dq1(4)
-      real(C_DOUBLE) :: qtmp(4)
-      call aa_tf_qrk1( q0, dq0, dt, qtmp )
-      call aa_tf_qvel2diff(qtmp, v, dq1)
-    end subroutine term
-  end subroutine aa_tf_qvelrk4
+  ! contains
+  !   subroutine term( dq0, dt, dq1 )
+  !     real(C_DOUBLE), intent(in) ::  dq0(4)
+  !     real(C_DOUBLE), intent(in), value :: dt
+  !     real(C_DOUBLE), intent(out) :: dq1(4)
+  !     real(C_DOUBLE) :: qtmp(4)
+  !     call aa_tf_qrk1( q0, dq0, dt, qtmp )
+  !     call aa_tf_qvel2diff(qtmp, v, dq1)
+  !   end subroutine term
+  ! end subroutine aa_tf_qvelrk4
 
   !! Evaluate a polynomial via Horners rule
   pure function aa_tf_horner( x, a ) result(y)
@@ -2849,17 +2878,17 @@ contains
   !   y = aa_tf_dual( d(DQ_REAL_W), d(DQ_DUAL_W) )
   ! end function aa_tf_duqu_dual_w
 
-  subroutine aa_tf_xyz2duqu( x, y, z, d ) &
-       bind( C, name="aa_tf_xyz2duqu" )
-    real(C_DOUBLE), intent(in), value :: x,y,z
-    real(C_DOUBLE), intent(out), dimension(8) :: d
-    d(DQ_REAL_XYZ) = real(0.0,C_DOUBLE)
-    d(DQ_REAL_W) = real(1.0,C_DOUBLE)
-    d(DQ_DUAL_W) = real(0.0,C_DOUBLE)
-    d(4+1) = 0.5 * x
-    d(4+2) = 0.5 * y
-    d(4+3) = 0.5 * z
-  end subroutine aa_tf_xyz2duqu
+  ! subroutine aa_tf_xyz2duqu( x, y, z, d ) &
+  !      bind( C, name="aa_tf_xyz2duqu" )
+  !   real(C_DOUBLE), intent(in), value :: x,y,z
+  !   real(C_DOUBLE), intent(out), dimension(8) :: d
+  !   d(DQ_REAL_XYZ) = real(0.0,C_DOUBLE)
+  !   d(DQ_REAL_W) = real(1.0,C_DOUBLE)
+  !   d(DQ_DUAL_W) = real(0.0,C_DOUBLE)
+  !   d(4+1) = 0.5 * x
+  !   d(4+2) = 0.5 * y
+  !   d(4+3) = 0.5 * z
+  ! end subroutine aa_tf_xyz2duqu
 
   ! x angle and translations to dual quaternion
   subroutine aa_tf_xxyz2duqu( theta, x, y, z, d ) &
