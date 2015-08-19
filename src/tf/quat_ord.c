@@ -702,3 +702,43 @@ AA_API void aa_tf_qslerpdiffalg(
     aa_tf_qln(qm,ql);
     aa_tf_qmul(ql,q,dq);
 }
+
+
+AA_API void aa_tf_qslerpchaindiff(
+    double u, double du,
+    const double q1[AA_RESTRICT 4], const double dq1[AA_RESTRICT 4],
+    const double q2[AA_RESTRICT 4], const double dq2[AA_RESTRICT 4],
+    double q[AA_RESTRICT 4], double dq[AA_RESTRICT 4] )
+{
+    // TODO: test case
+    double theta, d1, d2;
+    aa_tf_qslerp_param(q1, q2, &theta, &d1, &d2);
+    if( aa_feq(theta, 0, 0) ) {
+        AA_MEM_ZERO(dq, 4);
+        AA_MEM_CPY(q, q1, 4);
+        return;
+    }
+    //const double s = sin(theta);
+    const double c = cos(theta);
+    const double sa = sin((1-u)*theta);
+    const double ca = cos((1-u)*theta);
+    const double sb = sin(u*theta);
+    const double cb = cos(u*theta);
+
+    const double dtheta_c = aa_tf_qdot(q1, dq2) + aa_tf_qdot(dq1, q2);
+    const double dtheta =  dtheta_c / c;
+
+    const double a = sa / d1;
+    const double b = sb / d2;
+
+    const double da = ( ca * (dtheta*(1-u) - du*theta) ) / d1
+        - ( dtheta_c * sa ) / (d1*d1);
+
+    const double db = ( (dtheta*u + theta*du) * cb ) / d2
+        - ( dtheta_c * b ) / d1;
+
+    FOR_QUAT(i) {
+        q[i] = q1[i]*a + q2[i]*b;
+        dq[i] = (dq1[i]*a + q1[i]*da) + (dq2[i]*b + q2[i]*db);
+    }
+}

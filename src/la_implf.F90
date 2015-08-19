@@ -508,23 +508,23 @@ subroutine AA_FMOD_C_BEGIN(la, 5spline, n, tf, x1, incx1, dx1, incdx1, ddx1, inc
        x(1:size(x):incx), dx(1:size(dx):incdx), ddx(1:size(ddx):incddx) )
 end subroutine AA_FMOD_C_END(la,5spline)
 
-subroutine AA_FMOD_C_BEGIN(la, assign_hungarian, m, n, A, lda, row, col)
-  use amino_mem
-  integer(c_size_t), intent(in), value :: m,n,lda
-  real(AA_FSIZE),intent(in) :: A(lda,n)
-  integer(c_size_t),intent(out) :: row(m),col(n)
+! subroutine AA_FMOD_C_BEGIN(la, assign_hungarian, m, n, A, lda, row, col)
+!   use amino_mem
+!   integer(c_size_t), intent(in), value :: m,n,lda
+!   real(AA_FSIZE),intent(in) :: A(lda,n)
+!   integer(c_size_t),intent(out) :: row(m),col(n)
 
-  integer, pointer :: rowi(:), coli(:)
-  call aa_mem_region_alloc( m, rowi )
-  call aa_mem_region_alloc( m, coli )
+!   integer, pointer :: rowi(:), coli(:)
+!   call aa_mem_region_alloc( m, rowi )
+!   call aa_mem_region_alloc( m, coli )
 
-  call AA_FMOD(la,assign_hungarian)(A(1:m,1:n),rowi,coli)
-  ! convert to C indices
-  row = int(rowi-1,c_size_t)
-  col = int(coli-1,c_size_t)
+!   call AA_FMOD(la,assign_hungarian)(A(1:m,1:n),rowi,coli)
+!   ! convert to C indices
+!   row = int(rowi-1,c_size_t)
+!   col = int(coli-1,c_size_t)
 
-  call aa_mem_region_pop( rowi )
-end subroutine AA_FMOD_C_END(la,assign_hungarian)
+!   call aa_mem_region_pop( rowi )
+! end subroutine AA_FMOD_C_END(la,assign_hungarian)
 
 
 !> Solve assignment problem via Hungarian algorithm, padding if necessary
@@ -737,16 +737,16 @@ subroutine AA_FMOD(la,assign_hungarian_square)(A,row_assign,col_assign)
     end subroutine make_path
 end subroutine AA_FMOD(la,assign_hungarian_square)
 
-subroutine AA_FMOD(la,assign_hungarian_max2min)(A)
-  real(AA_FSIZE), intent(inout) :: A(:,:)
-  A = maxval(A) - A
-end subroutine AA_FMOD(la,assign_hungarian_max2min)
+! subroutine AA_FMOD(la,assign_hungarian_max2min)(A)
+!   real(AA_FSIZE), intent(inout) :: A(:,:)
+!   A = maxval(A) - A
+! end subroutine AA_FMOD(la,assign_hungarian_max2min)
 
-subroutine AA_FMOD_C_BEGIN(la, assign_hungarian_max2min, m, n, A, lda)
-  integer(c_size_t), intent(in), value :: m,n,lda
-  real(AA_FSIZE),intent(inout) :: A(lda,n)
-  call AA_FMOD(la,assign_hungarian_max2min)( A(1:m,1:n) )
-end subroutine AA_FMOD_C_END(la,assign_hungarian_max2min)
+! subroutine AA_FMOD_C_BEGIN(la, assign_hungarian_max2min, m, n, A, lda)
+!   integer(c_size_t), intent(in), value :: m,n,lda
+!   real(AA_FSIZE),intent(inout) :: A(lda,n)
+!   call AA_FMOD(la,assign_hungarian_max2min)( A(1:m,1:n) )
+! end subroutine AA_FMOD_C_END(la,assign_hungarian_max2min)
 
 #endif
 #if 0

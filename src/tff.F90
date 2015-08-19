@@ -2228,7 +2228,7 @@ module amino_tf
   !! Chain Rule Derivative of a SLERPed quaternion
   !! Assumes that q1 and q2 are unit quaternions
   pure subroutine aa_tf_qslerpchaindiff( u, du, q1, dq1, q2, dq2, q, dq ) &
-       bind( C, name="aa_tf_qslerpchaindiff" )
+       bind( C, name="aa_tf_qslerpchaindiff_f" )
     real(C_DOUBLE), dimension(4), intent(out) :: q, dq
     real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, dq1, dq2
     real(C_DOUBLE), value, intent(in) :: u, du

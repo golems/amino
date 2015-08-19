@@ -300,7 +300,7 @@ AA_FDEC( void, la, assign_hungarian,
 
 AA_FDEC( void, la, assign_hungarian_max2min,
          size_t m, size_t n,
-         const AA_TYPE *A, size_t lda );
+         AA_TYPE *A, size_t lda );
 
 
 /** Minimum location of vector x */
