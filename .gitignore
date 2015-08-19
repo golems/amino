@@ -90,3 +90,5 @@ amino*.tar.gz
 /test_vec
 /src/tf/.deps/.dirstamp
 /src/tf/.dirstamp
+/src/mac/euler.c
+/src/mac/euler.f

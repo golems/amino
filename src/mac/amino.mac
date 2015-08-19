@@ -127,6 +127,11 @@ qaxang(theta, v) := ([
   sin(theta/2)*vref(v,3),
   cos(theta/2) ]);
 
+qaxang2(s, c, v) := ([
+  s*vref(v,1),
+  s*vref(v,2),
+  s*vref(v,3),
+  c ]);
 
 qmat_l(q) :=
 matrix(

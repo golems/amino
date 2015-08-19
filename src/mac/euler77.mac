@@ -1,0 +1,136 @@
+/*
+ * Copyright (c) 2010-2011, Georgia Tech Research Corporation
+ * All rights reserved.
+ *
+ * Author(s): Neil T. Dantam <ntd@gatech.edu>
+ * Georgia Tech Humanoid Robotics Lab
+ * Under Direction of Prof. Mike Stilman
+ *
+ *
+ * This file is provided under the following "BSD-style" License:
+ *
+ *
+ *   Redistribution and use in source and binary forms, with or
+ *   without modification, are permitted provided that the following
+ *   conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+ *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ *   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ *   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ *   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *   POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/* generate*/
+load("./amino.mac")$
+
+X : [ 1, 0, 0 ]$
+Y : [ 0, 1, 0 ]$
+Z : [ 0, 0, 1 ]$
+
+/* Note, GCC's optimizer will eliminate redundant calls to sin/cos
+(merging them to sincos).  No need to worry about that here */
+
+lp : "("$
+rp : ")"$
+
+qassign(var,quat) := block([],
+  fortran( var(1) = quat[1] ),
+  fortran( var(2) = quat[2] ),
+  fortran( var(3) = quat[3] ),
+  fortran( var(4) = quat[4] ) )$
+
+gen(stuff, tf1, tf2, tf3, x1, x2, x3)  := (
+  printf(true, "~&      SUBROUTINE aa_tf_euler~a2rotmat(e1, e2, e3, R) ~&", stuff),
+  printf(true, "~&      DOUBLE PRECISION e1,e2,e3~&"),
+  printf(true, "~&      DOUBLE PRECISION R(3,3)~&"),
+
+  /* print("  real(C_DOUBLE), value, intent(in)  :: e1,e2,e3"), */
+  /* print("  real(C_DOUBLE), intent(out) :: R(3,3)"), */
+  fortran( R =  submatrix(4, tf1(e1) . tf2(e2) . tf3(e3), 4 ) ),
+  printf(true, "~&      RETURN" ),
+  printf(true, "~&      END~&" ),
+
+
+  printf(true, "~&      SUBROUTINE aa_tf_euler~a2quat(e1, e2, e3, q) ~&", stuff),
+  printf(true, "~&      DOUBLE PRECISION e1,e2,e3~&"),
+  printf(true, "~&      DOUBLE PRECISION q(4)~&"),
+  printf(true, "~&      DOUBLE PRECISION s1,c1,s2,c2,s3,c3"),
+  printf(true, "~&      s1 = sin(e1/2.0)~&" ),
+  printf(true, "~&      c1 = cos(e1/2.0)~&" ),
+  printf(true, "~&      s2 = sin(e2/2.0)~&" ),
+  printf(true, "~&      c2 = cos(e2/2.0)~&" ),
+  printf(true, "~&      s3 = sin(e3/2.0)~&" ),
+  printf(true, "~&      c3 = cos(e3/2.0)~&" ),
+
+  qassign( 'q , qmul( qmul( qaxang2(s1,c1,x1), qaxang2(s2,c2,x2)), qaxang2(s3,c3,x3) ) ) ,
+
+  printf(true,"~&      call aa_tf_qnormalize(q)"),
+
+  printf(true, "~&      RETURN" ),
+  printf(true, "~&      END~&" )
+
+
+  );
+
+
+with_stdout("euler.f",
+
+  /*-- Euler XYZ --*/
+  gen(xyz, tf_rotx, tf_roty, tf_rotz, X, Y, Z ),
+
+  /*-- Euler XZY --*/
+  gen(xzy, tf_rotx, tf_rotz, tf_roty, X, Z, Y ),
+
+  /*-- Euler YXZ --*/
+  gen(yxz, tf_roty, tf_rotx, tf_rotz, Y, X, Z ),
+
+  /*-- Euler YZX --*/
+  gen(yzx, tf_roty, tf_rotz, tf_rotx, Y, Z, X ),
+
+  /*-- Euler ZXY --*/
+  gen(zxy, tf_rotz, tf_rotx, tf_roty, Z, X, Y ),
+
+  /*-- Euler ZYX --*/
+  gen(zyx, tf_rotz, tf_roty, tf_rotx, Z, Y, X ),
+
+  /*-- Euler XYX --*/
+  gen(xyx, tf_rotx, tf_roty, tf_rotx, X, Y, X ),
+
+  /*-- Euler XZX --*/
+  gen(xzx, tf_rotx, tf_rotz, tf_rotx, X, Z, X ),
+
+  /*-- Euler YXY --*/
+  gen(yxy, tf_roty, tf_rotx, tf_roty, Y, X, Y ),
+
+  /*-- Euler YZY --*/
+  gen(yzy, tf_roty, tf_rotz, tf_roty, Y, Z, Y ),
+
+  /*-- Euler ZXZ --*/
+  gen(zxz, tf_rotz, tf_rotx, tf_rotz, Z, X, Z ),
+
+  /*-- Euler ZYZ --*/
+  gen(zyz, tf_rotz, tf_roty, tf_rotz, Z, Y, Z )
+
+)$
+
+/* Local Variables: */
+/* mode: maxima */
+/* End: */

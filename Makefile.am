@@ -79,11 +79,17 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	cd $(top_srcdir)/src/mac && maxima --very-quiet -b gen.mac
 	@echo [maxima end]
 
-BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/aa_ls_se3.f90
+BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/aa_ls_se3.f90 src/mac/euler.f
 
 src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
 	@echo [maxima start]
 	cd $(top_srcdir)/src/mac && maxima --very-quiet -b euler.mac
+	@echo [maxima end]
+
+
+src/mac/euler.f: src/mac/amino.mac src/mac/euler77.mac
+	@echo [maxima start]
+	cd $(top_srcdir)/src/mac && maxima --very-quiet -b euler77.mac
 	@echo [maxima end]
 
 src/mac/aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
@@ -134,10 +140,17 @@ libamino_la_LIBADD =                   \
 else
 
 if USE_F2C
+endif
+
+BUILT_SOURCES += src/mac/euler.c
+src/mac/euler.c: src/mac/euler.f
+	cd src/mac && f2c euler.f
+
+libamino_la_SOURCES += src/mac/euler_f2c.c
 
 endif
 
-endif
+
 
 ## JAVA ##
 JSOURCES =                                        \
@@ -255,7 +268,7 @@ la_mod.f90: src/la_mod.F90 src/la_implf.F90 src/mac/aa_ls_se3.f90 include/amino/
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
 
-tf_mod.f90: src/tff.F90 src/mac/aa_tf_euler.f90
+tf_mod.f90: src/tff.F90 # src/mac/aa_tf_euler.f90
 	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
 
 
