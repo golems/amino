@@ -52,52 +52,6 @@ void AA_NAME(la,transpose) ( size_t m, size_t n,
     }
 }
 
-/* void AA_NAME(la,_cmean) */
-/* ( size_t m, size_t n, */
-/*   const AA_TYPE *A, size_t lda, */
-/*   AA_TYPE *x) */
-/* { */
-/*     memset( x, 0, sizeof(x[0])*m ); */
-/*     for( size_t i=0, j=0; i < n; i++, j+=lda ) { */
-/*         AA_CBLAS_NAME(axpy)( (int)m, 1.0, A+j, (int)1, */
-/*                              x, 1 ); */
-/*     } */
-/*     AA_CBLAS_NAME(scal)((int)m, ((AA_TYPE)1.0)/(AA_TYPE)n, */
-/*                         x, 1); */
-/* } */
-
-/* void AA_NAME(la,_ccov) */
-/* ( size_t m, size_t n, */
-/*   const AA_TYPE *A, size_t lda, */
-/*   const AA_TYPE *x, */
-/*   AA_TYPE *E, size_t lde ) { */
-/*     for( size_t j = 0; j < m*lde; j+=lde ) { */
-/*         memset( E+j, 0, sizeof(E[0])*m ); */
-/*     } */
-/*     for( size_t j = 0; j < n*lda; j+=lda ) */
-/*     { */
-/*         /\* t := - mu + A_i *\/ */
-/*         AA_TYPE t[m]; */
-/*         memcpy( t, A+j, sizeof(t[0])*m ); */
-/*         AA_CBLAS_NAME(axpy) ((int)m, -1.0, x, (int)1, */
-/*                              t, 1 ); */
-/*         /\* E += t * t' *\/ */
-/*         AA_CBLAS_NAME(syr)( CblasColMajor, CblasUpper, */
-/*                             (int)m, 1.0, t, 1, */
-/*                             E, (int)lde ); */
-/*     } */
-/*     AA_CBLAS_NAME(scal) ( (int)(m*m), */
-/*                           (AA_TYPE)1.0/(AA_TYPE)(n-1), */
-/*                           E, 1 ); */
-/*     /\* fill lower half *\/ */
-/*     for( size_t i = 0; i < m; i ++ ) { */
-/*         for( size_t j = i+1; j < m; j ++ ) { */
-/*             AA_MATREF(E, m, j, i) = AA_MATREF(E, m, i, j); */
-/*         } */
-/*     } */
-/* } */
-
-
 
 
 /* AA_API void AA_NAME(la,opt_hungarian) */
@@ -382,6 +336,69 @@ void AA_NAME(la,transpose) ( size_t m, size_t n,
 /*     } */
 /* } */
 
+AA_API void AA_NAME(la,lerp)
+( size_t n, AA_TYPE u,
+  const AA_TYPE *v1, size_t inc1,
+  const AA_TYPE *v2, size_t inc2,
+  AA_TYPE *vu, size_t incu )
+{
+    for( size_t i=0, j=0, k=0;
+         n--;
+         i+=inc1, j+=inc2, k+=incu
+        )
+    {
+        vu[k] = v1[i] + u * (v2[j] - v1[i]);
+    }
+}
+
+void AA_NAME(la,colmean)
+( size_t m, size_t n,
+  const AA_TYPE *A, size_t lda,
+  AA_TYPE *x)
+{
+    memset( x, 0, sizeof(x[0])*m );
+    for( size_t i=0, j=0; i < n; i++, j+=lda ) {
+        AA_CBLAS_NAME(axpy)( (int)m, 1.0, A+j, (int)1,
+                             x, 1 );
+    }
+    AA_CBLAS_NAME(scal)((int)m, ((AA_TYPE)1.0)/(AA_TYPE)n,
+                        x, 1);
+}
+
+void AA_NAME(la,colcov)
+( size_t m, size_t n,
+  const AA_TYPE *A, size_t lda,
+  const AA_TYPE *x,
+  AA_TYPE *E, size_t lde ) {
+    for( size_t j = 0; j < m*lde; j+=lde ) {
+        memset( E+j, 0, sizeof(E[0])*m );
+    }
+    for( size_t j = 0; j < n*lda; j+=lda )
+    {
+        /* t := - mu + A_i */
+        AA_TYPE t[m];
+        memcpy( t, A+j, sizeof(t[0])*m );
+        AA_CBLAS_NAME(axpy) ((int)m, -1.0, x, (int)1,
+                             t, 1 );
+        /* E += t * t' */
+        AA_CBLAS_NAME(syr)( CblasColMajor, CblasUpper,
+                            (int)m, 1.0, t, 1,
+                            E, (int)lde );
+    }
+    AA_CBLAS_NAME(scal) ( (int)(m*m),
+                          (AA_TYPE)1.0/(AA_TYPE)(n-1),
+                          E, 1 );
+    /* fill lower half */
+    for( size_t i = 0; i < m; i ++ ) {
+        for( size_t j = i+1; j < m; j ++ ) {
+            AA_MATREF(E, m, j, i) = AA_MATREF(E, m, i, j);
+        }
+    }
+}
+
+
+
+
 AA_API void AA_NAME(la,lls)
 ( size_t m, size_t n, size_t p,
   const AA_TYPE *A, size_t lda,
@@ -568,6 +585,109 @@ AA_TYPE AA_NAME(la,mad2)( size_t m, size_t n, const AA_TYPE *u, const AA_TYPE *A
         P[i] = (AA_TYPE)sqrt( AA_NAME(la,ssd)(m, AA_MATCOL(A,lda,i), 1, u, 1) );
     }
     return AA_NAME(la,nmedian_pop)( n, P );
+}
+
+
+AA_TYPE AA_NAME(la,ssd) (
+    size_t n,
+    const AA_TYPE *x, size_t incx,
+    const AA_TYPE *y, size_t incy
+    )
+{
+    double a = 0;
+    for( size_t i = 0, j=0;
+         n--;
+         i+=incx, j+=incy
+        )
+    {
+        double t = x[i] - y[j];
+        a += t*t;
+    }
+    return (AA_TYPE)a;
+}
+
+
+/* Method from: Kahan, Willliam. How futile are mindless assessments
+ * of roundoff in floating-point computation. 2006
+ */
+AA_TYPE AA_NAME(la,angle) (
+    size_t n,
+    const AA_TYPE *x, size_t incx,
+    const AA_TYPE *y, size_t incy
+    )
+{
+    double nx = AA_CBLAS_NAME(nrm2)((int)n, x, (int)incx);
+    double ny = AA_CBLAS_NAME(nrm2)((int)n, y, (int)incy);
+    double s=0, c=0;
+
+    for( size_t i = 0, j=0;
+         n--;
+         i+=incx, j+=incy
+        )
+    {
+        double a = ny*x[i];
+        double b = nx*y[j];
+        double ts = a-b;
+        double tc = a+b;
+        s += ts*ts;
+        c += tc*tc;
+    }
+    return (AA_TYPE)(2*atan2( sqrt(s), sqrt(c)));
+}
+
+AA_API void AA_NAME(la, colfit) (
+    size_t m, size_t n,
+    const AA_TYPE *A, size_t lda, AA_TYPE *x
+    )
+{
+    AA_TYPE *At = (AA_TYPE*)
+        aa_mem_region_local_alloc(sizeof(AA_TYPE)*m*n);
+    AA_TYPE *b = (AA_TYPE*)
+        aa_mem_region_local_alloc(sizeof(AA_TYPE)*n);
+    AA_TYPE *xout = (AA_TYPE*)
+        aa_mem_region_local_alloc(sizeof(AA_TYPE)*m);
+
+    // construct normed A,b matrix
+    for( size_t i = 0, j=0;
+         i < n;
+         j+=lda, i++ )
+    {
+        // Copy normed columns of A into At
+        const AA_TYPE *aa = A+j; // column of A
+        double g = AA_CBLAS_NAME(nrm2)( (int)m, aa, 1 );
+
+        b[i] = (AA_TYPE)(-1/g);
+        for( size_t q=0,k=i; q<m; q++,k+=n ) {
+            At[k] = (AA_TYPE)(aa[q]/g);
+        }
+    }
+    // solve
+    AA_NAME(la,lls)( n, m, 1,
+                     At, n, b, n, xout, m );
+    // normalize
+    double d = AA_CBLAS_NAME(nrm2)((int)m, xout, (int)1);
+    for( size_t i = 0; i < m; i ++ ) {
+        x[i] = (AA_TYPE)(xout[i]/d);
+    }
+    x[m] = (AA_TYPE)(1.0/d);
+
+    aa_mem_region_local_pop(At);
+}
+
+AA_API AA_TYPE AA_NAME(la, vecstd) (
+    size_t n,
+    const AA_TYPE *x, size_t incx,
+    AA_TYPE mu)
+{
+    double a=0;
+    for( size_t p=n,i=0;
+         p--;
+         i+=incx )
+    {
+        double t=x[i]-mu;
+        a += t*t;
+    }
+    return (AA_TYPE)sqrt( a/(double)(n-1) );
 }
 
 #include "amino/undef.h"

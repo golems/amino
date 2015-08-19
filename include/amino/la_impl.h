@@ -87,6 +87,8 @@ AA_API void AA_NAME(la,lerp)
   const AA_TYPE *v2, size_t inc2,
   AA_TYPE *vu, size_t incu );
 
+
+
 /** Compute cubic spline parameters */
 AA_API void AA_NAME(la,3spline_param)
 ( size_t n, AA_TYPE tf,
@@ -148,7 +150,21 @@ AA_FDEC(AA_TYPE, la, vecstd,
  *
  * \sa aa_la_d_colmean
  */
-AA_FDEC(AA_TYPE, la, colmean,
+AA_FDEC(void, la, colmean,
+        size_t m, size_t n,
+        const AA_TYPE *A, size_t lda,
+        AA_TYPE *x);
+
+/** Mean of rows of A.
+ * \param m rows of A
+ * \param n cols of A
+ * \param lda leading dimension of A
+ * \param[in] A source matrix, m*n
+ * \param[out] x destination vector for mean, length n
+ *
+ * \sa aa_la_d_rowmean
+ */
+AA_FDEC(AA_TYPE, la, rowmean,
         size_t m, size_t n,
         const AA_TYPE *A, size_t lda,
         AA_TYPE *x);
@@ -169,8 +185,7 @@ AA_FDEC(AA_TYPE, la, colmean,
  *
  * \sa aa_la_d_colcov
  */
-
-AA_FDEC(AA_TYPE, la, colcov,
+AA_FDEC(void, la, colcov,
         size_t m, size_t n,
         const AA_TYPE *A, size_t lda,
         const AA_TYPE *x,

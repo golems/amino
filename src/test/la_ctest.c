@@ -54,7 +54,7 @@ static void test_angle();
 //static void test_cross();
 //static void test_proj_orth();
 //static void test_std();
-//static void test_meancov();
+static void test_meancov();
 
 
 int main( int argc, char **argv ) {
@@ -89,6 +89,7 @@ int main( int argc, char **argv ) {
 
     test_ssd();
     test_angle();
+    test_meancov();
 
     printf("Ending la_ctest\n");
 }
@@ -148,6 +149,31 @@ static void test_angle()
 
 }
 
+static void test_meancov()
+{
+
+    double  A[] = {1.,2., 3.,3., 8.,12.}; // 2x3
+    double e[4], mu[2], At[6];
+
+    double mu_r[2] = {4, 5.6666667};
+    double e_r[] = {13.,19.5, 19.5,30.333333};
+
+    aa_la_d_colmean( 2, 3, A, 2, mu);
+    aveq( "colmean", 2, mu, mu_r, 1e-6);
+
+    aa_la_d_transpose(2,3,A,2, At,3);
+    printf("\n");
+    aa_dump_mat( stdout, A, 2,3);
+    printf("\n");
+    aa_dump_mat( stdout, At, 3,2);
+    printf("\n");
+
+    aa_la_d_rowmean( 3, 2, At, 3, mu);
+    aveq( "rowmean", 2, mu, mu_r, 1e-6);
+
+    aa_la_d_colcov( 2, 3, A, 2, mu, e, 2);
+    aveq( "colcov", 4, e, e_r, 1e-6);
+}
 
 
 /* static void test_proj_orth() */

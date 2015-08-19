@@ -108,12 +108,12 @@ end function AA_FMOD(la,ssd)
 !! \param[in] incx stepsize of x
 !! \param[in] y second vector
 !! \param[in] incy stepsize of y
-pure function AA_FMOD_C_BEGIN(la, ssd, n, x, incx, y, incy) result(a)
-  integer (c_size_t), intent(in), value :: n, incx, incy
-  AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx), y(n*incy)
-  AA_FTYPE(AA_FSIZE) :: a
-  a = AA_FMOD(la,ssd)(x(1:n*incx:incx),y(1:n*incy:incy))
-end function AA_FMOD_C_END(la,ssd)
+! pure function AA_FMOD_C_BEGIN(la, ssd, n, x, incx, y, incy) result(a)
+!   integer (c_size_t), intent(in), value :: n, incx, incy
+!   AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx), y(n*incy)
+!   AA_FTYPE(AA_FSIZE) :: a
+!   a = AA_FMOD(la,ssd)(x(1:n*incx:incx),y(1:n*incy:incy))
+! end function AA_FMOD_C_END(la,ssd)
 
 !> Sum of squared differences of columns
 !!
@@ -184,19 +184,19 @@ pure function AA_FMOD(la,angle)( x, y ) result(r)
   r = real(2,AA_FSIZE)*atan2(sqrt(s),sqrt(c))
 end function AA_FMOD(la,angle)
 
-!> Angle between vectors, C interface
-!!
-!! \param[in] n length of vectors
-!! \param[in] x first vector
-!! \param[in] incx stepsize of x
-!! \param[in] y second vector
-!! \param[in] incy stepsize of y
-pure function AA_FMOD_C_BEGIN(la, angle, n, x, incx, y, incy ) result(a)
-  integer(C_SIZE_T), intent(in), value   :: n, incx, incy
-  real(AA_FSIZE), intent(in) :: x(n*incx),y(n*incy)
-  real(AA_FSIZE) :: a
-  a = AA_FMOD(la,angle)( x(1:n:incx), y(1:n:incy) )
-end function AA_FMOD_C_END(la,angle)
+! !> Angle between vectors, C interface
+! !!
+! !! \param[in] n length of vectors
+! !! \param[in] x first vector
+! !! \param[in] incx stepsize of x
+! !! \param[in] y second vector
+! !! \param[in] incy stepsize of y
+! pure function AA_FMOD_C_BEGIN(la, angle, n, x, incx, y, incy ) result(a)
+!   integer(C_SIZE_T), intent(in), value   :: n, incx, incy
+!   real(AA_FSIZE), intent(in) :: x(n*incx),y(n*incy)
+!   real(AA_FSIZE) :: a
+!   a = AA_FMOD(la,angle)( x(1:n:incx), y(1:n:incy) )
+! end function AA_FMOD_C_END(la,angle)
 
 
 !! Norm2
@@ -291,13 +291,13 @@ pure function AA_FMOD(la,vecstd)(x,mu) result(sigma)
   sigma = sqrt( TOREAL(1)/(TOREAL(size(x)-1)) * sum( (x-mu)**2 ) )
 end function AA_FMOD(la,vecstd)
 
-pure function AA_FMOD_C_BEGIN(la, vecstd, n,x,incx,mu) result(sigma)
-  integer(c_size_t), intent(in), value :: n,incx
-  AA_FTYPE(AA_FSIZE), intent(in), value :: mu
-  AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx)
-  AA_FTYPE(AA_FSIZE) :: sigma
-  sigma = aa_la_std(x(1:n:incx),mu)
-end function AA_FMOD_C_END(la,vecstd)
+! pure function AA_FMOD_C_BEGIN(la, vecstd, n,x,incx,mu) result(sigma)
+!   integer(c_size_t), intent(in), value :: n,incx
+!   AA_FTYPE(AA_FSIZE), intent(in), value :: mu
+!   AA_FTYPE(AA_FSIZE), intent(in) :: x(n*incx)
+!   AA_FTYPE(AA_FSIZE) :: sigma
+!   sigma = aa_la_std(x(1:n:incx),mu)
+! end function AA_FMOD_C_END(la,vecstd)
 
 !! Colmean
 
@@ -316,13 +316,13 @@ pure subroutine AA_FMOD(la,colmean)( A, x )
   end forall
 end subroutine AA_FMOD(la,colmean)
 
-!> Mean of columns, C interface
-pure subroutine AA_FMOD_C_BEGIN(la, colmean, m, n, A, lda, x )
-  integer(C_SIZE_T), intent(in), value :: m,n,lda
-  real(AA_FSIZE), intent(in) :: A(lda,n)
-  real(AA_FSIZE), intent(out) :: x(m)
-  call AA_FMOD(la,colmean)(A,x)
-end subroutine AA_FMOD_C_END(la,colmean)
+! !> Mean of columns, C interface
+! pure subroutine AA_FMOD_C_BEGIN(la, colmean, m, n, A, lda, x )
+!   integer(C_SIZE_T), intent(in), value :: m,n,lda
+!   real(AA_FSIZE), intent(in) :: A(lda,n)
+!   real(AA_FSIZE), intent(out) :: x(m)
+!   call AA_FMOD(la,colmean)(A,x)
+! end subroutine AA_FMOD_C_END(la,colmean)
 
 
 !> Mean of rows
@@ -339,8 +339,8 @@ end subroutine AA_FMOD(la,rowmean)
 pure subroutine AA_FMOD_C_BEGIN(la, rowmean, m, n, A, lda, x )
   integer(C_SIZE_T), intent(in), value :: m,n,lda
   real(AA_FSIZE), intent(in) :: A(lda,n)
-  real(AA_FSIZE), intent(out) :: x(m)
-  call AA_FMOD(la,rowmean)(A,x)
+  real(AA_FSIZE), intent(out) :: x(n)
+  call AA_FMOD(la,rowmean)(A(1:m,:),x)
 end subroutine AA_FMOD_C_END(la,rowmean)
 
 !! Colcov
@@ -365,13 +365,13 @@ end subroutine AA_FMOD(la,colcov)
 
 
 !> Covariance of columns, C interface
-pure subroutine AA_FMOD_C_BEGIN(la, colcov, m, n, A, lda, x, E, lde )
-  integer(C_SIZE_T), intent(in), value :: m,n,lda,lde
-  real(AA_FSIZE), intent(in) :: A(lda,n)
-  real(AA_FSIZE), intent(in) :: x(m)
-  real(AA_FSIZE), intent(out) :: E(lde,m)
-  call AA_FMOD(la,colcov)(A,x,E)
-end subroutine AA_FMOD_C_END(la,colcov)
+! pure subroutine AA_FMOD_C_BEGIN(la, colcov, m, n, A, lda, x, E, lde )
+!   integer(C_SIZE_T), intent(in), value :: m,n,lda,lde
+!   real(AA_FSIZE), intent(in) :: A(lda,n)
+!   real(AA_FSIZE), intent(in) :: x(m)
+!   real(AA_FSIZE), intent(out) :: E(lde,m)
+!   call AA_FMOD(la,colcov)(A(1:m,:),x,E(1:m,:))
+! end subroutine AA_FMOD_C_END(la,colcov)
 
 !! Fits
 
@@ -403,11 +403,11 @@ subroutine AA_FMOD(la,colfit)( A, x )
 end subroutine AA_FMOD(la,colfit)
 
 !> Fit hyperplane to columns, C interface
-subroutine AA_FMOD_C_BEGIN(la, colfit, m, n, A, lda, x)
-  integer(c_size_t), intent(in), value :: m,n,lda
-  real(AA_FSIZE), intent(out) :: A(lda,n), x(int(m)+1)
-  call AA_FMOD(la,colfit)( A, x )
-end subroutine AA_FMOD_C_END(la,colfit)
+! subroutine AA_FMOD_C_BEGIN(la, colfit, m, n, A, lda, x)
+!   integer(c_size_t), intent(in), value :: m,n,lda
+!   real(AA_FSIZE), intent(out) :: A(lda,n), x(int(m)+1)
+!   call AA_FMOD(la,colfit)( A, x )
+! end subroutine AA_FMOD_C_END(la,colfit)
 
 pure subroutine AA_FMOD(la,lerp) (u, v1, v2, vu)
   real(AA_FSIZE), intent(in)  :: v1(:), v2(:)
@@ -416,13 +416,13 @@ pure subroutine AA_FMOD(la,lerp) (u, v1, v2, vu)
   vu = v1 + u * (v2 - v1 )
 end subroutine AA_FMOD(la,lerp)
 
-subroutine AA_FMOD_C_BEGIN(la,lerp, n, u, v1, inc1, v2, inc2, vu, incu)
-  integer(c_size_t), intent(in), value :: n, inc1, inc2, incu
-  real(AA_FSIZE), intent(in)  :: v1(n*inc1), v2(n*inc2)
-  real(AA_FSIZE), intent(in), value  :: u
-  real(AA_FSIZE), intent(out) :: vu(n*incu)
-  call aa_la_lerp( u, v1(1:size(v1):inc1), v2(1:size(v2):inc2), vu(1:size(vu):incu) )
-end subroutine AA_FMOD_C_END(la,lerp)
+! subroutine AA_FMOD_C_BEGIN(la,lerp, n, u, v1, inc1, v2, inc2, vu, incu)
+!   integer(c_size_t), intent(in), value :: n, inc1, inc2, incu
+!   real(AA_FSIZE), intent(in)  :: v1(n*inc1), v2(n*inc2)
+!   real(AA_FSIZE), intent(in), value  :: u
+!   real(AA_FSIZE), intent(out) :: vu(n*incu)
+!   call aa_la_lerp( u, v1(1:size(v1):inc1), v2(1:size(v2):inc2), vu(1:size(vu):incu) )
+! end subroutine AA_FMOD_C_END(la,lerp)
 
 !> Compute cubic spline parameters for time from x1 to x2
 !> Note, a0 = x1 and a1 = dx1
