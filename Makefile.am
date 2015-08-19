@@ -13,7 +13,6 @@ dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h include/amino.hpp
 
-nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
 
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
@@ -76,30 +75,30 @@ libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
 src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && maxima --very-quiet -b gen.mac
+	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b gen.mac
 	@echo [maxima end]
 
 BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/aa_ls_se3.f90 src/mac/euler.f
 
 src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && maxima --very-quiet -b euler.mac
+	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler.mac
 	@echo [maxima end]
 
 
 src/mac/euler.f: src/mac/amino.mac src/mac/euler77.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && maxima --very-quiet -b euler77.mac
+	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler77.mac
 	@echo [maxima end]
 
 src/mac/aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && maxima --very-quiet -b ls.mac
+	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b ls.mac
 	@echo [maxima end]
 
 src/mac/mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && maxima --very-quiet -b tf.mac
+	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b tf.mac
 	@echo [maxima end]
 
 distclean-local:
@@ -137,16 +136,19 @@ libamino_la_LIBADD =                   \
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la
+
+nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
+
 else
 
-if USE_F2C
-endif
+# No fortran compiler
 
 BUILT_SOURCES += src/mac/euler.c
 src/mac/euler.c: src/mac/euler.f
-	cd src/mac && f2c euler.f
+	cd src/mac && $(F2C) euler.f
 
 libamino_la_SOURCES += src/mac/euler_f2c.c
+
 
 endif
 

@@ -15,9 +15,11 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC_C99
 AC_PROG_CXX
+AC_PROG_FC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
+
 
 # Checks for libraries.
 AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
@@ -28,24 +30,63 @@ AC_SEARCH_LIBS([dgemm_],[openblas blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])
 
 
+m4_ifdef([AX_CHECK_COMPILE_FLAG],
+         [AC_DEFUN([APPEND_CFLAG],
+                   [AX_CHECK_COMPILE_FLAG([$1], [CFLAGS="$1 $CFLAGS"])])
+          AC_DEFUN([APPEND_CXXFLAG],
+                   [AX_CHECK_COMPILE_FLAG([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
+          AC_DEFUN([APPEND_FCFLAG],
+                   [AX_CHECK_COMPILE_FLAG([$1], [FCFLAGS="$1 $FCFLAGS"])])])
 
+m4_ifdef([AX_CHECK_COMPILER_FLAGS],
+         [AC_DEFUN([APPEND_CFLAG],
+                   [AX_CHECK_COMPILER_FLAGS([$1], [CFLAGS="$1 $CFLAGS"])])
+          AC_DEFUN([APPEND_CXXFLAG],
+                   [AX_CHECK_COMPILER_FLAGS([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
+          AC_DEFUN([APPEND_FCFLAG],
+                   [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])])
+
+
+
+# Fortran Checks
 AC_ARG_WITH([fortran],
             AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
             [],
             [with_fortran=yes])
-AC_ARG_WITH([f2c],
-            AS_HELP_STRING([--with-f2c], [Use F2C])
-            [],
-            [with_f2c=yes])
 
 AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
-AM_CONDITIONAL([USE_F2C],     [test "x$with_f2c" = xyes])
 
-AC_PROG_FC
+AS_IF([test "x$with_fortran" = xyes],
+[
 AC_LANG([Fortran])
 
 AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
+
+AC_LANG([Fortran])
+APPEND_FCFLAG([-fimplicit-none])
+APPEND_FCFLAG([-ffree-line-length-none])
+APPEND_FCFLAG([-Wall])
+APPEND_FCFLAG([-pedantic])
+APPEND_FCFLAG([-Wextra])
+APPEND_FCFLAG([-Wconversion])
+APPEND_FCFLAG([-Wconversion-extra])
+APPEND_FCFLAG([-Wshadow])
+APPEND_FCFLAG([-Wimplicit-interface])
+APPEND_FCFLAG([-Wimplicit-procedure])
+APPEND_FCFLAG([-Wunderflow])
+APPEND_FCFLAG([-Warray-temporaries])
+APPEND_FCFLAG([-Wtabs])
+APPEND_FCFLAG([-Wunused-parameter])
+APPEND_FCFLAG([-Wintrinsic-shadow])
+
+],
+[
+AC_CHECK_PROGS([F2C], [f2c])
 AC_LANG([C])
+AC_CHECK_HEADERS([f2c.h])
+]
+)
+
 
 # Check for thread local storage
 AX_TLS
@@ -81,22 +122,6 @@ AX_CFLAGS_WARN_ALL
 dnl APPEND_FLAG( [FLAG] )
 dnl Check if FLAG is supported, and if so, add it
 
-m4_ifdef([AX_CHECK_COMPILE_FLAG],
-         [AC_DEFUN([APPEND_CFLAG],
-                   [AX_CHECK_COMPILE_FLAG([$1], [CFLAGS="$1 $CFLAGS"])])
-          AC_DEFUN([APPEND_CXXFLAG],
-                   [AX_CHECK_COMPILE_FLAG([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
-          AC_DEFUN([APPEND_FCFLAG],
-                   [AX_CHECK_COMPILE_FLAG([$1], [FCFLAGS="$1 $FCFLAGS"])])])
-
-m4_ifdef([AX_CHECK_COMPILER_FLAGS],
-         [AC_DEFUN([APPEND_CFLAG],
-                   [AX_CHECK_COMPILER_FLAGS([$1], [CFLAGS="$1 $CFLAGS"])])
-          AC_DEFUN([APPEND_CXXFLAG],
-                   [AX_CHECK_COMPILER_FLAGS([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
-          AC_DEFUN([APPEND_FCFLAG],
-                   [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])])
-
 
 
 
@@ -117,23 +142,6 @@ APPEND_CXXFLAG([-Wpointer-arith])
 APPEND_CXXFLAG([-Wfloat-equal])
 APPEND_CXXFLAG([-Wshadow])
 APPEND_CXXFLAG([-Wwrite-strings])
-
-AC_LANG([Fortran])
-APPEND_FCFLAG([-fimplicit-none])
-APPEND_FCFLAG([-ffree-line-length-none])
-APPEND_FCFLAG([-Wall])
-APPEND_FCFLAG([-pedantic])
-APPEND_FCFLAG([-Wextra])
-APPEND_FCFLAG([-Wconversion])
-APPEND_FCFLAG([-Wconversion-extra])
-APPEND_FCFLAG([-Wshadow])
-APPEND_FCFLAG([-Wimplicit-interface])
-APPEND_FCFLAG([-Wimplicit-procedure])
-APPEND_FCFLAG([-Wunderflow])
-APPEND_FCFLAG([-Warray-temporaries])
-APPEND_FCFLAG([-Wtabs])
-APPEND_FCFLAG([-Wunused-parameter])
-APPEND_FCFLAG([-Wintrinsic-shadow])
 
 AC_ARG_ENABLE([debug],
         AS_HELP_STRING([--enable-debug], [Build for debugging]))
@@ -204,7 +212,8 @@ AC_MSG_NOTICE([=========================])
 AC_MSG_NOTICE([C compiler:        $CC])
 AC_MSG_NOTICE([C++ compiler:      $CXX])
 AC_MSG_NOTICE([Use Fortran        $with_fortran])
-AC_MSG_NOTICE([Fortran compiler:  $FC])
+AS_IF([test "x$with_fortran" = xyes],
+      [AC_MSG_NOTICE([Fortran compiler:  $FC])])
 AC_MSG_NOTICE([Java compiler:     $JAVAC])
 AC_MSG_NOTICE([prefix:            $prefix])
 AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
