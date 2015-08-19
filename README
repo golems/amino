@@ -1,10 +1,35 @@
 OVERVIEW
 =========
 
-Amino is package of basic utilities for robotics software.  It
-includes mathematical and linear algebra routines, memory management,
-and time-handling.  Design goals are easy integration, efficiency, and
-simplicity.
+Amino is library of basic utilities for robotics software.  It covers
+mathematical and linear algebra routines, memory management,
+time-handling, and various utilities.
+
+FEATURES
+========
+
+Extensive SE(3) Support
+-----------------------
+* Menagerie of Representations:
+  - Rotation and Transformation Matrices
+  - Ordinary Quaternions
+  - Dual Quaternions
+  - Quaternion-Vector
+  - Axis-Angle / Rotation-Vector / Log-map
+  - Euler Angles
+* Derivatives and Exact Integration
+* Numerically stable log and exponential
+
+Region-based Memory Allocation
+------------------------------
+* Container for LIFO-ordered memory allocation
+* O(1) allocation and deallocation
+
+Linear Algebra
+---------------
+* Lightweight LAPACK wrapper:
+  Handles work-array creation for LAPACK using memory regions
+* Multiple Runge-Kutta integrators, including adaptive integrators
 
 DEPENDENCIES
 ============
