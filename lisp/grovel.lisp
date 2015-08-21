@@ -39,4 +39,12 @@
 
 (progn
   (in-package :amino-ffi)
-  (ctype size-t "size_t"))
+  (ctype size-t "size_t")
+  (include "time.h")
+  (ctype time-t "time_t")
+  (cstruct timespec "struct timespec"
+           (tv-sec "tv_sec" :type time-t)
+           (tv-nsec "tv_nsec" :type :long))
+  (cenum clockid-t
+         ((:clock-realtime "CLOCK_REALTIME"))
+         ((:clock-monotonic "CLOCK_MONOTONIC"))))
