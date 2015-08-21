@@ -93,6 +93,13 @@ aa_tf_qnormalize( double q[AA_RESTRICT 4] )
 }
 
 AA_API void
+aa_tf_qnormalize2( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
+{
+    double n = aa_tf_qnorm(q);
+    FOR_QUAT(i) r[i] = q[i] / n;
+}
+
+AA_API void
 aa_tf_qminimize( double q[AA_RESTRICT 4] )
 {
     if( q[AA_TF_QUAT_W] < 0 )
