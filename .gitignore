@@ -92,3 +92,6 @@ amino*.tar.gz
 /src/tf/.dirstamp
 /src/mac/euler.c
 /src/mac/euler.f
+/src/mac/aa_ls_se3.f90
+/la_ctest
+/aa_fuzz_tf

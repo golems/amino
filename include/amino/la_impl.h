@@ -493,4 +493,14 @@ AA_FDEC( void, la, colfit,
 /* Ordering / Sort comparison function */
 int AA_NAME(la,compar)( const void *a, const void *b );
 
+/** Create a companion matrix for the lambda polynomial in se3 least-squares
+ *
+ * \param sigma Singular values of A, in vector form.
+ * \param theta Values of U^T b.
+ * \param cm The output companion matrix.
+ */
+int AA_NAME(la, ls_duqu_cmat)
+(const double *sigma, const double *theta, double *cm);
+
+
 #include "amino/undef.h"
