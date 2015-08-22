@@ -58,6 +58,7 @@ libamino_la_SOURCES =                  \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
+	src/rx/scenegraph.cpp 	       \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \

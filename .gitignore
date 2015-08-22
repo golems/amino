@@ -95,3 +95,4 @@ amino*.tar.gz
 /src/mac/aa_ls_se3.f90
 /la_ctest
 /aa_fuzz_tf
+/src/rx/.dirstamp
