@@ -39,74 +39,104 @@
 #define AMINO_SCENEGRAPH_INTERNAL_H
 
 #include <vector>
-
-struct aa_rx_sg { };
-struct aa_rx_sg_frame { };
+#include <string>
+#include <map>
 
 
 #ifdef __cplusplus
+
+struct aa_rx_sg_frame { };
 
 namespace amino {
 
 
 struct SceneFrame : public aa_rx_sg_frame {
-    SceneFrame( const char *name,
-                const char *parent,
-                double q[4], double v[3] );
+    SceneFrame( const char *parent,
+                const char *name,
+                const double q[4], const double v[3] );
     virtual ~SceneFrame();
 
-    virtual void tf_rel( const double *q, double E[7] );
+    virtual void tf_rel( const double *q, double E[7] ) = 0;
+    virtual aa_rx_frame_type type() = 0;
 
-    char *name;
-    char *parent;
+    std::string name;
+    std::string parent;
     size_t parent_index;
     double E[7];
     void *data;
 };
 
+
+struct SceneFrameFixed : public SceneFrame {
+    SceneFrameFixed( const char *parent,
+                     const char *name,
+                     const double q[4], const double v[3] );
+    virtual ~SceneFrameFixed();
+    virtual void tf_rel( const double *q, double E[7] );
+    virtual aa_rx_frame_type type();
+};
+
 struct SceneFrameJoint : public SceneFrame {
-    SceneFrameJoint( const char *name,
-                     const char *parent,
-                     double q[4], double v[3],
+    SceneFrameJoint( const char *parent,
+                     const char *name,
+                     const double q[4], const double v[3],
                      const char *config_name,
-                     double offset, double axis[3] );
+                     double offset, const double axis[3] );
     virtual ~SceneFrameJoint();
 
-    char *config_name;
+    std::string config_name;
     size_t config_index;
     double offset;
     double axis[3];
 };
 
 struct SceneFramePrismatic : public SceneFrameJoint {
-    SceneFramePrismatic( const char *name,
-                         const char *parent,
-                         double q[4], double v[3],
+    SceneFramePrismatic( const char *parent,
+                         const char *name,
+                         const double q[4], const double v[3],
                          const char *config_name,
-                         double offset, double axis[3] );
+                         double offset, const double axis[3] );
     virtual ~SceneFramePrismatic();
     virtual void tf_rel( const double *q, double E[7] );
+    virtual aa_rx_frame_type type();
 };
 
 
 struct SceneFrameRevolute : public SceneFrameJoint {
-    SceneFrameRevolute( const char *name,
-                        const char *parent,
-                        double q[4], double v[3],
+    SceneFrameRevolute( const char *parent,
+                        const char *name,
+                        const double q[4], const double v[3],
                         const char *config_name,
-                        double offset, double axis[3] );
+                        double offset, const double axis[3] );
     virtual ~SceneFrameRevolute();
     virtual void tf_rel( const double *q, double E[7] );
+    virtual aa_rx_frame_type type();
 };
 
-struct SceneGraph : public aa_rx_sg {
+struct SceneGraph  {
     SceneGraph();
     ~SceneGraph();
 
+    void index();
+
     std::vector<SceneFrame*> frames;
+    std::map<std::string,SceneFrame*> frame_map;
+
+    std::map<std::string,size_t> frame_idx_map;
+    std::map<std::string,size_t> config_idx_map;
+
+    int dirty_indices;
 };
 
 }
+
+
+struct aa_rx_sg {
+    amino::SceneGraph *sg;
+};
+
+
+
 #endif
 
 #endif /*AMINO_SCENEGRAPH_H*/

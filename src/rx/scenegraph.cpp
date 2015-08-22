@@ -39,36 +39,49 @@
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
 
+#include <list>
+#include <set>
+
+
 namespace amino {
 
 SceneFrame::SceneFrame(
-    const char *_name,
     const char *_parent,
-    double q[4], double v[3]
+    const char *_name,
+    const double q[4], const double v[3]
     ) :
-    name(strdup(_name)),
-    parent(strdup(_parent))
+    name(_name),
+    parent(_parent)
 {
     AA_MEM_CPY(E+AA_TF_QUTR_Q, q, 4);
     AA_MEM_CPY(E+AA_TF_QUTR_V, v, 3);
 }
 
 SceneFrame::~SceneFrame( )
-{
-    free(name);
-    free(parent);
-}
+{ }
 
+
+SceneFrameFixed::SceneFrameFixed(
+    const char *_parent,
+    const char *_name,
+    const double q[4], const double v[3]
+    ) :
+    SceneFrame( _parent, _name, q, v )
+{ }
+
+
+SceneFrameFixed::~SceneFrameFixed()
+{ }
 
 SceneFrameJoint::SceneFrameJoint(
-    const char *_name,
     const char *_parent,
-    double q[4], double v[3],
+    const char *_name,
+    const double q[4], const double v[3],
     const char *_config_name,
-    double _offset, double _axis[3]
+    double _offset, const double _axis[3]
     ) :
-    SceneFrame( _name, _parent, q, v ),
-    config_name(strdup(_config_name)),
+    SceneFrame( _parent, _name, q, v ),
+    config_name(_config_name),
     offset(_offset)
 {
     AA_MEM_CPY(this->axis, _axis, 3);
@@ -76,19 +89,17 @@ SceneFrameJoint::SceneFrameJoint(
 
 
 SceneFrameJoint::~SceneFrameJoint()
-{
-    free(config_name);
-}
+{ }
 
 
 SceneFrameRevolute::SceneFrameRevolute(
-    const char *_name,
     const char *_parent,
-    double q[4], double v[3],
+    const char *_name,
+    const double q[4], const double v[3],
     const char *_config_name,
-    double _offset, double _axis[3]
+    double _offset, const double _axis[3]
     ) :
-    SceneFrameJoint( _name, _parent, q, v,
+    SceneFrameJoint( _parent, _name, q, v,
                      _config_name, _offset, _axis)
 { }
 
@@ -97,13 +108,13 @@ SceneFrameRevolute::~SceneFrameRevolute()
 { }
 
 SceneFramePrismatic::SceneFramePrismatic(
-    const char *_name,
     const char *_parent,
-    double q[4], double v[3],
+    const char *_name,
+    const double q[4], const double v[3],
     const char *_config_name,
-    double _offset, double _axis[3]
+    double _offset, const double _axis[3]
     ) :
-    SceneFrameJoint( _name, _parent, q, v,
+    SceneFrameJoint( _parent, _name, q, v,
                      _config_name, _offset, _axis)
 { }
 
@@ -111,7 +122,7 @@ SceneFramePrismatic::SceneFramePrismatic(
 SceneFramePrismatic::~SceneFramePrismatic()
 { }
 
-void SceneFrame::tf_rel( const double *q, double _E[7] )
+void SceneFrameFixed::tf_rel( const double *q, double _E[7] )
 {
     (void)q;
     AA_MEM_CPY(_E, this->E, 7);
@@ -148,7 +159,23 @@ void SceneFrameRevolute::tf_rel( const double *q, double _E[7] )
                     _E + AA_TF_QUTR_Q, _E+AA_TF_QUTR_V );
 }
 
-SceneGraph::SceneGraph() {}
+aa_rx_frame_type SceneFrameFixed::type()
+{
+    return AA_RX_FRAME_FIXED;
+}
+
+aa_rx_frame_type SceneFrameRevolute::type()
+{
+    return AA_RX_FRAME_REVOLUTE;
+}
+
+aa_rx_frame_type SceneFramePrismatic::type()
+{
+    return AA_RX_FRAME_PRISMATIC;
+}
+
+SceneGraph::SceneGraph()
+    : dirty_indices(0) {}
 
 SceneGraph::~SceneGraph()
 {
@@ -158,5 +185,58 @@ SceneGraph::~SceneGraph()
     }
 }
 
+static void sort_frame_helper( std::list<SceneFrame*> &list,
+                               std::set<std::string> &visited,
+                               std::map<std::string,SceneFrame*> &map,
+                               std::string &name )
+{
+    if( 0 == name.size() ||  // root frame
+        visited.find(name) != visited.end()  // already visited
+        ) { return; }
+    // mark visited
+    visited.insert(name);
+    SceneFrame *f = map[name];
+    // visit parent
+    sort_frame_helper(list,visited,map,f->parent);
+    // append
+    list.push_back(f);
+}
+
+void SceneGraph::index()
+{
+    if( ! dirty_indices ) return;
+
+    // Sort frames
+    std::list<SceneFrame*> list;
+    std::set<std::string> visited;
+    for( auto itr = frames.begin(); itr != frames.end(); itr++ ) {
+        sort_frame_helper( list, visited, frame_map, (*itr)->name );
+    }
+
+    // Index names and configs
+    {
+        config_idx_map.clear();
+        frame_idx_map.clear();
+        size_t i_frame=0, i_config=0;
+        for( auto itr = list.begin();
+             itr != list.end();
+             itr++, i_frame++ )
+        {
+            SceneFrame *f = *itr;
+            frames[i_frame] = f;
+            frame_idx_map[ f->name ] = i_frame;
+            switch( f->type() ) {
+            case AA_RX_FRAME_FIXED:
+                break;
+            case AA_RX_FRAME_REVOLUTE:
+            case AA_RX_FRAME_PRISMATIC:
+                config_idx_map[ ((SceneFrameJoint*)f)->name ] = i_config++;
+                break;
+            }
+        }
+    }
+
+    dirty_indices = 0;
+}
 
 } /* amino */

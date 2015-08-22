@@ -59,6 +59,7 @@ libamino_la_SOURCES =                  \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
 	src/rx/scenegraph.cpp 	       \
+	src/rx/sg_api.cpp 	       \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \

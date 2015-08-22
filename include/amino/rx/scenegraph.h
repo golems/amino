@@ -50,9 +50,19 @@ struct aa_rx_sg;
 struct aa_rx_sg_frame;
 
 /**
+ * Enum of frame types
+ */
+enum aa_rx_frame_type {
+    AA_RX_FRAME_FIXED,       /**< A fixed transform */
+    AA_RX_FRAME_REVOLUTE,    /**< A rotating transform */
+    AA_RX_FRAME_PRISMATIC,   /**< A prismatic (sliding) transform */
+};
+
+/**
  *  Construct a new scene graph
  */
-struct aa_rx_sg *aa_rx_sg_create();
+AA_API struct aa_rx_sg *
+aa_rx_sg_create();
 
 /**
  *  Destroy a scene graph
@@ -60,10 +70,16 @@ struct aa_rx_sg *aa_rx_sg_create();
 AA_API void aa_rx_sg_destroy(struct aa_rx_sg *scene_graph);
 
 /**
- *  Return the index of a frame in the scene graph
+ * Optimize internal indices
  */
-AA_API size_t aa_rx_sg_index_frame(
-    struct aa_rx_sg *scene_graph, const char *frame_name);
+AA_API void aa_rx_sg_index ( struct aa_rx_sg *scene_graph );
+
+/**
+ * Return the type of the given frame
+ */
+AA_API enum aa_rx_frame_type
+aa_rx_sg_frame_type (
+    struct aa_rx_sg *scene_graph, size_t frame_index );
 
 /**
  *  Return the index of a configuration variable in the scne graph
@@ -72,7 +88,19 @@ AA_API size_t aa_rx_sg_config_index(
     struct aa_rx_sg *scene_graph, const char *config_name);
 
 /**
+ *  Return the index of a frame in the scene graph
+ */
+AA_API size_t aa_rx_sg_frame_index (
+    struct aa_rx_sg *scene_graph, const char *frame_name);
+
+/**
  *  Add a fixed-transform frame to the scene graph
+ *
+ * @param scene_graph The scene graph container
+ * @param parent      The name of the parent frame
+ * @param name        The name of the frame to be added
+ * @param q           The unit quaternion frame rotation
+ * @param v           The frame translation vector
  */
 AA_API void aa_rx_sg_add_frame_fixed
 ( struct aa_rx_sg *scene_graph,
@@ -81,6 +109,15 @@ AA_API void aa_rx_sg_add_frame_fixed
 
 /**
  *  Add a prismatic-joint frame to the scene graph
+ *
+ * @param scene_graph The scene graph container
+ * @param parent      The name of the parent frame
+ * @param name        The name of the frame to be added
+ * @param q           The unit quaternion frame initial rotation
+ * @param v           The frame initial translation vector
+ * @param axis        The axis of rotation.  A non-unit axis will
+ *                    scale the translation accordingly.
+ * @param offset      An offset to be added to the configuration value
  */
 AA_API void aa_rx_sg_add_frame_prismatic
 ( struct aa_rx_sg *scene_graph,
@@ -91,6 +128,15 @@ AA_API void aa_rx_sg_add_frame_prismatic
 
 /**
  *  Add a revolute-joint frame to the scene graph
+ *
+ * @param scene_graph The scene graph container
+ * @param parent      The name of the parent frame
+ * @param name        The name of the frame to be added
+ * @param q           The unit quaternion frame initial rotation
+ * @param v           The frame initial translation vector
+ * @param axis        The axis of rotation.  A non-unit axis will
+ *                    scale the rotation accordingly.
+ * @param offset      An offset to be added to the configuration value
  */
 AA_API void aa_rx_sg_add_frame_revolute
 ( struct aa_rx_sg *scene_graph,
@@ -108,6 +154,16 @@ AA_API void aa_rx_sg_rm_frame
 
 /**
  *  Compute transforms for the scene graph
+ *
+ * @param scene_graph The scene graph container
+ * @param n_q         Size of configuration vector q
+ * @param q           Configuraiton vector
+ * @param n_tf        Number of entries in the TF array
+ * @param TF_rel      Relative transform matrix in quaternion-vector format
+ * @param ld_rel      Leading dimensional of TF_rel, i.e., space between each entry
+ * @param TF_abs      Absolute transform matrix in quaternion-vector format
+ * @param ld_abs      Leading dimensional of TF_abs, i.e., space between each entry
+ *
  */
 AA_API void aa_rx_sg_tf
 ( struct aa_rx_sg *scene_graph,
