@@ -45,12 +45,11 @@
 
 #ifdef __cplusplus
 
-struct aa_rx_sg_frame { };
 
 namespace amino {
 
 
-struct SceneFrame : public aa_rx_sg_frame {
+struct SceneFrame  {
     SceneFrame( const char *parent,
                 const char *name,
                 const double q[4], const double v[3] );
@@ -58,10 +57,13 @@ struct SceneFrame : public aa_rx_sg_frame {
 
     virtual void tf_rel( const double *q, double E[7] ) = 0;
     virtual aa_rx_frame_type type() = 0;
+    int in_global();
 
     std::string name;
     std::string parent;
+    size_t frame_index;
     size_t parent_index;
+    size_t config_index;
     double E[7];
     void *data;
 };
@@ -118,13 +120,18 @@ struct SceneGraph  {
     ~SceneGraph();
 
     void index();
+    void add(SceneFrame *f);
 
+    /** Array of frames */
     std::vector<SceneFrame*> frames;
+
+    /** Map from frame name to frame */
     std::map<std::string,SceneFrame*> frame_map;
 
-    std::map<std::string,size_t> frame_idx_map;
-    std::map<std::string,size_t> config_idx_map;
+    /** Map from configuration name to configuration index */
+    std::map<std::string,size_t> config_map;
 
+    /** Are the indices invalid? */
     int dirty_indices;
 };
 

@@ -61,6 +61,11 @@ SceneFrame::~SceneFrame( )
 { }
 
 
+int SceneFrame::in_global()
+{
+    return 0 == name.size();
+}
+
 SceneFrameFixed::SceneFrameFixed(
     const char *_parent,
     const char *_name,
@@ -181,7 +186,7 @@ SceneGraph::~SceneGraph()
 {
     for( auto itr = frames.begin(); itr != frames.end(); itr++ )
     {
-        free( *itr );
+        delete *itr ;
     }
 }
 
@@ -210,13 +215,16 @@ void SceneGraph::index()
     std::list<SceneFrame*> list;
     std::set<std::string> visited;
     for( auto itr = frames.begin(); itr != frames.end(); itr++ ) {
+        // invalidate indices
+        (*itr)->frame_index = (*itr)->parent_index = (*itr)->config_index =
+            (size_t)-1;
+        // Recursive sort
         sort_frame_helper( list, visited, frame_map, (*itr)->name );
     }
 
     // Index names and configs
     {
-        config_idx_map.clear();
-        frame_idx_map.clear();
+        config_map.clear();
         size_t i_frame=0, i_config=0;
         for( auto itr = list.begin();
              itr != list.end();
@@ -224,19 +232,32 @@ void SceneGraph::index()
         {
             SceneFrame *f = *itr;
             frames[i_frame] = f;
-            frame_idx_map[ f->name ] = i_frame;
+            f->frame_index = i_frame;
+            f->parent_index = frame_map[f->parent]->frame_index;
+            assert( f->parent_index < f->frame_index );
             switch( f->type() ) {
             case AA_RX_FRAME_FIXED:
                 break;
             case AA_RX_FRAME_REVOLUTE:
             case AA_RX_FRAME_PRISMATIC:
-                config_idx_map[ ((SceneFrameJoint*)f)->name ] = i_config++;
+                config_map[ ((SceneFrameJoint*)f)->name ] = i_config;
+                f->config_index = i_config;
+                i_config++;
                 break;
             }
         }
     }
 
     dirty_indices = 0;
+}
+
+
+void SceneGraph::add(SceneFrame *f)
+{
+    dirty_indices = 1;
+    frames.push_back(f);
+    /* TODO: handle duplicate frame */
+    frame_map[f->name] = f;
 }
 
 } /* amino */
