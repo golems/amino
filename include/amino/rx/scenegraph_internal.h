@@ -38,12 +38,13 @@
 #ifndef AMINO_SCENEGRAPH_INTERNAL_H
 #define AMINO_SCENEGRAPH_INTERNAL_H
 
+#ifdef __cplusplus
+
 #include <vector>
 #include <string>
 #include <map>
 
 
-#ifdef __cplusplus
 
 
 namespace amino {
@@ -61,8 +62,8 @@ struct SceneFrame  {
 
     std::string name;
     std::string parent;
-    size_t frame_index;
-    size_t parent_index;
+    aa_rx_frame_id frame_id;
+    aa_rx_frame_id parent_id;
     size_t config_index;
     double E[7];
     void *data;
@@ -130,6 +131,9 @@ struct SceneGraph  {
 
     /** Map from configuration name to configuration index */
     std::map<std::string,size_t> config_map;
+
+    /** Number of configuration variables */
+    aa_rx_config_id config_size;
 
     /** Are the indices invalid? */
     int dirty_indices;

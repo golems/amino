@@ -220,6 +220,11 @@ noinst_PROGRAMS += aa_regress
 aa_regress_SOURCES = src/test/aa_regress.c
 aa_regress_LDADD = libamino.la libtestutil.la
 
+TESTS += sg_test
+noinst_PROGRAMS += sg_test
+sg_test_SOURCES = src/test/sg_test.c
+sg_test_LDADD = libamino.la libtestutil.la
+
 if USE_FORTRAN
 TESTS += la_test
 noinst_PROGRAMS += la_test

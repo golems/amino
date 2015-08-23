@@ -53,8 +53,8 @@ SceneFrame::SceneFrame(
     name(_name),
     parent(_parent)
 {
-    AA_MEM_CPY(E+AA_TF_QUTR_Q, q, 4);
-    AA_MEM_CPY(E+AA_TF_QUTR_V, v, 3);
+    AA_MEM_CPY(E+AA_TF_QUTR_Q, q ? q : aa_tf_quat_ident, 4);
+    AA_MEM_CPY(E+AA_TF_QUTR_V, v ? v : aa_tf_vec_ident, 3);
 }
 
 SceneFrame::~SceneFrame( )
@@ -63,7 +63,7 @@ SceneFrame::~SceneFrame( )
 
 int SceneFrame::in_global()
 {
-    return 0 == name.size();
+    return 0 == parent.size();
 }
 
 SceneFrameFixed::SceneFrameFixed(
@@ -86,7 +86,7 @@ SceneFrameJoint::SceneFrameJoint(
     double _offset, const double _axis[3]
     ) :
     SceneFrame( _parent, _name, q, v ),
-    config_name(_config_name),
+    config_name(_config_name ? _config_name : _name),
     offset(_offset)
 {
     AA_MEM_CPY(this->axis, _axis, 3);
@@ -216,7 +216,7 @@ void SceneGraph::index()
     std::set<std::string> visited;
     for( auto itr = frames.begin(); itr != frames.end(); itr++ ) {
         // invalidate indices
-        (*itr)->frame_index = (*itr)->parent_index = (*itr)->config_index =
+        (*itr)->frame_id = (*itr)->parent_id = (*itr)->config_index =
             (size_t)-1;
         // Recursive sort
         sort_frame_helper( list, visited, frame_map, (*itr)->name );
@@ -225,24 +225,27 @@ void SceneGraph::index()
     // Index names and configs
     {
         config_map.clear();
-        size_t i_frame=0, i_config=0;
+        size_t i_frame=0;
+        config_size = 0;
         for( auto itr = list.begin();
              itr != list.end();
              itr++, i_frame++ )
         {
             SceneFrame *f = *itr;
             frames[i_frame] = f;
-            f->frame_index = i_frame;
-            f->parent_index = frame_map[f->parent]->frame_index;
-            assert( f->parent_index < f->frame_index );
+            f->frame_id = i_frame;
+            if( f->in_global() ) {
+                f->parent_id = AA_RX_FRAME_ROOT;
+            } else {
+                f->parent_id = frame_map[f->parent]->frame_id;
+            }
+            assert( f->parent_id < f->frame_id );
             switch( f->type() ) {
             case AA_RX_FRAME_FIXED:
                 break;
             case AA_RX_FRAME_REVOLUTE:
             case AA_RX_FRAME_PRISMATIC:
-                config_map[ ((SceneFrameJoint*)f)->name ] = i_config;
-                f->config_index = i_config;
-                i_config++;
+                config_map[f->name] = f->config_index = config_size++;
                 break;
             }
         }

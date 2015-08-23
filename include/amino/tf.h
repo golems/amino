@@ -354,6 +354,10 @@ static const double aa_tf_axang_ident[4] = AA_TF_AXANG_IDENT_INITIALIZER;
 static const double aa_tf_rotvec_ident[3] = AA_TF_ROTVEC_IDENT_INITIALIZER;
 static const double aa_tf_vec_ident[3] = AA_TF_ROTVEC_IDENT_INITIALIZER;
 
+static const double aa_tf_vec_x[3] = {1, 0, 0};
+static const double aa_tf_vec_y[3] = {0, 1, 0};
+static const double aa_tf_vec_z[3] = {0, 0, 1};
+
 /**************/
 /* Transforms */
 /**************/

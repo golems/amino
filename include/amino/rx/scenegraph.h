@@ -39,15 +39,27 @@
 #define AMINO_SCENEGRAPH_H
 
 /**
- *  Opaque type for a scene_graph
+ *  Opaque type for a scene_graph.
+ *
+ * A scene graph is a set of frames in SE(3).
+ *
  */
 struct aa_rx_sg;
 
+/**
+ * Type for frame indices.
+ */
+typedef signed long aa_rx_frame_id;
 
 /**
- *  Opaque type for a scene_graph frame
+ * Type for configuration indices.
  */
-struct aa_rx_sg_frame;
+typedef signed long aa_rx_config_id;
+
+/**
+ * Magic frame_id for the root/global/absolute frame.
+ */
+#define AA_RX_FRAME_ROOT ((aa_rx_frame_id)-1)
 
 /**
  * Enum of frame types
@@ -79,18 +91,47 @@ AA_API void aa_rx_sg_index ( struct aa_rx_sg *scene_graph );
  */
 AA_API enum aa_rx_frame_type
 aa_rx_sg_frame_type (
-    struct aa_rx_sg *scene_graph, size_t frame_index );
+    struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
+
+/**
+ * Return the name of the given frame
+ */
+AA_API const char *
+aa_rx_sg_frame_name (
+    struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
+
+/**
+ * Return the parent id of the frame
+ */
+AA_API aa_rx_frame_id
+aa_rx_sg_frame_parent (
+    struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
+
+
+/**
+ * Return the number of frames in scene_graph.
+ */
+AA_API aa_rx_frame_id
+aa_rx_sg_frame_count (
+    struct aa_rx_sg *scene_graph );
+
+/**
+ * Return the number of configuration variables in scene_graph.
+ */
+AA_API aa_rx_config_id
+aa_rx_sg_config_count (
+    struct aa_rx_sg *scene_graph );
 
 /**
  *  Return the index of a configuration variable in the scne graph
  */
-AA_API size_t aa_rx_sg_config_index(
+AA_API aa_rx_config_id aa_rx_sg_config_id(
     struct aa_rx_sg *scene_graph, const char *config_name);
 
 /**
  *  Return the index of a frame in the scene graph
  */
-AA_API size_t aa_rx_sg_frame_index (
+AA_API aa_rx_frame_id aa_rx_sg_frame_id (
     struct aa_rx_sg *scene_graph, const char *frame_name);
 
 /**
@@ -99,7 +140,7 @@ AA_API size_t aa_rx_sg_frame_index (
  * @param scene_graph The scene graph container
  * @param parent      The name of the parent frame
  * @param name        The name of the frame to be added
- * @param q           The unit quaternion frame rotation
+ * @param q           The unit quaternion frame rotation (xyzw)
  * @param v           The frame translation vector
  */
 AA_API void aa_rx_sg_add_frame_fixed
@@ -113,7 +154,7 @@ AA_API void aa_rx_sg_add_frame_fixed
  * @param scene_graph The scene graph container
  * @param parent      The name of the parent frame
  * @param name        The name of the frame to be added
- * @param q           The unit quaternion frame initial rotation
+ * @param q           The unit quaternion frame initial rotation (xyzw)
  * @param v           The frame initial translation vector
  * @param axis        The axis of rotation.  A non-unit axis will
  *                    scale the translation accordingly.
@@ -132,7 +173,7 @@ AA_API void aa_rx_sg_add_frame_prismatic
  * @param scene_graph The scene graph container
  * @param parent      The name of the parent frame
  * @param name        The name of the frame to be added
- * @param q           The unit quaternion frame initial rotation
+ * @param q           The unit quaternion frame initial rotation (xyzw)
  * @param v           The frame initial translation vector
  * @param axis        The axis of rotation.  A non-unit axis will
  *                    scale the rotation accordingly.
@@ -154,6 +195,9 @@ AA_API void aa_rx_sg_rm_frame
 
 /**
  *  Compute transforms for the scene graph
+ *
+ * Transform entries are in {q_x, q_y, q_z, q_w, v_x, v_y, v_z}
+ * format.
  *
  * @param scene_graph The scene graph container
  * @param n_q         Size of configuration vector q
