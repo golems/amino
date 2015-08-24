@@ -58,7 +58,10 @@ void afeq( double a, double b, double tol ) {
 
 void test_feq( const char *name, double a, double b, double tol )
 {
-    test(name, aa_feq(a,b,tol));
+    if( !aa_feq(a,b,tol) ) {
+        fprintf( stderr, "FAILED: %s, %f != %f\n",name, a, b);
+        abort();
+    }
 }
 
 void aveq( const char * name,

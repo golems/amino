@@ -20,6 +20,12 @@ AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
 
+# Enable C++ 11
+m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
+         [AX_CXX_COMPILE_STDCXX_11],
+         [m4_ifdef([AX_CXX_COMPILE_STDCXX_0X],
+                   [AX_CXX_COMPILE_STDCXX_0X])])
+
 
 # Checks for libraries.
 AC_CHECK_HEADERS([cblas.h], [true], [exit 1])

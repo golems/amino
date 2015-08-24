@@ -58,6 +58,8 @@ libamino_la_SOURCES =                  \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
+	src/rx/scenegraph.cpp 	       \
+	src/rx/sg_api.cpp 	       \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \
@@ -217,6 +219,11 @@ TESTS += aa_regress
 noinst_PROGRAMS += aa_regress
 aa_regress_SOURCES = src/test/aa_regress.c
 aa_regress_LDADD = libamino.la libtestutil.la
+
+TESTS += sg_test
+noinst_PROGRAMS += sg_test
+sg_test_SOURCES = src/test/sg_test.c
+sg_test_LDADD = libamino.la libtestutil.la
 
 if USE_FORTRAN
 TESTS += la_test
