@@ -62,6 +62,11 @@ typedef signed long aa_rx_config_id;
 #define AA_RX_FRAME_ROOT ((aa_rx_frame_id)-1)
 
 /**
+ * Magic config_id for no configuration variable.
+ */
+#define AA_RX_CONFIG_NONE ((aa_rx_config_id)-1)
+
+/**
  * Enum of frame types
  */
 enum aa_rx_frame_type {
@@ -134,8 +139,18 @@ AA_API aa_rx_config_id aa_rx_sg_config_id(
 AA_API aa_rx_frame_id aa_rx_sg_frame_id (
     struct aa_rx_sg *scene_graph, const char *frame_name);
 
+
+/* /\** */
+/*  *  Return the index of a configuration variable for the given frame. */
+/*  *\/ */
+/* AA_API aa_rx_config_id aa_rx_sg_frame_config_id( */
+/*     struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id); */
+
 /**
  *  Add a fixed-transform frame to the scene graph
+ *
+ * Note that adding a new frame may changes the frame_ids of all
+ * previously added frames.
  *
  * @param scene_graph The scene graph container
  * @param parent      The name of the parent frame
@@ -150,6 +165,9 @@ AA_API void aa_rx_sg_add_frame_fixed
 
 /**
  *  Add a prismatic-joint frame to the scene graph
+ *
+ * Note that adding a new frame may changes the frame_ids and
+ * config_ids of all previously added frames.
  *
  * @param scene_graph The scene graph container
  * @param parent      The name of the parent frame
@@ -169,6 +187,9 @@ AA_API void aa_rx_sg_add_frame_prismatic
 
 /**
  *  Add a revolute-joint frame to the scene graph
+ *
+ * Note that adding a new frame may changes the frame_ids and
+ * config_ids of all previously added frames.
  *
  * @param scene_graph The scene graph container
  * @param parent      The name of the parent frame
@@ -211,8 +232,8 @@ AA_API void aa_rx_sg_rm_frame
  */
 AA_API void aa_rx_sg_tf
 ( struct aa_rx_sg *scene_graph,
-  size_t n_q, double *q,
-  size_t n_tf,
+  aa_rx_config_id n_q, double *q,
+  aa_rx_frame_id n_tf,
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
 

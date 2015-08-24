@@ -41,8 +41,10 @@
  */
 
 #include "amino.h"
+#include "amino/test.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
+#include <assert.h>
 
 
 
@@ -54,21 +56,29 @@ int main(void)
 {
     struct aa_rx_sg *sg = aa_rx_sg_create();
     scara(sg);
-    check_scara(sg);
-
     aa_rx_sg_index(sg);
+
+    check_scara(sg);
+    check_tf(sg);
+
+
 
     aa_rx_sg_destroy(sg);
 
     return 0;
 }
 
+
+#define l0 .2
+#define l1 .5
+#define l2 .7
+
 static void scara( struct aa_rx_sg *sg )
 {
     /* Link Lengths */
-    static const double L0[3] = {1, 0, 0};
-    static const double L1[3] = {1, 0, 0};
-    static const double L2[3] = {1, 0, 0};
+    static const double L0[3] = {l0, 0, 0};
+    static const double L1[3] = {l1, 0, 0};
+    static const double L2[3] = {l2, 0, 0};
     static const double L3[3] = {0, 0, 0};
 
     /* Construct a scara manipulator */
@@ -101,10 +111,6 @@ static void check_scara( struct aa_rx_sg *sg )
     aa_rx_frame_id fid2 = aa_rx_sg_frame_id(sg,"q2");
     aa_rx_frame_id fid3 = aa_rx_sg_frame_id(sg,"q3");
 
-    aa_rx_config_id cid0 = aa_rx_sg_config_id(sg,"q0");
-    aa_rx_config_id cid1 = aa_rx_sg_config_id(sg,"q1");
-    aa_rx_config_id cid2 = aa_rx_sg_config_id(sg,"q2");
-    aa_rx_config_id cid3 = aa_rx_sg_config_id(sg,"q3");
 
     assert( 0 == strcmp( "q0", aa_rx_sg_frame_name(sg, fid0) ) );
     assert( 0 == strcmp( "q1", aa_rx_sg_frame_name(sg, fid1) ) );
@@ -120,4 +126,71 @@ static void check_scara( struct aa_rx_sg *sg )
 
     assert( 4 == aa_rx_sg_frame_count(sg) );
     assert( 4 == aa_rx_sg_config_count(sg) );
+
+    // aa_rx_config_id cid0 = aa_rx_sg_config_id(sg,"q0");
+    // aa_rx_config_id cid1 = aa_rx_sg_config_id(sg,"q1");
+    // aa_rx_config_id cid2 = aa_rx_sg_config_id(sg,"q2");
+    // aa_rx_config_id cid3 = aa_rx_sg_config_id(sg,"q3");
+
+    // assert( cid0 == aa_rx_sg_frame_config_id(sg, fid0) );
+    // assert( cid1 == aa_rx_sg_frame_config_id(sg, fid1) );
+    // assert( cid2 == aa_rx_sg_frame_config_id(sg, fid2) );
+    // assert( cid3 == aa_rx_sg_frame_config_id(sg, fid3) );
+}
+
+static void check_tf( struct aa_rx_sg *sg )
+{
+    aa_rx_config_id cid0 = aa_rx_sg_config_id(sg,"q0");
+    aa_rx_config_id cid1 = aa_rx_sg_config_id(sg,"q1");
+    aa_rx_config_id cid2 = aa_rx_sg_config_id(sg,"q2");
+    aa_rx_config_id cid3 = aa_rx_sg_config_id(sg,"q3");
+
+    aa_rx_frame_id fid0 = aa_rx_sg_frame_id(sg,"q0");
+    aa_rx_frame_id fid1 = aa_rx_sg_frame_id(sg,"q1");
+    aa_rx_frame_id fid2 = aa_rx_sg_frame_id(sg,"q2");
+    aa_rx_frame_id fid3 = aa_rx_sg_frame_id(sg,"q3");
+
+    aa_rx_frame_id frame_cnt =  aa_rx_sg_frame_count(sg);
+    aa_rx_config_id config_cnt =  aa_rx_sg_config_count(sg);
+    double q[config_cnt];
+    double TF_rel[7*frame_cnt];
+    double TF_abs[7*frame_cnt];
+
+    /* q = 0 */
+    {
+        q[cid0] = 0;
+        q[cid1] = 0;
+        q[cid2] = 0;
+        q[cid3] = 0;
+        aa_rx_sg_tf( sg, config_cnt, q, frame_cnt, TF_rel, 7, TF_abs, 7 );
+        double E_ref[] = {0,0,0,1, l0, 0, 0,
+                          0,0,0,1, l0+l1, 0, 0,
+                          0,0,0,1, l0+l1+l2, 0, 0,
+                          0,0,0,1, l0+l1+l2, 0, 0 };
+        aveq( "chain 0", 7*4, E_ref, TF_abs, 1e-6 );
+    }
+
+    /* q1 = M_PI_2 */
+    {
+        q[cid1] = M_PI_2;
+        aa_rx_sg_tf( sg, config_cnt, q, frame_cnt, TF_rel, 7, TF_abs, 7 );
+        double s = sin(M_PI_4);
+        double E_ref[] = {0,0,0,1, l0, 0, 0,
+                          0,0,s,s, l0+l1, 0, 0,
+                          0,0,s,s, l0+l1, l2, 0,
+                          0,0,s,s, l0+l1, l2, 0 };
+        aveq( "chain 0", 7*4, E_ref, TF_abs, 1e-6 );
+    }
+
+    /* q3 = 1.5 */
+    {
+        q[cid3] = 1.5;
+        aa_rx_sg_tf( sg, config_cnt, q, frame_cnt, TF_rel, 7, TF_abs, 7 );
+        double s = sin(M_PI_4);
+        double E_ref[] = {0,0,0,1, l0, 0, 0,
+                          0,0,s,s, l0+l1, 0, 0,
+                          0,0,s,s, l0+l1, l2, 0,
+                          0,0,s,s, l0+l1, l2, q[cid3] };
+        aveq( "chain 0", 7*4, E_ref, TF_abs, 1e-6 );
+    }
 }

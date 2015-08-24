@@ -138,6 +138,7 @@ void SceneFramePrismatic::tf_rel( const double *q, double _E[7] )
     (void)q;
     double x[3];
     double qo = q[this->config_index] + this->offset;
+
     for( size_t i = 0; i < 3; i ++ ) {
         x[i] = qo*this->axis[i];
     }
@@ -216,8 +217,7 @@ void SceneGraph::index()
     std::set<std::string> visited;
     for( auto itr = frames.begin(); itr != frames.end(); itr++ ) {
         // invalidate indices
-        (*itr)->frame_id = (*itr)->parent_id = (*itr)->config_index =
-            (size_t)-1;
+        (*itr)->frame_id = (*itr)->parent_id = (size_t)-1;
         // Recursive sort
         sort_frame_helper( list, visited, frame_map, (*itr)->name );
     }
@@ -245,7 +245,7 @@ void SceneGraph::index()
                 break;
             case AA_RX_FRAME_REVOLUTE:
             case AA_RX_FRAME_PRISMATIC:
-                config_map[f->name] = f->config_index = config_size++;
+                config_map[f->name] = ((SceneFrameJoint*)f)->config_index = config_size++;
                 break;
             }
         }

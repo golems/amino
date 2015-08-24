@@ -64,7 +64,6 @@ struct SceneFrame  {
     std::string parent;
     aa_rx_frame_id frame_id;
     aa_rx_frame_id parent_id;
-    size_t config_index;
     double E[7];
     void *data;
 };
