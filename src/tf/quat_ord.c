@@ -780,42 +780,58 @@ aa_tf_vecs2quat( const double u[AA_RESTRICT 3],
 {
 
     aa_tf_cross( u, v, &q[AA_TF_QUAT_X] );
-    double c = aa_tf_vdot(&q[AA_TF_QUAT_X],&q[AA_TF_QUAT_X]);
+
     double nu = aa_tf_vdot(u,u);
     double nv = aa_tf_vdot(v,v);
     double nuv = sqrt(nu*nv);
+    double uv = aa_tf_vdot(u,v);
 
-    if( c/nuv < sqrt_epsilon ) {
-        /* Degenerate case where vectors are very close.  Arbitrarily
-         * rotate one vector, find the quaternation, then apply the
-         * inverse rotation.
-         */
+    double cc = aa_tf_vdot(&q[AA_TF_QUAT_X],&q[AA_TF_QUAT_X]);
+
+    if( cc / nuv < sqrt_epsilon ) {
+
+        /* Find a differently-pointed vector */
         double fx=fabs(u[0]);
         double fy=fabs(u[1]);
         double fz=fabs(u[2]);
-        /* Find an arbitrary rotation whose axis is not close to the
-         * vector.
-         */
-        static const double q_x[4] = {1,0,0,0};
-        static const double q_y[4] = {0,1,0,0};
-        static const double q_z[4] = {0,0,1,0};
-        const double *qr = (fx > fy) ?
-            (fy > fz ? q_z : q_y) :
-            (fx > fz ? q_z : q_x);
 
-        double up[3];
-        aa_tf_qrot(qr,u,up);
+        static const double a_x[3] = {1,0,0};
+        static const double a_y[3] = {0,1,0};
+        static const double a_z[3] = {0,0,1};
 
-        double qt[4];
-        aa_tf_cross( up, v, &qt[AA_TF_QUAT_X] );
-        qt[AA_TF_QUAT_W] = aa_tf_vdot(up,v) + nuv;
+        const double *ar = (fx > fy) ?
+            (fy > fz ? a_z : a_y) :
+            (fx > fz ? a_z : a_x);
 
-        aa_tf_qmulc(qt,qr,q);
+        /* Get the quaternion axis */
+        /* TODO: verify axis direction */
+        double au[3];
+        double av[3];
+        aa_tf_cross( u, ar, au);
+        if( uv > 0 ) {
+            aa_tf_cross( v, ar, av);
+        } else {
+            aa_tf_cross( ar, v, av);
+        }
+        /* average axis from u and v */
+        FOR_VEC(i) q[AA_TF_QUAT_X+i] = au[i]+av[i];
+
+        /* Get the euclidean angle */
+        double theta = atan2(cc,uv); /* euclidean angle */
+        double qtheta = theta/2;
+
+        double s = sin( qtheta );
+        double m = s / sqrt(aa_tf_vdot(&q[AA_TF_QUAT_X],&q[AA_TF_QUAT_X]));
+
+        /* scale axis by sign / magnitude */
+        FOR_VEC(i) q[AA_TF_QUAT_X+i] *= m;
+
+        q[AA_TF_QUAT_W] = cos(qtheta);
 
     } else {
-        q[AA_TF_QUAT_W] = aa_tf_vdot(u,v) + nuv;
+        q[AA_TF_QUAT_W] = uv + nuv;
+        aa_tf_qnormalize(q);
     }
 
-    aa_tf_qnormalize(q);
 
 }

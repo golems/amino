@@ -399,6 +399,12 @@ static void quat(double E[2][7]) {
         double *v0 = E[0] + AA_TF_QUTR_T;
         double *v1 = E[1] + AA_TF_QUTR_T;
         double q[4], vp[3];
+
+        // identify case
+        aa_tf_vecs2quat( v0, v0, q);
+        aveq( "vecs2quat-ident", 4, q, aa_tf_quat_ident, 1e-6 );
+
+        // regular case
         aa_tf_vecs2quat( v0, v1, q);
         aa_tf_qrot(q,v0,vp);
 
@@ -413,6 +419,7 @@ static void quat(double E[2][7]) {
 
             aveq("vecs2quat", 3, vp, vp1, 1e-6 );
         }
+        // inverted case
         double v0n[3] = {-v0[0], -v0[1], -v0[2]};
         aa_tf_vecs2quat( v0, v0n, q);
         aa_tf_qrot(q,v0,vp);
