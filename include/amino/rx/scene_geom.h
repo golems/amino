@@ -73,7 +73,7 @@ aa_rx_geom_opt_set_no_shadow (
 void
 aa_rx_geom_opt_set_color (
     struct aa_rx_geom_opt *opt,
-    float red, float blue, float green );
+    double red, double blue, double green );
 
 /**
  * Set alpha (transparency) option
@@ -81,7 +81,7 @@ aa_rx_geom_opt_set_color (
 void
 aa_rx_geom_opt_set_alpha (
     struct aa_rx_geom_opt *opt,
-    float red, float blue, float green );
+    double red, double blue, double green );
 
 /**
  * Set visual flag
@@ -102,6 +102,15 @@ aa_rx_geom_opt_set_collision (
 /*----------*/
 /*- Shapes -*/
 /*----------*/
+
+enum aa_rx_geom_shape {
+    AA_RX_NOSHAPE,
+    AA_RX_MESH,
+    AA_RX_BOX,
+    AA_RX_SPHERE,
+    AA_RX_CYLINDER,
+    AA_RX_CONE
+};
 
 /**
  * Attach a box to frame.
@@ -134,7 +143,7 @@ void aa_rx_geom_attach_cylinder (
 /**
  * Attach a cone to frame.
  */
-void aa_rx_geom_attach_cylinder (
+void aa_rx_geom_attach_cone (
     struct aa_rx_sg *sg,
     const char *frame,
     struct aa_rx_geom_opt *opt,
@@ -146,6 +155,44 @@ void aa_rx_geom_attach_cylinder (
  * Opaque type for a mesh objects
  */
 struct aa_rx_mesh;
+
+void aa_rx_mesh_fill_vertex_vectors (
+    struct aa_rx_mesh *mesh,
+    size_t n, float *vectors);
+
+void aa_rx_mesh_fill_vertex_vectors_dbl (
+    struct aa_rx_mesh *mesh,
+    size_t n, double *vectors );
+
+void aa_rx_mesh_fill_vertex_indices (
+    struct aa_rx_mesh *mesh,
+    size_t n, size_t *indices);
+
+
+void aa_rx_mesh_fill_normal_vectors (
+    struct aa_rx_mesh *mesh,
+    size_t n, float *vectors);
+
+void aa_rx_mesh_fill_normal_vectors_dbl (
+    struct aa_rx_mesh *mesh,
+    size_t n, double *vectors );
+
+void aa_rx_mesh_fill_normal_indices (
+    struct aa_rx_mesh *mesh,
+    size_t n, size_t *indices);
+
+
+void aa_rx_mesh_fill_uv_vectors (
+    struct aa_rx_mesh *mesh,
+    size_t n, float *vectors);
+
+void aa_rx_mesh_fill_uv_vectors_dbl (
+    struct aa_rx_mesh *mesh,
+    size_t n, double *vectors );
+
+void aa_rx_mesh_fill_uv_indices (
+    struct aa_rx_mesh *mesh,
+    size_t n, size_t *indices);
 
 /**
  * Attach a mesh to frame.

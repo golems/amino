@@ -44,14 +44,50 @@
 struct aa_rx_geom_opt
 {
     int no_shadow;
-    int no_shadow;
+    double color[3];
+    double alpha;
+    bool visual;
+    bool collision;
+};
+
+
+struct aa_rx_geom_base {
+    struct aa_rx_geom_opt opt;
+    enum aa_rx_geom_shape shape;
+};
+
+struct aa_rx_geom_box {
+    struct aa_rx_geom_base base;
+    double dimension[3];
+};
+
+struct aa_rx_geom_sphere {
+    struct aa_rx_geom_base base;
+    double radius;
+};
+
+struct aa_rx_geom_cylinder {
+    struct aa_rx_geom_base base;
+    double height;
+    double radius;
+};
+
+struct aa_rx_geom_cone {
+    struct aa_rx_geom_base base;
+    double height;
+    double start_radius;
+    double end_radius;
+};
+
+struct aa_rx_mesh {
+    std::vector<float> vertex_vectors;
+    std::vector<size_t> vertex_indices;
+
+    std::vector<float> normal_vectors;
+    std::vector<size_t> normal_vectors;
+
+    std::vector<float> uv_vectors;
+    std::vector<size_t> uv_vectors;
 }
-
-
-/**
- * Opaque type for a mesh objects
- */
-struct aa_rx_mesh;
-
 
 #endif /*AMINO_RX_SCENE_GEOM_INTERNAL_H*/

@@ -832,6 +832,4 @@ aa_tf_vecs2quat( const double u[AA_RESTRICT 3],
         q[AA_TF_QUAT_W] = uv + nuv;
         aa_tf_qnormalize(q);
     }
-
-
 }

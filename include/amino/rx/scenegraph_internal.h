@@ -49,6 +49,7 @@
 
 namespace amino {
 
+struct Geometry;
 
 struct SceneFrame  {
     SceneFrame( const char *parent,
@@ -60,12 +61,17 @@ struct SceneFrame  {
     virtual aa_rx_frame_type type() = 0;
     int in_global();
 
+    /* Kinematic values */
     std::string name;
     std::string parent;
     aa_rx_frame_id frame_id;
     aa_rx_frame_id parent_id;
     double E[7];
-    void *data;
+
+    /* Geometry */
+    std::vector<struct Geometry*> geometry;
+
+
 };
 
 
