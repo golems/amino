@@ -772,3 +772,50 @@ AA_API void aa_tf_quat_davenport_matrix (
     /* printf("\n"); */
     /* aa_dump_mat( stdout, M, 4, 4 ); */
 }
+
+AA_API void
+aa_tf_vecs2quat( const double u[AA_RESTRICT 3],
+                 const double v[AA_RESTRICT 3],
+                 double q[AA_RESTRICT 4] )
+{
+
+    aa_tf_cross( u, v, &q[AA_TF_QUAT_X] );
+    double c = aa_tf_vdot(&q[AA_TF_QUAT_X],&q[AA_TF_QUAT_X]);
+    double nu = aa_tf_vdot(u,u);
+    double nv = aa_tf_vdot(v,v);
+    double nuv = sqrt(nu*nv);
+
+    if( c/nuv < sqrt_epsilon ) {
+        /* Degenerate case where vectors are very close.  Arbitrarily
+         * rotate one vector, find the quaternation, then apply the
+         * inverse rotation.
+         */
+        double fx=fabs(u[0]);
+        double fy=fabs(u[1]);
+        double fz=fabs(u[2]);
+        /* Find an arbitrary rotation whose axis is not close to the
+         * vector.
+         */
+        static const double q_x[4] = {1,0,0,0};
+        static const double q_y[4] = {0,1,0,0};
+        static const double q_z[4] = {0,0,1,0};
+        const double *qr = (fx > fy) ?
+            (fy > fz ? q_z : q_y) :
+            (fx > fz ? q_z : q_x);
+
+        double up[3];
+        aa_tf_qrot(qr,u,up);
+
+        double qt[4];
+        aa_tf_cross( up, v, &qt[AA_TF_QUAT_X] );
+        qt[AA_TF_QUAT_W] = aa_tf_vdot(up,v) + nuv;
+
+        aa_tf_qmulc(qt,qr,q);
+
+    } else {
+        q[AA_TF_QUAT_W] = aa_tf_vdot(u,v) + nuv;
+    }
+
+    aa_tf_qnormalize(q);
+
+}

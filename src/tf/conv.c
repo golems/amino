@@ -297,13 +297,3 @@ static double vdot (const double u[3],
 /*     double n = vnorm(v); */
 /*     for( size_t i = 0; i < 3; i ++ ) v[i] /= n; */
 /* } */
-
-AA_API void
-aa_tf_vecs2quat( const double u[AA_RESTRICT 3],
-                 const double v[AA_RESTRICT 3],
-                 double q[AA_RESTRICT 4] )
-{
-    aa_tf_cross( u, v, &q[AA_TF_QUAT_X] );
-    q[AA_TF_QUAT_W] = vdot(u,v) + sqrt( vdot(u,u) * vdot(v,v) );
-    aa_tf_qnormalize(q);
-}

@@ -403,14 +403,30 @@ static void quat(double E[2][7]) {
         aa_tf_qrot(q,v0,vp);
 
         // normalize result
-        double n0 = sqrt(v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2] );
-        double n1 = sqrt(v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2] );
-        double vp1[3];
-        for( size_t i = 0; i < 3; i ++ ) {
-            vp1[i] = n0*v1[i] / n1;
+        {
+            double n0 = sqrt(v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2] );
+            double n1 = sqrt(v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2] );
+            double vp1[3];
+            for( size_t i = 0; i < 3; i ++ ) {
+                vp1[i] = n0*v1[i] / n1;
+            }
+
+            aveq("vecs2quat", 3, vp, vp1, 1e-6 );
+        }
+        double v0n[3] = {-v0[0], -v0[1], -v0[2]};
+        aa_tf_vecs2quat( v0, v0n, q);
+        aa_tf_qrot(q,v0,vp);
+        {
+            double n0 = sqrt(v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2] );
+            double n1 = sqrt(v0n[0]*v0n[0] + v0n[1]*v0n[1] + v0n[2]*v0n[2] );
+            double vp1[3];
+            for( size_t i = 0; i < 3; i ++ ) {
+                vp1[i] = n0*v0n[i] / n1;
+            }
+
+            aveq("vecs2quat-degenerate", 3, vp, vp1, 1e-6 );
         }
 
-        aveq("vecs2quat", 3, vp, vp1, 1e-6 );
 
     }
 }
