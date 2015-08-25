@@ -72,7 +72,8 @@
   (c vector-3-t))
 
 (defun cross (a b &optional (c (make-vec3)))
-  (aa-tf-cross a b c))
+  (aa-tf-cross a b c)
+  c)
 
 
 
