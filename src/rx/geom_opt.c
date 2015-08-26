@@ -28,70 +28,77 @@
  *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
  *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *   AND ON ANY HEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-#ifndef AMINO_RX_SCENE_GEOM_INTERNAL_H
-#define AMINO_RX_SCENE_GEOM_INTERNAL_H
+#include "amino.h"
+#include "amino/rx/scenegraph.h"
+#include "amino/rx/scenegraph_internal.h"
+#include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_geom_internal.h"
 
-/**
- * Opaque structure for geometry options.
- */
-struct aa_rx_geom_opt
+
+
+
+
+struct aa_rx_geom_opt* aa_rx_geom_opt_create()
 {
-    double color[3];
-    double alpha;
-    unsigned no_shadow : 1;
-    unsigned visual : 1;
-    unsigned collision : 1;
-};
+    struct aa_rx_geom_opt *o = (struct aa_rx_geom_opt*)malloc(sizeof(struct aa_rx_geom_opt));
+    AA_MEM_ZERO(o, 1);
+    return o;
+}
 
-struct aa_rx_geom_base {
-    struct aa_rx_geom_opt opt;
-    enum aa_rx_geom_shape type;
-};
+void
+aa_rx_geom_opt_destroy(struct aa_rx_geom_opt* opt)
+{
+    free(opt);
+}
 
-struct aa_rx_geom_box {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_box shape;
-};
+void
+aa_rx_geom_opt_set_no_shadow (
+    struct aa_rx_geom_opt *opt,
+    int no_shadow )
+{
+    opt->no_shadow = no_shadow ? 1 : 0;
+}
 
-struct aa_rx_geom_sphere {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_sphere shape;
-};
 
-struct aa_rx_geom_cylinder {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_cylinder shape;
-};
+void
+aa_rx_geom_opt_set_color (
+    struct aa_rx_geom_opt *opt,
+    double red, double blue, double green )
+{
+    opt->color[0] = red;
+    opt->color[1] = blue;
+    opt->color[2] = green;
+}
 
-struct aa_rx_geom_cone {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_cone shape;
-};
 
-struct aa_rx_geom_mesh {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_mesh shape;
-};
+void
+aa_rx_geom_opt_set_alpha (
+    struct aa_rx_geom_opt *opt,
+    double alpha )
+{
+    opt->alpha = alpha;
+}
 
-#ifdef __cplusplus
+void
+aa_rx_geom_opt_set_visual (
+    struct aa_rx_geom_opt *opt,
+    int visual )
+{
+    opt->visual = visual ? 1 : 0;
+}
 
-struct aa_rx_mesh {
-    std::vector<float> vertex_vectors;
-    std::vector<size_t> vertex_indices;
+void
+aa_rx_geom_opt_set_collision (
+    struct aa_rx_geom_opt *opt,
+    int collision )
+{
+    opt->collision = collision ? 1 : 0;
 
-    std::vector<float> normal_vectors;
-    std::vector<size_t> normal_indices;
-
-    std::vector<float> uv_vectors;
-    std::vector<size_t> uv_indices;
-};
-#endif /*__cplusplus */
-
-#endif /*AMINO_RX_SCENE_GEOM_INTERNAL_H*/
+}

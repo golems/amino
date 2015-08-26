@@ -44,6 +44,9 @@
 
 /**
  * Opaque structure for geometry options.
+ *
+ * All options are set through accessor functions so that future
+ * options can be added while preserving API and ABI compatability.
  */
 struct aa_rx_geom_opt;
 
@@ -56,8 +59,8 @@ aa_rx_geom_opt_create();
 /**
  * Destroy a geometry option struct.
  */
-struct aa_rx_geom_opt*
-aa_rx_geom_opt_destroy();
+void
+aa_rx_geom_opt_destroy(struct aa_rx_geom_opt*);
 
 /**
  * Set no-shadow option
@@ -81,7 +84,7 @@ aa_rx_geom_opt_set_color (
 void
 aa_rx_geom_opt_set_alpha (
     struct aa_rx_geom_opt *opt,
-    double red, double blue, double green );
+    double alpha );
 
 /**
  * Set visual flag
@@ -112,11 +115,33 @@ enum aa_rx_geom_shape {
     AA_RX_CONE
 };
 
+struct aa_rx_shape_box {
+    double dimension[3];
+};
+
+struct aa_rx_shape_sphere {
+    double radius;
+};
+
+struct aa_rx_shape_cylinder {
+    double height;
+    double radius;
+};
+
+struct aa_rx_shape_cone {
+    double height;
+    double start_radius;
+    double end_radius;
+};
+
+struct aa_rx_shape_mesh {
+};
+
 /**
  * Attach a box to frame.
  */
 void aa_rx_geom_attach_box (
-    struct aa_rx_sg *sg,
+    struct aa_rx_sg *scene_graph,
     const char *frame,
     struct aa_rx_geom_opt *opt,
     const double dimension[3] );
@@ -125,7 +150,7 @@ void aa_rx_geom_attach_box (
  * Attach a sphere to frame.
  */
 void aa_rx_geom_attach_sphere (
-    struct aa_rx_sg *sg,
+    struct aa_rx_sg *scene_graph,
     const char *frame,
     struct aa_rx_geom_opt *opt,
     double radius );
@@ -134,7 +159,7 @@ void aa_rx_geom_attach_sphere (
  * Attach a cylinder to frame.
  */
 void aa_rx_geom_attach_cylinder (
-    struct aa_rx_sg *sg,
+    struct aa_rx_sg *scene_graph,
     const char *frame,
     struct aa_rx_geom_opt *opt,
     double height,
@@ -144,7 +169,7 @@ void aa_rx_geom_attach_cylinder (
  * Attach a cone to frame.
  */
 void aa_rx_geom_attach_cone (
-    struct aa_rx_sg *sg,
+    struct aa_rx_sg *scene_graph,
     const char *frame,
     struct aa_rx_geom_opt *opt,
     double height,
@@ -198,7 +223,7 @@ void aa_rx_mesh_fill_uv_indices (
  * Attach a mesh to frame.
  */
 void aa_rx_geom_attach_mesh (
-    struct aa_rx_sg *sg,
+    struct aa_rx_sg *scene_graph,
     const char *frame,
     struct aa_rx_geom_opt *opt,
     struct aa_rx_mesh *mesh );

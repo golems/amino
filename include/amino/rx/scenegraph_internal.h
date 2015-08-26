@@ -49,7 +49,7 @@
 
 namespace amino {
 
-struct Geometry;
+struct aa_rx_geom_base;
 
 struct SceneFrame  {
     SceneFrame( const char *parent,
@@ -69,9 +69,7 @@ struct SceneFrame  {
     double E[7];
 
     /* Geometry */
-    std::vector<struct Geometry*> geometry;
-
-
+    std::vector<void*> geometry;
 };
 
 
@@ -153,6 +151,11 @@ struct aa_rx_sg {
 
 
 
-#endif
+#endif /* __cplusplus */
+struct aa_rx_geom_base;
+
+AA_API void
+aa_rx_sg_add_geom( struct aa_rx_sg *scene_graph, const char *frame,
+                   struct aa_rx_geom_base *geom );
 
 #endif /*AMINO_SCENEGRAPH_H*/

@@ -38,6 +38,7 @@
 #include "amino.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
+#include "sg_convenience.h"
 
 #include <list>
 #include <set>
@@ -264,3 +265,13 @@ void SceneGraph::add(SceneFrame *f)
 }
 
 } /* amino */
+
+
+void
+aa_rx_sg_add_geom( aa_rx_sg *scene_graph, const char *frame,
+                   struct aa_rx_geom_base *geom )
+{
+
+    aa_rx_scene_frame *f = aa_rx_sg_find(scene_graph, frame);
+    f->geometry.push_back(geom);
+}
