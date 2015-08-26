@@ -69,12 +69,8 @@ amino*.tar.gz
 /src/sub/.dirstamp
 /src/mac/tf.f90
 /vecbench
-/aa_regress.log
-/aa_regress.trs
-/aa_test.log
-/aa_test.trs
-/la_test.log
-/la_test.trs
+/*.log
+/*.trs
 /q_test
 /test-driver
 /test-suite.log
@@ -96,3 +92,6 @@ amino*.tar.gz
 /la_ctest
 /aa_fuzz_tf
 /src/rx/.dirstamp
+/sdl_test
+/sg_test
+/sg_test.log

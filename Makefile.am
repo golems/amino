@@ -12,6 +12,7 @@ EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
 dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h include/amino.hpp
+noinst_PROGRAMS =
 
 
 pkginclude_HEADERS = 	                \
@@ -203,12 +204,24 @@ javadoc: doc/.javadoc.stamp
 endif
 
 
+## SDL ##
+if HAVE_SDL2
+
+
+noinst_PROGRAMS += sdl_test
+sdl_test_SOURCES = src/rx/sdl_test.c
+sdl_test_CFLAGS = $(SDL2_CFLAGS)
+sdl_test_LDADD = libamino.la $(SDL2_LIBS)
+
+
+endif
+
 ## TESTS ##
 noinst_LTLIBRARIES += libtestutil.la
 libtestutil_la_SOURCES = src/test/testutil.c
 
 TESTS = aa_test
-noinst_PROGRAMS = aa_test
+noinst_PROGRAMS += aa_test
 aa_test_SOURCES = src/test/aa_test.c
 aa_test_LDADD = libamino.la libtestutil.la
 

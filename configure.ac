@@ -210,19 +210,41 @@ AM_CONDITIONAL([HAVE_JAVAC],   [test "x$JAVAC" != x])
 
 AC_LANG([C])
 
+## SDL2 ##
+AC_ARG_WITH([sdl2],
+            [AS_HELP_STRING([--without-sdl2], [Disable SDL2 support])],
+            [],
+            [with_sdl2=yes])
 
+HAVE_SDL2=disabled
+AS_IF([test "x$with_sdl2" = xyes], [
+  PKG_CHECK_MODULES([SDL2],
+                    [sdl2],
+                    [HAVE_SDL2=yes])]
+)
 
-AC_MSG_NOTICE([=========================])
-AC_MSG_NOTICE([= CONFIGURATION SUMMARY =])
-AC_MSG_NOTICE([=========================])
+AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
+
+AC_SUBST([SDL2_CFLAGS])
+AC_SUBST([SDL2_LIBS])
+
+## SUMMARY ##
+AC_MSG_NOTICE([===============================])
+AC_MSG_NOTICE([= AMINO CONFIGURATION SUMMARY =])
+AC_MSG_NOTICE([===============================])
+AC_MSG_NOTICE([prefix:            $prefix])
 AC_MSG_NOTICE([C compiler:        $CC])
 AC_MSG_NOTICE([C++ compiler:      $CXX])
 AC_MSG_NOTICE([Use Fortran        $with_fortran])
-AS_IF([test "x$with_fortran" = xyes],
-      [AC_MSG_NOTICE([Fortran compiler:  $FC])])
-AC_MSG_NOTICE([Java compiler:     $JAVAC])
-AC_MSG_NOTICE([prefix:            $prefix])
+AS_IF([test "x$with_fortran" = xyes],[
+AC_MSG_NOTICE([Fortran compiler:  $FC])]
+)
+AC_MSG_NOTICE([Use Java           $with_java])
+AS_IF([test "x$with_java" = xyes], [
+AC_MSG_NOTICE([Java compiler:     $JAVAC])]
 AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
+)
+AC_MSG_NOTICE([SDL2:              $HAVE_SDL2])
 
 
 AS_IF([test "x$CC" = "x"],
