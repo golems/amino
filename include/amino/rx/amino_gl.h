@@ -1,4 +1,4 @@
-/* -*- mode: C++; c-basic-offset: 4; -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
@@ -35,63 +35,64 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_GEOM_INTERNAL_H
-#define AMINO_RX_SCENE_GEOM_INTERNAL_H
+#ifndef AMINO_RX_GL_H
+#define AMINO_RX_GL_H
+
+/* DESIGN
+ * ======
+ *
+ * - Per-frame GL arrays
+ *   - vertices
+ *   - colors
+ *   - indices
+ * - Initially create per-frame VBOs
+ * - Initially compile shaders
+ *
+ *
+ */
+
+struct amino_rx_frame_gl {
+    GLuint vertices;
+    GLuint colors;
+};
+
+
+/** Forward declaration */
+struct aa_rx_sg;
 
 /**
- * Opaque structure for geometry options.
+ * Render the scene graph to the current GL context.
  */
-struct aa_rx_geom_opt
-{
-    double color[3];
-    double alpha;
-    unsigned no_shadow : 1;
-    unsigned visual : 1;
-    unsigned collision : 1;
-};
+AA_API void
+aa_rx_sg_render(
+    struct aa_rx_sg *sg,
+    size_t n_TF, double *TF_abs, size_t ld_TF);
 
-struct aa_rx_geom_base {
-    struct aa_rx_geom_opt opt;
-    enum aa_rx_geom_shape type;
-};
+/**
+ * Convert a quaternion-translation to an OpenGL matrix
+ */
+AA_API void
+aa_gl_qutr2glmat( const double E[AA_RESTRICT 7],
+                  GLfloat M[AA_RESTRICT 16] );
 
-struct aa_rx_geom_box {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_box shape;
-};
+/**
+ * Convert a condensed transformation matrix to an OpenGL matrix
+ */
+AA_API void
+aa_gl_tfmat2glmat( const double T[AA_RESTRICT 12],
+                   GLfloat M[AA_RESTRICT 16] );
 
-struct aa_rx_geom_sphere {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_sphere shape;
-};
 
-struct aa_rx_geom_cylinder {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_cylinder shape;
-};
+/**
+ * Compile a shader from a text string.
+ */
+AA_API GLuint aa_gl_create_shader(
+    GLenum shader_type, const char* source );
 
-struct aa_rx_geom_cone {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_cone shape;
-};
 
-struct aa_rx_geom_mesh {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_mesh shape;
-};
+/**
+ * Create a GLSL program and attach shaders.
+ */
+AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader);
 
-#ifdef __cplusplus
-
-struct aa_rx_mesh {
-    std::vector<float> vertex_vectors;
-    std::vector<size_t> vertex_indices;
-
-    std::vector<float> normal_vectors;
-    std::vector<size_t> normal_indices;
-
-    std::vector<float> uv_vectors;
-    std::vector<size_t> uv_indices;
-};
-#endif /*__cplusplus */
-
-#endif /*AMINO_RX_SCENE_GEOM_INTERNAL_H*/
+#endif /*AMINO_RX_GL_H*/

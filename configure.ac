@@ -210,21 +210,52 @@ AM_CONDITIONAL([HAVE_JAVAC],   [test "x$JAVAC" != x])
 
 AC_LANG([C])
 
-## SDL2 ##
+## GRAPHICS ##
+
+# OpenGL
+AC_ARG_WITH([opengl],
+            [AS_HELP_STRING([--without-opengl], [Disable OpenGL support])],
+            [],
+            [with_opengl=yes])
+
+AS_IF([test "x$with_opengl" = xyes], [
+  PKG_CHECK_MODULES([GL],
+                    [gl],
+                    [HAVE_GL=yes])
+  dnl PKG_CHECK_MODULES([GLU],
+  dnl                   [glu],
+  dnl                   [HAVE_GLU=yes])
+  ]
+)
+
+AC_SUBST([GL_CFLAGS])
+AC_SUBST([GL_LIBS])
+AM_CONDITIONAL([HAVE_GL], [test "x$HAVE_GL" = xyes])
+
+dnl AC_SUBST([GLU_CFLAGS])
+dnl AC_SUBST([GLU_LIBS])
+dnl AM_CONDITIONAL([HAVE_GLU], [test "x$HAVE_GLU" = xyes])
+
+# SDL
 AC_ARG_WITH([sdl2],
             [AS_HELP_STRING([--without-sdl2], [Disable SDL2 support])],
             [],
-            [with_sdl2=yes])
+            [with_sdl2=$with_opengl])
 
 HAVE_SDL2=disabled
 AS_IF([test "x$with_sdl2" = xyes], [
   PKG_CHECK_MODULES([SDL2],
                     [sdl2],
-                    [HAVE_SDL2=yes])]
+                    [HAVE_SDL2=yes])
+
+  PKG_CHECK_MODULES([GLEW],
+                    [glew] )]
 )
 
 AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
 
+AC_SUBST([GLEW_CFLAGS])
+AC_SUBST([GLEW_LIBS])
 AC_SUBST([SDL2_CFLAGS])
 AC_SUBST([SDL2_LIBS])
 
@@ -244,6 +275,7 @@ AS_IF([test "x$with_java" = xyes], [
 AC_MSG_NOTICE([Java compiler:     $JAVAC])]
 AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
 )
+AC_MSG_NOTICE([OpenGL:            $with_opengl])
 AC_MSG_NOTICE([SDL2:              $HAVE_SDL2])
 
 

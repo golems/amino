@@ -203,6 +203,16 @@ javadoc: doc/.javadoc.stamp
 
 endif
 
+## OpenGL support
+if HAVE_GL
+lib_LTLIBRARIES += libamino_gl.la
+libamino_gl_la_SOURCES = src/amino_gl.c
+
+libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+libamino_gl_la_LIBADD = libamino.la $(GL_LIBS)
+
+endif
 
 ## SDL ##
 if HAVE_SDL2
