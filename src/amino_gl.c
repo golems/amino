@@ -44,6 +44,8 @@
 #include <SDL.h>
 
 #include "amino/rx/amino_gl.h"
+#include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_geom_internal.h"
 
 #define CHECK_GL_STATUS(TYPE,handle,pname) {                            \
         GLint status;                                                   \
@@ -154,11 +156,7 @@ static void check_error( const char *name ){
 
 AA_API void aa_gl_draw_tf (
     const double *E,
-    GLuint values_buffer,
-    GLuint colors_buffer,
-    GLuint indices_buffer,
-    size_t count
-    )
+    const struct aa_gl_buffers *buffers )
 {
     AA_GL_INIT;
 
@@ -166,7 +164,7 @@ AA_API void aa_gl_draw_tf (
     glUseProgram(aa_gl_id_program);
     check_error("glUseProgram");
 
-    glBindBuffer(GL_ARRAY_BUFFER, values_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
     check_error("glBindBuffer");
 
     glEnableVertexAttribArray(aa_gl_id_position);
@@ -177,7 +175,7 @@ AA_API void aa_gl_draw_tf (
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, colors_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers->colors);
     check_error("glBindBuffer");
 
     glEnableVertexAttribArray(aa_gl_id_color);
@@ -192,18 +190,18 @@ AA_API void aa_gl_draw_tf (
     glUniformMatrix4fv(aa_gl_id_matrix, 1, GL_FALSE, M);
     check_error("uniform mat");
 
-    if( indices_buffer ) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_buffer);
+    if( buffers->has_indices ) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers->indices);
         glDrawElements(
             GL_TRIANGLES,      // mode
-            count,             // count
+            buffers->count,    // count
             GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
             );
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
-        glDrawArrays(GL_TRIANGLES, 0, count);
+        glDrawArrays(GL_TRIANGLES, 0, buffers->count);
     }
     check_error("glDraw");
 
@@ -214,3 +212,11 @@ AA_API void aa_gl_draw_tf (
     glUseProgram(0);
 
 }
+
+
+static void aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
+    if( bufs->has_indices ) glDeleteProgram(bufs->indices);
+    if( bufs->has_colors ) glDeleteProgram(bufs->colors);
+    if( bufs->has_values ) glDeleteProgram(bufs->values);
+}
+

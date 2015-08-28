@@ -51,11 +51,6 @@
  *
  */
 
-struct amino_rx_frame_gl {
-    GLuint vertices;
-    GLuint colors;
-};
-
 
 /** Forward declaration */
 struct aa_rx_sg;
@@ -101,15 +96,25 @@ AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader);
  */
 AA_API void aa_gl_init();
 
+
+struct aa_gl_buffers {
+    GLuint values;
+    GLuint colors;
+    GLuint indices;
+    GLsizei count;
+
+    unsigned has_indices : 1;
+    unsigned has_colors : 1;
+    unsigned has_values : 1;
+};
+
+struct aa_sg_gl_buffers;
+
 /**
  * Draw a transform frame frame
  */
 AA_API void aa_gl_draw_tf (
     const double *E,
-    GLuint values_buffer,
-    GLuint colors_buffer,
-    GLuint indices_buffer,
-    size_t n_indices
-    );
+    const struct aa_gl_buffers *buffers);
 
 #endif /*AMINO_RX_GL_H*/
