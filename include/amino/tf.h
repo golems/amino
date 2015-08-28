@@ -350,6 +350,7 @@ static const double aa_tf_ident[12] = AA_TF_IDENT_INITIALIZER;
 static const double aa_tf_rotmat_ident[9] = AA_TF_ROTMAT_IDENT_INITIALIZER;
 static const double aa_tf_quat_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
 static const double aa_tf_duqu_ident[8] = AA_TF_DUQU_IDENT_INITIALIZER;
+static const double aa_tf_qutr_ident[7] = AA_TF_QUTR_IDENT_INITIALIZER;
 static const double aa_tf_axang_ident[4] = AA_TF_AXANG_IDENT_INITIALIZER;
 static const double aa_tf_rotvec_ident[3] = AA_TF_ROTVEC_IDENT_INITIALIZER;
 static const double aa_tf_vec_ident[3] = AA_TF_ROTVEC_IDENT_INITIALIZER;

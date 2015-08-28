@@ -95,4 +95,16 @@ AA_API GLuint aa_gl_create_shader(
  */
 AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader);
 
+
+/**
+ * Initialize GL engine
+ */
+AA_API void aa_gl_init();
+
+/**
+ * Draw a transform frame frame
+ */
+AA_API void aa_gl_draw_tf (
+    GLuint values_buffer, GLuint colors_buffer, const double *E );
+
 #endif /*AMINO_RX_GL_H*/

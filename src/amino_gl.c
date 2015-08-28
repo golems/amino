@@ -105,3 +105,95 @@ AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader)
     CHECK_GL_STATUS(Program, program, GL_LINK_STATUS);
     return program;
 }
+
+static const char aa_gl_vertex_shader[] =
+    "#version 130\n"
+    "in vec4 position;"
+    "in vec4 color;"
+    "uniform mat4 matrix;"
+    "smooth out vec4 vColor;"
+    "void main() {"
+    "  gl_Position = matrix * position;"
+    "  vColor = color;"
+    "}";
+
+static const char aa_gl_fragment_shader[] =
+    "#version 130\n"
+    "smooth in vec4 vColor;"
+    "void main() {"
+    "  gl_FragColor = vColor;"
+    "}";
+
+static int aa_gl_do_init = 1;
+#define AA_GL_INIT if(aa_gl_do_init) aa_gl_init();
+
+static GLuint aa_gl_id_program;
+static GLuint aa_gl_id_position;
+static GLuint aa_gl_id_color;
+static GLint aa_gl_id_matrix;
+
+AA_API void aa_gl_init()
+{
+    GLuint vertexShader = aa_gl_create_shader(GL_VERTEX_SHADER, aa_gl_vertex_shader);
+    GLuint fragmentShader = aa_gl_create_shader(GL_FRAGMENT_SHADER, aa_gl_fragment_shader);
+    aa_gl_id_program = aa_gl_create_program(vertexShader, fragmentShader);
+
+    aa_gl_id_position = glGetAttribLocation(aa_gl_id_program, "position");
+    aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
+    aa_gl_id_matrix = glGetUniformLocation(aa_gl_id_program, "matrix");
+
+    aa_gl_do_init = 0;
+}
+
+
+static void check_error( const char *name ){
+    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
+        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
+    }
+}
+
+AA_API void aa_gl_draw_tf (
+    GLuint values_buffer, GLuint colors_buffer, const double *E )
+{
+    AA_GL_INIT;
+
+
+    glUseProgram(aa_gl_id_program);
+    check_error("glUseProgram");
+
+    glBindBuffer(GL_ARRAY_BUFFER, values_buffer);
+    check_error("glBindBuffer");
+
+    glEnableVertexAttribArray(aa_gl_id_position);
+    check_error("glEnableVert");
+
+    glVertexAttribPointer(aa_gl_id_position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    check_error("glVertAttribPointer");
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, colors_buffer);
+    check_error("glBindBuffer");
+
+    glEnableVertexAttribArray(aa_gl_id_color);
+    check_error("glEnabeVert");
+
+    glVertexAttribPointer(aa_gl_id_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    check_error("glVerteAttribPointer");
+
+    GLfloat M[16];
+    aa_gl_qutr2glmat( E, M);
+
+    glUniformMatrix4fv(aa_gl_id_matrix, 1, GL_FALSE, M);
+    check_error("uniform mat");
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    check_error("glDraw");
+
+
+    glDisableVertexAttribArray(aa_gl_id_position);
+    glDisableVertexAttribArray(aa_gl_id_color);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glUseProgram(0);
+
+}
