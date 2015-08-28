@@ -138,6 +138,10 @@ AA_API void aa_gl_init()
 {
     GLuint vertexShader = aa_gl_create_shader(GL_VERTEX_SHADER, aa_gl_vertex_shader);
     GLuint fragmentShader = aa_gl_create_shader(GL_FRAGMENT_SHADER, aa_gl_fragment_shader);
+
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     aa_gl_id_program = aa_gl_create_program(vertexShader, fragmentShader);
 
     aa_gl_id_position = glGetAttribLocation(aa_gl_id_program, "position");
