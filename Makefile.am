@@ -17,7 +17,7 @@ noinst_PROGRAMS =
 
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
-	include/amino/tf.hpp           \
+	include/amino/tf.hpp            \
 	include/amino/debug.h           \
 	include/amino/test.h            \
 	include/amino/endconv.h         \
@@ -220,11 +220,15 @@ if HAVE_SDL2
 
 noinst_PROGRAMS += sdl_test
 sdl_test_SOURCES = src/rx/sdl_test.c
-sdl_test_CFLAGS = $(SDL2_CFLAGS)
+sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
+if HAVE_GL
+sdl_test_LDADD += libamino_gl.la $(GL_LIBS) $(GLEW_LIBS)  -lglut
+endif
 
 endif
+
 
 ## TESTS ##
 noinst_LTLIBRARIES += libtestutil.la

@@ -34,18 +34,73 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#define GL_GLEXT_PROTOTYPES
+
+#include <error.h>
+#include <stdio.h>
+#include <math.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 #include "amino.h"
-#include <SDL.h>
-#include <stdio.h>
+#include "amino/rx/amino_gl.h"
+#include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_geom_internal.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-int main( int argc, char *argv[] )
+#include <SDL.h>
+
+
+struct aa_gl_buffers buffers;
+struct aa_rx_geom_box geom;
+
+
+void Init(void)
+{
+    geom.base.opt.color[0] = 1;
+    geom.base.opt.color[1] = 0;
+    geom.base.opt.color[2] = 0;
+    geom.base.opt.color[3] = 0.2;
+    geom.base.type = AA_RX_BOX;
+    geom.base.gl_buffers = NULL;
+    geom.shape.dimension[0] = 0.5;
+    geom.shape.dimension[1] = 0.5;
+    geom.shape.dimension[2] = 0.5;
+
+    aa_geom_gl_buffers_init( &geom.base );
+
+}
+
+void check_error( const char *name ){
+    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
+        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
+    }
+}
+
+
+void display(void)
+{
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    check_error("glClearColor");
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    check_error("glClear");
+
+    double E[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+    //aa_tf_zangle2quat(M_PI/2, E );
+    buffers.count = 3;
+    buffers.has_indices = 1;
+    //aa_gl_draw_tf( E, &buffers );
+    aa_gl_draw_tf( E, geom.base.gl_buffers );
+
+
+}
+
+int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
-
     SDL_Window* window = NULL;
 
 
@@ -54,27 +109,48 @@ int main( int argc, char *argv[] )
         abort();
     }
 
+
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+
     window = SDL_CreateWindow( "SDL Test",
                                SDL_WINDOWPOS_UNDEFINED,
                                SDL_WINDOWPOS_UNDEFINED,
                                SCREEN_WIDTH,
                                SCREEN_HEIGHT,
-                               SDL_WINDOW_SHOWN );
+                               SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL );
     if( window == NULL ) {
         printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
         abort();
     }
 
-    SDL_Surface *screenSurface = screenSurface = SDL_GetWindowSurface( window );
+    SDL_GLContext gContext = SDL_GL_CreateContext( window );
+    if( gContext == NULL )
+    {
+        printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
+        abort();
+    }
 
-    SDL_FillRect( screenSurface, NULL, SDL_MapRGB( screenSurface->format, 0xFF, 0xFF, 0xFF ) );
+    printf("version: %s\n", glGetString(GL_VERSION));
 
+    Init();
+
+    display();
+
+    SDL_UpdateWindowSurface( window );
+    SDL_GL_SwapWindow(window );
     SDL_UpdateWindowSurface( window );
 
     SDL_Delay( 2000 );
 
+    SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );
 
     SDL_Quit();
-
+    return 0;
 }
