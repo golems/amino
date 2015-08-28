@@ -153,7 +153,12 @@ static void check_error( const char *name ){
 }
 
 AA_API void aa_gl_draw_tf (
-    GLuint values_buffer, GLuint colors_buffer, const double *E )
+    const double *E,
+    GLuint values_buffer,
+    GLuint colors_buffer,
+    GLuint indices_buffer,
+    size_t count
+    )
 {
     AA_GL_INIT;
 
@@ -187,7 +192,19 @@ AA_API void aa_gl_draw_tf (
     glUniformMatrix4fv(aa_gl_id_matrix, 1, GL_FALSE, M);
     check_error("uniform mat");
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    if( indices_buffer ) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices_buffer);
+        glDrawElements(
+            GL_TRIANGLES,      // mode
+            count,             // count
+            GL_UNSIGNED_INT,   // type
+            (void*)0           // element array buffer offset
+            );
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    } else {
+        glDrawArrays(GL_TRIANGLES, 0, count);
+    }
     check_error("glDraw");
 
 

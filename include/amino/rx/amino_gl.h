@@ -105,6 +105,11 @@ AA_API void aa_gl_init();
  * Draw a transform frame frame
  */
 AA_API void aa_gl_draw_tf (
-    GLuint values_buffer, GLuint colors_buffer, const double *E );
+    const double *E,
+    GLuint values_buffer,
+    GLuint colors_buffer,
+    GLuint indices_buffer,
+    size_t n_indices
+    );
 
 #endif /*AMINO_RX_GL_H*/
