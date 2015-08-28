@@ -220,3 +220,123 @@ static void aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
     if( bufs->has_values ) glDeleteProgram(bufs->values);
 }
 
+static void quad_tr( unsigned *indices,
+                     unsigned pp,
+                     unsigned pm,
+                     unsigned mp,
+                     unsigned mm )
+{
+    size_t j = 0;
+    indices[j++] = pp;
+    indices[j++] = pm;
+    indices[j++] = mp;
+
+    indices[j++] = mm;
+    indices[j++] = pm;
+    indices[j++] = mp;
+}
+
+
+AA_API void aa_geom_gl_buffers_init_box (
+    struct aa_rx_geom_box *geom
+    )
+{
+    GLfloat values[3*4*2]; // 3 values, 4 corners, two squares
+    //GLfloat colors[3*4*2]; // same as vertices
+    GLfloat colors[6*2*4]; // same as vertices
+    unsigned indices[6*2*3]; // 6 sides, 2 triangles, 3 vertices
+    double *d = geom->shape.dimension;
+
+    // fill vertices
+    double a[2] = {1,-1};
+    for( size_t x = 0, j=0; x < 2; x ++ ) {
+        for( size_t y = 0; y < 2; y ++ ) {
+            for( size_t z = 0; z < 2; z ++ ) {
+                values[j++] = (GLfloat)(a[x]*d[0]);
+                values[j++] = (GLfloat)(a[y]*d[1]);
+                values[j++] = (GLfloat)(a[z]*d[2]);
+            }
+        }
+    }
+
+    /*    xyz
+     *    ===
+     * 0: +++
+     * 1: ++-
+     * 2: +-+
+     * 3: +--
+     *
+     * 4: -++
+     * 5: -+-
+     * 6: --+
+     * 7: ---
+     */
+
+    {
+        size_t j = 0;
+        // +x
+        quad_tr(indices+j, 0,1,2,3 );
+        j+=6;
+        // -x
+        quad_tr(indices+j, 4,5,6,7 );
+        j+=6;
+        // +y
+        quad_tr(indices+j, 0,1,4,5 );
+        j+=6;
+        // -y
+        quad_tr(indices+j, 2,3,6,7 );
+        j+=6;
+        // +z
+        quad_tr(indices+j, 0,2,4,6 );
+        j+=6;
+        // -z
+        quad_tr(indices+j, 1,3,5,7 );
+        j+=6;
+    }
+
+    for( int i = 0; i < sizeof(colors)/(4*sizeof(*colors)); i ++ ) {
+        for( int j = 0; j < 4; j ++ ) {
+            colors[4*i + j ] = (GLfloat)geom->base.opt.color[j];
+        }
+    }
+
+    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
+    geom->base.gl_buffers = bufs;
+    bufs->count = sizeof(indices)/sizeof(*indices);
+
+    glGenBuffers(1, &bufs->values);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(values), values, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_values = 1;
+
+    glGenBuffers(1, &bufs->colors);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_colors = 1;
+
+
+    glGenBuffers(1, &bufs->indices);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_indices = 1;
+
+}
+
+
+AA_API void aa_geom_gl_buffers_init (
+    struct aa_rx_geom_base *geom
+    )
+{
+    if( geom->gl_buffers ) aa_gl_buffers_destroy( geom->gl_buffers );
+    geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
+
+    switch( geom->type ) {
+    case AA_RX_BOX:
+        aa_geom_gl_buffers_init_box((struct aa_rx_geom_box*)geom);
+        break;
+    default: abort();
+    }
+}

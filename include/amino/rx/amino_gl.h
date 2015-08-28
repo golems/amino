@@ -117,4 +117,11 @@ AA_API void aa_gl_draw_tf (
     const double *E,
     const struct aa_gl_buffers *buffers);
 
+
+struct aa_rx_geom_base;
+
+AA_API void aa_geom_gl_buffers_init (
+    struct aa_rx_geom_base *geom
+    );
+
 #endif /*AMINO_RX_GL_H*/

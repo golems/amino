@@ -43,16 +43,19 @@
  */
 struct aa_rx_geom_opt
 {
-    double color[3];
-    double alpha;
+    double color[4]; ///< RGBA
     unsigned no_shadow : 1;
     unsigned visual : 1;
     unsigned collision : 1;
 };
 
+/* Forward declaration */
+struct aa_gl_buffers;
+
 struct aa_rx_geom_base {
     struct aa_rx_geom_opt opt;
     enum aa_rx_geom_shape type;
+    struct aa_gl_buffers *gl_buffers;
 };
 
 struct aa_rx_geom_box {

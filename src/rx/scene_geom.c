@@ -42,17 +42,23 @@
 #include "amino/rx/scene_geom_internal.h"
 #include "sg_convenience.h"
 
+#define ALLOC_GEOM(TYPE, var, type_value, geom_opt, sg, frame)  \
+    TYPE *var = AA_NEW0(TYPE);                                  \
+    AA_MEM_CPY(&g->base.opt, geom_opt, 1);                      \
+    var->base.type = type_value;                                \
+    var->base.gl_buffers = NULL;                                \
+    aa_rx_sg_add_geom(sg, frame, &var->base);                   \
+
 void aa_rx_geom_attach_box (
     struct aa_rx_sg *scene_graph,
     const char *frame,
     struct aa_rx_geom_opt *opt,
     const double dimension[3] )
 {
-    struct aa_rx_geom_box *g = (struct aa_rx_geom_box *)malloc(sizeof*g);
-    AA_MEM_CPY(&g->base.opt, opt, 1);
-    g->base.type = AA_RX_BOX;
+    ALLOC_GEOM( struct aa_rx_geom_box, g,
+                AA_RX_BOX, opt,
+                scene_graph, frame );
     AA_MEM_CPY(g->shape.dimension, dimension, 3);
-    aa_rx_sg_add_geom(scene_graph, frame, &g->base);
 }
 
 void aa_rx_geom_attach_sphere (
@@ -61,11 +67,10 @@ void aa_rx_geom_attach_sphere (
     struct aa_rx_geom_opt *opt,
     double radius )
 {
-    struct aa_rx_geom_sphere *g = (struct aa_rx_geom_sphere *)malloc(sizeof*g);
-    AA_MEM_CPY(&g->base.opt, opt, 1);
-    g->base.type = AA_RX_SPHERE;
+    ALLOC_GEOM( struct aa_rx_geom_sphere, g,
+                AA_RX_SPHERE, opt,
+                scene_graph, frame );
     g->shape.radius = radius;
-    aa_rx_sg_add_geom(scene_graph, frame, &g->base);
 }
 
 void aa_rx_geom_attach_cylinder (
@@ -75,12 +80,11 @@ void aa_rx_geom_attach_cylinder (
     double height,
     double radius )
 {
-    struct aa_rx_geom_cylinder *g = (struct aa_rx_geom_cylinder *)malloc(sizeof*g);
-    AA_MEM_CPY(&g->base.opt, opt, 1);
-    g->base.type = AA_RX_CYLINDER;
+    ALLOC_GEOM( struct aa_rx_geom_cylinder, g,
+                AA_RX_CYLINDER, opt,
+                scene_graph, frame );
     g->shape.radius = radius;
     g->shape.height = height;
-    aa_rx_sg_add_geom(scene_graph, frame, &g->base);
 }
 
 void aa_rx_geom_attach_cone (
@@ -91,11 +95,10 @@ void aa_rx_geom_attach_cone (
     double start_radius,
     double end_radius )
 {
-    struct aa_rx_geom_cone *g = (struct aa_rx_geom_cone *)malloc(sizeof*g);
-    AA_MEM_CPY(&g->base.opt, opt, 1);
-    g->base.type = AA_RX_CONE;
+    ALLOC_GEOM( struct aa_rx_geom_cone, g,
+                AA_RX_CONE, opt,
+                scene_graph, frame );
     g->shape.start_radius = start_radius;
     g->shape.end_radius = end_radius;
     g->shape.height = height;
-    aa_rx_sg_add_geom(scene_graph, frame, &g->base);
 }

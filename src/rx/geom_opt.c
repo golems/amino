@@ -47,9 +47,11 @@
 
 struct aa_rx_geom_opt* aa_rx_geom_opt_create()
 {
-    struct aa_rx_geom_opt *o = (struct aa_rx_geom_opt*)malloc(sizeof(struct aa_rx_geom_opt));
-    AA_MEM_ZERO(o, 1);
-    return o;
+    struct aa_rx_geom_opt *a = AA_NEW0(struct aa_rx_geom_opt);
+    aa_rx_geom_opt_set_alpha(a, 1);
+    aa_rx_geom_opt_set_color(a, .5, .5, .5);
+
+    return a;
 }
 
 void
@@ -83,7 +85,7 @@ aa_rx_geom_opt_set_alpha (
     struct aa_rx_geom_opt *opt,
     double alpha )
 {
-    opt->alpha = alpha;
+    opt->color[3] = alpha;
 }
 
 void
