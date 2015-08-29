@@ -79,7 +79,7 @@ void check_error( const char *name ){
 }
 
 
-void display(void)
+void display(const double world_E_camera[7] )
 {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
@@ -88,7 +88,6 @@ void display(void)
     check_error("glClear");
 
     double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-    double world_E_camera[7] = AA_TF_QUTR_IDENT_INITIALIZER;
 
     world_E_model[AA_TF_QUTR_TZ] = -1;
 
@@ -97,7 +96,6 @@ void display(void)
     //world_E_camera[AA_TF_QUTR_TY] = .5;
 
     aa_tf_yangle2quat(0 * M_PI / 180 , world_E_model );
-    aa_tf_yangle2quat(15 * M_PI / 180 , world_E_camera );
 
     //aa_tf_yangle2quat(M_PI/4, world_E_model );
 
@@ -162,11 +160,108 @@ int main(int argc, char *argv[])
 
     Init();
 
-    display();
+    double world_E_camera[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+    double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+    double scroll_ratio = .05;
+    double angle_ratio = .05;
 
-    SDL_UpdateWindowSurface( window );
-    SDL_GL_SwapWindow(window );
-    SDL_UpdateWindowSurface( window );
+    int quit = 0;
+    while( !quit ) {
+        //Handle events on queue
+        SDL_Event e;
+        while( SDL_PollEvent( &e ) != 0 ) {
+            const Uint8 *state = SDL_GetKeyboardState(NULL);
+            int shift =  state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT];
+            int ctrl =  state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL] ||
+                state[SDL_SCANCODE_CAPSLOCK] ; /* keyboards are wrong, this is CTRL.
+                                                * And SDL doesn't respect ctrl:swapcaps */
+            int alt =  state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT];
+
+            double cam_E_camp[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+            double world_E_cam0[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+            double R_cam[9];
+            aa_tf_quat2rotmat(world_E_camera, R_cam);
+            int update_tf = 0;
+            //User requests quit
+            switch (e.type) {
+            case SDL_QUIT:
+                quit = 1;
+                break;
+            case SDL_KEYDOWN: {
+                double sign = 1;
+                switch( e.key.keysym.sym ) {
+
+                case SDLK_KP_2: sign = -1;
+                case SDLK_KP_8:
+                    if( ctrl ) {
+                        cam_E_camp[AA_TF_QUTR_TY] += sign*scroll_ratio;
+                    } else {
+                        aa_tf_axang2quat2( R_cam, sign*angle_ratio, world_E_cam0 );
+                    }
+                    update_tf = 1;
+                    break;
+                case SDLK_KP_4: sign = -1;
+                case SDLK_KP_6:
+                    if( ctrl ) {
+                        cam_E_camp[AA_TF_QUTR_TX] += sign*scroll_ratio;
+                    } else {
+                        aa_tf_axang2quat2( R_cam+3, sign*angle_ratio, world_E_cam0 );
+                    }
+                    update_tf = 1;
+                    break;
+
+                case SDLK_KP_MINUS: sign = -1;
+                case SDLK_KP_PLUS:
+                    cam_E_camp[AA_TF_QUTR_TZ] -= sign*scroll_ratio;
+                    update_tf = 1;
+                    break;
+                case SDLK_HOME:
+                    AA_MEM_CPY(world_E_camera, world_E_camera_home, 7);
+                    update_tf = 1;
+                    break;
+                default:
+                    printf("other key\n");
+                    break;
+                }
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+                break;
+            case SDL_MOUSEWHEEL: {
+                    if( ctrl && shift ) {
+                        aa_tf_zangle2quat( angle_ratio * e.wheel.y, cam_E_camp );
+                    } else if( alt && shift ) {
+                        aa_tf_axang2quat2( R_cam, angle_ratio*e.wheel.y, world_E_cam0 );
+                    } else if( alt && ctrl ) {
+                        aa_tf_axang2quat2( R_cam+3, angle_ratio*e.wheel.y, world_E_cam0 );
+                    } else if( ctrl ) {
+                        cam_E_camp[AA_TF_QUTR_TX] = scroll_ratio * e.wheel.y;
+                    } else if( shift ) {
+                        cam_E_camp[AA_TF_QUTR_TY] = scroll_ratio * e.wheel.y;
+                    } else if (!ctrl && !shift && !alt ) {
+                        cam_E_camp[AA_TF_QUTR_TZ] = -scroll_ratio * e.wheel.y;
+                    }
+
+                    update_tf = 1;
+                }
+                break;
+
+            } // end event switch
+
+            if( update_tf ) {
+                double Etmp[2][7];
+                aa_tf_qutr_mul( world_E_cam0, world_E_camera, Etmp[0] );
+                aa_tf_qutr_mul( Etmp[0], cam_E_camp, Etmp[1] );
+                AA_MEM_CPY( world_E_camera, Etmp[1], 7 );
+                printf("camera: " );aa_dump_vec( stdout, world_E_camera, 7 );
+            }
+        }
+
+        //SDL_UpdateWindowSurface( window );
+        //SDL_UpdateWindowSurface( window );
+        display( world_E_camera );
+        SDL_GL_SwapWindow(window);
+    }
 
     SDL_Delay( 1000 );
 
