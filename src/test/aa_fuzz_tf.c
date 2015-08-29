@@ -768,6 +768,34 @@ static void tfmat() {
     aveq( "tfmat-exp-ln", 6, v, lne, 1e-6 );
 }
 
+static void tfmat_inv(const double T[12]) {
+    double Tc[12], Ti[12], Tr[12];
+
+    // aa_tf_rotmat_inv1
+    AA_MEM_CPY(Tc, T, 12);
+    aa_tf_rotmat_inv1(Tc);
+    aa_tf_rotmat_mul(T,Tc,Tr);
+    aveq( "aa_tf_rotmat_inv1", 9, Tr, aa_tf_rotmat_ident, 1e-6 );
+
+    // aa_tf_rotmat_inv2
+    AA_MEM_CPY(Tc, T, 12);
+    aa_tf_rotmat_inv2(Tc, Ti);
+    aa_tf_rotmat_mul(T,Ti,Tr);
+    aveq( "aa_tf_rotmat_inv2", 9, Tr, aa_tf_rotmat_ident, 1e-6 );
+
+    // aa_tf_tfmat_inv1
+    AA_MEM_CPY(Tc, T, 12);
+    aa_tf_tfmat_inv1(Tc);
+    aa_tf_tfmat_mul(T,Tc,Tr);
+    aveq( "aa_tf_tfmat_inv1", 12, Tr, aa_tf_tfmat_ident, 1e-6 );
+
+    // aa_tf_rotmat_inv2
+    AA_MEM_CPY(Tc, T, 12);
+    aa_tf_tfmat_inv2(Tc, Ti);
+    aa_tf_tfmat_mul(T,Ti,Tr);
+    aveq( "aa_tf_tfmat_inv2", 12, Tr, aa_tf_tfmat_ident, 1e-6 );
+}
+
 static void integrate(const double *E, const double *S, const double *T, const double *dx) {
     const double *q = E+AA_TF_QUTR_Q;
     /* const double *v = E+AA_TF_QUTR_V; */
@@ -954,6 +982,7 @@ int main( void ) {
         theta2quat();
         rotmat(E[0]);
         tfmat();
+        tfmat_inv(T[0]);
         integrate(E[0], S[0], T[0], dx[0]);
         tf_conj(E, S);
         qdiff(E,dx);

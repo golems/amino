@@ -325,6 +325,39 @@ aa_tf_tfmat_svel( const double T0[12], const double dx[6], double dt, double T1[
     }
 }
 
+/*************/
+/* INVERSE   */
+/*************/
+AA_API void aa_tf_rotmat_inv1( double R[AA_RESTRICT 9] )
+{
+    aa_la_transpose( 3, R);
+}
+
+AA_API void aa_tf_rotmat_inv2( const double R[AA_RESTRICT 9],
+                               double Ri[AA_RESTRICT 9] )
+{
+
+    aa_la_transpose2( 3, 3, R, Ri);
+}
+
+AA_API void aa_tf_tfmat_inv1( double T[AA_RESTRICT 12] )
+{
+    aa_tf_rotmat_inv1(T);
+    double *v = T + AA_TF_TFMAT_V;
+    double vv[3] = {-v[0],-v[1],-v[2]};
+    aa_tf_9rot( T, vv, v );
+}
+
+AA_API void aa_tf_tfmat_inv2( const double T[AA_RESTRICT 12],
+                              double Ti[AA_RESTRICT 12] )
+{
+    aa_tf_rotmat_inv2(T,Ti);
+    double *v = T + AA_TF_TFMAT_V;
+    double vv[3] = {-v[0],-v[1],-v[2]};
+    aa_tf_9rot( Ti, vv, Ti + AA_TF_TFMAT_V );
+}
+
+
 /* Transform */
 
 AA_API void

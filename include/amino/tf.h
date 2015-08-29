@@ -347,6 +347,7 @@ struct aa_tf_qv_dx {
 #define AA_TF_ROTVEC_IDENT ( (double[3]) AA_TF_ROTVEC_IDENT_INITIALIZER )
 
 static const double aa_tf_ident[12] = AA_TF_IDENT_INITIALIZER;
+static const double aa_tf_tfmat_ident[12] = AA_TF_IDENT_INITIALIZER;
 static const double aa_tf_rotmat_ident[9] = AA_TF_ROTMAT_IDENT_INITIALIZER;
 static const double aa_tf_quat_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
 static const double aa_tf_duqu_ident[8] = AA_TF_DUQU_IDENT_INITIALIZER;
@@ -505,6 +506,27 @@ AA_API void aa_tf_tfmat2_tf( const double R[AA_RESTRICT 9],
                              const double p0[AA_RESTRICT 3],
                              double p1[AA_RESTRICT 4] );
 
+/**
+ * Invert a rotation in place
+ */
+AA_API void aa_tf_rotmat_inv1( double R[AA_RESTRICT 9] );
+
+/**
+ * Invert a rotation
+ */
+AA_API void aa_tf_rotmat_inv2( const double R[AA_RESTRICT 9],
+                               double Ri[AA_RESTRICT 9] );
+
+/**
+ * Invert a transform in place
+ */
+AA_API void aa_tf_tfmat_inv1( double T[AA_RESTRICT 12] );
+
+/**
+ * Invert a transform
+ */
+AA_API void aa_tf_tfmat_inv2( const double T[AA_RESTRICT 12],
+                              double Ti[AA_RESTRICT 12] );
 
 /// tests if R is a rotation matrix
 AA_API int aa_tf_isrotmat( const double R[AA_RESTRICT 9] );
