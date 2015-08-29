@@ -60,16 +60,16 @@
 #define sqrt_epsilon sqrt(DBL_EPSILON)
 #define sqrt_sqrt_epsilon sqrt(sqrt(DBL_EPSILON))
 
-static inline double
+double
 aa_tf_qdot( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )
 {
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
+    return AA_TF_QDOT(a,b);
 }
 
-static inline double
+AA_API double
 aa_tf_vdot( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
 {
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    return AA_TF_VDOT(a,b);
 }
 
 AA_API double
@@ -83,6 +83,13 @@ aa_tf_qvnorm( const double q[AA_RESTRICT 4] )
 {
     const double *v = q + AA_TF_QUAT_XYZ;
     return sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] );
+}
+
+AA_API void
+aa_tf_vnormalize( double v[AA_RESTRICT 3] )
+{
+    double n = sqrt( aa_tf_vdot(v,v) );
+    FOR_VEC(i) v[i] /= n;
 }
 
 AA_API void

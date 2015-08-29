@@ -586,14 +586,72 @@ aa_tf_rotmat_zx( const double z_axis[AA_RESTRICT 3],
                  const double x_axis[AA_RESTRICT 3],
                  double R[AA_RESTRICT 9] );
 
+
+/***********/
+/* Vectors */
+/***********/
+
+/**
+ * Inlined vector dot product
+ */
+static inline double
+AA_TF_VDOT( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
+{
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+
+/**
+ * Vector dot product.
+ */
+AA_API double
+aa_tf_vdot( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] );
+
+
+/**
+ * Inlined Vector cross product
+ */
+static inline void
+AA_TF_CROSS( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3], double c[AA_RESTRICT 3] )
+{
+    /* 6 mul, 3 add */
+    c[0] =  a[1]*b[2] - a[2]*b[1];
+    c[1] =  a[2]*b[0] - a[0]*b[2];
+    c[2] =  a[0]*b[1] - a[1]*b[0];
+}
+
+/**
+ * Vector cross product
+ */
+AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
+                         double c[AA_RESTRICT 3] ) ;
+
+
+/**
+ * Normalize Vector.
+ */
+AA_API void aa_tf_vnormalize( double v[AA_RESTRICT 3] );
+
+
+
 /***************/
 /* Quaternions */
 /***************/
 
-/** Dual quaternion normalization */
-AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
-                         double c[AA_RESTRICT 3] ) ;
+/**
+ * Inlined quaternion dot product.
+ */
+static inline double
+AA_TF_QDOT( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )
+{
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
+}
 
+/**
+ * Quaternion dot product.
+ */
+double
+aa_tf_qdot( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] );
 
 /** Normalize Quaternion.
  * \f[ \bf{q} \leftarrow \frac{\bf q}{\Arrowvert {\bf q} \Arrowvert} \f]
@@ -1240,6 +1298,18 @@ AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dx[AA_
  */
 AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                               double dt, double d1[AA_RESTRICT 6] ) ;
+
+
+AA_API void aa_tf_tfmat_look( const double position[AA_RESTRICT 3],
+                              const double target[AA_RESTRICT 3],
+                              const double up[AA_RESTRICT 3],
+                              double T[AA_RESTRICT 12] );
+
+AA_API void aa_tf_qutr_look( const double position[AA_RESTRICT 3],
+                             const double target[AA_RESTRICT 3],
+                             const double up[AA_RESTRICT 3],
+                             double T[AA_RESTRICT 12] );
+
 
 
 /* Misc */
