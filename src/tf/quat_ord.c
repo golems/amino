@@ -294,16 +294,21 @@ aa_tf_qmul_qv( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 2], dou
 
 
 AA_API void
+aa_tf_qrot1( const double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] )
+
+{
+    double a[3];
+    aa_tf_qmul_qv_v(q,v,a);
+    FOR_VEC(i) a[i] *= 2;
+    aa_tf_cross_a( q+AA_TF_QUAT_V, a, v);
+}
+
+AA_API void
 aa_tf_qrot( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
             double r[AA_RESTRICT 3] )
 {
-    double a[3];
-
-    aa_tf_qmul_qv_v(q,v,a);
-    FOR_VEC(i) a[i] *= 2;
-
     FOR_VEC(i) r[i] = v[i];
-    aa_tf_cross_a( q+AA_TF_QUAT_V, a, r);
+    aa_tf_qrot1(q,r);
 }
 
 AA_API void

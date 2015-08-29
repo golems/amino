@@ -78,6 +78,12 @@ aa_gl_tfmat2glmat( const double T[AA_RESTRICT 12],
                    GLfloat M[AA_RESTRICT 16] );
 
 
+AA_API void
+aa_gl_mat_perspective( double fovy,
+                       double aspect,
+                       double znear, double zfar,
+                       GLfloat M[16] );
+
 /**
  * Compile a shader from a text string.
  */
@@ -114,7 +120,9 @@ struct aa_sg_gl_buffers;
  * Draw a transform frame frame
  */
 AA_API void aa_gl_draw_tf (
-    const double *E,
+    const GLfloat *perspective,
+    const double *world_E_camera,
+    const double *world_E_model,
     const struct aa_gl_buffers *buffers);
 
 

@@ -86,6 +86,23 @@ aa_gl_tfmat2glmat( const double T[AA_RESTRICT 12],
     M[3*4 + 3] = 1;
 }
 
+AA_API void
+aa_gl_mat_perspective( double fovy,
+                       double aspect,
+                       double znear, double zfar,
+                       GLfloat M[16] )
+{
+    AA_MEM_SET(M,0,16);
+    double t = tan(fovy/2);
+    AA_MATREF(M,4,0,0) = (GLfloat)(1.0 / (aspect*t));
+    AA_MATREF(M,4,1,1) = (GLfloat)(1.0/t);
+    AA_MATREF(M,4,2,2) = (GLfloat)(- (zfar+znear) / (zfar-znear));
+    AA_MATREF(M,4,3,2) = (GLfloat)(- 1);
+    AA_MATREF(M,4,2,3) = (GLfloat)(- (2*zfar*znear) / (zfar-znear));
+
+}
+
+
 AA_API GLuint aa_gl_create_shader(
     GLenum shader_type, const char* source)
 {
@@ -112,10 +129,12 @@ static const char aa_gl_vertex_shader[] =
     "#version 130\n"
     "in vec4 position;"
     "in vec4 color;"
-    "uniform mat4 matrix;"
+    "uniform mat4 matrix_model;"   // parent: world, child: model
+    "uniform mat4 matrix_camera;"  // parent: camera, child world
+    "uniform mat4 matrix_perspective;"
     "smooth out vec4 vColor;"
     "void main() {"
-    "  gl_Position = matrix * position;"
+    "  gl_Position = matrix_perspective * matrix_camera * matrix_model * position;"
     "  vColor = color;"
     "}";
 
@@ -132,7 +151,9 @@ static int aa_gl_do_init = 1;
 static GLuint aa_gl_id_program;
 static GLuint aa_gl_id_position;
 static GLuint aa_gl_id_color;
-static GLint aa_gl_id_matrix;
+static GLint aa_gl_id_matrix_model;
+static GLint aa_gl_id_matrix_camera;
+static GLint aa_gl_id_matrix_perspective;
 
 AA_API void aa_gl_init()
 {
@@ -146,7 +167,9 @@ AA_API void aa_gl_init()
 
     aa_gl_id_position = glGetAttribLocation(aa_gl_id_program, "position");
     aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
-    aa_gl_id_matrix = glGetUniformLocation(aa_gl_id_program, "matrix");
+    aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
+    aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
+    aa_gl_id_matrix_perspective = glGetUniformLocation(aa_gl_id_program, "matrix_perspective");
 
     aa_gl_do_init = 0;
 }
@@ -159,7 +182,9 @@ static void check_error( const char *name ){
 }
 
 AA_API void aa_gl_draw_tf (
-    const double *E,
+    const GLfloat *perspective,
+    const double *world_E_camera,
+    const double *world_E_model,
     const struct aa_gl_buffers *buffers )
 {
     AA_GL_INIT;
@@ -188,11 +213,22 @@ AA_API void aa_gl_draw_tf (
     glVertexAttribPointer(aa_gl_id_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
     check_error("glVerteAttribPointer");
 
-    GLfloat M[16];
-    aa_gl_qutr2glmat( E, M);
+    GLfloat M_model[16];
+    aa_gl_qutr2glmat( world_E_model, M_model);
 
-    glUniformMatrix4fv(aa_gl_id_matrix, 1, GL_FALSE, M);
-    check_error("uniform mat");
+    glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
+    check_error("uniform mat model");
+
+    GLfloat M_camera[16];
+    double world_T_camera[12], camera_T_world[12];
+    aa_tf_qutr2tfmat(world_E_camera,world_T_camera);
+    aa_tf_tfmat_inv2(world_T_camera, camera_T_world);
+    aa_gl_tfmat2glmat( camera_T_world, M_camera );
+    glUniformMatrix4fv(aa_gl_id_matrix_camera, 1, GL_FALSE, M_camera);
+    check_error("uniform mat camera");
+
+    glUniformMatrix4fv(aa_gl_id_matrix_perspective, 1, GL_FALSE, perspective);
+    check_error("uniform mat perspective");
 
     if( buffers->has_indices ) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers->indices);
@@ -298,8 +334,8 @@ AA_API void aa_geom_gl_buffers_init_box (
         j+=6;
     }
 
-    for( int i = 0; i < sizeof(colors)/(4*sizeof(*colors)); i ++ ) {
-        for( int j = 0; j < 4; j ++ ) {
+    for( size_t i = 0; i < sizeof(colors)/(4*sizeof(*colors)); i ++ ) {
+        for( size_t j = 0; j < 4; j ++ ) {
             colors[4*i + j ] = (GLfloat)geom->base.opt.color[j];
         }
     }

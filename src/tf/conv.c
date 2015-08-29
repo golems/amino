@@ -280,20 +280,67 @@ aa_tf_tfmat2qutr( const double T[AA_RESTRICT 12], double E[AA_RESTRICT 7] )
     aa_tf_tfmat2qv( T, E+AA_TF_QUTR_Q, E+AA_TF_QUTR_V );
 }
 
-static double vdot (const double u[3],
-                    const double v[3] )
+
+AA_API void
+aa_tf_rotmat_mzlook( const double eye[AA_RESTRICT 3],
+                     const double target[AA_RESTRICT 3],
+                     const double up[AA_RESTRICT 3],
+                     double R[AA_RESTRICT 9] )
 {
-    return u[0]*v[0] + u[1]*v[1] + u[2]*v[2];
+    double *x = R, *y = R+3, *z = R+6;
+    /* Find the -z vector in parent coords */
+    FOR_VEC(i) z[i] = -target[i] + eye[i]; /* z is negated */
+    /* Find the x vector */
+    AA_TF_CROSS(up,z,x);
+    /* Find the y vector */
+    AA_TF_CROSS(z,x,y);
+
+    aa_tf_vnormalize(x);
+    aa_tf_vnormalize(y);
+    aa_tf_vnormalize(z);
 }
 
-/* static double vnorm(double v[3] ) */
-/* { */
 
-/*     return sqrt( vdot(v,v) ); */
-/* } */
+AA_API void
+aa_tf_tfmat_mzlook( const double eye[AA_RESTRICT 3],
+                    const double target[AA_RESTRICT 3],
+                    const double up[AA_RESTRICT 3],
+                    double T[AA_RESTRICT 12] )
+{
+    aa_tf_rotmat_mzlook(eye, target, up, T+AA_TF_TFMAT_R);
+    AA_MEM_CPY(T+AA_TF_TFMAT_V, eye, 3 );
+}
 
-/* static void vnormalize (double v[3] ) */
-/* { */
-/*     double n = vnorm(v); */
-/*     for( size_t i = 0; i < 3; i ++ ) v[i] /= n; */
-/* } */
+AA_API void
+aa_tf_qmzlook( const double eye[AA_RESTRICT 3],
+               const double target[AA_RESTRICT 3],
+               const double up[AA_RESTRICT 3],
+               double q[AA_RESTRICT 4] )
+{
+    double R[9];
+    aa_tf_rotmat_mzlook(eye, target, up, R);
+    aa_tf_rotmat2quat(R, q);
+
+}
+
+AA_API void
+aa_tf_qv_mzlook( const double eye[AA_RESTRICT 3],
+                 const double target[AA_RESTRICT 3],
+                 const double up[AA_RESTRICT 3],
+                 double q[AA_RESTRICT 4],
+                 double v[AA_RESTRICT 3] )
+{
+    aa_tf_qmzlook(eye, target, up, q);
+    AA_MEM_CPY(v, eye, 3);
+}
+
+AA_API void
+aa_tf_qutr_mzlook( const double eye[AA_RESTRICT 3],
+                   const double target[AA_RESTRICT 3],
+                   const double up[AA_RESTRICT 3],
+                   double E[AA_RESTRICT 12] )
+{
+
+    aa_tf_qv_mzlook( eye, target, up,
+                     E+AA_TF_QUTR_Q, E+AA_TF_QUTR_T );
+}

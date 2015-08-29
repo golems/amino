@@ -286,9 +286,11 @@ int aa_tf_isrotmat( const double R[restrict 9] ) {
     double Rt[9], Ri[9], d;
     aa_la_transpose2( 3, 3, R, Rt );
     //aa_la_inverse3x3( R, Ri );
-    AA_MEM_CPY(Ri, R, 9); aa_la_inv( 3, Ri );
+    AA_MEM_CPY(Ri, R, 9);
+    aa_la_inv( 3, Ri );
     d = aa_la_det3x3( R );
-    return aa_veq( 9, Rt, Ri, .0001 ) && aa_feq( d, 1, .0001 );
+    return aa_veq( 9, Rt, Ri, .0001 ) &&
+        aa_feq( d, 1, .0001 );
 }
 
 

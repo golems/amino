@@ -47,13 +47,12 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 700;
+const int SCREEN_HEIGHT = 700;
 
 #include <SDL.h>
 
 
-struct aa_gl_buffers buffers;
 struct aa_rx_geom_box geom;
 
 
@@ -62,12 +61,12 @@ void Init(void)
     geom.base.opt.color[0] = 1;
     geom.base.opt.color[1] = 0;
     geom.base.opt.color[2] = 0;
-    geom.base.opt.color[3] = 0.2;
+    geom.base.opt.color[3] = 1;
     geom.base.type = AA_RX_BOX;
     geom.base.gl_buffers = NULL;
-    geom.shape.dimension[0] = 0.5;
-    geom.shape.dimension[1] = 0.5;
-    geom.shape.dimension[2] = 0.5;
+    geom.shape.dimension[0] = 0.1;
+    geom.shape.dimension[1] = 0.1;
+    geom.shape.dimension[2] = 0.1;
 
     aa_geom_gl_buffers_init( &geom.base );
 
@@ -88,12 +87,35 @@ void display(void)
     glClear(GL_COLOR_BUFFER_BIT);
     check_error("glClear");
 
-    double E[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-    //aa_tf_zangle2quat(M_PI/2, E );
-    buffers.count = 3;
-    buffers.has_indices = 1;
+    double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+    double world_E_camera[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+
+    world_E_model[AA_TF_QUTR_TZ] = -1;
+
+    //world_E_camera[AA_TF_QUTR_TZ] = 1.5;
+    //world_E_camera[AA_TF_QUTR_TX] = .5;
+    //world_E_camera[AA_TF_QUTR_TY] = .5;
+
+    aa_tf_yangle2quat(0 * M_PI / 180 , world_E_model );
+    aa_tf_yangle2quat(15 * M_PI / 180 , world_E_camera );
+
+    //aa_tf_yangle2quat(M_PI/4, world_E_model );
+
+    /* { */
+    /*     double eye[3] = {0,0,2}; */
+    /*     double target[3] = {0,0,0}; */
+    /*     double up[3] = {0,1,0}; */
+    /*     aa_tf_qutr_mzlook(eye, target, up, world_E_camera ); */
+    /*     } */
     //aa_gl_draw_tf( E, &buffers );
-    aa_gl_draw_tf( E, geom.base.gl_buffers );
+    GLfloat P[16] = {0};
+    for( size_t i = 0; i < 4; i ++ ) {
+        P[i*4 + i] = 1;
+    }
+    aa_gl_mat_perspective(M_PI_2, ((double)SCREEN_WIDTH)/SCREEN_HEIGHT,
+                          0.1, 100,
+                          P );
+    aa_gl_draw_tf( P, world_E_camera, world_E_model, geom.base.gl_buffers );
 
 
 }
@@ -146,7 +168,7 @@ int main(int argc, char *argv[])
     SDL_GL_SwapWindow(window );
     SDL_UpdateWindowSurface( window );
 
-    SDL_Delay( 2000 );
+    SDL_Delay( 1000 );
 
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );

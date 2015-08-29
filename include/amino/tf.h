@@ -798,6 +798,12 @@ AA_API void aa_tf_qmulc( const double a[AA_RESTRICT 4],
                          double c[AA_RESTRICT 4] );
 
 
+/**
+ * Quaternion point rotation, in place.
+ */
+AA_API void
+aa_tf_qrot1( const double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] );
+
 /** Quaternion point rotation. */
 AA_API void aa_tf_qrot( const double q[AA_RESTRICT 4],
                         const double v[AA_RESTRICT 3],
@@ -1019,6 +1025,13 @@ void aa_tf_duqu2qutr( const double s[8], double e[7] );
 /// quaternion-translation multiply
 void aa_tf_qutr_mul( const double a[7], const double b[7], double c[7] ) ;
 
+/**
+ * Transform a point,
+ */
+AA_API void
+aa_tf_qutr_tf( const double E[AA_RESTRICT 7], const double p0[AA_RESTRICT 3],
+               double p1[AA_RESTRICT 3] );
+
 /// quaternion-translation multiply and normalize
 void aa_tf_qutr_mulnorm( const double a[7], const double b[7], double c[7] ) ;
 
@@ -1177,6 +1190,54 @@ AA_API void aa_tf_yangle2rotmat( double theta_y, double R[AA_RESTRICT 9] );
 /** Angle about z axis */
 AA_API void aa_tf_zangle2rotmat( double theta_z, double R[AA_RESTRICT 9] );
 
+/**
+ * Find the camera frame, looking in negative z direction.
+ *
+ *
+ */
+AA_API void
+aa_tf_rotmat_mzlook( const double eye[AA_RESTRICT 3],
+                     const double target[AA_RESTRICT 3],
+                     const double up[AA_RESTRICT 3],
+                     double R[AA_RESTRICT 9] );
+
+
+/**
+ * Find the camera frame, looking in negative z direction
+ */
+AA_API void
+aa_tf_tfmat_mzlook( const double eye[AA_RESTRICT 3],
+                    const double target[AA_RESTRICT 3],
+                    const double up[AA_RESTRICT 3],
+                    double T[AA_RESTRICT 12] );
+
+/**
+ * Find the camera frame, looking in negative z direction
+ */
+AA_API void
+aa_tf_qmzlook( const double eye[AA_RESTRICT 3],
+               const double target[AA_RESTRICT 3],
+               const double up[AA_RESTRICT 3],
+               double q[AA_RESTRICT 4] );
+
+/**
+ * Find the camera frame, looking in negative z direction
+ */
+AA_API void
+aa_tf_qv_mzlook( const double eye[AA_RESTRICT 3],
+                 const double target[AA_RESTRICT 3],
+                 const double up[AA_RESTRICT 3],
+                 double q[AA_RESTRICT 4],
+                 double v[AA_RESTRICT 3] );
+
+/**
+ * Find the camera frame, looking in  negative z direction
+ */
+AA_API void
+aa_tf_qutr_mzlook( const double eye[AA_RESTRICT 3],
+                   const double target[AA_RESTRICT 3],
+                   const double up[AA_RESTRICT 3],
+                   double T[AA_RESTRICT 12] );
 
 
 /* Dual Quaternions */
@@ -1321,16 +1382,6 @@ AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dx[AA_
 AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                               double dt, double d1[AA_RESTRICT 6] ) ;
 
-
-AA_API void aa_tf_tfmat_look( const double position[AA_RESTRICT 3],
-                              const double target[AA_RESTRICT 3],
-                              const double up[AA_RESTRICT 3],
-                              double T[AA_RESTRICT 12] );
-
-AA_API void aa_tf_qutr_look( const double position[AA_RESTRICT 3],
-                             const double target[AA_RESTRICT 3],
-                             const double up[AA_RESTRICT 3],
-                             double T[AA_RESTRICT 12] );
 
 
 

@@ -796,6 +796,39 @@ static void tfmat_inv(const double T[12]) {
     aveq( "aa_tf_tfmat_inv2", 12, Tr, aa_tf_tfmat_ident, 1e-6 );
 }
 
+static void mzlook( const double eye[3],
+                    const double target[3],
+                    const double up[3] )
+{
+
+    {
+        double R[9] = {0};
+        aa_tf_rotmat_mzlook(eye,target,up,R);
+        assert( aa_tf_isrotmat(R) );
+    }
+
+    double g_E_cam[7];
+    double cam_E_g[7];
+    aa_tf_qutr_mzlook(eye,target,up,g_E_cam);
+    aa_tf_qutr_conj(g_E_cam, cam_E_g);
+    {
+        double x[3];
+        aa_tf_qutr_tf(g_E_cam, aa_tf_vec_ident, x);
+        aveq("mzlook eye 0", 3, eye, x, 1e-6 );
+        aa_tf_qutr_tf(cam_E_g, eye, x);
+        aveq("mzlook eye 1", 3, aa_tf_vec_ident, x, 1e-6 );
+    }
+    {
+        double ell[3];
+        for(size_t i=0; i<3; i++) ell[i] = -(target[i] - eye[i]);
+        aa_tf_vnormalize(ell);
+        double z[3];
+        aa_tf_qrot(cam_E_g, ell, z);
+        aveq("mzlook rot", 3, z, aa_tf_vec_z, 1e-6 );
+    }
+
+}
+
 static void integrate(const double *E, const double *S, const double *T, const double *dx) {
     const double *q = E+AA_TF_QUTR_Q;
     /* const double *v = E+AA_TF_QUTR_V; */
@@ -956,7 +989,9 @@ static void qdiff(double E[2][7], double dx[2][6] )
 
 int main( void ) {
     // init
-    srand((unsigned int)time(NULL)); // might break in 2038
+    time_t seed = time(NULL);
+    printf("seed: %ld\n", seed);
+    srand((unsigned int)seed); // might break in 2038
     aa_test_ulimit();
 
     for( size_t i = 0; i < 1000; i++ ) {
@@ -983,6 +1018,7 @@ int main( void ) {
         rotmat(E[0]);
         tfmat();
         tfmat_inv(T[0]);
+        mzlook(dx[0]+0, dx[0]+3, dx[1]+0);
         integrate(E[0], S[0], T[0], dx[0]);
         tf_conj(E, S);
         qdiff(E,dx);
