@@ -66,10 +66,12 @@ static void scroll( double x, double y,
     /* aa_tf_yangle2quat( y, q1 ); */
 }
 
-int aa_sdl_scroll( struct aa_gl_globals * globals )
+void aa_sdl_scroll( struct aa_gl_globals * globals,
+                    int *update, int *quit )
 {
     SDL_Event e;
-    int quit = 0;
+    *quit = 0;
+    *update = 0;
     while( SDL_PollEvent( &e ) != 0 ) {
         const Uint8 *state = SDL_GetKeyboardState(NULL);
         int shift =  state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT];
@@ -86,7 +88,7 @@ int aa_sdl_scroll( struct aa_gl_globals * globals )
         //User requests quit
         switch (e.type) {
         case SDL_QUIT:
-            quit = 1;
+            *quit = 1;
             break;
         case SDL_KEYDOWN: {
             //aa_dump_mat(stdout, R_cam, 3, 3);
@@ -127,7 +129,6 @@ int aa_sdl_scroll( struct aa_gl_globals * globals )
                 update_tf = 1;
                 break;
             default:
-                printf("other key\n");
                 break;
             }
             break;
@@ -184,11 +185,11 @@ int aa_sdl_scroll( struct aa_gl_globals * globals )
             aa_gl_globals_set_camera( globals, Etmp[1] );
             //printf("camera: " );
             //aa_dump_vec( stdout, world_E_camera, 7 );
+            *update = 1;
         }
     }
 
     //SDL_UpdateWindowSurface( window );
     //SDL_UpdateWindowSurface( window );
-    return quit;
 
 }

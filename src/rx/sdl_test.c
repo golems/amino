@@ -191,10 +191,21 @@ int main(int argc, char *argv[])
     double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
 
 
-    int quit;
-    while( !(quit = aa_sdl_scroll(globals) ) ) {
-        display( globals, world_E_model );
-        SDL_GL_SwapWindow(window);
+    int quit,update=1;
+    struct timespec delta = aa_tm_sec2timespec( 1.0 / 120 );
+
+    for(;;) {
+        //printf("update: %d\n", update );
+        if( update ) {
+            display( globals, world_E_model );
+            SDL_GL_SwapWindow(window);
+        } else {
+            struct timespec now = aa_tm_add( now, delta );
+            /* Required for mouse wheel to work? */
+            clock_nanosleep( AA_CLOCK, 0, &delta, NULL );
+        }
+        aa_sdl_scroll(globals, &update, &quit);
+        if( quit ) break;
     }
 
     SDL_Delay( 1000 );

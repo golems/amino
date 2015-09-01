@@ -235,8 +235,8 @@ AA_API void aa_gl_init()
     aa_gl_id_light_power = glGetUniformLocation(aa_gl_id_program, "light_power");
     aa_gl_id_specular = glGetUniformLocation(aa_gl_id_program, "specular");
 
-    printf("ids: %d\n",
-           aa_gl_id_specular );
+    /* printf("ids: %d\n", */
+    /*        aa_gl_id_specular ); */
 
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
