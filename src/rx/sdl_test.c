@@ -263,6 +263,12 @@ int main(int argc, char *argv[])
                     mouse[0] = e.motion.x;
                     mouse[1] = e.motion.y;
                     update_tf = 1;
+                } else if( SDL_BUTTON(e.motion.state) & SDL_BUTTON_MIDDLE ) {
+                    cam_E_camp[AA_TF_QUTR_TX] = -.1*scroll_ratio*(e.motion.x-mouse[0]),
+                    cam_E_camp[AA_TF_QUTR_TY] = .1*scroll_ratio*(e.motion.y-mouse[1]),
+                    mouse[0] = e.motion.x;
+                    mouse[1] = e.motion.y;
+                    update_tf = 1;
                 }
 
                 break;
