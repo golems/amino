@@ -47,8 +47,8 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
 
-const int SCREEN_WIDTH = 700;
-const int SCREEN_HEIGHT = 700;
+const int SCREEN_WIDTH = 1000;
+const int SCREEN_HEIGHT = 1000;
 
 #include <SDL.h>
 
@@ -118,6 +118,22 @@ void display(const double world_E_camera[7] )
 
 }
 
+void scroll( double x, double y,
+             double *R_cam,
+             double *E_pre, double *E_post )
+{
+    AA_MEM_CPY(E_pre, aa_tf_qutr_ident, 7);
+    AA_MEM_CPY(E_post, aa_tf_qutr_ident, 7);
+
+    double q1[4], q2[4];
+    aa_tf_axang2quat2( R_cam, x, q2 );
+    aa_tf_axang2quat2( R_cam+3, y, q1 );
+    aa_tf_qmul(q2,q1, E_pre);
+    /* aa_dump_mat(stdout, R_cam, 3, 3); */
+    /* aa_tf_xangle2quat(  x, q2 ); */
+    /* aa_tf_yangle2quat( y, q1 ); */
+}
+
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
@@ -164,6 +180,7 @@ int main(int argc, char *argv[])
     double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
     double scroll_ratio = .05;
     double angle_ratio = .05;
+    int mouse[2];
 
     int quit = 0;
     while( !quit ) {
@@ -188,6 +205,7 @@ int main(int argc, char *argv[])
                 quit = 1;
                 break;
             case SDL_KEYDOWN: {
+                aa_dump_mat(stdout, R_cam, 3, 3);
                 double sign = 1;
                 switch( e.key.keysym.sym ) {
 
@@ -196,7 +214,8 @@ int main(int argc, char *argv[])
                     if( ctrl ) {
                         cam_E_camp[AA_TF_QUTR_TY] += sign*scroll_ratio;
                     } else {
-                        aa_tf_axang2quat2( R_cam, sign*angle_ratio, world_E_cam0 );
+                        scroll( sign*angle_ratio, 0,
+                                R_cam, world_E_cam0, cam_E_camp );
                     }
                     update_tf = 1;
                     break;
@@ -205,7 +224,8 @@ int main(int argc, char *argv[])
                     if( ctrl ) {
                         cam_E_camp[AA_TF_QUTR_TX] += sign*scroll_ratio;
                     } else {
-                        aa_tf_axang2quat2( R_cam+3, sign*angle_ratio, world_E_cam0 );
+                        scroll( 0, sign*angle_ratio,
+                                R_cam, world_E_cam0, cam_E_camp );
                     }
                     update_tf = 1;
                     break;
@@ -226,14 +246,29 @@ int main(int argc, char *argv[])
                 break;
             }
             case SDL_MOUSEBUTTONDOWN:
+                SDL_GetMouseState(&mouse[0], &mouse[1]);
                 break;
+            case SDL_MOUSEMOTION: {
+                if( SDL_BUTTON(e.motion.state) & SDL_BUTTON_LEFT ) {
+                    scroll( .05*angle_ratio*(e.motion.y-mouse[1]),
+                            .05*angle_ratio*(e.motion.x-mouse[0]),
+                            R_cam, world_E_cam0, cam_E_camp );
+                    mouse[0] = e.motion.x;
+                    mouse[1] = e.motion.y;
+                    update_tf = 1;
+                }
+
+                break;
+            }
             case SDL_MOUSEWHEEL: {
                     if( ctrl && shift ) {
                         aa_tf_zangle2quat( angle_ratio * e.wheel.y, cam_E_camp );
                     } else if( alt && shift ) {
-                        aa_tf_axang2quat2( R_cam, angle_ratio*e.wheel.y, world_E_cam0 );
+                        scroll( angle_ratio*e.wheel.y, 0,
+                                R_cam, world_E_cam0, cam_E_camp );
                     } else if( alt && ctrl ) {
-                        aa_tf_axang2quat2( R_cam+3, angle_ratio*e.wheel.y, world_E_cam0 );
+                        scroll( 0, angle_ratio*e.wheel.y,
+                                R_cam, world_E_cam0, cam_E_camp );
                     } else if( ctrl ) {
                         cam_E_camp[AA_TF_QUTR_TX] = scroll_ratio * e.wheel.y;
                     } else if( shift ) {
