@@ -47,6 +47,18 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
 
+
+struct aa_gl_globals {
+    double *world_E_cam;
+    GLfloat cam_E_world[16];
+    GLfloat perspective[16];
+    GLfloat world_v_light[3];
+    GLfloat light_color[3];
+    GLfloat light_power;
+    GLfloat ambient[3];
+};
+
+
 #define CHECK_GL_STATUS(TYPE,handle,pname) {                            \
         GLint status;                                                   \
         glGet ## TYPE ## iv(handle, pname, &status);                    \
@@ -164,13 +176,13 @@ static const char aa_gl_fragment_shader[] =
     "in vec3 normal_camera;"
     "in vec3 eye_camera;"
     "in vec3 light_dir_camera;"
+    "uniform vec3 ambient;"
+    "uniform vec3 light_color;"
+    "uniform float light_power;"
     ""
     "void main() {"
     ""
-    "  vec3 light_color = vec3(1,1,1);"
-    "  float light_power = 50;"
     ""
-    "  vec3 ambient = vec3(.1,.1,.1);"
     //"  vec3 specular = vec3(.3,.3,.3);"
     "  vec3 diffuse = vColor.xyz;"
     ""
@@ -207,6 +219,9 @@ static GLint aa_gl_id_matrix_model;
 static GLint aa_gl_id_matrix_camera;
 static GLint aa_gl_id_matrix_perspective;
 static GLint aa_gl_id_light_position;
+static GLint aa_gl_id_ambient;
+static GLint aa_gl_id_light_color;
+static GLint aa_gl_id_light_power;
 
 AA_API void aa_gl_init()
 {
@@ -225,6 +240,9 @@ AA_API void aa_gl_init()
     aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
 
     aa_gl_id_light_position = glGetUniformLocation(aa_gl_id_program, "light_world");
+    aa_gl_id_ambient = glGetUniformLocation(aa_gl_id_program, "ambient");
+    aa_gl_id_light_color = glGetUniformLocation(aa_gl_id_program, "light_color");
+    aa_gl_id_light_power = glGetUniformLocation(aa_gl_id_program, "light_power");
 
     printf("ids: %d %d %d %d\n",
            aa_gl_id_position,
@@ -249,10 +267,8 @@ static void check_error( const char *name ){
 }
 
 AA_API void aa_gl_draw_tf (
-    const GLfloat *perspective,
-    const double *world_E_camera,
+    const struct aa_gl_globals *globals,
     const double *world_E_model,
-    const double *v_light,
     const struct aa_gl_buffers *buffers )
 {
     AA_GL_INIT;
@@ -296,13 +312,21 @@ AA_API void aa_gl_draw_tf (
     }
 
     // Light position
-    GLfloat LP[3] =  {(GLfloat)v_light[0], (GLfloat)v_light[1], (GLfloat)v_light[2]};
     //glUniform3f(aa_gl_id_light_position,
                 //(GLfloat)v_light[0], (GLfloat)v_light[1], (GLfloat)v_light[2] );
     //aa_dump_mat( stdout, v_light, 1, 3 );
 
-    glUniform3fv(aa_gl_id_light_position, 1, LP);
+    glUniform3fv(aa_gl_id_light_position, 1, globals->world_v_light);
     check_error("unform light position");
+
+    glUniform3fv(aa_gl_id_ambient, 1, globals->ambient);
+    check_error("unform ambient");
+
+    glUniform3fv(aa_gl_id_light_color, 1, globals->light_color);
+    check_error("unform light color");
+
+    glUniform1f(aa_gl_id_light_power, globals->light_power);
+    check_error("unform light power");
 
     // matrices
     GLfloat M_model[16];
@@ -311,15 +335,12 @@ AA_API void aa_gl_draw_tf (
     glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
     check_error("uniform mat model");
 
-    GLfloat M_camera[16];
-    double world_T_camera[12], camera_T_world[12];
-    aa_tf_qutr2tfmat(world_E_camera,world_T_camera);
-    aa_tf_tfmat_inv2(world_T_camera, camera_T_world);
-    aa_gl_tfmat2glmat( camera_T_world, M_camera );
-    glUniformMatrix4fv(aa_gl_id_matrix_camera, 1, GL_FALSE, M_camera);
+    glUniformMatrix4fv(aa_gl_id_matrix_camera, 1, GL_FALSE, globals->cam_E_world);
     check_error("uniform mat camera");
 
-    glUniformMatrix4fv(aa_gl_id_matrix_perspective, 1, GL_FALSE, perspective);
+    // perspective matrix
+
+    glUniformMatrix4fv(aa_gl_id_matrix_perspective, 1, GL_FALSE, globals->perspective);
     check_error("uniform mat perspective");
 
     if( buffers->has_indices ) {
@@ -569,5 +590,104 @@ AA_API void aa_geom_gl_buffers_init (
         aa_geom_gl_buffers_init_box((struct aa_rx_geom_box*)geom);
         break;
     default: abort();
+    }
+}
+
+struct aa_gl_globals *
+aa_gl_globals_create()
+{
+    struct aa_gl_globals *G = AA_NEW0(struct aa_gl_globals);
+
+    aa_gl_globals_set_camera( G, aa_tf_qutr_ident );
+
+    double light_position[3] = {0,0,1};
+    aa_gl_globals_set_light_position( G, light_position );
+
+    aa_gl_globals_set_perspective( G,
+                                   M_PI_2, 16.0 / 9.0 ,
+                                   .1, 100 );
+
+    double light_color[3] = {1,1,1};
+    aa_gl_globals_set_light_color( G, light_color );
+
+    double ambient[3] = {0.5,0.5,0.5};
+    aa_gl_globals_set_ambient( G, ambient );
+
+    aa_gl_globals_set_light_power( G, 50 );
+
+
+    return G;
+}
+
+void
+aa_gl_globals_destroy( struct aa_gl_globals *globals )
+{
+    free(globals);
+}
+
+void
+aa_gl_globals_set_camera(
+    struct aa_gl_globals *globals,
+    const double world_E_camera[7])
+{
+    double world_T_camera[12], camera_T_world[12];
+    aa_tf_qutr2tfmat(world_E_camera,world_T_camera);
+    aa_tf_tfmat_inv2(world_T_camera, camera_T_world);
+    aa_gl_tfmat2glmat( camera_T_world, globals->cam_E_world );
+}
+
+void
+aa_gl_globals_set_light_position(
+    struct aa_gl_globals *globals,
+    const double world_v_light[3])
+{
+    for( size_t i = 0; i < 3; i ++ ) {
+        globals->world_v_light[i] = (GLfloat)world_v_light[i];
+    }
+}
+
+void
+aa_gl_globals_set_perspective(
+    struct aa_gl_globals *globals,
+    double fovy,
+    double aspect,
+    double znear,
+    double zfar )
+{
+    for( size_t i = 0; i < 4; i ++ ) {
+        globals->perspective[i*4 + i] = 1;
+    }
+
+    aa_gl_mat_perspective(fovy, aspect,
+                          znear, zfar,
+                          globals->perspective);
+}
+
+void
+aa_gl_globals_set_light_color(
+    struct aa_gl_globals *globals,
+    double color[3] )
+{
+    for( size_t i = 0; i < 3; i ++ ) {
+        globals->light_color[i] = (GLfloat)color[i];
+    }
+}
+
+void
+aa_gl_globals_set_light_power(
+    struct aa_gl_globals *globals,
+    double power )
+{
+    globals->light_power = (GLfloat)power;
+}
+
+void
+aa_gl_globals_set_ambient(
+    struct aa_gl_globals *globals,
+    double ambient[3] )
+{
+
+    for( size_t i = 0; i < 3; i ++ ) {
+        globals->ambient[i] = (GLfloat)ambient[i];
     }
 }

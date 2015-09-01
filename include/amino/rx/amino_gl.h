@@ -116,16 +116,56 @@ struct aa_gl_buffers {
     unsigned has_normals : 1;
 };
 
+
+struct aa_gl_globals;
+
+struct aa_gl_globals *
+aa_gl_globals_create();
+
+void
+aa_gl_globals_destroy( struct aa_gl_globals *globals );
+
+void
+aa_gl_globals_set_camera(
+    struct aa_gl_globals *globals,
+    const double world_E_camera[7]);
+
+void
+aa_gl_globals_set_light_position(
+    struct aa_gl_globals *globals,
+    const double world_v_light[3]);
+
+void
+aa_gl_globals_set_perspective(
+    struct aa_gl_globals *globals,
+    double fovy,
+    double aspect,
+    double znear,
+    double zfar );
+
+void
+aa_gl_globals_set_light_color(
+    struct aa_gl_globals *globals,
+    double color[3] );
+
+void
+aa_gl_globals_set_light_power(
+    struct aa_gl_globals *globals,
+    double power );
+
+void
+aa_gl_globals_set_ambient(
+    struct aa_gl_globals *globals,
+    double ambient[3] );
+
 struct aa_sg_gl_buffers;
 
 /**
  * Draw a transform frame frame
  */
 AA_API void aa_gl_draw_tf (
-    const GLfloat *perspective,
-    const double *world_E_camera,
+    const struct aa_gl_globals *globals,
     const double *world_E_model,
-    const double *v_light,
     const struct aa_gl_buffers *buffers);
 
 

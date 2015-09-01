@@ -79,10 +79,10 @@ void check_error( const char *name ){
 }
 
 
-void display(const double world_E_camera[7],
+void display( const struct aa_gl_globals *globals,
              const double world_E_model[7] )
 {
-    double light_pos[3] = {0,1,5};
+
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
 
@@ -104,15 +104,15 @@ void display(const double world_E_camera[7],
     /*     aa_tf_qutr_mzlook(eye, target, up, world_E_camera ); */
     /*     } */
     //aa_gl_draw_tf( E, &buffers );
-    GLfloat P[16] = {0};
-    for( size_t i = 0; i < 4; i ++ ) {
-        P[i*4 + i] = 1;
-    }
-    aa_gl_mat_perspective(M_PI_2, ((double)SCREEN_WIDTH)/SCREEN_HEIGHT,
-                          0.1, 100,
-                          P );
-    aa_gl_draw_tf( P, world_E_camera, world_E_model,
-                   light_pos,
+    /* GLfloat P[16] = {0}; */
+    /* for( size_t i = 0; i < 4; i ++ ) { */
+    /*     P[i*4 + i] = 1; */
+    /* } */
+    /* aa_gl_mat_perspective(M_PI_2, ((double)SCREEN_WIDTH)/SCREEN_HEIGHT, */
+    /*                       0.1, 100, */
+    /*                       P ); */
+
+    aa_gl_draw_tf( globals, world_E_model,
                    geom.base.gl_buffers );
 
 
@@ -191,6 +191,19 @@ int main(int argc, char *argv[])
 
     double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
     world_E_model[AA_TF_QUTR_TZ] = .4;
+
+    struct aa_gl_globals *globals = aa_gl_globals_create();
+    double v_light[3] = {0,5,5};
+    double ambient[3] = {.1,.1,.1};
+    aa_gl_globals_set_light_position( globals, v_light );
+    aa_gl_globals_set_perspective( globals,
+                                   M_PI_2,
+                                   ((double)SCREEN_WIDTH)/SCREEN_HEIGHT,
+                                   .1,
+                                   100 );
+
+    aa_gl_globals_set_ambient(globals, ambient);
+
 
     int quit = 0;
     while( !quit ) {
@@ -313,7 +326,9 @@ int main(int argc, char *argv[])
 
         //SDL_UpdateWindowSurface( window );
         //SDL_UpdateWindowSurface( window );
-        display( world_E_camera, world_E_model );
+
+        aa_gl_globals_set_camera( globals, world_E_camera );
+        display( globals, world_E_model );
         SDL_GL_SwapWindow(window);
     }
 
