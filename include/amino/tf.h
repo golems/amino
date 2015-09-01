@@ -613,13 +613,25 @@ aa_tf_rotmat_zx( const double z_axis[AA_RESTRICT 3],
 /* Vectors */
 /***********/
 
+#define AA_TF_DOTX(a,b) \
+    ((a)[0]*(b)[0] + (a)[1]*(b)[1] + (a)[2]*(b)[2])
+
 /**
  * Inlined vector dot product
  */
 static inline double
 AA_TF_VDOT( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
 {
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    return AA_TF_DOTX(a,b);
+}
+
+/**
+ * Inlined vector dot product
+ */
+static inline float
+AA_TF_VDOTF( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3] )
+{
+    return AA_TF_DOTX(a,b);
 }
 
 
@@ -629,6 +641,17 @@ AA_TF_VDOT( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
 AA_API double
 aa_tf_vdot( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] );
 
+/**
+ * Vector dot product.
+ */
+AA_API float
+aa_tf_vdotf( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3] );
+
+#define AA_TF_CROSSX( a, b, c ) \
+    (c)[0] =  (a)[1]*(b)[2] - (a)[2]*(b)[1]; \
+    (c)[1] =  (a)[2]*(b)[0] - (a)[0]*(b)[2]; \
+    (c)[2] =  (a)[0]*(b)[1] - (a)[1]*(b)[0]; \
+
 
 /**
  * Inlined Vector cross product
@@ -636,10 +659,16 @@ aa_tf_vdot( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] );
 static inline void
 AA_TF_CROSS( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3], double c[AA_RESTRICT 3] )
 {
-    /* 6 mul, 3 add */
-    c[0] =  a[1]*b[2] - a[2]*b[1];
-    c[1] =  a[2]*b[0] - a[0]*b[2];
-    c[2] =  a[0]*b[1] - a[1]*b[0];
+    AA_TF_CROSSX(a,b,c);
+}
+
+/**
+ * Inlined Vector cross product
+ */
+static inline void
+AA_TF_CROSSF( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3], float c[AA_RESTRICT 3] )
+{
+    AA_TF_CROSSX(a,b,c);
 }
 
 /**
@@ -650,10 +679,21 @@ AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRI
 
 
 /**
+ * Vector cross product
+ */
+AA_API void aa_tf_crossf( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3],
+                          float c[AA_RESTRICT 3] ) ;
+
+/**
  * Normalize Vector.
  */
 AA_API void aa_tf_vnormalize( double v[AA_RESTRICT 3] );
 
+
+/**
+ * Normalize Vector.
+ */
+AA_API void aa_tf_vnormalizef( float v[AA_RESTRICT 3] );
 
 
 /***************/

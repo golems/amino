@@ -107,11 +107,13 @@ struct aa_gl_buffers {
     GLuint values;
     GLuint colors;
     GLuint indices;
+    GLuint normals;
     GLsizei count;
 
     unsigned has_indices : 1;
     unsigned has_colors : 1;
     unsigned has_values : 1;
+    unsigned has_normals : 1;
 };
 
 struct aa_sg_gl_buffers;
@@ -123,6 +125,7 @@ AA_API void aa_gl_draw_tf (
     const GLfloat *perspective,
     const double *world_E_camera,
     const double *world_E_model,
+    const double *v_light,
     const struct aa_gl_buffers *buffers);
 
 

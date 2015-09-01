@@ -79,23 +79,21 @@ void check_error( const char *name ){
 }
 
 
-void display(const double world_E_camera[7] )
+void display(const double world_E_camera[7],
+             const double world_E_model[7] )
 {
+    double light_pos[3] = {0,1,5};
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     check_error("glClear");
 
-    double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-
-    world_E_model[AA_TF_QUTR_TZ] = 0;;
 
     //world_E_camera[AA_TF_QUTR_TZ] = 1.5;
     //world_E_camera[AA_TF_QUTR_TX] = .5;
     //world_E_camera[AA_TF_QUTR_TY] = .5;
 
-    aa_tf_yangle2quat(0 * M_PI / 180 , world_E_model );
 
     //aa_tf_yangle2quat(M_PI/4, world_E_model );
 
@@ -113,7 +111,9 @@ void display(const double world_E_camera[7] )
     aa_gl_mat_perspective(M_PI_2, ((double)SCREEN_WIDTH)/SCREEN_HEIGHT,
                           0.1, 100,
                           P );
-    aa_gl_draw_tf( P, world_E_camera, world_E_model, geom.base.gl_buffers );
+    aa_gl_draw_tf( P, world_E_camera, world_E_model,
+                   light_pos,
+                   geom.base.gl_buffers );
 
 
 }
@@ -189,6 +189,9 @@ int main(int argc, char *argv[])
     double angle_ratio = .05;
     int mouse[2];
 
+    double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+    world_E_model[AA_TF_QUTR_TZ] = .4;
+
     int quit = 0;
     while( !quit ) {
         //Handle events on queue
@@ -215,6 +218,9 @@ int main(int argc, char *argv[])
                 aa_dump_mat(stdout, R_cam, 3, 3);
                 double sign = 1;
                 switch( e.key.keysym.sym ) {
+
+                case SDLK_UP: world_E_model[AA_TF_QUTR_TZ] += .1; break;
+                case SDLK_DOWN: world_E_model[AA_TF_QUTR_TZ] -= .1; break;
 
                 case SDLK_KP_2: sign = -1;
                 case SDLK_KP_8:
@@ -307,7 +313,7 @@ int main(int argc, char *argv[])
 
         //SDL_UpdateWindowSurface( window );
         //SDL_UpdateWindowSurface( window );
-        display( world_E_camera );
+        display( world_E_camera, world_E_model );
         SDL_GL_SwapWindow(window);
     }
 

@@ -72,6 +72,12 @@ aa_tf_vdot( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
     return AA_TF_VDOT(a,b);
 }
 
+AA_API float
+aa_tf_vdotf( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3] )
+{
+    return AA_TF_VDOTF(a,b);
+}
+
 AA_API double
 aa_tf_qnorm( const double q[AA_RESTRICT 4] )
 {
@@ -89,6 +95,13 @@ AA_API void
 aa_tf_vnormalize( double v[AA_RESTRICT 3] )
 {
     double n = sqrt( aa_tf_vdot(v,v) );
+    FOR_VEC(i) v[i] /= n;
+}
+
+AA_API void
+aa_tf_vnormalizef( float v[AA_RESTRICT 3] )
+{
+    float n = sqrtf( aa_tf_vdotf(v,v) );
     FOR_VEC(i) v[i] /= n;
 }
 

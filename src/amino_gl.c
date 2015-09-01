@@ -127,33 +127,86 @@ AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader)
 
 static const char aa_gl_vertex_shader[] =
     "#version 130\n"
+    ""
     "in vec4 position;"
     "in vec4 color;"
+    "in vec3 normal;"
+    ""
     "uniform mat4 matrix_model;"   // parent: world, child: model
     "uniform mat4 matrix_camera;"  // parent: camera, child world
     "uniform mat4 matrix_perspective;"
+    "uniform vec3 light_world;"
+    ""
     "smooth out vec4 vColor;"
+    "out vec4 position_world;"
+    "out vec4 position_camera;"
+    "out vec3 eye_camera;"
+    "out vec3 light_dir_camera;"
+    "out vec3 normal_camera;"
+    ""
     "void main() {"
-    "  gl_Position = matrix_perspective * matrix_camera * matrix_model * position;"
+    "  position_world = matrix_model * position;"
+    "  position_camera = matrix_camera * position_world;"
+    "  gl_Position = matrix_perspective * position_camera;"
+    "  eye_camera = vec3(0,0,0) - position_camera.xyz;" // vector from vertex to camera origin
+    "  vec3 light_pos_camera = (matrix_camera * vec4(light_world,1)).xyz;"
+    "  light_dir_camera = eye_camera + light_pos_camera;" // vector from light to vertex
+    "  normal_camera = (matrix_camera * matrix_model * vec4(normal,0)).xyz;"
+
     "  vColor = color;"
     "}";
 
 static const char aa_gl_fragment_shader[] =
     "#version 130\n"
-    "smooth in vec4 vColor;"
+    "smooth in vec4 vColor;" // diffuse
+    ""
+    "in vec4 position_world;"
+    "in vec3 normal_camera;"
+    "in vec3 eye_camera;"
+    "in vec3 light_dir_camera;"
+    ""
     "void main() {"
-    "  gl_FragColor = vColor;"
+    ""
+    "  vec3 light_color = vec3(1,1,1);"
+    "  float light_power = 50;"
+    ""
+    "  vec3 ambient = vec3(.1,.1,.1);"
+    //"  vec3 specular = vec3(.3,.3,.3);"
+    "  vec3 diffuse = vColor.xyz;"
+    ""
+    //"  float dist = length( light_world.xyz - position_world.xyz );"
+    "  float dist = length( light_dir_camera );"
+    "  vec3 n = normalize(normal_camera);"
+    "  vec3 l = normalize(light_dir_camera);"
+    "  float ct = clamp(dot(n,l), 0.1, 1);"
+    ""
+    /* "  vec3 E = normalize(eye_camera);" */
+    /* "  vec3 R = reflect(-l,n);" */
+    /* "  float ca = clamp(dot(E,R), 0.1, 1);" */
+    ""
+    ""
+    "  vec3 color ="
+    // Ambient : simulates indirect lighting
+    "    ambient * diffuse"
+    // Diffuse : "color" of the object
+    "    + diffuse * light_color * light_power * ct / (dist*dist)"
+    // Specular : reflective highlight, like a mirror
+    //"    + specular * light_color * light-power * pow(ca,5) / (dist*dist)"
+    "  ;"
+    "  gl_FragColor = vec4(color,vColor.w);"
     "}";
 
 static int aa_gl_do_init = 1;
 #define AA_GL_INIT if(aa_gl_do_init) aa_gl_init();
 
 static GLuint aa_gl_id_program;
-static GLuint aa_gl_id_position;
-static GLuint aa_gl_id_color;
+static GLint aa_gl_id_position;
+static GLint aa_gl_id_color;
+static GLint aa_gl_id_normal;
 static GLint aa_gl_id_matrix_model;
 static GLint aa_gl_id_matrix_camera;
 static GLint aa_gl_id_matrix_perspective;
+static GLint aa_gl_id_light_position;
 
 AA_API void aa_gl_init()
 {
@@ -171,10 +224,14 @@ AA_API void aa_gl_init()
     aa_gl_id_normal = glGetAttribLocation(aa_gl_id_program, "normal");
     aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
 
-    printf("ids: %d %d %d\n",
+    aa_gl_id_light_position = glGetUniformLocation(aa_gl_id_program, "light_world");
+
+    printf("ids: %d %d %d %d\n",
            aa_gl_id_position,
            aa_gl_id_color,
-           aa_gl_id_normal );
+           aa_gl_id_normal,
+           aa_gl_id_light_position
+        );
 
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
@@ -187,6 +244,7 @@ AA_API void aa_gl_init()
 static void check_error( const char *name ){
     for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
         fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
+        abort();
     }
 }
 
@@ -194,6 +252,7 @@ AA_API void aa_gl_draw_tf (
     const GLfloat *perspective,
     const double *world_E_camera,
     const double *world_E_model,
+    const double *v_light,
     const struct aa_gl_buffers *buffers )
 {
     AA_GL_INIT;
@@ -202,26 +261,50 @@ AA_API void aa_gl_draw_tf (
     glUseProgram(aa_gl_id_program);
     check_error("glUseProgram");
 
+    // positions
     glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
     check_error("glBindBuffer");
 
-    glEnableVertexAttribArray(aa_gl_id_position);
+    glEnableVertexAttribArray((GLuint)aa_gl_id_position);
     check_error("glEnableVert");
 
-    glVertexAttribPointer(aa_gl_id_position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer((GLuint)aa_gl_id_position, 3, GL_FLOAT, GL_FALSE, 0, 0);
     check_error("glVertAttribPointer");
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // colors
     glBindBuffer(GL_ARRAY_BUFFER, buffers->colors);
     check_error("glBindBuffer");
 
-    glEnableVertexAttribArray(aa_gl_id_color);
+    glEnableVertexAttribArray((GLuint)aa_gl_id_color);
     check_error("glEnabeVert");
 
-    glVertexAttribPointer(aa_gl_id_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer((GLuint)aa_gl_id_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
     check_error("glVerteAttribPointer");
 
+    // normals
+    if( 0 <= aa_gl_id_normal ) {
+        glBindBuffer(GL_ARRAY_BUFFER, buffers->normals);
+        check_error("glBindBuffer normal");
+
+        glEnableVertexAttribArray((GLuint)aa_gl_id_normal);
+        check_error("glEnabeVert normal");
+
+        glVertexAttribPointer((GLuint)aa_gl_id_normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        check_error("glVerteAttribPointer normal");
+    }
+
+    // Light position
+    GLfloat LP[3] =  {(GLfloat)v_light[0], (GLfloat)v_light[1], (GLfloat)v_light[2]};
+    //glUniform3f(aa_gl_id_light_position,
+                //(GLfloat)v_light[0], (GLfloat)v_light[1], (GLfloat)v_light[2] );
+    //aa_dump_mat( stdout, v_light, 1, 3 );
+
+    glUniform3fv(aa_gl_id_light_position, 1, LP);
+    check_error("unform light position");
+
+    // matrices
     GLfloat M_model[16];
     aa_gl_qutr2glmat( world_E_model, M_model);
 
@@ -255,8 +338,13 @@ AA_API void aa_gl_draw_tf (
     check_error("glDraw");
 
 
-    glDisableVertexAttribArray(aa_gl_id_position);
-    glDisableVertexAttribArray(aa_gl_id_color);
+    glDisableVertexAttribArray((GLuint)aa_gl_id_position);
+    glDisableVertexAttribArray((GLuint)aa_gl_id_color);
+
+    if( 0 <= aa_gl_id_normal ) {
+        glDisableVertexAttribArray((GLuint)aa_gl_id_normal);
+    }
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
 
@@ -285,12 +373,79 @@ static void quad_tr( unsigned *indices,
     indices[j++] = mp;
 }
 
+/* AA_API void aa_gl_normals( struct aa_gl_buffers *buffers, */
+/*                            size_t n_values, size_t n_indices, */
+/*                            GLfloat *values, size_t ld_values, */
+/*                            unsigned *indices, size_t ld_indices ) */
+/* { */
+/*     size_t size = sizeof(GLfloat) * 3 * n_values; */
+/*     GLfloat *normals = (GLfloat*)aa_mem_region_local_alloc( size ); */
+/*     AA_MEM_ZERO(normals,size); */
+/*     for( size_t i = 0; i < n_indices; i ++ ) { */
+/*         unsigned *index = &indices[ld_indices*i]; */
+/*         printf("%u, %u, %u\n", */
+/*                index[0], index[1], index[2] ); */
+/*         GLfloat *v[3] = {values + ld_values*index[0], */
+/*                          values + ld_values*index[1], */
+/*                          values + ld_values*index[2] }; */
+/*         GLfloat *n[3] = {normals + 3*index[0], */
+/*                          normals + 3*index[1], */
+/*                          normals + 3*index[2] }; */
+/*         GLfloat e[2][3], tri_norm[3]; */
+/*         for( int k = 0; k < 2; k ++ ) { */
+/*             for( int j = 0; j < 3; j ++ ) { */
+/*                 e[k][j] = v[1+k][j] - v[0][j]; */
+/*             } */
+/*         } */
+/*         printf("v0: "); aa_dump_matf( stdout, v[0], 1, 3 ); */
+/*         printf("v1: "); aa_dump_matf( stdout, v[1], 1, 3 ); */
+/*         printf("v2: "); aa_dump_matf( stdout, v[2], 1, 3 ); */
+/*         printf("e0: "); aa_dump_matf( stdout, e[0], 1, 3 ); */
+/*         printf("e1: "); aa_dump_matf( stdout, e[1], 1, 3 ); */
+
+/*         aa_tf_crossf(e[0],e[1],tri_norm); */
+
+/*         printf("tn0: "); aa_dump_matf( stdout, tri_norm, 1, 3 ); */
+/*         aa_tf_vnormalizef(tri_norm); */
+
+
+
+/*         printf("tnn: "); aa_dump_matf( stdout, tri_norm, 1, 3 ); */
+
+/*         aa_dump_matf( stdout, tri_norm, 1, 3 ); */
+/*         for( int k = 0; k < 3; k ++ ) { */
+/*             for( int j = 0; j < 3; j ++ ) { */
+/*                 n[k][j] += tri_norm[j]; */
+/*             } */
+/*         } */
+/*     } */
+
+/*     aa_dump_matf( stdout, normals, 3, n_values ); */
+
+/*     for( size_t i = 0; i < n_values; i ++ ) { */
+/*         aa_tf_vnormalizef( normals+3*i ); */
+/*     } */
+
+
+    /* glGenBuffers(1, &buffers->values); */
+    /* glBindBuffer(GL_ARRAY_BUFFER, buffers->normals); */
+    /* glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)size, normals, GL_STATIC_DRAW); */
+    /* glBindBuffer(GL_ARRAY_BUFFER, 0); */
+    /* buffers->has_normals = 1; */
+
+/*     printf("values:\n"); aa_dump_matf( stdout, values, 3, n_values ); */
+/*     printf("--\n"); */
+/*     aa_dump_matf( stdout, normals, 3, n_values ); */
+
+/*     aa_mem_region_local_pop(normals); */
+/* } */
 
 AA_API void aa_geom_gl_buffers_init_box (
     struct aa_rx_geom_box *geom
     )
 {
     GLfloat values[3*4*2]; // 3 values, 4 corners, two squares
+    GLfloat normals[3*4*2]; // 3 values, 4 corners, two squares
     //GLfloat colors[3*4*2]; // same as vertices
     GLfloat colors[6*2*4]; // same as vertices
     unsigned indices[6*2*3]; // 6 sides, 2 triangles, 3 vertices
@@ -306,6 +461,10 @@ AA_API void aa_geom_gl_buffers_init_box (
                 values[j++] = (GLfloat)(a[z]*d[2]);
             }
         }
+    }
+    for( size_t i = 0; i < 8; i ++ ){
+        AA_MEM_CPY( normals+3*i, values+3*i, 3 );
+        aa_tf_vnormalizef( normals+3*i );
     }
 
     /*    xyz
@@ -348,6 +507,17 @@ AA_API void aa_geom_gl_buffers_init_box (
             colors[4*i + j ] = (GLfloat)geom->base.opt.color[j];
         }
     }
+    /* for( size_t i = 0; i < 8; i ++ ) { */
+    /*     if( i % 2 ) { */
+    /*         colors[4*i + 0 ] = 1; */
+    /*         colors[4*i + 1 ] = 0; */
+    /*         colors[4*i + 2 ] = 0; */
+    /*     } else { */
+    /*         colors[4*i + 0 ] = 0; */
+    /*         colors[4*i + 1 ] = 1; */
+    /*         colors[4*i + 2 ] = 0; */
+    /*     } */
+    /* } */
 
     struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
     geom->base.gl_buffers = bufs;
@@ -371,6 +541,18 @@ AA_API void aa_geom_gl_buffers_init_box (
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_indices = 1;
+
+
+    glGenBuffers(1, &bufs->normals);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_normals = 1;
+
+    /* aa_gl_normals( bufs, */
+    /*                sizeof(values)/sizeof(*values)/3, sizeof(indices)/sizeof(*indices)/3, */
+    /*                values, 3, */
+    /*                indices, 3 ); */
 
 }
 

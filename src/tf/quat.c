@@ -69,6 +69,13 @@ aa_tf_cross_a( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3], dou
     c[2] -= a[1]*b[0];
 }
 
+AA_API void
+aa_tf_crossf( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3], float c[AA_RESTRICT 3] )
+{
+    /* 6 mul, 3 add */
+    AA_TF_CROSSX(a,b,c);
+}
+
 /*----------------------*/
 /* ORDINARY QUATERNIONS */
 /*----------------------*/
