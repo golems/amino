@@ -110,6 +110,8 @@ struct aa_gl_buffers {
     GLuint normals;
     GLsizei count;
 
+    GLfloat specular[3];
+
     unsigned has_indices : 1;
     unsigned has_colors : 1;
     unsigned has_values : 1;

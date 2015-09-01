@@ -68,6 +68,8 @@ void Init(void)
     geom.shape.dimension[1] = 0.1;
     geom.shape.dimension[2] = 0.1;
 
+    double spec[3] = {.3, .3, .3 };
+    aa_rx_geom_opt_set_specular( &geom.base.opt, spec );
     aa_geom_gl_buffers_init( &geom.base );
 
 }
@@ -190,7 +192,7 @@ int main(int argc, char *argv[])
     int mouse[2];
 
     double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-    world_E_model[AA_TF_QUTR_TZ] = .4;
+    //world_E_model[AA_TF_QUTR_TZ] = .4;
 
     struct aa_gl_globals *globals = aa_gl_globals_create();
     double v_light[3] = {0,5,5};

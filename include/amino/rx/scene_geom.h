@@ -102,6 +102,14 @@ aa_rx_geom_opt_set_collision (
     struct aa_rx_geom_opt *opt,
     int collision );
 
+/**
+ * Set specular reflection.
+ */
+void
+aa_rx_geom_opt_set_specular (
+    struct aa_rx_geom_opt *opt,
+    double specular[3] );
+
 /*----------*/
 /*- Shapes -*/
 /*----------*/

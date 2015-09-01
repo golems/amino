@@ -44,6 +44,7 @@
 struct aa_rx_geom_opt
 {
     double color[4]; ///< RGBA
+    double specular[3];
     unsigned no_shadow : 1;
     unsigned visual : 1;
     unsigned collision : 1;

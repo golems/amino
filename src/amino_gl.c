@@ -170,7 +170,7 @@ static const char aa_gl_vertex_shader[] =
 
 static const char aa_gl_fragment_shader[] =
     "#version 130\n"
-    "smooth in vec4 vColor;" // diffuse
+    "smooth in vec4 vColor;"
     ""
     "in vec4 position_world;"
     "in vec3 normal_camera;"
@@ -179,22 +179,21 @@ static const char aa_gl_fragment_shader[] =
     "uniform vec3 ambient;"
     "uniform vec3 light_color;"
     "uniform float light_power;"
+    "uniform vec3 specular;"
     ""
     "void main() {"
     ""
     ""
-    //"  vec3 specular = vec3(.3,.3,.3);"
     "  vec3 diffuse = vColor.xyz;"
     ""
-    //"  float dist = length( light_world.xyz - position_world.xyz );"
     "  float dist = length( light_dir_camera );"
     "  vec3 n = normalize(normal_camera);"
     "  vec3 l = normalize(light_dir_camera);"
     "  float ct = clamp(dot(n,l), 0.1, 1);"
     ""
-    /* "  vec3 E = normalize(eye_camera);" */
-    /* "  vec3 R = reflect(-l,n);" */
-    /* "  float ca = clamp(dot(E,R), 0.1, 1);" */
+    "  vec3 E = normalize(eye_camera);"
+    "  vec3 R = reflect(-l,n);"
+    "  float ca = clamp(dot(E,R), 0.1, 1);"
     ""
     ""
     "  vec3 color ="
@@ -203,7 +202,7 @@ static const char aa_gl_fragment_shader[] =
     // Diffuse : "color" of the object
     "    + diffuse * light_color * light_power * ct / (dist*dist)"
     // Specular : reflective highlight, like a mirror
-    //"    + specular * light_color * light-power * pow(ca,5) / (dist*dist)"
+    "    + specular * light_color * light_power * pow(ca,5) / (dist*dist)"
     "  ;"
     "  gl_FragColor = vec4(color,vColor.w);"
     "}";
@@ -222,6 +221,7 @@ static GLint aa_gl_id_light_position;
 static GLint aa_gl_id_ambient;
 static GLint aa_gl_id_light_color;
 static GLint aa_gl_id_light_power;
+static GLint aa_gl_id_specular;
 
 AA_API void aa_gl_init()
 {
@@ -243,13 +243,10 @@ AA_API void aa_gl_init()
     aa_gl_id_ambient = glGetUniformLocation(aa_gl_id_program, "ambient");
     aa_gl_id_light_color = glGetUniformLocation(aa_gl_id_program, "light_color");
     aa_gl_id_light_power = glGetUniformLocation(aa_gl_id_program, "light_power");
+    aa_gl_id_specular = glGetUniformLocation(aa_gl_id_program, "specular");
 
-    printf("ids: %d %d %d %d\n",
-           aa_gl_id_position,
-           aa_gl_id_color,
-           aa_gl_id_normal,
-           aa_gl_id_light_position
-        );
+    printf("ids: %d\n",
+           aa_gl_id_specular );
 
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
@@ -324,6 +321,9 @@ AA_API void aa_gl_draw_tf (
 
     glUniform3fv(aa_gl_id_light_color, 1, globals->light_color);
     check_error("unform light color");
+
+    glUniform3fv(aa_gl_id_specular, 1, buffers->specular);
+    check_error("unform specular");
 
     glUniform1f(aa_gl_id_light_power, globals->light_power);
     check_error("unform light power");
@@ -591,7 +591,14 @@ AA_API void aa_geom_gl_buffers_init (
         break;
     default: abort();
     }
+
+    // specular
+    for( int i = 0; i < 3; i ++ ) {
+        geom->gl_buffers->specular[i] = (GLfloat) geom->opt.specular[i];
+    }
 }
+
+
 
 struct aa_gl_globals *
 aa_gl_globals_create()

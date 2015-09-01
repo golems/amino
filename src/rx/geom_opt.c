@@ -104,3 +104,13 @@ aa_rx_geom_opt_set_collision (
     opt->collision = collision ? 1 : 0;
 
 }
+
+void
+aa_rx_geom_opt_set_specular (
+    struct aa_rx_geom_opt *opt,
+    double specular[3] )
+{
+    for( size_t i = 0; i < 3; i ++ ) {
+        opt->specular[i] = specular[i];
+    }
+}
