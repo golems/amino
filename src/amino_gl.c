@@ -163,10 +163,19 @@ AA_API void aa_gl_init()
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glEnable (GL_DEPTH_TEST);
+
     aa_gl_id_program = aa_gl_create_program(vertexShader, fragmentShader);
 
     aa_gl_id_position = glGetAttribLocation(aa_gl_id_program, "position");
+    aa_gl_id_normal = glGetAttribLocation(aa_gl_id_program, "normal");
     aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
+
+    printf("ids: %d %d %d\n",
+           aa_gl_id_position,
+           aa_gl_id_color,
+           aa_gl_id_normal );
+
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
     aa_gl_id_matrix_perspective = glGetUniformLocation(aa_gl_id_program, "matrix_perspective");

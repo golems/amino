@@ -84,12 +84,12 @@ void display(const double world_E_camera[7] )
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     check_error("glClear");
 
     double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
 
-    world_E_model[AA_TF_QUTR_TZ] = -1;
+    world_E_model[AA_TF_QUTR_TZ] = 0;;
 
     //world_E_camera[AA_TF_QUTR_TZ] = 1.5;
     //world_E_camera[AA_TF_QUTR_TX] = .5;
@@ -176,8 +176,15 @@ int main(int argc, char *argv[])
 
     Init();
 
-    double world_E_camera[7] = AA_TF_QUTR_IDENT_INITIALIZER;
     double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+    {
+        double eye[3] = {1,1,0.5};
+        double target[3] = {0,0,0};
+        double up[3] = {0,0,1};
+        aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
+    }
+    double world_E_camera[7];
+    AA_MEM_CPY( world_E_camera, world_E_camera_home, 7 );
     double scroll_ratio = .05;
     double angle_ratio = .05;
     int mouse[2];
@@ -250,8 +257,8 @@ int main(int argc, char *argv[])
                 break;
             case SDL_MOUSEMOTION: {
                 if( SDL_BUTTON(e.motion.state) & SDL_BUTTON_LEFT ) {
-                    scroll( .05*angle_ratio*(e.motion.y-mouse[1]),
-                            .05*angle_ratio*(e.motion.x-mouse[0]),
+                    scroll( -.1*angle_ratio*(e.motion.y-mouse[1]),
+                            -.1*angle_ratio*(e.motion.x-mouse[0]),
                             R_cam, world_E_cam0, cam_E_camp );
                     mouse[0] = e.motion.x;
                     mouse[1] = e.motion.y;
