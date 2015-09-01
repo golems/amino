@@ -44,19 +44,9 @@
 #include <SDL.h>
 
 #include "amino/rx/amino_gl.h"
+#include "amino/rx/amino_gl_internal.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
-
-
-struct aa_gl_globals {
-    double *world_E_cam;
-    GLfloat cam_E_world[16];
-    GLfloat perspective[16];
-    GLfloat world_v_light[3];
-    GLfloat light_color[3];
-    GLfloat light_power;
-    GLfloat ambient[3];
-};
 
 
 #define CHECK_GL_STATUS(TYPE,handle,pname) {                            \
@@ -622,6 +612,8 @@ aa_gl_globals_create()
 
     aa_gl_globals_set_light_power( G, 50 );
 
+    G->scroll_ratio = .05;
+    G->angle_ratio = .05;
 
     return G;
 }
@@ -638,9 +630,28 @@ aa_gl_globals_set_camera(
     const double world_E_camera[7])
 {
     double world_T_camera[12], camera_T_world[12];
+    // Copy camera pose
+    AA_MEM_CPY(globals->world_E_cam, world_E_camera, 7);
+    // Convert inverse camera pose
     aa_tf_qutr2tfmat(world_E_camera,world_T_camera);
     aa_tf_tfmat_inv2(world_T_camera, camera_T_world);
     aa_gl_tfmat2glmat( camera_T_world, globals->cam_E_world );
+}
+
+void
+aa_gl_globals_set_camera_home(
+    struct aa_gl_globals *globals,
+    const double world_E_camera_home[7])
+{
+
+    AA_MEM_CPY(globals->world_E_camhome, world_E_camera_home, 7);
+}
+
+void
+aa_gl_globals_home_camera(
+    struct aa_gl_globals *globals )
+{
+    aa_gl_globals_set_camera( globals, globals->world_E_camhome );
 }
 
 void

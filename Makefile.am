@@ -212,22 +212,22 @@ libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 libamino_gl_la_LIBADD = libamino.la $(GL_LIBS)
 
-endif
 
 ## SDL ##
 if HAVE_SDL2
 
+libamino_gl_la_SOURCES += src/amino_sdl.c
 
 noinst_PROGRAMS += sdl_test
 sdl_test_SOURCES = src/rx/sdl_test.c
 sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
-if HAVE_GL
 sdl_test_LDADD += libamino_gl.la $(GL_LIBS) $(GLEW_LIBS)  -lglut
-endif
 
-endif
+endif # SDL2
+
+endif # GL
 
 
 ## TESTS ##

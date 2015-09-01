@@ -44,6 +44,7 @@
 
 #include "amino.h"
 #include "amino/rx/amino_gl.h"
+#include "amino/rx/amino_sdl.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
 
@@ -120,22 +121,6 @@ void display( const struct aa_gl_globals *globals,
 
 }
 
-void scroll( double x, double y,
-             double *R_cam,
-             double *E_pre, double *E_post )
-{
-    AA_MEM_CPY(E_pre, aa_tf_qutr_ident, 7);
-    AA_MEM_CPY(E_post, aa_tf_qutr_ident, 7);
-
-    double q1[4], q2[4];
-    aa_tf_axang2quat2( R_cam, x, q2 );
-    aa_tf_axang2quat2( R_cam+3, y, q1 );
-    aa_tf_qmul(q2,q1, E_pre);
-    /* aa_dump_mat(stdout, R_cam, 3, 3); */
-    /* aa_tf_xangle2quat(  x, q2 ); */
-    /* aa_tf_yangle2quat( y, q1 ); */
-}
-
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
@@ -174,162 +159,40 @@ int main(int argc, char *argv[])
         abort();
     }
 
-    printf("version: %s\n", glGetString(GL_VERSION));
+    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
     Init();
 
-    double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+    struct aa_gl_globals *globals = aa_gl_globals_create();
+    // global camera
     {
+        double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
         double eye[3] = {1,1,0.5};
         double target[3] = {0,0,0};
         double up[3] = {0,0,1};
         aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
+        aa_gl_globals_set_camera_home( globals, world_E_camera_home );
+        aa_gl_globals_home_camera( globals );
+
     }
-    double world_E_camera[7];
-    AA_MEM_CPY( world_E_camera, world_E_camera_home, 7 );
-    double scroll_ratio = .05;
-    double angle_ratio = .05;
-    int mouse[2];
 
-    double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-    //world_E_model[AA_TF_QUTR_TZ] = .4;
-
-    struct aa_gl_globals *globals = aa_gl_globals_create();
-    double v_light[3] = {0,5,5};
-    double ambient[3] = {.1,.1,.1};
-    aa_gl_globals_set_light_position( globals, v_light );
-    aa_gl_globals_set_perspective( globals,
-                                   M_PI_2,
-                                   ((double)SCREEN_WIDTH)/SCREEN_HEIGHT,
-                                   .1,
+    // global lighting
+    {
+        double v_light[3] = {0,5,5};
+        double ambient[3] = {.1,.1,.1};
+        aa_gl_globals_set_light_position( globals, v_light );
+        aa_gl_globals_set_perspective( globals,
+                                       M_PI_2,
+                                       ((double)SCREEN_WIDTH)/SCREEN_HEIGHT,
+                                       .1,
                                    100 );
+        aa_gl_globals_set_ambient(globals, ambient);
+    }
+    double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
 
-    aa_gl_globals_set_ambient(globals, ambient);
 
-
-    int quit = 0;
-    while( !quit ) {
-        //Handle events on queue
-        SDL_Event e;
-        while( SDL_PollEvent( &e ) != 0 ) {
-            const Uint8 *state = SDL_GetKeyboardState(NULL);
-            int shift =  state[SDL_SCANCODE_LSHIFT] || state[SDL_SCANCODE_RSHIFT];
-            int ctrl =  state[SDL_SCANCODE_LCTRL] || state[SDL_SCANCODE_RCTRL] ||
-                state[SDL_SCANCODE_CAPSLOCK] ; /* keyboards are wrong, this is CTRL.
-                                                * And SDL doesn't respect ctrl:swapcaps */
-            int alt =  state[SDL_SCANCODE_LALT] || state[SDL_SCANCODE_RALT];
-
-            double cam_E_camp[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-            double world_E_cam0[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-            double R_cam[9];
-            aa_tf_quat2rotmat(world_E_camera, R_cam);
-            int update_tf = 0;
-            //User requests quit
-            switch (e.type) {
-            case SDL_QUIT:
-                quit = 1;
-                break;
-            case SDL_KEYDOWN: {
-                aa_dump_mat(stdout, R_cam, 3, 3);
-                double sign = 1;
-                switch( e.key.keysym.sym ) {
-
-                case SDLK_UP: world_E_model[AA_TF_QUTR_TZ] += .1; break;
-                case SDLK_DOWN: world_E_model[AA_TF_QUTR_TZ] -= .1; break;
-
-                case SDLK_KP_2: sign = -1;
-                case SDLK_KP_8:
-                    if( ctrl ) {
-                        cam_E_camp[AA_TF_QUTR_TY] += sign*scroll_ratio;
-                    } else {
-                        scroll( sign*angle_ratio, 0,
-                                R_cam, world_E_cam0, cam_E_camp );
-                    }
-                    update_tf = 1;
-                    break;
-                case SDLK_KP_4: sign = -1;
-                case SDLK_KP_6:
-                    if( ctrl ) {
-                        cam_E_camp[AA_TF_QUTR_TX] += sign*scroll_ratio;
-                    } else {
-                        scroll( 0, sign*angle_ratio,
-                                R_cam, world_E_cam0, cam_E_camp );
-                    }
-                    update_tf = 1;
-                    break;
-
-                case SDLK_KP_MINUS: sign = -1;
-                case SDLK_KP_PLUS:
-                    cam_E_camp[AA_TF_QUTR_TZ] -= sign*scroll_ratio;
-                    update_tf = 1;
-                    break;
-                case SDLK_HOME:
-                    AA_MEM_CPY(world_E_camera, world_E_camera_home, 7);
-                    update_tf = 1;
-                    break;
-                default:
-                    printf("other key\n");
-                    break;
-                }
-                break;
-            }
-            case SDL_MOUSEBUTTONDOWN:
-                SDL_GetMouseState(&mouse[0], &mouse[1]);
-                break;
-            case SDL_MOUSEMOTION: {
-                if( SDL_BUTTON(e.motion.state) & SDL_BUTTON_LEFT ) {
-                    scroll( -.1*angle_ratio*(e.motion.y-mouse[1]),
-                            -.1*angle_ratio*(e.motion.x-mouse[0]),
-                            R_cam, world_E_cam0, cam_E_camp );
-                    mouse[0] = e.motion.x;
-                    mouse[1] = e.motion.y;
-                    update_tf = 1;
-                } else if( SDL_BUTTON(e.motion.state) & SDL_BUTTON_MIDDLE ) {
-                    cam_E_camp[AA_TF_QUTR_TX] = -.1*scroll_ratio*(e.motion.x-mouse[0]),
-                    cam_E_camp[AA_TF_QUTR_TY] = .1*scroll_ratio*(e.motion.y-mouse[1]),
-                    mouse[0] = e.motion.x;
-                    mouse[1] = e.motion.y;
-                    update_tf = 1;
-                }
-
-                break;
-            }
-            case SDL_MOUSEWHEEL: {
-                    if( ctrl && shift ) {
-                        aa_tf_zangle2quat( angle_ratio * e.wheel.y, cam_E_camp );
-                    } else if( alt && shift ) {
-                        scroll( angle_ratio*e.wheel.y, 0,
-                                R_cam, world_E_cam0, cam_E_camp );
-                    } else if( alt && ctrl ) {
-                        scroll( 0, angle_ratio*e.wheel.y,
-                                R_cam, world_E_cam0, cam_E_camp );
-                    } else if( ctrl ) {
-                        cam_E_camp[AA_TF_QUTR_TX] = scroll_ratio * e.wheel.y;
-                    } else if( shift ) {
-                        cam_E_camp[AA_TF_QUTR_TY] = scroll_ratio * e.wheel.y;
-                    } else if (!ctrl && !shift && !alt ) {
-                        cam_E_camp[AA_TF_QUTR_TZ] = -scroll_ratio * e.wheel.y;
-                    }
-
-                    update_tf = 1;
-                }
-                break;
-
-            } // end event switch
-
-            if( update_tf ) {
-                double Etmp[2][7];
-                aa_tf_qutr_mul( world_E_cam0, world_E_camera, Etmp[0] );
-                aa_tf_qutr_mul( Etmp[0], cam_E_camp, Etmp[1] );
-                AA_MEM_CPY( world_E_camera, Etmp[1], 7 );
-                printf("camera: " );aa_dump_vec( stdout, world_E_camera, 7 );
-            }
-        }
-
-        //SDL_UpdateWindowSurface( window );
-        //SDL_UpdateWindowSurface( window );
-
-        aa_gl_globals_set_camera( globals, world_E_camera );
+    int quit;
+    while( !(quit = aa_sdl_scroll(globals) ) ) {
         display( globals, world_E_model );
         SDL_GL_SwapWindow(window);
     }

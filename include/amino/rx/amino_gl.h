@@ -133,6 +133,15 @@ aa_gl_globals_set_camera(
     const double world_E_camera[7]);
 
 void
+aa_gl_globals_set_camera_home(
+    struct aa_gl_globals *globals,
+    const double world_E_camera_home[7]);
+
+void
+aa_gl_globals_home_camera(
+    struct aa_gl_globals *globals );
+
+void
 aa_gl_globals_set_light_position(
     struct aa_gl_globals *globals,
     const double world_v_light[3]);
