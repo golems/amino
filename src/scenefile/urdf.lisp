@@ -88,14 +88,16 @@
 (defun urdf-bind-links (dom scene-graph link-parent-map &key
                                                           (default-color '(.5 .5 .5))
                                                           (default-alpha 1d0))
-  (labels ((path (node path &optional default)
+  (labels ((path-1 (node path &optional default)
              (dom-select-path node path :singleton t :undefined-error nil :default default))
+           (path-n (node path &optional default)
+             (dom-select-path node path :singleton nil :undefined-error nil :default default))
            (node-shape (node)
-             (let* ((mesh-file (path node '("geometry" "mesh" "@filename")))
-                    (box-size (path node '("geometry" "box" "@size")))
-                    (sphere-radius (path node '("geometry" "sphere" "@radius")))
-                    (cylinder-radius (path node '("geometry" "cylinder" "@radius")))
-                    (cylinder-length (path node '("geometry" "cylinder" "@length"))))
+             (let* ((mesh-file (path-1 node '("geometry" "mesh" "@filename")))
+                    (box-size (path-1 node '("geometry" "box" "@size")))
+                    (sphere-radius (path-1 node '("geometry" "sphere" "@radius")))
+                    (cylinder-radius (path-1 node '("geometry" "cylinder" "@radius")))
+                    (cylinder-length (path-1 node '("geometry" "cylinder" "@length"))))
                (assert (xor mesh-file box-size sphere-radius (and cylinder-length
                                                                   cylinder-radius)))
                (cond (mesh-file
@@ -109,8 +111,8 @@
                                       :radius (parse-float cylinder-radius))))))
            (node-origin (link-name node suffix geometry)
              (let* ((frame-name (gethash link-name link-parent-map))
-                    (rpy (parse-float-sequence (path node '("origin" "@rpy") "0 0 0")))
-                    (xyz (parse-float-sequence (path node '("origin" "@xyz") "0 0 0")))
+                    (rpy (parse-float-sequence (path-1 node '("origin" "@rpy") "0 0 0")))
+                    (xyz (parse-float-sequence (path-1 node '("origin" "@xyz") "0 0 0")))
                     (offset (if (scene-cylinder-p geometry) ; URDF cylinders have origin at their center
                                 (tf* nil (vec3* 0d0 0d0 (/ (scene-cylinder-height geometry) -2)))
                                 (tf* nil nil))))
@@ -130,28 +132,29 @@
 
     (loop for link-node in (dom-select-path dom '("robot" "link"))
        for name = (dom:get-attribute link-node "name")
-       for visual-node = (path link-node '("visual"))
-       for collision-node = (path link-node '("collision"))
-       for rgba-text = (when visual-node (path visual-node '("material" "color" "@rgba")))
-       for rgba = (if rgba-text (parse-float-sequence rgba-text)
-                      (append default-color (list default-alpha)))
 
        do
-         (when visual-node
-           (let* ((shape (node-shape visual-node))
-                  (frame-name (node-origin name visual-node "visual" shape))
-                  (options (node-options :rgba rgba :visual t)))
-             ;; bind geometry
-             (setq scene-graph
-                   (scene-graph-add-geometry scene-graph frame-name
-                                             (scene-geometry shape options)))))
-         (when collision-node
-           (let* ((shape (node-shape collision-node))
-                  (frame-name (node-origin name collision-node "collision" shape))
-                  (options (node-options :rgba rgba :collision t)))
-             (setq scene-graph
-                   (scene-graph-add-geometry scene-graph frame-name
-                                             (scene-geometry shape options)))))))
+         (loop for visual-node in (path-n link-node '("visual"))
+            for rgba-text = (when visual-node (path-1 visual-node '("material" "color" "@rgba")))
+            for rgba = (if rgba-text (parse-float-sequence rgba-text)
+                           (append default-color (list default-alpha)))
+            do (let* ((shape (node-shape visual-node))
+                      (frame-name (node-origin name visual-node "visual" shape))
+                      (options (node-options :rgba rgba :visual t)))
+                 ;; bind geometry
+                 (setq scene-graph
+                       (scene-graph-add-geometry scene-graph frame-name
+                                                 (scene-geometry shape options)))))
+         (loop for collision-node in (path-n link-node '("collision"))
+            do
+              (let* ((shape (node-shape collision-node))
+                     (frame-name (node-origin name collision-node "collision" shape))
+                     (options)
+                     ;;(options (node-options :rgba rgba :collision t))
+                     )
+                (setq scene-graph
+                      (scene-graph-add-geometry scene-graph frame-name
+                                                (scene-geometry shape options)))))))
   scene-graph)
 
 
