@@ -114,6 +114,14 @@ aa_rx_geom_opt_set_specular (
 /*- Shapes -*/
 /*----------*/
 
+struct aa_rx_geom;
+
+struct aa_rx_geom *
+aa_rx_geom_copy( struct aa_rx_geom *src );
+
+void
+aa_rx_geom_destroy( struct aa_rx_geom *geom );
+
 enum aa_rx_geom_shape {
     AA_RX_NOSHAPE,
     AA_RX_MESH,
@@ -142,8 +150,6 @@ struct aa_rx_shape_cone {
     double end_radius;
 };
 
-struct aa_rx_shape_mesh {
-};
 
 /**
  * Attach a box to frame.
@@ -189,43 +195,68 @@ void aa_rx_geom_attach_cone (
  */
 struct aa_rx_mesh;
 
-void aa_rx_mesh_fill_vertex_vectors (
+struct aa_rx_mesh* aa_rx_mesh_create();
+void aa_rx_mesh_set_destroy( struct aa_rx_mesh * mesh );
+
+void aa_rx_mesh_set_vertices (
+    struct aa_rx_mesh *mesh, size_t n,
+    float *vectors, int copy );
+
+void aa_rx_mesh_set_normals (
+    struct aa_rx_mesh *mesh, size_t n,
+    float *normals, int copy );
+
+void aa_rx_mesh_set_indices (
+    struct aa_rx_mesh *mesh, size_t n,
+    unsigned *indices, int copy );
+
+void aa_rx_mesh_set_normals (
+    struct aa_rx_mesh *mesh, size_t n,
+    float *normals, int copy );
+
+void aa_rx_mesh_set_textures (
     struct aa_rx_mesh *mesh,
-    size_t n, float *vectors);
+    size_t n, struct aa_rx_geom_opt *textures,
+    int copy );
 
-void aa_rx_mesh_fill_vertex_vectors_dbl (
+void aa_rx_mesh_set_texture_indices (
     struct aa_rx_mesh *mesh,
-    size_t n, double *vectors );
+    size_t n, unsigned *texture_indices,
+    int copy );
 
-void aa_rx_mesh_fill_vertex_indices (
-    struct aa_rx_mesh *mesh,
-    size_t n, size_t *indices);
+/* void aa_rx_mesh_fill_vertex_vectors_dbl ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, double *vectors ); */
 
-
-void aa_rx_mesh_fill_normal_vectors (
-    struct aa_rx_mesh *mesh,
-    size_t n, float *vectors);
-
-void aa_rx_mesh_fill_normal_vectors_dbl (
-    struct aa_rx_mesh *mesh,
-    size_t n, double *vectors );
-
-void aa_rx_mesh_fill_normal_indices (
-    struct aa_rx_mesh *mesh,
-    size_t n, size_t *indices);
+/* void aa_rx_mesh_fill_vertex_indices ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, size_t *indices); */
 
 
-void aa_rx_mesh_fill_uv_vectors (
-    struct aa_rx_mesh *mesh,
-    size_t n, float *vectors);
+/* void aa_rx_mesh_fill_normal_vectors ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, float *vectors); */
 
-void aa_rx_mesh_fill_uv_vectors_dbl (
-    struct aa_rx_mesh *mesh,
-    size_t n, double *vectors );
+/* void aa_rx_mesh_fill_normal_vectors_dbl ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, double *vectors ); */
 
-void aa_rx_mesh_fill_uv_indices (
-    struct aa_rx_mesh *mesh,
-    size_t n, size_t *indices);
+/* void aa_rx_mesh_fill_normal_indices ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, size_t *indices); */
+
+
+/* void aa_rx_mesh_fill_uv_vectors ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, float *vectors); */
+
+/* void aa_rx_mesh_fill_uv_vectors_dbl ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, double *vectors ); */
+
+/* void aa_rx_mesh_fill_uv_indices ( */
+/*     struct aa_rx_mesh *mesh, */
+/*     size_t n, size_t *indices); */
 
 /**
  * Attach a mesh to frame.

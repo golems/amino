@@ -116,6 +116,8 @@ struct aa_gl_buffers {
     unsigned has_colors : 1;
     unsigned has_values : 1;
     unsigned has_normals : 1;
+
+    struct aa_gl_buffers *next;
 };
 
 
@@ -180,10 +182,10 @@ AA_API void aa_gl_draw_tf (
     const struct aa_gl_buffers *buffers);
 
 
-struct aa_rx_geom_base;
+struct aa_rx_geom;
 
 AA_API void aa_geom_gl_buffers_init (
-    struct aa_rx_geom_base *geom
+    struct aa_rx_geom *geom
     );
 
 #endif /*AMINO_RX_GL_H*/

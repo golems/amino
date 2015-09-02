@@ -53,40 +53,59 @@ struct aa_rx_geom_opt
 /* Forward declaration */
 struct aa_gl_buffers;
 
-struct aa_rx_geom_base {
+struct aa_rx_geom {
     struct aa_rx_geom_opt opt;
     enum aa_rx_geom_shape type;
+
+    /* Set to 1 one create.
+     * Increment on Copy
+     * Decrement on Destroy
+     * Free when it reaches 0
+     */
+    size_t refcount;
     struct aa_gl_buffers *gl_buffers;
 };
 
 struct aa_rx_geom_box {
-    struct aa_rx_geom_base base;
+    struct aa_rx_geom base;
     struct aa_rx_shape_box shape;
 };
 
 struct aa_rx_geom_sphere {
-    struct aa_rx_geom_base base;
+    struct aa_rx_geom base;
     struct aa_rx_shape_sphere shape;
 };
 
 struct aa_rx_geom_cylinder {
-    struct aa_rx_geom_base base;
+    struct aa_rx_geom base;
     struct aa_rx_shape_cylinder shape;
 };
 
 struct aa_rx_geom_cone {
-    struct aa_rx_geom_base base;
+    struct aa_rx_geom base;
     struct aa_rx_shape_cone shape;
 };
 
 struct aa_rx_geom_mesh {
-    struct aa_rx_geom_base base;
-    struct aa_rx_shape_mesh shape;
+    struct aa_rx_geom base;
+    struct aa_rx_mesh *shape;
 };
 
 #ifdef __cplusplus
 
 struct aa_rx_mesh {
+    float *vertices;
+    float *normals;
+    unsigned *texture_indices;
+    size_t n_vertices;
+
+    unsigned *indices;
+    size_t n_indices;
+
+    unsigned free_vertices : 1;
+    unsigned free_normals : 1;
+    unsigned free_indices : 1;
+
     std::vector<float> vertex_vectors;
     std::vector<size_t> vertex_indices;
 

@@ -269,7 +269,7 @@ void SceneGraph::add(SceneFrame *f)
 
 void
 aa_rx_sg_add_geom( aa_rx_sg *scene_graph, const char *frame,
-                   struct aa_rx_geom_base *geom )
+                   struct aa_rx_geom* geom )
 {
 
     aa_rx_scene_frame *f = aa_rx_sg_find(scene_graph, frame);

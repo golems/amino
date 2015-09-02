@@ -569,7 +569,7 @@ AA_API void aa_geom_gl_buffers_init_box (
 
 
 AA_API void aa_geom_gl_buffers_init (
-    struct aa_rx_geom_base *geom
+    struct aa_rx_geom *geom
     )
 {
     if( geom->gl_buffers ) aa_gl_buffers_destroy( geom->gl_buffers );
