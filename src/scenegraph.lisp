@@ -61,7 +61,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
     (:color . (0 0 0))
     (:alpha . 1d0)
     (:visual . t)
-    (:collision . t)))
+    (:collision . t)
+    (:type . nil)))
 
 (defun draw-option (options key)
   (alist-get-default options key *draw-options*))
@@ -72,12 +73,14 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                (color (draw-option options :color))
                                (alpha (draw-option options :alpha))
                                (visual (draw-option options :visual))
+                               (type (draw-option options :type))
                                (collision (draw-option options :collision)))
   (list* (cons :no-shadow no-shadow)
          (cons :color color)
          (cons :alpha alpha)
          (cons :visual visual)
          (cons :collision collision)
+         (cons :type type)
          options))
 
 (defun draw-options (&rest options-plist)
@@ -99,6 +102,11 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun scene-geometry (shape options)
   (make-scene-geometry :shape shape
                        :options options
+                       :type (let ((type (draw-option options :type)))
+                               (etypecase type
+                                 (list (apply #'tree-set #'rope-compare-fast type))
+                                 (tree-set type)
+                                 (rope (tree-set #'rope-compare-fast type))))
                        :collision (draw-option options :collision)
                        :visual (draw-option options :visual)))
 
@@ -326,14 +334,15 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun fold-scene-graph-frames (function initial-value scene-graph)
   (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
-(defun prefix-scene-graph (prefix scene-graph)
+(defun prefix-scene-graph (prefix scene-graph &key
+                                                (prefix-parents t))
   (let ((frames))
-    (do-scene-graph-frames (frame scene-graph (scene-graph frames))
+    (do-scene-graph-frames (frame (scene-graph scene-graph) (scene-graph frames))
       (let ((frame (copy-structure frame))
             (parent (scene-frame-parent frame)))
         (setf (scene-frame-name frame)
               (rope prefix (scene-frame-name frame)))
-        (when parent
+        (when (and parent prefix-parents)
           (setf (scene-frame-parent frame)
                 (rope prefix parent)))
         (when (scene-frame-joint-p frame)
