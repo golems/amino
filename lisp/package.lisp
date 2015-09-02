@@ -120,6 +120,7 @@
    :tf-copy
    :tf-normalize
    :tf-translation
+   :tf-quaternion
    :tf-rotation
    :identity-quaternion
    :identity-vec3
