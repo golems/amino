@@ -150,41 +150,40 @@ struct aa_rx_shape_cone {
     double end_radius;
 };
 
+void *
+aa_rx_geom_shape ( const struct aa_rx_geom *g,
+                   enum aa_rx_geom_shape *shape_type );
 
 /**
- * Attach a box to frame.
+ * Create a box
  */
-void aa_rx_geom_attach_box (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_box (
     struct aa_rx_geom_opt *opt,
     const double dimension[3] );
 
 /**
- * Attach a sphere to frame.
+ * Create a sphere
  */
-void aa_rx_geom_attach_sphere (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_sphere (
     struct aa_rx_geom_opt *opt,
     double radius );
 
 /**
- * Attach a cylinder to frame.
+ * Create a cylinder
  */
-void aa_rx_geom_attach_cylinder (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_cylinder (
     struct aa_rx_geom_opt *opt,
     double height,
     double radius );
 
 /**
- * Attach a cone to frame.
+ * Create a cone
  */
-void aa_rx_geom_attach_cone (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_cone (
     struct aa_rx_geom_opt *opt,
     double height,
     double start_radius,
@@ -261,10 +260,16 @@ void aa_rx_mesh_set_texture_indices (
 /**
  * Attach a mesh to frame.
  */
-void aa_rx_geom_attach_mesh (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_mesh (
     struct aa_rx_geom_opt *opt,
     struct aa_rx_mesh *mesh );
+
+
+void
+aa_rx_geom_attach (
+    struct aa_rx_sg *sg,
+    const char *frame,
+    struct aa_rx_geom *geom );
 
 #endif /*AMINO_RX_SCENE_GEOM_H*/

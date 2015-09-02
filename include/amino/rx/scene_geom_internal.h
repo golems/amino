@@ -94,11 +94,27 @@ struct aa_rx_geom_mesh {
 #ifdef __cplusplus
 
 struct aa_rx_mesh {
+    /**
+     * 3 x n_vertices array of mesh vertices
+     */
     float *vertices;
+
+    /**
+     * 3 x n_vertices array of vertex normals
+     */
     float *normals;
+    /**
+     * 3 x n_vertices array of vertex textures
+     */
     unsigned *texture_indices;
+    /**
+     * Number of vertices
+     */
     size_t n_vertices;
 
+    /**
+     * 3 x n_indices array of face vertices
+     */
     unsigned *indices;
     size_t n_indices;
 

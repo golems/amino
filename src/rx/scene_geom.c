@@ -47,11 +47,12 @@
     AA_MEM_CPY(&g->base.opt, geom_opt, 1);                      \
     var->base.type = type_value;                                \
     var->base.gl_buffers = NULL;                                \
-    aa_rx_sg_add_geom(sg, frame, &var->base);                   \
+    var->base.refcount = 1;
 
-void aa_rx_geom_attach_box (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+//aa_rx_sg_add_geom(sg, frame, &var->base);
+
+struct aa_rx_geom *
+aa_rx_geom_box (
     struct aa_rx_geom_opt *opt,
     const double dimension[3] )
 {
@@ -59,11 +60,11 @@ void aa_rx_geom_attach_box (
                 AA_RX_BOX, opt,
                 scene_graph, frame );
     AA_MEM_CPY(g->shape.dimension, dimension, 3);
+    return &g->base;
 }
 
-void aa_rx_geom_attach_sphere (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_sphere (
     struct aa_rx_geom_opt *opt,
     double radius )
 {
@@ -71,11 +72,11 @@ void aa_rx_geom_attach_sphere (
                 AA_RX_SPHERE, opt,
                 scene_graph, frame );
     g->shape.radius = radius;
+    return &g->base;
 }
 
-void aa_rx_geom_attach_cylinder (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_cylinder (
     struct aa_rx_geom_opt *opt,
     double height,
     double radius )
@@ -85,11 +86,11 @@ void aa_rx_geom_attach_cylinder (
                 scene_graph, frame );
     g->shape.radius = radius;
     g->shape.height = height;
+    return &g->base;
 }
 
-void aa_rx_geom_attach_cone (
-    struct aa_rx_sg *scene_graph,
-    const char *frame,
+struct aa_rx_geom *
+aa_rx_geom_cone (
     struct aa_rx_geom_opt *opt,
     double height,
     double start_radius,
@@ -101,4 +102,60 @@ void aa_rx_geom_attach_cone (
     g->shape.start_radius = start_radius;
     g->shape.end_radius = end_radius;
     g->shape.height = height;
+    return &g->base;
+}
+
+
+void
+aa_rx_geom_attach (
+    struct aa_rx_sg *sg,
+    const char *frame,
+    struct aa_rx_geom *geom )
+{
+    aa_rx_sg_add_geom(sg, frame, geom);
+}
+
+struct aa_rx_geom *
+aa_rx_geom_copy( struct aa_rx_geom *src )
+{
+    src->refcount++;
+    return src;
+}
+
+void
+aa_rx_geom_destroy( struct aa_rx_geom *geom )
+{
+
+    geom->refcount--;
+    if( 0 == geom->refcount )
+    {
+        free(geom);
+    }
+}
+
+void *
+aa_rx_geom_shape ( const struct aa_rx_geom *g,
+                   enum aa_rx_geom_shape *shape_type )
+{
+    void *shape = NULL;
+    switch(g->type ) {
+    case AA_RX_NOSHAPE: break;
+    case AA_RX_MESH:
+        shape = &((struct aa_rx_geom_mesh*)g)->shape;
+        break;
+    case AA_RX_BOX:
+        shape = &((struct aa_rx_geom_box*)g)->shape;
+        break;
+    case AA_RX_SPHERE:
+        shape = &((struct aa_rx_geom_sphere*)g)->shape;
+        break;
+    case AA_RX_CYLINDER:
+        shape = &((struct aa_rx_geom_cylinder*)g)->shape;
+        break;
+    case AA_RX_CONE:
+        shape = &((struct aa_rx_geom_cone*)g)->shape;
+        break;
+    }
+    if( shape_type ) *shape_type = g->type;
+    return shape;
 }
