@@ -308,6 +308,9 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   `(do-tree-set (,frame-variable (scene-graph-frames ,scene-graph) ,result)
      ,@body))
 
+(defun map-scene-graph-frames (result-type function scene-graph)
+  (map-tree-set result-type function (scene-graph-frames scene-graph)))
+
 (defmacro do-scene-graph-geometry (((frame geometry) scene-graph &optional result)
                                    &body body)
   (with-gensyms (fun)

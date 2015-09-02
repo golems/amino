@@ -1,5 +1,5 @@
 (defpackage :robray
-  (:use :cl :alexandria :amino :sycamore :sycamore-util)
+  (:use :cl :alexandria :amino :sycamore :sycamore-util :sycamore-cgen)
   (:export
 
    ;; Frame Types
