@@ -51,19 +51,20 @@
 
 
 static void scroll( double x, double y,
-                    double *R_cam,
+                    const double *R_cam, const double *v_cam,
                     double *E_pre, double *E_post )
 {
     AA_MEM_CPY(E_pre, aa_tf_qutr_ident, 7);
     AA_MEM_CPY(E_post, aa_tf_qutr_ident, 7);
+    (void)R_cam;
+    (void)v_cam;
 
     double q1[4], q2[4];
-    aa_tf_axang2quat2( R_cam, x, q2 );
-    aa_tf_axang2quat2( R_cam+3, y, q1 );
-    aa_tf_qmul(q2,q1, E_pre);
-    /* aa_dump_mat(stdout, R_cam, 3, 3); */
-    /* aa_tf_xangle2quat(  x, q2 ); */
-    /* aa_tf_yangle2quat( y, q1 ); */
+    const double *a_x = R_cam;
+    const double *a_y = aa_tf_vec_z;
+    aa_tf_axang2quat2( a_y, y, q1 );
+    aa_tf_axang2quat2( a_x, x, q2 );
+    aa_tf_qmul(q1,q2, E_pre);
 }
 
 void aa_sdl_scroll( struct aa_gl_globals * globals,
@@ -111,7 +112,8 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
                     cam_E_camp[AA_TF_QUTR_TY] += sign*globals->scroll_ratio;
                 } else {
                     scroll( sign*globals->angle_ratio, 0,
-                            R_cam, world_E_cam0, cam_E_camp );
+                            R_cam, globals->world_E_cam+4,
+                            world_E_cam0, cam_E_camp );
                 }
                 update_tf = 1;
                 break;
@@ -121,7 +123,8 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
                     cam_E_camp[AA_TF_QUTR_TX] += sign*globals->scroll_ratio;
                 } else {
                     scroll( 0, sign*globals->angle_ratio,
-                            R_cam, world_E_cam0, cam_E_camp );
+                            R_cam, globals->world_E_cam+4,
+                             world_E_cam0, cam_E_camp );
                 }
                 update_tf = 1;
                 break;
@@ -148,7 +151,8 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
             double dy = (e.motion.y-globals->mouse[1]);
             if( SDL_BUTTON(SDL_BUTTON_LEFT) & e.motion.state ) {
                 scroll( -.1*globals->angle_ratio*dy, -.1*globals->angle_ratio*dx,
-                        R_cam, world_E_cam0, cam_E_camp );
+                        R_cam, globals->world_E_cam+4,
+                             world_E_cam0, cam_E_camp );
                 update_tf = 1;
             } else if( e.motion.state & SDL_BUTTON(SDL_BUTTON_RIGHT) ) {
                 cam_E_camp[AA_TF_QUTR_TX] = -.1*globals->scroll_ratio*dx;
@@ -167,10 +171,12 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
                 aa_tf_zangle2quat( globals->angle_ratio * e.wheel.y, cam_E_camp );
             } else if( alt && shift ) {
                 scroll( globals->angle_ratio*e.wheel.y, 0,
-                        R_cam, world_E_cam0, cam_E_camp );
+                        R_cam, globals->world_E_cam+4,
+                             world_E_cam0, cam_E_camp );
             } else if( alt && ctrl ) {
                 scroll( 0, globals->angle_ratio*e.wheel.y,
-                        R_cam, world_E_cam0, cam_E_camp );
+                        R_cam, globals->world_E_cam+4,
+                             world_E_cam0, cam_E_camp );
             } else if( ctrl ) {
                 cam_E_camp[AA_TF_QUTR_TX] = globals->scroll_ratio * e.wheel.y;
             } else if( shift ) {
