@@ -341,7 +341,6 @@ AA_API void aa_gl_draw_tf (
             GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
             );
-
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
         glDrawArrays(buffers->mode, 0, buffers->count);
@@ -451,59 +450,101 @@ static void quad_tr( unsigned *indices,
 /*     aa_mem_region_local_pop(normals); */
 /* } */
 
+static void bind_mesh (
+    struct aa_rx_geom *geom,
+    struct aa_rx_mesh *mesh
+    )
+{
+
+    assert(sizeof(float) == sizeof(GLfloat));
+
+    struct aa_gl_buffers *bufs = geom->gl_buffers;
+    size_t n_vert = mesh->n_vertices;
+
+    GLfloat *colors = (GLfloat*)aa_mem_region_local_alloc( sizeof(*colors) * n_vert * 4 );
+    /* TODO: handle multiple textures */
+    for( size_t i = 0; i < n_vert ; i ++ ) {
+        for( size_t j = 0; j < 4; j ++ ) {
+            colors[4*i + j ] = (GLfloat)geom->opt.color[j];
+        }
+    }
+
+    glGenBuffers(1, &bufs->values);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(bufs->values_size*sizeof(float)*n_vert),
+                 mesh->vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_values = 1;
+
+    bufs->colors_size = 4;
+    glGenBuffers(1, &bufs->colors);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(bufs->colors_size*sizeof(float)*n_vert), colors, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_colors = 1;
+
+
+    if( bufs->indices_size ) {
+        glGenBuffers(1, &bufs->indices);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(bufs->indices_size*sizeof(unsigned)*mesh->n_indices),
+                     mesh->indices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        bufs->has_indices = 1;
+    }
+
+    if( bufs->normals_size ) {
+        glGenBuffers(1, &bufs->normals);
+        glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(bufs->normals_size*sizeof(float)*n_vert),
+                     mesh->normals, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        bufs->has_normals = 1;
+    }
+}
+
+
 static void tri_mesh (
     struct aa_rx_geom_box *geom,
     struct aa_rx_mesh *mesh
     )
 {
-    size_t n_vert = mesh->n_vertices;
-    GLfloat *colors = (GLfloat*)aa_mem_region_local_alloc( sizeof(*colors) * n_vert * 4 );
-
-
-    /* TODO: handle multiple textures */
-    for( size_t i = 0; i < n_vert ; i ++ ) {
-        for( size_t j = 0; j < 4; j ++ ) {
-            colors[4*i + j ] = (GLfloat)geom->base.opt.color[j];
-        }
-    }
-
     struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
     geom->base.gl_buffers = bufs;
     bufs->count = (GLsizei)(3*mesh->n_indices);
 
-    assert(sizeof(float) == sizeof(GLfloat));
-
-    glGenBuffers(1, &bufs->values);
     bufs->values_size = 3;
-    glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(float)*n_vert), mesh->vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_values = 1;
-
-    glGenBuffers(1, &bufs->colors);
-    bufs->colors_size = 4;
-    glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(4*sizeof(float)*n_vert), colors, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_colors = 1;
-
-
-    glGenBuffers(1, &bufs->indices);
-    bufs->indices_size = 3;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(unsigned)*mesh->n_indices),
-                 mesh->indices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_indices = 1;
-
-    glGenBuffers(1, &bufs->normals);
+    if( mesh->indices ) {
+        bufs->indices_size = 3;
+    }
     bufs->normals_size = 3;
-    glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(float)*n_vert), mesh->normals, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_normals = 1;
-
     bufs->mode = GL_TRIANGLES;
+
+
+    bind_mesh( &geom->base, mesh );
+
+}
+
+static void quad_mesh (
+    struct aa_rx_geom_box *geom,
+    struct aa_rx_mesh *mesh
+    )
+{
+    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
+    geom->base.gl_buffers = bufs;
+    bufs->values_size = 3;
+
+    if( mesh->indices ) {
+        bufs->indices_size = 4;
+        bufs->count = (GLsizei)(4*mesh->n_indices);
+    } else {
+        bufs->count = (GLsizei)(4*mesh->n_vertices);
+    }
+
+    bufs->normals_size = 3;
+    bufs->mode = GL_QUADS;
+
+    bind_mesh( &geom->base, mesh );
 
 }
 
@@ -512,79 +553,149 @@ AA_API void aa_geom_gl_buffers_init_box (
     struct aa_rx_geom_box *geom
     )
 {
-    static const size_t n_vert = 4*2;
-    static const size_t n_indices = 6*2;
+    //static const size_t n_vert = 4*2;
+    //static const size_t n_indices = 6*2;
 
-    GLfloat values[3*n_vert]; // 3 values, 4 corners, two squares
-    GLfloat normals[3*n_vert]; // 3 values, 4 corners, two squares
-    //GLfloat colors[3*4*2]; // same as vertices
-    GLfloat colors[6*n_vert]; // same as vertices
-    unsigned indices[n_indices*3]; // 6 sides, 2 triangles, 3 vertices
-    double *d = geom->shape.dimension;
+    /* GLfloat values[3*n_vert]; // 3 values, 4 corners, two squares */
+    /* GLfloat colors[6*n_vert]; // same as vertices */
+    /* unsigned indices[n_indices*3]; // 6 sides, 2 triangles, 3 vertices */
+    /* double *d = geom->shape.dimension; */
 
-    // fill vertices
-    double a[2] = {1,-1};
-    for( size_t x = 0, j=0; x < 2; x ++ ) {
-        for( size_t y = 0; y < 2; y ++ ) {
-            for( size_t z = 0; z < 2; z ++ ) {
-                values[j++] = (GLfloat)(a[x]*d[0]);
-                values[j++] = (GLfloat)(a[y]*d[1]);
-                values[j++] = (GLfloat)(a[z]*d[2]);
-            }
+
+    GLfloat values[6*4*3];
+    GLfloat normals[6*4*3];
+    GLfloat d[3] = { geom->shape.dimension[0],
+                     geom->shape.dimension[1],
+                     geom->shape.dimension[2]};
+    GLfloat a[2] = {1,-1};
+    double ii[4][2] = {{0,0}, {0,1}, {1,1}, {1,0}};
+
+    // Z
+    size_t n = 0;
+    for( size_t k = 0; k < 2; k ++ ) {
+        for( size_t ell = 0; ell<4; ell++ ) {
+            size_t i = ii[ell][0];
+            size_t j = ii[ell][1];
+            values[n*3 + 0] = a[i]*d[0];
+            values[n*3 + 1] = a[j]*d[1];
+            values[n*3 + 2] = a[k]*d[2];
+            normals[n*3+0] = 0;
+            normals[n*3+1] = 0;
+            normals[n*3+2] = a[k];
+            n++;
         }
     }
-    for( size_t i = 0; i < 8; i ++ ){
-        AA_MEM_CPY( normals+3*i, values+3*i, 3 );
-        aa_tf_vnormalizef( normals+3*i );
-    }
-
-    /*    xyz
-     *    ===
-     * 0: +++
-     * 1: ++-
-     * 2: +-+
-     * 3: +--
-     *
-     * 4: -++
-     * 5: -+-
-     * 6: --+
-     * 7: ---
-     */
-
-    {
-        size_t j = 0;
-        // +x
-        quad_tr(indices+j, 0,1,2,3 );
-        j+=6;
-        // -x
-        quad_tr(indices+j, 4,5,6,7 );
-        j+=6;
-        // +y
-        quad_tr(indices+j, 0,1,4,5 );
-        j+=6;
-        // -y
-        quad_tr(indices+j, 2,3,6,7 );
-        j+=6;
-        // +z
-        quad_tr(indices+j, 0,2,4,6 );
-        j+=6;
-        // -z
-        quad_tr(indices+j, 1,3,5,7 );
-        j+=6;
-    }
-
-    for( size_t i = 0; i < sizeof(colors)/(4*sizeof(*colors)); i ++ ) {
-        for( size_t j = 0; j < 4; j ++ ) {
-            colors[4*i + j ] = (GLfloat)geom->base.opt.color[j];
+    // X
+    for( size_t k = 0; k < 2; k ++ ) {
+        for( size_t ell = 0; ell<4; ell++ ) {
+            size_t i = ii[ell][0];
+            size_t j = ii[ell][1];
+            values[n*3 + 0] = a[k]*d[0];
+            values[n*3 + 1] = a[i]*d[1];
+            values[n*3 + 2] = a[j]*d[2];
+            normals[n*3+0] = a[k];
+            normals[n*3+1] = 0;
+            normals[n*3+2] = 0;
+            n++;
         }
     }
+    // Y
+    for( size_t k = 0; k < 2; k ++ ) {
+        for( size_t ell = 0; ell<4; ell++ ) {
+            size_t i = ii[ell][0];
+            size_t j = ii[ell][1];
+            values[n*3 + 0] = a[i]*d[0];
+            values[n*3 + 1] = a[k]*d[1];
+            values[n*3 + 2] = a[j]*d[2];
+            normals[n*3+0] = 0;
+            normals[n*3+1] = a[k];
+            normals[n*3+2] = 0;
+            n++;
+        }
+    }
+    fprintf(stderr, "n: %lu\n", n );
+
+    aa_dump_matf( stdout, values, 3, 6*4 );
+
 
     struct aa_rx_mesh vmesh = {0};
     struct aa_rx_mesh *mesh = &vmesh;
-    aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 );
-    aa_rx_mesh_set_normals( mesh, n_vert, normals, 0 );
-    aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 );
-    tri_mesh( geom, mesh );
+
+    /* unsigned n_indices = 6*4; */
+    /* unsigned indices[n_indices]; */
+    /* for( unsigned i = 0; i < n_indices; i++ ) { */
+    /*     indices[i] = i; */
+    /* } */
+
+    /* aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 ); */
+
+    aa_rx_mesh_set_vertices( mesh, 6*4, values, 0 );
+    aa_rx_mesh_set_normals( mesh, 6*4, normals, 0 );
+    quad_mesh( geom, mesh );
+
+
+    /* // fill vertices */
+    /* for( size_t x = 0, j=0; x < 2; x ++ ) { */
+    /*     for( size_t y = 0; y < 2; y ++ ) { */
+    /*         for( size_t z = 0; z < 2; z ++ ) { */
+    /*             values[j++] = (GLfloat)(a[x]*d[0]); */
+    /*             values[j++] = (GLfloat)(a[y]*d[1]); */
+    /*             values[j++] = (GLfloat)(a[z]*d[2]); */
+    /*         } */
+    /*     } */
+    /* } */
+    /* for( size_t i = 0; i < 8; i ++ ){ */
+    /*     AA_MEM_CPY( normals+3*i, values+3*i, 3 ); */
+    /*     aa_tf_vnormalizef( normals+3*i ); */
+    /* } */
+
+    /* /\*    xyz */
+    /*  *    === */
+    /*  * 0: +++ */
+    /*  * 1: ++- */
+    /*  * 2: +-+ */
+    /*  * 3: +-- */
+    /*  * */
+    /*  * 4: -++ */
+    /*  * 5: -+- */
+    /*  * 6: --+ */
+    /*  * 7: --- */
+    /*  *\/ */
+
+    /* { */
+    /*     size_t j = 0; */
+    /*     // +x */
+    /*     quad_tr(indices+j, 0,1,2,3 ); */
+    /*     j+=6; */
+    /*     // -x */
+    /*     quad_tr(indices+j, 4,5,6,7 ); */
+    /*     j+=6; */
+    /*     // +y */
+    /*     quad_tr(indices+j, 0,1,4,5 ); */
+    /*     j+=6; */
+    /*     // -y */
+    /*     quad_tr(indices+j, 2,3,6,7 ); */
+    /*     j+=6; */
+    /*     // +z */
+    /*     quad_tr(indices+j, 0,2,4,6 ); */
+    /*     j+=6; */
+    /*     // -z */
+    /*     quad_tr(indices+j, 1,3,5,7 ); */
+    /*     j+=6; */
+    /* } */
+
+    /* for( size_t i = 0; i < sizeof(colors)/(4*sizeof(*colors)); i ++ ) { */
+    /*     for( size_t j = 0; j < 4; j ++ ) { */
+    /*         colors[4*i + j ] = (GLfloat)geom->base.opt.color[j]; */
+    /*     } */
+    /* } */
+
+    /* struct aa_rx_mesh vmesh = {0}; */
+    /* struct aa_rx_mesh *mesh = &vmesh; */
+    /* aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 ); */
+    /* aa_rx_mesh_set_normals( mesh, n_vert, normals, 0 ); */
+    /* aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 ); */
+    /* tri_mesh( geom, mesh ); */
 }
 
 

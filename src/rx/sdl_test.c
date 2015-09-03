@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     // global lighting
     {
-        double v_light[3] = {0,5,5};
+        double v_light[3] = {.5,1,5};
         double ambient[3] = {.1,.1,.1};
         aa_gl_globals_set_light_position( globals, v_light );
         aa_gl_globals_set_perspective( globals,
