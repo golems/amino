@@ -87,6 +87,13 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
         int update_tf = 0;
         //User requests quit
         switch (e.type) {
+        case SDL_WINDOWEVENT:
+            switch( e.window.event ) {
+            case SDL_WINDOWEVENT_EXPOSED:
+                *update = 1;
+                break;
+            }
+            break;
         case SDL_QUIT:
             *quit = 1;
             break;
