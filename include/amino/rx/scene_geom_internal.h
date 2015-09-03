@@ -91,7 +91,7 @@ struct aa_rx_geom_mesh {
     struct aa_rx_mesh *shape;
 };
 
-#ifdef __cplusplus
+
 
 struct aa_rx_mesh {
     /**
@@ -112,25 +112,30 @@ struct aa_rx_mesh {
      */
     size_t n_vertices;
 
+
+
     /**
      * 3 x n_indices array of face vertices
      */
     unsigned *indices;
     size_t n_indices;
 
+    struct aa_rx_geom_opt *textures;
+    size_t n_textures;
+
+    size_t refcount;
+
     unsigned free_vertices : 1;
     unsigned free_normals : 1;
     unsigned free_indices : 1;
+    unsigned free_textures : 1;
+    unsigned free_texture_indices : 1;
 
-    std::vector<float> vertex_vectors;
-    std::vector<size_t> vertex_indices;
 
-    std::vector<float> normal_vectors;
-    std::vector<size_t> normal_indices;
-
-    std::vector<float> uv_vectors;
-    std::vector<size_t> uv_indices;
 };
+
+#ifdef __cplusplus
+
 #endif /*__cplusplus */
 
 #endif /*AMINO_RX_SCENE_GEOM_INTERNAL_H*/

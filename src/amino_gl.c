@@ -451,15 +451,70 @@ static void quad_tr( unsigned *indices,
 /*     aa_mem_region_local_pop(normals); */
 /* } */
 
+static void init_mesh (
+    struct aa_rx_geom_box *geom,
+    struct aa_rx_mesh *mesh
+    )
+{
+
+    size_t n_vert = mesh->n_vertices;
+    GLfloat *colors = (GLfloat*)aa_mem_region_local_alloc( sizeof(*colors) * n_vert * 4 );
+
+
+    /* TODO: handle multiple textures */
+    for( size_t i = 0; i < n_vert ; i ++ ) {
+        for( size_t j = 0; j < 4; j ++ ) {
+            colors[4*i + j ] = (GLfloat)geom->base.opt.color[j];
+        }
+    }
+
+    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
+    geom->base.gl_buffers = bufs;
+    bufs->count = (GLsizei)(3*mesh->n_indices);
+
+    assert(sizeof(float) == sizeof(GLfloat));
+
+    glGenBuffers(1, &bufs->values);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(float)*n_vert), mesh->vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_values = 1;
+
+    glGenBuffers(1, &bufs->colors);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(4*sizeof(float)*n_vert), colors, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_colors = 1;
+
+
+    glGenBuffers(1, &bufs->indices);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(unsigned)*mesh->n_indices),
+                 mesh->indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_indices = 1;
+
+    glGenBuffers(1, &bufs->normals);
+    glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(float)*n_vert), mesh->normals, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    bufs->has_normals = 1;
+
+}
+
+
 AA_API void aa_geom_gl_buffers_init_box (
     struct aa_rx_geom_box *geom
     )
 {
-    GLfloat values[3*4*2]; // 3 values, 4 corners, two squares
-    GLfloat normals[3*4*2]; // 3 values, 4 corners, two squares
+    static const size_t n_vert = 4*2;
+    static const size_t n_indices = 6*2;
+
+    GLfloat values[3*n_vert]; // 3 values, 4 corners, two squares
+    GLfloat normals[3*n_vert]; // 3 values, 4 corners, two squares
     //GLfloat colors[3*4*2]; // same as vertices
-    GLfloat colors[6*2*4]; // same as vertices
-    unsigned indices[6*2*3]; // 6 sides, 2 triangles, 3 vertices
+    GLfloat colors[6*n_vert]; // same as vertices
+    unsigned indices[n_indices*3]; // 6 sides, 2 triangles, 3 vertices
     double *d = geom->shape.dimension;
 
     // fill vertices
@@ -518,54 +573,15 @@ AA_API void aa_geom_gl_buffers_init_box (
             colors[4*i + j ] = (GLfloat)geom->base.opt.color[j];
         }
     }
-    /* for( size_t i = 0; i < 8; i ++ ) { */
-    /*     if( i % 2 ) { */
-    /*         colors[4*i + 0 ] = 1; */
-    /*         colors[4*i + 1 ] = 0; */
-    /*         colors[4*i + 2 ] = 0; */
-    /*     } else { */
-    /*         colors[4*i + 0 ] = 0; */
-    /*         colors[4*i + 1 ] = 1; */
-    /*         colors[4*i + 2 ] = 0; */
-    /*     } */
-    /* } */
 
-    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
-    geom->base.gl_buffers = bufs;
-    bufs->count = sizeof(indices)/sizeof(*indices);
-
-    glGenBuffers(1, &bufs->values);
-    glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(values), values, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_values = 1;
-
-    glGenBuffers(1, &bufs->colors);
-    glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_colors = 1;
-
-
-    glGenBuffers(1, &bufs->indices);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_indices = 1;
-
-
-    glGenBuffers(1, &bufs->normals);
-    glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_normals = 1;
-
-    /* aa_gl_normals( bufs, */
-    /*                sizeof(values)/sizeof(*values)/3, sizeof(indices)/sizeof(*indices)/3, */
-    /*                values, 3, */
-    /*                indices, 3 ); */
-
+    struct aa_rx_mesh vmesh = {0};
+    struct aa_rx_mesh *mesh = &vmesh;
+    aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 );
+    aa_rx_mesh_set_normals( mesh, n_vert, normals, 0 );
+    aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 );
+    init_mesh( geom, mesh );
 }
+
 
 
 AA_API void aa_geom_gl_buffers_init (

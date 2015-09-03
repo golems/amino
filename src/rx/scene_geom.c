@@ -159,3 +159,60 @@ aa_rx_geom_shape ( const struct aa_rx_geom *g,
     if( shape_type ) *shape_type = g->type;
     return shape;
 }
+
+struct aa_rx_mesh* aa_rx_mesh_create()
+{
+    struct aa_rx_mesh *mesh = AA_NEW0( struct aa_rx_mesh );
+    mesh->refcount = 1;
+    return mesh;
+}
+
+void aa_rx_mesh_set_destroy( struct aa_rx_mesh * mesh )
+{
+    mesh->refcount--;
+    if( 0 == mesh->refcount ) {
+        if(mesh->free_vertices) free(mesh->vertices);
+        if(mesh->free_normals) free(mesh->normals);
+        if(mesh->free_indices) free(mesh->indices);
+        free(mesh);
+    }
+}
+
+#define MESH_SET_THINGN( TYPE, THING, LD, N )           \
+    void aa_rx_mesh_set_ ## THING (                     \
+        struct aa_rx_mesh *mesh, size_t n,              \
+        TYPE * THING, int copy )                        \
+    {                                                   \
+        if(mesh->free_ ## THING) free(mesh->THING);     \
+        mesh->N = n;                                    \
+        if( copy ) {                                    \
+            mesh->free_ ## THING = 1;                   \
+            mesh->THING = AA_NEW_AR(TYPE, 3*n);         \
+            AA_MEM_CPY(mesh->THING, THING, 3*n);        \
+        } else {                                        \
+            mesh->free_ ## THING  = 0;                  \
+            mesh->THING = THING;                        \
+        }                                               \
+    }
+
+#define MESH_SET_THING( TYPE, THING, LD )               \
+    void aa_rx_mesh_set_ ## THING (                     \
+        struct aa_rx_mesh *mesh, size_t n,              \
+        TYPE * THING, int copy )                        \
+    {                                                   \
+        if(mesh->free_ ## THING) free(mesh->THING);     \
+        if( copy ) {                                    \
+            mesh->free_ ## THING = 1;                   \
+            mesh->THING = AA_NEW_AR(TYPE, LD*n);        \
+            AA_MEM_CPY(mesh->THING, THING, LD*n);       \
+        } else {                                        \
+            mesh->free_ ## THING  = 0;                  \
+            mesh->THING = THING;                        \
+        }                                               \
+    }
+
+MESH_SET_THINGN( float, vertices, 3, n_vertices)
+MESH_SET_THING( float, normals, 3 )
+MESH_SET_THINGN( unsigned, indices, 3, n_indices )
+MESH_SET_THING( unsigned, texture_indices, 3 )
+MESH_SET_THINGN( struct aa_rx_geom_opt, textures, 3, n_textures)
