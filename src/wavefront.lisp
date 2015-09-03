@@ -274,6 +274,7 @@
                     (mesh-up-axis "Z")
                     (mesh-forward-axis "Y"))
   (labels ((handle-obj (obj-file)
+             ;(mesh-deindex-normals (wavefront-obj-load obj-file)))
              (wavefront-obj-load obj-file))
            (handle-dae (dae-file)
              (convert dae-file))
