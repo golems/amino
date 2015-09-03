@@ -105,9 +105,17 @@ AA_API void aa_gl_init();
 
 struct aa_gl_buffers {
     GLuint values;
+    GLint  values_size;
+
     GLuint colors;
+    GLint  colors_size;
+
     GLuint indices;
+    GLint  indices_size;
+
     GLuint normals;
+    GLint  normals_size;
+
     GLsizei count;
 
     GLfloat specular[3];
@@ -116,6 +124,8 @@ struct aa_gl_buffers {
     unsigned has_colors : 1;
     unsigned has_values : 1;
     unsigned has_normals : 1;
+
+    GLenum mode;
 
     struct aa_gl_buffers *next;
 };

@@ -271,7 +271,7 @@ AA_API void aa_gl_draw_tf (
     glEnableVertexAttribArray((GLuint)aa_gl_id_position);
     check_error("glEnableVert");
 
-    glVertexAttribPointer((GLuint)aa_gl_id_position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer((GLuint)aa_gl_id_position, buffers->values_size, GL_FLOAT, GL_FALSE, 0, 0);
     check_error("glVertAttribPointer");
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -283,7 +283,7 @@ AA_API void aa_gl_draw_tf (
     glEnableVertexAttribArray((GLuint)aa_gl_id_color);
     check_error("glEnabeVert");
 
-    glVertexAttribPointer((GLuint)aa_gl_id_color, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer((GLuint)aa_gl_id_color, buffers->colors_size, GL_FLOAT, GL_FALSE, 0, 0);
     check_error("glVerteAttribPointer");
 
     // normals
@@ -294,7 +294,7 @@ AA_API void aa_gl_draw_tf (
         glEnableVertexAttribArray((GLuint)aa_gl_id_normal);
         check_error("glEnabeVert normal");
 
-        glVertexAttribPointer((GLuint)aa_gl_id_normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glVertexAttribPointer((GLuint)aa_gl_id_normal, buffers->normals_size, GL_FLOAT, GL_FALSE, 0, 0);
         check_error("glVerteAttribPointer normal");
     }
 
@@ -336,7 +336,7 @@ AA_API void aa_gl_draw_tf (
     if( buffers->has_indices ) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers->indices);
         glDrawElements(
-            GL_TRIANGLES,      // mode
+            buffers->mode,     // mode
             buffers->count,    // count
             GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
@@ -344,7 +344,7 @@ AA_API void aa_gl_draw_tf (
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
-        glDrawArrays(GL_TRIANGLES, 0, buffers->count);
+        glDrawArrays(buffers->mode, 0, buffers->count);
     }
     check_error("glDraw");
 
@@ -451,12 +451,11 @@ static void quad_tr( unsigned *indices,
 /*     aa_mem_region_local_pop(normals); */
 /* } */
 
-static void init_mesh (
+static void tri_mesh (
     struct aa_rx_geom_box *geom,
     struct aa_rx_mesh *mesh
     )
 {
-
     size_t n_vert = mesh->n_vertices;
     GLfloat *colors = (GLfloat*)aa_mem_region_local_alloc( sizeof(*colors) * n_vert * 4 );
 
@@ -475,12 +474,14 @@ static void init_mesh (
     assert(sizeof(float) == sizeof(GLfloat));
 
     glGenBuffers(1, &bufs->values);
+    bufs->values_size = 3;
     glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(float)*n_vert), mesh->vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_values = 1;
 
     glGenBuffers(1, &bufs->colors);
+    bufs->colors_size = 4;
     glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(4*sizeof(float)*n_vert), colors, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -488,6 +489,7 @@ static void init_mesh (
 
 
     glGenBuffers(1, &bufs->indices);
+    bufs->indices_size = 3;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(unsigned)*mesh->n_indices),
                  mesh->indices, GL_STATIC_DRAW);
@@ -495,10 +497,13 @@ static void init_mesh (
     bufs->has_indices = 1;
 
     glGenBuffers(1, &bufs->normals);
+    bufs->normals_size = 3;
     glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(3*sizeof(float)*n_vert), mesh->normals, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_normals = 1;
+
+    bufs->mode = GL_TRIANGLES;
 
 }
 
@@ -579,7 +584,7 @@ AA_API void aa_geom_gl_buffers_init_box (
     aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 );
     aa_rx_mesh_set_normals( mesh, n_vert, normals, 0 );
     aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 );
-    init_mesh( geom, mesh );
+    tri_mesh( geom, mesh );
 }
 
 
