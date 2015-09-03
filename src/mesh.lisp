@@ -11,3 +11,10 @@
   (uv-indices nil :type (or null (simple-array fixnum (*))))
   texture-properties
   (texture-indices nil :type (or null (simple-array fixnum (*)))))
+
+
+(defmethod print-object ((object mesh-data) stream)
+  (print-unreadable-object (object stream :type t :identity nil)
+    (format stream "~A" (mesh-data-name object))))
+
+(defun mesh-deindex-normals (mesh))
