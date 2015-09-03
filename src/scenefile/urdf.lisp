@@ -132,9 +132,15 @@
 
     (loop for link-node in (dom-select-path dom '("robot" "link"))
        for name = (dom:get-attribute link-node "name")
-
+       for visuals = (path-n link-node '("visual"))
+       for default-visual-node = (car visuals)
+       for default-rgba-text = (when default-visual-node
+                                 (path-1 default-visual-node '("material" "color" "@rgba")))
+       for default-rgba = (if default-rgba-text
+                              (parse-float-sequence default-rgba-text)
+                              (append default-color (list default-alpha)))
        do
-         (loop for visual-node in (path-n link-node '("visual"))
+         (loop for visual-node in visuals
             for rgba-text = (when visual-node (path-1 visual-node '("material" "color" "@rgba")))
             for rgba = (if rgba-text (parse-float-sequence rgba-text)
                            (append default-color (list default-alpha)))
@@ -149,9 +155,7 @@
             do
               (let* ((shape (node-shape collision-node))
                      (frame-name (node-origin name collision-node "collision" shape))
-                     (options)
-                     ;;(options (node-options :rgba rgba :collision t))
-                     )
+                     (options (node-options :rgba default-rgba :visual nil :collision t)))
                 (setq scene-graph
                       (scene-graph-add-geometry scene-graph frame-name
                                                 (scene-geometry shape options)))))))
