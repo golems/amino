@@ -54,5 +54,32 @@ struct aa_gl_globals {
     double angle_ratio;
 };
 
+struct aa_gl_buffers {
+    GLuint values;
+    GLint  values_size;
+
+    GLuint colors;
+    GLint  colors_size;
+
+    GLuint indices;
+    GLint  indices_size;
+
+    GLuint normals;
+    GLint  normals_size;
+
+    GLsizei count;
+
+    GLfloat specular[3];
+
+    unsigned has_indices : 1;
+    unsigned has_colors : 1;
+    unsigned has_values : 1;
+    unsigned has_normals : 1;
+
+    GLenum mode;
+
+    struct aa_gl_buffers *next;
+};
+
 
 #endif /*AMINO_RX_GL_INTERNAL_H*/

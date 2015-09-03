@@ -102,35 +102,14 @@ AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader);
  */
 AA_API void aa_gl_init();
 
+/**
+ * Container for OpenGL buffers (Forward declaration)
+ */
+struct aa_gl_buffers;
 
-struct aa_gl_buffers {
-    GLuint values;
-    GLint  values_size;
-
-    GLuint colors;
-    GLint  colors_size;
-
-    GLuint indices;
-    GLint  indices_size;
-
-    GLuint normals;
-    GLint  normals_size;
-
-    GLsizei count;
-
-    GLfloat specular[3];
-
-    unsigned has_indices : 1;
-    unsigned has_colors : 1;
-    unsigned has_values : 1;
-    unsigned has_normals : 1;
-
-    GLenum mode;
-
-    struct aa_gl_buffers *next;
-};
-
-
+/**
+ * Container for globals rendering info (Forward declaration)
+ */
 struct aa_gl_globals;
 
 struct aa_gl_globals *
