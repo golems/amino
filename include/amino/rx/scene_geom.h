@@ -128,7 +128,8 @@ enum aa_rx_geom_shape {
     AA_RX_BOX,
     AA_RX_SPHERE,
     AA_RX_CYLINDER,
-    AA_RX_CONE
+    AA_RX_CONE,
+    AA_RX_GRID
 };
 
 struct aa_rx_shape_box {
@@ -148,6 +149,12 @@ struct aa_rx_shape_cone {
     double height;
     double start_radius;
     double end_radius;
+};
+
+
+struct aa_rx_shape_grid {
+    double dimension[2];
+    double delta[2];
 };
 
 void *
@@ -188,6 +195,15 @@ aa_rx_geom_cone (
     double height,
     double start_radius,
     double end_radius );
+
+/**
+ * Create a grid
+ */
+struct aa_rx_geom *
+aa_rx_geom_grid (
+    struct aa_rx_geom_opt *opt,
+    const double dimension[2],
+    const double delta[2] );
 
 /**
  * Opaque type for a mesh objects

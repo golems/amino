@@ -287,7 +287,7 @@ AA_API void aa_gl_draw_tf (
     check_error("glVerteAttribPointer");
 
     // normals
-    if( 0 <= aa_gl_id_normal ) {
+    if( 0 <= aa_gl_id_normal && buffers->normals_size ) {
         glBindBuffer(GL_ARRAY_BUFFER, buffers->normals);
         check_error("glBindBuffer normal");
 
@@ -455,7 +455,7 @@ static void bind_mesh (
     struct aa_rx_mesh *mesh
     )
 {
-
+    assert(geom->gl_buffers);
     assert(sizeof(float) == sizeof(GLfloat));
 
     struct aa_gl_buffers *bufs = geom->gl_buffers;
@@ -545,9 +545,82 @@ static void quad_mesh (
     bufs->mode = GL_QUADS;
 
     bind_mesh( &geom->base, mesh );
-
 }
 
+static void line_mesh (
+    struct aa_rx_geom *geom,
+    struct aa_rx_mesh *mesh
+    )
+{
+    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
+    geom->gl_buffers = bufs;
+    bufs->values_size = 3;
+
+    if( mesh->indices ) {
+        bufs->indices_size = 2;
+        bufs->count = (GLsizei)(2*mesh->n_indices);
+    } else {
+        bufs->count = (GLsizei)(2*mesh->n_vertices);
+    }
+
+    bufs->mode = GL_LINES;
+
+    assert(geom->gl_buffers);
+    bind_mesh( geom, mesh );
+}
+
+AA_API void aa_geom_gl_buffers_init_grid (
+    struct aa_rx_geom_grid *geom
+    )
+{
+    double *dmax1 = geom->shape.dimension;
+    double *delta = geom->shape.delta;
+    size_t n_x = (size_t)(dmax1[0]/delta[0]) + 1;
+    size_t n_y = (size_t)(dmax1[1]/delta[1]) + 1;
+    double dmax[2] = {(n_x-1)*delta[0], (n_y-1)*delta[1]};
+    //size_t n_vert = 2*n_x + 2*n_x - 1 + 2*n_y + 2*n_y - 1;
+    size_t n_vert = 4*(n_x+n_y-1);
+
+    size_t vsize = 3 * n_vert * sizeof(GLfloat);
+    GLfloat *values = (GLfloat*)aa_mem_region_local_alloc(vsize);;
+
+    static const double a[2] = {1,-1};
+    // x
+    size_t c = 0;
+    for( short k = 0; k < 2; k ++ ) { // +/- x
+        for( size_t i = k; i < n_x; i ++ ) { // step from 0
+            for( short j = 0; j < 2; j ++ ) { // +/- y
+                double x = a[k]*i*delta[0];
+                double y = a[j]*dmax[1];
+                values[c++] = (GLfloat)x;
+                values[c++] = (GLfloat)y;
+                values[c++] = 0;
+            }
+        }
+    }
+
+    // y
+    for( short k = k; k < 2; k ++ ) {
+        for( size_t i = k; i < n_y; i ++ ) {
+            for( short j = 0; j < 2; j ++ ) {
+                double x = a[j]*dmax[0];
+                double y = a[k]*i*delta[1];
+                values[c++] = (GLfloat)x;
+                values[c++] = (GLfloat)y;
+                values[c++] = 0;
+            }
+        }
+    }
+    assert( c == 3*n_vert );
+
+    struct aa_rx_mesh vmesh = {0};
+    struct aa_rx_mesh *mesh = &vmesh;
+
+    aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 );
+    line_mesh( &geom->base, mesh );
+
+    aa_mem_region_local_pop(values);
+}
 
 AA_API void aa_geom_gl_buffers_init_box (
     struct aa_rx_geom_box *geom
@@ -568,7 +641,7 @@ AA_API void aa_geom_gl_buffers_init_box (
                      geom->shape.dimension[1],
                      geom->shape.dimension[2]};
     GLfloat a[2] = {1,-1};
-    double ii[4][2] = {{0,0}, {0,1}, {1,1}, {1,0}};
+    size_t ii[4][2] = {{0,0}, {0,1}, {1,1}, {1,0}};
 
     // Z
     size_t n = 0;
@@ -613,9 +686,9 @@ AA_API void aa_geom_gl_buffers_init_box (
             n++;
         }
     }
-    fprintf(stderr, "n: %lu\n", n );
+    //fprintf(stderr, "n: %lu\n", n );
 
-    aa_dump_matf( stdout, values, 3, 6*4 );
+    //aa_dump_matf( stdout, values, 3, 6*4 );
 
 
     struct aa_rx_mesh vmesh = {0};
@@ -710,6 +783,9 @@ AA_API void aa_geom_gl_buffers_init (
     switch( geom->type ) {
     case AA_RX_BOX:
         aa_geom_gl_buffers_init_box((struct aa_rx_geom_box*)geom);
+        break;
+    case AA_RX_GRID:
+        aa_geom_gl_buffers_init_grid((struct aa_rx_geom_grid*)geom);
         break;
     default: abort();
     }

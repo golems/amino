@@ -158,8 +158,10 @@ AS_IF([test "x$enable_debug" = "xyes"],[
     AC_LANG([Fortran])
     APPEND_FCFLAG([-fbounds-check])
     APPEND_FCFLAG([-fstack-check])
+    APPEND_CFLAG([-g])
     AC_LANG([C])
     APPEND_CFLAG([-fstack-check])
+    APPEND_CFLAG([-g])
 ])
 
 

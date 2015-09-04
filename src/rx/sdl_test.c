@@ -55,10 +55,14 @@ const int SCREEN_HEIGHT = 1000;
 
 
 struct aa_rx_geom_box geom;
+struct aa_rx_geom_grid grid;
 
 
 void Init(void)
 {
+    memset(&geom,0,sizeof(geom));
+    memset(&grid,0,sizeof(grid));
+
     geom.base.opt.color[0] = 1;
     geom.base.opt.color[1] = 0;
     geom.base.opt.color[2] = 0;
@@ -72,6 +76,23 @@ void Init(void)
     double spec[3] = {.3, .3, .3 };
     aa_rx_geom_opt_set_specular( &geom.base.opt, spec );
     aa_geom_gl_buffers_init( &geom.base );
+
+    grid.base.opt.color[0] = .5;
+    grid.base.opt.color[1] = .5;
+    grid.base.opt.color[2] = 1;
+    grid.base.opt.color[3] = 1;
+    grid.base.type = AA_RX_GRID;
+    grid.base.gl_buffers = NULL;
+
+    grid.shape.dimension[0] = 1;
+    grid.shape.dimension[1] = 1;
+
+    grid.shape.delta[0] = .05;
+    grid.shape.delta[1] = .05;
+
+    aa_rx_geom_opt_set_specular( &grid.base.opt, spec );
+    aa_geom_gl_buffers_init( &grid.base );
+
 
 }
 
@@ -118,6 +139,9 @@ void display( const struct aa_gl_globals *globals,
     aa_gl_draw_tf( globals, world_E_model,
                    geom.base.gl_buffers );
 
+
+    aa_gl_draw_tf( globals, world_E_model,
+                   grid.base.gl_buffers );
 
 }
 

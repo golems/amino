@@ -42,7 +42,7 @@
 #include "amino/rx/scene_geom_internal.h"
 #include "sg_convenience.h"
 
-#define ALLOC_GEOM(TYPE, var, type_value, geom_opt, sg, frame)  \
+#define ALLOC_GEOM(TYPE, var, type_value, geom_opt )            \
     TYPE *var = AA_NEW0(TYPE);                                  \
     AA_MEM_CPY(&g->base.opt, geom_opt, 1);                      \
     var->base.type = type_value;                                \
@@ -57,8 +57,7 @@ aa_rx_geom_box (
     const double dimension[3] )
 {
     ALLOC_GEOM( struct aa_rx_geom_box, g,
-                AA_RX_BOX, opt,
-                scene_graph, frame );
+                AA_RX_BOX, opt );
     AA_MEM_CPY(g->shape.dimension, dimension, 3);
     return &g->base;
 }
@@ -69,8 +68,7 @@ aa_rx_geom_sphere (
     double radius )
 {
     ALLOC_GEOM( struct aa_rx_geom_sphere, g,
-                AA_RX_SPHERE, opt,
-                scene_graph, frame );
+                AA_RX_SPHERE, opt );
     g->shape.radius = radius;
     return &g->base;
 }
@@ -82,8 +80,7 @@ aa_rx_geom_cylinder (
     double radius )
 {
     ALLOC_GEOM( struct aa_rx_geom_cylinder, g,
-                AA_RX_CYLINDER, opt,
-                scene_graph, frame );
+                AA_RX_CYLINDER, opt );
     g->shape.radius = radius;
     g->shape.height = height;
     return &g->base;
@@ -97,14 +94,26 @@ aa_rx_geom_cone (
     double end_radius )
 {
     ALLOC_GEOM( struct aa_rx_geom_cone, g,
-                AA_RX_CONE, opt,
-                scene_graph, frame );
+                AA_RX_CONE, opt );
     g->shape.start_radius = start_radius;
     g->shape.end_radius = end_radius;
     g->shape.height = height;
     return &g->base;
 }
 
+
+struct aa_rx_geom *
+aa_rx_geom_grid (
+    struct aa_rx_geom_opt *opt,
+    const double dimension[2],
+    const double delta[2] )
+{
+    ALLOC_GEOM( struct aa_rx_geom_grid, g,
+                AA_RX_GRID, opt );
+    AA_MEM_CPY(g->shape.dimension, dimension, 2);
+    AA_MEM_CPY(g->shape.delta, delta, 2);
+    return &g->base;
+}
 
 void
 aa_rx_geom_attach (
@@ -154,6 +163,9 @@ aa_rx_geom_shape ( const struct aa_rx_geom *g,
         break;
     case AA_RX_CONE:
         shape = &((struct aa_rx_geom_cone*)g)->shape;
+        break;
+    case AA_RX_GRID:
+        shape = &((struct aa_rx_geom_grid*)g)->shape;
         break;
     }
     if( shape_type ) *shape_type = g->type;
