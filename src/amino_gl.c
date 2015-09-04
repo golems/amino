@@ -135,25 +135,28 @@ static const char aa_gl_vertex_shader[] =
     "in vec3 normal;"
     ""
     "uniform mat4 matrix_model;"   // parent: world, child: model
-    "uniform mat4 matrix_camera;"  // parent: camera, child world
-    "uniform mat4 matrix_perspective;"
-    "uniform vec3 light_world;"
+    "uniform mat4 matrix_camera;"  // camera perspective * pose
+    "uniform vec3 light_world;"    // position of light in world
+    "uniform vec3 camera_world;"    // position of camera in world
     ""
     "smooth out vec4 vColor;"
-    "out vec4 position_world;"
-    "out vec4 position_camera;"
-    "out vec3 eye_camera;"
-    "out vec3 light_dir_camera;"
-    "out vec3 normal_camera;"
+
+    "out vec3 eye_world;"
+    "out vec3 light_dir_world;"
+    "out vec3 normal_world;"
     ""
     "void main() {"
-    "  position_world = matrix_model * position;"
-    "  position_camera = matrix_camera * position_world;"
-    "  gl_Position = matrix_perspective * position_camera;"
-    "  eye_camera = vec3(0,0,0) - position_camera.xyz;" // vector from vertex to camera origin
-    "  vec3 light_pos_camera = (matrix_camera * vec4(light_world,1)).xyz;"
-    "  light_dir_camera = eye_camera + light_pos_camera;" // vector from light to vertex
-    "  normal_camera = (matrix_camera * matrix_model * vec4(normal,0)).xyz;"
+    "  vec4 position_world = matrix_model * position;"
+    "  gl_Position = matrix_camera * position_world;"
+
+    /* "  eye_camera = vec3(0,0,0) - position_camera.xyz;" // vector from vertex to camera origin */
+    /* "  vec3 light_pos_camera = (matrix_camera * vec4(light_world,1)).xyz;" */
+    /* "  light_dir_camera = eye_camera + light_pos_camera;" // vector from light to vertex */
+    /* "  normal_camera = (matrix_camera * matrix_model * vec4(normal,0)).xyz;" */
+
+    "  eye_world = camera_world - position_world.xyz;"         // tail: vertex, tip: camera
+    "  light_dir_world = light_world - position_world.xyz;" // tail: vertex, tip: light
+    "  normal_world = mat3(matrix_model) * normal;"
 
     "  vColor = color;"
     "}";
@@ -162,10 +165,11 @@ static const char aa_gl_fragment_shader[] =
     "#version 130\n"
     "smooth in vec4 vColor;"
     ""
-    "in vec4 position_world;"
-    "in vec3 normal_camera;"
-    "in vec3 eye_camera;"
-    "in vec3 light_dir_camera;"
+
+    "in vec3 normal_world;"
+    "in vec3 eye_world;"
+    "in vec3 light_dir_world;"
+
     "uniform vec3 ambient;"
     "uniform vec3 light_color;"
     "uniform float light_power;"
@@ -176,12 +180,12 @@ static const char aa_gl_fragment_shader[] =
     ""
     "  vec3 diffuse = vColor.xyz;"
     ""
-    "  float dist = length( light_dir_camera );"
-    "  vec3 n = normalize(normal_camera);"
-    "  vec3 l = normalize(light_dir_camera);"
+    "  float dist = length( light_dir_world );"
+    "  vec3 n = normal_world;" // already a unit vector
+    "  vec3 l = light_dir_world / dist;" // normalize
     "  float ct = clamp(dot(n,l), 0.1, 1);"
     ""
-    "  vec3 E = normalize(eye_camera);"
+    "  vec3 E = normalize(eye_world);"
     "  vec3 R = reflect(-l,n);"
     "  float ca = clamp(dot(E,R), 0.1, 1);"
     ""
@@ -194,6 +198,7 @@ static const char aa_gl_fragment_shader[] =
     // Specular : reflective highlight, like a mirror
     "    + specular * light_color * light_power * pow(ca,5) / (dist*dist)"
     "  ;"
+    "" // apply color and alpha
     "  gl_FragColor = vec4(color,vColor.w);"
     "}";
 
@@ -206,7 +211,7 @@ static GLint aa_gl_id_color;
 static GLint aa_gl_id_normal;
 static GLint aa_gl_id_matrix_model;
 static GLint aa_gl_id_matrix_camera;
-static GLint aa_gl_id_matrix_perspective;
+static GLint aa_gl_id_camera_world;;
 static GLint aa_gl_id_light_position;
 static GLint aa_gl_id_ambient;
 static GLint aa_gl_id_light_color;
@@ -238,9 +243,9 @@ AA_API void aa_gl_init()
     /* printf("ids: %d\n", */
     /*        aa_gl_id_specular ); */
 
+    aa_gl_id_camera_world = glGetUniformLocation(aa_gl_id_program, "camera_world");
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
-    aa_gl_id_matrix_perspective = glGetUniformLocation(aa_gl_id_program, "matrix_perspective");
 
     aa_gl_do_init = 0;
 }
@@ -325,13 +330,21 @@ AA_API void aa_gl_draw_tf (
     glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
     check_error("uniform mat model");
 
-    glUniformMatrix4fv(aa_gl_id_matrix_camera, 1, GL_FALSE, globals->cam_E_world);
+
+
+    GLfloat M_c[16];
+    cblas_sgemm( CblasColMajor, CblasNoTrans, CblasNoTrans,
+                 4, 4, 4,
+                 1.0, globals->perspective, 4,
+                 globals->cam_M_world, 4,
+                 0, M_c, 4 );
+
+    glUniformMatrix4fv(aa_gl_id_matrix_camera, 1, GL_FALSE, M_c);
     check_error("uniform mat camera");
 
-    // perspective matrix
+    glUniform3fv(aa_gl_id_camera_world, 1, globals->world_v_cam);
+    check_error("uniform pos camera");
 
-    glUniformMatrix4fv(aa_gl_id_matrix_perspective, 1, GL_FALSE, globals->perspective);
-    check_error("uniform mat perspective");
 
     if( buffers->has_indices ) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers->indices);
@@ -837,13 +850,18 @@ aa_gl_globals_set_camera(
     struct aa_gl_globals *globals,
     const double world_E_camera[7])
 {
+
+    for( size_t i = 0; i < 3; i ++ ) {
+        globals->world_v_cam[i] = (GLfloat) world_E_camera[AA_TF_QUTR_T + i] ;
+    }
+
     double world_T_camera[12], camera_T_world[12];
     // Copy camera pose
     AA_MEM_CPY(globals->world_E_cam, world_E_camera, 7);
     // Convert inverse camera pose
     aa_tf_qutr2tfmat(world_E_camera,world_T_camera);
     aa_tf_tfmat_inv2(world_T_camera, camera_T_world);
-    aa_gl_tfmat2glmat( camera_T_world, globals->cam_E_world );
+    aa_gl_tfmat2glmat( camera_T_world, globals->cam_M_world );
 }
 
 void

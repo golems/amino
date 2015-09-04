@@ -42,7 +42,9 @@
 struct aa_gl_globals {
     double world_E_cam[7];
     double world_E_camhome[7];
-    GLfloat cam_E_world[16];
+
+    GLfloat world_v_cam[3];
+    GLfloat cam_M_world[16];
     GLfloat perspective[16];
     GLfloat world_v_light[3];
     GLfloat light_color[3];
