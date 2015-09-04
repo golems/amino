@@ -95,11 +95,13 @@
     ((null place)
      object)
     ((ropep place)
-     (let ((file (output-file (rope-string place)
+     (let ((place (output-file (rope-string place)
                               directory)))
-       (ensure-directories-exist file)
-       (with-open-file (place file :direction :output :if-exists if-exists)
-         (print object place)))
+       (ensure-directories-exist place)
+       (with-open-file (s place :direction :output
+                          :if-exists if-exists
+                          :if-does-not-exist :create)
+         (print object s)))
      (values))
     (t (error "Unknown place type: ~A" place))))
 
