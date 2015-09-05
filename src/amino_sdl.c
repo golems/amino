@@ -93,6 +93,14 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
             case SDL_WINDOWEVENT_EXPOSED:
                 *update = 1;
                 break;
+            case SDL_WINDOWEVENT_RESIZED:
+            case SDL_WINDOWEVENT_SIZE_CHANGED: {
+                int w = e.window.data1;
+                int h = e.window.data2;
+                glViewport(0,0,w,h);
+                aa_gl_globals_set_aspect(globals, ((double)w)/((double)h));
+                break;
+            }
             }
             break;
         case SDL_QUIT:

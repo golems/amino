@@ -898,13 +898,25 @@ aa_gl_globals_set_perspective(
     double znear,
     double zfar )
 {
+    globals->fovy = fovy;
+    globals->znear = znear;
+    globals->zfar = zfar;
+    aa_gl_globals_set_aspect( globals, aspect );
+}
+
+void
+aa_gl_globals_set_aspect(
+    struct aa_gl_globals *globals,
+    double aspect )
+{
     for( size_t i = 0; i < 4; i ++ ) {
         globals->perspective[i*4 + i] = 1;
     }
+    globals->aspect = aspect;
 
-    aa_gl_mat_perspective(fovy, aspect,
-                          znear, zfar,
-                          globals->perspective);
+    aa_gl_mat_perspective( globals->fovy, globals->aspect,
+                           globals->znear, globals->zfar,
+                           globals->perspective);
 }
 
 void

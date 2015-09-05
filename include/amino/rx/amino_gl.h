@@ -138,6 +138,11 @@ aa_gl_globals_set_light_position(
     const double world_v_light[3]);
 
 void
+aa_gl_globals_set_aspect(
+    struct aa_gl_globals *globals,
+    double aspect );
+
+void
 aa_gl_globals_set_perspective(
     struct aa_gl_globals *globals,
     double fovy,
