@@ -456,7 +456,7 @@
                                                               :radius (get-prop properties "radius")))
                                              (otherwise (error "Unknown shape: ~A" (get-prop properties "shape")))))
                                (mesh-prop (make-scene-mesh :source-file (file-resolve mesh-prop file-directory)))
-                               (t (error "foo"))))
+                               (t (error "No shape or mesh in ~A" parent))))
                       (geometry (scene-geometry shape (property-options properties)))
                       (parent (get-prop properties "parent" parent)))
                  (setf (scene-geometry-type geometry) (property-classes properties))
