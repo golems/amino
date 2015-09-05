@@ -114,6 +114,18 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
                 //case SDLK_UP: world_E_model[AA_TF_QUTR_TZ] += .1; break;
                 //case SDLK_DOWN: world_E_model[AA_TF_QUTR_TZ] -= .1; break;
 
+            case SDLK_F11: {
+                SDL_Window *w = SDL_GetWindowFromID(e.key.windowID);
+                uint32_t f = SDL_GetWindowFlags(w);
+                if( (f & SDL_WINDOW_FULLSCREEN) ||
+                    (f & SDL_WINDOW_FULLSCREEN_DESKTOP ) )
+                {
+                    SDL_SetWindowFullscreen( w, 0 );
+                } else {
+                    SDL_SetWindowFullscreen( w, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                }
+            }
+            break;
             case SDLK_KP_2: sign = -1;
             case SDLK_KP_8:
                 if( ctrl ) {

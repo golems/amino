@@ -166,6 +166,7 @@ int main(int argc, char *argv[])
 
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
+    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
     window = SDL_CreateWindow( "SDL Test",
                                SDL_WINDOWPOS_UNDEFINED,
