@@ -59,6 +59,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defparameter *draw-options*
   '((:no-shadow . nil)
     (:color . (0 0 0))
+    (:specular . (0 0 0))
     (:alpha . 1d0)
     (:visual . t)
     (:collision . t)
@@ -70,6 +71,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun draw-options-default (&key
                                (options *draw-options*)
                                (no-shadow (draw-option options :no-shadow))
+                               (specular (draw-option options :specular))
                                (color (draw-option options :color))
                                (alpha (draw-option options :alpha))
                                (visual (draw-option options :visual))
@@ -77,6 +79,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                                (collision (draw-option options :collision)))
   (list* (cons :no-shadow no-shadow)
          (cons :color color)
+         (cons :specular specular)
          (cons :alpha alpha)
          (cons :visual visual)
          (cons :collision collision)
