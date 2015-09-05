@@ -87,10 +87,10 @@
                  (if-exists :supersede))
   (cond
     ((streamp place)
-     (print object place)
+     (princ object place)
      (values))
     ((eq place t)
-     (print object *standard-output*)
+     (princ object *standard-output*)
      (values))
     ((null place)
      object)
@@ -101,7 +101,7 @@
        (with-open-file (s place :direction :output
                           :if-exists if-exists
                           :if-does-not-exist :create)
-         (print object s)))
+         (output object s)))
      (values))
     (t (error "Unknown place type: ~A" place))))
 
