@@ -96,21 +96,21 @@ AA_API void aa_rx_sg_index ( struct aa_rx_sg *scene_graph );
  */
 AA_API enum aa_rx_frame_type
 aa_rx_sg_frame_type (
-    struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
+    const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
 
 /**
  * Return the name of the given frame
  */
 AA_API const char *
 aa_rx_sg_frame_name (
-    struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
+    const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
 
 /**
  * Return the parent id of the frame
  */
 AA_API aa_rx_frame_id
 aa_rx_sg_frame_parent (
-    struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
+    const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
 
 
 /**
@@ -118,26 +118,26 @@ aa_rx_sg_frame_parent (
  */
 AA_API aa_rx_frame_id
 aa_rx_sg_frame_count (
-    struct aa_rx_sg *scene_graph );
+    const struct aa_rx_sg *scene_graph );
 
 /**
  * Return the number of configuration variables in scene_graph.
  */
 AA_API aa_rx_config_id
 aa_rx_sg_config_count (
-    struct aa_rx_sg *scene_graph );
+    const struct aa_rx_sg *scene_graph );
 
 /**
  *  Return the index of a configuration variable in the scne graph
  */
 AA_API aa_rx_config_id aa_rx_sg_config_id(
-    struct aa_rx_sg *scene_graph, const char *config_name);
+    const struct aa_rx_sg *scene_graph, const char *config_name);
 
 /**
  *  Return the index of a frame in the scene graph
  */
 AA_API aa_rx_frame_id aa_rx_sg_frame_id (
-    struct aa_rx_sg *scene_graph, const char *frame_name);
+    const struct aa_rx_sg *scene_graph, const char *frame_name);
 
 
 /* /\** */
@@ -231,7 +231,7 @@ AA_API void aa_rx_sg_rm_frame
  *
  */
 AA_API void aa_rx_sg_tf
-( struct aa_rx_sg *scene_graph,
+( const struct aa_rx_sg *scene_graph,
   aa_rx_config_id n_q, double *q,
   aa_rx_frame_id n_tf,
   double *TF_rel, size_t ld_rel,
