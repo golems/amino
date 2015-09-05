@@ -108,10 +108,6 @@ AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader);
  */
 AA_API void aa_gl_init();
 
-/**
- * Container for OpenGL buffers (Forward declaration)
- */
-struct aa_gl_buffers;
 
 /**
  * Container for globals rendering info (Forward declaration)
@@ -171,17 +167,6 @@ aa_gl_globals_set_ambient(
     double ambient[3] );
 
 struct aa_sg_gl_buffers;
-
-/**
- * Draw a transform frame frame
- */
-AA_API void aa_gl_draw_tf (
-    const struct aa_gl_globals *globals,
-    const double *world_E_model,
-    const struct aa_gl_buffers *buffers);
-
-
-struct aa_rx_geom;
 
 AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom

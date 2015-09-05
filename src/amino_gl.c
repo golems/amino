@@ -43,6 +43,8 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
+#include "amino/rx/rxtype.h"
+#include "amino/rx/rxtype_internal.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_gl_internal.h"

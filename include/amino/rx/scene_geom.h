@@ -114,7 +114,6 @@ aa_rx_geom_opt_set_specular (
 /*- Shapes -*/
 /*----------*/
 
-struct aa_rx_geom;
 
 struct aa_rx_geom *
 aa_rx_geom_copy( struct aa_rx_geom *src );

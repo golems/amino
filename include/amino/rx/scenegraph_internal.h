@@ -150,7 +150,6 @@ struct aa_rx_sg {
 
 
 #endif /* __cplusplus */
-struct aa_rx_geom;
 
 AA_API void
 aa_rx_sg_add_geom( struct aa_rx_sg *scene_graph, const char *frame,

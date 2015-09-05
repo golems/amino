@@ -39,14 +39,6 @@
 #define AMINO_SCENEGRAPH_H
 
 /**
- *  Opaque type for a scene_graph.
- *
- * A scene graph is a set of frames in SE(3).
- *
- */
-struct aa_rx_sg;
-
-/**
  * Type for frame indices.
  */
 typedef signed long aa_rx_frame_id;
@@ -236,9 +228,6 @@ AA_API void aa_rx_sg_tf
   aa_rx_frame_id n_tf,
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
-
-
-struct aa_rx_geom;
 
 AA_API void aa_rx_sg_map_geom (
     const struct aa_rx_sg *scene_graph,

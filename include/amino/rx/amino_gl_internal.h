@@ -88,5 +88,12 @@ struct aa_gl_buffers {
     struct aa_gl_buffers *next;
 };
 
+/**
+ * Draw a transform frame frame
+ */
+AA_API void aa_gl_draw_tf (
+    const struct aa_gl_globals *globals,
+    const double *world_E_model,
+    const struct aa_gl_buffers *buffers);
 
 #endif /*AMINO_RX_GL_INTERNAL_H*/

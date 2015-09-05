@@ -43,11 +43,10 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
+#include "amino/rx/rxtype.h"
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_gl_internal.h"
 #include "amino/rx/amino_sdl.h"
-#include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_geom_internal.h"
 
 
 static void scroll( double x, double y,

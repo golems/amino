@@ -36,6 +36,7 @@
  */
 
 #include "amino.h"
+#include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_geom.h"

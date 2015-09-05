@@ -1,4 +1,4 @@
-/* -*- mode: C++; c-basic-offset: 4; -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
@@ -35,82 +35,23 @@
  *
  */
 
-#include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_geom_internal.h"
+#ifndef AMINO_RX_RXTYPE_H
+#define AMINO_RX_RXTYPE_H
 
+/* Opaque types shared between different RX modules
+ */
 
+/**
+ *  Opaque type for a scene_graph.
+ *
+ * A scene graph is a set of frames in SE(3).
+ *
+ */
+struct aa_rx_sg;
 
+/**
+ * Container for scene geometry
+ */
+struct aa_rx_geom;
 
-
-struct aa_rx_geom_opt* aa_rx_geom_opt_create()
-{
-    struct aa_rx_geom_opt *a = AA_NEW0(struct aa_rx_geom_opt);
-    aa_rx_geom_opt_set_alpha(a, 1);
-    aa_rx_geom_opt_set_color(a, .5, .5, .5);
-
-    return a;
-}
-
-void
-aa_rx_geom_opt_destroy(struct aa_rx_geom_opt* opt)
-{
-    free(opt);
-}
-
-void
-aa_rx_geom_opt_set_no_shadow (
-    struct aa_rx_geom_opt *opt,
-    int no_shadow )
-{
-    opt->no_shadow = no_shadow ? 1 : 0;
-}
-
-
-void
-aa_rx_geom_opt_set_color (
-    struct aa_rx_geom_opt *opt,
-    double red, double blue, double green )
-{
-    opt->color[0] = red;
-    opt->color[1] = blue;
-    opt->color[2] = green;
-}
-
-
-void
-aa_rx_geom_opt_set_alpha (
-    struct aa_rx_geom_opt *opt,
-    double alpha )
-{
-    opt->color[3] = alpha;
-}
-
-void
-aa_rx_geom_opt_set_visual (
-    struct aa_rx_geom_opt *opt,
-    int visual )
-{
-    opt->visual = visual ? 1 : 0;
-}
-
-void
-aa_rx_geom_opt_set_collision (
-    struct aa_rx_geom_opt *opt,
-    int collision )
-{
-    opt->collision = collision ? 1 : 0;
-
-}
-
-void
-aa_rx_geom_opt_set_specular (
-    struct aa_rx_geom_opt *opt,
-    double red, double green, double blue )
-{
-
-    opt->specular[0] = red;
-    opt->specular[1] = blue;
-    opt->specular[2] = green;
-}
+#endif /*AMINO_RX_RXTYPE_H*/
