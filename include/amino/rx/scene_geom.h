@@ -108,7 +108,7 @@ aa_rx_geom_opt_set_collision (
 void
 aa_rx_geom_opt_set_specular (
     struct aa_rx_geom_opt *opt,
-    double specular[3] );
+    double red, double green, double blue );
 
 /*----------*/
 /*- Shapes -*/

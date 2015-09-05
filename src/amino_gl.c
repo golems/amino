@@ -43,6 +43,7 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
+#include "amino/rx/scenegraph.h"
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_gl_internal.h"
 #include "amino/rx/scene_geom.h"
@@ -946,4 +947,41 @@ aa_gl_globals_set_ambient(
     for( size_t i = 0; i < 3; i ++ ) {
         globals->ambient[i] = (GLfloat)ambient[i];
     }
+}
+
+struct sg_render_cx {
+    double *TF;
+    size_t ld_tf;
+    struct aa_gl_globals *globals;
+};
+
+void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
+    struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
+    double *E = cx->TF + (frame_id*cx->ld_tf);
+    aa_gl_draw_tf(cx->globals, E, geom->gl_buffers);
+}
+
+AA_API void
+aa_rx_sg_render(
+    const struct aa_rx_sg *sg,
+    const struct aa_gl_globals *globals,
+    size_t n_TF, double *TF_abs, size_t ld_tf)
+{
+    // TODO: optimize globals handling
+    struct sg_render_cx cx = {.TF = TF_abs,
+                              .ld_tf = ld_tf,
+                              .globals = globals };
+    aa_rx_sg_map_geom( sg, &render_helper, &cx );
+}
+
+void gl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
+    (void)cx;
+    (void)frame_id;
+    aa_geom_gl_buffers_init( geom );
+}
+
+AA_API void
+aa_rx_sg_gl_init( struct aa_rx_sg *sg )
+{
+    aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
 }

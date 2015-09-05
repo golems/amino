@@ -237,4 +237,12 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
 
+
+struct aa_rx_geom;
+
+AA_API void aa_rx_sg_map_geom (
+    const struct aa_rx_sg *scene_graph,
+    void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),
+    void *context );
+
 #endif /*AMINO_SCENEGRAPH_H*/

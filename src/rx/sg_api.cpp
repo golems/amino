@@ -190,3 +190,19 @@ AA_API void aa_rx_sg_tf
         }
     }
 }
+
+
+AA_API void aa_rx_sg_map_geom (
+    const struct aa_rx_sg *scene_graph,
+    void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),
+    void *context )
+{
+    ensure_indexed( scene_graph );
+    amino::SceneGraph *sg = scene_graph->sg;
+    for( auto itr = sg->frames.begin(); itr != sg->frames.end(); itr++ ) {
+        amino::SceneFrame *f = *itr;
+        for( auto g = f->geometry.begin(); g != f->geometry.end(); g++ ) {
+            function(context, f->frame_id, *g);
+        }
+    }
+}

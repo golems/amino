@@ -43,10 +43,10 @@
 #include <GL/glu.h>
 
 #include "amino.h"
+#include "amino/rx/scenegraph.h"
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_sdl.h"
 #include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_geom_internal.h"
 
 const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 1000;
@@ -54,45 +54,47 @@ const int SCREEN_HEIGHT = 1000;
 #include <SDL.h>
 
 
-struct aa_rx_geom_box geom;
-struct aa_rx_geom_grid grid;
+//struct aa_rx_geom_box geom;
+//struct aa_rx_geom_grid grid;
+struct aa_rx_sg *scenegraph;
 
 
 void Init(void)
 {
-    memset(&geom,0,sizeof(geom));
-    memset(&grid,0,sizeof(grid));
+    scenegraph = aa_rx_sg_create();
 
-    geom.base.opt.color[0] = 1;
-    geom.base.opt.color[1] = 0;
-    geom.base.opt.color[2] = 0;
-    geom.base.opt.color[3] = 1;
-    geom.base.type = AA_RX_BOX;
-    geom.base.gl_buffers = NULL;
-    geom.shape.dimension[0] = 0.1;
-    geom.shape.dimension[1] = 0.1;
-    geom.shape.dimension[2] = 0.1;
+    // box
+    {
+        aa_rx_sg_add_frame_fixed( scenegraph,
+                                  "", "box",
+                                  aa_tf_quat_ident, aa_tf_vec_ident );
 
-    double spec[3] = {.3, .3, .3 };
-    aa_rx_geom_opt_set_specular( &geom.base.opt, spec );
-    aa_geom_gl_buffers_init( &geom.base );
+        struct aa_rx_geom_opt *box_opt = aa_rx_geom_opt_create();
+        aa_rx_geom_opt_set_color( box_opt, 1, 0, 0);
+        aa_rx_geom_opt_set_specular( box_opt, .3, .3, .3);
 
-    grid.base.opt.color[0] = .5;
-    grid.base.opt.color[1] = .5;
-    grid.base.opt.color[2] = 1;
-    grid.base.opt.color[3] = 1;
-    grid.base.type = AA_RX_GRID;
-    grid.base.gl_buffers = NULL;
+        double d[3] = {.1, .1, .1};
+        aa_rx_geom_attach( scenegraph, "box", aa_rx_geom_box(box_opt, d) );
 
-    grid.shape.dimension[0] = 1;
-    grid.shape.dimension[1] = 1;
+        aa_rx_geom_opt_destroy(box_opt);
+    }
 
-    grid.shape.delta[0] = .05;
-    grid.shape.delta[1] = .05;
+    // grid
+    {
+        aa_rx_sg_add_frame_fixed( scenegraph,
+                                  "", "grid",
+                                  aa_tf_quat_ident, aa_tf_vec_ident );
+        struct aa_rx_geom_opt *grid_opt = aa_rx_geom_opt_create();
+        aa_rx_geom_opt_set_color( grid_opt, .5, .5, .5);
 
-    aa_rx_geom_opt_set_specular( &grid.base.opt, spec );
-    aa_geom_gl_buffers_init( &grid.base );
+        double dim[2] = {1,1};
+        double delta[2] = {.05, .05};
+        aa_rx_geom_attach( scenegraph, "grid", aa_rx_geom_grid(grid_opt, dim, delta) );
 
+        aa_rx_geom_opt_destroy(grid_opt);
+    }
+    aa_rx_sg_index(scenegraph);
+    aa_rx_sg_gl_init(scenegraph);
 
 }
 
@@ -103,8 +105,7 @@ void check_error( const char *name ){
 }
 
 
-void display( const struct aa_gl_globals *globals,
-             const double world_E_model[7] )
+void display( const struct aa_gl_globals *globals )
 {
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -113,36 +114,15 @@ void display( const struct aa_gl_globals *globals,
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     check_error("glClear");
 
-
-    //world_E_camera[AA_TF_QUTR_TZ] = 1.5;
-    //world_E_camera[AA_TF_QUTR_TX] = .5;
-    //world_E_camera[AA_TF_QUTR_TY] = .5;
-
-
-    //aa_tf_yangle2quat(M_PI/4, world_E_model );
-
-    /* { */
-    /*     double eye[3] = {0,0,2}; */
-    /*     double target[3] = {0,0,0}; */
-    /*     double up[3] = {0,1,0}; */
-    /*     aa_tf_qutr_mzlook(eye, target, up, world_E_camera ); */
-    /*     } */
-    //aa_gl_draw_tf( E, &buffers );
-    /* GLfloat P[16] = {0}; */
-    /* for( size_t i = 0; i < 4; i ++ ) { */
-    /*     P[i*4 + i] = 1; */
-    /* } */
-    /* aa_gl_mat_perspective(M_PI_2, ((double)SCREEN_WIDTH)/SCREEN_HEIGHT, */
-    /*                       0.1, 100, */
-    /*                       P ); */
-
-    aa_gl_draw_tf( globals, world_E_model,
-                   geom.base.gl_buffers );
-
-
-    aa_gl_draw_tf( globals, world_E_model,
-                   grid.base.gl_buffers );
-
+    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
+    double TF_rel[7*n];
+    double TF_abs[7*n];
+    aa_rx_sg_tf(scenegraph, 0, NULL,
+                2,
+                TF_rel, 7,
+                TF_abs, 7 );
+    aa_rx_sg_render( scenegraph, globals,
+                     (size_t)n, TF_abs, 7 );
 }
 
 int main(int argc, char *argv[])
@@ -215,8 +195,6 @@ int main(int argc, char *argv[])
                                    100 );
         aa_gl_globals_set_ambient(globals, ambient);
     }
-    double world_E_model[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-
 
     int quit,update=1;
     struct timespec delta = aa_tm_sec2timespec( 1.0 / 120 );
@@ -224,7 +202,7 @@ int main(int argc, char *argv[])
     for(;;) {
         //printf("update: %d\n", update );
         if( update ) {
-            display( globals, world_E_model );
+            display( globals );
             SDL_GL_SwapWindow(window);
         } else {
             struct timespec now = aa_tm_add( now, delta );

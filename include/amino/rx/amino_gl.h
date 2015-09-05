@@ -54,13 +54,19 @@
 
 /** Forward declaration */
 struct aa_rx_sg;
+struct aa_gl_globals;
+
+
+AA_API void
+aa_rx_sg_gl_init( struct aa_rx_sg *sg );
 
 /**
  * Render the scene graph to the current GL context.
  */
 AA_API void
 aa_rx_sg_render(
-    struct aa_rx_sg *sg,
+    const struct aa_rx_sg *sg,
+    const struct aa_gl_globals *globals,
     size_t n_TF, double *TF_abs, size_t ld_TF);
 
 /**
@@ -110,7 +116,6 @@ struct aa_gl_buffers;
 /**
  * Container for globals rendering info (Forward declaration)
  */
-struct aa_gl_globals;
 
 struct aa_gl_globals *
 aa_gl_globals_create();

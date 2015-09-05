@@ -67,7 +67,7 @@ struct SceneFrame  {
     double E[7];
 
     /* Geometry */
-    std::vector<void*> geometry;
+    std::vector<struct aa_rx_geom*> geometry;
 };
 
 

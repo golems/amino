@@ -108,9 +108,10 @@ aa_rx_geom_opt_set_collision (
 void
 aa_rx_geom_opt_set_specular (
     struct aa_rx_geom_opt *opt,
-    double specular[3] )
+    double red, double green, double blue )
 {
-    for( size_t i = 0; i < 3; i ++ ) {
-        opt->specular[i] = specular[i];
-    }
+
+    opt->specular[0] = red;
+    opt->specular[1] = blue;
+    opt->specular[2] = green;
 }
