@@ -92,14 +92,15 @@
              (dom-select-path node path :singleton t :undefined-error nil :default default))
            (path-n (node path &optional default)
              (dom-select-path node path :singleton nil :undefined-error nil :default default))
-           (node-shape (node)
+           (node-shape (node name)
              (let* ((mesh-file (path-1 node '("geometry" "mesh" "@filename")))
                     (box-size (path-1 node '("geometry" "box" "@size")))
                     (sphere-radius (path-1 node '("geometry" "sphere" "@radius")))
                     (cylinder-radius (path-1 node '("geometry" "cylinder" "@radius")))
                     (cylinder-length (path-1 node '("geometry" "cylinder" "@length"))))
-               (assert (xor mesh-file box-size sphere-radius (and cylinder-length
-                                                                  cylinder-radius)))
+               (unless (xor mesh-file box-size sphere-radius (and cylinder-length
+                                                                  cylinder-radius))
+                 (error "bad shapes in frame ~A" name))
                (cond (mesh-file
                       (make-scene-mesh :source-file (urdf-resolve-file mesh-file)))
                      (sphere-radius
@@ -144,7 +145,7 @@
             for rgba-text = (when visual-node (path-1 visual-node '("material" "color" "@rgba")))
             for rgba = (if rgba-text (parse-float-sequence rgba-text)
                            (append default-color (list default-alpha)))
-            do (let* ((shape (node-shape visual-node))
+            do (let* ((shape (node-shape visual-node name))
                       (frame-name (node-origin name visual-node "visual" shape))
                       (options (node-options :rgba rgba :visual t)))
                  ;; bind geometry
@@ -153,7 +154,7 @@
                                                  (scene-geometry shape options)))))
          (loop for collision-node in (path-n link-node '("collision"))
             do
-              (let* ((shape (node-shape collision-node))
+              (let* ((shape (node-shape collision-node name))
                      (frame-name (node-origin name collision-node "collision" shape))
                      (options (node-options :rgba default-rgba :visual nil :collision t)))
                 (setq scene-graph
