@@ -262,15 +262,19 @@ static void check_error( const char *name ){
 }
 
 AA_API void aa_gl_draw_tf (
-    const struct aa_gl_globals *globals,
     const double *world_E_model,
     const struct aa_gl_buffers *buffers )
 {
-    AA_GL_INIT;
+    // Uniforms
+    glUniform3fv(aa_gl_id_specular, 1, buffers->specular);
+    check_error("unform specular");
 
+    // matrices
+    GLfloat M_model[16];
+    aa_gl_qutr2glmat( world_E_model, M_model);
 
-    glUseProgram(aa_gl_id_program);
-    check_error("glUseProgram");
+    glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
+    check_error("uniform mat model");
 
     // positions
     glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
@@ -311,42 +315,6 @@ AA_API void aa_gl_draw_tf (
                 //(GLfloat)v_light[0], (GLfloat)v_light[1], (GLfloat)v_light[2] );
     //aa_dump_mat( stdout, v_light, 1, 3 );
 
-    glUniform3fv(aa_gl_id_light_position, 1, globals->world_v_light);
-    check_error("unform light position");
-
-    glUniform3fv(aa_gl_id_ambient, 1, globals->ambient);
-    check_error("unform ambient");
-
-    glUniform3fv(aa_gl_id_light_color, 1, globals->light_color);
-    check_error("unform light color");
-
-    glUniform3fv(aa_gl_id_specular, 1, buffers->specular);
-    check_error("unform specular");
-
-    glUniform1f(aa_gl_id_light_power, globals->light_power);
-    check_error("unform light power");
-
-    // matrices
-    GLfloat M_model[16];
-    aa_gl_qutr2glmat( world_E_model, M_model);
-
-    glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
-    check_error("uniform mat model");
-
-
-
-    GLfloat M_c[16];
-    cblas_sgemm( CblasColMajor, CblasNoTrans, CblasNoTrans,
-                 4, 4, 4,
-                 1.0, globals->perspective, 4,
-                 globals->cam_M_world, 4,
-                 0, M_c, 4 );
-
-    glUniformMatrix4fv(aa_gl_id_matrix_camera, 1, GL_FALSE, M_c);
-    check_error("uniform mat camera");
-
-    glUniform3fv(aa_gl_id_camera_world, 1, globals->world_v_cam);
-    check_error("uniform pos camera");
 
 
     if( buffers->has_indices ) {
@@ -372,7 +340,6 @@ AA_API void aa_gl_draw_tf (
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glUseProgram(0);
 
 }
 
@@ -960,7 +927,7 @@ struct sg_render_cx {
 void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
     double *E = cx->TF + (frame_id*cx->ld_tf);
-    aa_gl_draw_tf(cx->globals, E, geom->gl_buffers);
+    aa_gl_draw_tf( E, geom->gl_buffers);
 }
 
 AA_API void
@@ -969,11 +936,47 @@ aa_rx_sg_render(
     const struct aa_gl_globals *globals,
     size_t n_TF, double *TF_abs, size_t ld_tf)
 {
+
+    AA_GL_INIT;
+
+    glUseProgram(aa_gl_id_program);
+    check_error("glUseProgram");
+
+    // uniforms
+    glUniform3fv(aa_gl_id_light_position, 1, globals->world_v_light);
+    check_error("unform light position");
+
+    glUniform3fv(aa_gl_id_ambient, 1, globals->ambient);
+    check_error("unform ambient");
+
+    glUniform3fv(aa_gl_id_light_color, 1, globals->light_color);
+    check_error("unform light color");
+
+    glUniform1f(aa_gl_id_light_power, globals->light_power);
+    check_error("unform light power");
+
+
+    GLfloat M_c[16];
+    cblas_sgemm( CblasColMajor, CblasNoTrans, CblasNoTrans,
+                 4, 4, 4,
+                 1.0, globals->perspective, 4,
+                 globals->cam_M_world, 4,
+                 0, M_c, 4 );
+
+    glUniformMatrix4fv(aa_gl_id_matrix_camera, 1, GL_FALSE, M_c);
+    check_error("uniform mat camera");
+
+    glUniform3fv(aa_gl_id_camera_world, 1, globals->world_v_cam);
+    check_error("uniform pos camera");
+
+
     // TODO: optimize globals handling
     struct sg_render_cx cx = {.TF = TF_abs,
                               .ld_tf = ld_tf,
                               .globals = globals };
     aa_rx_sg_map_geom( sg, &render_helper, &cx );
+
+    glUseProgram(0);
 }
 
 void gl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {

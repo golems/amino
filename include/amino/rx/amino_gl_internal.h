@@ -48,13 +48,20 @@ struct aa_gl_globals {
     double znear;
     double zfar;
 
-    GLfloat world_v_cam[3];
     GLfloat cam_M_world[16];
     GLfloat perspective[16];
-    GLfloat world_v_light[3];
-    GLfloat light_color[3];
+
+    union {
+        struct {
+            GLfloat world_v_cam[3];
+            GLfloat ambient[3];
+            GLfloat world_v_light[3];
+            GLfloat light_color[3];
+        };
+        GLfloat vec3_data[12];
+    };
+
     GLfloat light_power;
-    GLfloat ambient[3];
 
     int mouse[2];
     double scroll_ratio;
@@ -92,7 +99,6 @@ struct aa_gl_buffers {
  * Draw a transform frame frame
  */
 AA_API void aa_gl_draw_tf (
-    const struct aa_gl_globals *globals,
     const double *world_E_model,
     const struct aa_gl_buffers *buffers);
 
