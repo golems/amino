@@ -314,6 +314,7 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
 (defun map-scene-graph-frames (result-type function scene-graph)
   (map-tree-set result-type function (scene-graph-frames scene-graph)))
 
+
 (defmacro do-scene-graph-geometry (((frame geometry) scene-graph &optional result)
                                    &body body)
   (with-gensyms (fun)
@@ -324,6 +325,39 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
          (loop
             for ,geometry in (scene-frame-geometry ,frame)
             do (,fun ,frame ,geometry))))))
+
+
+(defun map-scene-graph-geometry (result-type function scene-graph)
+  (cond
+    ((null result-type)
+     (do-scene-graph-geometry ((frame geometry) scene-graph)
+       (funcall function frame geometry)))
+
+    ((eq 'list result-type)
+     (apply #'nconc
+            (map-scene-graph-frames result-type
+                                    (lambda (f)
+                                      (loop for g in (scene-frame-geometry f)
+                                         collect (funcall function f g)))
+                                    scene-graph)))
+    (t (error "Unsupported result-type ~A" result-type))))
+
+
+(defun scene-graph-meshes (scene-graph)
+  (let ((meshes (make-hash-table :test #'equal)))
+    ;; hash meshes
+    (do-scene-graph-geometry ((f g) scene-graph
+                              (hash-table-values meshes))
+      (declare (ignore f))
+      (let ((shape (scene-geometry-shape g)))
+        (when (scene-mesh-p shape)
+          (let ((name (rope-string (scene-mesh-name shape))))
+            (if-let ((other-mesh (gethash name meshes)))
+              ;; check matching data
+              (assert (equal (scene-mesh-source-file shape)
+                             (scene-mesh-source-file other-mesh)))
+              ;; add to hash table
+              (setf (gethash name meshes) shape))))))))
 
 (defmacro do-scene-graph-geometry-types (((frame geometry) (scene-graph type) &optional result)
                                          &body body)
