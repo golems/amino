@@ -12,6 +12,18 @@
   texture-properties
   (texture-indices nil :type (or null (simple-array fixnum (*)))))
 
+(defun mesh-data-vertex-vectors-count (mesh)
+  (/ (length (mesh-data-vertex-vectors mesh))
+     3))
+(defun mesh-data-vertex-indices-count (mesh)
+  (/ (length (mesh-data-vertex-indices mesh))
+     3))
+(defun mesh-data-normal-vectors-count (mesh)
+  (/ (length (mesh-data-normal-vectors mesh))
+     3))
+(defun mesh-data-normal-indices-count (mesh)
+  (/ (length (mesh-data-normal-indices mesh))
+     3))
 
 (defmethod print-object ((object mesh-data) stream)
   (print-unreadable-object (object stream :type t :identity nil)

@@ -81,23 +81,30 @@
 (defun scene-genc-mesh (scene-graph)
   ;; declare
   (loop for mesh in (scene-graph-meshes scene-graph)
-     ;for mesh-data = (load-mesh (scene-mesh-source-file mesh))
-     ;for normed-mesh-data = (mesh-deindex-normals mesh-data)
-     collect
-       (list (cgen-declare "struct aa_rx_mesh *" (scene-genc-mesh-var mesh) (cgen-call "aa_rx_mesh_create"))
-             ;; (cgen-block
-             ;;  ;; vertices
-             ;;  (cgen-declare-array "static const double" "vertices"
-             ;;                      (mesh-data-vertex-vectors normed-mesh-data))
-             ;;  ;; normals
-             ;;  (cgen-declare-array "static const double" "normal"
-             ;;                      (mesh-data-normal-vectors normed-mesh-data))
-             ;;  ;; indices
-             ;;  (cgen-declare-array "static const unsigned" "indices"
-             ;;                      (mesh-data-vertex-indices normed-mesh-data))
-             ;;  )
-              ;; textures
-              )))
+     for var = (scene-genc-mesh-var mesh)
+     for mesh-data = (load-mesh (scene-mesh-source-file mesh))
+     for normed-data = (mesh-deindex-normals mesh-data)
+     nconc
+       (list (cgen-declare "struct aa_rx_mesh *" var (cgen-call "aa_rx_mesh_create"))
+             (cgen-block
+              ;; vertices
+              (cgen-declare-array "static const float" "vertices"
+                                  (mesh-data-vertex-vectors normed-data))
+              ;; normals
+              (cgen-declare-array "static const float" "normals"
+                                  (mesh-data-normal-vectors normed-data))
+              ;; indices
+              (cgen-declare-array "static const unsigned" "indices"
+                                  (mesh-data-vertex-indices normed-data))
+              ;; fill
+              (cgen-call-stmt "aa_rx_mesh_set_vertices" var (mesh-data-vertex-vectors-count normed-data)
+                              "vertices" 0)
+              (cgen-call-stmt "aa_rx_mesh_set_indices" var (mesh-data-vertex-indices-count normed-data)
+                              "indices" 0)
+              (cgen-call-stmt "aa_rx_mesh_set_normals" var (mesh-data-normal-vectors-count normed-data)
+                              "normals" 0)
+              ;; textures, TODO
+              ))))
 
 
 
