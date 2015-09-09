@@ -94,6 +94,7 @@
    :make-vec
    :vecref :vec-x :vec-y :vec-z :vec-w
    :vec-cat
+   :vec-list
    :make-matrix
    :matref
    ;; TF Types

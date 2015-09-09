@@ -319,8 +319,14 @@ N: cols in the block."
     new))
 
 (defun vec-list (vec)
-  (loop for x across vec
-     collect x))
+  (etypecase vec
+    (list vec)
+    (array
+     (loop for x across vec
+        collect x))
+     ;; TODO: block matrix version
+     (real-array
+      (vec-list (real-array-data vec)))))
 
 (defun matrix-vector-store-p (matrix)
   "Is the matrix stored in a way that looks like a vector?"
