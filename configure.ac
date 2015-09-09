@@ -289,5 +289,5 @@ AS_IF([test "x$FC" = "x"],
       [AC_MSG_ERROR([No Fortran compiler detected])])
 
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile share/amino.pc share/amino_gl.pc])
 AC_OUTPUT

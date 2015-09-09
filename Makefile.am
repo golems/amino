@@ -14,6 +14,8 @@ dist_pkgdata_DATA = src/mac/amino.mac
 include_HEADERS = include/amino.h include/amino.hpp
 noinst_PROGRAMS =
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = share/amino.pc share/amino_gl.pc
 
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \

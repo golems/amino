@@ -95,3 +95,4 @@ amino*.tar.gz
 /sdl_test
 /sg_test
 /sg_test.log
+/share/*.pc
