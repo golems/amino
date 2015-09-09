@@ -180,7 +180,7 @@ struct aa_rx_mesh* aa_rx_mesh_create()
     return mesh;
 }
 
-void aa_rx_mesh_set_destroy( struct aa_rx_mesh * mesh )
+void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
 {
     mesh->refcount--;
     if( 0 == mesh->refcount ) {

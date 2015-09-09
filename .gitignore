@@ -96,3 +96,5 @@ amino*.tar.gz
 /sg_test
 /sg_test.log
 /share/*.pc
+/demo/simple-rx/simple-rx
+/demo/simple-rx/scene.c

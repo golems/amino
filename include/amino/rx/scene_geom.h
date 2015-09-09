@@ -210,7 +210,7 @@ aa_rx_geom_grid (
 struct aa_rx_mesh;
 
 struct aa_rx_mesh* aa_rx_mesh_create();
-void aa_rx_mesh_set_destroy( struct aa_rx_mesh * mesh );
+void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh );
 
 void aa_rx_mesh_set_vertices (
     struct aa_rx_mesh *mesh, size_t n,
