@@ -116,6 +116,19 @@ aa_rx_geom_grid (
     return &g->base;
 }
 
+struct aa_rx_geom *
+aa_rx_geom_mesh (
+    struct aa_rx_geom_opt *opt,
+    struct aa_rx_mesh *mesh )
+{
+
+    ALLOC_GEOM( struct aa_rx_geom_mesh, g,
+                AA_RX_CYLINDER, opt );
+    g->shape = mesh;
+    mesh->refcount++;
+    return &g->base;
+}
+
 void
 aa_rx_geom_attach (
     struct aa_rx_sg *sg,
@@ -184,44 +197,45 @@ void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
 {
     mesh->refcount--;
     if( 0 == mesh->refcount ) {
-        if(mesh->free_vertices) free(mesh->vertices);
-        if(mesh->free_normals) free(mesh->normals);
-        if(mesh->free_indices) free(mesh->indices);
+        if(mesh->vertices_data) free(mesh->vertices_data);
+        if(mesh->normals_data) free(mesh->normals_data);
+        if(mesh->indices_data) free(mesh->indices_data);
         free(mesh);
     }
 }
 
-#define MESH_SET_THINGN( TYPE, THING, LD, N )           \
-    void aa_rx_mesh_set_ ## THING (                     \
-        struct aa_rx_mesh *mesh, size_t n,              \
-        TYPE * THING, int copy )                        \
-    {                                                   \
-        if(mesh->free_ ## THING) free(mesh->THING);     \
-        mesh->N = n;                                    \
-        if( copy ) {                                    \
-            mesh->free_ ## THING = 1;                   \
-            mesh->THING = AA_NEW_AR(TYPE, 3*n);         \
-            AA_MEM_CPY(mesh->THING, THING, 3*n);        \
-        } else {                                        \
-            mesh->free_ ## THING  = 0;                  \
-            mesh->THING = THING;                        \
-        }                                               \
+
+#define MESH_SET_THINGN( TYPE, THING, LD, N )                   \
+    void aa_rx_mesh_set_ ## THING (                             \
+        struct aa_rx_mesh *mesh, size_t n,                      \
+        const TYPE * THING, int copy )                          \
+    {                                                           \
+        if(mesh->THING##_data) free(mesh->THING##_data);        \
+        mesh->N = n;                                            \
+        if( copy ) {                                            \
+            mesh->THING##_data = AA_NEW_AR(TYPE, LD*n);         \
+            AA_MEM_CPY(mesh->THING##_data, THING, LD*n);        \
+            mesh->THING = mesh->THING##_data;                   \
+        } else {                                                \
+            mesh->THING ## _data = NULL;                        \
+            mesh->THING = THING;                                \
+        }                                                       \
     }
 
-#define MESH_SET_THING( TYPE, THING, LD )               \
-    void aa_rx_mesh_set_ ## THING (                     \
-        struct aa_rx_mesh *mesh, size_t n,              \
-        TYPE * THING, int copy )                        \
-    {                                                   \
-        if(mesh->free_ ## THING) free(mesh->THING);     \
-        if( copy ) {                                    \
-            mesh->free_ ## THING = 1;                   \
-            mesh->THING = AA_NEW_AR(TYPE, LD*n);        \
-            AA_MEM_CPY(mesh->THING, THING, LD*n);       \
-        } else {                                        \
-            mesh->free_ ## THING  = 0;                  \
-            mesh->THING = THING;                        \
-        }                                               \
+#define MESH_SET_THING( TYPE, THING, LD )                       \
+    void aa_rx_mesh_set_ ## THING (                             \
+        struct aa_rx_mesh *mesh, size_t n,                      \
+        const TYPE * THING, int copy )                          \
+    {                                                           \
+        if(mesh->THING##_data) free(mesh->THING##_data);        \
+        if( copy ) {                                            \
+            mesh->THING##_data = AA_NEW_AR(TYPE, LD*n);         \
+            AA_MEM_CPY(mesh->THING##_data, THING, LD*n);        \
+            mesh->THING = mesh->THING##_data;                   \
+        } else {                                                \
+            mesh->THING ## _data = NULL;                        \
+            mesh->THING = THING;                                \
+        }                                                       \
     }
 
 MESH_SET_THINGN( float, vertices, 3, n_vertices)

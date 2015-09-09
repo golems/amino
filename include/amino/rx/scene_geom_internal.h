@@ -102,16 +102,21 @@ struct aa_rx_mesh {
     /**
      * 3 x n_vertices array of mesh vertices
      */
-    float *vertices;
+    const float *vertices;
+    float *vertices_data;
 
     /**
      * 3 x n_vertices array of vertex normals
      */
-    float *normals;
+    const float *normals;
+    float *normals_data;
+
     /**
      * 3 x n_vertices array of vertex textures
      */
-    unsigned *texture_indices;
+    const unsigned *texture_indices;
+    unsigned *texture_indices_data;
+
     /**
      * Number of vertices
      */
@@ -122,19 +127,16 @@ struct aa_rx_mesh {
     /**
      * 3 x n_indices array of face vertices
      */
-    unsigned *indices;
+    const unsigned *indices;
+    unsigned *indices_data;
     size_t n_indices;
 
-    struct aa_rx_geom_opt *textures;
+    const struct aa_rx_geom_opt *textures;
+    struct aa_rx_geom_opt *textures_data;
     size_t n_textures;
 
     size_t refcount;
 
-    unsigned free_vertices : 1;
-    unsigned free_normals : 1;
-    unsigned free_indices : 1;
-    unsigned free_textures : 1;
-    unsigned free_texture_indices : 1;
 
 
 };

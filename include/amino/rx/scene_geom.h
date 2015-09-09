@@ -214,28 +214,28 @@ void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh );
 
 void aa_rx_mesh_set_vertices (
     struct aa_rx_mesh *mesh, size_t n,
-    float *vectors, int copy );
+    const float *vectors, int copy );
 
 void aa_rx_mesh_set_normals (
     struct aa_rx_mesh *mesh, size_t n,
-    float *normals, int copy );
+    const float *normals, int copy );
 
 void aa_rx_mesh_set_indices (
     struct aa_rx_mesh *mesh, size_t n,
-    unsigned *indices, int copy );
+    const unsigned *indices, int copy );
 
 void aa_rx_mesh_set_normals (
     struct aa_rx_mesh *mesh, size_t n,
-    float *normals, int copy );
+    const float *normals, int copy );
 
 void aa_rx_mesh_set_textures (
     struct aa_rx_mesh *mesh,
-    size_t n, struct aa_rx_geom_opt *textures,
+    size_t n, const struct aa_rx_geom_opt *textures,
     int copy );
 
 void aa_rx_mesh_set_texture_indices (
     struct aa_rx_mesh *mesh,
-    size_t n, unsigned *texture_indices,
+    size_t n, const unsigned *texture_indices,
     int copy );
 
 /* void aa_rx_mesh_fill_vertex_vectors_dbl ( */
