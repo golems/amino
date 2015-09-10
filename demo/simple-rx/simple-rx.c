@@ -118,10 +118,13 @@ void display( const struct aa_gl_globals *globals )
     check_error("glClear");
 
     aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
+    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
+    double q[m];
+    AA_MEM_ZERO(q,m);
     double TF_rel[7*n];
     double TF_abs[7*n];
-    aa_rx_sg_tf(scenegraph, 0, NULL,
-                2,
+    aa_rx_sg_tf(scenegraph, m, q,
+                n,
                 TF_rel, 7,
                 TF_abs, 7 );
     aa_rx_sg_render( scenegraph, globals,

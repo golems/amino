@@ -282,14 +282,23 @@ N: cols in the block."
 (defun make-vec (n)
   (make-array n :element-type 'double-float))
 
-(defun vec (&rest args)
-  (let ((vec (make-vec (length args))))
+(declaim (inline %vec))
+(defun %vec (type args)
+  (let ((vec (make-array (length args) :element-type type)))
     (loop
        for i from 0
        for x in args
        do (setf (aref vec i)
-                (coerce x 'double-float)))
+                (coerce x type)))
     vec))
+
+(defun vec (&rest args)
+  "Create a floating-point vector"
+  (%vec 'double-float args))
+
+(defun fnvec (&rest args)
+  "Create a fixnum vector"
+  (%vec 'fixnum args))
 
 (defun vec-length (vec)
   (etypecase vec
@@ -334,6 +343,30 @@ N: cols in the block."
      ;; TODO: block matrix version
      (real-array
       (real-array-data vec))))
+
+;(defun vec-flatten (sequence)
+
+(declaim (inline %vec-flatten))
+(defun %vec-flatten (type sequence)
+  (let* ((n (length sequence))
+         (m (vec-length (elt sequence 0)))
+         (v (make-array (* m n) :element-type type))
+         (j 0))
+    (map 'nil (lambda (x)
+                (assert (= m (vec-length x)))
+                (dotimes (i m)
+                  (setf (aref v (+ (* 3 j) i))
+                        (vecref x i)))
+                (incf j))
+         sequence)
+         v))
+
+(defun vec-flatten (sequence)
+  (%vec-flatten 'double-float sequence))
+
+(defun fnvec-flatten (sequence)
+  (%vec-flatten 'fixnum sequence))
+
 
 (defun matrix-vector-store-p (matrix)
   "Is the matrix stored in a way that looks like a vector?"

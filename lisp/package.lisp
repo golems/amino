@@ -91,11 +91,15 @@
   (:export
    ;; General types
    :vec
+   :fnvec
+   :vec
    :make-vec
    :vecref :vec-x :vec-y :vec-z :vec-w
    :vec-cat
    :vec-list
    :vec-sequence
+   :vec-flatten
+   :fnvec-flatten
    :make-matrix
    :matref
    ;; TF Types
