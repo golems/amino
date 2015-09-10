@@ -29,7 +29,7 @@
          (1 font-lock-keyword-face) (2 font-lock-constant-face nil t))
        (cons (regexp-opt '("geometry" "include") 'words)
              'font-lock-keyword-face)
-       (cons (regexp-opt '("translation" "quaternion" "rpy" "shape" "color" "alpha"
+       (cons (regexp-opt '("translation" "quaternion" "rpy" "shape" "color" "alpha" "specular"
                            "dimension" "radius" "height" "start_radius" "end_radius" "affords"
                            "type" "axis" "offset" "scale") 'words)
              'font-lock-type-face)

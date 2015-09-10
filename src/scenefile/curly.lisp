@@ -362,7 +362,7 @@
                              (("quaternion" "rpy"
                                "translation"
                                "type" "axis" "offset" "parent"
-                               "shape" "dimension" "color" "alpha")
+                               "shape" "dimension" "color" "alpha" "specular")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
@@ -421,7 +421,7 @@
                    (etypecase stmt
                      (null)
                      (cons (string-case (car stmt)
-                             (("shape" "color" "alpha" "mesh"
+                             (("shape" "color" "alpha" "specular" "mesh"
                                        "dimension" "radius" "height" "start-radius" "end-radius" "scale")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
@@ -440,8 +440,8 @@
                    (apply #'tree-set #'string-compare list))))
              (property-options (properties)
                (loop
-                  for name in '("color" "alpha" "scale")
-                  for kw in   '(:color  :alpha :scale)
+                  for name in '("color" "alpha" "scale" "specular")
+                  for kw in   '(:color  :alpha :scale :specular)
                   for value = (get-prop properties name)
                   when value collect (cons kw value)))
              (insert-geom (properties parent)
