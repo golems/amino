@@ -44,6 +44,17 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
   start-radius
   end-radius)
 
+(defstruct scene-grid
+  "A grid object.
+The center of the grid plane is at the origin, and it is normal to the Z axis"
+  dimension
+  delta
+  thickness)
+(defun scene-grid (dimension delta thickness)
+  (make-scene-grid :dimension dimension
+                   :delta delta
+                   :thickness thickness))
+
 (defparameter *scene-font* :monospace)
 
 (defstruct scene-text
@@ -654,6 +665,8 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                             :modifiers modifiers))
       (scene-mesh (pov-mesh2 :mesh (scene-mesh-name shape)
                              :modifiers modifiers))
+      (scene-grid (pov-mesh2 :mesh-data (grid-mesh shape)
+                             :modifiers modifiers))
       (scene-box
        (pov-box-center (scene-box-dimension shape)
                        :modifiers modifiers))
@@ -671,10 +684,44 @@ The cone starts at the origin and extends by HEIGHT in the Z direction."
                    (scene-sphere-radius shape)
                    modifiers)))))
 
+
+(defun grid-mesh (grid)
+  (let ((dim (scene-grid-dimension grid))
+        (delta (scene-grid-delta grid))
+        (thickness (scene-grid-thickness grid))
+        (verts (make-array 0 :fill-pointer t :adjustable t))
+        (indices (make-array 0 :fill-pointer t :adjustable t)))
+    (labels ((helper (x0 x-max y delta vec-fun)
+               (loop
+                  with i-begin = (length verts)
+                  with y-1 = (+ y (/ thickness 1))
+                  with y-0 = (- y-1)
+                  for x-c = x0 then (+ x-c delta)
+                  while (<= (abs x-c) x-max)
+                  for i0 from i-begin by 4
+                  for i1 from (+ i-begin 1) by 4
+                  for i2 from (+ i-begin 2) by 4
+                  for i3 from (+ i-begin 3) by 4
+                  for x-0 = (- x-c thickness)
+                  for x-1 = (+ x-c thickness)
+                  do (progn
+                       (vector-push-extend (funcall vec-fun x-0 y-0 0) verts)
+                       (vector-push-extend (funcall vec-fun x-0 y-1 0) verts)
+                       (vector-push-extend (funcall vec-fun x-1 y-0 0) verts)
+                       (vector-push-extend (funcall vec-fun x-1 y-1 0) verts)
+                       (vector-push-extend (vector i0 i1 i2) indices)
+                       (vector-push-extend (vector i3 i1 i2) indices)))))
+      (helper 0 (vec-x dim) (vec-y dim) (vec-x delta) #'vec3*)
+      (helper (- (vec-x delta)) (vec-x dim) (vec-y dim) (- (vec-x delta)) #'vec3*)
+      (helper 0 (vec-y dim) (vec-x dim) (vec-y delta) (lambda (y x z) (vec3* x y z)))
+      (helper (- (vec-y delta)) (vec-y dim) (vec-x dim) (- (vec-y delta)) (lambda (y x z) (vec3* x y z)))
+      (make-mesh-data :vertex-vectors (vec-flatten verts)
+                      :vertex-indices (fnvec-flatten indices)))))
+
 (defun scene-graph-pov-frame (scene-graph
                               &key
                                 render
-                                options
+                                (options (render-options-default))
                                 configuration-map
                                 output
                                 (directory *robray-tmp-directory*)

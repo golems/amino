@@ -362,7 +362,7 @@
                              (("quaternion" "rpy"
                                "translation"
                                "type" "axis" "offset" "parent"
-                               "shape" "dimension" "color" "alpha" "specular")
+                               "shape" "dimension" "delta" "thickness" "color" "alpha" "specular")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
@@ -422,7 +422,7 @@
                      (null)
                      (cons (string-case (car stmt)
                              (("shape" "color" "alpha" "specular" "mesh"
-                                       "dimension" "radius" "height" "start-radius" "end-radius" "scale")
+                                       "dimension" "delta" "thickness" "radius" "height" "start-radius" "end-radius" "scale")
                               (setq properties (add-prop properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
@@ -451,6 +451,10 @@
                                (shape-prop (string-case shape-prop
                                              ("box"
                                               (scene-box (get-prop properties "dimension")))
+                                             ("grid"
+                                              (scene-grid (get-prop properties "dimension")
+                                                          (get-prop properties "delta")
+                                                          (get-prop properties "thickness")))
                                              ("cylinder"
                                               (scene-cylinder :height (get-prop properties "height")
                                                               :radius (get-prop properties "radius")))

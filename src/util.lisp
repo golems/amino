@@ -87,7 +87,7 @@
                  (if-exists :supersede))
   (cond
     ((streamp place)
-     (rope-write object :stream place)
+     (rope-write (rope object) :stream place :escape nil)
      (values))
     ((eq place t)
      (princ object *standard-output*)

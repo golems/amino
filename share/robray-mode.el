@@ -30,10 +30,10 @@
        (cons (regexp-opt '("geometry" "include") 'words)
              'font-lock-keyword-face)
        (cons (regexp-opt '("translation" "quaternion" "rpy" "shape" "color" "alpha" "specular"
-                           "dimension" "radius" "height" "start_radius" "end_radius" "affords"
+                           "dimension" "radius" "height" "start_radius" "end_radius" "delta" "thickness" "affords"
                            "type" "axis" "offset" "scale") 'words)
              'font-lock-type-face)
-       (cons (regexp-opt '("mesh" "box" "cone" "cylinder" "sphere"
+       (cons (regexp-opt '("mesh" "grid" "box" "cone" "cylinder" "sphere"
                            "fixed" "prismatic" "revolute" "π" "pi" "deg")
                          'words)
              'font-lock-constant-face)))
