@@ -328,6 +328,13 @@ N: cols in the block."
      (real-array
       (vec-list (real-array-data vec)))))
 
+(defun vec-sequence (vec)
+  (etypecase vec
+    (sequence vec)
+     ;; TODO: block matrix version
+     (real-array
+      (real-array-data vec))))
+
 (defun matrix-vector-store-p (matrix)
   "Is the matrix stored in a way that looks like a vector?"
   (or (= (matrix-stride matrix)
