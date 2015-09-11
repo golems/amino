@@ -61,6 +61,7 @@
                (:file "src/draw" :depends-on ("src/scenegraph"))
                (:file "src/trajectory" :depends-on ("src/scenegraph"))
                (:file "src/config" :depends-on ("src/util" "src/scenefile/urdf" "src/parameters"))
+               (:file "src/sg-gen" :depends-on ("src/scenegraph" "src/mesh"))
                )
   :long-description "Robotics Raytracining Frontend"
   )

@@ -72,6 +72,16 @@
                                           (scene-cone-height shape)
                                           (scene-cone-start-radius shape)
                                           (scene-cone-end-radius shape))))
+       (scene-grid
+
+        (list (cgen-declare-array "static const double" "dimension"
+                                  (amino::vec-list (scene-grid-dimension shape)))
+              (cgen-declare-array "static const double" "delta"
+                                  (amino::vec-list (scene-grid-delta shape)))
+              (cgen-assign-stmt cgeom (cgen-call "aa_rx_geom_grid" copt
+                                                 "dimension"
+                                                 "delta"))))
+
         )
      (cgen-call-stmt "aa_rx_geom_attach" argument-name
                      (cgen-string (scene-frame-name frame)) cgeom)

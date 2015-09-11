@@ -1,0 +1,83 @@
+#!/bin/sh
+
+# Copyright (c) 2015, Rice University
+# All rights reserved.
+#
+# Author(s): Neil T. Dantam <ntd@rice.edu>
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions
+#  are met:
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#   * Redistributions in binary form must reproduce the above
+#     copyright notice, this list of conditions and the following
+#     disclaimer in the documentation and/or other materials provided
+#     with the distribution.
+#   * Neither the name of the copyright holder nor the names of its
+#     contributors may be used to endorse or promote products derived
+#     from this software without specific prior written permission.
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+#  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+#  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+#  COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+#  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+#  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+#  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+#  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+#  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+#  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+#  OF THE POSSIBILITY OF SUCH DAMAGE.
+
+OUTPUT_FILE=arxc.out.c
+
+while test "$1" != x-- -a "x$#" != x0; do
+    case "$1" in
+        -h|-\?|--help)
+            cat <<EOF
+Usage: arxc [OPTION] scene-file -o output-file
+Generate C code from scene graph files files
+
+Options:
+  -h|-?|--help,                  display this help and exit
+  -o OUTPUT-FILE                 write generated code to OUTPUT_FILE
+
+Examples:
+  arxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
+
+Report bugs to <ntd@rice.edu>"
+EOF
+            exit 0
+            ;;
+        -o)
+            shift
+            OUTPUT_FILE="$1";
+            ;;
+        -*)
+            echo "error: unknown option: $1"
+            exit 1
+            ;;
+        *)
+            if test -z "$INPUT_FILE"; then
+                INPUT_FILE="$1";
+            else
+                >&2 echo "error: duplicate input file: $1"
+                exit 1
+            fi
+            ;;
+    esac
+    shift
+done
+
+
+if test -z "$INPUT_FILE"; then
+    >&2 echo "error: no input file specified"
+    exit 1
+fi
+
+
+arxc.core --script <<EOF
+(robray::scene-graph-genc (robray::scene-graph "$INPUT_FILE")
+                          :file "$OUTPUT_FILE")
+EOF
