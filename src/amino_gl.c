@@ -454,7 +454,7 @@ static void bind_mesh (
 
     glGenBuffers(1, &bufs->values);
     glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(bufs->values_size*sizeof(float)*n_vert),
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->values_size*sizeof(float)*n_vert),
                  mesh->vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_values = 1;
@@ -462,7 +462,7 @@ static void bind_mesh (
     bufs->colors_size = 4;
     glGenBuffers(1, &bufs->colors);
     glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(bufs->colors_size*sizeof(float)*n_vert), colors, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->colors_size*sizeof(float)*n_vert), colors, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_colors = 1;
 
@@ -470,7 +470,7 @@ static void bind_mesh (
     if( bufs->indices_size ) {
         glGenBuffers(1, &bufs->indices);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(bufs->indices_size*sizeof(unsigned)*mesh->n_indices),
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->indices_size*sizeof(unsigned)*mesh->n_indices),
                      mesh->indices, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         bufs->has_indices = 1;
@@ -479,7 +479,7 @@ static void bind_mesh (
     if( bufs->normals_size ) {
         glGenBuffers(1, &bufs->normals);
         glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
-        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(bufs->normals_size*sizeof(float)*n_vert),
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->normals_size*sizeof(float)*n_vert),
                      mesh->normals, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         bufs->has_normals = 1;
@@ -552,6 +552,14 @@ static void line_mesh (
     bind_mesh( geom, mesh );
 }
 
+AA_API void aa_geom_gl_buffers_init_mesh(
+    struct aa_rx_geom_mesh *geom
+    )
+{
+
+}
+
+
 AA_API void aa_geom_gl_buffers_init_grid (
     struct aa_rx_geom_grid *geom
     )
@@ -560,7 +568,7 @@ AA_API void aa_geom_gl_buffers_init_grid (
     double *delta = geom->shape.delta;
     size_t n_x = (size_t)(dmax1[0]/delta[0]) + 1;
     size_t n_y = (size_t)(dmax1[1]/delta[1]) + 1;
-    double dmax[2] = {(n_x-1)*delta[0], (n_y-1)*delta[1]};
+    double dmax[2] = {(double)(n_x-1)*delta[0], (double)(n_y-1)*delta[1]};
     //size_t n_vert = 2*n_x + 2*n_x - 1 + 2*n_y + 2*n_y - 1;
     size_t n_vert = 4*(n_x+n_y-1);
 
@@ -570,10 +578,10 @@ AA_API void aa_geom_gl_buffers_init_grid (
     static const double a[2] = {1,-1};
     // x
     size_t c = 0;
-    for( short k = 0; k < 2; k ++ ) { // +/- x
+    for( size_t k = 0; k < 2; k ++ ) { // +/- x
         for( size_t i = k; i < n_x; i ++ ) { // step from 0
-            for( short j = 0; j < 2; j ++ ) { // +/- y
-                double x = a[k]*i*delta[0];
+            for( size_t j = 0; j < 2; j ++ ) { // +/- y
+                double x = a[k]*(double)i*delta[0];
                 double y = a[j]*dmax[1];
                 values[c++] = (GLfloat)x;
                 values[c++] = (GLfloat)y;
@@ -583,11 +591,11 @@ AA_API void aa_geom_gl_buffers_init_grid (
     }
 
     // y
-    for( short k = k; k < 2; k ++ ) {
+    for( size_t k = k; k < 2; k ++ ) {
         for( size_t i = k; i < n_y; i ++ ) {
-            for( short j = 0; j < 2; j ++ ) {
+            for( size_t j = 0; j < 2; j ++ ) {
                 double x = a[j]*dmax[0];
-                double y = a[k]*i*delta[1];
+                double y = a[k]*(double)i*delta[1];
                 values[c++] = (GLfloat)x;
                 values[c++] = (GLfloat)y;
                 values[c++] = 0;
@@ -620,9 +628,9 @@ AA_API void aa_geom_gl_buffers_init_box (
 
     GLfloat values[6*4*3];
     GLfloat normals[6*4*3];
-    GLfloat d[3] = { geom->shape.dimension[0],
-                     geom->shape.dimension[1],
-                     geom->shape.dimension[2]};
+    GLfloat d[3] = { (GLfloat)geom->shape.dimension[0],
+                     (GLfloat)geom->shape.dimension[1],
+                     (GLfloat)geom->shape.dimension[2]};
     GLfloat a[2] = {1,-1};
     size_t ii[4][2] = {{0,0}, {0,1}, {1,1}, {1,0}};
 
@@ -770,7 +778,11 @@ AA_API void aa_geom_gl_buffers_init (
     case AA_RX_GRID:
         aa_geom_gl_buffers_init_grid((struct aa_rx_geom_grid*)geom);
         break;
-    default: abort();
+    case AA_RX_MESH:
+        aa_geom_gl_buffers_init_mesh((struct aa_rx_geom_mesh*)geom);
+        break;
+    default:
+        abort();
     }
 
     // specular
@@ -921,12 +933,12 @@ aa_gl_globals_set_ambient(
 struct sg_render_cx {
     double *TF;
     size_t ld_tf;
-    struct aa_gl_globals *globals;
+    const struct aa_gl_globals *globals;
 };
 
 void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
-    double *E = cx->TF + (frame_id*cx->ld_tf);
+    double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
     aa_gl_draw_tf( E, geom->gl_buffers);
 }
 
