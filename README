@@ -47,3 +47,29 @@ INSTALLATION
     ./configure && make && make install
 
 See the INSTALL file for details.
+
+FAQ
+===
+
+SE(3)
+-----
+
+* Why dual quaternions?
+
+  - Dual quaternions are more compact and easier, computationally, to
+    normalize and filter than matrices.
+
+Scene Graphs
+------------
+
+* How can I load a URDF file?
+
+  - Use the scene graph compiler, `arxc`, to generate code from the
+    URDF file.
+
+* How can I reload a modified scene graph file without restarting my
+  program?
+
+  - Compile the scene graph to a shared library and load the library
+    with dlopen().  To reload the scene graph, recompile the scene
+    graph and dlopen() the library again.
