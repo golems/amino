@@ -435,11 +435,20 @@ static void quad_tr( unsigned *indices,
 
 static void bind_mesh (
     struct aa_rx_geom *geom,
-    struct aa_rx_mesh *mesh
+    struct aa_rx_mesh *mesh,
+    size_t size
     )
 {
     assert(geom->gl_buffers);
     assert(sizeof(float) == sizeof(GLfloat));
+
+    geom->gl_buffers->values_size = 3;
+    if( mesh->indices ) {
+        geom->gl_buffers->indices_size = (GLint)size;
+        geom->gl_buffers->count = (GLsizei)(size*mesh->n_indices);
+    } else {
+        geom->gl_buffers->count = (GLsizei)(size*mesh->n_vertices);
+    }
 
     struct aa_gl_buffers *bufs = geom->gl_buffers;
     size_t n_vert = mesh->n_vertices;
@@ -488,46 +497,25 @@ static void bind_mesh (
 
 
 static void tri_mesh (
-    struct aa_rx_geom_box *geom,
+    struct aa_rx_geom *geom,
     struct aa_rx_mesh *mesh
     )
 {
-    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
-    geom->base.gl_buffers = bufs;
-    bufs->count = (GLsizei)(3*mesh->n_indices);
-
-    bufs->values_size = 3;
-    if( mesh->indices ) {
-        bufs->indices_size = 3;
-    }
-    bufs->normals_size = 3;
-    bufs->mode = GL_TRIANGLES;
-
-
-    bind_mesh( &geom->base, mesh );
-
+    geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
+    geom->gl_buffers->mode = GL_TRIANGLES;
+    geom->gl_buffers->normals_size = 3;
+    bind_mesh( geom, mesh, 3 );
 }
 
 static void quad_mesh (
-    struct aa_rx_geom_box *geom,
+    struct aa_rx_geom *geom,
     struct aa_rx_mesh *mesh
     )
 {
-    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
-    geom->base.gl_buffers = bufs;
-    bufs->values_size = 3;
-
-    if( mesh->indices ) {
-        bufs->indices_size = 4;
-        bufs->count = (GLsizei)(4*mesh->n_indices);
-    } else {
-        bufs->count = (GLsizei)(4*mesh->n_vertices);
-    }
-
-    bufs->normals_size = 3;
-    bufs->mode = GL_QUADS;
-
-    bind_mesh( &geom->base, mesh );
+    geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
+    geom->gl_buffers->mode = GL_QUADS;
+    geom->gl_buffers->normals_size = 3;
+    bind_mesh( geom, mesh, 4 );
 }
 
 static void line_mesh (
@@ -535,28 +523,16 @@ static void line_mesh (
     struct aa_rx_mesh *mesh
     )
 {
-    struct aa_gl_buffers *bufs = AA_NEW0(struct aa_gl_buffers);
-    geom->gl_buffers = bufs;
-    bufs->values_size = 3;
-
-    if( mesh->indices ) {
-        bufs->indices_size = 2;
-        bufs->count = (GLsizei)(2*mesh->n_indices);
-    } else {
-        bufs->count = (GLsizei)(2*mesh->n_vertices);
-    }
-
-    bufs->mode = GL_LINES;
-
-    assert(geom->gl_buffers);
-    bind_mesh( geom, mesh );
+    geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
+    geom->gl_buffers->mode = GL_LINES;
+    bind_mesh( geom, mesh, 2 );
 }
 
 AA_API void aa_geom_gl_buffers_init_mesh(
     struct aa_rx_geom_mesh *geom
     )
 {
-
+    tri_mesh( &geom->base, geom->shape );
 }
 
 
@@ -695,7 +671,7 @@ AA_API void aa_geom_gl_buffers_init_box (
 
     aa_rx_mesh_set_vertices( mesh, 6*4, values, 0 );
     aa_rx_mesh_set_normals( mesh, 6*4, normals, 0 );
-    quad_mesh( geom, mesh );
+    quad_mesh( &geom->base, mesh );
 
 
     /* // fill vertices */
@@ -782,7 +758,8 @@ AA_API void aa_geom_gl_buffers_init (
         aa_geom_gl_buffers_init_mesh((struct aa_rx_geom_mesh*)geom);
         break;
     default:
-        abort();
+        break;
+        //abort();
     }
 
     // specular
