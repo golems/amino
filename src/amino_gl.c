@@ -284,7 +284,7 @@ AA_API void aa_gl_draw_tf (
     check_error("glEnableVert");
 
     glVertexAttribPointer((GLuint)aa_gl_id_position, buffers->values_size, GL_FLOAT, GL_FALSE, 0, 0);
-    check_error("glVertAttribPointer");
+    check_error("glVertAttribPointer position");
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -745,7 +745,7 @@ AA_API void aa_geom_gl_buffers_init (
     )
 {
     if( geom->gl_buffers ) aa_gl_buffers_destroy( geom->gl_buffers );
-    geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
+    //geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
 
     switch( geom->type ) {
     case AA_RX_BOX:
@@ -763,8 +763,10 @@ AA_API void aa_geom_gl_buffers_init (
     }
 
     // specular
-    for( int i = 0; i < 3; i ++ ) {
-        geom->gl_buffers->specular[i] = (GLfloat) geom->opt.specular[i];
+    if( geom->gl_buffers ) {
+        for( int i = 0; i < 3; i ++ ) {
+            geom->gl_buffers->specular[i] = (GLfloat) geom->opt.specular[i];
+        }
     }
 }
 
@@ -908,15 +910,19 @@ aa_gl_globals_set_ambient(
 }
 
 struct sg_render_cx {
+    const struct aa_rx_sg *sg;
     double *TF;
     size_t ld_tf;
     const struct aa_gl_globals *globals;
 };
 
-void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
+void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
+{
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
     double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
-    aa_gl_draw_tf( E, geom->gl_buffers);
+    if( geom->gl_buffers ) {
+        aa_gl_draw_tf( E, geom->gl_buffers);
+    }
 }
 
 AA_API void
@@ -960,7 +966,8 @@ aa_rx_sg_render(
 
 
     // TODO: optimize globals handling
-    struct sg_render_cx cx = {.TF = TF_abs,
+    struct sg_render_cx cx = {.sg = sg,
+                              .TF = TF_abs,
                               .ld_tf = ld_tf,
                               .globals = globals };
     aa_rx_sg_map_geom( sg, &render_helper, &cx );
