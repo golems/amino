@@ -48,6 +48,29 @@
 #include "amino/rx/amino_gl_internal.h"
 #include "amino/rx/amino_sdl.h"
 
+static int aa_sdl_initialized = 0;
+AA_API void aa_sdl_init( void )
+{
+    if( aa_sdl_initialized ) return;
+    aa_sdl_initialized = 1;
+
+    if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
+        printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+        abort();
+    }
+
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
+    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+}
+
 
 static void scroll( double x, double y,
                     const double *R_cam, const double *v_cam,
@@ -223,5 +246,31 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
 
     //SDL_UpdateWindowSurface( window );
     //SDL_UpdateWindowSurface( window );
+
+}
+
+AA_API void aa_sdl_display_loop(
+    SDL_Window* window,
+    struct aa_gl_globals * globals,
+    void (*display)(void *context),
+    void *context )
+{
+
+
+    int quit,update=1;
+    struct timespec delta = aa_tm_sec2timespec( 1.0 / 120 );
+    for(;;) {
+        //printf("update: %d\n", update );
+        if( update ) {
+            display( context );
+            SDL_GL_SwapWindow(window);
+        } else {
+            struct timespec now = aa_tm_add( now, delta );
+            /* Required for mouse wheel to work? */
+            clock_nanosleep( AA_CLOCK, 0, &delta, NULL );
+        }
+        aa_sdl_scroll(globals, &update, &quit);
+        if( quit ) break;
+    }
 
 }

@@ -41,6 +41,7 @@
 #include <math.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <SDL.h>
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
@@ -52,54 +53,9 @@
 const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 1000;
 
-#include <SDL.h>
 
 struct aa_rx_sg *generate_scenegraph(struct aa_rx_sg *sg);
-
-
-//struct aa_rx_geom_box geom;
-//struct aa_rx_geom_grid grid;
 struct aa_rx_sg *scenegraph;
-
-
-void Init(void)
-{
-    scenegraph = generate_scenegraph(NULL);
-
-    /* // box */
-    /* { */
-    /*     aa_rx_sg_add_frame_fixed( scenegraph, */
-    /*                               "", "box", */
-    /*                               aa_tf_quat_ident, aa_tf_vec_ident ); */
-
-    /*     struct aa_rx_geom_opt *box_opt = aa_rx_geom_opt_create(); */
-    /*     aa_rx_geom_opt_set_color( box_opt, 1, 0, 0); */
-    /*     aa_rx_geom_opt_set_specular( box_opt, .3, .3, .3); */
-
-    /*     double d[3] = {.1, .1, .1}; */
-    /*     aa_rx_geom_attach( scenegraph, "box", aa_rx_geom_box(box_opt, d) ); */
-
-    /*     aa_rx_geom_opt_destroy(box_opt); */
-    /* } */
-
-    /* // grid */
-    /* { */
-    /*     aa_rx_sg_add_frame_fixed( scenegraph, */
-    /*                               "", "grid", */
-    /*                               aa_tf_quat_ident, aa_tf_vec_ident ); */
-    /*     struct aa_rx_geom_opt *grid_opt = aa_rx_geom_opt_create(); */
-    /*     aa_rx_geom_opt_set_color( grid_opt, .5, .5, .5); */
-
-    /*     double dim[2] = {1,1}; */
-    /*     double delta[2] = {.05, .05}; */
-    /*     aa_rx_geom_attach( scenegraph, "grid", aa_rx_geom_grid(grid_opt, dim, delta) ); */
-
-    /*     aa_rx_geom_opt_destroy(grid_opt); */
-    /* } */
-    aa_rx_sg_index(scenegraph);
-    aa_rx_sg_gl_init(scenegraph);
-
-}
 
 void check_error( const char *name ){
     for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
@@ -107,9 +63,9 @@ void check_error( const char *name ){
     }
 }
 
-
-void display( const struct aa_gl_globals *globals )
+void display( void *globals_ )
 {
+    const struct aa_gl_globals *globals = (const struct aa_gl_globals *) globals_;
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
@@ -136,23 +92,7 @@ int main(int argc, char *argv[])
     (void)argc; (void)argv;
     SDL_Window* window = NULL;
 
-
-    if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
-        printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-        abort();
-    }
-
-
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
-    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+    aa_sdl_init();
 
     window = SDL_CreateWindow( "SDL Test",
                                SDL_WINDOWPOS_UNDEFINED,
@@ -172,10 +112,16 @@ int main(int argc, char *argv[])
         abort();
     }
 
+    aa_gl_init();
+
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
-    Init();
+    // Initialize scene graph
+    scenegraph = generate_scenegraph(NULL);
+    aa_rx_sg_index(scenegraph);
+    aa_rx_sg_gl_init(scenegraph);
 
+    // Initialize globals
     struct aa_gl_globals *globals = aa_gl_globals_create();
     // global camera
     {
@@ -202,24 +148,10 @@ int main(int argc, char *argv[])
         aa_gl_globals_set_ambient(globals, ambient);
     }
 
-    int quit,update=1;
-    struct timespec delta = aa_tm_sec2timespec( 1.0 / 120 );
 
-    for(;;) {
-        //printf("update: %d\n", update );
-        if( update ) {
-            display( globals );
-            SDL_GL_SwapWindow(window);
-        } else {
-            struct timespec now = aa_tm_add( now, delta );
-            /* Required for mouse wheel to work? */
-            clock_nanosleep( AA_CLOCK, 0, &delta, NULL );
-        }
-        aa_sdl_scroll(globals, &update, &quit);
-        if( quit ) break;
-    }
-
-    SDL_Delay( 1000 );
+    aa_sdl_display_loop( window, globals,
+                         display,
+                         globals );
 
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );

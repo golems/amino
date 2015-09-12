@@ -205,8 +205,6 @@ static const char aa_gl_fragment_shader[] =
     "  gl_FragColor = vec4(color,vColor.w);"
     "}";
 
-static int aa_gl_do_init = 1;
-#define AA_GL_INIT if(aa_gl_do_init) aa_gl_init();
 
 static GLuint aa_gl_id_program;
 static GLint aa_gl_id_position;
@@ -221,8 +219,13 @@ static GLint aa_gl_id_light_color;
 static GLint aa_gl_id_light_power;
 static GLint aa_gl_id_specular;
 
+static int aa_gl_initialized = 0;
 AA_API void aa_gl_init()
 {
+    if( aa_gl_initialized ) return;
+
+    aa_gl_initialized = 1;
+
     GLuint vertexShader = aa_gl_create_shader(GL_VERTEX_SHADER, aa_gl_vertex_shader);
     GLuint fragmentShader = aa_gl_create_shader(GL_FRAGMENT_SHADER, aa_gl_fragment_shader);
 
@@ -249,8 +252,6 @@ AA_API void aa_gl_init()
     aa_gl_id_camera_world = glGetUniformLocation(aa_gl_id_program, "camera_world");
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
-
-    aa_gl_do_init = 0;
 }
 
 
@@ -931,8 +932,6 @@ aa_rx_sg_render(
     const struct aa_gl_globals *globals,
     size_t n_TF, double *TF_abs, size_t ld_tf)
 {
-
-    AA_GL_INIT;
 
     glUseProgram(aa_gl_id_program);
     check_error("glUseProgram");

@@ -41,6 +41,7 @@
 #include <math.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <SDL.h>
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
@@ -52,7 +53,6 @@
 const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 1000;
 
-#include <SDL.h>
 
 
 //struct aa_rx_geom_box geom;
@@ -106,8 +106,9 @@ void check_error( const char *name ){
 }
 
 
-void display( const struct aa_gl_globals *globals )
+void display( void *globals_ )
 {
+    const struct aa_gl_globals *globals = (const struct aa_gl_globals *) globals_;
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
@@ -131,23 +132,8 @@ int main(int argc, char *argv[])
     (void)argc; (void)argv;
     SDL_Window* window = NULL;
 
-
-    if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
-        printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
-        abort();
-    }
-
-
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
-    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+    aa_sdl_init();
+    fprintf(stderr, "foo\n");
 
     window = SDL_CreateWindow( "SDL Test",
                                SDL_WINDOWPOS_UNDEFINED,
@@ -166,6 +152,8 @@ int main(int argc, char *argv[])
         printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
         abort();
     }
+
+    aa_gl_init();
 
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
@@ -197,24 +185,11 @@ int main(int argc, char *argv[])
         aa_gl_globals_set_ambient(globals, ambient);
     }
 
-    int quit,update=1;
-    struct timespec delta = aa_tm_sec2timespec( 1.0 / 120 );
 
-    for(;;) {
-        //printf("update: %d\n", update );
-        if( update ) {
-            display( globals );
-            SDL_GL_SwapWindow(window);
-        } else {
-            struct timespec now = aa_tm_add( now, delta );
-            /* Required for mouse wheel to work? */
-            clock_nanosleep( AA_CLOCK, 0, &delta, NULL );
-        }
-        aa_sdl_scroll(globals, &update, &quit);
-        if( quit ) break;
-    }
+    aa_sdl_display_loop( window, globals,
+                         display,
+                         globals );
 
-    SDL_Delay( 1000 );
 
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );

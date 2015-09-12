@@ -38,7 +38,19 @@
 #ifndef AMINO_RX_SDL_H
 #define AMINO_RX_SDL_H
 
-void aa_sdl_scroll( struct aa_gl_globals * globals,
-                    int *update, int *quit );
+
+AA_API void aa_sdl_init( void );
+
+AA_API void aa_sdl_scroll(
+    struct aa_gl_globals * globals,
+    int *update, int *quit );
+
+
+AA_API void aa_sdl_display_loop(
+    SDL_Window* window,
+    struct aa_gl_globals * globals,
+    void (*display)(void *context),
+    void *context );
+
 
 #endif /*AMINO_RX_SDL_H*/

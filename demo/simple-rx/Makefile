@@ -6,8 +6,11 @@ CFLAGS_ALL := $(CFLAGS) `pkg-config --cflags $(PKG_CONFIG_MODULES)`
 LDFLAGS_ALL := $(LDLAGS) `pkg-config --libs $(PKG_CONFIG_MODULES)`
 
 
-simple-rx: scene.c simple-rx.c
-	$(CC) scene.c simple-rx.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o simple-rx
+simple-rx: scene.o simple-rx.c
+	$(CC) scene.o simple-rx.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o simple-rx
+
+scene.o: scene.c
+	$(CC) -c scene.c $(CFLAGS_ALL)
 
 scene.c: scene.robray
 	arxc scene.robray -o scene.c
