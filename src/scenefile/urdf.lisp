@@ -3,20 +3,25 @@
 (defvar *urdf-dom*)
 (defvar *urdf-package-alist* nil)
 
-(defun urdf-package-add (name directory)
-  (pushnew (cons name directory)
-           *urdf-package-alist* :test #'equal))
+;; (defun urdf-package-add (name directory)
+;;   (pushnew (cons name directory)
+;;            *urdf-package-alist* :test #'equal))
 
-(defun urdf-resolve-file (filename &optional (package-alist *urdf-package-alist*))
+(defun urdf-resolve-file (filename) ; &optional (package-alist *urdf-package-alist*))
   (let* ((package (ppcre:regex-replace "^package://([^/]*)/.*"
                                        filename
                                        "\\1")))
     (if package
-        (let ((package-directory (cdr (assoc package package-alist :test #'string=))))
-          (assert package-directory)
-          (ppcre:regex-replace "^package://([^/]*)"
-                               filename
-                               package-directory))
+        (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH")))
+          (loop for path in (ppcre:split ":" ros-package-path)
+             for package-directory = (concatenate 'string path "/" package)
+             do
+               (when (probe-file package-directory)
+                 (return-from urdf-resolve-file
+                   (ppcre:regex-replace "^package://([^/]*)"
+                                        filename
+                                        package-directory))))
+          (error "Package ~A not found for ROS_PACKAGE_PATH='~A'" package ros-package-path))
         filename)))
 
 
