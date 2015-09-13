@@ -90,29 +90,17 @@ void display( void *globals_ )
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
+
     SDL_Window* window = NULL;
+    SDL_GLContext gContext = NULL;
 
-    aa_sdl_init();
-
-    window = SDL_CreateWindow( "SDL Test",
-                               SDL_WINDOWPOS_UNDEFINED,
-                               SDL_WINDOWPOS_UNDEFINED,
-                               SCREEN_WIDTH,
-                               SCREEN_HEIGHT,
-                               SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
-    if( window == NULL ) {
-        printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
-        abort();
-    }
-
-    SDL_GLContext gContext = SDL_GL_CreateContext( window );
-    if( gContext == NULL )
-    {
-        printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
-        abort();
-    }
-
-    aa_gl_init();
+    aa_sdl_gl_window( "SDL Test",
+                      SDL_WINDOWPOS_UNDEFINED,
+                      SDL_WINDOWPOS_UNDEFINED,
+                      SCREEN_WIDTH,
+                      SCREEN_HEIGHT,
+                      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE,
+                      &window, &gContext);
 
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 

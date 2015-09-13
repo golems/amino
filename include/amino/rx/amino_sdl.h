@@ -53,4 +53,15 @@ AA_API void aa_sdl_display_loop(
     void *context );
 
 
+
+AA_API void aa_sdl_gl_window(
+    const char* title,
+    int x_pos,
+    int y_pos,
+    int width,
+    int height,
+    Uint32 flags,
+    SDL_Window **pwindow,
+    SDL_GLContext *p_glcontext );
+
 #endif /*AMINO_RX_SDL_H*/

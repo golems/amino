@@ -274,3 +274,37 @@ AA_API void aa_sdl_display_loop(
     }
 
 }
+
+
+AA_API void aa_sdl_gl_window(
+    const char* title,
+    int x_pos,
+    int y_pos,
+    int width,
+    int height,
+    Uint32 flags,
+    SDL_Window **pwindow,
+    SDL_GLContext *p_glcontext )
+{
+    aa_sdl_init();
+
+    *pwindow = SDL_CreateWindow( title,
+                                 x_pos, y_pos,
+                                 width, height,
+                                 flags | SDL_WINDOW_OPENGL );
+    if( *pwindow == NULL ) {
+        printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+        abort();
+    }
+
+    *p_glcontext = SDL_GL_CreateContext( *pwindow );
+    if( p_glcontext == NULL )
+    {
+        fprintf( stderr, "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
+        abort();
+    }
+
+    aa_gl_init();
+    //printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+
+}
