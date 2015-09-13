@@ -80,6 +80,22 @@ void Init(void)
         aa_rx_geom_opt_destroy(box_opt);
     }
 
+    // cylinder
+    {
+        aa_rx_sg_add_frame_fixed( scenegraph,
+                                  "", "cylinder",
+                                  aa_tf_quat_ident, aa_tf_vec_ident );
+
+        struct aa_rx_geom_opt *opt = aa_rx_geom_opt_create();
+        aa_rx_geom_opt_set_color( opt, 0, 0, 1);
+        aa_rx_geom_opt_set_specular( opt, .3, .3, .3);
+
+        aa_rx_geom_attach( scenegraph, "cylinder",
+                           aa_rx_geom_cylinder(opt, .2, .1) );
+
+        aa_rx_geom_opt_destroy(opt);
+    }
+
     // grid
     {
         aa_rx_sg_add_frame_fixed( scenegraph,

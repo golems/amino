@@ -774,6 +774,114 @@ AA_API void aa_geom_gl_buffers_init_box (
 }
 
 
+AA_API void aa_geom_gl_buffers_init_cylinder (
+    struct aa_rx_geom_cylinder *geom
+    )
+{
+    double r = geom->shape.radius;
+    GLfloat h[2] = {0, (GLfloat)geom->shape.height};
+
+    unsigned p = 36;
+
+    unsigned n_values = p*2*2+2;
+    unsigned n_indices = p*2*2;
+    GLfloat values[n_values*3];
+    GLfloat normals[n_values*3];
+    unsigned indices[n_indices*3];
+
+    unsigned a = 0;
+    unsigned b = 0;
+
+    // sides
+    for( unsigned i = 0; i < p; i ++ ) {
+
+        { // values
+            double theta = i * (2*M_PI/p);
+            double s = sin(theta);
+            double c = cos(theta);
+            double x = c*r;
+            double y = s*r;
+
+            for( unsigned j = 0; j < 2; j ++ ) {
+                values[a]    = (GLfloat)x;
+                normals[a++] = (GLfloat)c;
+                values[a]    = (GLfloat)y;
+                normals[a++] = (GLfloat)s;
+                values[a] =   h[j];
+                normals[a++] = 0;
+            }
+        }
+        { // indices
+            unsigned k0 = 2*i;
+            unsigned k1 = k0 + 1;
+            unsigned k2 = (k1 + 1) % (2*p);
+            unsigned k3 = (k2 + 1) % (2*p);
+
+            indices[b++] = k0;
+            indices[b++] = k1;
+            indices[b++] = k2;
+
+            indices[b++] = k3;
+            indices[b++] = k1;
+            indices[b++] = k2;
+
+        }
+    }
+
+    // ends
+    AA_MEM_CPY( values+a, values, a );
+    unsigned k_end = a/3;
+    unsigned an = a;
+    a += a;
+
+    assert( a/3 == 4*p );
+    assert(a/3 + 2 == n_values );
+
+    unsigned centers[2] = {a/3, a/3+1};
+    GLfloat sg[2] = {-1,1};
+
+    for( unsigned i = 0; i < p; i ++ ) {
+        unsigned k0 = k_end + (2*i + 0);
+        unsigned k1 = k_end + (2*i + 1);
+        unsigned k2 = k_end + ((2*i + 2) % (2*p));
+        unsigned k3 = k_end + ((2*i + 3) % (2*p));
+        unsigned kk[2][2] = { {k0, k2}, {k1, k3} };
+        for( unsigned j = 0; j < 2; j ++ ) {
+            indices[b++] = centers[j];
+            indices[b++] = kk[j][0];
+            indices[b++] = kk[j][1];
+
+            normals[an++] = 0;
+            normals[an++] = 0;
+            normals[an++] = sg[j];
+        }
+    }
+
+    for( unsigned j = 0; j < 2; j ++ ) {
+
+        values[a++]    =  0;
+        values[a++]    =  0;
+        values[a++]    =  h[j];
+
+        normals[an++] = 0;
+        normals[an++] = 0;
+        normals[an++] = sg[j];
+    }
+
+    assert( a/3  == n_values );
+    assert( an/3  == n_values );
+    assert( b/3  == n_indices );
+
+    struct aa_rx_mesh vmesh = {0};
+    struct aa_rx_mesh *mesh = &vmesh;
+
+    aa_rx_mesh_set_vertices( mesh, a/3, values, 0 );
+    aa_rx_mesh_set_normals( mesh, an/3, normals, 0 );
+    aa_rx_mesh_set_indices( mesh, b/3, indices, 0 );
+    tri_mesh( &geom->base, mesh );
+}
+
+
 
 AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom
@@ -791,6 +899,9 @@ AA_API void aa_geom_gl_buffers_init (
         break;
     case AA_RX_MESH:
         aa_geom_gl_buffers_init_mesh((struct aa_rx_geom_mesh*)geom);
+        break;
+    case AA_RX_CYLINDER:
+        aa_geom_gl_buffers_init_cylinder((struct aa_rx_geom_cylinder*)geom);
         break;
     default:
         break;
