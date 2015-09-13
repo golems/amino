@@ -107,12 +107,14 @@ struct aa_rx_geom *
 aa_rx_geom_grid (
     struct aa_rx_geom_opt *opt,
     const double dimension[2],
-    const double delta[2] )
+    const double delta[2],
+    double width )
 {
     ALLOC_GEOM( struct aa_rx_geom_grid, g,
                 AA_RX_GRID, opt );
     AA_MEM_CPY(g->shape.dimension, dimension, 2);
     AA_MEM_CPY(g->shape.delta, delta, 2);
+    g->shape.width = width;
     return &g->base;
 }
 

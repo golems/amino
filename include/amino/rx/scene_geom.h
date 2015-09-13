@@ -156,6 +156,7 @@ struct aa_rx_shape_cone {
 struct aa_rx_shape_grid {
     double dimension[2];
     double delta[2];
+    double width;
 };
 
 void *
@@ -204,7 +205,8 @@ struct aa_rx_geom *
 aa_rx_geom_grid (
     struct aa_rx_geom_opt *opt,
     const double dimension[2],
-    const double delta[2] );
+    const double delta[2],
+    double width );
 
 /**
  * Opaque type for a mesh objects

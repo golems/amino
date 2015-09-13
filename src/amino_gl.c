@@ -541,51 +541,85 @@ AA_API void aa_geom_gl_buffers_init_grid (
     struct aa_rx_geom_grid *geom
     )
 {
-    double *dmax1 = geom->shape.dimension;
+    double *dmaxd = geom->shape.dimension;
     double *delta = geom->shape.delta;
-    size_t n_x = (size_t)(dmax1[0]/delta[0]) + 1;
-    size_t n_y = (size_t)(dmax1[1]/delta[1]) + 1;
-    double dmax[2] = {(double)(n_x-1)*delta[0], (double)(n_y-1)*delta[1]};
-    //size_t n_vert = 2*n_x + 2*n_x - 1 + 2*n_y + 2*n_y - 1;
-    size_t n_vert = 4*(n_x+n_y-1);
+
+    size_t n_x = (size_t)(dmaxd[0]/delta[0]) + 1;
+    size_t n_y = (size_t)(dmaxd[1]/delta[1]) + 1;
+    GLfloat dmax[2] = { (GLfloat)((double)(n_x-1)*delta[0]),
+                        (GLfloat)((double)(n_y-1)*delta[1])};
+    size_t n_vert = 8*(n_x+n_y-1);
+    double w = geom->shape.width / 2;
 
     size_t vsize = 3 * n_vert * sizeof(GLfloat);
     GLfloat *values = (GLfloat*)aa_mem_region_local_alloc(vsize);;
 
     static const double a[2] = {1,-1};
+
     // x
     size_t c = 0;
     for( size_t k = 0; k < 2; k ++ ) { // +/- x
         for( size_t i = k; i < n_x; i ++ ) { // step from 0
-            for( size_t j = 0; j < 2; j ++ ) { // +/- y
-                double x = a[k]*(double)i*delta[0];
-                double y = a[j]*dmax[1];
-                values[c++] = (GLfloat)x;
-                values[c++] = (GLfloat)y;
-                values[c++] = 0;
-            }
+            double x_nom = a[k]*(double)i*delta[0];
+            GLfloat x0 = (GLfloat)(x_nom + w);
+            GLfloat x1 = (GLfloat)(x_nom - w);
+            GLfloat y0 = -dmax[1];
+            GLfloat y1 = dmax[1];
+
+            values[c++] = x0;
+            values[c++] = y0;
+            values[c++] = 0;
+
+            values[c++] = x0;
+            values[c++] = y1;
+            values[c++] = 0;
+
+            values[c++] = x1;
+            values[c++] = y1;
+            values[c++] = 0;
+
+            values[c++] = x1;
+            values[c++] = y0;
+            values[c++] = 0;
+
         }
     }
 
     // y
-    for( size_t k = k; k < 2; k ++ ) {
-        for( size_t i = k; i < n_y; i ++ ) {
-            for( size_t j = 0; j < 2; j ++ ) {
-                double x = a[j]*dmax[0];
-                double y = a[k]*(double)i*delta[1];
-                values[c++] = (GLfloat)x;
-                values[c++] = (GLfloat)y;
-                values[c++] = 0;
-            }
+    for( size_t k = 0; k < 2; k ++ ) { // +/- x
+        for( size_t i = k; i < n_y; i ++ ) { // step from 0
+            double y_nom = a[k]*(double)i*delta[1];
+            GLfloat y0 = (GLfloat)(y_nom + w);
+            GLfloat y1 = (GLfloat)(y_nom - w);
+            GLfloat x0 = -dmax[0];
+            GLfloat x1 = dmax[0];
+
+            values[c++] = x0;
+            values[c++] = y0;
+            values[c++] = 0;
+
+            values[c++] = x0;
+            values[c++] = y1;
+            values[c++] = 0;
+
+            values[c++] = x1;
+            values[c++] = y1;
+            values[c++] = 0;
+
+            values[c++] = x1;
+            values[c++] = y0;
+            values[c++] = 0;
+
         }
     }
+
     assert( c == 3*n_vert );
 
     struct aa_rx_mesh vmesh = {0};
     struct aa_rx_mesh *mesh = &vmesh;
 
     aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 );
-    line_mesh( &geom->base, mesh );
+    quad_mesh( &geom->base, mesh );
 
     aa_mem_region_local_pop(values);
 }

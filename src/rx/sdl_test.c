@@ -90,7 +90,8 @@ void Init(void)
 
         double dim[2] = {1,1};
         double delta[2] = {.05, .05};
-        aa_rx_geom_attach( scenegraph, "grid", aa_rx_geom_grid(grid_opt, dim, delta) );
+        aa_rx_geom_attach( scenegraph, "grid",
+                           aa_rx_geom_grid(grid_opt, dim, delta, 2.5e-3) );
 
         aa_rx_geom_opt_destroy(grid_opt);
     }
