@@ -605,9 +605,9 @@ AA_API void aa_geom_gl_buffers_init_box (
 
     GLfloat values[6*4*3];
     GLfloat normals[6*4*3];
-    GLfloat d[3] = { (GLfloat)geom->shape.dimension[0],
-                     (GLfloat)geom->shape.dimension[1],
-                     (GLfloat)geom->shape.dimension[2]};
+    GLfloat d[3] = { (GLfloat)geom->shape.dimension[0] / 2,
+                     (GLfloat)geom->shape.dimension[1] / 2,
+                     (GLfloat)geom->shape.dimension[2] / 2};
     GLfloat a[2] = {1,-1};
     size_t ii[4][2] = {{0,0}, {0,1}, {1,1}, {1,0}};
 
