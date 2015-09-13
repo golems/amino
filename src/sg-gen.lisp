@@ -80,7 +80,8 @@
                                   (amino::vec-list (scene-grid-delta shape)))
               (cgen-assign-stmt cgeom (cgen-call "aa_rx_geom_grid" copt
                                                  "dimension"
-                                                 "delta"))))
+                                                 "delta"
+                                                 (scene-grid-thickness shape)))))
 
         )
      (cgen-call-stmt "aa_rx_geom_attach" argument-name
