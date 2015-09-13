@@ -131,6 +131,8 @@ enum aa_rx_geom_shape {
     AA_RX_GRID
 };
 
+const char *aa_rx_geom_shape_str( enum aa_rx_geom_shape shape );
+
 struct aa_rx_shape_box {
     double dimension[3];
 };

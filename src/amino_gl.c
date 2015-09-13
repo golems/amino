@@ -477,7 +477,8 @@ static void bind_mesh (
     bufs->has_colors = 1;
 
 
-    if( bufs->indices_size ) {
+    if( mesh->indices ) {
+        bufs->indices_size = 3;
         glGenBuffers(1, &bufs->indices);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufs->indices);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->indices_size*sizeof(unsigned)*mesh->n_indices),
@@ -486,7 +487,8 @@ static void bind_mesh (
         bufs->has_indices = 1;
     }
 
-    if( bufs->normals_size ) {
+    if( mesh->normals ) {
+        bufs->normals_size = 3;
         glGenBuffers(1, &bufs->normals);
         glBindBuffer(GL_ARRAY_BUFFER, bufs->normals);
         glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->normals_size*sizeof(float)*n_vert),
@@ -504,7 +506,6 @@ static void tri_mesh (
 {
     geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
     geom->gl_buffers->mode = GL_TRIANGLES;
-    geom->gl_buffers->normals_size = 3;
     bind_mesh( geom, mesh, 3 );
 }
 
@@ -515,7 +516,6 @@ static void quad_mesh (
 {
     geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
     geom->gl_buffers->mode = GL_QUADS;
-    geom->gl_buffers->normals_size = 3;
     bind_mesh( geom, mesh, 4 );
 }
 

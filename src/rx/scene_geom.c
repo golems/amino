@@ -123,7 +123,7 @@ aa_rx_geom_mesh (
 {
 
     ALLOC_GEOM( struct aa_rx_geom_mesh, g,
-                AA_RX_CYLINDER, opt );
+                AA_RX_MESH, opt );
     g->shape = mesh;
     mesh->refcount++;
     return &g->base;
@@ -243,3 +243,18 @@ MESH_SET_THING( float, normals, 3 )
 MESH_SET_THINGN( unsigned, indices, 3, n_indices )
 MESH_SET_THING( unsigned, texture_indices, 3 )
 MESH_SET_THINGN( struct aa_rx_geom_opt, textures, 3, n_textures)
+
+const char *
+aa_rx_geom_shape_str( enum aa_rx_geom_shape shape )
+{
+    switch( shape ) {
+    case AA_RX_NOSHAPE: return "none";
+    case AA_RX_MESH: return "mesh";
+    case AA_RX_BOX: return "box";
+    case AA_RX_SPHERE: return "sphere";
+    case AA_RX_CYLINDER: return "cylinder";
+    case AA_RX_CONE: return "cone";
+    case AA_RX_GRID: return "grid";
+    }
+    return "?";
+}

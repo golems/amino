@@ -118,6 +118,39 @@ int main(int argc, char *argv[])
 
     // Initialize scene graph
     scenegraph = generate_scenegraph(NULL);
+
+    // mesh
+    {
+        aa_rx_sg_add_frame_fixed(scenegraph, "", "mesh", aa_tf_quat_ident, aa_tf_vec_ident);
+        struct aa_rx_mesh * mesh = aa_rx_mesh_create();
+#define F .5
+        static const float vertices[4*3] = { -F,-F,0,
+                                             -F,F,0,
+                                             F,-F,0,
+                                             F,F,0 };
+        static const float normals[4*3] = { 0,0,1,
+                                            0,0,1,
+                                            0,0,1,
+                                            0,0,1 };
+        static const unsigned indices [3*2] = {0, 1, 2,
+                                               3,1,2};
+        aa_rx_mesh_set_vertices(mesh, 4, vertices, 0);
+        aa_rx_mesh_set_normals(mesh, 4, normals, 0);
+        aa_rx_mesh_set_indices(mesh, 2, indices, 0);
+
+        struct aa_rx_geom * geom;
+        struct aa_rx_geom_opt * opt = aa_rx_geom_opt_create();
+        double d = .5;
+        aa_rx_geom_opt_set_color(opt, d*.91, d*.96, d*.88);
+        aa_rx_geom_opt_set_alpha(opt, 1.0);
+        aa_rx_geom_opt_set_visual(opt, 1);
+        aa_rx_geom_opt_set_collision(opt, 0);
+        aa_rx_geom_opt_set_no_shadow(opt, 0);
+        (geom) = (aa_rx_geom_mesh(opt, mesh));
+        aa_rx_geom_attach(scenegraph, "mesh", geom);
+        aa_rx_geom_opt_destroy(opt);
+    }
+
     aa_rx_sg_index(scenegraph);
     aa_rx_sg_gl_init(scenegraph);
 
