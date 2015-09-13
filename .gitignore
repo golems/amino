@@ -98,3 +98,5 @@ amino*.tar.gz
 /share/*.pc
 /demo/simple-rx/simple-rx
 /demo/simple-rx/scene.c
+/demo/baxter-1/scene.c
+/demo/baxter-1/baxter-rx

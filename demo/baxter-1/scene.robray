@@ -1,0 +1,23 @@
+
+def box_side .1;
+
+frame boxframe {
+    translation [0,0,box_side / 2];
+    geometry {
+        shape box;
+        dimension [box_side, box_side, box_side];
+        color [1, 0, 0];
+        specular [.3, .3, .3];
+    }
+}
+
+frame gridframe {
+    geometry {
+        shape grid;
+        dimension [.5, .5];
+        delta [box_side/2, box_side/2];
+        thickness .003;
+        color [0, .2, 0];
+    }
+
+}
