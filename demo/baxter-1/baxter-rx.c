@@ -135,6 +135,8 @@ int main(int argc, char *argv[])
         aa_gl_globals_set_ambient(globals, ambient);
     }
 
+    aa_gl_globals_set_show_visual(globals, 1);
+    aa_gl_globals_set_show_collision(globals, 0);
 
     aa_sdl_display_loop( window, globals,
                          display,

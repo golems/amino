@@ -943,6 +943,8 @@ aa_gl_globals_create()
     G->scroll_ratio = .05;
     G->angle_ratio = .05;
 
+    G->show_visual = 1;
+
     return G;
 }
 
@@ -1055,6 +1057,23 @@ aa_gl_globals_set_ambient(
     }
 }
 
+void
+aa_gl_globals_set_show_visual(
+    struct aa_gl_globals *globals,
+    int show_visual )
+{
+    globals->show_visual = show_visual ? 1 : 0;
+}
+
+void
+aa_gl_globals_set_show_collision (
+    struct aa_gl_globals *globals,
+    int show_collision )
+{
+    globals->show_collision = show_collision ? 1 : 0;
+}
+
+
 struct sg_render_cx {
     const struct aa_rx_sg *sg;
     double *TF;
@@ -1066,7 +1085,10 @@ void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom 
 {
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
     double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
-    if( geom->gl_buffers ) {
+    if( geom->gl_buffers &&
+        ((cx->globals->show_visual && geom->opt.visual) ||
+         (cx->globals->show_collision && geom->opt.collision)) )
+    {
         aa_gl_draw_tf( E, geom->gl_buffers);
     }
 }

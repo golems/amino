@@ -166,6 +166,16 @@ aa_gl_globals_set_ambient(
     struct aa_gl_globals *globals,
     double ambient[3] );
 
+void
+aa_gl_globals_set_show_visual(
+    struct aa_gl_globals *globals,
+    int show_visual );
+
+void
+aa_gl_globals_set_show_collision (
+    struct aa_gl_globals *globals,
+    int show_collision );
+
 struct aa_sg_gl_buffers;
 
 AA_API void aa_geom_gl_buffers_init (

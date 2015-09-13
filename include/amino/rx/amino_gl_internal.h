@@ -40,6 +40,8 @@
 
 
 struct aa_gl_globals {
+
+    /* GL Data */
     double world_E_cam[7];
     double world_E_camhome[7];
 
@@ -63,9 +65,15 @@ struct aa_gl_globals {
 
     GLfloat light_power;
 
+    /* UI data */
     int mouse[2];
     double scroll_ratio;
     double angle_ratio;
+
+
+    /* Flags */
+    unsigned show_visual : 1;
+    unsigned show_collision : 1;
 };
 
 struct aa_gl_buffers {
