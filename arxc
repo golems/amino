@@ -78,6 +78,6 @@ fi
 
 
 arxc.core --script <<EOF
-(robray::scene-graph-genc (robray::scene-graph "$INPUT_FILE")
+(robray::scene-graph-genc (robray::load-scene-file "$INPUT_FILE")
                           :file "$OUTPUT_FILE")
 EOF

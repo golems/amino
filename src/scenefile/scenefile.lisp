@@ -19,7 +19,7 @@
   (let* ((filename (rope-string (rope filename)))
          (type (or type (scene-file-type filename))))
     (ecase type
-      (:urdf (urdf-parse filename
+      (:urdf (urdf-parse (urdf-resolve-file filename)
                          :reload-meshes reload-meshes
                          :mesh-up-axis mesh-up-axis
                          :mesh-forward-axis mesh-forward-axis))
