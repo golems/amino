@@ -89,6 +89,9 @@ struct aa_gl_buffers {
     GLuint normals;
     GLint  normals_size;
 
+    GLuint tex2d;
+    GLuint uv;
+
     GLsizei count;
 
     GLfloat specular[3];
@@ -97,6 +100,8 @@ struct aa_gl_buffers {
     unsigned has_colors : 1;
     unsigned has_values : 1;
     unsigned has_normals : 1;
+    unsigned has_tex2d : 1;
+    unsigned has_uv : 1;
 
     GLenum mode;
 

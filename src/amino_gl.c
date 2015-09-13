@@ -134,8 +134,9 @@ static const char aa_gl_vertex_shader[] =
     "#version 130\n"
     ""
     "in vec4 position;"
-    "in vec4 color;"
+    //"in vec4 color;"
     "in vec3 normal;"
+    "in vec2 UV;"
     ""
     "uniform mat4 matrix_model;"   // parent: world, child: model
     "uniform mat4 matrix_camera;"  // camera perspective * pose
@@ -143,6 +144,7 @@ static const char aa_gl_vertex_shader[] =
     "uniform vec3 camera_world;"    // position of camera in world
     ""
     "smooth out vec4 vColor;"
+    "out vec2 vUV;"
 
     "out vec3 eye_world;"
     "out vec3 light_dir_world;"
@@ -161,27 +163,32 @@ static const char aa_gl_vertex_shader[] =
     "  light_dir_world = light_world - position_world.xyz;" // tail: vertex, tip: light
     "  normal_world = mat3(matrix_model) * normal;"
 
-    "  vColor = color;"
+    //"  vColor = color;"
+    "  vUV = UV;"
     "}";
 
 static const char aa_gl_fragment_shader[] =
     "#version 130\n"
-    "smooth in vec4 vColor;"
+    //"smooth in vec4 vColor;"
     ""
 
     "in vec3 normal_world;"
     "in vec3 eye_world;"
     "in vec3 light_dir_world;"
+    "in vec2 vUV;"
 
     "uniform vec3 ambient;"
     "uniform vec3 light_color;"
     "uniform float light_power;"
     "uniform vec3 specular;"
+    "uniform sampler2D texture_sampler;"
     ""
     "void main() {"
     ""
     ""
-    "  vec3 diffuse = vColor.xyz;"
+    "  vec4 rgba = texture(texture_sampler, vUV);"
+    "  vec3 diffuse = rgba.rgb;"
+    "  float alpha = rgba.a;"
     ""
     "  float dist = length( light_dir_world );"
     "  vec3 n = normal_world;" // already a unit vector
@@ -195,20 +202,20 @@ static const char aa_gl_fragment_shader[] =
     ""
     "  vec3 color ="
     // Ambient : simulates indirect lighting
-    "    ambient * diffuse"
+    "    ambient * alpha"
     // Diffuse : "color" of the object
     "    + diffuse * light_color * light_power * ct / (dist*dist)"
     // Specular : reflective highlight, like a mirror
     "    + specular * light_color * light_power * pow(ca,5) / (dist*dist)"
     "  ;"
     "" // apply color and alpha
-    "  gl_FragColor = vec4(color,vColor.w);"
+    "  gl_FragColor = vec4(color,alpha);"
     "}";
 
 
 static GLuint aa_gl_id_program;
 static GLint aa_gl_id_position;
-static GLint aa_gl_id_color;
+//static GLint aa_gl_id_color;
 static GLint aa_gl_id_normal;
 static GLint aa_gl_id_matrix_model;
 static GLint aa_gl_id_matrix_camera;
@@ -218,6 +225,8 @@ static GLint aa_gl_id_ambient;
 static GLint aa_gl_id_light_color;
 static GLint aa_gl_id_light_power;
 static GLint aa_gl_id_specular;
+static GLint aa_gl_id_uv;
+static GLint aa_gl_id_texture;
 
 static int aa_gl_initialized = 0;
 AA_API void aa_gl_init()
@@ -238,13 +247,15 @@ AA_API void aa_gl_init()
 
     aa_gl_id_position = glGetAttribLocation(aa_gl_id_program, "position");
     aa_gl_id_normal = glGetAttribLocation(aa_gl_id_program, "normal");
-    aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
+    //aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
+    aa_gl_id_uv = glGetAttribLocation(aa_gl_id_program, "UV");
 
     aa_gl_id_light_position = glGetUniformLocation(aa_gl_id_program, "light_world");
     aa_gl_id_ambient = glGetUniformLocation(aa_gl_id_program, "ambient");
     aa_gl_id_light_color = glGetUniformLocation(aa_gl_id_program, "light_color");
     aa_gl_id_light_power = glGetUniformLocation(aa_gl_id_program, "light_power");
     aa_gl_id_specular = glGetUniformLocation(aa_gl_id_program, "specular");
+    aa_gl_id_texture = glGetUniformLocation(aa_gl_id_program, "texture_sampler");
 
     /* printf("ids: %d\n", */
     /*        aa_gl_id_specular ); */
@@ -290,14 +301,14 @@ AA_API void aa_gl_draw_tf (
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // colors
-    glBindBuffer(GL_ARRAY_BUFFER, buffers->colors);
-    check_error("glBindBuffer");
+    /* glBindBuffer(GL_ARRAY_BUFFER, buffers->colors); */
+    /* check_error("glBindBuffer"); */
 
-    glEnableVertexAttribArray((GLuint)aa_gl_id_color);
-    check_error("glEnabeVert");
+    /* glEnableVertexAttribArray((GLuint)aa_gl_id_color); */
+    /* check_error("glEnabeVert"); */
 
-    glVertexAttribPointer((GLuint)aa_gl_id_color, buffers->colors_size, GL_FLOAT, GL_FALSE, 0, 0);
-    check_error("glVerteAttribPointer");
+    /* glVertexAttribPointer((GLuint)aa_gl_id_color, buffers->colors_size, GL_FLOAT, GL_FALSE, 0, 0); */
+    /* check_error("glVerteAttribPointer"); */
 
     // normals
     if( 0 <= aa_gl_id_normal && buffers->normals_size ) {
@@ -311,6 +322,22 @@ AA_API void aa_gl_draw_tf (
         check_error("glVerteAttribPointer normal");
     }
 
+
+    if( buffers->has_tex2d ) {
+        glBindTexture(GL_TEXTURE_2D, buffers->tex2d);
+    }
+
+
+    if( buffers->has_uv ) {
+        glBindBuffer(GL_ARRAY_BUFFER, buffers->uv);
+        check_error("glBindBuffer uv");
+
+        glEnableVertexAttribArray((GLuint)aa_gl_id_uv);
+        check_error("glEnabeVert uv");
+
+        glVertexAttribPointer((GLuint)aa_gl_id_uv, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        check_error("glVerteAttribPointer uv");
+    }
     // Light position
     //glUniform3f(aa_gl_id_light_position,
                 //(GLfloat)v_light[0], (GLfloat)v_light[1], (GLfloat)v_light[2] );
@@ -334,10 +361,13 @@ AA_API void aa_gl_draw_tf (
 
 
     glDisableVertexAttribArray((GLuint)aa_gl_id_position);
-    glDisableVertexAttribArray((GLuint)aa_gl_id_color);
+    /* glDisableVertexAttribArray((GLuint)aa_gl_id_color); */
 
     if( 0 <= aa_gl_id_normal ) {
         glDisableVertexAttribArray((GLuint)aa_gl_id_normal);
+    }
+    if( buffers->has_uv ) {
+        glDisableVertexAttribArray((GLuint)aa_gl_id_uv);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -443,24 +473,18 @@ static void bind_mesh (
     assert(geom->gl_buffers);
     assert(sizeof(float) == sizeof(GLfloat));
 
-    geom->gl_buffers->values_size = 3;
-    if( mesh->indices ) {
-        geom->gl_buffers->indices_size = (GLint)size;
-        geom->gl_buffers->count = (GLsizei)(size*mesh->n_indices);
-    } else {
-        geom->gl_buffers->count = (GLsizei)(size*mesh->n_vertices);
-    }
-
     struct aa_gl_buffers *bufs = geom->gl_buffers;
     size_t n_vert = mesh->n_vertices;
 
-    GLfloat *colors = (GLfloat*)aa_mem_region_local_alloc( sizeof(*colors) * n_vert * 4 );
-    /* TODO: handle multiple textures */
-    for( size_t i = 0; i < n_vert ; i ++ ) {
-        for( size_t j = 0; j < 4; j ++ ) {
-            colors[4*i + j ] = (GLfloat)geom->opt.color[j];
-        }
+    bufs->values_size = 3;
+    if( mesh->indices ) {
+        bufs->indices_size = (GLint)size;
+        bufs->count = (GLsizei)(size*mesh->n_indices);
+    } else {
+        bufs->count = (GLsizei)(size*mesh->n_vertices);
     }
+
+
 
     glGenBuffers(1, &bufs->values);
     glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
@@ -469,12 +493,57 @@ static void bind_mesh (
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_values = 1;
 
-    bufs->colors_size = 4;
-    glGenBuffers(1, &bufs->colors);
-    glBindBuffer(GL_ARRAY_BUFFER, bufs->colors);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->colors_size*sizeof(float)*n_vert), colors, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    bufs->has_colors = 1;
+    { // textures
+        size_t n_uv = 2*n_vert;
+        size_t uv_size = sizeof(GLfloat)*n_uv;
+        GLfloat *uv = (GLfloat*)aa_mem_region_local_alloc( uv_size );
+        uint8_t *tex;
+        size_t n_tex;
+
+        if( mesh->textures ) {
+            // TODO: fill in multiple textures
+            abort();
+        } else {
+            // Single color
+            memset(uv, 0, uv_size);
+            n_tex = 4;
+            tex = (uint8_t*)aa_mem_region_local_alloc( n_tex );
+            for( size_t i = 0; i < n_tex; i ++ ) tex[i] = (uint8_t)(geom->opt.color[i] * 255);
+        }
+
+
+        glGenBuffers(1, &bufs->uv);
+        glBindBuffer(GL_ARRAY_BUFFER, bufs->uv);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)uv_size, uv, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        bufs->has_uv = 1;
+
+
+        glGenTextures(1, &bufs->tex2d);
+        glBindTexture(GL_TEXTURE_2D, bufs->tex2d);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        bufs->has_tex2d = 1;
+
+        aa_mem_region_local_pop(uv);
+    }
+
+    /* GLfloat *colors = (GLfloat*)aa_mem_region_local_alloc( sizeof(*colors) * n_vert * 4 ); */
+    /* /\* TODO: handle multiple textures *\/ */
+    /* for( size_t i = 0; i < n_vert ; i ++ ) { */
+    /*     for( size_t j = 0; j < 4; j ++ ) { */
+    /*         colors[4*i + j ] = (GLfloat)geom->opt.color[j]; */
+    /*     } */
+    /* } */
+
+    /* bufs->colors_size = 4; */
+    /* glGenBuffers(1, &bufs->colors); */
+    /* glBindBuffer(GL_ARRAY_BUFFER, bufs->colors); */
+    /* glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->colors_size*sizeof(float)*n_vert), colors, GL_STATIC_DRAW); */
+    /* glBindBuffer(GL_ARRAY_BUFFER, 0); */
+    /* bufs->has_colors = 1; */
+    /* aa_mem_region_local_pop(colors); */
 
 
     if( mesh->indices ) {
@@ -1089,6 +1158,7 @@ void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom 
         ((cx->globals->show_visual && geom->opt.visual) ||
          (cx->globals->show_collision && geom->opt.collision)) )
     {
+        //printf("rendering %s\n", aa_rx_geom_shape_str(geom->type));
         aa_gl_draw_tf( E, geom->gl_buffers);
     }
 }

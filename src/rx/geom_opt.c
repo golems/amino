@@ -49,6 +49,8 @@ struct aa_rx_geom_opt* aa_rx_geom_opt_create()
     struct aa_rx_geom_opt *a = AA_NEW0(struct aa_rx_geom_opt);
     aa_rx_geom_opt_set_alpha(a, 1);
     aa_rx_geom_opt_set_color(a, .5, .5, .5);
+    aa_rx_geom_opt_set_visual(a,1);
+    aa_rx_geom_opt_set_collision(a,1);
 
     return a;
 }
