@@ -232,15 +232,15 @@ void aa_rx_mesh_set_normals (
     struct aa_rx_mesh *mesh, size_t n,
     const float *normals, int copy );
 
-void aa_rx_mesh_set_textures (
+void aa_rx_mesh_set_rgba (
     struct aa_rx_mesh *mesh,
-    size_t n, const struct aa_rx_geom_opt *textures,
-    int copy );
+    size_t width, size_t height,
+    const uint8_t *rgba, int copy );
 
-void aa_rx_mesh_set_texture_indices (
+
+void aa_rx_mesh_set_texture (
     struct aa_rx_mesh *mesh,
-    size_t n, const unsigned *texture_indices,
-    int copy );
+    const struct aa_rx_geom_opt *opt );
 
 /* void aa_rx_mesh_fill_vertex_vectors_dbl ( */
 /*     struct aa_rx_mesh *mesh, */

@@ -55,6 +55,7 @@ struct aa_rx_geom_opt* aa_rx_geom_opt_create()
     return a;
 }
 
+
 void
 aa_rx_geom_opt_destroy(struct aa_rx_geom_opt* opt)
 {

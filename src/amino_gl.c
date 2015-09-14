@@ -493,58 +493,25 @@ static void bind_mesh (
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_values = 1;
 
-    { // textures
-        size_t n_uv = 2*n_vert;
-        size_t uv_size = sizeof(GLfloat)*n_uv;
-        GLfloat *uv = (GLfloat*)aa_mem_region_local_alloc( uv_size );
-        uint8_t *tex;
-        size_t n_tex;
-
-        if( mesh->textures ) {
-            // TODO: fill in multiple textures
-            abort();
-        } else {
-            // Single color
-            memset(uv, 0, uv_size);
-            n_tex = 4;
-            tex = (uint8_t*)aa_mem_region_local_alloc( n_tex );
-            for( size_t i = 0; i < n_tex; i ++ ) tex[i] = (uint8_t)(geom->opt.color[i] * 255);
-        }
-
-
+    // textures
+    if( mesh->uv ) {
         glGenBuffers(1, &bufs->uv);
         glBindBuffer(GL_ARRAY_BUFFER, bufs->uv);
-        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)uv_size, uv, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(2*n_vert*sizeof(GLfloat)), mesh->uv, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         bufs->has_uv = 1;
+    }
 
 
+    if( mesh->rgba ) {
         glGenTextures(1, &bufs->tex2d);
         glBindTexture(GL_TEXTURE_2D, bufs->tex2d);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)mesh->width_rgba, (GLsizei)mesh->height_rgba,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, mesh->rgba);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         bufs->has_tex2d = 1;
-
-        aa_mem_region_local_pop(uv);
     }
-
-    /* GLfloat *colors = (GLfloat*)aa_mem_region_local_alloc( sizeof(*colors) * n_vert * 4 ); */
-    /* /\* TODO: handle multiple textures *\/ */
-    /* for( size_t i = 0; i < n_vert ; i ++ ) { */
-    /*     for( size_t j = 0; j < 4; j ++ ) { */
-    /*         colors[4*i + j ] = (GLfloat)geom->opt.color[j]; */
-    /*     } */
-    /* } */
-
-    /* bufs->colors_size = 4; */
-    /* glGenBuffers(1, &bufs->colors); */
-    /* glBindBuffer(GL_ARRAY_BUFFER, bufs->colors); */
-    /* glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->colors_size*sizeof(float)*n_vert), colors, GL_STATIC_DRAW); */
-    /* glBindBuffer(GL_ARRAY_BUFFER, 0); */
-    /* bufs->has_colors = 1; */
-    /* aa_mem_region_local_pop(colors); */
-
 
     if( mesh->indices ) {
         bufs->indices_size = 3;
@@ -684,13 +651,16 @@ AA_API void aa_geom_gl_buffers_init_grid (
 
     assert( c == 3*n_vert );
 
-    struct aa_rx_mesh vmesh = {0};
-    struct aa_rx_mesh *mesh = &vmesh;
+    struct aa_rx_mesh *mesh = aa_rx_mesh_create();
 
     aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 );
+    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
+
+
     quad_mesh( &geom->base, mesh );
 
     aa_mem_region_local_pop(values);
+    aa_rx_mesh_destroy(mesh);
 }
 
 AA_API void aa_geom_gl_buffers_init_box (
@@ -762,8 +732,6 @@ AA_API void aa_geom_gl_buffers_init_box (
     //aa_dump_matf( stdout, values, 3, 6*4 );
 
 
-    struct aa_rx_mesh vmesh = {0};
-    struct aa_rx_mesh *mesh = &vmesh;
 
     /* unsigned n_indices = 6*4; */
     /* unsigned indices[n_indices]; */
@@ -773,9 +741,12 @@ AA_API void aa_geom_gl_buffers_init_box (
 
     /* aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 ); */
 
+    struct aa_rx_mesh *mesh = aa_rx_mesh_create();
     aa_rx_mesh_set_vertices( mesh, 6*4, values, 0 );
+    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
     aa_rx_mesh_set_normals( mesh, 6*4, normals, 0 );
     quad_mesh( &geom->base, mesh );
+    aa_rx_mesh_destroy(mesh);
 
 
     /* // fill vertices */
@@ -941,13 +912,14 @@ AA_API void aa_geom_gl_buffers_init_cylinder (
     assert( an/3  == n_values );
     assert( b/3  == n_indices );
 
-    struct aa_rx_mesh vmesh = {0};
-    struct aa_rx_mesh *mesh = &vmesh;
+    struct aa_rx_mesh *mesh = aa_rx_mesh_create();
 
     aa_rx_mesh_set_vertices( mesh, a/3, values, 0 );
     aa_rx_mesh_set_normals( mesh, an/3, normals, 0 );
     aa_rx_mesh_set_indices( mesh, b/3, indices, 0 );
+    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
     tri_mesh( &geom->base, mesh );
+    aa_rx_mesh_destroy(mesh);
 }
 
 

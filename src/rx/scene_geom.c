@@ -243,8 +243,6 @@ void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
 MESH_SET_THINGN( float, vertices, 3, n_vertices)
 MESH_SET_THING( float, normals, 3 )
 MESH_SET_THINGN( unsigned, indices, 3, n_indices )
-MESH_SET_THING( unsigned, texture_indices, 3 )
-MESH_SET_THINGN( struct aa_rx_geom_opt, textures, 3, n_textures)
 
 const char *
 aa_rx_geom_shape_str( enum aa_rx_geom_shape shape )
@@ -259,4 +257,20 @@ aa_rx_geom_shape_str( enum aa_rx_geom_shape shape )
     case AA_RX_GRID: return "grid";
     }
     return "?";
+}
+
+void aa_rx_mesh_set_texture (
+    struct aa_rx_mesh *mesh,
+    const struct aa_rx_geom_opt *opt )
+{
+    if( mesh->rgba_data ) free(mesh->rgba_data);
+    if( mesh->uv_data ) free(mesh->uv_data);
+
+    mesh->rgba = mesh->rgba_data =  AA_NEW_AR(uint8_t, 4);
+    mesh->uv = mesh->uv_data =  AA_NEW0_AR(unsigned, 2*mesh->n_vertices);
+
+    for( size_t i = 0; i < 4; i ++ ) mesh->rgba_data[i] = (uint8_t)(opt->color[i] * 255);
+
+    mesh->width_rgba = 1;
+    mesh->height_rgba = 1;
 }
