@@ -127,11 +127,6 @@ int main(int argc, char *argv[])
         double v_light[3] = {.5,1,5};
         double ambient[3] = {.1,.1,.1};
         aa_gl_globals_set_light_position( globals, v_light );
-        aa_gl_globals_set_perspective( globals,
-                                       M_PI_4,
-                                       ((double)SCREEN_WIDTH)/SCREEN_HEIGHT,
-                                       .1,
-                                   100 );
         aa_gl_globals_set_ambient(globals, ambient);
     }
 

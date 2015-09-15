@@ -970,8 +970,8 @@ aa_gl_globals_create()
     aa_gl_globals_set_light_position( G, light_position );
 
     aa_gl_globals_set_perspective( G,
-                                   M_PI_2, 16.0 / 9.0 ,
-                                   .1, 100 );
+                                   M_PI_4, 1.0 / 1.0,
+                                   .05, 100 );
 
     double light_color[3] = {1,1,1};
     aa_gl_globals_set_light_color( G, light_color );
