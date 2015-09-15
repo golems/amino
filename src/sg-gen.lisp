@@ -89,6 +89,50 @@
      (cgen-call-stmt "aa_rx_geom_opt_destroy" copt)
      )))
 
+(defun ratio->octet (f)
+  (assert (and (<= f 1d0)
+               (>= f 0)))
+  (clamp (round (* 255 f)) 0 255))
+
+(defun scene-genc-mesh-texture (var mesh-data)
+  (when-let ((textures (mesh-data-texture-properties mesh-data))
+             (texture-indices (mesh-data-texture-indices mesh-data)))
+    (assert (= (* 3 (length texture-indices))
+               (length (mesh-data-vertex-vectors mesh-data))))
+    (let* ((n (length textures))
+           (nd (coerce n 'double-float))
+           (m (length texture-indices))
+           (rgba (make-fnvec (* 4 n)))
+           (uv (make-vec (* 2 m)))
+           (t-delta (coerce (/ 1 (* 2 n)) 'double-float))
+           (i -1))
+      ;; Fill RGBA
+      (map nil (lambda (opt)
+                 ;(print opt)
+                 (let ((rgb (alist-get-default opt :diffuse '(.5d0 .5d0 .5d0)))
+                       (alpha (alist-get-default opt :alpha 1d0)))
+                   ;(print rgb)
+                   (setf (aref rgba (incf i)) (ratio->octet (vec-x rgb)))
+                   (setf (aref rgba (incf i)) (ratio->octet (vec-y rgb)))
+                   (setf (aref rgba (incf i)) (ratio->octet (vec-z rgb)))
+                   (setf (aref rgba (incf i)) (ratio->octet alpha))))
+           textures)
+      ;; Fill UV
+      (setq i -1)
+      (dotimes (j (length texture-indices))
+        (setf (aref uv (incf i)) (+ (/ (coerce (aref texture-indices j) 'double-float)
+                                       nd)
+                                    t-delta))
+        (setf (aref uv (incf i)) 0d0))
+      ;; output
+      (list
+       (cgen-declare-array "static const unsigned char" "rgba" rgba)
+       (cgen-declare-array "static const float" "uv" uv)
+
+       (cgen-call-stmt "aa_rx_mesh_set_rgba" var n 1
+                       "rgba" 0)
+       (cgen-call-stmt "aa_rx_mesh_set_uv" var m "uv" 0)))))
+
 (defun scene-genc-mesh (scene-graph)
   ;; declare
   (loop for mesh in (scene-graph-meshes scene-graph)
@@ -114,8 +158,8 @@
                               "indices" 0)
               (cgen-call-stmt "aa_rx_mesh_set_normals" var (mesh-data-normal-vectors-count normed-data)
                               "normals" 0)
-              ;; textures, TODO
-              ))))
+              ;; textures,
+              (scene-genc-mesh-texture var normed-data)))))
 
 
 

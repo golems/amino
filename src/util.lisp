@@ -1,5 +1,10 @@
 (in-package :robray)
 
+(defun alist-get (alist key &optional default)
+  (if-let ((cons (assoc key alist)))
+    (cdr cons)
+    default))
+
 (defun alist-get-default (alist key default-alist)
   (cdr (or (assoc key alist)
            (assoc key default-alist))))

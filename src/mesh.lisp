@@ -48,33 +48,43 @@
 The result is suitable for OpenGL."
   (let* ((v-indices (mesh-data-vertex-indices mesh))
          (n-indices (mesh-data-normal-indices mesh))
+         (t-indices (mesh-data-texture-indices mesh))
          (hash (make-hash-table :test #'equalp))
          (count 0)
          (new-indices (make-array (length v-indices)
                                   :element-type 'fixnum)))
     (assert (= (length v-indices)
                (length n-indices)))
-    (loop
+    (loop ;; iterate over faces
        for i below (length v-indices)
        for vertex = (mesh-vertex mesh (aref v-indices i))
        for normal = (mesh-normal mesh (aref n-indices i))
-       for v-n = (cons vertex normal)
+       for texture = (when t-indices (aref t-indices (truncate (/ i 3))))
+       for v-n = (list vertex normal texture)
+       for new-index = (gethash v-n hash) ;; check if already hashed
        do
-         (if-let ((new-index (gethash v-n hash)))
-           (setf (aref new-indices i)
-                 new-index)
-           (progn
-             (setf (gethash v-n hash) count
-                   (aref new-indices i) count)
-             (incf count))))
+         (if new-index
+             (setf (aref new-indices i)
+                   new-index)
+             (progn
+               (setf (gethash v-n hash) count
+                     (aref new-indices i) count)
+               (incf count))))
+    (assert (= count (hash-table-count hash)))
     (let ((new-vertices (make-vec (* 3 count)))
-          (new-normals (make-vec (* 3 count))))
+          (new-normals (make-vec (* 3 count)))
+          (new-textures (when t-indices (make-fnvec count))))
       (maphash (lambda (k i)
-                 (destructuring-bind (vertex . normal) k
+                 (destructuring-bind (vertex normal texture) k
                    (dotimes (j 3)
                      (let ((offset (+ j (* 3 i))))
                        (setf (aref new-vertices offset) (aref vertex j))
-                       (setf (aref new-normals offset) (aref normal j))))))
+                       (setf (aref new-normals offset) (aref normal j))))
+                   (when new-textures
+                     ;(print 'a)
+                     (setf (aref new-textures i) texture)
+                    ; (print 'b)
+                     )))
                hash)
       (make-mesh-data :name (mesh-data-name mesh)
                       :vertex-vectors new-vertices
@@ -84,4 +94,4 @@ The result is suitable for OpenGL."
                       :uv-vectors (mesh-data-uv-vectors mesh)
                       :uv-indices (mesh-data-uv-indices mesh)
                       :texture-properties (mesh-data-texture-properties mesh)
-                      :texture-indices (mesh-data-texture-indices mesh)))))
+                      :texture-indices new-textures))))
