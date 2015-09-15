@@ -122,8 +122,8 @@ struct aa_rx_mesh {
     const unsigned *indices;
     unsigned *indices_data;
 
-    const unsigned *uv;
-    unsigned *uv_data;
+    const float *uv;
+    float *uv_data;
 
     size_t n_indices;
 

@@ -282,6 +282,9 @@ N: cols in the block."
 (defun make-vec (n)
   (make-array n :element-type 'double-float))
 
+(defun make-fnvec (n)
+  (make-array n :element-type 'fixnum))
+
 (declaim (inline %vec))
 (defun %vec (type args)
   (let ((vec (make-array (length args) :element-type type)))

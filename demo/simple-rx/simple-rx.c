@@ -109,7 +109,8 @@ int main(int argc, char *argv[])
 
     // mesh
     {
-        aa_rx_sg_add_frame_fixed(scenegraph, "", "mesh", aa_tf_quat_ident, aa_tf_vec_ident);
+        double v[3] = {0,0,-1e-3};
+        aa_rx_sg_add_frame_fixed(scenegraph, "", "mesh", aa_tf_quat_ident, v);
         struct aa_rx_mesh * mesh = aa_rx_mesh_create();
 #define F .5
         static const float vertices[4*3] = { -F,-F,0,
@@ -130,10 +131,12 @@ int main(int argc, char *argv[])
         struct aa_rx_geom_opt * opt = aa_rx_geom_opt_create();
         double d = .5;
         aa_rx_geom_opt_set_color(opt, d*.91, d*.96, d*.88);
+
         aa_rx_geom_opt_set_alpha(opt, 1.0);
         aa_rx_geom_opt_set_visual(opt, 1);
         aa_rx_geom_opt_set_collision(opt, 0);
         aa_rx_geom_opt_set_no_shadow(opt, 0);
+        aa_rx_mesh_set_texture(mesh, opt);
         (geom) = (aa_rx_geom_mesh(opt, mesh));
         aa_rx_geom_attach(scenegraph, "mesh", geom);
         aa_rx_geom_opt_destroy(opt);

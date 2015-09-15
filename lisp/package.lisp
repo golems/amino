@@ -94,6 +94,7 @@
    :fnvec
    :vec
    :make-vec
+   :make-fnvec
    :vecref :vec-x :vec-y :vec-z :vec-w
    :vec-cat
    :vec-list

@@ -237,6 +237,9 @@ void aa_rx_mesh_set_rgba (
     size_t width, size_t height,
     const uint8_t *rgba, int copy );
 
+void aa_rx_mesh_set_uv (
+    struct aa_rx_mesh *mesh,
+    size_t n, const float *uv, int copy );
 
 void aa_rx_mesh_set_texture (
     struct aa_rx_mesh *mesh,
