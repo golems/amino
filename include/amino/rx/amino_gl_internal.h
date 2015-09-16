@@ -69,6 +69,7 @@ struct aa_gl_globals {
     int mouse[2];
     double scroll_ratio;
     double angle_ratio;
+    double fps;
 
 
     /* Flags */

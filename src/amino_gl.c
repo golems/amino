@@ -986,6 +986,8 @@ aa_gl_globals_create()
 
     G->show_visual = 1;
 
+    G->fps = 60;
+
     return G;
 }
 
