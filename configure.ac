@@ -256,6 +256,21 @@ AS_IF([test "x$with_sdl2" = xyes], [
 
 AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
 
+# Spacenav
+AC_ARG_WITH([spacenav],
+            [AS_HELP_STRING([--without-spacenav], [Disable support for 3D Connexion space navigator])],
+            [],
+            [with_spacenav=$with_sdl])
+
+HAVE_SPACENAV=disabled
+AS_IF([test "x$with_spacenave" != xno], [
+AC_CHECK_HEADERS([spnav.h], [HAVE_SPACENAV=yes], [HAVE_SPACENAV=no])
+
+AC_SEARCH_LIBS([spnav_open],[spnav])
+])
+
+AM_CONDITIONAL([HAVE_SPACENAV], [test "x$HAVE_SPACENAV" = xyes])
+
 AC_SUBST([GLEW_CFLAGS])
 AC_SUBST([GLEW_LIBS])
 AC_SUBST([SDL2_CFLAGS])
@@ -279,6 +294,7 @@ AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
 )
 AC_MSG_NOTICE([OpenGL:            $with_opengl])
 AC_MSG_NOTICE([SDL2:              $HAVE_SDL2])
+AC_MSG_NOTICE([Spacenav:          $HAVE_SPACENAV])
 
 
 AS_IF([test "x$CC" = "x"],

@@ -126,6 +126,12 @@ aa_tm_timespec2usec( const struct timespec t ) {
     return t.tv_sec*1000000 + t.tv_nsec/1000;
 }
 
+/// convert timespec t to milliseconds
+static inline int64_t
+aa_tm_timespec2msec( const struct timespec t ) {
+    return t.tv_sec*1000 + t.tv_nsec/1000000;
+}
+
 /// convert timespec t to seconds
 static inline double
 aa_tm_timespec2sec( const struct timespec t ) {

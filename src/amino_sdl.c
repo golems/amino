@@ -35,6 +35,8 @@
  *
  */
 
+#include "config.h"
+
 #include "amino.h"
 
 #define GL_GLEXT_PROTOTYPES
@@ -43,10 +45,90 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
+#ifdef HAVE_SPNAV_H
+#include <spnav.h>
+#endif /*HAVE_SPNAV_H*/
+
+
 #include "amino/rx/rxtype.h"
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_gl_internal.h"
 #include "amino/rx/amino_sdl.h"
+
+
+
+#ifdef HAVE_SPNAV_H
+
+static void aa_spnav_init() {
+    int r = spnav_open();
+    if( -1 == r ) {
+        fprintf(stderr, "Error, could not open spacenav\n");
+    }
+}
+
+static void aa_spnav_poll(double dv[3], double omega[3]) {
+    const double m = 350;
+    spnav_event spnevent = {0};
+
+    // get the latest event
+    while( spnav_poll_event(&spnevent) ) {}
+
+    dv[0] = (double)spnevent.motion.x /  m;
+    dv[1] = (double)spnevent.motion.y /  m;
+    dv[2] = -(double)spnevent.motion.z /  m;
+    omega[0] = (double)spnevent.motion.rx / m;
+    omega[1] = (double)spnevent.motion.ry / m;
+    omega[2] = -(double)spnevent.motion.rz / m;
+
+    // deadzone
+    /* for( size_t i = 0; i < 3; i ++ ) { */
+    /*     dv[i] = aa_fdeadzone( dv[i], -0.1, 0.1, 0 ); */
+    /*     omega[i] = aa_fdeadzone( omega[i], -0.1, 0.1, 0 ); */
+    /* } */
+
+}
+
+static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
+{
+    double dx[6];
+    aa_spnav_poll(dx+AA_TF_DX_V,
+                  dx+AA_TF_DX_W);
+
+    int sp_update = 0;
+    for( size_t i = 0; i < 6; i ++ ) {
+        if( !aa_feq(0.0,dx[i],0) ) sp_update = 1;
+    }
+
+    if( sp_update ) {
+
+        for( size_t i = 0; i < 3; i ++ ) {
+            dx[ i + AA_TF_DX_V ] *= 1.25;
+            dx[ i + AA_TF_DX_W ] *= .4;
+        }
+
+        //double cam1[7];
+        //aa_tf_qutr_svel(globals->world_E_cam, dx, 1.0/globals->fps, cam1);
+
+        double S0[8], twist[8], etwist[8], S1[8], E1[7];
+        /* TODO: avoid the memcpy()s */
+        aa_tf_qutr2duqu( globals->world_E_cam, S0 );
+        aa_tf_duqu_vel2twist( S0, dx, twist );
+        for( size_t i = 0; i < 8; i ++ ) twist[i] *= (1.0/globals->fps);
+        aa_tf_duqu_exp( twist, etwist);
+        aa_tf_duqu_mul( S0, etwist, S1 );
+        aa_tf_duqu2qutr(S1, E1);
+
+        aa_gl_globals_set_camera( globals, E1 );
+        *update = 1;
+    }
+    /* printf("%f, %f, %f, %f, %f, %f\n", */
+    /*         dv[0], dv[1], dv[2], */
+    /*         omega[0], omega[1], omega[2] ); */
+
+}
+
+#endif /*HAVE_SPNAV_H*/
+
 
 static int aa_sdl_initialized = 0;
 AA_API void aa_sdl_init( void )
@@ -72,6 +154,10 @@ AA_API void aa_sdl_init( void )
     SDL_GL_SetSwapInterval(1);
 
     SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+
+#ifdef HAVE_SPNAV_H
+    aa_spnav_init();
+#endif
 }
 
 
@@ -276,21 +362,26 @@ AA_API void aa_sdl_display_loop(
         }
         next = aa_tm_add(now, delta);
 
-        // wait for events
+        // wait for SDL events
+        int timeout = 1;
         do {
             quit = 0;
             clock_gettime( CLOCK_MONOTONIC, &now );
             struct timespec ts_timeout = aa_tm_sub(next, now);
-            int timeout = (int) aa_tm_timespec2usec(ts_timeout);
-            if( timeout < 0 ) break;
+            timeout = (int) aa_tm_timespec2msec(ts_timeout);
+
             SDL_Event e;
-            int r = SDL_WaitEventTimeout( &e, timeout );
-            if( !r ) {
-                fprintf(stderr, "error: on SDL_WaitEventTimeout(), %s\n", SDL_GetError());
-            } else {
+            int r = SDL_WaitEventTimeout( &e, timeout < 0 ? 0 : timeout );
+            if( r ) {
                 aa_sdl_scroll_event(globals, &update, &quit, &e);
             }
-        } while( !quit );
+
+        } while( !quit && timeout > 0 );
+
+        // poll spnav
+#ifdef HAVE_SPNAV_H
+        aa_spnav_scroll(globals, &update);
+#endif
     } while ( !quit );
 }
 
