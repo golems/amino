@@ -298,6 +298,21 @@ noinst_PROGRAMS += la_ctest
 la_ctest_SOURCES = src/test/la_ctest.c
 la_ctest_LDADD = libamino.la libtestutil.la
 
+
+if HAVE_FCL
+
+TESTS += fcl_test
+
+noinst_PROGRAMS += fcl_test
+fcl_test_SOURCES = src/test/aa_test_fcl.cpp
+fcl_test_CFLAGS = $(FCL_CFLAGS)
+fcl_test_LDADD = libamino.la $(FCL_LIBS)
+
+
+endif # HAVE_FCL
+
+
+
 # noinst_PROGRAMS += test_vec
 # test_vec_SOURCES = src/test/test_vec.c
 # test_vec_LDADD = libamino.la -lblas -llapack libtestutil.la

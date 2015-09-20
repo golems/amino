@@ -254,7 +254,31 @@ AS_IF([test "x$with_sdl2" = xyes], [
                     [glew] )]
 )
 
+AC_SUBST([GLEW_CFLAGS])
+AC_SUBST([GLEW_LIBS])
+AC_SUBST([SDL2_CFLAGS])
+AC_SUBST([SDL2_LIBS])
 AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
+
+# FCL
+AC_ARG_WITH([fcl],
+            [AS_HELP_STRING([--without-fcl], [Disable support for the Flexible Collision Library (FCL)])],
+            [],
+            [with_fcl=yes])
+
+HAVE_FCL=disabled
+AS_IF([test "x$with_fcl" = xyes], [
+  PKG_CHECK_MODULES([FCL],
+                    [fcl],
+                    [HAVE_FCL=yes])
+# TODO: smartly check with we also need boost_system
+FCL_LIBS="$FCL_LIBS -lboost_system"
+])
+
+AC_SUBST([FCL_CFLAGS])
+AC_SUBST([FCL_LIBS])
+AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
+
 
 # Spacenav
 AC_ARG_WITH([spacenav],
@@ -271,10 +295,6 @@ AC_SEARCH_LIBS([spnav_open],[spnav])
 
 AM_CONDITIONAL([HAVE_SPACENAV], [test "x$HAVE_SPACENAV" = xyes])
 
-AC_SUBST([GLEW_CFLAGS])
-AC_SUBST([GLEW_LIBS])
-AC_SUBST([SDL2_CFLAGS])
-AC_SUBST([SDL2_LIBS])
 
 ## SUMMARY ##
 AC_MSG_NOTICE([===============================])
@@ -292,9 +312,10 @@ AS_IF([test "x$with_java" = xyes], [
 AC_MSG_NOTICE([Java compiler:     $JAVAC])]
 AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
 )
-AC_MSG_NOTICE([OpenGL:            $with_opengl])
-AC_MSG_NOTICE([SDL2:              $HAVE_SDL2])
-AC_MSG_NOTICE([Spacenav:          $HAVE_SPACENAV])
+AC_MSG_NOTICE([Use OpenGL:        $with_opengl])
+AC_MSG_NOTICE([Use SDL2:          $HAVE_SDL2])
+AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
+AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
 
 
 AS_IF([test "x$CC" = "x"],
