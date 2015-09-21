@@ -39,6 +39,7 @@
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
+#include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
 #include "amino/rx/scene_collision.h"
@@ -118,6 +119,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     if(ptr) {
         struct aa_rx_cl_geom *cl_geom = new aa_rx_cl_geom;
         cl_geom->ptr = ptr;
+        (*ptr)->setUserData(geom);
         geom->cl_geom = cl_geom;
         //printf("  created\n");
     } else {
@@ -130,9 +132,8 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 void aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph )
 {
     aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
+    aa_rx_sg_clean_collision(scene_graph);
 }
-
-
 
 
 struct aa_rx_cl
@@ -159,6 +160,8 @@ static void cl_create_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_g
 struct aa_rx_cl *
 aa_rx_cl_create( const struct aa_rx_sg *scene_graph )
 {
+    aa_rx_sg_ensure_clean_collision(scene_graph);
+
     struct aa_rx_cl *cl = new aa_rx_cl;
     cl->sg = scene_graph;
     cl->objects = new std::vector<fcl::CollisionObject*>;
@@ -213,7 +216,25 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
     {
         fcl::CollisionObject *obj = *itr;
         aa_rx_frame_id id = (intptr_t) obj->getUserData();
-        obj->setTransform( amino::fcl::qutr2fcltf(TF + id*ldTF) );
+        double *TF_obj = TF+id*ldTF;
+
+        enum aa_rx_geom_shape shape_type;
+        struct aa_rx_geom *geom = (struct aa_rx_geom*)obj->collisionGeometry()->getUserData();
+        void *shape_ = aa_rx_geom_shape( geom, &shape_type);
+
+        /* Special case cylinders.
+         * Amino cylinders extend in +Z
+         * FCL cylinders extend in both +/- Z.
+         */
+        if( AA_RX_CYLINDER == shape_type ) {
+            struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
+            double E[7] = {0,0,0,1, 0,0, shape->height/2};
+            double E1[7];
+            aa_tf_qutr_mul(TF_obj, E, E1);
+            obj->setTransform(amino::fcl::qutr2fcltf(E1));
+        } else {
+            obj->setTransform( amino::fcl::qutr2fcltf(TF_obj) );
+        }
     }
     cl->manager->update();
 

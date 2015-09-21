@@ -8,11 +8,8 @@
 #include "amino/rx/scene_collision.h"
 
 
-
-int main( int argc, char **argv)
+static void test_box()
 {
-    (void) argc; (void) argv;
-
     struct aa_rx_sg *sg = aa_rx_sg_create();
     struct aa_rx_sg *sg1 = aa_rx_sg_create();
 
@@ -74,6 +71,74 @@ int main( int argc, char **argv)
         int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7 );
         assert( !collision );
     }
+
+}
+
+void test_cylinder()
+{
+
+    struct aa_rx_sg *sg = aa_rx_sg_create();
+    struct aa_rx_geom_opt *opt_cl = aa_rx_geom_opt_create();
+    aa_rx_geom_opt_set_collision(opt_cl, 1);
+
+
+    aa_rx_sg_add_frame_fixed( sg,
+                              "", "a",
+                              aa_tf_quat_ident, aa_tf_vec_ident );
+    double vb[3] = {0,0,.51};
+    aa_rx_sg_add_frame_fixed( sg,
+                              "", "b",
+                              aa_tf_quat_ident, vb );
+
+    double vc[3] = {0,0,-.49};
+    aa_rx_sg_add_frame_fixed( sg,
+                              "", "c",
+                              aa_tf_quat_ident, vc );
+
+    double d[3] = {1, 1, 1};
+    aa_rx_geom_attach( sg, "a", aa_rx_geom_box(opt_cl, d) );
+    aa_rx_geom_attach( sg, "b", aa_rx_geom_cylinder(opt_cl, 1, .5) );
+
+
+    aa_rx_sg_index(sg);
+    aa_rx_sg_cl_init(sg);
+
+    {
+        struct aa_rx_cl *cl = aa_rx_cl_create(sg);
+        aa_rx_frame_id n = aa_rx_sg_frame_count(sg);
+        double TF_rel[7*n];
+        double TF_abs[7*n];
+        aa_rx_sg_tf(sg, 0, NULL,
+                    n,
+                    TF_rel, 7,
+                    TF_abs, 7 );
+        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7 );
+        assert( !collision );
+    }
+
+    aa_rx_geom_attach( sg, "c", aa_rx_geom_cylinder(opt_cl, 1, .5) );
+    aa_rx_sg_index(sg);
+    aa_rx_sg_cl_init(sg);
+    {
+        struct aa_rx_cl *cl = aa_rx_cl_create(sg);
+        aa_rx_frame_id n = aa_rx_sg_frame_count(sg);
+        double TF_rel[7*n];
+        double TF_abs[7*n];
+        aa_rx_sg_tf(sg, 0, NULL,
+                    n,
+                    TF_rel, 7,
+                    TF_abs, 7 );
+        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7 );
+        assert( collision );
+    }
+}
+
+
+int main( int argc, char **argv)
+{
+    (void) argc; (void) argv;
+    test_box();
+    test_cylinder();
 
     return 0;
 }

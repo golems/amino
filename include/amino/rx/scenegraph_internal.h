@@ -137,7 +137,9 @@ struct SceneGraph  {
     aa_rx_config_id config_size;
 
     /** Are the indices invalid? */
-    int dirty_indices;
+    unsigned dirty_indices : 1;
+    unsigned dirty_collision : 1;
+    unsigned dirty_gl : 1;
 };
 
 }
@@ -154,5 +156,24 @@ struct aa_rx_sg {
 AA_API void
 aa_rx_sg_add_geom( struct aa_rx_sg *scene_graph, const char *frame,
                    struct aa_rx_geom *geom );
+
+
+AA_API void
+aa_rx_sg_dirty_geom( struct aa_rx_sg *scene_graph );
+
+AA_API void
+aa_rx_sg_ensure_clean_frames( const struct aa_rx_sg *scene_graph );
+
+AA_API void
+aa_rx_sg_clean_gl( struct aa_rx_sg *scene_graph );
+
+AA_API void
+aa_rx_sg_clean_collision( struct aa_rx_sg *scene_graph );
+
+AA_API void
+aa_rx_sg_ensure_clean_gl( const struct aa_rx_sg *scene_graph );
+
+AA_API void
+aa_rx_sg_ensure_clean_collision( const struct aa_rx_sg *scene_graph );
 
 #endif /*AMINO_SCENEGRAPH_H*/

@@ -46,6 +46,7 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxtype_internal.h"
 #include "amino/rx/scenegraph.h"
+#include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_gl_internal.h"
 #include "amino/rx/scene_geom.h"
@@ -1143,6 +1144,7 @@ aa_rx_sg_render(
     const struct aa_gl_globals *globals,
     size_t n_TF, double *TF_abs, size_t ld_tf)
 {
+    aa_rx_sg_ensure_clean_gl( sg );
 
     glUseProgram(aa_gl_id_program);
     check_error("glUseProgram");
@@ -1195,4 +1197,5 @@ AA_API void
 aa_rx_sg_gl_init( struct aa_rx_sg *sg )
 {
     aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
+    aa_rx_sg_clean_gl(sg);
 }

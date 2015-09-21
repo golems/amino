@@ -60,21 +60,10 @@ AA_API void aa_rx_sg_index ( struct aa_rx_sg *scene_graph )
     scene_graph->sg->index();
 }
 
-
-static void ensure_indexed ( const struct aa_rx_sg *scene_graph )
-{
-    amino::SceneGraph *sg = scene_graph->sg;
-    if( sg->dirty_indices ) {
-        fprintf(stderr, "ERROR: scene graph indices are dirty.  Must call aa_rx_sg_index()\n");
-        abort();
-        exit(EXIT_FAILURE);
-    }
-}
-
 AA_API aa_rx_config_id aa_rx_sg_config_count(
     const struct aa_rx_sg *scene_graph )
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
     return scene_graph->sg->config_size;
 }
 
@@ -87,21 +76,21 @@ AA_API aa_rx_config_id aa_rx_sg_frame_count(
 AA_API enum aa_rx_frame_type aa_rx_sg_frame_type (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
     return scene_graph->sg->frames[frame_id]->type();
 }
 
 AA_API aa_rx_config_id aa_rx_sg_config_id(
     const struct aa_rx_sg *scene_graph, const char *config_name)
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
     return scene_graph->sg->config_map[config_name];
 }
 
 AA_API aa_rx_frame_id aa_rx_sg_frame_id (
     const struct aa_rx_sg *scene_graph, const char *frame_name)
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
     return scene_graph->sg->frame_map[frame_name]->frame_id;
 }
 
@@ -117,7 +106,7 @@ AA_API const char *
 aa_rx_sg_frame_name (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
     return scene_graph->sg->frames[frame_id]->name.c_str();
 }
 
@@ -125,7 +114,7 @@ AA_API aa_rx_frame_id
 aa_rx_sg_frame_parent (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
     return scene_graph->sg->frames[frame_id]->parent_id;
 }
 
@@ -168,10 +157,9 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs )
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
 
     amino::SceneGraph *sg = scene_graph->sg;
-    sg->index();
     aa_rx_frame_id i_frame = 0;
     for( size_t i_rel = 0, i_abs = 0;
          i_frame < n_tf && (size_t)i_frame < sg->frames.size();
@@ -201,7 +189,7 @@ AA_API void aa_rx_sg_map_geom (
     void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),
     void *context )
 {
-    ensure_indexed( scene_graph );
+    aa_rx_sg_ensure_clean_frames( scene_graph );
     amino::SceneGraph *sg = scene_graph->sg;
     for( auto itr = sg->frames.begin(); itr != sg->frames.end(); itr++ ) {
         amino::SceneFrame *f = *itr;
