@@ -168,6 +168,8 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs )
 {
+    ensure_indexed( scene_graph );
+
     amino::SceneGraph *sg = scene_graph->sg;
     sg->index();
     aa_rx_frame_id i_frame = 0;

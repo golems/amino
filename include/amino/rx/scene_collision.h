@@ -35,28 +35,23 @@
  *
  */
 
-#ifndef AMINO_RX_RXTYPE_H
-#define AMINO_RX_RXTYPE_H
+#ifndef AMINO_RX_SCENE_COLLISION_H
+#define AMINO_RX_SCENE_COLLISION_H
 
-/* Opaque types shared between different RX modules
- */
+struct aa_rx_cl;
 
-/**
- *  Opaque type for a scene_graph.
- *
- * A scene graph is a set of frames in SE(3).
- *
- */
-struct aa_rx_sg;
+AA_API void
+aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph );
 
-/**
- * Container for scene geometry
- */
-struct aa_rx_geom;
+AA_API struct aa_rx_cl *
+aa_rx_cl_create( const struct aa_rx_sg *scene_graph );
 
-/**
- * Container for collision info
- */
-struct aa_rx_cl_geom;
+AA_API void
+aa_rx_cl_destroy( struct aa_rx_cl *cl );
 
-#endif /*AMINO_RX_RXTYPE_H*/
+AA_API int
+aa_rx_cl_check( struct aa_rx_cl *cl,
+                size_t n_tf,
+                double *TF, size_t ldTF );
+
+#endif /*AMINO_RX_SCENE_COLLISION_H*/

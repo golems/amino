@@ -56,6 +56,7 @@ struct aa_gl_buffers;
 struct aa_rx_geom {
     struct aa_rx_geom_opt opt;
     enum aa_rx_geom_shape type;
+    struct aa_rx_cl_geom *cl_geom;
 
     /* Set to 1 one create.
      * Increment on Copy

@@ -100,3 +100,5 @@ amino*.tar.gz
 /demo/simple-rx/scene.c
 /demo/baxter-1/scene.c
 /demo/baxter-1/baxter-rx
+/fcl_test
+/cl_test

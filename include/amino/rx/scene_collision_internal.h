@@ -1,4 +1,4 @@
-/* -*- mode: C; c-basic-offset: 4; -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
@@ -35,28 +35,13 @@
  *
  */
 
-#ifndef AMINO_RX_RXTYPE_H
-#define AMINO_RX_RXTYPE_H
+#ifndef AMINO_RX_SCENE_COLLISION_INTERNAL_H
+#define AMINO_RX_SCENE_COLLISION_INTERNAL_H
 
-/* Opaque types shared between different RX modules
- */
+#ifdef __cplusplus
 
-/**
- *  Opaque type for a scene_graph.
- *
- * A scene graph is a set of frames in SE(3).
- *
- */
-struct aa_rx_sg;
+#endif /* __cplusplus */
 
-/**
- * Container for scene geometry
- */
-struct aa_rx_geom;
 
-/**
- * Container for collision info
- */
-struct aa_rx_cl_geom;
 
-#endif /*AMINO_RX_RXTYPE_H*/
+#endif /*AMINO_RX_SCENE_COLLISION_H*/

@@ -301,13 +301,25 @@ la_ctest_LDADD = libamino.la libtestutil.la
 
 if HAVE_FCL
 
-TESTS += fcl_test
 
+lib_LTLIBRARIES += libamino_cl.la
+libamino_cl_la_SOURCES = src/rx/amino_fcl.cpp
+
+libamino_cl_la_CFLAGS = $(FCL_CFLAGS)
+libamino_cl_la_CXXFLAGS = $(FCL_CFLAGS)
+libamino_cl_la_LIBADD = libamino.la $(FCL_LIBS)
+
+
+TESTS += fcl_test
 noinst_PROGRAMS += fcl_test
 fcl_test_SOURCES = src/test/aa_test_fcl.cpp
 fcl_test_CFLAGS = $(FCL_CFLAGS)
-fcl_test_LDADD = libamino.la $(FCL_LIBS)
+fcl_test_LDADD = libamino.la libamino_cl.la $(FCL_LIBS)
 
+TESTS += cl_test
+noinst_PROGRAMS += cl_test
+cl_test_SOURCES = src/test/test_collision.c
+cl_test_LDADD = libamino.la libamino_cl.la
 
 endif # HAVE_FCL
 
