@@ -1,4 +1,4 @@
-/* -*- mode: C; c-basic-offset: 4; -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
@@ -35,62 +35,77 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_COLLISION_H
-#define AMINO_RX_SCENE_COLLISION_H
 
+#include "amino.h"
+#include "amino/rx/rxtype.h"
+#include "amino/rx/scenegraph.h"
+#include "amino/rx/scenegraph_internal.h"
+#include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_geom_internal.h"
+#include "amino/rx/scene_collision.h"
 
-struct aa_rx_cl_set;
+struct aa_rx_cl_set {
+    size_t n;
+    std::vector<bool> *v;
+};
 
 AA_API struct aa_rx_cl_set*
-aa_rx_cl_set_create( const struct aa_rx_sg *sg );
+aa_rx_cl_set_create( const struct aa_rx_sg *sg )
+{
+    struct aa_rx_cl_set *set = AA_NEW(struct aa_rx_cl_set);
+
+    set->n = aa_rx_sg_frame_count(sg);
+    set->v = new std::vector<bool>(set->n*set->n);
+
+    return set;
+}
 
 AA_API void
-aa_rx_cl_set_destroy(struct aa_rx_cl_set *cl_set);
+aa_rx_cl_set_destroy(struct aa_rx_cl_set *cl_set)
+{
+    delete cl_set->v;
+    free(cl_set);
+}
+
+static inline size_t cl_set_i(
+    const struct aa_rx_cl_set *set,
+    aa_rx_frame_id i,
+    aa_rx_frame_id j )
+{
+    assert( i >= 0 );
+    assert( j >= 0 );
+
+    size_t r = (i < j) ?
+        (set->n*j + i) :
+        (set->n*i + j);
+
+    assert( r < set->v->size() );
+    return r;
+}
+
+#define CLSET_REF(set,i,j) ( (*(set)->v)[ cl_set_i(set,i,j) ] )
 
 AA_API void
 aa_rx_cl_set_set( struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
                   aa_rx_frame_id j,
-                  int is_colliding );
+                  int is_colliding )
+{
+    CLSET_REF(cl_set, i, j) = is_colliding ? 1 : 0;
+}
 
 AA_API void
 aa_rx_cl_set_fill( struct aa_rx_cl_set *dst,
-                   const struct aa_rx_cl_set *src );
-
+                   const struct aa_rx_cl_set *src )
+{
+    dst->v->assign( src->v->begin(),
+                    src->v->end() );
+}
 
 AA_API int
 aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
-                  aa_rx_frame_id j );
-
-
-struct aa_rx_cl;
-
-AA_API void
-aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph );
-
-AA_API struct aa_rx_cl *
-aa_rx_cl_create( const struct aa_rx_sg *scene_graph );
-
-AA_API void
-aa_rx_cl_destroy( struct aa_rx_cl *cl );
-
-AA_API void
-aa_rx_cl_allow( struct aa_rx_cl *cl,
-                aa_rx_frame_id id0,
-                aa_rx_frame_id id1,
-                int allowed );
-
-AA_API void
-aa_rx_cl_allow_name( struct aa_rx_cl *cl,
-                     const char *frame0,
-                     const char *frame1,
-                     int allowed );
-
-AA_API int
-aa_rx_cl_check( struct aa_rx_cl *cl,
-                size_t n_tf,
-                const double *TF, size_t ldTF,
-                struct aa_rx_cl_set *cl_set );
-
-#endif /*AMINO_RX_SCENE_COLLISION_H*/
+                  aa_rx_frame_id j )
+{
+    return (*cl_set->v)[ cl_set_i(cl_set,i,j) ];
+}

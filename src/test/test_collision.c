@@ -55,7 +55,7 @@ static void test_box()
                     n,
                     TF_rel, 7,
                     TF_abs, 7 );
-        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7 );
+        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7, NULL );
         assert( collision );
     }
 
@@ -68,7 +68,7 @@ static void test_box()
                     n,
                     TF_rel, 7,
                     TF_abs, 7 );
-        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7 );
+        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7, NULL );
         assert( !collision );
     }
 
@@ -112,7 +112,7 @@ void test_cylinder()
                     n,
                     TF_rel, 7,
                     TF_abs, 7 );
-        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7 );
+        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7, NULL );
         assert( !collision );
     }
 
@@ -121,6 +121,7 @@ void test_cylinder()
     aa_rx_sg_cl_init(sg);
     {
         struct aa_rx_cl *cl = aa_rx_cl_create(sg);
+        struct aa_rx_cl_set *set = aa_rx_cl_set_create(sg);
         aa_rx_frame_id n = aa_rx_sg_frame_count(sg);
         double TF_rel[7*n];
         double TF_abs[7*n];
@@ -128,8 +129,17 @@ void test_cylinder()
                     n,
                     TF_rel, 7,
                     TF_abs, 7 );
-        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7 );
+        int collision = aa_rx_cl_check( cl, (size_t)n, TF_abs, 7, set );
         assert( collision );
+        assert( 0 == aa_rx_cl_set_get( set,
+                                       aa_rx_sg_frame_id(sg, "a"),
+                                       aa_rx_sg_frame_id(sg, "b") ) );
+        assert( 1 == aa_rx_cl_set_get( set,
+                                       aa_rx_sg_frame_id(sg, "a"),
+                                       aa_rx_sg_frame_id(sg, "c") ) );
+        assert( 0 == aa_rx_cl_set_get( set,
+                                       aa_rx_sg_frame_id(sg, "b"),
+                                       aa_rx_sg_frame_id(sg, "c") ) );
     }
 }
 

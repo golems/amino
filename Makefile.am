@@ -304,7 +304,9 @@ if HAVE_FCL
 
 
 lib_LTLIBRARIES += libamino_cl.la
-libamino_cl_la_SOURCES = src/rx/amino_fcl.cpp
+libamino_cl_la_SOURCES = \
+	src/rx/amino_fcl.cpp \
+	src/rx/collision_set.cpp
 
 libamino_cl_la_CFLAGS = $(FCL_CFLAGS)
 libamino_cl_la_CXXFLAGS = $(FCL_CFLAGS)

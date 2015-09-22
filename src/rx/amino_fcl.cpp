@@ -195,7 +195,7 @@ struct aa_rx_cl
     std::vector<fcl::CollisionObject*> *objects;
 
     // A bit-matrix of allowable collisions
-    std::vector<bool> *allowed_collisions;
+    struct aa_rx_cl_set *allowed;
 };
 
 static void cl_create_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
@@ -221,8 +221,8 @@ aa_rx_cl_create( const struct aa_rx_sg *scene_graph )
     cl->sg = scene_graph;
     cl->objects = new std::vector<fcl::CollisionObject*>;
     cl->manager = new fcl::DynamicAABBTreeCollisionManager();
-    size_t n = aa_rx_sg_frame_count(scene_graph);
-    cl->allowed_collisions = new std::vector<bool>(n*n);
+
+    cl->allowed = aa_rx_cl_set_create(scene_graph);
 
     aa_rx_sg_map_geom( scene_graph, &cl_create_helper, cl );
 
@@ -236,14 +236,9 @@ aa_rx_cl_destroy( struct aa_rx_cl *cl )
 {
     delete cl->manager;
     delete cl->objects;
-    delete cl->allowed_collisions;
+    aa_rx_cl_set_destroy( cl->allowed );
     delete cl;
 }
-
-#define CL_ALLOWED(cl,id0,id1) \
-    ( (*(cl)->allowed_collisions)[(id0)*aa_rx_sg_frame_count((cl)->sg)+(id1)] )
-
-
 
 AA_API void
 aa_rx_cl_allow( struct aa_rx_cl *cl,
@@ -251,8 +246,7 @@ aa_rx_cl_allow( struct aa_rx_cl *cl,
                 aa_rx_frame_id id1,
                 int allowed )
 {
-    CL_ALLOWED(cl,id0,id1) = CL_ALLOWED(cl,id1,id0) =
-        (allowed ? 1 : 0);
+    aa_rx_cl_set_set( cl->allowed, id0, id1, allowed );
 }
 
 
@@ -271,6 +265,7 @@ aa_rx_cl_allow_name( struct aa_rx_cl *cl,
 struct cl_check_data {
     int result;
     struct aa_rx_cl *cl;
+    struct aa_rx_cl_set *cl_set;
 };
 
 static bool
@@ -284,7 +279,11 @@ cl_check_callback( ::fcl::CollisionObject *o1,
 
     /* Skip geometry in the same frame */
     if( id1 == id2 ) return false;
-    if( id1 == id2 ) return false;
+
+    /* Check if allowed collision */
+    if( aa_rx_cl_set_get(data->cl->allowed,id1,id2) ) {
+        return false;
+    }
 
 
     fcl::CollisionRequest request;
@@ -292,8 +291,15 @@ cl_check_callback( ::fcl::CollisionObject *o1,
     fcl::collide(o1, o2, request, result);
 
     if(!request.enable_cost && (result.isCollision()) && (result.numContacts() >= request.num_max_contacts)) {
+        /* In Collision */
         data->result = 1;
-        return true;
+
+        /* Short Circuit? */
+        if( data->cl_set ) {
+            aa_rx_cl_set_set( data->cl_set, id1, id2, 1 );
+        } else {
+            return true;
+        }
     }
 
     return false;
@@ -302,7 +308,8 @@ cl_check_callback( ::fcl::CollisionObject *o1,
 int
 aa_rx_cl_check( struct aa_rx_cl *cl,
                 size_t n_tf,
-                double *TF, size_t ldTF )
+                const double *TF, size_t ldTF,
+                struct aa_rx_cl_set *cl_set )
 {
     /* Update Transforms */
     for( auto itr = cl->objects->begin();
@@ -311,7 +318,7 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
     {
         fcl::CollisionObject *obj = *itr;
         aa_rx_frame_id id = (intptr_t) obj->getUserData();
-        double *TF_obj = TF+id*ldTF;
+        const double *TF_obj = TF+id*ldTF;
 
         enum aa_rx_geom_shape shape_type;
         struct aa_rx_geom *geom = (struct aa_rx_geom*)obj->collisionGeometry()->getUserData();
@@ -337,6 +344,7 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
     struct cl_check_data data;
     data.result = 0;
     data.cl = cl;
+    data.cl_set = cl_set;
 
     cl->manager->collide( &data, cl_check_callback );
     return data.result;
