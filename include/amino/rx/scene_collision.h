@@ -82,6 +82,10 @@ aa_rx_cl_allow( struct aa_rx_cl *cl,
                 int allowed );
 
 AA_API void
+aa_rx_cl_allow_set( struct aa_rx_cl *cl,
+                    const struct aa_rx_cl_set *set );
+
+AA_API void
 aa_rx_cl_allow_name( struct aa_rx_cl *cl,
                      const char *frame0,
                      const char *frame1,

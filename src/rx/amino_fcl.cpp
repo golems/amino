@@ -249,6 +249,13 @@ aa_rx_cl_allow( struct aa_rx_cl *cl,
     aa_rx_cl_set_set( cl->allowed, id0, id1, allowed );
 }
 
+AA_API void
+aa_rx_cl_allow_set( struct aa_rx_cl *cl,
+                    const struct aa_rx_cl_set *set )
+{
+    aa_rx_cl_set_fill( cl->allowed, set );
+}
+
 
 AA_API void
 aa_rx_cl_allow_name( struct aa_rx_cl *cl,

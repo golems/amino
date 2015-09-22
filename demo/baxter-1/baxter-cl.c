@@ -91,7 +91,7 @@ int display( void *cx_, int updated, const struct timespec *now )
 
     if( cx->last.tv_sec || cx->last.tv_nsec ) {
         double dt = aa_tm_timespec2sec( aa_tm_sub(*now, cx->last) );
-        cx->q += dt * 20 * (M_PI/180);
+        cx->q += dt * 45 * (M_PI/180);
 
     }
     q[ cx->i_q ] = cx->q;
@@ -107,8 +107,9 @@ int display( void *cx_, int updated, const struct timespec *now )
 
     memcpy( &cx->last, now, sizeof(*now) );
 
-    int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7 );
-    printf("col: %d\n", col );
+    int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7, NULL );
+    printf("in collision: %s\n",
+           col ? "yes" : "no" );
 
     return 1;
 }
@@ -164,6 +165,25 @@ int main(int argc, char *argv[])
     cx.globals = globals;
     cx.i_q = aa_rx_sg_config_id(scenegraph, "left_s0");
     cx.cl = aa_rx_cl_create( scenegraph );
+
+    {
+        aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
+        aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
+        double q[m];
+        AA_MEM_ZERO(q,m);
+        double TF_rel[7*n];
+        double TF_abs[7*n];
+        aa_rx_sg_tf(scenegraph, m, q,
+                    n,
+                    TF_rel, 7,
+                    TF_abs, 7 );
+
+        struct aa_rx_cl_set *allowed = aa_rx_cl_set_create( scenegraph );
+        int col = aa_rx_cl_check( cx.cl, n, TF_abs, 7, allowed );
+        aa_rx_cl_allow_set( cx.cl, allowed );
+        aa_rx_cl_set_destroy( allowed );
+    }
+
 
     aa_sdl_display_loop( window, globals,
                          display,
