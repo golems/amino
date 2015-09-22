@@ -193,6 +193,9 @@ struct aa_rx_cl
     const struct aa_rx_sg *sg;
     fcl::BroadPhaseCollisionManager *manager;
     std::vector<fcl::CollisionObject*> *objects;
+
+    // A bit-matrix of allowable collisions
+    std::vector<bool> *allowed_collisions;
 };
 
 static void cl_create_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
@@ -218,6 +221,8 @@ aa_rx_cl_create( const struct aa_rx_sg *scene_graph )
     cl->sg = scene_graph;
     cl->objects = new std::vector<fcl::CollisionObject*>;
     cl->manager = new fcl::DynamicAABBTreeCollisionManager();
+    size_t n = aa_rx_sg_frame_count(scene_graph);
+    cl->allowed_collisions = new std::vector<bool>(n*n);
 
     aa_rx_sg_map_geom( scene_graph, &cl_create_helper, cl );
 
@@ -231,25 +236,63 @@ aa_rx_cl_destroy( struct aa_rx_cl *cl )
 {
     delete cl->manager;
     delete cl->objects;
+    delete cl->allowed_collisions;
     delete cl;
 }
+
+#define CL_ALLOWED(cl,id0,id1) \
+    ( (*(cl)->allowed_collisions)[(id0)*aa_rx_sg_frame_count((cl)->sg)+(id1)] )
+
+
+
+AA_API void
+aa_rx_cl_allow( struct aa_rx_cl *cl,
+                aa_rx_frame_id id0,
+                aa_rx_frame_id id1,
+                int allowed )
+{
+    CL_ALLOWED(cl,id0,id1) = CL_ALLOWED(cl,id1,id0) =
+        (allowed ? 1 : 0);
+}
+
+
+AA_API void
+aa_rx_cl_allow_name( struct aa_rx_cl *cl,
+                const char *frame0,
+                const char *frame1,
+                int allowed )
+{
+    aa_rx_cl_allow( cl,
+                    aa_rx_sg_frame_id(cl->sg, frame0),
+                    aa_rx_sg_frame_id(cl->sg, frame1),
+                    allowed );
+}
+
+struct cl_check_data {
+    int result;
+    struct aa_rx_cl *cl;
+};
 
 static bool
 cl_check_callback( ::fcl::CollisionObject *o1,
                    ::fcl::CollisionObject *o2,
-                   void *cdata )
+                   void *data_ )
 {
-    //aa_rx_frame_id id1 = (intptr_t) o1->getUserData();
-    //aa_rx_frame_id id2 = (intptr_t) o2->getUserData();
+    struct cl_check_data *data = (struct cl_check_data*)data_;
+    aa_rx_frame_id id1 = (intptr_t) o1->getUserData();
+    aa_rx_frame_id id2 = (intptr_t) o2->getUserData();
 
-    int *x = (int*)cdata;
+    /* Skip geometry in the same frame */
+    if( id1 == id2 ) return false;
+    if( id1 == id2 ) return false;
+
 
     fcl::CollisionRequest request;
     fcl::CollisionResult result;
     fcl::collide(o1, o2, request, result);
 
     if(!request.enable_cost && (result.isCollision()) && (result.numContacts() >= request.num_max_contacts)) {
-        *x = 1;
+        data->result = 1;
         return true;
     }
 
@@ -291,7 +334,10 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
     cl->manager->update();
 
     /* Check Collision */
-    int collision = 0;
-    cl->manager->collide( &collision, cl_check_callback );
-    return collision;
+    struct cl_check_data data;
+    data.result = 0;
+    data.cl = cl;
+
+    cl->manager->collide( &data, cl_check_callback );
+    return data.result;
 }

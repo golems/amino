@@ -49,6 +49,18 @@ aa_rx_cl_create( const struct aa_rx_sg *scene_graph );
 AA_API void
 aa_rx_cl_destroy( struct aa_rx_cl *cl );
 
+AA_API void
+aa_rx_cl_allow( struct aa_rx_cl *cl,
+                aa_rx_frame_id id0,
+                aa_rx_frame_id id1,
+                int allowed );
+
+AA_API void
+aa_rx_cl_allow_name( struct aa_rx_cl *cl,
+                     const char *frame0,
+                     const char *frame1,
+                     int allowed );
+
 AA_API int
 aa_rx_cl_check( struct aa_rx_cl *cl,
                 size_t n_tf,
