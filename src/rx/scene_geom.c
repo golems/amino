@@ -166,7 +166,7 @@ aa_rx_geom_shape ( const struct aa_rx_geom *g,
     switch(g->type ) {
     case AA_RX_NOSHAPE: break;
     case AA_RX_MESH:
-        shape = &((struct aa_rx_geom_mesh*)g)->shape;
+        shape = ((struct aa_rx_geom_mesh*)g)->shape;
         break;
     case AA_RX_BOX:
         shape = &((struct aa_rx_geom_box*)g)->shape;

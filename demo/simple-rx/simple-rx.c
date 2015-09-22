@@ -63,7 +63,7 @@ void check_error( const char *name ){
     }
 }
 
-void display( void *globals_ )
+void display( void *globals_, const struct timespec *now )
 {
     const struct aa_gl_globals *globals = (const struct aa_gl_globals *) globals_;
 

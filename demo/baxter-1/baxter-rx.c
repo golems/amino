@@ -63,8 +63,9 @@ void check_error( const char *name ){
     }
 }
 
-void display( void *globals_ )
+int display( void *globals_, int updated, const struct timespec *now )
 {
+    if( !updated ) return 0;
     const struct aa_gl_globals *globals = (const struct aa_gl_globals *) globals_;
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -85,6 +86,7 @@ void display( void *globals_ )
                 TF_abs, 7 );
     aa_rx_sg_render( scenegraph, globals,
                      (size_t)n, TF_abs, 7 );
+    return updated;
 }
 
 int main(int argc, char *argv[])

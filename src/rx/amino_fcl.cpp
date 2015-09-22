@@ -47,6 +47,7 @@
 #include <fcl/collision.h>
 #include <fcl/shape/geometric_shapes.h>
 #include <fcl/broadphase/broadphase.h>
+#include <fcl/BVH/BVH_model.h>
 
 #include "amino/rx/scene_collision_internal.h"
 #include "amino/rx/amino_fcl.h"
@@ -56,12 +57,57 @@ struct aa_rx_cl_geom {
 };
 
 
+static boost::shared_ptr<fcl::CollisionGeometry> *
+cl_init_mesh( const struct aa_rx_mesh *mesh )
+{
+
+    //printf("mesh\n");
+    //printf("n_verts: %u\n",mesh->n_vertices );
+    //printf("n_indices: %u\n",mesh->n_indices );
+    /* TODO: FCL should be able to reference external arrays for mesh
+     * vertices and indices so that we don't have to copy the mesh.
+     */
+    std::vector<fcl::Vec3f> vertices;
+    std::vector<fcl::Triangle> triangles;
+
+
+    /* fill vertices */
+    {
+        const float *v = mesh->vertices;
+        for( unsigned i = 0, j=0; i < mesh->n_vertices; i++ ) {
+            unsigned x=j++;
+            unsigned y=j++;
+            unsigned z=j++;
+            vertices.push_back( fcl::Vec3f(v[x], v[y], v[z]) );
+        }
+    }
+    //printf("filled verts\n");
+    /* fill faces*/
+    {
+        const unsigned *f = mesh->indices;
+        //printf("n_indices: %u\n",mesh->n_indices );
+        for( unsigned i=0, j=0; i < mesh->n_indices; i++ ) {
+            unsigned x=j++;
+            unsigned y=j++;
+            unsigned z=j++;
+            //printf("tri: %u, %u, %u, (%u)\n", x,y,z, 3*mesh->n_indices);
+            triangles.push_back( fcl::Triangle(f[x], f[y], f[z]) );
+        }
+    }
+    //printf("filled tris\n");
+
+    auto model = new(fcl::BVHModel<fcl::OBBRSS>);
+    model->beginModel();
+    model->addSubModel(vertices, triangles);
+    model->endModel();
+
+    return new boost::shared_ptr<fcl::CollisionGeometry> (model);
+}
+
 static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
 {
     (void)cx; (void)frame_id;
     struct aa_rx_sg *sg = (struct aa_rx_sg*)cx;
-    //printf("creating collision geometry for frame %s\n",
-           //aa_rx_sg_frame_name(sg, frame_id) );
 
     /* not a collision geometry */
     if( ! geom->opt.collision ) {
@@ -75,10 +121,15 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
         return;
     }
 
+
     /* Ok, now do it */
     boost::shared_ptr<fcl::CollisionGeometry> *ptr = NULL;
     enum aa_rx_geom_shape shape_type;
     void *shape_ = aa_rx_geom_shape(geom, &shape_type);
+
+    printf("creating collision geometry for frame %s (%s)\n",
+           aa_rx_sg_frame_name(sg, frame_id),
+           aa_rx_geom_shape_str(shape_type) );
 
     switch( shape_type ) {
     case AA_RX_NOSHAPE: {
@@ -86,6 +137,9 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     }
     case AA_RX_MESH: {
         struct aa_rx_mesh *shape = (struct aa_rx_mesh *)  shape_;
+        printf("a\n");
+        ptr = cl_init_mesh(shape);
+        printf("b\n");
         break;
     }
     case AA_RX_BOX: {
@@ -118,12 +172,10 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 
     if(ptr) {
         struct aa_rx_cl_geom *cl_geom = new aa_rx_cl_geom;
-        cl_geom->ptr = ptr;
-        (*ptr)->setUserData(geom);
-        geom->cl_geom = cl_geom;
-        //printf("  created\n");
+        (*ptr)->setUserData(geom); // FCL user data is the amino geometry object
+        cl_geom->ptr = ptr;        // Fill the POD structure with shared pointer
+        geom->cl_geom = cl_geom;   // Set the amino geometry collision object
     } else {
-        //printf("  skipped\n");
         fprintf(stderr, "Unimplemented collision type: %s\n", aa_rx_geom_shape_str( shape_type ) );
     }
 }

@@ -15,7 +15,7 @@ include_HEADERS = include/amino.h include/amino.hpp
 noinst_PROGRAMS =
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = share/amino.pc share/amino_gl.pc
+pkgconfig_DATA = share/amino.pc share/amino_gl.pc share/amino_collision.pc
 
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
@@ -56,6 +56,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/amino_gl.h     \
+	include/amino/rx/scene_collision.h \
 	include/amino/rx/amino_sdl.h
 
 

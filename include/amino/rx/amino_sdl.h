@@ -46,10 +46,21 @@ AA_API void aa_sdl_scroll(
     int *update, int *quit );
 
 
+/**
+ * @param context A pointer to local context
+ * @param updated Whether other parts of these scene are updated
+ * @param now The present time
+ * @return Whether any update has occurred
+ */
+typedef int (*aa_sdl_display_fun)(
+    void *context,
+    int updated,
+    const struct timespec *now);
+
 AA_API void aa_sdl_display_loop(
     SDL_Window* window,
     struct aa_gl_globals * globals,
-    void (*display)(void *context),
+    aa_sdl_display_fun display,
     void *context );
 
 

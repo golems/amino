@@ -49,72 +49,14 @@
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_sdl.h"
 #include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_collision.h"
 
 const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 1000;
 
 
-
-//struct aa_rx_geom_box geom;
-//struct aa_rx_geom_grid grid;
+struct aa_rx_sg *generate_scenegraph(struct aa_rx_sg *sg);
 struct aa_rx_sg *scenegraph;
-
-
-void Init(void)
-{
-    scenegraph = aa_rx_sg_create();
-
-    // box
-    {
-        aa_rx_sg_add_frame_fixed( scenegraph,
-                                  "", "box",
-                                  aa_tf_quat_ident, aa_tf_vec_ident );
-
-        struct aa_rx_geom_opt *box_opt = aa_rx_geom_opt_create();
-        aa_rx_geom_opt_set_color( box_opt, 1, 0, 0);
-        aa_rx_geom_opt_set_specular( box_opt, .3, .3, .3);
-
-        double d[3] = {.1, .1, .1};
-        aa_rx_geom_attach( scenegraph, "box", aa_rx_geom_box(box_opt, d) );
-
-        aa_rx_geom_opt_destroy(box_opt);
-    }
-
-    // cylinder
-    {
-        aa_rx_sg_add_frame_fixed( scenegraph,
-                                  "", "cylinder",
-                                  aa_tf_quat_ident, aa_tf_vec_ident );
-
-        struct aa_rx_geom_opt *opt = aa_rx_geom_opt_create();
-        aa_rx_geom_opt_set_color( opt, 0, 0, 1);
-        aa_rx_geom_opt_set_specular( opt, .3, .3, .3);
-
-        aa_rx_geom_attach( scenegraph, "cylinder",
-                           aa_rx_geom_cylinder(opt, .2, .1) );
-
-        aa_rx_geom_opt_destroy(opt);
-    }
-
-    // grid
-    {
-        aa_rx_sg_add_frame_fixed( scenegraph,
-                                  "", "grid",
-                                  aa_tf_quat_ident, aa_tf_vec_ident );
-        struct aa_rx_geom_opt *grid_opt = aa_rx_geom_opt_create();
-        aa_rx_geom_opt_set_color( grid_opt, .5, .5, .5);
-
-        double dim[2] = {1,1};
-        double delta[2] = {.05, .05};
-        aa_rx_geom_attach( scenegraph, "grid",
-                           aa_rx_geom_grid(grid_opt, dim, delta, 2.5e-3) );
-
-        aa_rx_geom_opt_destroy(grid_opt);
-    }
-    aa_rx_sg_index(scenegraph);
-    aa_rx_sg_gl_init(scenegraph);
-
-}
 
 void check_error( const char *name ){
     for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
@@ -122,12 +64,19 @@ void check_error( const char *name ){
     }
 }
 
+struct display_cx {
+    const struct aa_gl_globals *globals;
+    struct aa_rx_cl *cl;
+    double q;
+    aa_rx_config_id i_q;
+    struct timespec last;
+};
 
-int display( void *globals_, int updated, const struct timespec *now )
+int display( void *cx_, int updated, const struct timespec *now )
 {
-    (void) now;
-    if( !updated ) return 0;
-    const struct aa_gl_globals *globals = (const struct aa_gl_globals *) globals_;
+    struct display_cx *cx = (struct display_cx *)cx_;
+    const struct aa_gl_globals *globals = cx->globals;
+
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
@@ -136,24 +85,44 @@ int display( void *globals_, int updated, const struct timespec *now )
     check_error("glClear");
 
     aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
+    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
+    double q[m];
+    AA_MEM_ZERO(q,m);
+
+    if( cx->last.tv_sec || cx->last.tv_nsec ) {
+        double dt = aa_tm_timespec2sec( aa_tm_sub(*now, cx->last) );
+        cx->q += dt * 20 * (M_PI/180);
+
+    }
+    q[ cx->i_q ] = cx->q;
+
     double TF_rel[7*n];
     double TF_abs[7*n];
-    aa_rx_sg_tf(scenegraph, 0, NULL,
-                2,
+    aa_rx_sg_tf(scenegraph, m, q,
+                n,
                 TF_rel, 7,
                 TF_abs, 7 );
     aa_rx_sg_render( scenegraph, globals,
                      (size_t)n, TF_abs, 7 );
-    return updated;
+
+    memcpy( &cx->last, now, sizeof(*now) );
+
+    int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7 );
+    printf("col: %d\n", col );
+
+    return 1;
 }
 
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
-
-
     SDL_Window* window = NULL;
     SDL_GLContext gContext = NULL;
+
+    // Initialize scene graph
+    scenegraph = generate_scenegraph(NULL);
+    aa_rx_sg_index(scenegraph);
+    aa_rx_sg_cl_init(scenegraph);
 
     aa_sdl_gl_window( "SDL Test",
                       SDL_WINDOWPOS_UNDEFINED,
@@ -164,14 +133,14 @@ int main(int argc, char *argv[])
                       &window, &gContext);
 
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+    aa_rx_sg_gl_init(scenegraph);
 
-    Init();
-
+    // Initialize globals
     struct aa_gl_globals *globals = aa_gl_globals_create();
     // global camera
     {
         double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-        double eye[3] = {1,1,0.5};
+        double eye[3] = {3,2,1.25};
         double target[3] = {0,0,0};
         double up[3] = {0,0,1};
         aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
@@ -188,11 +157,17 @@ int main(int argc, char *argv[])
         aa_gl_globals_set_ambient(globals, ambient);
     }
 
+    aa_gl_globals_set_show_visual(globals, 0);
+    aa_gl_globals_set_show_collision(globals, 1);
+
+    struct display_cx cx = {0};
+    cx.globals = globals;
+    cx.i_q = aa_rx_sg_config_id(scenegraph, "left_s0");
+    cx.cl = aa_rx_cl_create( scenegraph );
 
     aa_sdl_display_loop( window, globals,
                          display,
-                         globals );
-
+                         &cx );
 
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );

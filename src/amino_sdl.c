@@ -346,7 +346,7 @@ void aa_sdl_scroll( struct aa_gl_globals * globals,
 AA_API void aa_sdl_display_loop(
     SDL_Window* window,
     struct aa_gl_globals * globals,
-    void (*display)(void *context),
+    aa_sdl_display_fun display,
     void *context )
 {
     int quit=0, update=1;
@@ -355,8 +355,8 @@ AA_API void aa_sdl_display_loop(
     do {
         // update screen
         clock_gettime( CLOCK_MONOTONIC, &now );
+        update = display(context, update, &now);
         if( update ) {
-            display(context);
             SDL_GL_SwapWindow(window);
             update = 0;
         }
