@@ -113,37 +113,37 @@ AA_API void aa_gl_init();
  * Container for globals rendering info (Forward declaration)
  */
 
-struct aa_gl_globals *
+AA_API struct aa_gl_globals *
 aa_gl_globals_create();
 
-void
+AA_API void
 aa_gl_globals_destroy( struct aa_gl_globals *globals );
 
-void
+AA_API void
 aa_gl_globals_set_camera(
     struct aa_gl_globals *globals,
     const double world_E_camera[7]);
 
-void
+AA_API void
 aa_gl_globals_set_camera_home(
     struct aa_gl_globals *globals,
     const double world_E_camera_home[7]);
 
-void
+AA_API void
 aa_gl_globals_home_camera(
     struct aa_gl_globals *globals );
 
-void
+AA_API void
 aa_gl_globals_set_light_position(
     struct aa_gl_globals *globals,
     const double world_v_light[3]);
 
-void
+AA_API void
 aa_gl_globals_set_aspect(
     struct aa_gl_globals *globals,
     double aspect );
 
-void
+AA_API void
 aa_gl_globals_set_perspective(
     struct aa_gl_globals *globals,
     double fovy,
@@ -151,27 +151,27 @@ aa_gl_globals_set_perspective(
     double znear,
     double zfar );
 
-void
+AA_API void
 aa_gl_globals_set_light_color(
     struct aa_gl_globals *globals,
     double color[3] );
 
-void
+AA_API void
 aa_gl_globals_set_light_power(
     struct aa_gl_globals *globals,
     double power );
 
-void
+AA_API void
 aa_gl_globals_set_ambient(
     struct aa_gl_globals *globals,
     double ambient[3] );
 
-void
+AA_API void
 aa_gl_globals_set_show_visual(
     struct aa_gl_globals *globals,
     int show_visual );
 
-void
+AA_API void
 aa_gl_globals_set_show_collision (
     struct aa_gl_globals *globals,
     int show_collision );
