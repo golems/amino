@@ -2,7 +2,7 @@
 
 ALL:
 	$(MAKE) -C simple-rx
-	$(MAKE) -C baxter-1
+	$(MAKE) -C baxter
 clean:
 	$(MAKE) -C simple-rx clean
-	$(MAKE) -C baxter-1 clean
+	$(MAKE) -C baxter clean
