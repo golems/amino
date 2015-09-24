@@ -203,3 +203,43 @@ AA_API void aa_rx_sg_map_geom (
         }
     }
 }
+
+
+
+AA_API void
+aa_rx_sg_config_indices(
+    const struct aa_rx_sg *scene_graph, size_t n,
+    const char **config_name, aa_rx_config_id *ids )
+{
+    for( size_t i = 0; i < n; i ++ ) {
+        ids[i] = aa_rx_sg_config_id( scene_graph, config_name[i] );
+    }
+}
+
+
+
+AA_API void
+aa_rx_sg_config_get(
+    const struct aa_rx_sg *scene_graph, size_t n_all, size_t n_subset,
+    const aa_rx_config_id *ids,
+    const double *config_all,
+    double *config_subset )
+{
+    (void) scene_graph;
+    for( size_t i = 0; i < n_subset; i ++ ) {
+        config_subset[i] = config_all[ ids[i] ];
+    }
+}
+
+AA_API void
+aa_rx_sg_config_set(
+    const struct aa_rx_sg *scene_graph, size_t n_all, size_t n_subset,
+    const aa_rx_config_id *ids, const double *config_subset,
+    double *config_all
+    )
+{
+    (void) scene_graph;
+    for( size_t i = 0; i < n_subset; i ++ ) {
+        config_all[ ids[i] ] = config_subset[i];
+    }
+}

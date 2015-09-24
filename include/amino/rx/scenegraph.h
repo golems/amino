@@ -137,10 +137,33 @@ aa_rx_sg_config_names (
     const char **names );
 
 /**
- *  Return the index of a configuration variable in the scne graph
+ *  Return the index of a configuration variable in the scene graph
  */
 AA_API aa_rx_config_id aa_rx_sg_config_id(
     const struct aa_rx_sg *scene_graph, const char *config_name);
+
+/**
+ *  Return the indices of a configuration variable in the scene graph
+ */
+AA_API void
+aa_rx_sg_config_indices(
+    const struct aa_rx_sg *scene_graph, size_t n,
+    const char **config_name, aa_rx_config_id *ids );
+
+
+AA_API void
+aa_rx_sg_config_get(
+    const struct aa_rx_sg *scene_graph, size_t n_all, size_t n_subset,
+    const aa_rx_config_id *ids,
+    const double *config_all,
+    double *config_subset );
+
+AA_API void
+aa_rx_sg_config_set(
+    const struct aa_rx_sg *scene_graph, size_t n_all, size_t n_subset,
+    const aa_rx_config_id *ids, const double *config_subset,
+    double *config_all
+    );
 
 /**
  *  Return the index of a frame in the scene graph

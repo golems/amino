@@ -103,3 +103,4 @@ amino*.tar.gz
 /demo/baxter/baxter-collision
 /demo/baxter/baxter-simple
 /demo/baxter/scene.c
+/demo/baxter/baxter-ompl
