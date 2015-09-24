@@ -98,6 +98,13 @@ aa_rx_sg_frame_name (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id );
 
 /**
+ * Return the config of the given frame
+ */
+AA_API const char *
+aa_rx_sg_config_name (
+    const struct aa_rx_sg *scene_graph, aa_rx_config_id config_id );
+
+/**
  * Return the parent id of the frame
  */
 AA_API aa_rx_frame_id
@@ -118,6 +125,16 @@ aa_rx_sg_frame_count (
 AA_API aa_rx_config_id
 aa_rx_sg_config_count (
     const struct aa_rx_sg *scene_graph );
+
+
+/**
+ * Fill names with pointers to config names
+ *
+ */
+AA_API size_t
+aa_rx_sg_config_names (
+    const struct aa_rx_sg *scene_graph, size_t n_names,
+    const char **names );
 
 /**
  *  Return the index of a configuration variable in the scne graph

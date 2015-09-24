@@ -74,6 +74,7 @@ libamino_la_SOURCES =                  \
 	src/tf/conv.c                  \
 	src/rx/scenegraph.cpp 	       \
 	src/rx/sg_api.cpp 	       \
+	src/rx/sg_capi.c 	       \
 	src/rx/scene_geom.c 	       \
 	src/rx/geom_opt.c              \
 	src/math.c                     \

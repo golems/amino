@@ -94,6 +94,12 @@ AA_API aa_rx_frame_id aa_rx_sg_frame_id (
     return scene_graph->sg->frame_map[frame_name]->frame_id;
 }
 
+AA_API const char *
+aa_rx_sg_frame_name (
+    const struct aa_rx_sg *scene_graph, aa_rx_config_id config_id )
+{
+}
+
 // AA_API aa_rx_config_id aa_rx_sg_frame_config_id(
 //     struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id)
 // {
@@ -103,11 +109,10 @@ AA_API aa_rx_frame_id aa_rx_sg_frame_id (
 // }
 
 AA_API const char *
-aa_rx_sg_frame_name (
-    const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
+aa_rx_sg_config_name (
+    const struct aa_rx_sg *scene_graph, aa_rx_config_id id )
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->frames[frame_id]->name.c_str();
+    return scene_graph->sg->config_rmap[id];
 }
 
 AA_API aa_rx_frame_id

@@ -133,6 +133,9 @@ struct SceneGraph  {
     /** Map from configuration name to configuration index */
     std::map<std::string,size_t> config_map;
 
+    /** Map from configuration index to configuration name */
+    std::vector<const char *> config_rmap;
+
     /** Number of configuration variables */
     aa_rx_config_id config_size;
 

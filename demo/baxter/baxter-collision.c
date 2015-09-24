@@ -125,6 +125,18 @@ int main(int argc, char *argv[])
     aa_rx_sg_index(scenegraph);
     aa_rx_sg_cl_init(scenegraph);
 
+
+    // Print configs
+    {
+        size_t n_config = aa_rx_sg_config_count(scenegraph);
+        const char *names[n_config];
+        int n_filled = aa_rx_sg_config_names(scenegraph,n_config,names);
+        for( size_t i = 0; i < n_filled; i++ ) {
+            printf("q[%lu]: %s\n", i, names[i]);
+        }
+
+    }
+
     aa_sdl_gl_window( "SDL Test",
                       SDL_WINDOWPOS_UNDEFINED,
                       SDL_WINDOWPOS_UNDEFINED,

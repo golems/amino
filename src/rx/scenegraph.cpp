@@ -226,6 +226,7 @@ void SceneGraph::index()
     // Index names and configs
     {
         config_map.clear();
+        config_rmap.clear();
         size_t i_frame=0;
         config_size = 0;
         for( auto itr = list.begin();
@@ -245,9 +246,11 @@ void SceneGraph::index()
             case AA_RX_FRAME_FIXED:
                 break;
             case AA_RX_FRAME_REVOLUTE:
-            case AA_RX_FRAME_PRISMATIC:
+            case AA_RX_FRAME_PRISMATIC: {
+                config_rmap.push_back(f->name.c_str());
                 config_map[f->name] = ((SceneFrameJoint*)f)->config_index = config_size++;
                 break;
+            }
             }
         }
     }
