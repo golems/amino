@@ -111,6 +111,12 @@ public:
         state_set( state->values, q_all );
     }
 
+    void fill_state( const double *q_set, const ompl::base::State *state_ ) {
+        const ompl::base::RealVectorStateSpace::StateType *state
+            = state_->as<ompl::base::RealVectorStateSpace::StateType>();
+        std::copy( q_set, q_set + dim_set(), state->values );
+    }
+
     const aa_rx_sg *sg;
     ompl::base::StateSpacePtr state_space;
     ompl::base::SpaceInformationPtr space_information;
@@ -156,7 +162,8 @@ public:
         int col = aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
         aa_rx_cl_destroy(cl);
 
-        return col ? true : false;
+        bool valid = !col;
+        return valid;
     }
 
     const rxSpace *space;
