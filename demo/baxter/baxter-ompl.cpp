@@ -93,13 +93,14 @@ const int SCREEN_HEIGHT = 1000;
 // };
 
 
+
 AA_API struct aa_rx_sg *generate_scenegraph(struct aa_rx_sg *sg);
 struct aa_rx_sg *scenegraph;
 
-amino::rxSpace *g_space;
-amino::rxStateValidityChecker *g_checker;
+//amino::sgStateValidityChecker *g_checker;
 double *g_path = NULL;
 size_t g_n_path = 0;
+
 
 static void motion_plan( const struct aa_rx_sg *sg)
 {
@@ -111,6 +112,7 @@ static void motion_plan( const struct aa_rx_sg *sg)
     //for( size_t i = 0; i < 7; i ++ ) (start_state)[i] = .1;
 
     // Initialize Spaces
+
     const char *names[] = {"right_s0",
                            "right_s1",
                            "right_e0",
@@ -118,19 +120,33 @@ static void motion_plan( const struct aa_rx_sg *sg)
                            "right_w0",
                            "right_w1",
                            "right_w2"};
-    g_space = new amino::rxSpace (scenegraph, 7, names );
 
-    double q0[g_space->dim_all()];
-    AA_MEM_ZERO(q0, g_space->dim_all());
-    g_checker = new amino::rxStateValidityChecker(g_space, q0);
 
-    // set validity checker
-    ompl::base::StateValidityCheckerPtr checker (new amino::rxStateValidityChecker(g_space, q0));
-    g_space->space_information->setStateValidityChecker(checker);
-    g_space->state_space->as<ompl::base::RealVectorStateSpace>()->setBounds(-M_PI, M_PI);
-    g_space->space_information->setup();
+    //ompl::base::StateSpacePtr ss (
+        //new amino::sgStateSpace (scenegraph, 7, names));
 
-    // set start and goal states
+    ompl::base::SpaceInformationPtr si(
+        new ompl::base::SpaceInformation(
+            ompl::base::StateSpacePtr(
+                new amino::sgStateSpace (scenegraph, 7, names))));
+    amino::sgStateSpace *ss = si->getStateSpace()->as<amino::sgStateSpace>();
+
+    // //g_space_info = new amino::sgSpaceInformation (scenegraph, 7, names);
+
+
+    // // // set validity checker
+    double q0[ss->config_count_all()];
+    AA_MEM_ZERO(q0, ss->config_count_all());
+    ss->allow_config(q0);
+
+
+    // g_checker = new amino::sgStateValidityChecker(g_space_info, q0);
+    si->setStateValidityChecker(
+        ompl::base::StateValidityCheckerPtr(new amino::sgStateValidityChecker(si.get(), q0)) );
+
+    si->setup();
+
+    // // // set start and goal states
     double q1[7] = {.05 * M_PI, // s0
                     -.25 * M_PI, // s1
                     0, // e0
@@ -139,21 +155,22 @@ static void motion_plan( const struct aa_rx_sg *sg)
                     .25*M_PI, // w1
                     0 // w2
     };
-    ompl::base::ScopedState<> start_state(g_space->space_information);
-    ompl::base::ScopedState<> goal_state(g_space->space_information);
-    g_space->fill_state(q0, start_state.get());
-    g_space->fill_state(q1, goal_state.get());
+    ompl::base::ScopedState<> start_state(si);
+    ompl::base::ScopedState<> goal_state(si);
+    ss->copy_state(q0, start_state.get());
+    ss->copy_state(q1, goal_state.get());
+
     //ompl::base::GoalState gs( g_space->space_information );
 
-    printf("check_start: %s\n", g_checker->isValid(start_state.get()) ? "yes" : "no" );
-    printf("check_goal: %s\n", g_checker->isValid(goal_state.get()) ? "yes" : "no" );
+    printf("check_start: %s\n", si->isValid(start_state.get()) ? "yes" : "no" );
+    printf("check_goal: %s\n", si->isValid(goal_state.get()) ? "yes" : "no" );
 
-    ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(g_space->space_information));
+    ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
     pdef->addStartState(start_state);
     pdef->setGoalState(goal_state);
 
-    //rxGoalSampleableRegion goal_sampler(si);
-    ompl::base::PlannerPtr planner(new ompl::geometric::SBL(g_space->space_information));
+    // //rxGoalSampleableRegion goal_sampler(si);
+    ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
     planner->setProblemDefinition(pdef);
     planner->solve(1.0);
 
@@ -164,17 +181,15 @@ static void motion_plan( const struct aa_rx_sg *sg)
         ompl::geometric::PathGeometric &path = static_cast<ompl::geometric::PathGeometric&>(*path0);
 
         g_n_path = path.getStateCount();
-        g_path = AA_NEW_AR( double, g_n_path * g_space->dim_all() );
+        g_path = AA_NEW_AR( double, g_n_path * ss->config_count_all() );
         std::vector< ompl::base::State *> &states = path.getStates();
         double *ptr = g_path;
-        for( auto itr = states.begin(); itr != states.end(); itr++, ptr += g_space->dim_all() )
+        for( auto itr = states.begin(); itr != states.end(); itr++, ptr += ss->config_count_all() )
         {
-            AA_MEM_CPY( ptr, q0, g_space->dim_all() );
-            g_space->state_set( *itr, ptr );
-            aa_dump_vec( stdout, ptr, g_space->dim_all() );
+            AA_MEM_CPY( ptr, q0, ss->config_count_all() );
+            ss->insert_state( *itr, ptr );
+            aa_dump_vec( stdout, ptr, ss->config_count_all() );
         }
-
-
         printf("solved\n");
     } else  {
         printf("failed\n");
@@ -252,8 +267,8 @@ int display( void *cx_, int updated, const struct timespec *now )
                        i1*dt, q1,
                        t, q );
     }
-    double qs[ g_space->dim_set() ];
-    g_space->state_get( q, qs );
+    //double qs[ g_space->config_count_set() ];
+    //g_space->state_get( q, qs );
 
 
     double *TF_rel = AA_MEM_REGION_LOCAL_NEW_N( double, 7*n );

@@ -40,124 +40,189 @@
 
 namespace amino {
 
-class rxSpace {
+
+class sgStateSpace : public ompl::base::RealVectorStateSpace {
 public:
-    rxSpace( const aa_rx_sg *sg_, size_t n_configs,
-             const char **config_names ) :
-        sg(sg_),
-        state_space(new ompl::base::RealVectorStateSpace(n_configs)),
-        space_information(new ompl::base::SpaceInformation(state_space)),
+    sgStateSpace( const aa_rx_sg *sg, size_t n_configs,
+                  const char **config_names ) :
+        ompl::base::RealVectorStateSpace(n_configs),
         ids(new aa_rx_config_id[n_configs]),
         allowed(aa_rx_cl_set_create(sg)),
-        cl(aa_rx_cl_create(sg)) {
+        scene_graph(sg) {
 
         // Fill indices
         aa_rx_sg_config_indices( sg, n_configs, config_names, ids );
 
-        // Get allowed collisions
-        size_t n_q = dim_all();
-        double q[n_q];
-        AA_MEM_ZERO(q, n_q); // TODO: give good config
-        allow_config(q);
+        // TODO: get actual bounds
+        setBounds(-M_PI, M_PI);
+
+        // // allowed
+        // size_t n_q = config_count_all();
+        // double q[n_q];
+        // AA_MEM_ZERO(q, n_q); // TODO: give good config
+        // allow_config(q);
     }
 
-    ~rxSpace() {
-        delete [] ids;
+    virtual ~sgStateSpace() {
+        delete[] ids;
         aa_rx_cl_set_destroy(allowed);
-        aa_rx_cl_destroy(cl);
+    }
+
+    const aa_rx_sg *get_scene_graph() const {
+        return scene_graph;
+    }
+
+    size_t config_count_all() const {
+        return aa_rx_sg_config_count(get_scene_graph());
+    }
+    size_t config_count_subset() const {
+        return getDimension();
+    }
+
+    size_t frame_count() const {
+        return aa_rx_sg_frame_count(get_scene_graph());
     }
 
     void allow_config( double *q ) {
         size_t n_f = frame_count();
+        size_t n_q = config_count_all();
+
         double TF_rel[7*n_f];
         double TF_abs[7*n_f];
-        aa_rx_sg_tf(sg, dim_all(), q,
+        aa_rx_sg_tf(scene_graph, n_q, q,
                     n_f,
                     TF_rel, 7,
                     TF_abs, 7 );
-        aa_rx_cl_check( cl, n_f, TF_abs, 7, allowed );
+
+        struct aa_rx_cl *cl = aa_rx_cl_create(scene_graph);
+        aa_rx_cl_check(cl, n_f, TF_abs, 7, allowed);
+        aa_rx_cl_destroy(cl);
     }
 
-    size_t dim_set() const {
-        return state_space->getDimension();
-    }
-    size_t dim_all() const {
-        return aa_rx_sg_config_count(sg);
-    }
-
-    size_t frame_count() const {
-        return aa_rx_sg_frame_count(sg);
-    }
-
-    void state_get( const double *q_all, double *q_set ) const {
-        aa_rx_sg_config_get( sg, dim_all(), dim_set(),
+    void extract_state( const double *q_all, double *q_set ) const {
+        aa_rx_sg_config_get( scene_graph, config_count_all(), config_count_subset(),
                              ids, q_all, q_set );
     }
 
-    void state_get( const double *q_all, ompl::base::State *state_ ) const {
+    void extract_state( const double *q_all, ompl::base::State *state_ ) const {
         ompl::base::RealVectorStateSpace::StateType *state
             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
-        state_get( q_all, state->values );
+        extract_state( q_all, state->values );
     }
 
-    void state_set( const double *q_set, double *q_all ) const {
-        aa_rx_sg_config_set( sg, dim_all(), dim_set(),
+    void insert_state( const double *q_set, double *q_all ) const {
+        aa_rx_sg_config_set( scene_graph, config_count_all(), config_count_subset(),
                              ids, q_set, q_all );
     }
 
-    void state_set( const ompl::base::State *state_, double *q_all ) const {
+    void insert_state( const ompl::base::State *state_, double *q_all ) const {
         const ompl::base::RealVectorStateSpace::StateType *state
             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
-        state_set( state->values, q_all );
+        insert_state( state->values, q_all );
     }
 
-    void fill_state( const double *q_set, const ompl::base::State *state_ ) {
+    void copy_state( const double *q_set, const ompl::base::State *state_ ) {
         const ompl::base::RealVectorStateSpace::StateType *state
             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
-        std::copy( q_set, q_set + dim_set(), state->values );
+        std::copy( q_set, q_set + config_count_subset(), state->values );
     }
 
-    const aa_rx_sg *sg;
-    ompl::base::StateSpacePtr state_space;
-    ompl::base::SpaceInformationPtr space_information;
+
+    const aa_rx_sg *scene_graph;
     aa_rx_config_id *ids;
-    struct aa_rx_cl *cl;
     struct aa_rx_cl_set *allowed;
 };
 
-class rxStateValidityChecker : public ompl::base::StateValidityChecker {
+
+// class sgSpaceInformation : public ompl::base::SpaceInformation {
+// public:
+//     sgSpaceInformation( const aa_rx_sg *sg, size_t n_configs,
+//                   const char **config_names ) :
+//         ompl::base::SpaceInformation(
+//             ompl::base::StateSpacePtr(
+//                 new amino::sgStateSpace (sg, n_configs, config_names)))
+//         { }
+
+//     sgStateSpace *getSgStateSpace() const {
+//         return static_cast<sgStateSpace*> (getStateSpace()->as<sgStateSpace>() );
+//     }
+
+//     const aa_rx_sg *get_scene_graph() const {
+//         return getSgStateSpace()->scene_graph;
+//     }
+
+//     size_t config_count_all() const {
+//         return aa_rx_sg_config_count(get_scene_graph());
+//     }
+//     size_t config_count_subset() const {
+//         return getSgStateSpace()->getDimension();
+//     }
+
+//     size_t frame_count() const {
+//         return aa_rx_sg_frame_count(get_scene_graph());
+//     }
+
+
+//     void extract_state( const double *q_all, double *q_set ) const {
+//         getSgStateSpace()->extract_state( q_all, q_set );
+//     }
+
+//     void extract_state( const double *q_all, ompl::base::State *state_ ) const {
+//         getSgStateSpace()->extract_state( q_all, state_ );
+//     }
+
+//     void insert_state( const double *q_set, double *q_all ) const {
+//         getSgStateSpace()->insert_state( q_set, q_all );
+//     }
+
+//     void insert_state( const ompl::base::State *state_, double *q_all ) const {
+//         getSgStateSpace()->insert_state( state_, q_all );
+//     }
+
+//     void copy_state( const double *q_set, const ompl::base::State *state_ ) {
+//         getSgStateSpace()->copy_state( q_set, state_ );
+//     }
+
+// };
+
+class sgStateValidityChecker : public ompl::base::StateValidityChecker {
 public:
-    rxStateValidityChecker(const rxSpace *space_, const double *q_initial ) :
-        ompl::base::StateValidityChecker(space_->space_information),
-        space(space_) {
-
-        q_all = new double[space->dim_all()];
-        std::copy( q_initial, q_initial + space->dim_all(), q_all );
-
+    sgStateValidityChecker(ompl::base::SpaceInformation *si_,
+                           const double *q_initial ) :
+        ompl::base::StateValidityChecker(si_) {
+        size_t n_all = getStateSpace()->config_count_all();
+        q_all = new double[n_all];
+        std::copy( q_initial, q_initial + n_all, q_all );
     }
+
+    sgStateSpace *getStateSpace() const {
+        return static_cast<sgStateSpace*> (si_->getStateSpace()->as<sgStateSpace>() );
+    }
+
     virtual bool isValid(const ompl::base::State *state) const
     {
-        size_t n_q = space->dim_all();
-        size_t n_s = space->dim_set();
+        sgStateSpace *space = getStateSpace();
+        size_t n_q = space->config_count_all();
+        size_t n_s = space->config_count_subset();
         size_t n_f = space->frame_count();
 
         // Set configs
 
         double q[n_q];
         std::copy( q_all, q_all + n_q, q );
-        space->state_set(state, q);
+        space->insert_state(state, q);
         //aa_dump_vec(stdout, q, n_q);
 
         // Find TFs
         double TF_rel[7*n_f];
         double TF_abs[7*n_f];
-        aa_rx_sg_tf( space->sg, n_q, q,
+        aa_rx_sg_tf( space->scene_graph, n_q, q,
                      n_f,
                      TF_rel, 7,
                      TF_abs, 7 );
 
         // check collision
-        struct aa_rx_cl *cl = aa_rx_cl_create( space->sg );
+        struct aa_rx_cl *cl = aa_rx_cl_create( space->scene_graph );
         aa_rx_cl_allow_set( cl, space->allowed );
         int col = aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
         aa_rx_cl_destroy(cl);
@@ -166,9 +231,94 @@ public:
         return valid;
     }
 
-    const rxSpace *space;
     double *q_all;
 };
+
+
+// class rxSpace {
+// public:
+//     rxSpace( const aa_rx_sg *sg_, size_t n_configs,
+//              const char **config_names ) :
+//         sg(sg_),
+//         state_space(new ompl::base::RealVectorStateSpace(n_configs)),
+//         space_information(new ompl::base::SpaceInformation(state_space)),
+//         ids(new aa_rx_config_id[n_configs]),
+//         allowed(aa_rx_cl_set_create(sg)),
+//         cl(aa_rx_cl_create(sg)) {
+
+//         // Fill indices
+//         aa_rx_sg_config_indices( sg, n_configs, config_names, ids );
+
+//         // Get allowed collisions
+//         size_t n_q = dim_all();
+//         double q[n_q];
+//         AA_MEM_ZERO(q, n_q); // TODO: give good config
+//         allow_config(q);
+//     }
+
+//     ~rxSpace() {
+//         delete [] ids;
+//         aa_rx_cl_set_destroy(allowed);
+//         aa_rx_cl_destroy(cl);
+//     }
+
+//     void allow_config( double *q ) {
+//         size_t n_f = frame_count();
+//         double TF_rel[7*n_f];
+//         double TF_abs[7*n_f];
+//         aa_rx_sg_tf(sg, dim_all(), q,
+//                     n_f,
+//                     TF_rel, 7,
+//                     TF_abs, 7 );
+//         aa_rx_cl_check( cl, n_f, TF_abs, 7, allowed );
+//     }
+
+//     size_t dim_set() const {
+//         return state_space->getDimension();
+//     }
+//     size_t dim_all() const {
+//         return aa_rx_sg_config_count(sg);
+//     }
+
+//     size_t frame_count() const {
+//         return aa_rx_sg_frame_count(sg);
+//     }
+
+//     void state_get( const double *q_all, double *q_set ) const {
+//         aa_rx_sg_config_get( sg, dim_all(), dim_set(),
+//                              ids, q_all, q_set );
+//     }
+
+//     void state_get( const double *q_all, ompl::base::State *state_ ) const {
+//         ompl::base::RealVectorStateSpace::StateType *state
+//             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
+//         state_get( q_all, state->values );
+//     }
+
+//     void state_set( const double *q_set, double *q_all ) const {
+//         aa_rx_sg_config_set( sg, dim_all(), dim_set(),
+//                              ids, q_set, q_all );
+//     }
+
+//     void state_set( const ompl::base::State *state_, double *q_all ) const {
+//         const ompl::base::RealVectorStateSpace::StateType *state
+//             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
+//         state_set( state->values, q_all );
+//     }
+
+//     void fill_state( const double *q_set, const ompl::base::State *state_ ) {
+//         const ompl::base::RealVectorStateSpace::StateType *state
+//             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
+//         std::copy( q_set, q_set + dim_set(), state->values );
+//     }
+
+//     const aa_rx_sg *sg;
+//     ompl::base::StateSpacePtr state_space;
+//     ompl::base::SpaceInformationPtr space_information;
+//     aa_rx_config_id *ids;
+//     struct aa_rx_cl *cl;
+//     struct aa_rx_cl_set *allowed;
+// };
 }
 
 #endif /*AMINO_RX_SCENE_OMPL_H*/
