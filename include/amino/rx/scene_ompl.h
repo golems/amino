@@ -44,6 +44,8 @@ template<class SpaceType>
 class TypedSpaceInformation : public ::ompl::base::SpaceInformation {
 public:
 
+    /*--- Type Definitions ---*/
+
     /**
      * The actual type of states in the space.
      */
@@ -64,12 +66,17 @@ public:
      */
     typedef boost::shared_ptr< TypedSpaceInformation<SpaceType> > Ptr;
 
+
+    /*--- Constructor ---*/
+
     /**
      * Construct from shared pointer to the actual space.
      */
     TypedSpaceInformation( const SpacePtr &space ) :
         ::ompl::base::SpaceInformation(space)
         {}
+
+    /*--- Space Accessors ---*/
 
     /**
      * Get space pointer of the proper type, const.
@@ -87,12 +94,53 @@ public:
         return ptr->as<SpaceType>();
     }
 
+    /*--- State Memory Management ---*/
+
     /**
      * Allocate a state of the proper type.
      */
-    StateType * allocState () const {
-        return stateSpace_->allocState()->as<StateType>();
+    StateType * allocTypedState () const {
+        ompl::base::State *s = this->allocState();
+        return s->as<StateType>();
     }
+
+    /**
+     * Allocate memory for typed states in array
+     */
+    void allocTypedStates (std::vector<StateType *> &states) const {
+        allocStates(states);
+    }
+
+    /**
+     * Free a state of the proper type.
+     */
+    void freeTypedState ( StateType *state ) const {
+        freeState(state);
+    }
+
+    /**
+     * Free typed states in array
+     */
+    void freeTypedStates (std::vector<StateType *> &states) const {
+        freeStates(states);
+    }
+
+    /**
+     * Copy a state of the proper type.
+     */
+    void copyTypedState ( StateType *destination,
+                          const StateType *source ) const {
+        copyState(destination, source );
+    }
+
+    /**
+     * Clone a state of the proper type.
+     */
+    StateType * cloneTypedState ( const StateType *source ) const {
+        ompl::base::State *s = this->cloneState();
+        return s->as<StateType>();
+    }
+
 };
 
 
