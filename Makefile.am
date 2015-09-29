@@ -328,6 +328,16 @@ cl_test_LDADD = libamino.la libamino_cl.la
 
 endif # HAVE_FCL
 
+if HAVE_OMPL
+
+lib_LTLIBRARIES += libamino_planning.la
+libamino_planning_la_SOURCES = \
+	src/rx/scene_ompl.cpp
+libamino_planning_la_CFLAGS = $(OMPL_CFLAGS)
+libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS)
+libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
+
+endif # HAVE_OMPL
 
 
 # noinst_PROGRAMS += test_vec

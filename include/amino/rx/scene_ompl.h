@@ -38,6 +38,11 @@
 #ifndef AMINO_RX_SCENE_OMPL_H
 #define AMINO_RX_SCENE_OMPL_H
 
+
+#include <ompl/base/StateValidityChecker.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/ScopedState.h>
+
 namespace amino {
 
 template<class SpaceType>
@@ -149,7 +154,7 @@ class sgStateSpace : public ompl::base::RealVectorStateSpace {
 public:
     sgStateSpace( const aa_rx_sg *sg, size_t n_configs,
                   const char **config_names ) :
-        ompl::base::RealVectorStateSpace(n_configs),
+        ompl::base::RealVectorStateSpace((unsigned)n_configs),
         ids(new aa_rx_config_id[n_configs]),
         allowed(aa_rx_cl_set_create(sg)),
         scene_graph(sg) {
@@ -242,9 +247,9 @@ typedef TypedSpaceInformation<amino::sgStateSpace> sgSpaceInformation;
 
 class sgStateValidityChecker : public ompl::base::StateValidityChecker {
 public:
-    sgStateValidityChecker(ompl::base::SpaceInformation *si_,
+    sgStateValidityChecker(ompl::base::SpaceInformation *si,
                            const double *q_initial ) :
-        ompl::base::StateValidityChecker(si_) {
+        ompl::base::StateValidityChecker(si) {
         size_t n_all = getStateSpace()->config_count_all();
         q_all = new double[n_all];
         std::copy( q_initial, q_initial + n_all, q_all );

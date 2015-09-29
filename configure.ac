@@ -214,9 +214,12 @@ AM_CONDITIONAL([HAVE_JAVAC],   [test "x$JAVAC" != x])
 
 AC_LANG([C])
 
-## GRAPHICS ##
 
-# OpenGL
+#######################
+## OPTIONAL PACKAGES ##
+#######################
+
+## OpenGL ##
 AC_ARG_WITH([opengl],
             [AS_HELP_STRING([--without-opengl], [Disable OpenGL support])],
             [],
@@ -236,18 +239,17 @@ AC_SUBST([GL_CFLAGS])
 AC_SUBST([GL_LIBS])
 AM_CONDITIONAL([HAVE_GL], [test "x$HAVE_GL" = xyes])
 
-dnl AC_SUBST([GLU_CFLAGS])
-dnl AC_SUBST([GLU_LIBS])
-dnl AM_CONDITIONAL([HAVE_GLU], [test "x$HAVE_GLU" = xyes])
-
-# SDL
+## SDL ##
 AC_ARG_WITH([sdl2],
             [AS_HELP_STRING([--without-sdl2], [Disable SDL2 support])],
             [],
-            [with_sdl2=$with_opengl])
+            [with_sdl2="$with_opengl"])
 
 HAVE_SDL2=disabled
 AS_IF([test "x$with_sdl2" = xyes], [
+  AS_IF([test "x$HAVE_GL" != xyes], [
+    AC_MSG_ERROR([SDL support requires OpenGL, but OpenGL not found])
+  ])
   PKG_CHECK_MODULES([SDL2],
                     [sdl2],
                     [HAVE_SDL2=yes])
@@ -262,7 +264,7 @@ AC_SUBST([SDL2_CFLAGS])
 AC_SUBST([SDL2_LIBS])
 AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
 
-# FCL
+## FCL ##
 AC_ARG_WITH([fcl],
             [AS_HELP_STRING([--without-fcl], [Disable support for the Flexible Collision Library (FCL)])],
             [],
@@ -273,16 +275,36 @@ AS_IF([test "x$with_fcl" = xyes], [
   PKG_CHECK_MODULES([FCL],
                     [fcl],
                     [HAVE_FCL=yes])
-# TODO: smartly check with we also need boost_system
-FCL_LIBS="$FCL_LIBS -lboost_system"
+  # TODO: smartly check with we also need boost_system
+  FCL_LIBS="$FCL_LIBS -lboost_system"
 ])
-
 AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])
 AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
 
+## OMPL ##
+AC_ARG_WITH([ompl],
+            [AS_HELP_STRING([--without-ompl], [Disable support for the Open Motion Planning Library (OMPL)])],
+            [],
+            [with_ompl="$with_fcl"])
 
-# Spacenav
+HAVE_OMPL=disabled
+AS_IF([test "x$with_ompl" = xyes], [
+  AS_IF([test "x$HAVE_FCL" != xyes], [
+    AC_MSG_ERROR([OMPL support requires FCL, but FCL not found])
+  ])
+  PKG_CHECK_MODULES([OMPL],
+                    [ompl],
+                    [HAVE_OMPL=yes])
+  # TODO: smartly check with we also need boost_system
+  OMPL_LIBS="$OMPL_LIBS = -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization"
+])
+
+AC_SUBST([OMPL_CFLAGS])
+AC_SUBST([OMPL_LIBS])
+AM_CONDITIONAL([HAVE_OMPL], [test "x$HAVE_OMPL" = xyes])
+
+## Spacenav ##
 AC_ARG_WITH([spacenav],
             [AS_HELP_STRING([--without-spacenav], [Disable support for 3D Connexion space navigator])],
             [],
@@ -290,15 +312,16 @@ AC_ARG_WITH([spacenav],
 
 HAVE_SPACENAV=disabled
 AS_IF([test "x$with_spacenave" != xno], [
-AC_CHECK_HEADERS([spnav.h], [HAVE_SPACENAV=yes], [HAVE_SPACENAV=no])
-
-AC_SEARCH_LIBS([spnav_open],[spnav])
+  AC_CHECK_HEADERS([spnav.h], [HAVE_SPACENAV=yes], [HAVE_SPACENAV=no])
+  AC_SEARCH_LIBS([spnav_open],[spnav])
 ])
 
 AM_CONDITIONAL([HAVE_SPACENAV], [test "x$HAVE_SPACENAV" = xyes])
 
 
+#############
 ## SUMMARY ##
+#############
 AC_MSG_NOTICE([===============================])
 AC_MSG_NOTICE([= AMINO CONFIGURATION SUMMARY =])
 AC_MSG_NOTICE([===============================])
@@ -318,6 +341,7 @@ AC_MSG_NOTICE([Use OpenGL:        $with_opengl])
 AC_MSG_NOTICE([Use SDL2:          $HAVE_SDL2])
 AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
 AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
+AC_MSG_NOTICE([Use OMPL:          $HAVE_OMPL])
 
 
 AS_IF([test "x$CC" = "x"],

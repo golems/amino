@@ -1,0 +1,74 @@
+/* -*- mode: C++; c-basic-offset: 4; -*- */
+/* ex: set shiftwidth=4 tabstop=4 expandtab: */
+/*
+ * Copyright (c) 2015, Rice University
+ * All rights reserved.
+ *
+ * Author(s): Neil T. Dantam <ntd@rice.edu>
+ *
+ *   Redistribution and use in source and binary forms, with or
+ *   without modification, are permitted provided that the following
+ *   conditions are met:
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above
+ *     copyright notice, this list of conditions and the following
+ *     disclaimer in the documentation and/or other materials provided
+ *     with the distribution.
+ *   * Neither the name of copyright holder the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+ *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ *   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ *   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ *   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ *   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+ *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *   POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+
+#include "amino.h"
+#include "amino/rx/rxtype.h"
+#include "amino/rx/scenegraph.h"
+#include "amino/rx/scenegraph_internal.h"
+#include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_geom_internal.h"
+#include "amino/rx/scene_collision.h"
+#include "amino/rx/scene_planning.h"
+
+#include "amino/rx/scene_ompl.h"
+
+struct aa_rx_mp;
+
+AA_API struct aa_rx_mp*
+aa_rx_mp_create( const aa_rx_sg *scene_graph,
+                 size_t n_config,
+                 const char **config_names,
+                 struct aa_rx_mp_opt *opt);
+
+AA_API void
+aa_rx_mp_destroy( struct aa_rx_mp *mp );
+
+AA_API void
+aa_rx_mp_set_start( struct aa_rx_mp *mp,
+                    size_t n_all,
+                    double *q_all );
+
+AA_API void
+aa_rx_mp_set_goal( struct aa_rx_mp *mp,
+                   size_t n_q,
+                   double *q_subset);
+
+AA_API int
+aa_rx_mp_plan( struct aa_rx_mp *mp,
+               size_t *n_path,
+               double **p_path_all );
