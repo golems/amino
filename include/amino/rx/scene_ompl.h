@@ -40,6 +40,62 @@
 
 namespace amino {
 
+template<class SpaceType>
+class TypedSpaceInformation : public ::ompl::base::SpaceInformation {
+public:
+
+    /**
+     * The actual type of states in the space.
+     */
+    typedef typename SpaceType::StateType StateType;
+
+    /**
+     * The actual type for a Scoped State.
+     */
+    typedef ::ompl::base::ScopedState<SpaceType> ScopedStateType;
+
+    /**
+     * Shared Pointer to the actual type of the space.
+     */
+    typedef boost::shared_ptr<SpaceType> SpacePtr;
+
+    /**
+     * Shared pointer to the typed space.
+     */
+    typedef boost::shared_ptr< TypedSpaceInformation<SpaceType> > Ptr;
+
+    /**
+     * Construct from shared pointer to the actual space.
+     */
+    TypedSpaceInformation( const SpacePtr &space ) :
+        ::ompl::base::SpaceInformation(space)
+        {}
+
+    /**
+     * Get space pointer of the proper type, const.
+     */
+    const SpaceType *getTypedStateSpace() const {
+        const ::ompl::base::StateSpacePtr &ptr = getStateSpace();
+        return ptr->as<SpaceType>();
+    }
+
+    /**
+     * Get space pointer of the proper type.
+     */
+    SpaceType *getTypedStateSpace() {
+        const ::ompl::base::StateSpacePtr &ptr = getStateSpace();
+        return ptr->as<SpaceType>();
+    }
+
+    /**
+     * Allocate a state of the proper type.
+     */
+    StateType * allocState () const {
+        return stateSpace_->allocState()->as<StateType>();
+    }
+};
+
+
 
 class sgStateSpace : public ompl::base::RealVectorStateSpace {
 public:
@@ -133,57 +189,8 @@ public:
     struct aa_rx_cl_set *allowed;
 };
 
+typedef TypedSpaceInformation<amino::sgStateSpace> sgSpaceInformation;
 
-// class sgSpaceInformation : public ompl::base::SpaceInformation {
-// public:
-//     sgSpaceInformation( const aa_rx_sg *sg, size_t n_configs,
-//                   const char **config_names ) :
-//         ompl::base::SpaceInformation(
-//             ompl::base::StateSpacePtr(
-//                 new amino::sgStateSpace (sg, n_configs, config_names)))
-//         { }
-
-//     sgStateSpace *getSgStateSpace() const {
-//         return static_cast<sgStateSpace*> (getStateSpace()->as<sgStateSpace>() );
-//     }
-
-//     const aa_rx_sg *get_scene_graph() const {
-//         return getSgStateSpace()->scene_graph;
-//     }
-
-//     size_t config_count_all() const {
-//         return aa_rx_sg_config_count(get_scene_graph());
-//     }
-//     size_t config_count_subset() const {
-//         return getSgStateSpace()->getDimension();
-//     }
-
-//     size_t frame_count() const {
-//         return aa_rx_sg_frame_count(get_scene_graph());
-//     }
-
-
-//     void extract_state( const double *q_all, double *q_set ) const {
-//         getSgStateSpace()->extract_state( q_all, q_set );
-//     }
-
-//     void extract_state( const double *q_all, ompl::base::State *state_ ) const {
-//         getSgStateSpace()->extract_state( q_all, state_ );
-//     }
-
-//     void insert_state( const double *q_set, double *q_all ) const {
-//         getSgStateSpace()->insert_state( q_set, q_all );
-//     }
-
-//     void insert_state( const ompl::base::State *state_, double *q_all ) const {
-//         getSgStateSpace()->insert_state( state_, q_all );
-//     }
-
-//     void copy_state( const double *q_set, const ompl::base::State *state_ ) {
-//         getSgStateSpace()->copy_state( q_set, state_ );
-//     }
-
-// };
 
 class sgStateValidityChecker : public ompl::base::StateValidityChecker {
 public:

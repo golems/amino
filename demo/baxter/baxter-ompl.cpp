@@ -112,7 +112,6 @@ static void motion_plan( const struct aa_rx_sg *sg)
     //for( size_t i = 0; i < 7; i ++ ) (start_state)[i] = .1;
 
     // Initialize Spaces
-
     const char *names[] = {"right_s0",
                            "right_s1",
                            "right_e0",
@@ -121,18 +120,11 @@ static void motion_plan( const struct aa_rx_sg *sg)
                            "right_w1",
                            "right_w2"};
 
-
-    //ompl::base::StateSpacePtr ss (
-        //new amino::sgStateSpace (scenegraph, 7, names));
-
-    ompl::base::SpaceInformationPtr si(
-        new ompl::base::SpaceInformation(
-            ompl::base::StateSpacePtr(
+    amino::sgSpaceInformation::Ptr si(
+        new amino::sgSpaceInformation(
+            amino::sgSpaceInformation::SpacePtr(
                 new amino::sgStateSpace (scenegraph, 7, names))));
-    amino::sgStateSpace *ss = si->getStateSpace()->as<amino::sgStateSpace>();
-
-    // //g_space_info = new amino::sgSpaceInformation (scenegraph, 7, names);
-
+    amino::sgStateSpace *ss = si->getTypedStateSpace();
 
     // // // set validity checker
     double q0[ss->config_count_all()];
@@ -155,19 +147,23 @@ static void motion_plan( const struct aa_rx_sg *sg)
                     .25*M_PI, // w1
                     0 // w2
     };
-    ompl::base::ScopedState<> start_state(si);
-    ompl::base::ScopedState<> goal_state(si);
-    ss->copy_state(q0, start_state.get());
-    ss->copy_state(q1, goal_state.get());
 
-    //ompl::base::GoalState gs( g_space->space_information );
-
-    printf("check_start: %s\n", si->isValid(start_state.get()) ? "yes" : "no" );
-    printf("check_goal: %s\n", si->isValid(goal_state.get()) ? "yes" : "no" );
 
     ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
-    pdef->addStartState(start_state);
-    pdef->setGoalState(goal_state);
+    {
+        amino::sgSpaceInformation::ScopedStateType start_state(si);
+        amino::sgSpaceInformation::ScopedStateType goal_state(si);
+        //ompl::base::ScopedState<> goal_state(si);
+        ss->copy_state(q0, start_state.get());
+        ss->copy_state(q1, goal_state.get());
+
+        printf("check_start: %s\n", si->isValid(start_state.get()) ? "yes" : "no" );
+        printf("check_goal: %s\n", si->isValid(goal_state.get()) ? "yes" : "no" );
+
+        pdef->addStartState(start_state);
+        pdef->setGoalState(goal_state);
+    }
+
 
     // //rxGoalSampleableRegion goal_sampler(si);
     ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
@@ -175,6 +171,7 @@ static void motion_plan( const struct aa_rx_sg *sg)
     planner->solve(1.0);
 
     if (pdef->hasSolution())
+
     {
         // Fuck type safety, apparently
         const ompl::base::PathPtr &path0 = pdef->getSolutionPath();
@@ -194,7 +191,6 @@ static void motion_plan( const struct aa_rx_sg *sg)
     } else  {
         printf("failed\n");
     }
-
 }
 
 
