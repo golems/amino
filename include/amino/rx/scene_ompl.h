@@ -42,6 +42,7 @@
 #include <ompl/base/StateValidityChecker.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/ScopedState.h>
+#include <ompl/base/ProblemDefinition.h>
 
 namespace amino {
 
@@ -295,90 +296,23 @@ public:
 };
 
 
-// class rxSpace {
-// public:
-//     rxSpace( const aa_rx_sg *sg_, size_t n_configs,
-//              const char **config_names ) :
-//         sg(sg_),
-//         state_space(new ompl::base::RealVectorStateSpace(n_configs)),
-//         space_information(new ompl::base::SpaceInformation(state_space)),
-//         ids(new aa_rx_config_id[n_configs]),
-//         allowed(aa_rx_cl_set_create(sg)),
-//         cl(aa_rx_cl_create(sg)) {
+} /* namespace amino */
 
-//         // Fill indices
-//         aa_rx_sg_config_indices( sg, n_configs, config_names, ids );
+struct aa_rx_mp {
+    aa_rx_mp( const struct aa_rx_sg *sg,
+              size_t n,
+              const char **names ) :
+        space_information(
+            new amino::sgSpaceInformation(
+                amino::sgSpaceInformation::SpacePtr(
+                    new amino::sgStateSpace (sg, n, names)))),
+        problem_definition(new ompl::base::ProblemDefinition(space_information))
+        { }
 
-//         // Get allowed collisions
-//         size_t n_q = dim_all();
-//         double q[n_q];
-//         AA_MEM_ZERO(q, n_q); // TODO: give good config
-//         allow_config(q);
-//     }
+    amino::sgSpaceInformation::Ptr space_information;
+    ompl::base::ProblemDefinitionPtr problem_definition;
+};
 
-//     ~rxSpace() {
-//         delete [] ids;
-//         aa_rx_cl_set_destroy(allowed);
-//         aa_rx_cl_destroy(cl);
-//     }
 
-//     void allow_config( double *q ) {
-//         size_t n_f = frame_count();
-//         double TF_rel[7*n_f];
-//         double TF_abs[7*n_f];
-//         aa_rx_sg_tf(sg, dim_all(), q,
-//                     n_f,
-//                     TF_rel, 7,
-//                     TF_abs, 7 );
-//         aa_rx_cl_check( cl, n_f, TF_abs, 7, allowed );
-//     }
-
-//     size_t dim_set() const {
-//         return state_space->getDimension();
-//     }
-//     size_t dim_all() const {
-//         return aa_rx_sg_config_count(sg);
-//     }
-
-//     size_t frame_count() const {
-//         return aa_rx_sg_frame_count(sg);
-//     }
-
-//     void state_get( const double *q_all, double *q_set ) const {
-//         aa_rx_sg_config_get( sg, dim_all(), dim_set(),
-//                              ids, q_all, q_set );
-//     }
-
-//     void state_get( const double *q_all, ompl::base::State *state_ ) const {
-//         ompl::base::RealVectorStateSpace::StateType *state
-//             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
-//         state_get( q_all, state->values );
-//     }
-
-//     void state_set( const double *q_set, double *q_all ) const {
-//         aa_rx_sg_config_set( sg, dim_all(), dim_set(),
-//                              ids, q_set, q_all );
-//     }
-
-//     void state_set( const ompl::base::State *state_, double *q_all ) const {
-//         const ompl::base::RealVectorStateSpace::StateType *state
-//             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
-//         state_set( state->values, q_all );
-//     }
-
-//     void fill_state( const double *q_set, const ompl::base::State *state_ ) {
-//         const ompl::base::RealVectorStateSpace::StateType *state
-//             = state_->as<ompl::base::RealVectorStateSpace::StateType>();
-//         std::copy( q_set, q_set + dim_set(), state->values );
-//     }
-
-//     const aa_rx_sg *sg;
-//     ompl::base::StateSpacePtr state_space;
-//     ompl::base::SpaceInformationPtr space_information;
-//     aa_rx_config_id *ids;
-//     struct aa_rx_cl *cl;
-//     struct aa_rx_cl_set *allowed;
-// };
-}
 
 #endif /*AMINO_RX_SCENE_OMPL_H*/

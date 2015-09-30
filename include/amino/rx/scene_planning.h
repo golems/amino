@@ -50,7 +50,7 @@ aa_rx_mp_opt_destroy( struct aa_rx_mp_opt *);
 struct aa_rx_mp;
 
 AA_API struct aa_rx_mp*
-aa_rx_mp_create( const aa_rx_sg *scene_graph,
+aa_rx_mp_create( const struct aa_rx_sg *scene_graph,
                  size_t n_config,
                  const char **config_names,
                  struct aa_rx_mp_opt *opt);
@@ -71,6 +71,7 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
+               double timeout,
                size_t *n_path,
                double **p_path_all );
 

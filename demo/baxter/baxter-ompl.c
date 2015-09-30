@@ -1,4 +1,4 @@
-/* -*- mode: C++; c-basic-offset: 4; -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
@@ -47,16 +47,6 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
-#include <ompl/base/StateValidityChecker.h>
-#include <ompl/base/goals/GoalSampleableRegion.h>
-#include <ompl/base/goals/GoalState.h>
-#include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <ompl/base/ProblemDefinition.h>
-#include <ompl/base/ScopedState.h>
-#include <ompl/base/Planner.h>
-#include <ompl/geometric/planners/sbl/SBL.h>
-#include <ompl/geometric/PathGeometric.h>
-
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
@@ -64,7 +54,7 @@
 #include "amino/rx/amino_sdl.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_collision.h"
-#include "amino/rx/scene_ompl.h"
+#include "amino/rx/scene_planning.h"
 
 const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 1000;
@@ -104,12 +94,6 @@ size_t g_n_path = 0;
 
 static void motion_plan( const struct aa_rx_sg *sg)
 {
-    // Motion Planning
-    //ompl::base::StateSpacePtr ss( new ompl::base::RealVectorStateSpace(7));
-    //ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(ss));
-
-    //ompl::base::ScopedState<> start_state(ss);
-    //for( size_t i = 0; i < 7; i ++ ) (start_state)[i] = .1;
 
     // Initialize Spaces
     const char *names[] = {"right_s0",
@@ -120,25 +104,15 @@ static void motion_plan( const struct aa_rx_sg *sg)
                            "right_w1",
                            "right_w2"};
 
-    amino::sgSpaceInformation::Ptr si(
-        new amino::sgSpaceInformation(
-            amino::sgSpaceInformation::SpacePtr(
-                new amino::sgStateSpace (scenegraph, 7, names))));
-    amino::sgStateSpace *ss = si->getTypedStateSpace();
 
-    // // // set validity checker
-    double q0[ss->config_count_all()];
-    AA_MEM_ZERO(q0, ss->config_count_all());
-    ss->allow_config(q0);
+    struct aa_rx_mp *mp = aa_rx_mp_create( scenegraph, 7, names, NULL );
 
+    size_t n_q = aa_rx_sg_config_count(scenegraph);
+    double q0[n_q];
+    AA_MEM_ZERO(q0, n_q);
+    aa_rx_mp_set_start( mp, n_q, q0);
 
-    // g_checker = new amino::sgStateValidityChecker(g_space_info, q0);
-    si->setStateValidityChecker(
-        ompl::base::StateValidityCheckerPtr(new amino::sgStateValidityChecker(si.get(), q0)) );
-
-    si->setup();
-
-    // // // set start and goal states
+    // set start and goal states
     double q1[7] = {.05 * M_PI, // s0
                     -.25 * M_PI, // s1
                     0, // e0
@@ -147,49 +121,15 @@ static void motion_plan( const struct aa_rx_sg *sg)
                     .25*M_PI, // w1
                     0 // w2
     };
+    aa_rx_mp_set_goal( mp, 7, q1 );
 
-
-    ompl::base::ProblemDefinitionPtr pdef(new ompl::base::ProblemDefinition(si));
-    {
-        amino::sgSpaceInformation::ScopedStateType start_state(si);
-        amino::sgSpaceInformation::ScopedStateType goal_state(si);
-        //ompl::base::ScopedState<> goal_state(si);
-        ss->copy_state(q0, start_state.get());
-        ss->copy_state(q1, goal_state.get());
-
-        printf("check_start: %s\n", si->isValid(start_state.get()) ? "yes" : "no" );
-        printf("check_goal: %s\n", si->isValid(goal_state.get()) ? "yes" : "no" );
-
-        pdef->addStartState(start_state);
-        pdef->setGoalState(goal_state);
-    }
-
-
-    // //rxGoalSampleableRegion goal_sampler(si);
-    ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
-    planner->setProblemDefinition(pdef);
-    planner->solve(1.0);
-
-    if (pdef->hasSolution())
-
-    {
-        // Fuck type safety, apparently
-        const ompl::base::PathPtr &path0 = pdef->getSolutionPath();
-        ompl::geometric::PathGeometric &path = static_cast<ompl::geometric::PathGeometric&>(*path0);
-
-        g_n_path = path.getStateCount();
-        g_path = AA_NEW_AR( double, g_n_path * ss->config_count_all() );
-        std::vector< ompl::base::State *> &states = path.getStates();
-        double *ptr = g_path;
-        for( auto itr = states.begin(); itr != states.end(); itr++, ptr += ss->config_count_all() )
-        {
-            AA_MEM_CPY( ptr, q0, ss->config_count_all() );
-            ss->insert_state( *itr, ptr );
-            aa_dump_vec( stdout, ptr, ss->config_count_all() );
-        }
-        printf("solved\n");
-    } else  {
-        printf("failed\n");
+    // plan
+    int r = aa_rx_mp_plan( mp, 5.0,
+                           &g_n_path,
+                           &g_path );
+    if( r < 0 ) {
+        fprintf(stderr, "Planning failed!\n");
+        exit(EXIT_FAILURE);
     }
 }
 
