@@ -369,6 +369,12 @@ tf_mod.f90: src/tff.F90 # src/mac/aa_tf_euler.f90
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 
+
+doc/manual/scenegraph.html: doc/manual/scenegraph.org org-compile.el
+	emacs --batch --quick \
+	--load org-compile.el       \
+	--eval '(golems-org-emit "$<" "scenegraph.html")'
+
 clean-local:
 	-rm -rf debian/tmp                  \
 		debian/files                \

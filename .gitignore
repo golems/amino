@@ -104,3 +104,4 @@ amino*.tar.gz
 /demo/baxter/baxter-simple
 /demo/baxter/scene.c
 /demo/baxter/baxter-ompl
+/doc/manual/scenegraph.html
