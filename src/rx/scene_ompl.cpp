@@ -134,7 +134,8 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
             //AA_MEM_CPY( ptr, q0, ss->config_count_all() );
             // TODO: Copy initial all-config state
             AA_MEM_ZERO( ptr, ss->config_count_all() );
-            ss->insert_state( *itr, ptr );
+            amino::sgSpaceInformation::StateType *state = amino::sgSpaceInformation::state_as(*itr);
+            ss->insert_state( state, ptr );
             //aa_dump_vec( stdout, ptr, ss->config_count_all() );
         }
         return 0;

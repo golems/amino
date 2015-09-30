@@ -46,11 +46,16 @@
 
 namespace amino {
 
-template<class SpaceType>
+template<class SpaceType_>
 class TypedSpaceInformation : public ::ompl::base::SpaceInformation {
 public:
 
     /*--- Type Definitions ---*/
+
+    /**
+     * The actual type of the state space
+     */
+    typedef SpaceType_ SpaceType;
 
     /**
      * The actual type of states in the space.
@@ -147,6 +152,46 @@ public:
         return s->as<StateType>();
     }
 
+    static StateType * state_as ( ompl::base::State *s ) {
+        return s->as<StateType>();
+    }
+
+    static const StateType * state_as( const ompl::base::State *s ) {
+        return s->as<StateType>();
+    }
+
+};
+
+template <class SpaceType_>
+class TypedStateValidityChecker : public ompl::base::StateValidityChecker {
+public:
+
+    typedef SpaceType_ SpaceType;
+    typedef TypedSpaceInformation<SpaceType> SpaceInformationType;
+
+    TypedStateValidityChecker(SpaceInformationType *si) :
+        ompl::base::StateValidityChecker(si) { }
+
+    TypedStateValidityChecker(const typename SpaceInformationType::Ptr si) :
+        ompl::base::StateValidityChecker(si) { }
+
+    SpaceInformationType *getTypedSpaceInformation() const {
+        return static_cast<SpaceInformationType*>(si_);
+    }
+
+    SpaceType *getTypedStateSpace() const {
+        return getTypedSpaceInformation()->getTypedStateSpace();
+    }
+
+    static typename SpaceType::StateType *
+    state_as ( ompl::base::State *s ) {
+        return SpaceInformationType::state_as(s);
+    }
+
+    static const typename SpaceType::StateType *
+    state_as( const ompl::base::State *s ) {
+        return SpaceInformationType::state_as(s);
+    }
 };
 
 
@@ -214,9 +259,8 @@ public:
                              ids, q_all, q_set );
     }
 
-    void extract_state( const double *q_all, ompl::base::State *state_ ) const {
-        ompl::base::RealVectorStateSpace::StateType *state
-            = state_->as<ompl::base::RealVectorStateSpace::StateType>();
+    void extract_state( const double *q_all, StateType *state_ ) const {
+        ompl::base::RealVectorStateSpace::StateType *state = state_->as<StateType>();
         extract_state( q_all, state->values );
     }
 
@@ -225,15 +269,13 @@ public:
                              ids, q_set, q_all );
     }
 
-    void insert_state( const ompl::base::State *state_, double *q_all ) const {
-        const ompl::base::RealVectorStateSpace::StateType *state
-            = state_->as<ompl::base::RealVectorStateSpace::StateType>();
+    void insert_state( const StateType *state_, double *q_all ) const {
+        const ompl::base::RealVectorStateSpace::StateType *state = state_->as<StateType>();
         insert_state( state->values, q_all );
     }
 
-    void copy_state( const double *q_set, const ompl::base::State *state_ ) {
-        const ompl::base::RealVectorStateSpace::StateType *state
-            = state_->as<ompl::base::RealVectorStateSpace::StateType>();
+    void copy_state( const double *q_set, StateType *state_ ) {
+        ompl::base::RealVectorStateSpace::StateType *state = state_->as<StateType>();
         std::copy( q_set, q_set + config_count_subset(), state->values );
     }
 
@@ -246,23 +288,24 @@ public:
 typedef TypedSpaceInformation<amino::sgStateSpace> sgSpaceInformation;
 
 
-class sgStateValidityChecker : public ompl::base::StateValidityChecker {
+class sgStateValidityChecker : public TypedStateValidityChecker<sgStateSpace> {
 public:
-    sgStateValidityChecker(ompl::base::SpaceInformation *si,
+    sgStateValidityChecker(sgSpaceInformation *si,
                            const double *q_initial ) :
-        ompl::base::StateValidityChecker(si) {
-        size_t n_all = getStateSpace()->config_count_all();
-        q_all = new double[n_all];
+        TypedStateValidityChecker(si),
+        q_all(new double[getTypedStateSpace()->config_count_all()]) {
+        size_t n_all = getTypedStateSpace()->config_count_all();
         std::copy( q_initial, q_initial + n_all, q_all );
     }
 
-    sgStateSpace *getStateSpace() const {
-        return static_cast<sgStateSpace*> (si_->getStateSpace()->as<sgStateSpace>() );
+    ~sgStateValidityChecker() {
+        delete [] q_all;
     }
 
-    virtual bool isValid(const ompl::base::State *state) const
+    virtual bool isValid(const ompl::base::State *state_) const
     {
-        sgStateSpace *space = getStateSpace();
+        const sgSpaceInformation::StateType *state = state_as(state_);
+        sgStateSpace *space = getTypedStateSpace();
         size_t n_q = space->config_count_all();
         size_t n_s = space->config_count_subset();
         size_t n_f = space->frame_count();
@@ -291,7 +334,6 @@ public:
         bool valid = !col;
         return valid;
     }
-
     double *q_all;
 };
 
