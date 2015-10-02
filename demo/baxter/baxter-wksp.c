@@ -58,11 +58,8 @@
 struct display_cx {
     const struct aa_gl_globals *globals;
     const struct aa_rx_sg *scenegraph;
+    const struct aa_rx_sg_sub *ssg;
     double *q;
-    aa_rx_config_id *chain_configs;
-    aa_rx_frame_id *chain_frames;
-    size_t n_ch_config;
-    size_t n_ch_frame;
     struct timespec first;
     struct timespec last;
 };
@@ -90,10 +87,8 @@ int display( void *cx_, int updated, const struct timespec *now )
 
     aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
     aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
-    aa_rx_frame_id n_c = cx->n_ch_config;
-    aa_rx_frame_id n_f = cx->n_ch_frame;
-
-
+    aa_rx_frame_id n_c = aa_rx_sg_sub_config_count(cx->ssg);
+    aa_rx_frame_id n_f = aa_rx_sg_sub_frame_count(cx->ssg);
 
     double TF_rel[7*n];
     double TF_abs[7*n];
@@ -106,18 +101,17 @@ int display( void *cx_, int updated, const struct timespec *now )
 
 
     double dx_r[6] = {0};
-    double dq_subset[cx->n_ch_config];
-    /* Feed forward only, enjoy the drift! */
+    size_t rows,cols;
+    aa_rx_sg_sub_jacobian_size( cx->ssg, &rows, &cols );
+    double dq_subset[n_c];
+    /* Feed forward velocity only, so some drift */
     dx_r[AA_TF_DX_V+2] = .5*cos(t*2*M_PI);
 
-    double J[n_c * 6], J_star[n_c * 6];
-    aa_rx_sg_chain_jacobian( scenegraph, n, TF_abs, 7,
-                             n_f, cx->chain_frames,
-                             n_c, cx->chain_configs,
-                             J, 6 );
+    double J[rows*cols], J_star[rows*cols];
+    aa_rx_sg_sub_jacobian( cx->ssg, n, TF_abs, 7,
+                           J, rows );
     // dx = J * dq
-    aa_la_dls( 6, n_c, 1e-6, J, dx_r, dq_subset );
-
+    aa_la_dls( rows, n_c, 1e-6, J, dx_r, dq_subset );
 
     /* Alternative damped-least squares computation */
     /* aa_la_dzdpinv( 6, n_c, 1e-2, J, J_star ); */
@@ -127,7 +121,7 @@ int display( void *cx_, int updated, const struct timespec *now )
     /* aa_la_xlsnp( 6, cx->n_ch_config, J, J_star, */
     /*              dx_r, dq_r, dq_subset ); */
 
-    aa_rx_frame_id f_ee = cx->chain_frames[n_f-1];
+    aa_rx_frame_id f_ee = aa_rx_sg_sub_frame(cx->ssg,n_f-1);
     double *E_ee = &TF_abs[7 * f_ee];
 
     // check
@@ -142,14 +136,15 @@ int display( void *cx_, int updated, const struct timespec *now )
 
 
     // integrate
-    double q_subset[cx->n_ch_config];
-    aa_rx_sg_config_get( scenegraph, m, cx->n_ch_config,
-                         cx->chain_configs, cx->q, q_subset );
-    for( size_t i = 0; i < cx->n_ch_config; i ++ ) {
+    double q_subset[n_c];
+    aa_rx_sg_config_get( scenegraph, m, n_c,
+                         aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset );
+    for( size_t i = 0; i < n_c; i ++ ) {
         q_subset[i] += dt*dq_subset[i];
     }
-    aa_rx_sg_config_set( scenegraph, m, cx->n_ch_config,
-                         cx->chain_configs, q_subset, cx->q );
+    aa_rx_sg_config_set( scenegraph, m, n_c,
+                         aa_rx_sg_sub_configs(cx->ssg),
+                         q_subset, cx->q );
 
 
 
@@ -183,15 +178,7 @@ int main(int argc, char *argv[])
     cx.q = AA_NEW0_AR(double, n_q );
 
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
-    cx.n_ch_frame = aa_rx_sg_chain_frame_count( scenegraph, AA_RX_FRAME_ROOT, tip_id);
-    cx.chain_frames = AA_NEW0_AR(aa_rx_frame_id, cx.n_ch_frame );
-    aa_rx_sg_chain_frames( scenegraph, AA_RX_FRAME_ROOT, tip_id,
-                           cx.n_ch_frame, cx.chain_frames );
-    cx.n_ch_config = aa_rx_sg_chain_config_count( scenegraph, cx.n_ch_frame, cx.chain_frames );
-    cx.chain_configs = AA_NEW0_AR(aa_rx_frame_id, cx.n_ch_config );
-    aa_rx_sg_chain_configs( scenegraph, cx.n_ch_frame, cx.chain_frames,
-                            cx.n_ch_config, cx.chain_configs );
-
+    cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
 
     // set start and goal states
     const char *names[] = {"right_s0",

@@ -35,59 +35,59 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_KIN_H
-#define AMINO_RX_SCENE_KIN_H
+#ifndef AMINO_RX_SCENE_KIN_INTERNAL_H
+#define AMINO_RX_SCENE_KIN_INTERNAL_H
+
+
+struct aa_rx_sg_sub
+{
+    const struct aa_rx_sg *scenegraph;
+    size_t frame_count;
+    aa_rx_frame_id *frames;
+
+    size_t config_count;
+    aa_rx_frame_id *configs;
+
+};
+
 
 /**
- * A scenegraph subset.
+ * Return the number of joint frames for the chain from root to tip.
  */
-struct aa_rx_sg_sub;
-
-AA_API void
-aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *sg );
-
-
 AA_API size_t
-aa_rx_sg_sub_config_count( const struct aa_rx_sg_sub *sg_sub );
+aa_rx_sg_chain_frame_count( const struct aa_rx_sg *sg,
+                            aa_rx_frame_id root, aa_rx_frame_id tip );
 
+/**
+ * Fill in the joint frame ids for the chain from root to tip.
+ */
+AA_API void
+aa_rx_sg_chain_frames( const struct aa_rx_sg *sg,
+                       aa_rx_frame_id root, aa_rx_frame_id tip,
+                       size_t n_frames, aa_rx_frame_id *chain_frames );
+
+/**
+ * Return the number of configuration variables in the chain.
+ */
 AA_API size_t
-aa_rx_sg_sub_frame_count( const struct aa_rx_sg_sub *sg_sub );
+aa_rx_sg_chain_config_count( const struct aa_rx_sg *sg,
+                             size_t n_frames, const aa_rx_frame_id  *chain_frames );
 
-AA_API aa_rx_config_id
-aa_rx_sg_sub_config( const struct aa_rx_sg_sub *sg_sub, size_t i );
-
-AA_API aa_rx_frame_id
-aa_rx_sg_sub_frame( const struct aa_rx_sg_sub *sg_sub, size_t i );
-
-AA_API aa_rx_config_id*
-aa_rx_sg_sub_configs( const struct aa_rx_sg_sub *sg_sub );
-
-AA_API aa_rx_frame_id*
-aa_rx_sg_sub_frames( const struct aa_rx_sg_sub *sg_sub );
-
-AA_API struct aa_rx_sg_sub *
-aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
-                       aa_rx_frame_id root, aa_rx_frame_id tip );
-
-
+/**
+ * Fill in the config ids for the chain over frames
+ */
 AA_API void
-aa_rx_sg_sub_jacobian_size( const struct aa_rx_sg_sub *ssg,
-                            size_t *rows, size_t *cols );
-
+aa_rx_sg_chain_configs( const struct aa_rx_sg *sg,
+                        size_t n_frames, const aa_rx_frame_id *chain_frames,
+                        size_t n_configs, aa_rx_config_id *chain_configs );
+/**
+ * Compute the Jacobian for a chain
+ */
 AA_API void
-aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
-                       size_t n_tf, const double *TF_abs, size_t ld_TF,
-                       double *J, size_t ld_J );
-
-/* struct aa_rx_sg_chain_ksol_opts */
-
-/* AA_API void */
-/* aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg *sg, */
-/*                          const struct  */
-/*                          size_t n_ids, aa_rx_frame_id *chain_frames, */
-/*                          size_t n_configs, aa_rx_frame_id *chain_configs , */
-/*                           ); */
-
-
+aa_rx_sg_chain_jacobian( const struct aa_rx_sg *sg,
+                         size_t n_tf, const double *TF_abs, size_t ld_TF,
+                         size_t n_ids, aa_rx_frame_id *chain_frames,
+                         size_t n_configs, aa_rx_frame_id *chain_configs ,
+                         double *J, size_t ld_J );
 
 #endif /*AMINO_RX_SCENE_KIN_H*/
