@@ -34,7 +34,6 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#define GL_GLEXT_PROTOTYPES
 
 #include <error.h>
 #include <stdio.h>
@@ -48,72 +47,46 @@
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/amino_gl.h"
 #include "amino/rx/amino_sdl.h"
-#include "amino/rx/scene_geom.h"
 
 #include "baxter-demo.h"
 
-
-struct display_cx {
-    const struct aa_gl_globals *globals;
-    const struct aa_rx_sg *scenegraph;
-};
-
-int display( void *cx_, int updated, const struct timespec *now )
+void baxter_demo_setup_window( struct aa_rx_sg *scenegraph,
+                               SDL_Window **window,
+                               SDL_GLContext *gContext,
+                               struct aa_gl_globals **globals )
 {
-    if( !updated ) return 0;
-    struct display_cx *cx = (struct display_cx*) cx_;
-    const struct aa_gl_globals *globals = cx->globals;
-    const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    baxter_demo_check_error("glClearColor");
+    aa_sdl_gl_window( "SDL Test",
+                      SDL_WINDOWPOS_UNDEFINED,
+                      SDL_WINDOWPOS_UNDEFINED,
+                      SCREEN_WIDTH,
+                      SCREEN_HEIGHT,
+                      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE,
+                      window, gContext);
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    baxter_demo_check_error("glClear");
+    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+    aa_rx_sg_gl_init(scenegraph);
 
-    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
-    double q[m];
-    AA_MEM_ZERO(q,m);
-    double TF_rel[7*n];
-    double TF_abs[7*n];
-    aa_rx_sg_tf(scenegraph, m, q,
-                n,
-                TF_rel, 7,
-                TF_abs, 7 );
-    aa_rx_sg_render( scenegraph, globals,
-                     (size_t)n, TF_abs, 7 );
-    return updated;
-}
+    // Initialize globals
+    *globals = aa_gl_globals_create();
+    // global camera
+    {
+        double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+        double eye[3] = {3,2,1.25};
+        double target[3] = {0,0,0};
+        double up[3] = {0,0,1};
+        aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
+        aa_gl_globals_set_camera_home( *globals, world_E_camera_home );
+        aa_gl_globals_home_camera( *globals );
 
-int main(int argc, char *argv[])
-{
-    (void)argc; (void)argv;
-    SDL_Window* window = NULL;
-    SDL_GLContext gContext = NULL;
-    struct aa_gl_globals *globals;
+    }
 
-    // Initialize scene graph
-    struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
-    aa_rx_sg_index(scenegraph);
+    // global lighting
+    {
+        double v_light[3] = {.5,1,5};
+        double ambient[3] = {.1,.1,.1};
+        aa_gl_globals_set_light_position( *globals, v_light );
+        aa_gl_globals_set_ambient(*globals, ambient);
+    }
 
-    // setup window
-    baxter_demo_setup_window( scenegraph,
-                              &window, &gContext, &globals );
-    aa_gl_globals_set_show_visual(globals, 1);
-    aa_gl_globals_set_show_collision(globals, 0);
-
-
-    // Display
-    struct display_cx dcx = { .globals=globals,
-                              .scenegraph=scenegraph };
-    aa_sdl_display_loop( window, globals,
-                         display,
-                         &dcx );
-
-    SDL_GL_DeleteContext(gContext);
-    SDL_DestroyWindow( window );
-
-    SDL_Quit();
-    return 0;
 }

@@ -51,21 +51,13 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_kin.h"
 
-const int SCREEN_WIDTH = 1000;
-const int SCREEN_HEIGHT = 1000;
+#include "baxter-demo.h"
 
 
-struct aa_rx_sg *generate_scenegraph(struct aa_rx_sg *sg);
-struct aa_rx_sg *scenegraph;
-
-void check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
-    }
-}
 
 struct display_cx {
     const struct aa_gl_globals *globals;
+    const struct aa_rx_sg *scenegraph;
     double *q;
     aa_rx_config_id *chain_configs;
     aa_rx_frame_id *chain_frames;
@@ -79,6 +71,8 @@ int display( void *cx_, int updated, const struct timespec *now )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct aa_gl_globals *globals = cx->globals;
+    const struct aa_rx_sg *scenegraph = cx->scenegraph;
+
     if( 0 == cx->first.tv_sec && 0 == cx->first.tv_nsec ) {
         memcpy( &cx->first, now, sizeof(*now) );
         memcpy( &cx->last, now, sizeof(*now) );
@@ -89,10 +83,10 @@ int display( void *cx_, int updated, const struct timespec *now )
 
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    check_error("glClearColor");
+    baxter_demo_check_error("glClearColor");
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    check_error("glClear");
+    baxter_demo_check_error("glClear");
 
     aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
     aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
@@ -166,58 +160,18 @@ int display( void *cx_, int updated, const struct timespec *now )
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
+
     SDL_Window* window = NULL;
     SDL_GLContext gContext = NULL;
+    struct aa_gl_globals *globals;
 
     // Initialize scene graph
-    scenegraph = generate_scenegraph(NULL);
+    struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
     aa_rx_sg_index(scenegraph);
 
-
-    // Print configs
-    {
-        size_t n_config = aa_rx_sg_config_count(scenegraph);
-        const char *names[n_config];
-        int n_filled = aa_rx_sg_config_names(scenegraph,n_config,names);
-        for( size_t i = 0; i < n_filled; i++ ) {
-            printf("q[%lu]: %s\n", i, names[i]);
-        }
-
-    }
-
-    aa_sdl_gl_window( "SDL Test",
-                      SDL_WINDOWPOS_UNDEFINED,
-                      SDL_WINDOWPOS_UNDEFINED,
-                      SCREEN_WIDTH,
-                      SCREEN_HEIGHT,
-                      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE,
-                      &window, &gContext);
-
-    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-    aa_rx_sg_gl_init(scenegraph);
-
-    // Initialize globals
-    struct aa_gl_globals *globals = aa_gl_globals_create();
-    // global camera
-    {
-        double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-        double eye[3] = {3,2,1.25};
-        double target[3] = {0,0,0};
-        double up[3] = {0,0,1};
-        aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
-        aa_gl_globals_set_camera_home( globals, world_E_camera_home );
-        aa_gl_globals_home_camera( globals );
-
-    }
-
-    // global lighting
-    {
-        double v_light[3] = {.5,1,5};
-        double ambient[3] = {.1,.1,.1};
-        aa_gl_globals_set_light_position( globals, v_light );
-        aa_gl_globals_set_ambient(globals, ambient);
-    }
-
+    // setup window
+    baxter_demo_setup_window( scenegraph,
+                              &window, &gContext, &globals );
     aa_gl_globals_set_show_visual(globals, 1);
     aa_gl_globals_set_show_collision(globals, 0);
 
@@ -225,6 +179,7 @@ int main(int argc, char *argv[])
     size_t n_q = aa_rx_sg_config_count(scenegraph);
     struct display_cx cx = {0};
     cx.globals = globals;
+    cx.scenegraph = scenegraph;
     cx.q = AA_NEW0_AR(double, n_q );
 
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
@@ -267,7 +222,6 @@ int main(int argc, char *argv[])
 
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );
-
     SDL_Quit();
     return 0;
 }
