@@ -50,14 +50,17 @@ namespace amino {
 
 
 struct SceneFrame  {
-    SceneFrame( const char *parent,
+    SceneFrame( enum aa_rx_frame_type type_,
+                const char *parent,
                 const char *name,
                 const double q[4], const double v[3] );
     virtual ~SceneFrame();
 
     virtual void tf_rel( const double *q, double E[7] ) = 0;
-    virtual aa_rx_frame_type type() = 0;
+    //virtual aa_rx_frame_type type() = 0;
     int in_global();
+
+    enum aa_rx_frame_type type;
 
     /* Kinematic values */
     std::string name;
@@ -65,6 +68,7 @@ struct SceneFrame  {
     aa_rx_frame_id frame_id;
     aa_rx_frame_id parent_id;
     double E[7];
+
 
     /* Geometry */
     std::vector<struct aa_rx_geom*> geometry;
@@ -77,11 +81,12 @@ struct SceneFrameFixed : public SceneFrame {
                      const double q[4], const double v[3] );
     virtual ~SceneFrameFixed();
     virtual void tf_rel( const double *q, double E[7] );
-    virtual aa_rx_frame_type type();
+    //virtual aa_rx_frame_type type();
 };
 
 struct SceneFrameJoint : public SceneFrame {
-    SceneFrameJoint( const char *parent,
+    SceneFrameJoint( enum aa_rx_frame_type type,
+                     const char *parent,
                      const char *name,
                      const double q[4], const double v[3],
                      const char *config_name,
@@ -102,7 +107,7 @@ struct SceneFramePrismatic : public SceneFrameJoint {
                          double offset, const double axis[3] );
     virtual ~SceneFramePrismatic();
     virtual void tf_rel( const double *q, double E[7] );
-    virtual aa_rx_frame_type type();
+    //virtual aa_rx_frame_type type();
 };
 
 
@@ -114,7 +119,7 @@ struct SceneFrameRevolute : public SceneFrameJoint {
                         double offset, const double axis[3] );
     virtual ~SceneFrameRevolute();
     virtual void tf_rel( const double *q, double E[7] );
-    virtual aa_rx_frame_type type();
+    //virtual aa_rx_frame_type type();
 };
 
 struct SceneGraph  {
@@ -151,8 +156,6 @@ struct SceneGraph  {
 struct aa_rx_sg {
     amino::SceneGraph *sg;
 };
-
-
 
 #endif /* __cplusplus */
 

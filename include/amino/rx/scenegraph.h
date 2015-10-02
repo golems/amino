@@ -57,6 +57,7 @@ typedef signed long aa_rx_config_id;
  * Magic config_id for no configuration variable.
  */
 #define AA_RX_CONFIG_NONE ((aa_rx_config_id)-1)
+#define AA_RX_CONFIG_MULTI ((aa_rx_config_id)-2)
 
 /**
  * Enum of frame types
@@ -126,6 +127,12 @@ AA_API aa_rx_config_id
 aa_rx_sg_config_count (
     const struct aa_rx_sg *scene_graph );
 
+/**
+ * Return the config id of frame.
+ */
+AA_API aa_rx_config_id
+aa_rx_sg_frame_config (
+    const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame);
 
 /**
  * Fill names with pointers to config names
@@ -245,6 +252,16 @@ AA_API void aa_rx_sg_add_frame_revolute
 AA_API void aa_rx_sg_rm_frame
 ( struct aa_rx_sg *scene_graph,
   const char *name );
+
+
+
+/**
+ * Return pointer to frame axis.
+ *
+ * Only valid for univariate joint frames.
+ */
+AA_API const double *aa_rx_sg_frame_axis
+( const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame );
 
 /**
  *  Compute transforms for the scene graph

@@ -259,8 +259,7 @@ public:
                              ids, q_all, q_set );
     }
 
-    void extract_state( const double *q_all, StateType *state_ ) const {
-        ompl::base::RealVectorStateSpace::StateType *state = state_->as<StateType>();
+    void extract_state( const double *q_all, StateType *state ) const {
         extract_state( q_all, state->values );
     }
 
@@ -269,13 +268,11 @@ public:
                              ids, q_set, q_all );
     }
 
-    void insert_state( const StateType *state_, double *q_all ) const {
-        const ompl::base::RealVectorStateSpace::StateType *state = state_->as<StateType>();
+    void insert_state( const StateType *state, double *q_all ) const {
         insert_state( state->values, q_all );
     }
 
-    void copy_state( const double *q_set, StateType *state_ ) {
-        ompl::base::RealVectorStateSpace::StateType *state = state_->as<StateType>();
+    void copy_state( const double *q_set, StateType *state ) {
         std::copy( q_set, q_set + config_count_subset(), state->values );
     }
 

@@ -81,6 +81,7 @@ libamino_la_SOURCES =                  \
 	src/rx/sg_capi.c 	       \
 	src/rx/scene_geom.c 	       \
 	src/rx/geom_opt.c              \
+	src/rx/scene_kin.c             \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \

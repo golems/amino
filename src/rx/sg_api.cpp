@@ -77,7 +77,7 @@ AA_API enum aa_rx_frame_type aa_rx_sg_frame_type (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->frames[frame_id]->type();
+    return scene_graph->sg->frames[frame_id]->type;
 }
 
 AA_API aa_rx_config_id aa_rx_sg_config_id(
@@ -96,17 +96,10 @@ AA_API aa_rx_frame_id aa_rx_sg_frame_id (
 
 AA_API const char *
 aa_rx_sg_frame_name (
-    const struct aa_rx_sg *scene_graph, aa_rx_config_id config_id )
+    const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
 {
+    return scene_graph->sg->frames[frame_id]->name.c_str();
 }
-
-// AA_API aa_rx_config_id aa_rx_sg_frame_config_id(
-//     struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id)
-// {
-//     amino::SceneGraph *sg = scene_graph->sg;
-//     sg->index();
-//     return sg->frames[frame_id]->config_index;
-// }
 
 AA_API const char *
 aa_rx_sg_config_name (
@@ -242,4 +235,30 @@ aa_rx_sg_config_set(
     for( size_t i = 0; i < n_subset; i ++ ) {
         config_all[ ids[i] ] = config_subset[i];
     }
+}
+
+AA_API const double *
+aa_rx_sg_frame_axis ( const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame )
+{
+    amino::SceneGraph *sg = scene_graph->sg;
+    amino::SceneFrameJoint *f = static_cast<amino::SceneFrameJoint*> (sg->frames[frame]);
+    return f->axis;
+}
+
+AA_API aa_rx_config_id
+aa_rx_sg_frame_config (
+    const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame)
+{
+    amino::SceneGraph *sg = scene_graph->sg;
+    amino::SceneFrame *f = sg->frames[frame];
+    switch( f->type ) {
+    case AA_RX_FRAME_FIXED:
+        return AA_RX_CONFIG_NONE;
+    case AA_RX_FRAME_REVOLUTE:
+    case AA_RX_FRAME_PRISMATIC: {
+        amino::SceneFrameJoint *fj = static_cast<amino::SceneFrameJoint*>(f);
+        return (aa_rx_config_id)(fj->config_index);
+    }
+    }
+    assert(0);
 }

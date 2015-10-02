@@ -47,10 +47,12 @@
 namespace amino {
 
 SceneFrame::SceneFrame(
+    enum aa_rx_frame_type type_,
     const char *_parent,
     const char *_name,
     const double q[4], const double v[3]
     ) :
+    type(type_),
     name(_name),
     parent(_parent)
 {
@@ -72,7 +74,7 @@ SceneFrameFixed::SceneFrameFixed(
     const char *_name,
     const double q[4], const double v[3]
     ) :
-    SceneFrame( _parent, _name, q, v )
+    SceneFrame( AA_RX_FRAME_FIXED, _parent, _name, q, v )
 { }
 
 
@@ -80,13 +82,14 @@ SceneFrameFixed::~SceneFrameFixed()
 { }
 
 SceneFrameJoint::SceneFrameJoint(
+    enum aa_rx_frame_type type_,
     const char *_parent,
     const char *_name,
     const double q[4], const double v[3],
     const char *_config_name,
     double _offset, const double _axis[3]
     ) :
-    SceneFrame( _parent, _name, q, v ),
+    SceneFrame( type_, _parent, _name, q, v ),
     config_name(_config_name ? _config_name : _name),
     offset(_offset)
 {
@@ -105,7 +108,8 @@ SceneFrameRevolute::SceneFrameRevolute(
     const char *_config_name,
     double _offset, const double _axis[3]
     ) :
-    SceneFrameJoint( _parent, _name, q, v,
+    SceneFrameJoint( AA_RX_FRAME_REVOLUTE,
+                     _parent, _name, q, v,
                      _config_name, _offset, _axis)
 { }
 
@@ -120,7 +124,8 @@ SceneFramePrismatic::SceneFramePrismatic(
     const char *_config_name,
     double _offset, const double _axis[3]
     ) :
-    SceneFrameJoint( _parent, _name, q, v,
+    SceneFrameJoint( AA_RX_FRAME_PRISMATIC,
+                     _parent, _name, q, v,
                      _config_name, _offset, _axis)
 { }
 
@@ -166,20 +171,20 @@ void SceneFrameRevolute::tf_rel( const double *q, double _E[7] )
                     _E + AA_TF_QUTR_Q, _E+AA_TF_QUTR_V );
 }
 
-aa_rx_frame_type SceneFrameFixed::type()
-{
-    return AA_RX_FRAME_FIXED;
-}
+// aa_rx_frame_type SceneFrameFixed::type()
+// {
+//     return AA_RX_FRAME_FIXED;
+// }
 
-aa_rx_frame_type SceneFrameRevolute::type()
-{
-    return AA_RX_FRAME_REVOLUTE;
-}
+// aa_rx_frame_type SceneFrameRevolute::type()
+// {
+//     return AA_RX_FRAME_REVOLUTE;
+// }
 
-aa_rx_frame_type SceneFramePrismatic::type()
-{
-    return AA_RX_FRAME_PRISMATIC;
-}
+// aa_rx_frame_type SceneFramePrismatic::type()
+// {
+//     return AA_RX_FRAME_PRISMATIC;
+// }
 
 SceneGraph::SceneGraph()
     : dirty_indices(0) {}
@@ -242,7 +247,7 @@ void SceneGraph::index()
                 f->parent_id = frame_map[f->parent]->frame_id;
             }
             assert( f->parent_id < f->frame_id );
-            switch( f->type() ) {
+            switch( f->type ) {
             case AA_RX_FRAME_FIXED:
                 break;
             case AA_RX_FRAME_REVOLUTE:

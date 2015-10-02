@@ -6,12 +6,17 @@ PKG_CONFIG_MODULES := amino amino_gl amino_collision sdl2 glew
 CFLAGS_ALL := $(CFLAGS) -g `pkg-config --cflags $(PKG_CONFIG_MODULES)` -I../../include/
 LDFLAGS_ALL := $(LDLAGS) -g `pkg-config --libs $(PKG_CONFIG_MODULES)` -L../../.libs
 
-OMPL_MODULES := $(PKG_CONFIG_MODULES) ompl amino_planning
+OMPL_MODULES := ompl amino_planning
 OMPL_LIBS := -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization
-CFLAGS_OMPL := $(CFLAGS) -g `pkg-config --cflags $(OMPL_MODULES)` -I../../include/
-LDFLAGS_OMPL := $(LDLAGS) `pkg-config --libs $(OMPL_MODULES)` $(OMPL_LIBS) -L../../.libs
+CFLAGS_OMPL := $(CFLAGS_ALL) -g `pkg-config --cflags $(OMPL_MODULES)`
+LDFLAGS_OMPL :=  `pkg-config --libs $(OMPL_MODULES)` $(LDFLAGS_ALL) $(OMPL_LIBS)
 
-ALL: baxter-simple baxter-collision baxter-ompl
+PROGS := baxter-simple baxter-collision baxter-ompl baxter-wksp
+
+ALL: $(PROGS)
+
+baxter-wksp: scene.o baxter-wksp.c
+	$(CC) scene.o baxter-wksp.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -lm -lopenblas -o baxter-wksp
 
 baxter-simple: scene.o baxter-simple.c
 	$(CC) scene.o baxter-simple.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o baxter-simple
@@ -29,7 +34,7 @@ scene.c: scene.robray
 	arxc 'package://baxter_description/urdf/baxter.urdf' -o scene.c
 
 clean:
-	rm -f baxter-simple baxter-collision baxter-ompl
+	rm -f $(PROGS)
 
 realclean: clean
 	rm -f scene.c *.o
