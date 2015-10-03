@@ -2,6 +2,7 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2013, Georgia Tech Research Corporation
+ * Copyright (c) 2015, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -24,6 +25,10 @@
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
  *
+ *   * Neither the name of the Rice University nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
  *   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -41,6 +46,10 @@
  */
 
 #include "amino.h"
+#include "amino/rx/rxtype.h"
+#include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_kin_internal.h"
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
 
@@ -58,40 +67,41 @@ struct rfx_kin_solve_opts {
     double *q_ref;
 };
 
-void rfx_kin_duqu_reldiff( const double S_u[8], const double S_r[8], const double dS_t[8],
-                           double S_t[8], double dS_u[8] ) {
-    aa_tf_duqu_mul( S_u, S_r, S_t );
-    aa_tf_duqu_mulc( dS_t, S_r, dS_u );
-}
+/* void rfx_kin_duqu_reldiff( const double S_u[8], const double S_r[8], const double dS_t[8], */
+/*                            double S_t[8], double dS_u[8] ) { */
+/*     aa_tf_duqu_mul( S_u, S_r, S_t ); */
+/*     aa_tf_duqu_mulc( dS_t, S_r, dS_u ); */
+/* } */
 
-void rfx_kin_duqu_relvel( const double S_u[8], const double S_r[8], const double w_t[6],
-                          double S_t[8], double w_u[6] ) {
-    double dS_t[8], dS_u[8];
+/* void rfx_kin_duqu_relvel( const double S_u[8], const double S_r[8], const double w_t[6], */
+/*                           double S_t[8], double w_u[6] ) { */
+/*     double dS_t[8], dS_u[8]; */
 
-    aa_tf_duqu_mul( S_u, S_r, S_t );
-    aa_tf_duqu_vel2diff( S_t, w_t, dS_t );
-    aa_tf_duqu_mulc( dS_t, S_r, dS_u );
-    rfx_kin_duqu_reldiff( S_u, S_r, dS_t, S_t, dS_u );
-    aa_tf_duqu_diff2vel( S_u, dS_u, w_u );
-}
+/*     aa_tf_duqu_mul( S_u, S_r, S_t ); */
+/*     aa_tf_duqu_vel2diff( S_t, w_t, dS_t ); */
+/*     aa_tf_duqu_mulc( dS_t, S_r, dS_u ); */
+/*     rfx_kin_duqu_reldiff( S_u, S_r, dS_t, S_t, dS_u ); */
+/*     aa_tf_duqu_diff2vel( S_u, dS_u, w_u ); */
+/* } */
 
 
 struct kin_solve_cx {
     size_t n;
     struct rfx_kin_solve_opts *opts;
     rfx_kin_duqu_fun kin_fun;
+    void *kin_cx;
     const double *S1;
     double *dq_dt;
 };
 
 
-void rfx_kin_2d2_fk( double l0, double l1, double q0, double q1, double *x, double *y ) {
+static void rfx_kin_2d2_fk( double l0, double l1, double q0, double q1, double *x, double *y ) {
     if( x ) *x = sin(q0)*l0 + sin(q0+q1)*l1;
     if( y ) *y = cos(q0)*l0 + cos(q0+q1)*l1;
 }
 
 
-void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6] ) {
+static void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6] ) {
     double twist[8], de[8];
     aa_tf_duqu_mulc( S, S_ref, de );  // de = d*conj(d_r)
     aa_tf_duqu_minimize(de);
@@ -100,7 +110,7 @@ void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6]
 }
 
 
-void rfx_kin_duqu_serr( const double S[8], const double S_ref[8],
+static void rfx_kin_duqu_serr( const double S[8], const double S_ref[8],
                        double *theta, double *x ) {
     double S_rel[8];
     aa_tf_duqu_cmul( S, S_ref, S_rel ); // relative dual quaternion
@@ -128,7 +138,7 @@ static void kin_solve_sys( const void *vcx,
     double S[8];
     double J[6*cx->n];
     double J_star[6*cx->n];
-    cx->kin_fun( NULL, q, S, J );
+    cx->kin_fun( cx->kin_cx, q, S, J );
 
     // position error
     double w_e[6];
@@ -150,7 +160,7 @@ static void kin_solve_sys( const void *vcx,
 }
 
 
-/* Levenberg Marquedt
+/* Levenberg Marquardt
  *
  *
  *   dq = pinv(J) * log( conj(S)*S_ref ) + (I-pinv(J)*J) dq_dt * (q - q_ref)
@@ -159,8 +169,8 @@ static void kin_solve_sys( const void *vcx,
  *   dt is adjusted using an adaptive Runge-Kutta
  *   dq_dt is adjusted when dq is too small
  */
-int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
-                   rfx_kin_duqu_fun kin_fun,
+static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
+                   rfx_kin_duqu_fun kin_fun, void *kin_cx,
                    double *q1,
                    struct rfx_kin_solve_opts *opts ) {
 
@@ -169,6 +179,7 @@ int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
     cx.opts = opts;
     cx.S1 = S1;
     cx.kin_fun = kin_fun;
+    cx.kin_cx = kin_cx;
     cx.dq_dt = opts->dq_dt;
 
     AA_MEM_CPY(q1, q0, n);
@@ -178,9 +189,9 @@ int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
     double k[n*6]; // adaptive runge-kutta internal derivatives
     kin_solve_sys( &cx, 0, q1, k ); // initial dx for adaptive runge-kutta
     double dt = opts->dt0; // adaptive timestep
-    double dq_dt[n];
-    AA_MEM_CPY( dq_dt, opts->dq_dt, n );
-    cx.dq_dt = dq_dt;
+    //double dq_dt[n];
+    //AA_MEM_CPY( dq_dt, opts->dq_dt, n );
+    cx.dq_dt = opts->dq_dt;
 
     double dq_norm = opts->dq_tol;
     double theta_err = opts->theta_tol;
@@ -242,12 +253,13 @@ int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
 
         // check error
         double S[8];
-        kin_fun( NULL, q1, S, NULL );
+        kin_fun( kin_cx, q1, S, NULL );
         rfx_kin_duqu_serr( S, S1, &theta_err, &x_err );
         //printf("err: theta: %f, x: %f, dqn: %f\n", theta_err, x_err, dq_norm);
 
         // adapt the nullspace gain
-        if( dq_norm < opts->dq_tol &&
+        if( cx.dq_dt &&
+            dq_norm < opts->dq_tol &&
             (theta_err > opts->theta_tol ||
              x_err > opts->x_tol ) )
         {
@@ -259,4 +271,87 @@ int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
     //printf(" iter: %d\n", iters );
     //printf(" norm: %f\n", aa_la_dot( n, q1, q1 ) );
     return 0;
+}
+
+static int ksol_duqu ( const void *cx_, const double *q_s, double S[8],  double *J)
+{
+    struct aa_rx_sg_sub *ssg = (struct aa_rx_sg_sub *)cx_;
+    const struct aa_rx_sg *sg = ssg->scenegraph;
+
+    size_t n_f = (size_t)aa_rx_sg_frame_count(sg);
+    size_t n_q = (size_t)aa_rx_sg_config_count(sg);
+    size_t n_sq = aa_rx_sg_sub_config_count(ssg);
+    //size_t n_sf = aa_rx_sg_sub_frame_count(ssg);
+
+    double q_all[n_q];
+    AA_MEM_ZERO(q_all, n_q);
+
+    aa_rx_sg_config_set( ssg->scenegraph, n_q, n_sq, aa_rx_sg_sub_configs(ssg),
+                         q_s, q_all );
+
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+
+    double *TF_rel = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
+    double *TF_abs = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
+
+    aa_rx_sg_tf( sg, n_q, q_all,
+                 n_f,
+                 TF_rel, 7,
+                 TF_abs, 7 );
+
+    if( S ) {
+        aa_rx_frame_id id_ee = aa_rx_sg_sub_frame(ssg,
+                                                  aa_rx_sg_sub_frame_count(ssg) - 1 );
+        double *E_ee = TF_abs + 7*id_ee;
+        //aa_dump_vec( stdout, E_ee, 7 );
+        aa_tf_qutr2duqu( E_ee, S );
+    }
+
+    if( J ) {
+        aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
+                               J, 6 );
+    }
+
+    aa_mem_region_pop(reg, TF_rel);
+    return 0;
+}
+
+AA_API int
+aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
+                       const struct aa_rx_sg_chain_ksol_opts *opts,
+                       size_t n_tf, const double *TF, size_t ld_TF,
+                       size_t n_q, double *q_subset )
+{
+    (void)opts;
+
+    /* Only chains for now */
+    assert(n_tf == 1 );
+    assert(n_q == aa_rx_sg_sub_config_count(ssg) );
+    (void)ld_TF;
+
+    double S[8];
+    aa_tf_qutr2duqu( TF, S );
+
+    assert( aa_rx_sg_sub_config_count(ssg) == n_q);
+
+    double q0_sub[n_q];
+    AA_MEM_ZERO(q0_sub,n_q);
+
+    struct rfx_kin_solve_opts kopts;
+    memset(&kopts,0,sizeof(kopts));
+    kopts.dt0 = .01;
+    kopts.theta_tol = 1*M_PI/180;
+    kopts.x_tol = 5e-3;
+    kopts.dq_tol = 1*M_PI/180;
+    kopts.dx_dt = .1;
+
+
+
+
+    rfx_kin_solve( n_q, q0_sub, S,
+                   ksol_duqu, (void*)ssg,
+                   q_subset, &kopts );
+
+
+    return -1;
 }

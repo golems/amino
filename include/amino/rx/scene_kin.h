@@ -46,7 +46,6 @@ struct aa_rx_sg_sub;
 AA_API void
 aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *sg );
 
-
 AA_API size_t
 aa_rx_sg_sub_config_count( const struct aa_rx_sg_sub *sg_sub );
 
@@ -79,15 +78,22 @@ aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                        size_t n_tf, const double *TF_abs, size_t ld_TF,
                        double *J, size_t ld_J );
 
-/* struct aa_rx_sg_chain_ksol_opts */
+struct aa_rx_sg_chain_ksol_opts;
 
-/* AA_API void */
-/* aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg *sg, */
-/*                          const struct  */
-/*                          size_t n_ids, aa_rx_frame_id *chain_frames, */
-/*                          size_t n_configs, aa_rx_frame_id *chain_configs , */
-/*                           ); */
+AA_API int
+aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
+                       const struct aa_rx_sg_chain_ksol_opts *opts,
+                       size_t n_tf, const double *TF, size_t ld_TF,
+                       size_t n_q, double *q_subset );
 
+static inline int
+aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg_sub *ssg,
+                         const struct aa_rx_sg_chain_ksol_opts *opts,
+                         const double *TF,
+                         size_t n_q, double *q_subset )
+{
+    return aa_rx_sg_sub_ksol_dls( ssg, opts, 1, TF, 7, n_q, q_subset );
+}
 
 
 #endif /*AMINO_RX_SCENE_KIN_H*/

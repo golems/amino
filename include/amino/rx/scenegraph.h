@@ -281,7 +281,7 @@ AA_API const double *aa_rx_sg_frame_axis
  */
 AA_API void aa_rx_sg_tf
 ( const struct aa_rx_sg *scene_graph,
-  aa_rx_config_id n_q, double *q,
+  aa_rx_config_id n_q, const double *q,
   aa_rx_frame_id n_tf,
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );

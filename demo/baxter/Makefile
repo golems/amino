@@ -11,9 +11,13 @@ OMPL_LIBS := -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lbo
 CFLAGS_OMPL := $(CFLAGS_ALL) -g `pkg-config --cflags $(OMPL_MODULES)`
 LDFLAGS_OMPL :=  `pkg-config --libs $(OMPL_MODULES)` $(LDFLAGS_ALL) $(OMPL_LIBS)
 
-PROGS := baxter-simple baxter-collision baxter-ompl baxter-wksp
+PROGS := baxter-simple baxter-collision baxter-ompl baxter-wksp baxter-ik
 OTHER_DEPS := scene.o baxter-demo.c
 ALL: $(PROGS)
+
+
+baxter-ik: baxter-ik.c $(OTHER_DEPS)
+	$(CC) $(OTHER_DEPS) baxter-ik.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o baxter-ik
 
 baxter-wksp: baxter-wksp.c $(OTHER_DEPS)
 	$(CC) $(OTHER_DEPS) baxter-wksp.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -lm -lopenblas -o baxter-wksp
