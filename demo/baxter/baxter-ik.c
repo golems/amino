@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 
 
     struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
-    aa_rx_ksol_opts_center_configs( ko, ssg, 10 );
+    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
 
 
@@ -149,10 +149,14 @@ int main(int argc, char *argv[])
         aa_tf_xangle2quat(-.5*M_PI, E1 );
         aa_tf_qutr_mul( E0, E1, E_ref );
     }
-
-    aa_rx_sg_chain_ksol_dls( ssg, ko,
-                             E_ref, n_q, qstart_all,
-                             n_qs, qs );
+    aa_tick("Inverse Kinematics: ");
+    int r = aa_rx_sg_chain_ksol_dls( ssg, ko,
+                                     E_ref, n_q, qstart_all,
+                                     n_qs, qs );
+    aa_tock();
+    if( r < 0 ) {
+        fprintf(stderr, "Oops, IK failed\n");
+    }
     aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
                          qs, dcx.q );
 

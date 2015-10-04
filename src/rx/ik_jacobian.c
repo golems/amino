@@ -179,7 +179,7 @@ static int kin_solve( const struct aa_rx_sg_sub *ssg,
 
     AA_MEM_CPY(q1, q0, n);
 
-    int iters = 0;
+    size_t iters = 0;
 
     double k[n*6]; // adaptive runge-kutta internal derivatives
     kin_solve_sys( &cx, 0, q1, k ); // initial dx for adaptive runge-kutta
@@ -196,12 +196,15 @@ static int kin_solve( const struct aa_rx_sg_sub *ssg,
     double theta_err = opts->tol_angle;
     double x_err = opts->tol_trans;
 
-    while( fabs(theta_err) >= opts->tol_angle ||
-           fabs(x_err) >= opts->tol_trans ||
-           dq_norm >= opts->tol_dq )
+    while( (fabs(theta_err) >= opts->tol_angle ||
+            fabs(x_err) >= opts->tol_trans ||
+            dq_norm >= opts->tol_dq )
+        && iters < opts->max_iterations )
     {
         //printf("iter: %d\n", iters);
         iters++;
+
+
         dq_norm = 0;
 
         // integrate
@@ -285,7 +288,16 @@ static int kin_solve( const struct aa_rx_sg_sub *ssg,
 
     //printf(" iter: %d\n", iters );
     //printf(" norm: %f\n", aa_la_dot( n, q1, q1 ) );
-    return 0;
+
+    /* Did we get there? */
+    if( fabs(theta_err) >= opts->tol_angle ||
+        fabs(x_err) >= opts->tol_trans )
+    {
+        return -1;
+    } else {
+        return 0;
+    }
+
 }
 
 static int ksol_duqu ( const void *cx_, const double *q_s, double S[8],  double *J)
@@ -360,12 +372,9 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     /*     aa_dump_vec( stdout, opts->q_ref, ssg->config_count ); */
     //}
 
-
-    kin_solve( ssg,
+    return kin_solve( ssg,
                n_q, q0_sub, S,
                ksol_duqu, (void*)ssg,
                q_subset, opts );
 
-
-    return -1;
 }

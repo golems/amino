@@ -109,6 +109,8 @@ struct aa_rx_ksol_opts {
 
     double *dq_dt_data;
     double *q_ref_data;
+
+    size_t max_iterations;
 };
 
 #endif /*AMINO_RX_SCENE_KIN_H*/

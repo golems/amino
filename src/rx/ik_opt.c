@@ -67,6 +67,7 @@ aa_rx_ksol_opts_create()
     opt->tol_dq = 1*M_PI/180;
     opt->gain_angle = .1;
     opt->gain_trans = .1;
+    opt->max_iterations = 1000;
 
     return opt;
 }
@@ -86,6 +87,7 @@ AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_dq )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, s2min )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_angle )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_trans )
+AA_DEF_SETTER( aa_rx_ksol_opts, size_t, max_iterations )
 
 
 

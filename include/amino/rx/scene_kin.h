@@ -109,6 +109,9 @@ AA_API void
 aa_rx_ksol_opts_set_gain_trans( struct aa_rx_ksol_opts *opts, double k );
 
 AA_API void
+aa_rx_ksol_opts_set_max_iterations( struct aa_rx_ksol_opts *opts, size_t n );
+
+AA_API void
 aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
                         double *q, enum aa_mem_refop refop );
 
