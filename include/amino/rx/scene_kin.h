@@ -116,6 +116,14 @@ AA_API void
 aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
                              double *q, enum aa_mem_refop refop );
 
+/**
+ * Convenience function to set IK options to center joints
+ */
+AA_API void
+aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
+                                const struct aa_rx_sg_sub *ssg,
+                                double gain );
+
 AA_API int
 aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
                        const struct aa_rx_ksol_opts *opts,

@@ -105,3 +105,28 @@ aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
     AA_MEM_DUPOP( refop, double, opts->dq_dt,
                   opts->dq_dt_data, q, n_q );
 }
+
+
+AA_API void
+aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
+                                const struct aa_rx_sg_sub *ssg,
+                                double gain )
+{
+
+    size_t n_qs = aa_rx_sg_sub_config_count(ssg);
+
+    double *q_ref = AA_NEW_AR(double, n_qs);
+    double *q_gain = AA_NEW_AR(double, n_qs);
+
+    for( size_t i = 0; i < n_qs; i ++ ) {
+        double min=0 ,max=0;
+        aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg, i);
+        int r = aa_rx_sg_get_limit_pos( ssg->scenegraph, config_id, &min, &max );
+        assert(0 == r);
+        q_ref[i] = (max + min) / 2;
+        q_gain[i] = gain * (2*M_PI) / (max - min); // scale gain based on range
+    }
+
+    aa_rx_ksol_opts_take_config( opts, n_qs, q_ref, AA_MEM_STEAL );
+    aa_rx_ksol_opts_take_gain_config( opts, n_qs, q_gain, AA_MEM_STEAL );
+}

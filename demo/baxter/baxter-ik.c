@@ -116,14 +116,6 @@ int main(int argc, char *argv[])
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     struct aa_rx_sg_sub *ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
-    double E0[7] = {0, 1, 0, 0,
-                    0.6, -0.0, 0.3};
-    double E1[7] = {0, 0, 0, 1,
-                    0, 0, 0 };
-    aa_tf_xangle2quat(-.5*M_PI, E1 );
-    double E[7];
-    aa_tf_qutr_mul( E0, E1, E );
-
 
     assert( 7 == n_qs );
     double qstart_s[7] = {
@@ -141,28 +133,26 @@ int main(int argc, char *argv[])
                          qstart_s, qstart_all );
 
 
-    double qs[n_qs];
-    double q_ref[n_qs];
-    double q_gain[n_qs];
-    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
 
-    for( size_t i = 0; i < n_qs; i ++ ) {
-        double min=0 ,max=0;
-        aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg, i);
-        aa_rx_sg_get_limit_pos( scenegraph, config_id, &min, &max );
-        q_ref[i] = (max + min) / 2;
-        q_gain[i] = 1;
+    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
+    aa_rx_ksol_opts_center_configs( ko, ssg, 10 );
+    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+
+
+    double qs[n_qs];
+    double E_ref[7];
+    {
+        double E0[7] = {0, 1, 0, 0,
+                        0.6, -0.0, 0.3};
+        double E1[7] = {0, 0, 0, 1,
+                        0, 0, 0 };
+        aa_tf_xangle2quat(-.5*M_PI, E1 );
+        aa_tf_qutr_mul( E0, E1, E_ref );
     }
 
-    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
-    aa_rx_ksol_opts_take_config( ko, n_qs, q_ref, AA_MEM_BORROW );
-    aa_rx_ksol_opts_take_gain_config( ko, n_qs, q_gain, AA_MEM_BORROW );
-
-
     aa_rx_sg_chain_ksol_dls( ssg, ko,
-                             E, n_q, qstart_all,
+                             E_ref, n_q, qstart_all,
                              n_qs, qs );
-
     aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
                          qs, dcx.q );
 
