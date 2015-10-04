@@ -116,8 +116,14 @@ int main(int argc, char *argv[])
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     struct aa_rx_sg_sub *ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
-    double E[7] = {0, 0, 0, 1,
-                   0.6, -0.0, 0.3};
+    double E0[7] = {0, 1, 0, 0,
+                    0.6, -0.0, 0.3};
+    double E1[7] = {0, 0, 0, 1,
+                    0, 0, 0 };
+    aa_tf_xangle2quat(-.5*M_PI, E1 );
+    double E[7];
+    aa_tf_qutr_mul( E0, E1, E );
+
 
     assert( 7 == n_qs );
     double qstart_s[7] = {
@@ -145,8 +151,7 @@ int main(int argc, char *argv[])
         aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg, i);
         aa_rx_sg_get_limit_pos( scenegraph, config_id, &min, &max );
         q_ref[i] = (max + min) / 2;
-        //q_gain[i] = 0;
-        q_gain[i] = 10;
+        q_gain[i] = 1;
     }
 
     aa_rx_ksol_opts_set_tol_dq( ko, .01 );

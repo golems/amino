@@ -265,7 +265,7 @@ aa_rx_sg_frame_config (
 
 static struct aa_rx_config_limits *
 get_limits( struct aa_rx_sg *scenegraph,
-                 const char *config_name )
+            const char *config_name )
 {
     amino::SceneGraph *sg = scenegraph->sg;
     struct aa_rx_config_limits *l = sg->limits_map[config_name];
@@ -297,7 +297,7 @@ DEF_SET_LIMIT(eff)
 
 #define DEF_GET_LIMIT(value)                                            \
     AA_API int                                                          \
-    aa_rx_sg_get_limit_ ## value( struct aa_rx_sg *scenegraph,          \
+    aa_rx_sg_get_limit_ ## value( const struct aa_rx_sg *scenegraph,    \
                                   aa_rx_config_id config_id,            \
                                   double *min, double *max )            \
     {                                                                   \

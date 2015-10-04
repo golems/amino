@@ -243,14 +243,18 @@ static int kin_solve( const struct aa_rx_sg_sub *ssg,
             } while( qerr > opts->tol_dq );
 
             dq_norm = aa_la_ssd( n, q1, q5 );
-            AA_MEM_CPY(q1, q5, n); // write dx to k0
             AA_MEM_CPY(k, k+5*n, n); // write dx to k0
 
-            // clamp
-            /* for( size_t i = 0; i < n; i ++ ) { */
-            /*     double min,max; */
-            /*     int has = aa_rx_sg_ */
-            /* } */
+            // copy and clamp clamp
+            for( size_t i = 0; i < n; i ++ ) {
+                double min,max;
+                aa_rx_config_id id = aa_rx_sg_sub_config(ssg,i);
+                if( 0 == aa_rx_sg_get_limit_pos(ssg->scenegraph, id, &min, &max ) ) {
+                    q1[i] = aa_fclamp(q5[i], min, max );
+                } else {
+                    q1[i] = q5[i];
+                }
+            }
         }
 
         //printf("q: "); aa_dump_vec(stdout, q1, n );

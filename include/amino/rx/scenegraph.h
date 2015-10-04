@@ -288,7 +288,7 @@ aa_rx_sg_set_limit_eff( struct aa_rx_sg *scenegraph,
  * Get position limit values
  */
 AA_API int
-aa_rx_sg_get_limit_pos( struct aa_rx_sg *scenegraph,
+aa_rx_sg_get_limit_pos( const struct aa_rx_sg *scenegraph,
                         aa_rx_config_id config_id,
                         double *min, double *max );
 
@@ -296,7 +296,7 @@ aa_rx_sg_get_limit_pos( struct aa_rx_sg *scenegraph,
  * Get velocity limit values
  */
 AA_API int
-aa_rx_sg_get_limit_vel( struct aa_rx_sg *scenegraph,
+aa_rx_sg_get_limit_vel( const struct aa_rx_sg *scenegraph,
                         aa_rx_config_id config_id,
                         double *min, double *max );
 
@@ -304,7 +304,7 @@ aa_rx_sg_get_limit_vel( struct aa_rx_sg *scenegraph,
  * Get acceleration limit values
  */
 AA_API int
-aa_rx_sg_get_limit_acc( struct aa_rx_sg *scenegraph,
+aa_rx_sg_get_limit_acc( const struct aa_rx_sg *scenegraph,
                         aa_rx_config_id config_id,
                         double *min, double *max );
 
@@ -312,7 +312,7 @@ aa_rx_sg_get_limit_acc( struct aa_rx_sg *scenegraph,
  * Set effort limit values
  */
 AA_API int
-aa_rx_sg_get_limit_eff( struct aa_rx_sg *scenegraph,
+aa_rx_sg_get_limit_eff( const struct aa_rx_sg *scenegraph,
                         aa_rx_config_id config_id,
                         double *min, double *max );
 
