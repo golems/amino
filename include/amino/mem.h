@@ -53,6 +53,15 @@
  * \file amino/mem.h
  */
 
+enum aa_mem_refop {
+    /* Make a private copy */
+    AA_MEM_COPY,
+    /* Use the existing copy.  Someone else will clean up */
+    AA_MEM_BORROW,
+    /* Take the reference and cleanup when we're done */
+    AA_MEM_STEAL
+};
+
 /**************/
 /* Allocation */
 /**************/
@@ -91,7 +100,6 @@ static inline void aa_free_if_valid( void *ptr ) {
 /** Returns val aligned to some multiple of align.  align must be
  * a power of 2.  Evaluates arguments multiple times. */
 #define AA_ALIGN2( val, align ) (((val) + (align) - 1) & ~(align-1))
-
 
 /*----------- Local Allocation ------------------*/
 
@@ -429,6 +437,26 @@ AA_API void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
         memcpy( (dst), (src), sizeof((dst)[0])*(n_elem) );      \
     }
 
+
+#define AA_MEM_DUPOP( refop, type, const_dst, dst_data, src, n_elem )   \
+    switch(refop) {                                                     \
+    case AA_MEM_COPY:                                                   \
+        dst_data = (type*)malloc(sizeof(type) * n_elem);                \
+        AA_MEM_CPY(dst_data, src, n_elem);                              \
+        const_dst = dst_data;                                           \
+        break;                                                          \
+    case AA_MEM_STEAL:                                                  \
+        dst_data = src;                                                 \
+        const_dst = dst_data;                                           \
+        break;                                                          \
+    case AA_MEM_BORROW:                                                 \
+        dst_data = NULL;                                                \
+        const_dst = src;                                                \
+        break;                                                          \
+    };
+
+
+
 /* Set n_elem elements at dst to val.
  *
  * May evaluate arguments multiple times.
@@ -637,7 +665,6 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
         vec->max = max;                                          \
         vec->fill = 0;                                           \
     };
-
 
 
 

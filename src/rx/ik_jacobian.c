@@ -73,18 +73,20 @@ typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8], 
 
 struct kin_solve_cx {
     size_t n;
-    struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_ksol_opts *opts;
     rfx_kin_duqu_fun kin_fun;
     void *kin_cx;
     const double *S1;
-    double *dq_dt;
+    const double *dq_dt;
+    const double *min;
+    const double *max;
 };
 
 
-static void rfx_kin_2d2_fk( double l0, double l1, double q0, double q1, double *x, double *y ) {
-    if( x ) *x = sin(q0)*l0 + sin(q0+q1)*l1;
-    if( y ) *y = cos(q0)*l0 + cos(q0+q1)*l1;
-}
+/* static void rfx_kin_2d2_fk( double l0, double l1, double q0, double q1, double *x, double *y ) { */
+/*     if( x ) *x = sin(q0)*l0 + sin(q0+q1)*l1; */
+/*     if( y ) *y = cos(q0)*l0 + cos(q0+q1)*l1; */
+/* } */
 
 
 static void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6] ) {
@@ -129,18 +131,24 @@ static void kin_solve_sys( const void *vcx,
     // position error
     double w_e[6];
     rfx_kin_duqu_werr( S, cx->S1, w_e );
-    for( size_t i = 0; i < 6; i ++ ) w_e[i] *= -cx->opts->dx_dt;
+    for( size_t i = 0; i < 3; i ++ ) {
+        w_e[AA_TF_DX_V + i] *= -cx->opts->gain_trans;
+        w_e[AA_TF_DX_W + i] *= -cx->opts->gain_angle;
+    }
 
     // damped least squares
     aa_la_dzdpinv( 6, cx->n, cx->opts->s2min, J, J_star );
     if( cx->opts->q_ref ) {
+        //printf("nullspace projection\n");
         // nullspace projection
         double dqnull[cx->n];
         for( size_t i = 0; i < cx->n; i ++ )  {
             dqnull[i] = - cx->dq_dt[i] * ( q[i] - cx->opts->q_ref[i] );
         }
+        //aa_dump_vec( stdout, dqnull, cx->n );
         aa_la_xlsnp( 6, cx->n, J, J_star, w_e, dqnull, dq );
     } else {
+        //printf("no projection\n");
         aa_la_mvmul(cx->n,6,J_star,w_e,dq);
     }
 }
@@ -155,10 +163,11 @@ static void kin_solve_sys( const void *vcx,
  *   dt is adjusted using an adaptive Runge-Kutta
  *   dq_dt is adjusted when dq is too small
  */
-static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
-                   rfx_kin_duqu_fun kin_fun, void *kin_cx,
-                   double *q1,
-                   const struct aa_rx_ksol_opts *opts ) {
+static int kin_solve( const struct aa_rx_sg_sub *ssg,
+                      size_t n, const double *q0, const double S1[8],
+                      rfx_kin_duqu_fun kin_fun, void *kin_cx,
+                      double *q1,
+                      const struct aa_rx_ksol_opts *opts ) {
 
     struct kin_solve_cx cx;
     cx.n = n;
@@ -175,9 +184,13 @@ static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
     double k[n*6]; // adaptive runge-kutta internal derivatives
     kin_solve_sys( &cx, 0, q1, k ); // initial dx for adaptive runge-kutta
     double dt = opts->dt; // adaptive timestep
-    //double dq_dt[n];
-    //AA_MEM_CPY( dq_dt, opts->dq_dt, n );
-    cx.dq_dt = opts->dq_dt;
+    double dq_dt[n];
+    if( opts->dq_dt ) {
+        AA_MEM_CPY( dq_dt, opts->dq_dt, n );
+        cx.dq_dt = dq_dt;
+    } else {
+        cx.dq_dt = NULL;
+    }
 
     double dq_norm = opts->tol_dq;
     double theta_err = opts->tol_angle;
@@ -187,6 +200,7 @@ static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
            fabs(x_err) >= opts->tol_trans ||
            dq_norm >= opts->tol_dq )
     {
+        //printf("iter: %d\n", iters);
         iters++;
         dq_norm = 0;
 
@@ -228,31 +242,42 @@ static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
                 }
             } while( qerr > opts->tol_dq );
 
-            for( size_t i = 0; i < n; i ++ ) {
-                dq_norm += (q1[i]-q5[i]) * (q1[i]-q5[i]);
-                q1[i] = q5[i];
-            }
+            dq_norm = aa_la_ssd( n, q1, q5 );
+            AA_MEM_CPY(q1, q5, n); // write dx to k0
             AA_MEM_CPY(k, k+5*n, n); // write dx to k0
+
+            // clamp
+            /* for( size_t i = 0; i < n; i ++ ) { */
+            /*     double min,max; */
+            /*     int has = aa_rx_sg_ */
+            /* } */
         }
 
         //printf("q: "); aa_dump_vec(stdout, q1, n );
+        //dq_norm = aa_la_norm( n, k );
 
         // check error
         double S[8];
         kin_fun( kin_cx, q1, S, NULL );
         rfx_kin_duqu_serr( S, S1, &theta_err, &x_err );
         //printf("err: theta: %f, x: %f, dqn: %f\n", theta_err, x_err, dq_norm);
+        //printf("dq_norm: %f\n", dq_norm );
 
         // adapt the nullspace gain
-        if( cx.dq_dt &&
-            dq_norm < opts->tol_dq &&
-            (theta_err > opts->tol_angle ||
-             x_err > opts->tol_trans ) )
-        {
-            for( size_t i = 0; i < n; i ++  ) cx.dq_dt[i] /= 2;
-            //printf("halving nullspace gain: %f\n", cx.dq_dt);
-        }
+        /* if( cx.dq_dt && */
+        /*     dq_norm < opts->tol_dq && */
+        /*     (theta_err > opts->tol_angle || */
+        /*      x_err > opts->tol_trans ) ) */
+        /* { */
+        /*     for( size_t i = 0; i < n; i ++  ) dq_dt[i] /= 2; */
+        /*     //printf("halving nullspace gain: %f\n", cx.dq_dt); */
+        /* } */
     };
+
+    //double S[8], E[7];
+    //kin_fun( kin_cx, q1, S, NULL );
+    //aa_tf_duqu2qutr(S,E);
+    //aa_dump_vec( stdout, E, 7 );
 
     //printf(" iter: %d\n", iters );
     //printf(" norm: %f\n", aa_la_dot( n, q1, q1 ) );
@@ -306,6 +331,7 @@ AA_API int
 aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
                        const struct aa_rx_ksol_opts *opts,
                        size_t n_tf, const double *TF, size_t ld_TF,
+                       size_t n_q_all, const double *q_start_all,
                        size_t n_q, double *q_subset )
 {
 
@@ -320,20 +346,21 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     assert( aa_rx_sg_sub_config_count(ssg) == n_q);
 
     double q0_sub[n_q];
-    AA_MEM_ZERO(q0_sub,n_q);
 
-    /* struct aa_rx_ksol_opts kopts; */
-    /* memset(&kopts,0,sizeof(kopts)); */
-    /* kopts.dt = .01; */
-    /* kopts.tol_angle = 1*M_PI/180; */
-    /* kopts.tol_trans = 5e-3; */
-    /* kopts.tol_dq = 1*M_PI/180; */
-    /* kopts.dx_dt = .1; */
+    aa_rx_sg_config_get( ssg->scenegraph, n_q_all, n_q, aa_rx_sg_sub_configs(ssg),
+                         q_start_all, q0_sub );
+
+    /* printf("jacobian ik\n"); */
+    /* printf("q ref:  %s\n", opts->q_ref ? "yes" : "no"); */
+    /* if( opts->q_ref ) { */
+    /*     aa_dump_vec( stdout, opts->q_ref, ssg->config_count ); */
+    //}
 
 
-    rfx_kin_solve( n_q, q0_sub, S,
-                   ksol_duqu, (void*)ssg,
-                   q_subset, opts );
+    kin_solve( ssg,
+               n_q, q0_sub, S,
+               ksol_duqu, (void*)ssg,
+               q_subset, opts );
 
 
     return -1;

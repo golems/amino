@@ -88,33 +88,51 @@ AA_API void
 aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts);
 
 AA_API void
-aa_rx_ksol_set_dt( struct aa_rx_ksol_opts *opts, double dt);
+aa_rx_ksol_opts_set_dt( struct aa_rx_ksol_opts *opts, double dt);
 
 AA_API void
-aa_rx_ksol_set_tol_angle( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ksol_opts_set_tol_angle( struct aa_rx_ksol_opts *opts, double tol);
 
 AA_API void
-aa_rx_ksol_set_tol_trans( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ksol_opts_set_tol_trans( struct aa_rx_ksol_opts *opts, double tol);
 
 AA_API void
-aa_rx_ksol_set_tol_config( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ksol_opts_set_tol_dq( struct aa_rx_ksol_opts *opts, double tol);
 
 AA_API void
-aa_rx_ksol_set_tol_s2min( struct aa_rx_ksol_opts *opts, double s2min);
+aa_rx_ksol_opts_set_tol_s2min( struct aa_rx_ksol_opts *opts, double s2min);
+
+AA_API void
+aa_rx_ksol_opts_set_gain_angle( struct aa_rx_ksol_opts *opts, double k );
+
+AA_API void
+aa_rx_ksol_opts_set_gain_trans( struct aa_rx_ksol_opts *opts, double k );
+
+AA_API void
+aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+                        double *q, enum aa_mem_refop refop );
+
+AA_API void
+aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+                             double *q, enum aa_mem_refop refop );
 
 AA_API int
 aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
                        const struct aa_rx_ksol_opts *opts,
                        size_t n_tf, const double *TF, size_t ld_TF,
+                       size_t n_q_all, const double *q_start_all,
                        size_t n_q, double *q_subset );
 
 static inline int
 aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg_sub *ssg,
                          const struct aa_rx_ksol_opts *opts,
                          const double *TF,
-                         size_t n_q, double *q_subset )
+                         size_t n_q_all, const double *q_start_all,
+                         size_t n_qs, double *q_subset )
 {
-    return aa_rx_sg_sub_ksol_dls( ssg, opts, 1, TF, 7, n_q, q_subset );
+    return aa_rx_sg_sub_ksol_dls( ssg, opts, 1, TF, 7,
+                                  n_q_all, q_start_all,
+                                  n_qs, q_subset );
 }
 
 

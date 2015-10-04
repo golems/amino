@@ -65,7 +65,8 @@ aa_rx_ksol_opts_create()
     opt->tol_angle = 1*M_PI/180;
     opt->tol_trans = 5e-3;
     opt->tol_dq = 1*M_PI/180;
-    opt->dx_dt = .1;
+    opt->gain_angle = .1;
+    opt->gain_trans = .1;
 
     return opt;
 }
@@ -73,13 +74,34 @@ aa_rx_ksol_opts_create()
 AA_API void
 aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts)
 {
-    if( opts->free_dq_dt ) free( opts->dq_dt );
-    if( opts->free_q_ref ) free( opts->q_ref );
+    if( opts->dq_dt_data ) free( opts->dq_dt_data );
+    if( opts->q_ref_data ) free( opts->q_ref_data );
 }
+
 
 AA_DEF_SETTER( aa_rx_ksol_opts, double, dt )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_angle )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_trans )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_dq )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, s2min )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, dx_dt )
+AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_angle )
+AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_trans )
+
+
+
+AA_API void
+aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+                        double *q, enum aa_mem_refop refop )
+{
+    AA_MEM_DUPOP( refop, double, opts->q_ref,
+                  opts->q_ref_data, q, n_q );
+}
+
+
+AA_API void
+aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+                             double *q, enum aa_mem_refop refop )
+{
+    AA_MEM_DUPOP( refop, double, opts->dq_dt,
+                  opts->dq_dt_data, q, n_q );
+}

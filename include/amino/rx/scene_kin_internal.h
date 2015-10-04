@@ -99,13 +99,16 @@ struct aa_rx_ksol_opts {
     double tol_dq;       ///< translation error tolerance
     double s2min;        ///< minimum square singular value for damped least squares
 
-    double dx_dt;        ///< scaling for cartesian error
+    //double dx_dt;        ///< scaling for cartesian error
+    double gain_angle;     ///< scaling for cartesian error
+    double gain_trans;     ///< scaling for cartesian error
 
-    double *dq_dt;       ///< scaling for joint error
-    double *q_ref;
+    const double *dq_dt;       ///< scaling for joint error
+    const double *q_ref;
 
-    unsigned free_dq_dt : 1;
-    unsigned free_q_ref : 1;
+
+    double *dq_dt_data;
+    double *q_ref_data;
 };
 
 #endif /*AMINO_RX_SCENE_KIN_H*/

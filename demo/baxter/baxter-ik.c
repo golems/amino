@@ -116,17 +116,51 @@ int main(int argc, char *argv[])
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     struct aa_rx_sg_sub *ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
-    double qs[n_qs];
-    double E[7] = {0.285495, 0.878661, -0.118256, 0.363953,
-                   0.736943, -0.747931, 0.516863};
+    double E[7] = {0, 0, 0, 1,
+                   0.6, -0.0, 0.3};
 
+    assert( 7 == n_qs );
+    double qstart_s[7] = {
+        .05 * M_PI, // s0
+        -.25 * M_PI, // s1
+        0, // e0
+        .25*M_PI, // e1
+        0, // w0
+        .25*M_PI, // w1
+        0 // w2
+    };
+    double qstart_all[n_q];
+    AA_MEM_ZERO(qstart_all, n_q);
+    aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
+                         qstart_s, qstart_all );
+
+
+    double qs[n_qs];
+    double q_ref[n_qs];
+    double q_gain[n_qs];
     struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
 
+    for( size_t i = 0; i < n_qs; i ++ ) {
+        double min=0 ,max=0;
+        aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg, i);
+        aa_rx_sg_get_limit_pos( scenegraph, config_id, &min, &max );
+        q_ref[i] = (max + min) / 2;
+        //q_gain[i] = 0;
+        q_gain[i] = 10;
+    }
+
+    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+    aa_rx_ksol_opts_take_config( ko, n_qs, q_ref, AA_MEM_BORROW );
+    aa_rx_ksol_opts_take_gain_config( ko, n_qs, q_gain, AA_MEM_BORROW );
+
+
     aa_rx_sg_chain_ksol_dls( ssg, ko,
-                             E, n_qs, qs );
+                             E, n_q, qstart_all,
+                             n_qs, qs );
 
     aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
                          qs, dcx.q );
+
 
 
     // Do Display
