@@ -71,8 +71,8 @@ void Init(void)
                                   aa_tf_quat_ident, aa_tf_vec_ident );
 
         struct aa_rx_geom_opt *box_opt = aa_rx_geom_opt_create();
-        aa_rx_geom_opt_set_color( box_opt, 1, 0, 0);
-        aa_rx_geom_opt_set_specular( box_opt, .3, .3, .3);
+        aa_rx_geom_opt_set_color3( box_opt, 1, 0, 0);
+        aa_rx_geom_opt_set_specular3( box_opt, .3, .3, .3);
 
         double d[3] = {.1, .1, .1};
         aa_rx_geom_attach( scenegraph, "box", aa_rx_geom_box(box_opt, d) );

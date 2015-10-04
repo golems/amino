@@ -262,3 +262,57 @@ aa_rx_sg_frame_config (
     }
     assert(0);
 }
+
+static struct aa_rx_config_limits *
+get_limits( struct aa_rx_sg *scenegraph,
+                 const char *config_name )
+{
+    amino::SceneGraph *sg = scenegraph->sg;
+    struct aa_rx_config_limits *l = sg->limits_map[config_name];
+    if( NULL == l ) {
+        l = AA_NEW0(struct aa_rx_config_limits);
+        sg->limits_map[config_name] = l;
+    }
+
+    return l;
+}
+
+#define DEF_SET_LIMIT(value)                                            \
+    AA_API void                                                         \
+    aa_rx_sg_set_limit_ ## value( struct aa_rx_sg *scenegraph,          \
+                                  const char *config_name,              \
+                                  double min, double max )              \
+    {                                                                   \
+        struct aa_rx_config_limits *l =                                 \
+            get_limits(scenegraph,config_name);                         \
+        l->has_##value = 1;                                             \
+        l->value##_min = min;                                           \
+        l->value##_max = max;                                           \
+    }                                                                   \
+
+DEF_SET_LIMIT(pos)
+DEF_SET_LIMIT(vel)
+DEF_SET_LIMIT(acc)
+DEF_SET_LIMIT(eff)
+
+#define DEF_GET_LIMIT(value)                                            \
+    AA_API int                                                          \
+    aa_rx_sg_get_limit_ ## value( struct aa_rx_sg *scenegraph,          \
+                                  aa_rx_config_id config_id,            \
+                                  double *min, double *max )            \
+    {                                                                   \
+        amino::SceneGraph *sg = scenegraph->sg;                         \
+        struct aa_rx_config_limits *l = sg->limits[config_id];          \
+        if( l->has_##value ) {                                          \
+            *min = l->value##_min;                                      \
+            *max = l->value##_max;                                      \
+            return 0;                                                   \
+        } else {                                                        \
+            return -1;                                                  \
+        }                                                               \
+    }
+
+DEF_GET_LIMIT(pos)
+DEF_GET_LIMIT(vel)
+DEF_GET_LIMIT(acc)
+DEF_GET_LIMIT(eff)

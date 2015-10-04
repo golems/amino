@@ -38,6 +38,26 @@
 #ifndef AMINO_SCENEGRAPH_INTERNAL_H
 #define AMINO_SCENEGRAPH_INTERNAL_H
 
+
+struct aa_rx_config_limits {
+    double pos_min;
+    double pos_max;
+
+    double vel_min;
+    double vel_max;
+
+    double acc_min;
+    double acc_max;
+
+    double eff_min;
+    double eff_max;
+
+    unsigned has_pos : 1;
+    unsigned has_vel : 1;
+    unsigned has_acc : 1;
+    unsigned has_eff : 1;
+};
+
 #ifdef __cplusplus
 
 #include <vector>
@@ -122,6 +142,7 @@ struct SceneFrameRevolute : public SceneFrameJoint {
     //virtual aa_rx_frame_type type();
 };
 
+
 struct SceneGraph  {
     SceneGraph();
     ~SceneGraph();
@@ -129,11 +150,17 @@ struct SceneGraph  {
     void index();
     void add(SceneFrame *f);
 
+    /** Map from frame name to frame */
+    std::map<std::string,SceneFrame*> frame_map;
+
+    /** Map from configuration name to configuration limits */
+    std::map<std::string,struct aa_rx_config_limits*> limits_map;
+
     /** Array of frames */
     std::vector<SceneFrame*> frames;
 
-    /** Map from frame name to frame */
-    std::map<std::string,SceneFrame*> frame_map;
+    /** Array of configuration limits */
+    std::vector<struct aa_rx_config_limits*> limits;
 
     /** Map from configuration name to configuration index */
     std::map<std::string,size_t> config_map;
