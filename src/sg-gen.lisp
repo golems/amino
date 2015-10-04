@@ -43,10 +43,10 @@
     (cgen-block
      (cgen-declare "struct aa_rx_geom *" cgeom)
      (cgen-declare "struct aa_rx_geom_opt *" copt (cgen-call "aa_rx_geom_opt_create"))
-     (apply #'cgen-call-stmt "aa_rx_geom_opt_set_color" copt
+     (apply #'cgen-call-stmt "aa_rx_geom_opt_set_color3" copt
             (amino::vec-list (draw-option options :color)))
      (cgen-call-stmt "aa_rx_geom_opt_set_alpha" copt  (draw-option options :alpha))
-     (apply #'cgen-call-stmt "aa_rx_geom_opt_set_specular" copt
+     (apply #'cgen-call-stmt "aa_rx_geom_opt_set_specular3" copt
             (amino::vec-list (draw-option options :specular)))
      (cgen-call-stmt "aa_rx_geom_opt_set_visual" copt
                      (if (draw-option options :visual) 1 0))
