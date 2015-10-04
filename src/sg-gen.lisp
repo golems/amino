@@ -18,22 +18,35 @@
      (cgen-declare-array   "static const double""v" (amino::vec-list v))
      (when (scene-frame-joint-p frame)
        (cgen-declare-array "static const double" "axis" (amino::vec-list (scene-frame-joint-axis frame))))
-     (cgen-stmt
       (etypecase frame
-        (scene-frame-fixed (cgen-call "aa_rx_sg_add_frame_fixed"
-                                      argument-name
-                                      parent-string name-string
-                                      "q" "v"))
+        (scene-frame-fixed
+         (cgen-call-stmt "aa_rx_sg_add_frame_fixed"
+                         argument-name
+                         parent-string name-string
+                         "q" "v"))
         (scene-frame-joint
-         (cgen-call (etypecase frame
-                      (scene-frame-prismatic "aa_rx_sg_add_frame_prismatic")
-                      (scene-frame-revolute "aa_rx_sg_add_frame_revolute"))
-                    argument-name
-                    parent-string name-string
-                    "q" "v"
-                    (cgen-string (scene-frame-joint-configuration-name frame))
-                    "axis"
-                    (scene-frame-joint-configuration-offset frame))))))))
+         (list
+          (cgen-call-stmt (etypecase frame
+                            (scene-frame-prismatic "aa_rx_sg_add_frame_prismatic")
+                            (scene-frame-revolute "aa_rx_sg_add_frame_revolute"))
+                          argument-name
+                          parent-string name-string
+                          "q" "v"
+                          (cgen-string (scene-frame-joint-configuration-name frame))
+                          "axis"
+                          (scene-frame-joint-configuration-offset frame))
+          (when-let ((limits (scene-frame-joint-limits frame)))
+            (labels ((emit-limit (fun limit-fun)
+                       (when-let* ((limit (funcall limit-fun limits))
+                                   (min (joint-limit-min limit))
+                                   (max (joint-limit-min limit)))
+                         (cgen-call-stmt fun argument-name
+                                         (cgen-string (scene-frame-joint-configuration-name frame))
+                                         min max))))
+              (list (emit-limit "aa_rx_sg_set_limit_pos" #'joint-limits-position)
+                    (emit-limit "aa_rx_sg_set_limit_vel" #'joint-limits-velocity)
+                    (emit-limit "aa_rx_sg_set_limit_acc" #'joint-limits-acceleration)
+                    (emit-limit "aa_rx_sg_set_limit_eff" #'joint-limits-effort))))))))))
 
 (defun scene-genc-geom (argument-name frame geom)
   (let ((cgeom "geom")
