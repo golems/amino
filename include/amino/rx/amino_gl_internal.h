@@ -57,7 +57,10 @@ struct aa_gl_globals {
         struct {
             GLfloat world_v_cam[3];
             GLfloat ambient[3];
-            GLfloat world_v_light[3];
+            union {
+                GLfloat light_position[3];
+                GLfloat world_v_light[3];
+            };
             GLfloat light_color[3];
         };
         GLfloat vec3_data[12];

@@ -74,7 +74,7 @@ aa_rx_geom_opt_set_no_shadow (
  * Set color option
  */
 AA_API void
-aa_rx_geom_opt_set_color (
+aa_rx_geom_opt_set_color3 (
     struct aa_rx_geom_opt *opt,
     double red, double blue, double green );
 
@@ -106,7 +106,7 @@ aa_rx_geom_opt_set_collision (
  * Set specular reflection.
  */
 AA_API void
-aa_rx_geom_opt_set_specular (
+aa_rx_geom_opt_set_specular3 (
     struct aa_rx_geom_opt *opt,
     double red, double green, double blue );
 

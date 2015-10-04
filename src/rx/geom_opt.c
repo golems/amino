@@ -39,6 +39,7 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
+#include "amino/getset.h"
 
 
 
@@ -48,7 +49,7 @@ struct aa_rx_geom_opt* aa_rx_geom_opt_create()
 {
     struct aa_rx_geom_opt *a = AA_NEW0(struct aa_rx_geom_opt);
     aa_rx_geom_opt_set_alpha(a, 1);
-    aa_rx_geom_opt_set_color(a, .5, .5, .5);
+    aa_rx_geom_opt_set_color3(a, .5, .5, .5);
     aa_rx_geom_opt_set_visual(a,1);
     aa_rx_geom_opt_set_collision(a,1);
 
@@ -62,25 +63,13 @@ aa_rx_geom_opt_destroy(struct aa_rx_geom_opt* opt)
     free(opt);
 }
 
-void
-aa_rx_geom_opt_set_no_shadow (
-    struct aa_rx_geom_opt *opt,
-    int no_shadow )
-{
-    opt->no_shadow = no_shadow ? 1 : 0;
-}
+AA_DEF_BOOL_SETTER( aa_rx_geom_opt, no_shadow );
+AA_DEF_BOOL_SETTER( aa_rx_geom_opt, visual );
+AA_DEF_BOOL_SETTER( aa_rx_geom_opt, collision );
 
 
-void
-aa_rx_geom_opt_set_color (
-    struct aa_rx_geom_opt *opt,
-    double red, double blue, double green )
-{
-    opt->color[0] = red;
-    opt->color[1] = blue;
-    opt->color[2] = green;
-}
-
+AA_DEF_VEC3_SETTER( aa_rx_geom_opt, color );
+AA_DEF_VEC3_SETTER( aa_rx_geom_opt, specular );
 
 void
 aa_rx_geom_opt_set_alpha (
@@ -88,32 +77,4 @@ aa_rx_geom_opt_set_alpha (
     double alpha )
 {
     opt->color[3] = alpha;
-}
-
-void
-aa_rx_geom_opt_set_visual (
-    struct aa_rx_geom_opt *opt,
-    int visual )
-{
-    opt->visual = visual ? 1 : 0;
-}
-
-void
-aa_rx_geom_opt_set_collision (
-    struct aa_rx_geom_opt *opt,
-    int collision )
-{
-    opt->collision = collision ? 1 : 0;
-
-}
-
-void
-aa_rx_geom_opt_set_specular (
-    struct aa_rx_geom_opt *opt,
-    double red, double green, double blue )
-{
-
-    opt->specular[0] = red;
-    opt->specular[1] = blue;
-    opt->specular[2] = green;
 }

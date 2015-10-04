@@ -52,6 +52,8 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
 
+#include "amino/getset.h"
+
 
 #define CHECK_GL_STATUS(TYPE,handle,pname) {                            \
         GLint status;                                                   \
@@ -1034,16 +1036,6 @@ aa_gl_globals_home_camera(
 }
 
 void
-aa_gl_globals_set_light_position(
-    struct aa_gl_globals *globals,
-    const double world_v_light[3])
-{
-    for( size_t i = 0; i < 3; i ++ ) {
-        globals->world_v_light[i] = (GLfloat)world_v_light[i];
-    }
-}
-
-void
 aa_gl_globals_set_perspective(
     struct aa_gl_globals *globals,
     double fovy,
@@ -1072,51 +1064,13 @@ aa_gl_globals_set_aspect(
                            globals->perspective);
 }
 
-void
-aa_gl_globals_set_light_color(
-    struct aa_gl_globals *globals,
-    double color[3] )
-{
-    for( size_t i = 0; i < 3; i ++ ) {
-        globals->light_color[i] = (GLfloat)color[i];
-    }
-}
+AA_DEF_FLOAT3_SETTER( aa_gl_globals, light_position );
+AA_DEF_FLOAT3_SETTER( aa_gl_globals, light_color );
+AA_DEF_FLOAT3_SETTER( aa_gl_globals, ambient );
 
-void
-aa_gl_globals_set_light_power(
-    struct aa_gl_globals *globals,
-    double power )
-{
-    globals->light_power = (GLfloat)power;
-}
-
-void
-aa_gl_globals_set_ambient(
-    struct aa_gl_globals *globals,
-    double ambient[3] )
-{
-
-    for( size_t i = 0; i < 3; i ++ ) {
-        globals->ambient[i] = (GLfloat)ambient[i];
-    }
-}
-
-void
-aa_gl_globals_set_show_visual(
-    struct aa_gl_globals *globals,
-    int show_visual )
-{
-    globals->show_visual = show_visual ? 1 : 0;
-}
-
-void
-aa_gl_globals_set_show_collision (
-    struct aa_gl_globals *globals,
-    int show_collision )
-{
-    globals->show_collision = show_collision ? 1 : 0;
-}
-
+AA_DEF_FLOAT_SETTER( aa_gl_globals, light_power );
+AA_DEF_BOOL_SETTER( aa_gl_globals, show_visual );
+AA_DEF_BOOL_SETTER( aa_gl_globals, show_collision );
 
 struct sg_render_cx {
     const struct aa_rx_sg *sg;

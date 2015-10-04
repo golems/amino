@@ -154,7 +154,7 @@ aa_gl_globals_set_perspective(
 AA_API void
 aa_gl_globals_set_light_color(
     struct aa_gl_globals *globals,
-    double color[3] );
+    const double color[3] );
 
 AA_API void
 aa_gl_globals_set_light_power(
@@ -164,7 +164,7 @@ aa_gl_globals_set_light_power(
 AA_API void
 aa_gl_globals_set_ambient(
     struct aa_gl_globals *globals,
-    double ambient[3] );
+    const double ambient[3] );
 
 AA_API void
 aa_gl_globals_set_show_visual(
