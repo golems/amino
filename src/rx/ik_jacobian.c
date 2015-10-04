@@ -53,20 +53,6 @@
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
 
-struct rfx_kin_solve_opts {
-    double dt0;          ///< initial timestep
-
-    double theta_tol;    ///< angle error tolerate
-    double x_tol;        ///< translation error tolerance
-    double dq_tol;       ///< translation error tolerance
-    double s2min_dls;    ///< minimum square singular value for damped least squares
-
-    double dx_dt;        ///< scaling for cartesian error
-
-    double *dq_dt;       ///< scaling for joint error
-    double *q_ref;
-};
-
 /* void rfx_kin_duqu_reldiff( const double S_u[8], const double S_r[8], const double dS_t[8], */
 /*                            double S_t[8], double dS_u[8] ) { */
 /*     aa_tf_duqu_mul( S_u, S_r, S_t ); */
@@ -87,7 +73,7 @@ struct rfx_kin_solve_opts {
 
 struct kin_solve_cx {
     size_t n;
-    struct rfx_kin_solve_opts *opts;
+    struct aa_rx_ksol_opts *opts;
     rfx_kin_duqu_fun kin_fun;
     void *kin_cx;
     const double *S1;
@@ -146,7 +132,7 @@ static void kin_solve_sys( const void *vcx,
     for( size_t i = 0; i < 6; i ++ ) w_e[i] *= -cx->opts->dx_dt;
 
     // damped least squares
-    aa_la_dzdpinv( 6, cx->n, cx->opts->s2min_dls, J, J_star );
+    aa_la_dzdpinv( 6, cx->n, cx->opts->s2min, J, J_star );
     if( cx->opts->q_ref ) {
         // nullspace projection
         double dqnull[cx->n];
@@ -172,7 +158,7 @@ static void kin_solve_sys( const void *vcx,
 static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
                    rfx_kin_duqu_fun kin_fun, void *kin_cx,
                    double *q1,
-                   struct rfx_kin_solve_opts *opts ) {
+                   const struct aa_rx_ksol_opts *opts ) {
 
     struct kin_solve_cx cx;
     cx.n = n;
@@ -188,18 +174,18 @@ static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
 
     double k[n*6]; // adaptive runge-kutta internal derivatives
     kin_solve_sys( &cx, 0, q1, k ); // initial dx for adaptive runge-kutta
-    double dt = opts->dt0; // adaptive timestep
+    double dt = opts->dt; // adaptive timestep
     //double dq_dt[n];
     //AA_MEM_CPY( dq_dt, opts->dq_dt, n );
     cx.dq_dt = opts->dq_dt;
 
-    double dq_norm = opts->dq_tol;
-    double theta_err = opts->theta_tol;
-    double x_err = opts->x_tol;
+    double dq_norm = opts->tol_dq;
+    double theta_err = opts->tol_angle;
+    double x_err = opts->tol_trans;
 
-    while( fabs(theta_err) >= opts->theta_tol ||
-           fabs(x_err) >= opts->x_tol ||
-           dq_norm >= opts->dq_tol )
+    while( fabs(theta_err) >= opts->tol_angle ||
+           fabs(x_err) >= opts->tol_trans ||
+           dq_norm >= opts->tol_dq )
     {
         iters++;
         dq_norm = 0;
@@ -233,14 +219,14 @@ static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
                                      q1, k, q4, q5 );
                 qerr = aa_la_ssd( n, q4, q5 );
                 // adapt the step size
-                if( qerr > opts->dq_tol / 2) {
+                if( qerr > opts->tol_dq / 2) {
                     dt /= 10;
                     //printf("reducing dt: %f\n", dt);
-                } else if ( qerr < opts->dq_tol / 16 ) {
+                } else if ( qerr < opts->tol_dq / 16 ) {
                     dt *= 2;
                     //printf("increasing dt: %f\n", dt);
                 }
-            } while( qerr > opts->dq_tol );
+            } while( qerr > opts->tol_dq );
 
             for( size_t i = 0; i < n; i ++ ) {
                 dq_norm += (q1[i]-q5[i]) * (q1[i]-q5[i]);
@@ -259,9 +245,9 @@ static int rfx_kin_solve( size_t n, const double *q0, const double S1[8],
 
         // adapt the nullspace gain
         if( cx.dq_dt &&
-            dq_norm < opts->dq_tol &&
-            (theta_err > opts->theta_tol ||
-             x_err > opts->x_tol ) )
+            dq_norm < opts->tol_dq &&
+            (theta_err > opts->tol_angle ||
+             x_err > opts->tol_trans ) )
         {
             for( size_t i = 0; i < n; i ++  ) cx.dq_dt[i] /= 2;
             //printf("halving nullspace gain: %f\n", cx.dq_dt);
@@ -318,11 +304,10 @@ static int ksol_duqu ( const void *cx_, const double *q_s, double S[8],  double 
 
 AA_API int
 aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
-                       const struct aa_rx_sg_chain_ksol_opts *opts,
+                       const struct aa_rx_ksol_opts *opts,
                        size_t n_tf, const double *TF, size_t ld_TF,
                        size_t n_q, double *q_subset )
 {
-    (void)opts;
 
     /* Only chains for now */
     assert(n_tf == 1 );
@@ -337,20 +322,18 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     double q0_sub[n_q];
     AA_MEM_ZERO(q0_sub,n_q);
 
-    struct rfx_kin_solve_opts kopts;
-    memset(&kopts,0,sizeof(kopts));
-    kopts.dt0 = .01;
-    kopts.theta_tol = 1*M_PI/180;
-    kopts.x_tol = 5e-3;
-    kopts.dq_tol = 1*M_PI/180;
-    kopts.dx_dt = .1;
-
-
+    /* struct aa_rx_ksol_opts kopts; */
+    /* memset(&kopts,0,sizeof(kopts)); */
+    /* kopts.dt = .01; */
+    /* kopts.tol_angle = 1*M_PI/180; */
+    /* kopts.tol_trans = 5e-3; */
+    /* kopts.tol_dq = 1*M_PI/180; */
+    /* kopts.dx_dt = .1; */
 
 
     rfx_kin_solve( n_q, q0_sub, S,
                    ksol_duqu, (void*)ssg,
-                   q_subset, &kopts );
+                   q_subset, opts );
 
 
     return -1;

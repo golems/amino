@@ -68,7 +68,7 @@ AA_API struct aa_rx_sg_sub *
 aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
                        aa_rx_frame_id root, aa_rx_frame_id tip );
 
-
+/*-- Jacobians --*/
 AA_API void
 aa_rx_sg_sub_jacobian_size( const struct aa_rx_sg_sub *ssg,
                             size_t *rows, size_t *cols );
@@ -78,17 +78,39 @@ aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                        size_t n_tf, const double *TF_abs, size_t ld_TF,
                        double *J, size_t ld_J );
 
-struct aa_rx_sg_chain_ksol_opts;
+/*-- Kinematic Solvers --*/
+struct aa_rx_ksol_opts;
+
+AA_API struct aa_rx_ksol_opts*
+aa_rx_ksol_opts_create();
+
+AA_API void
+aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts);
+
+AA_API void
+aa_rx_ksol_set_dt( struct aa_rx_ksol_opts *opts, double dt);
+
+AA_API void
+aa_rx_ksol_set_tol_angle( struct aa_rx_ksol_opts *opts, double tol);
+
+AA_API void
+aa_rx_ksol_set_tol_trans( struct aa_rx_ksol_opts *opts, double tol);
+
+AA_API void
+aa_rx_ksol_set_tol_config( struct aa_rx_ksol_opts *opts, double tol);
+
+AA_API void
+aa_rx_ksol_set_tol_s2min( struct aa_rx_ksol_opts *opts, double s2min);
 
 AA_API int
 aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
-                       const struct aa_rx_sg_chain_ksol_opts *opts,
+                       const struct aa_rx_ksol_opts *opts,
                        size_t n_tf, const double *TF, size_t ld_TF,
                        size_t n_q, double *q_subset );
 
 static inline int
 aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg_sub *ssg,
-                         const struct aa_rx_sg_chain_ksol_opts *opts,
+                         const struct aa_rx_ksol_opts *opts,
                          const double *TF,
                          size_t n_q, double *q_subset )
 {

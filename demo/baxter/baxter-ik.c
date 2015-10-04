@@ -120,10 +120,10 @@ int main(int argc, char *argv[])
     double E[7] = {0.285495, 0.878661, -0.118256, 0.363953,
                    0.736943, -0.747931, 0.516863};
 
-    printf("start ik\n");
-    aa_rx_sg_chain_ksol_dls( ssg, NULL,
+    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
+
+    aa_rx_sg_chain_ksol_dls( ssg, ko,
                              E, n_qs, qs );
-    printf("end ik\n");
 
     aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
                          qs, dcx.q );

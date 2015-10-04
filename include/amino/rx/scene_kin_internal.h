@@ -90,4 +90,22 @@ aa_rx_sg_chain_jacobian( const struct aa_rx_sg *sg,
                          size_t n_configs, aa_rx_frame_id *chain_configs ,
                          double *J, size_t ld_J );
 
+
+struct aa_rx_ksol_opts {
+    double dt;          ///< initial timestep
+
+    double tol_angle;    ///< angle error tolerate
+    double tol_trans;    ///< translation error tolerance
+    double tol_dq;       ///< translation error tolerance
+    double s2min;        ///< minimum square singular value for damped least squares
+
+    double dx_dt;        ///< scaling for cartesian error
+
+    double *dq_dt;       ///< scaling for joint error
+    double *q_ref;
+
+    unsigned free_dq_dt : 1;
+    unsigned free_q_ref : 1;
+};
+
 #endif /*AMINO_RX_SCENE_KIN_H*/
