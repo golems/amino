@@ -193,27 +193,73 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
                  (make-tree-map #'frame-name-compare)
                  map))
 
+(defstruct joint-limit
+  (min 0 :type double-float)
+  (max 0 :type double-float))
+
+(defstruct joint-limits
+  (position nil :type (or null joint-limit))
+  (velocity nil :type (or null joint-limit))
+  (acceleration nil :type (or null joint-limit))
+  (effort nil :type (or null joint-limit)))
 
 (defstruct (scene-frame-joint (:include scene-frame))
   "Base struct for varying scene frames."
   (configuration-name nil :type frame-name)
   (configuration-offset 0d0 :type double-float)
-  (axis (vec3* 0d0 0d0 1d0) :type vec3))
+  (axis (vec3* 0d0 0d0 1d0) :type vec3)
+  (limits nil :type (or null joint-limits)))
 
 (defstruct (scene-frame-revolute (:include scene-frame-joint))
   "A frame representing a revolute (rotating) joint.")
+
+(defun joint-limit (&key value min max)
+  (cond
+    ;; no limit
+    ((and (null min)
+          (null max)
+          (null value))
+     nil)
+    ;; explit min/max
+    ((and min max (null value))
+     (assert (null value))
+     (make-joint-limit :min min :max max))
+    ;; something else
+    ((and (null min)
+          (null max)
+          value)
+     (etypecase value
+       (number
+        (make-joint-limit :min (- value) :max (+ value)))
+       (joint-limit value)))
+    ;; bad args
+    (t
+     (error "invalid joint-limit arguments"))))
+
+(defun joint-limits (&key
+                       effort-limit min-effort max-effort
+                       acceleration-limit min-acceleration max-acceleration
+                       velocity-limit min-velocity max-velocity
+                       position-limit min-position max-position)
+  (make-joint-limits
+   :position (joint-limit :value position-limit :min min-position :max max-position)
+   :velocity (joint-limit :value velocity-limit :min min-velocity :max max-velocity)
+   :acceleration (joint-limit :value acceleration-limit :min min-acceleration :max max-acceleration)
+   :effort (joint-limit :value effort-limit :min min-effort :max max-effort)))
 
 (defun scene-frame-revolute (parent name &key
                                            axis
                                            (configuration-name name)
                                            (configuration-offset 0d0)
-                                           (tf (identity-tf)))
+                                           (tf (identity-tf))
+                                           limits)
   "Create a new revolute frame."
   (assert axis)
   (make-scene-frame-revolute :name name
                              :configuration-name configuration-name
                              :configuration-offset (coerce configuration-offset 'double-float)
                              :parent parent
+                             :limits limits
                              :axis (vec3 axis)
                              :tf (tf tf)))
 
@@ -224,6 +270,7 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
                                             axis
                                             (configuration-name name)
                                             (configuration-offset 0d0)
+                                            limits
                                             (tf (identity-tf)))
   "Create a new prismatic frame."
   (assert axis)
@@ -232,6 +279,7 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
                               :configuration-offset (coerce configuration-offset 'double-float)
                               :parent parent
                               :axis (vec3 axis)
+                              :limits limits
                               :tf (tf tf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -290,11 +338,11 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
 
 (defun %scene-graph (things)
   (labels ((load-thing (thing)
-             (load-scene-file
-              (let ((dir (pathname-directory thing)))
-                (if (and dir (eq :absolute (car dir)))
-                    thing
-                    (merge-pathnames *scene-directory* thing)))))
+             (load-scene-file thing))
+              ;; (let ((dir (pathname-directory thing)))
+              ;;   (if (and dir (eq :absolute (car dir)))
+              ;;       thing
+              ;;       (merge-pathnames *scene-directory* thing))))
            (rec (scene-graph thing)
              (etypecase thing
                (scene-frame

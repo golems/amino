@@ -8,21 +8,21 @@
 ;;            *urdf-package-alist* :test #'equal))
 
 (defun urdf-resolve-file (filename) ; &optional (package-alist *urdf-package-alist*))
-  (let* ((package (ppcre:regex-replace "^package://([^/]*)/.*"
+  (if-let ((match (ppcre:scan "^package://" filename))
+           (package (ppcre:regex-replace "^package://([^/]*)/.*"
                                        filename
                                        "\\1")))
-    (if package
-        (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH")))
-          (loop for path in (ppcre:split ":" ros-package-path)
-             for package-directory = (concatenate 'string path "/" package)
-             do
-               (when (probe-file package-directory)
-                 (return-from urdf-resolve-file
-                   (ppcre:regex-replace "^package://([^/]*)"
-                                        filename
-                                        package-directory))))
-          (error "Package ~A not found for ROS_PACKAGE_PATH='~A'" package ros-package-path))
-        filename)))
+    (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH")))
+      (loop for path in (ppcre:split ":" ros-package-path)
+         for package-directory = (concatenate 'string path "/" package)
+         do
+           (when (probe-file package-directory)
+             (return-from urdf-resolve-file
+               (ppcre:regex-replace "^package://([^/]*)"
+                                    filename
+                                    package-directory))))
+      (error "Package ~A not found for ROS_PACKAGE_PATH='~A'" package ros-package-path))
+    filename))
 
 
 (defstruct urdf-joint
@@ -32,7 +32,11 @@
   type
   axis
   parent
-  child)
+  child
+  limit-effort
+  limit-lower
+  limit-upper
+  limit-velocity)
 
 (defun urdf-load (file)
   "Create the DOM for a Collada file."
@@ -53,6 +57,9 @@
                 (path (path)
                   (dom-select-path joint-node path
                                    :singleton t :undefined-error nil))
+                (maybe-float (text)
+                  (when (> (length text) 0)
+                    (parse-float text)))
                 (maybe-floats (text thing length)
                   (when (> (length text) 0)
                     (let ((seq (parse-float-sequence text)))
@@ -65,6 +72,10 @@
                           :xyz (maybe-floats (path '("origin" "@xyz")) "origin xyz" 3)
                           :axis (maybe-floats (path '("axis" "@xyz"))
                                               "axis xyz" 3)
+                          :limit-effort (maybe-float (path '("limit" "@effort")))
+                          :limit-lower (maybe-float (path '("limit" "@lower")))
+                          :limit-upper (maybe-float (path '("limit" "@upper")))
+                          :limit-velocity (maybe-float (path '("limit" "@velocity")))
                           :parent (path '("parent" "@link"))
                           :child (path '("child" "@link"))))))
 
@@ -77,6 +88,10 @@
      for xyz = (urdf-joint-xyz j)
      for axis = (urdf-joint-axis j)
      for tf = (tf* (amino:euler-rpy rpy) xyz)
+     for limits = (joint-limits :effort-limit (urdf-joint-limit-effort j)
+                                :velocity-limit (urdf-joint-limit-velocity j)
+                                :min-position (urdf-joint-limit-lower j)
+                                :max-position (urdf-joint-limit-upper j))
      collect
        (ecase type
          (:fixed
@@ -84,10 +99,12 @@
          (:revolute
           (scene-frame-revolute parent name
                                 :axis axis
+                                :limits limits
                                 :tf tf))
          (:prismatic
           (scene-frame-prismatic parent name
                                  :axis axis
+                                :limits limits
                                  :tf tf)))))
 
 (defun urdf-bind-links (dom scene-graph link-parent-map &key
