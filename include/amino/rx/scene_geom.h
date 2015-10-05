@@ -119,37 +119,61 @@ aa_rx_geom_opt_set_specular3 (
 /*----------*/
 
 
+/**
+ * Copy a geometry struct
+ */
 AA_API struct aa_rx_geom *
 aa_rx_geom_copy( struct aa_rx_geom *src );
 
+/**
+ * Destroy a geometry struct
+ */
 AA_API void
 aa_rx_geom_destroy( struct aa_rx_geom *geom );
 
+/**
+ * Enumeration of geometry shape types
+ */
 enum aa_rx_geom_shape {
-    AA_RX_NOSHAPE,
-    AA_RX_MESH,
-    AA_RX_BOX,
-    AA_RX_SPHERE,
-    AA_RX_CYLINDER,
-    AA_RX_CONE,
-    AA_RX_GRID
+    AA_RX_NOSHAPE,    ///< Invalid shape
+    AA_RX_MESH,       ///< A triangular mesh shape
+    AA_RX_BOX,        ///< A box (cube) shape
+    AA_RX_SPHERE,     ///< A sphere (ball) shape
+    AA_RX_CYLINDER,   ///< A cylinder shape
+    AA_RX_CONE,       ///< A cone shape
+    AA_RX_GRID        ///< A grid-lines shape
 };
 
+/**
+ * Return a string for the shape type
+ */
 AA_API const char *aa_rx_geom_shape_str( enum aa_rx_geom_shape shape );
 
+/**
+ * Shape for a box
+ */
 struct aa_rx_shape_box {
     double dimension[3];
 };
 
+/**
+ * Shape for a sphere
+ */
 struct aa_rx_shape_sphere {
     double radius;
 };
 
+/**
+ * Shape for a cylinder
+ */
 struct aa_rx_shape_cylinder {
     double height;
     double radius;
 };
 
+/**
+ * Shape for a cone
+ */
 struct aa_rx_shape_cone {
     double height;
     double start_radius;
@@ -157,12 +181,24 @@ struct aa_rx_shape_cone {
 };
 
 
+/**
+ * Shape for a grid
+ */
 struct aa_rx_shape_grid {
     double dimension[2];
     double delta[2];
     double width;
 };
 
+/**
+ * Extract the shape type from a geometry object.
+ *
+ * @param[in]  g            the geometry object
+ * @param[out] shape_type   the shape of the geometry
+ *
+ * @return poiner to the shape
+ *
+ */
 AA_API void *
 aa_rx_geom_shape ( const struct aa_rx_geom *g,
                    enum aa_rx_geom_shape *shape_type );
@@ -217,71 +253,58 @@ aa_rx_geom_grid (
  */
 struct aa_rx_mesh;
 
+/**
+ * Create a mesh
+ */
 AA_API struct aa_rx_mesh* aa_rx_mesh_create();
+
+/**
+ * Destroy the mesh
+ */
 AA_API void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh );
 
+/**
+ * Set the mesh vertices
+ */
 AA_API void aa_rx_mesh_set_vertices (
     struct aa_rx_mesh *mesh, size_t n,
     const float *vectors, int copy );
 
+/**
+ * Set the mesh normals
+ */
 AA_API void aa_rx_mesh_set_normals (
     struct aa_rx_mesh *mesh, size_t n,
     const float *normals, int copy );
 
+/**
+ * Set the mesh indices
+ */
 AA_API void aa_rx_mesh_set_indices (
     struct aa_rx_mesh *mesh, size_t n,
     const unsigned *indices, int copy );
 
-AA_API void aa_rx_mesh_set_normals (
-    struct aa_rx_mesh *mesh, size_t n,
-    const float *normals, int copy );
-
+/**
+ * Set the mesh colors and alpha
+ */
 AA_API void aa_rx_mesh_set_rgba (
     struct aa_rx_mesh *mesh,
     size_t width, size_t height,
     const uint8_t *rgba, int copy );
 
+/**
+ * Set the mesh colors and uv values
+ */
 AA_API void aa_rx_mesh_set_uv (
     struct aa_rx_mesh *mesh,
     size_t n, const float *uv, int copy );
 
+/**
+ * Set the mesh texture parameters
+ */
 AA_API void aa_rx_mesh_set_texture (
     struct aa_rx_mesh *mesh,
     const struct aa_rx_geom_opt *opt );
-
-/* void aa_rx_mesh_fill_vertex_vectors_dbl ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, double *vectors ); */
-
-/* void aa_rx_mesh_fill_vertex_indices ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, size_t *indices); */
-
-
-/* void aa_rx_mesh_fill_normal_vectors ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, float *vectors); */
-
-/* void aa_rx_mesh_fill_normal_vectors_dbl ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, double *vectors ); */
-
-/* void aa_rx_mesh_fill_normal_indices ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, size_t *indices); */
-
-
-/* void aa_rx_mesh_fill_uv_vectors ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, float *vectors); */
-
-/* void aa_rx_mesh_fill_uv_vectors_dbl ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, double *vectors ); */
-
-/* void aa_rx_mesh_fill_uv_indices ( */
-/*     struct aa_rx_mesh *mesh, */
-/*     size_t n, size_t *indices); */
 
 /**
  * Attach a mesh to frame.
@@ -291,7 +314,9 @@ aa_rx_geom_mesh (
     struct aa_rx_geom_opt *opt,
     struct aa_rx_mesh *mesh );
 
-
+/**
+ * Attach geometry to the scene graph
+ */
 AA_API void
 aa_rx_geom_attach (
     struct aa_rx_sg *sg,
