@@ -65,11 +65,11 @@ aa_rx_cl_init( )
 }
 
 struct aa_rx_cl_geom {
-    boost::shared_ptr<fcl::CollisionGeometry> *ptr;
-    aa_rx_cl_geom() { }
-    ~aa_rx_cl_geom() {
-        delete ptr;
-    }
+    boost::shared_ptr<fcl::CollisionGeometry> ptr;
+    aa_rx_cl_geom( fcl::CollisionGeometry *ptr_) :
+        ptr(ptr_) { }
+
+    ~aa_rx_cl_geom() { }
 };
 
 AA_API void
@@ -78,7 +78,7 @@ aa_rx_cl_geom_destroy( struct aa_rx_cl_geom *cl_geom ) {
 }
 
 
-static boost::shared_ptr<fcl::CollisionGeometry> *
+static fcl::CollisionGeometry *
 cl_init_mesh( const struct aa_rx_mesh *mesh )
 {
 
@@ -122,7 +122,7 @@ cl_init_mesh( const struct aa_rx_mesh *mesh )
     model->addSubModel(vertices, triangles);
     model->endModel();
 
-    return new boost::shared_ptr<fcl::CollisionGeometry> (model);
+    return model;
 }
 
 static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
@@ -144,7 +144,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 
 
     /* Ok, now do it */
-    boost::shared_ptr<fcl::CollisionGeometry> *ptr = NULL;
+    fcl::CollisionGeometry *ptr = NULL;
     enum aa_rx_geom_shape shape_type;
     void *shape_ = aa_rx_geom_shape(geom, &shape_type);
 
@@ -163,20 +163,17 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     }
     case AA_RX_BOX: {
         struct aa_rx_shape_box *shape = (struct aa_rx_shape_box *)  shape_;
-        ptr = new boost::shared_ptr<fcl::CollisionGeometry> (
-            new fcl::Box(shape->dimension[0],shape->dimension[1],shape->dimension[2]));
+        ptr = new fcl::Box(shape->dimension[0],shape->dimension[1],shape->dimension[2]);
         break;
     }
     case AA_RX_SPHERE: {
         struct aa_rx_shape_sphere *shape = (struct aa_rx_shape_sphere *)  shape_;
-        ptr = new boost::shared_ptr<fcl::CollisionGeometry> (
-            new fcl::Sphere(shape->radius) );
+        ptr = new fcl::Sphere(shape->radius);
         break;
     }
     case AA_RX_CYLINDER: {
         struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
-        ptr = new boost::shared_ptr<fcl::CollisionGeometry> (
-            new fcl::Cylinder(shape->radius, shape->height) );
+        ptr = new fcl::Cylinder(shape->radius, shape->height);
         break;
     }
     case AA_RX_CONE: {
@@ -190,9 +187,8 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     }
 
     if(ptr) {
-        struct aa_rx_cl_geom *cl_geom = new aa_rx_cl_geom;
-        (*ptr)->setUserData(geom); // FCL user data is the amino geometry object
-        cl_geom->ptr = ptr;        // Fill the POD structure with shared pointer
+        struct aa_rx_cl_geom *cl_geom = new aa_rx_cl_geom(ptr);
+        cl_geom->ptr->setUserData(geom); // FCL user data is the amino geometry object
         geom->cl_geom = cl_geom;   // Set the amino geometry collision object
     } else {
         fprintf(stderr, "Unimplemented collision type: %s\n", aa_rx_geom_shape_str( shape_type ) );
@@ -225,7 +221,7 @@ static void cl_create_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_g
 
     if( ! geom->cl_geom ) return;
 
-    fcl::CollisionObject *obj = new fcl::CollisionObject( *geom->cl_geom->ptr );
+    fcl::CollisionObject *obj = new fcl::CollisionObject( geom->cl_geom->ptr );
     obj->setUserData( (void*) ((intptr_t) frame_id) );
     cx->manager->registerObject(obj);
     cx->objects->push_back( obj );
