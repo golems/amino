@@ -77,7 +77,7 @@ if test -z "$INPUT_FILE"; then
 fi
 
 
-arxc.core --script <<EOF
+arxc.core --dynamic-space-size 2GB --script <<EOF
 (robray::scene-graph-genc (robray::load-scene-file "$INPUT_FILE")
                           :file "$OUTPUT_FILE")
 EOF

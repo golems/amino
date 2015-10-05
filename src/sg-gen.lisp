@@ -39,7 +39,7 @@
             (labels ((emit-limit (fun limit-fun)
                        (when-let* ((limit (funcall limit-fun limits))
                                    (min (joint-limit-min limit))
-                                   (max (joint-limit-min limit)))
+                                   (max (joint-limit-max limit)))
                          (cgen-call-stmt fun argument-name
                                          (cgen-string (scene-frame-joint-configuration-name frame))
                                          min max))))
