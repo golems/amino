@@ -148,9 +148,9 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     enum aa_rx_geom_shape shape_type;
     void *shape_ = aa_rx_geom_shape(geom, &shape_type);
 
-    printf("creating collision geometry for frame %s (%s)\n",
-           aa_rx_sg_frame_name(sg, frame_id),
-           aa_rx_geom_shape_str(shape_type) );
+    // printf("creating collision geometry for frame %s (%s)\n",
+    //        aa_rx_sg_frame_name(sg, frame_id),
+    //        aa_rx_geom_shape_str(shape_type) );
 
     switch( shape_type ) {
     case AA_RX_NOSHAPE: {
@@ -158,9 +158,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     }
     case AA_RX_MESH: {
         struct aa_rx_mesh *shape = (struct aa_rx_mesh *)  shape_;
-        printf("a\n");
         ptr = cl_init_mesh(shape);
-        printf("b\n");
         break;
     }
     case AA_RX_BOX: {
