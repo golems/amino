@@ -38,6 +38,10 @@
 #ifndef AMINO_RX_SCENE_COLLISION_H
 #define AMINO_RX_SCENE_COLLISION_H
 
+/**
+ * @file scene_collision.h
+ */
+
 /* Initialize collision handling */
 AA_API void
 aa_rx_cl_init( );

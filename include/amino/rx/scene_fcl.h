@@ -35,8 +35,8 @@
  *
  */
 
-#ifndef AMINO_RX_FCL_H
-#define AMINO_RX_FCL_H
+#ifndef AMINO_RX_SCENE_FCL_H
+#define AMINO_RX_SCENE_FCL_H
 
 /* Utility */
 #ifdef __cplusplus
@@ -66,4 +66,4 @@ qutr2fcltf( const double E[7] )
 
 #endif /* __cplusplus */
 
-#endif /*AMINO_RX_FCL_H*/
+#endif /*AMINO_RX_SCENE_FCL_H*/

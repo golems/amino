@@ -35,8 +35,12 @@
  *
  */
 
-#ifndef AMINO_RX_GL_H
-#define AMINO_RX_GL_H
+#ifndef AMINO_RX_SCENE_GL_H
+#define AMINO_RX_SCENE_GL_H
+
+/**
+ * @file scene_gl.h
+ */
 
 /* DESIGN
  * ======
@@ -182,4 +186,4 @@ AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom
     );
 
-#endif /*AMINO_RX_GL_H*/
+#endif /*AMINO_RX_SCENE_GL_H*/

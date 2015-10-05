@@ -35,8 +35,12 @@
  *
  */
 
-#ifndef AMINO_RX_SDL_H
-#define AMINO_RX_SDL_H
+#ifndef AMINO_RX_SCENE_SDL_H
+#define AMINO_RX_SCENE_SDL_H
+
+/**
+ * @file scene_sdl.h
+ */
 
 
 AA_API void aa_sdl_init( void );
@@ -75,4 +79,4 @@ AA_API void aa_sdl_gl_window(
     SDL_Window **pwindow,
     SDL_GLContext *p_glcontext );
 
-#endif /*AMINO_RX_SDL_H*/
+#endif /*AMINO_RX_SCENE_SDL_H*/

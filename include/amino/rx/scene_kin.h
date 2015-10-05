@@ -39,6 +39,10 @@
 #define AMINO_RX_SCENE_KIN_H
 
 /**
+ * @file scene_kin.h
+ */
+
+/**
  * A scenegraph subset.
  */
 struct aa_rx_sg_sub;

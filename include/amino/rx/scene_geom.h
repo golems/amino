@@ -38,6 +38,10 @@
 #ifndef AMINO_RX_SCENE_GEOM_H
 #define AMINO_RX_SCENE_GEOM_H
 
+/**
+ * @file scene_geom.h
+ */
+
 /*-----------*/
 /*- Options -*/
 /*-----------*/

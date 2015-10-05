@@ -35,8 +35,8 @@
  *
  */
 
-#ifndef AMINO_RX_GL_INTERNAL_H
-#define AMINO_RX_GL_INTERNAL_H
+#ifndef AMINO_RX_SCENE_GL_INTERNAL_H
+#define AMINO_RX_SCENE_GL_INTERNAL_H
 
 
 struct aa_gl_globals {
@@ -119,4 +119,4 @@ AA_API void aa_gl_draw_tf (
     const double *world_E_model,
     const struct aa_gl_buffers *buffers);
 
-#endif /*AMINO_RX_GL_INTERNAL_H*/
+#endif /*AMINO_RX_SCENE_GL_INTERNAL_H*/

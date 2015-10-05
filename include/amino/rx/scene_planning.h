@@ -38,6 +38,10 @@
 #ifndef AMINO_RX_SCENE_PLANNING_H
 #define AMINO_RX_SCENE_PLANNING_H
 
+/**
+ * @file scene_planning.h
+ */
+
 /*--- Motion Planning Options ---*/
 struct aa_rx_mp_opt;
 
