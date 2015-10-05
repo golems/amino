@@ -43,6 +43,7 @@
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/ProblemDefinition.h>
+#include <ompl/base/spaces/RealVectorBounds.h>
 
 namespace amino {
 
@@ -209,7 +210,23 @@ public:
         aa_rx_sg_config_indices( sg, n_configs, config_names, ids );
 
         // TODO: get actual bounds
-        setBounds(-M_PI, M_PI);
+        ompl::base::RealVectorBounds vb((unsigned int)n_configs);
+        for( unsigned i = 0; i < (unsigned)n_configs; i ++ ) {
+            double min,max;
+            int r = aa_rx_sg_get_limit_pos(sg, ids[i], &min, &max);
+            if(r) {
+                fprintf(stderr, "ERROR: no position limits for %s\n",
+                        aa_rx_sg_config_name(sg, ids[i]));
+                /* This seems as good as anything */
+                min = -M_PI;
+                max = -M_PI;
+            }
+
+            vb.setLow(i,min);
+            vb.setHigh(i,max);
+
+        }
+        setBounds(vb);
 
         // // allowed
         // size_t n_q = config_count_all();
