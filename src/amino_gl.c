@@ -47,8 +47,8 @@
 #include "amino/rx/rxtype_internal.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
-#include "amino/rx/amino_gl.h"
-#include "amino/rx/amino_gl_internal.h"
+#include "amino/rx/scene_gl.h"
+#include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
 

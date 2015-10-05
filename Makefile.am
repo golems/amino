@@ -58,10 +58,10 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/rxtype.h       \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
-	include/amino/rx/amino_gl.h     \
+	include/amino/rx/scene_gl.h     \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
-	include/amino/rx/amino_sdl.h
+	include/amino/rx/scene_sdl.h
 
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la

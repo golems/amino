@@ -51,9 +51,9 @@
 
 
 #include "amino/rx/rxtype.h"
-#include "amino/rx/amino_gl.h"
-#include "amino/rx/amino_gl_internal.h"
-#include "amino/rx/amino_sdl.h"
+#include "amino/rx/scene_gl.h"
+#include "amino/rx/scene_gl_internal.h"
+#include "amino/rx/scene_sdl.h"
 
 
 

@@ -54,7 +54,7 @@
 #include <fcl/BVH/BVH_model.h>
 
 #include "amino/rx/scene_collision_internal.h"
-#include "amino/rx/amino_fcl.h"
+#include "amino/rx/scene_fcl.h"
 
 
 /* Initialize collision handling */

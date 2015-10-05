@@ -55,7 +55,7 @@ AA_API void aa_rx_sg_destroy(struct aa_rx_sg *scene_graph)
     delete scene_graph;
 }
 
-AA_API void aa_rx_sg_index ( struct aa_rx_sg *scene_graph )
+AA_API void aa_rx_sg_init ( struct aa_rx_sg *scene_graph )
 {
     scene_graph->sg->index();
 }
