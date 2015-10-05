@@ -46,4 +46,20 @@
  */
 struct aa_gl_buffers;
 
+AA_API void
+aa_gl_buffers_destroy( struct aa_gl_buffers *bufs );
+
+/* Cleanup function set in GL module */
+AA_EXTERN void
+(*aa_gl_buffers_destroy_fun)( struct aa_gl_buffers *bufs );
+
+struct aa_rx_cl_geom;
+
+AA_API void
+aa_rx_cl_geom_destroy( struct aa_rx_cl_geom *cl_geom );
+
+/* Cleanup function set in collision module */
+AA_EXTERN void
+(*aa_rx_cl_geom_destroy_fun)( struct aa_rx_cl_geom *cl_geom );
+
 #endif /*AMINO_RX_RXTYPE_INTERNAL_H*/

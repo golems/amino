@@ -36,12 +36,23 @@
  */
 
 #include "amino.h"
+
 #include "amino/rx/rxtype.h"
+#include "amino/rx/rxtype_internal.h"
+
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
+
 #include "sg_convenience.h"
+
+
+void
+(*aa_gl_buffers_destroy_fun)( struct aa_gl_buffers *bufs ) = NULL;
+
+void
+(*aa_rx_cl_geom_destroy_fun)( struct aa_rx_cl_geom *bufs ) = NULL;
 
 #define ALLOC_GEOM(TYPE, var, type_value, geom_opt )            \
     TYPE *var = AA_NEW0(TYPE);                                  \
@@ -150,10 +161,22 @@ aa_rx_geom_copy( struct aa_rx_geom *src )
 void
 aa_rx_geom_destroy( struct aa_rx_geom *geom )
 {
-
     geom->refcount--;
-    if( 0 == geom->refcount )
-    {
+    if( 0 == geom->refcount ) {
+        /* Free Mesh */
+        if( AA_RX_MESH == geom->type ) {
+            struct aa_rx_geom_mesh *mesh_geom = (struct aa_rx_geom_mesh *)geom;
+            aa_rx_mesh_destroy(mesh_geom->shape);
+        }
+        /* Free collision */
+        if( geom->cl_geom ) {
+            aa_rx_cl_geom_destroy_fun( geom->cl_geom );
+        }
+        /* Free gl */
+        if( geom->gl_buffers ) {
+            aa_gl_buffers_destroy_fun(geom->gl_buffers);
+        }
+
         free(geom);
     }
 }
@@ -199,9 +222,11 @@ void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
 {
     mesh->refcount--;
     if( 0 == mesh->refcount ) {
-        if(mesh->vertices_data) free(mesh->vertices_data);
-        if(mesh->normals_data) free(mesh->normals_data);
-        if(mesh->indices_data) free(mesh->indices_data);
+        aa_checked_free(mesh->vertices_data);
+        aa_checked_free(mesh->normals_data);
+        aa_checked_free(mesh->indices_data);
+        aa_checked_free(mesh->rgba_data);
+        aa_checked_free(mesh->uv_data);
         free(mesh);
     }
 }
@@ -274,7 +299,7 @@ void aa_rx_mesh_set_texture (
 
     // indices
     if( mesh->uv_data ) free(mesh->uv_data);
-    mesh->uv = mesh->uv_data =  AA_NEW0_AR(float, 2*mesh->n_vertices);
+    mesh->uv = mesh->uv_data = AA_NEW0_AR(float, 2*mesh->n_vertices);
 }
 
 const char *

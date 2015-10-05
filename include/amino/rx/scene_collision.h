@@ -38,6 +38,9 @@
 #ifndef AMINO_RX_SCENE_COLLISION_H
 #define AMINO_RX_SCENE_COLLISION_H
 
+/* Initialize collision handling */
+AA_API void
+aa_rx_cl_init( );
 
 struct aa_rx_cl_set;
 

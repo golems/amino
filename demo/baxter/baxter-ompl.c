@@ -99,6 +99,9 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     int r = aa_rx_mp_plan( mp, 5.0,
                            &g_n_path,
                            &g_path );
+
+    aa_rx_mp_destroy(mp);
+
     if( r < 0 ) {
         fprintf(stderr, "Planning failed!\n");
         exit(EXIT_FAILURE);
@@ -199,13 +202,13 @@ int main(int argc, char *argv[])
     struct aa_gl_globals *globals;
 
     // Initialize scene graph
+    aa_rx_cl_init();
     struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
     aa_rx_sg_index(scenegraph);
     aa_rx_sg_cl_init(scenegraph);
 
     // Do Planning
     motion_plan(scenegraph);
-
 
     // setup window
     baxter_demo_setup_window( scenegraph,
@@ -241,8 +244,14 @@ int main(int argc, char *argv[])
                          display,
                          &cx );
 
+    // Cleanup
+    if( g_path ) free( g_path );
+    aa_rx_cl_destroy( cx.cl );
+    aa_rx_sg_destroy(scenegraph);
+    aa_gl_globals_destroy(globals);
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );
+    aa_mem_region_local_destroy();
 
     SDL_Quit();
     return 0;

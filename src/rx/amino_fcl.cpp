@@ -38,10 +38,14 @@
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
+#include "amino/rx/rxtype_internal.h"
+
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
+
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
+
 #include "amino/rx/scene_collision.h"
 
 #include <fcl/collision.h>
@@ -52,9 +56,26 @@
 #include "amino/rx/scene_collision_internal.h"
 #include "amino/rx/amino_fcl.h"
 
+
+/* Initialize collision handling */
+AA_API void
+aa_rx_cl_init( )
+{
+    aa_rx_cl_geom_destroy_fun = aa_rx_cl_geom_destroy;
+}
+
 struct aa_rx_cl_geom {
     boost::shared_ptr<fcl::CollisionGeometry> *ptr;
+    aa_rx_cl_geom() { }
+    ~aa_rx_cl_geom() {
+        delete ptr;
+    }
 };
+
+AA_API void
+aa_rx_cl_geom_destroy( struct aa_rx_cl_geom *cl_geom ) {
+    delete cl_geom;
+}
 
 
 static boost::shared_ptr<fcl::CollisionGeometry> *
@@ -234,6 +255,10 @@ aa_rx_cl_create( const struct aa_rx_sg *scene_graph )
 void
 aa_rx_cl_destroy( struct aa_rx_cl *cl )
 {
+    for( fcl::CollisionObject *o : *cl->objects ) {
+        delete o;
+    }
+
     delete cl->manager;
     delete cl->objects;
     aa_rx_cl_set_destroy( cl->allowed );

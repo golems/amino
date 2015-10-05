@@ -113,10 +113,14 @@ int main(int argc, char *argv[])
     SDL_GLContext gContext = NULL;
     struct aa_gl_globals *globals;
 
+    // Enable collision checking
+    aa_rx_cl_init();
+
     // Initialize scene graph
     struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
     aa_rx_sg_index(scenegraph);
     aa_rx_sg_cl_init(scenegraph);
+
 
     // setup window
     baxter_demo_setup_window( scenegraph,
@@ -151,6 +155,12 @@ int main(int argc, char *argv[])
     aa_sdl_display_loop( window, globals,
                          display,
                          &cx );
+
+
+    // Cleanup
+    aa_rx_cl_destroy( cx.cl );
+    aa_rx_sg_destroy(scenegraph);
+    aa_gl_globals_destroy(globals);
 
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );

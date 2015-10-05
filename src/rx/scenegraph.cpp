@@ -38,6 +38,7 @@
 #include "amino.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
+#include "amino/rx/scene_geom.h"
 #include "sg_convenience.h"
 
 #include <list>
@@ -61,7 +62,12 @@ SceneFrame::SceneFrame(
 }
 
 SceneFrame::~SceneFrame( )
-{ }
+{
+    /* Delete Geometry */
+    for( struct aa_rx_geom *g : geometry ) {
+        aa_rx_geom_destroy(g);
+    }
+}
 
 
 int SceneFrame::in_global()
@@ -191,10 +197,11 @@ SceneGraph::SceneGraph()
 
 SceneGraph::~SceneGraph()
 {
-    for( auto itr = frames.begin(); itr != frames.end(); itr++ )
-    {
-        delete *itr ;
-    }
+    /* Delete Frames */
+    for( auto &pair : frame_map ) delete pair.second;
+
+    /* Delete Limits */
+    for( auto &pair : limits_map ) free(pair.second);
 }
 
 static void sort_frame_helper( std::list<SceneFrame*> &list,

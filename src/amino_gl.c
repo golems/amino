@@ -266,6 +266,9 @@ AA_API void aa_gl_init()
     aa_gl_id_camera_world = glGetUniformLocation(aa_gl_id_program, "camera_world");
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
+
+    /* Register cleanup function */
+    aa_gl_buffers_destroy_fun = aa_gl_buffers_destroy;
 }
 
 
@@ -378,10 +381,12 @@ AA_API void aa_gl_draw_tf (
 }
 
 
-static void aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
+AA_API void
+aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
     if( bufs->has_indices ) glDeleteProgram(bufs->indices);
     if( bufs->has_colors ) glDeleteProgram(bufs->colors);
     if( bufs->has_values ) glDeleteProgram(bufs->values);
+    free(bufs);
 }
 
 static void quad_tr( unsigned *indices,

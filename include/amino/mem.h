@@ -101,6 +101,11 @@ static inline void aa_free_if_valid( void *ptr ) {
  * a power of 2.  Evaluates arguments multiple times. */
 #define AA_ALIGN2( val, align ) (((val) + (align) - 1) & ~(align-1))
 
+static inline void aa_checked_free( void * ptr )
+{
+    if( ptr ) free(ptr);
+}
+
 /*----------- Local Allocation ------------------*/
 
 /** Allocate a local memory block.

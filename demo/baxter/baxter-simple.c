@@ -97,6 +97,7 @@ int main(int argc, char *argv[])
     struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
     aa_rx_sg_index(scenegraph);
 
+
     // setup window
     baxter_demo_setup_window( scenegraph,
                               &window, &gContext, &globals );
@@ -110,6 +111,10 @@ int main(int argc, char *argv[])
     aa_sdl_display_loop( window, globals,
                          display,
                          &dcx );
+
+    // Cleanup
+    aa_rx_sg_destroy(scenegraph);
+    aa_gl_globals_destroy(globals);
 
     SDL_GL_DeleteContext(gContext);
     SDL_DestroyWindow( window );
