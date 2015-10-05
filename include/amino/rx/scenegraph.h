@@ -39,6 +39,10 @@
 #define AMINO_SCENEGRAPH_H
 
 /**
+ * @file scenegraph.h
+ */
+
+/**
  * Type for frame indices.
  */
 typedef signed long aa_rx_frame_id;
@@ -69,7 +73,7 @@ enum aa_rx_frame_type {
 };
 
 /**
- *  Construct a new scene graph
+ *  Construct a new, empty scene graph
  */
 AA_API struct aa_rx_sg *
 aa_rx_sg_create();
@@ -80,12 +84,18 @@ aa_rx_sg_create();
 AA_API void aa_rx_sg_destroy(struct aa_rx_sg *scene_graph);
 
 /**
- * Optimize internal indices
+ * Setup the scenegraph internal indices.
+ *
+ * This function must be called before any frame_ids or config_ids can
+ * be used with the scenegraph.
  */
-AA_API void aa_rx_sg_index ( struct aa_rx_sg *scene_graph );
+AA_API void aa_rx_sg_init ( struct aa_rx_sg *scene_graph );
 
 /**
  * Return the type of the given frame
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API enum aa_rx_frame_type
 aa_rx_sg_frame_type (
@@ -93,6 +103,9 @@ aa_rx_sg_frame_type (
 
 /**
  * Return the name of the given frame
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API const char *
 aa_rx_sg_frame_name (
@@ -100,6 +113,9 @@ aa_rx_sg_frame_name (
 
 /**
  * Return the config of the given frame
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API const char *
 aa_rx_sg_config_name (
@@ -107,6 +123,9 @@ aa_rx_sg_config_name (
 
 /**
  * Return the parent id of the frame
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API aa_rx_frame_id
 aa_rx_sg_frame_parent (
@@ -129,6 +148,9 @@ aa_rx_sg_config_count (
 
 /**
  * Return the config id of frame.
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API aa_rx_config_id
 aa_rx_sg_frame_config (
@@ -145,12 +167,18 @@ aa_rx_sg_config_names (
 
 /**
  *  Return the index of a configuration variable in the scene graph
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API aa_rx_config_id aa_rx_sg_config_id(
     const struct aa_rx_sg *scene_graph, const char *config_name);
 
 /**
  *  Return the indices of a configuration variable in the scene graph
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API void
 aa_rx_sg_config_indices(
@@ -174,6 +202,9 @@ aa_rx_sg_config_set(
 
 /**
  *  Return the index of a frame in the scene graph
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API aa_rx_frame_id aa_rx_sg_frame_id (
     const struct aa_rx_sg *scene_graph, const char *frame_name);
@@ -196,6 +227,9 @@ AA_API aa_rx_frame_id aa_rx_sg_frame_id (
  * @param name        The name of the frame to be added
  * @param q           The unit quaternion frame rotation (xyzw)
  * @param v           The frame translation vector
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API void aa_rx_sg_add_frame_fixed
 ( struct aa_rx_sg *scene_graph,
@@ -286,6 +320,9 @@ aa_rx_sg_set_limit_eff( struct aa_rx_sg *scenegraph,
                         double min, double max );
 /**
  * Get position limit values
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API int
 aa_rx_sg_get_limit_pos( const struct aa_rx_sg *scenegraph,
@@ -294,6 +331,9 @@ aa_rx_sg_get_limit_pos( const struct aa_rx_sg *scenegraph,
 
 /**
  * Get velocity limit values
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API int
 aa_rx_sg_get_limit_vel( const struct aa_rx_sg *scenegraph,
@@ -302,6 +342,9 @@ aa_rx_sg_get_limit_vel( const struct aa_rx_sg *scenegraph,
 
 /**
  * Get acceleration limit values
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API int
 aa_rx_sg_get_limit_acc( const struct aa_rx_sg *scenegraph,
@@ -309,7 +352,10 @@ aa_rx_sg_get_limit_acc( const struct aa_rx_sg *scenegraph,
                         double *min, double *max );
 
 /**
- * Set effort limit values
+ * Get effort limit values
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API int
 aa_rx_sg_get_limit_eff( const struct aa_rx_sg *scenegraph,
@@ -340,6 +386,9 @@ AA_API const double *aa_rx_sg_frame_axis
  * @param TF_abs      Absolute transform matrix in quaternion-vector format
  * @param ld_abs      Leading dimensional of TF_abs, i.e., space between each entry
  *
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
  */
 AA_API void aa_rx_sg_tf
 ( const struct aa_rx_sg *scene_graph,
@@ -348,6 +397,17 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
 
+
+/**
+ * Call function for every geometry object in the scene graph
+ *
+ * @param scene_graph The scene graph container
+ * @param function    A function to call on every geometry object
+ * @param context     The context argument to function
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
+ */
 AA_API void aa_rx_sg_map_geom (
     const struct aa_rx_sg *scene_graph,
     void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),

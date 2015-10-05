@@ -57,7 +57,7 @@ int main(void)
 {
     struct aa_rx_sg *sg = aa_rx_sg_create();
     scara(sg);
-    aa_rx_sg_index(sg);
+    aa_rx_sg_init(sg);
 
     check_scara(sg);
     check_tf(sg);

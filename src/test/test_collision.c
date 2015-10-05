@@ -40,8 +40,8 @@ static void test_box()
     aa_rx_geom_attach( sg1, "a", aa_rx_geom_box(opt_cl, d) );
     aa_rx_geom_attach( sg1, "b", aa_rx_geom_box(opt_cl, d) );
 
-    aa_rx_sg_index(sg);
-    aa_rx_sg_index(sg1);
+    aa_rx_sg_init(sg);
+    aa_rx_sg_init(sg1);
 
     aa_rx_sg_cl_init(sg);
     aa_rx_sg_cl_init(sg1);
@@ -100,7 +100,7 @@ void test_cylinder()
     aa_rx_geom_attach( sg, "b", aa_rx_geom_cylinder(opt_cl, 1, .5) );
 
 
-    aa_rx_sg_index(sg);
+    aa_rx_sg_init(sg);
     aa_rx_sg_cl_init(sg);
 
     {
@@ -117,7 +117,7 @@ void test_cylinder()
     }
 
     aa_rx_geom_attach( sg, "c", aa_rx_geom_cylinder(opt_cl, 1, .5) );
-    aa_rx_sg_index(sg);
+    aa_rx_sg_init(sg);
     aa_rx_sg_cl_init(sg);
     {
         struct aa_rx_cl *cl = aa_rx_cl_create(sg);

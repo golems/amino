@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
         aa_rx_geom_opt_destroy(opt);
     }
 
-    aa_rx_sg_index(scenegraph);
+    aa_rx_sg_init(scenegraph);
     aa_rx_sg_gl_init(scenegraph);
 
     // Initialize globals

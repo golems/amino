@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
     // Initialize scene graph
     struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
-    aa_rx_sg_index(scenegraph);
+    aa_rx_sg_init(scenegraph);
     aa_rx_sg_cl_init(scenegraph);
 
 
