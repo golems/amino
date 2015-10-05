@@ -57,19 +57,36 @@
 
 
 /** Forward declaration */
-struct aa_rx_sg;
+//struct aa_rx_sg;
+
+/**
+ * Opaque type for global GL values
+ */
 struct aa_gl_globals;
 
 
+/**
+ * Initialize OpenGL objects in scene graph
+ */
 AA_API void
 aa_rx_sg_gl_init( struct aa_rx_sg *sg );
 
 /**
  * Render the scene graph to the current GL context.
+ *
+ * @param scengreaph   the scene graph to render
+ * @param globals      the opengl global values
+ * @param n_TF         size of the TF array
+ * @param TF_abs       absolute transforms of frames in the scene graph
+ *                     (quaternion-translation format)
+ * @param ld_TF        leading dimension of TF_abs (typically 7)
+ *
+ * @pre aa_rx_sg_init() was called after all frames added and
+ * aa_rx_sg_gl_init() was called after all geometry attached.
  */
 AA_API void
 aa_rx_sg_render(
-    const struct aa_rx_sg *sg,
+    const struct aa_rx_sg *scenegraph,
     const struct aa_gl_globals *globals,
     size_t n_TF, double *TF_abs, size_t ld_TF);
 
@@ -87,7 +104,9 @@ AA_API void
 aa_gl_tfmat2glmat( const double T[AA_RESTRICT 12],
                    GLfloat M[AA_RESTRICT 16] );
 
-
+/**
+ * Create a OpenGL matrix for a perspective transform
+ */
 AA_API void
 aa_gl_mat_perspective( double fovy,
                        double aspect,
@@ -120,33 +139,54 @@ AA_API void aa_gl_init();
 AA_API struct aa_gl_globals *
 aa_gl_globals_create();
 
+/**
+ * Destroy a aa_gl_globals struct
+ */
 AA_API void
 aa_gl_globals_destroy( struct aa_gl_globals *globals );
 
+/**
+ * Set the camera transform
+ */
 AA_API void
 aa_gl_globals_set_camera(
     struct aa_gl_globals *globals,
     const double world_E_camera[7]);
 
+/**
+ * Set the camera "home" transform
+ */
 AA_API void
 aa_gl_globals_set_camera_home(
     struct aa_gl_globals *globals,
     const double world_E_camera_home[7]);
 
+/**
+ * Set the camera transform to its "home" value
+ */
 AA_API void
 aa_gl_globals_home_camera(
     struct aa_gl_globals *globals );
 
+/**
+ * Set the position of the light
+ */
 AA_API void
 aa_gl_globals_set_light_position(
     struct aa_gl_globals *globals,
     const double world_v_light[3]);
 
+/**
+ * Set the camera aspect ratio.
+ */
 AA_API void
 aa_gl_globals_set_aspect(
     struct aa_gl_globals *globals,
     double aspect );
 
+/**
+ * Set the camera perspective matrix
+ */
 AA_API void
 aa_gl_globals_set_perspective(
     struct aa_gl_globals *globals,
@@ -155,33 +195,54 @@ aa_gl_globals_set_perspective(
     double znear,
     double zfar );
 
+/**
+ * Set the color of the light
+ */
 AA_API void
 aa_gl_globals_set_light_color(
     struct aa_gl_globals *globals,
     const double color[3] );
 
+/**
+ * Set the power (intensity) of the light
+ */
 AA_API void
 aa_gl_globals_set_light_power(
     struct aa_gl_globals *globals,
     double power );
 
+/**
+ * Set the light ambient color
+ */
 AA_API void
 aa_gl_globals_set_ambient(
     struct aa_gl_globals *globals,
     const double ambient[3] );
 
+/**
+ * Set flag to enable render of visual geometry
+ */
 AA_API void
 aa_gl_globals_set_show_visual(
     struct aa_gl_globals *globals,
     int show_visual );
 
+/**
+ * Set flag to enable render of collision geometry
+ */
 AA_API void
 aa_gl_globals_set_show_collision (
     struct aa_gl_globals *globals,
     int show_collision );
 
+/**
+ * Opaque struct for opengl buffers
+ */
 struct aa_sg_gl_buffers;
 
+/**
+ * Initialize OpenGL buffers for geometry object.
+ */
 AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom
     );
