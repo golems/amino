@@ -372,7 +372,28 @@ aarx_core_SOURCES = \
 	lisp/test.lisp \
 	lisp/tf.lisp \
 	lisp/tf-op.lisp \
-	lisp/tf-type.lisp
+	lisp/tf-type.lisp \
+	lisp/rx/povray.lisp \
+	lisp/rx/animate.lisp \
+	lisp/rx/config.lisp \
+	lisp/rx/animation-plan.lisp \
+	lisp/rx/draw.lisp \
+	lisp/rx/lexer.lisp \
+	lisp/rx/assimp.lisp \
+	lisp/rx/scenefile/curly.lisp \
+	lisp/rx/scenefile/scenefile.lisp \
+	lisp/rx/scenefile/urdf.lisp \
+	lisp/rx/scenefile/moveit.lisp \
+	lisp/rx/scenegraph.lisp \
+	lisp/rx/wavefront.lisp \
+	lisp/rx/util.lisp \
+	lisp/rx/robray-package.lisp \
+	lisp/rx/collada.lisp \
+	lisp/rx/mesh.lisp \
+	lisp/rx/trajectory.lisp \
+	lisp/rx/parameters.lisp \
+	lisp/rx/inex.lisp \
+	lisp/rx/sg-gen.lisp
 
 aarx.core: share/make-aarx.sh $(aarx_core_SOURCES)
 	share/make-aarx.sh $(COMMON_LISP)

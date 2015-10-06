@@ -21,7 +21,7 @@
                (ppcre:regex-replace "^package://([^/]*)"
                                     filename
                                     package-directory))))
-      (error "Package ~A not found for ROS_PACKAGE_PATH='~A'" package ros-package-path))
+      (error "Package '~A' not found for ROS_PACKAGE_PATH='~A'" package ros-package-path))
     filename))
 
 

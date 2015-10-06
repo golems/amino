@@ -78,6 +78,7 @@ fi
 
 
 aarx.core --dynamic-space-size 2GB --script <<EOF
-(robray::scene-graph-genc (robray::load-scene-file "$INPUT_FILE")
-                          :file "$OUTPUT_FILE")
+(robray::catch-all
+  (robray::scene-graph-genc (robray::load-scene-file "$INPUT_FILE")
+                            :file "$OUTPUT_FILE"))
 EOF

@@ -335,3 +335,15 @@
                          time
                          reload t))))))
     (map nil #'try-dir *config-directories*)))
+
+
+
+(defmacro catch-all (&body body)
+  (with-gensyms (e)
+    `(handler-case
+         (progn ,@body)
+       (condition (,e)
+         (format *error-output* "~&ERROR: ~A~%" ,e)
+         #+sbcl
+         (sb-ext:exit :code -1)
+         (break)))))
