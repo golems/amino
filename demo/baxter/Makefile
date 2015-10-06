@@ -35,7 +35,7 @@ scene.o: scene.c
 	$(CC) -c scene.c $(CFLAGS_ALL)
 
 scene.c: scene.robray
-	arxc 'package://baxter_description/urdf/baxter.urdf' -o scene.c
+	aarxc 'package://baxter_description/urdf/baxter.urdf' -o scene.c
 
 clean:
 	rm -f $(PROGS)

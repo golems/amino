@@ -111,7 +111,7 @@ Scene Graphs
 
 * How can I load a URDF file?
 
-  - Use the scene graph compiler, `arxc`, to generate code from the
+  - Use the scene graph compiler, `aarxc`, to generate code from the
     URDF file.
 
 * How can I reload a modified scene graph file without restarting my

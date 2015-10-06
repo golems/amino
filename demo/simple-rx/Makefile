@@ -13,7 +13,7 @@ scene.o: scene.c
 	$(CC) -c scene.c $(CFLAGS_ALL)
 
 scene.c: scene.robray
-	arxc scene.robray -o scene.c
+	aarxc scene.robray -o scene.c
 
 clean:
 	rm -f scene.c simple-rx

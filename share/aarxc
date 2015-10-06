@@ -30,13 +30,13 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 #  OF THE POSSIBILITY OF SUCH DAMAGE.
 
-OUTPUT_FILE=arxc.out.c
+OUTPUT_FILE=aarxc.out.c
 
 while test "$1" != x-- -a "x$#" != x0; do
     case "$1" in
         -h|-\?|--help)
             cat <<EOF
-Usage: arxc [OPTION] scene-file -o output-file
+Usage: aarxc [OPTION] scene-file -o output-file
 Generate C code from scene graph files files
 
 Options:
@@ -44,7 +44,7 @@ Options:
   -o OUTPUT-FILE                 write generated code to OUTPUT_FILE
 
 Examples:
-  arxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
+  aarxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
 
 Report bugs to <ntd@rice.edu>"
 EOF
@@ -77,7 +77,7 @@ if test -z "$INPUT_FILE"; then
 fi
 
 
-arxc.core --dynamic-space-size 2GB --script <<EOF
+aarx.core --dynamic-space-size 2GB --script <<EOF
 (robray::scene-graph-genc (robray::load-scene-file "$INPUT_FILE")
                           :file "$OUTPUT_FILE")
 EOF
