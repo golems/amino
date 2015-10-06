@@ -83,7 +83,13 @@
               (list (emit-limit "aa_rx_sg_set_limit_pos" #'joint-limits-position)
                     (emit-limit "aa_rx_sg_set_limit_vel" #'joint-limits-velocity)
                     (emit-limit "aa_rx_sg_set_limit_acc" #'joint-limits-acceleration)
-                    (emit-limit "aa_rx_sg_set_limit_eff" #'joint-limits-effort))))))))))
+                    (emit-limit "aa_rx_sg_set_limit_eff" #'joint-limits-effort))))
+          (when-let ((inertial (scene-frame-inertial frame)))
+            (list
+             (cgen-declare-array "static const double" "inertia" (amino::vec-list (frame-inertial-inertia inertial)))
+             (cgen-call-stmt "aa_rx_sg_frame_set_inertial" argument-name name-string
+                             (frame-inertial-mass inertial)
+                             "inertia")))))))))
 
 (defun scene-genc-geom (argument-name frame geom)
   (let ((cgeom "geom")
