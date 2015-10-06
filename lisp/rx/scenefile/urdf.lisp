@@ -200,6 +200,7 @@
     (loop for link-node in (dom-select-path dom '("robot" "link"))
        for name = (dom:get-attribute link-node "name")
        for visuals = (path-n link-node '("visual"))
+       for inertial-node = (path-1 link-node '("inertial"))
        for default-visual-node = (car visuals)
        for default-rgba-text = (when default-visual-node
                                  (path-1 default-visual-node '("material" "color" "@rgba")))
@@ -207,6 +208,7 @@
                               (parse-float-sequence default-rgba-text)
                               (append default-color (list default-alpha)))
        do
+         ;; Add visuals
          (loop for visual-node in visuals
             for rgba-text = (when visual-node (path-1 visual-node '("material" "color" "@rgba")))
             for rgba = (if rgba-text (parse-float-sequence rgba-text)
@@ -218,6 +220,7 @@
                  (setq scene-graph
                        (scene-graph-add-geometry scene-graph frame-name
                                                  (scene-geometry shape options)))))
+       ;; Add collisions
          (loop for collision-node in (path-n link-node '("collision"))
             do
               (let* ((shape (node-shape collision-node name))
@@ -225,7 +228,27 @@
                      (options (node-options :rgba default-rgba :visual nil :collision t)))
                 (setq scene-graph
                       (scene-graph-add-geometry scene-graph frame-name
-                                                (scene-geometry shape options)))))))
+                                                (scene-geometry shape options)))))
+       ;; Add inertials
+         (when inertial-node
+           (let* ((frame-name (node-origin name inertial-node "inertial" nil))
+                  (mass (parse-float (path-1 inertial-node '("mass" "@value"))))
+                  (ixx (parse-float (path-1 inertial-node '("inertia" "@ixx"))))
+                  (ixy (parse-float (path-1 inertial-node '("inertia" "@ixy"))))
+                  (ixz (parse-float (path-1 inertial-node '("inertia" "@ixz"))))
+                  (iyy (parse-float (path-1 inertial-node '("inertia" "@iyy"))))
+                  (iyz (parse-float (path-1 inertial-node '("inertia" "@iyz"))))
+                  (izz (parse-float (path-1 inertial-node '("inertia" "@izz"))))
+                  (iyx (- ixy))
+                  (izy (- iyz))
+                  (izx (- ixz)))
+             (setq scene-graph
+                   (scene-graph-set-inertial scene-graph frame-name
+                                             :mass mass
+                                             ;; column major
+                                             :inertia (vec ixx iyx izx
+                                                           ixy iyy izy
+                                                           ixz iyz izz)))))))
   scene-graph)
 
 

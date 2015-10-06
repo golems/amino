@@ -175,12 +175,17 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
 (defun frame-name-compare (a b)
   (rope-compare-lexographic a b))
 
+(defstruct frame-inertial
+  (mass 0d0 :type double-float)
+  (inertia nil))
+
 (defstruct scene-frame
   "Base struct for frames in the scene."
   (name nil :type frame-name)
   (parent nil :type frame-name)
-  tf
-  geometry)
+  (inertial nil :type (or null frame-inertial))
+  (tf +tf-ident+ :type tf)
+  (geometry nil :type list))
 
 (defun scene-frame-geometry-isa (frame type)
   (find-if (lambda (g)
@@ -197,14 +202,14 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
 
 (defun scene-frame-fixed (parent name &key
                                         geometry
+                                        inertial
                                         (tf (identity-tf)))
   "Create a new fixed frame."
   (make-scene-frame-fixed :name name
                           :parent parent
                           :tf tf
-                          :geometry (etypecase geometry
-                                      (list geometry)
-                                      (scene-geometry (list geometry)))))
+                          :inertial inertial
+                          :geometry (ensure-list geometry)))
 
 
 (deftype configuration-map ()
@@ -358,6 +363,17 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
   "Bind collision geometry to a frame in the scene."
   (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
     (push geometry (scene-frame-geometry frame))
+    (%scene-graph-add-frame scene-graph frame)))
+
+(defun scene-graph-set-inertial (scene-graph frame-name
+                                 &key
+                                   (mass 0d0)
+                                   inertia)
+  "Bind collision geometry to a frame in the scene."
+  (let ((frame (copy-structure (scene-graph-lookup scene-graph frame-name))))
+    (setf (scene-frame-inertial frame)
+          (make-frame-inertial :mass mass
+                               :inertia inertia))
     (%scene-graph-add-frame scene-graph frame)))
 
 (defun %scene-graph-merge (scene-graph-1 scene-graph-2)
