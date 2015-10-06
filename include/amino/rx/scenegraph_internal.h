@@ -58,6 +58,11 @@ struct aa_rx_config_limits {
     unsigned has_eff : 1;
 };
 
+struct aa_rx_inertial {
+    double inertia[9];
+    double mass;
+};
+
 #ifdef __cplusplus
 
 #include <vector>
@@ -74,13 +79,14 @@ struct SceneFrame  {
                 const char *parent,
                 const char *name,
                 const double q[4], const double v[3] );
-    virtual ~SceneFrame();
+    virtual ~SceneFrame() ;
 
     virtual void tf_rel( const double *q, double E[7] ) = 0;
     //virtual aa_rx_frame_type type() = 0;
     int in_global();
 
     enum aa_rx_frame_type type;
+    struct aa_rx_inertial *inertial;
 
     /* Kinematic values */
     std::string name;
@@ -208,5 +214,8 @@ aa_rx_sg_ensure_clean_gl( const struct aa_rx_sg *scene_graph );
 
 AA_API void
 aa_rx_sg_ensure_clean_collision( const struct aa_rx_sg *scene_graph );
+
+
+
 
 #endif /*AMINO_SCENEGRAPH_H*/

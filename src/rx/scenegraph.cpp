@@ -67,6 +67,9 @@ SceneFrame::~SceneFrame( )
     for( struct aa_rx_geom *g : geometry ) {
         aa_rx_geom_destroy(g);
     }
+
+    /* Delete Inertial */
+    aa_checked_free(inertial);
 }
 
 

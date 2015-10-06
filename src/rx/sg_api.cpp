@@ -316,3 +316,47 @@ DEF_GET_LIMIT(pos)
 DEF_GET_LIMIT(vel)
 DEF_GET_LIMIT(acc)
 DEF_GET_LIMIT(eff)
+
+
+/* Inertial */
+
+AA_API void
+aa_rx_sg_frame_set_inertial( struct aa_rx_sg *scenegraph,
+                             const char *frame,
+                             double mass,
+                             const double inertia[9] )
+{
+    amino::SceneGraph *sg = scenegraph->sg;
+    struct amino::SceneFrame *f = sg->frame_map[frame];
+    if( NULL == f->inertial ) {
+        f->inertial = AA_NEW(struct aa_rx_inertial);
+    }
+    f->inertial->mass = mass;
+    AA_MEM_CPY( f->inertial->inertia, inertia, 9 );
+}
+
+AA_API double
+aa_rx_sg_frame_get_mass( struct aa_rx_sg *scenegraph,
+                         aa_rx_frame_id frame )
+{
+    amino::SceneGraph *sg = scenegraph->sg;
+    struct amino::SceneFrame *f = sg->frames[frame];
+    if( f->inertial ) {
+        return f->inertial->mass;
+    } else {
+        return nan("");
+    }
+}
+
+AA_API const double*
+aa_rx_sg_frame_get_inertia( struct aa_rx_sg *scenegraph,
+                            aa_rx_frame_id frame )
+{
+    amino::SceneGraph *sg = scenegraph->sg;
+    struct amino::SceneFrame *f = sg->frames[frame];
+    if( f->inertial ) {
+        return f->inertial->inertia;
+    } else {
+        return NULL;
+    }
+}
