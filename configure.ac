@@ -318,6 +318,19 @@ AS_IF([test "x$with_spacenave" != xno], [
 
 AM_CONDITIONAL([HAVE_SPACENAV], [test "x$HAVE_SPACENAV" = xyes])
 
+## Lisp ##
+AC_ARG_WITH([common-lisp],
+            [AS_HELP_STRING([--with-common-lisp=LISP], [Set the lisp system to use, or set to 'no' to disable])],
+            [],
+            [$with_common_lisp=yes])
+AC_MSG_NOTICE([common-lisp: $with_common_lisp])
+AS_IF([test "x$COMMON_LISP" = x -a "x$with_common_lisp" != xno], [
+AC_CHECK_PROGS([COMMON_LISP], [sbcl])
+])
+
+AC_SUBST([COMMON_LISP])
+AM_CONDITIONAL([HAVE_COMMON_LISP],[test "x$COMMON_LISP" != "x"])
+
 
 #############
 ## SUMMARY ##
@@ -329,6 +342,7 @@ AC_MSG_NOTICE([prefix:            $prefix])
 AC_MSG_NOTICE([C compiler:        $CC])
 AC_MSG_NOTICE([C++ compiler:      $CXX])
 AC_MSG_NOTICE([Use Fortran        $with_fortran])
+AC_MSG_NOTICE([Common Lisp:       $COMMON_LISP])
 AS_IF([test "x$with_fortran" = xyes],[
 AC_MSG_NOTICE([Fortran compiler:  $FC])]
 )

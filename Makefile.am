@@ -14,6 +14,9 @@ dist_pkgdata_DATA = src/mac/amino.mac
 include_HEADERS = include/amino.h include/amino.hpp
 noinst_PROGRAMS =
 
+bin_PROGRAMS =
+bin_SCRIPTS =
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = share/amino.pc \
 	share/amino_gl.pc \
@@ -345,6 +348,36 @@ libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
+if HAVE_COMMON_LISP
+
+bin_PROGRAMS += aarx.core
+bin_SCRIPTS += share/aarxc
+
+aarx_core_SOURCES = \
+	lisp/amino-la.lisp \
+	lisp/basic-ops.lisp \
+	lisp/basic-type.lisp \
+	lisp/blas-generic.lisp \
+	lisp/blas.lisp \
+	lisp/deprecated.lisp \
+	lisp/ffi.lisp \
+	lisp/foreign.lisp \
+	lisp/generic.lisp \
+	lisp/grovel.lisp \
+	lisp/io.lisp \
+	lisp/libc.lisp \
+	lisp/mem.lisp \
+	lisp/op.lisp \
+	lisp/package.lisp \
+	lisp/test.lisp \
+	lisp/tf.lisp \
+	lisp/tf-op.lisp \
+	lisp/tf-type.lisp
+
+aarx.core: share/make-aarx.sh $(aarx_core_SOURCES)
+	share/make-aarx.sh $(COMMON_LISP)
+
+endif # HAVE_COMMON_LISP
 
 # noinst_PROGRAMS += test_vec
 # test_vec_SOURCES = src/test/test_vec.c

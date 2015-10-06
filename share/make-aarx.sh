@@ -1,6 +1,8 @@
 #!/bin/sh
 
-sbcl --script <<EOF
+COMMON_LISP=$1
+
+$COMMON_LISP --script <<EOF
 
 
 (unless (find-package :quicklisp)
@@ -15,10 +17,10 @@ sbcl --script <<EOF
 
 (cond
   ((find-package :quicklisp)
-   (ql:quickload :robray))
-  (t (require :robray)))
+   (ql:quickload :amino))
+  (t (require :amino)))
 
 
-(sb-ext:save-lisp-and-die "arxc.core" :executable t)
+(sb-ext:save-lisp-and-die "aarx.core" :executable t)
 EOF
 echo end
