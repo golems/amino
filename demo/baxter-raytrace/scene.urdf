@@ -1,0 +1,98 @@
+<?xml version="1.0" ?>
+
+<robot name="scene">
+  <link name="scene_base_link">
+  </link>
+
+  <link name="front_table_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="1 3 0.01"/>
+        </geometry>
+        <material>
+          <color rgba=".6 .3 .6 0.5"/>
+        </material>
+    </visual>
+  </link>
+
+  <joint name="front_table" type="fixed">
+    <origin rpy="0 0 0" xyz="0.8 0 0"/>
+    <parent link="scene_base_link"/>
+    <child link="front_table_link"/>
+  </joint>
+
+  <link name="side_table1_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="2 1 0.01"/>
+        </geometry>
+        <material>
+          <color rgba=".6 .3 .6 0.5"/>
+        </material>
+    </visual>
+  </link>
+
+  <joint name="side_table1" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.7 -1 0"/>
+    <parent link="scene_base_link"/>
+    <child link="side_table1_link"/>
+  </joint>
+
+  <link name="side_table2_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="2 1 0.01"/>
+        </geometry>
+        <material>
+          <color rgba=".6 .3 .6 0.5"/>
+        </material>
+    </visual>
+  </link>
+
+  <joint name="side_table2_" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.7 1 0"/>
+    <parent link="scene_base"/>
+    <child link="side_table2_link"/>
+  </joint>
+
+
+  <link name="block_a_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size=".1 .1 .1"/>
+        </geometry>
+        <material>
+          <color rgba="0 0 1 0.5"/>
+        </material>
+    </visual>
+  </link>
+
+  <joint name="block_a" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 -.2 0.0551"/>
+    <parent link="front_table_link"/>
+    <child link="block_a_link"/>
+  </joint>
+
+  <link name="block_b_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size=".1 .1 .1"/>
+        </geometry>
+        <material>
+          <color rgba="0 1 0 0.5"/>
+        </material>
+    </visual>
+  </link>
+
+  <joint name="block_b" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 -.45 0.0551"/>
+    <parent link="front_table_link"/>
+    <child link="block_b_link"/>
+  </joint>
+
+</robot>

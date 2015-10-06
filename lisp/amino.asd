@@ -41,8 +41,8 @@
     (asdf:operate 'asdf:load-op 'cffi-grovel))
 
 (asdf:defsystem amino
-  :description "Basic utilities / numerics"
-  :depends-on ("cffi" "sycamore")
+  :description "Basic utilities, numerics, and kinematics"
+  :depends-on ("cffi" "sycamore" "cxml" "cl-ppcre")
   :components ((:file "package")
                ;; TYPE
                (:file "basic-type" :depends-on ("package"))
@@ -64,4 +64,25 @@
                (:file "tf-type" :depends-on ("foreign"))
                (:file "tf" :depends-on ("tf-type"))
                (:file "tf-op" :depends-on ("tf" "generic"))
+               ;; RX
+               (:file "rx/robray-package")
+               (:file "rx/util" :depends-on ("rx/robray-package"))
+               (:file "rx/mesh" :depends-on ("rx/util"))
+               (:file "rx/wavefront" :depends-on ("rx/mesh"))
+               (:file "rx/parameters" :depends-on ("rx/robray-package"))
+               (:file "rx/povray" :depends-on ("rx/util" "rx/parameters" "rx/robray-package" "rx/mesh"))
+               ;;(:file "collada" :depends-on ("util" "povray" "mesh"))
+               (:file "rx/scenegraph" :depends-on ("rx/util" "rx/povray" "rx/mesh"))
+               (:file "rx/scenefile/urdf" :depends-on ("rx/util" "rx/povray" "rx/scenegraph" "rx/wavefront"))
+               (:file "rx/lexer" :depends-on ("rx/util"))
+               (:file "rx/inex" :depends-on ("rx/util"))
+               (:file "rx/scenefile/curly" :depends-on ("rx/scenegraph" "rx/mesh" "rx/lexer" "rx/inex"))
+               (:file "rx/scenefile/moveit" :depends-on ("rx/scenegraph" "rx/mesh"))
+               (:file "rx/scenefile/scenefile"
+                      :depends-on ("rx/scenefile/urdf" "rx/scenefile/curly" "rx/scenefile/moveit"))
+               (:file "rx/animate" :depends-on ("rx/scenegraph" "rx/povray"))
+               (:file "rx/draw" :depends-on ("rx/scenegraph"))
+               (:file "rx/trajectory" :depends-on ("rx/scenegraph"))
+               (:file "rx/config" :depends-on ("rx/util" "rx/scenefile/urdf" "rx/parameters"))
+               (:file "rx/sg-gen" :depends-on ("rx/scenegraph" "rx/mesh"))
                ))

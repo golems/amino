@@ -1,0 +1,13 @@
+#!/bin/sh
+
+remote_host="$1"
+shift
+POVRAY="$1"
+shift
+NICE="$1"
+shift
+
+>&2 echo "Rendering on $remote_host"
+>&2 echo ""
+
+ssh "$remote_host" "cd /tmp/robray-$USER && nice -n $NICE $POVRAY $@ -D"
