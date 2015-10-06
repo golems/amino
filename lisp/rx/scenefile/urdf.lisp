@@ -175,14 +175,21 @@
                     (xyz (parse-float-sequence (path-1 node '("origin" "@xyz") "0 0 0")))
                     (offset (if (scene-cylinder-p geometry) ; URDF cylinders have origin at their center
                                 (tf* nil (vec3* 0d0 0d0 (/ (scene-cylinder-height geometry) -2)))
-                                (tf* nil nil))))
-               (let ((new-frame (scene-frame-fixed frame-name
-                                                   (concatenate 'string frame-name "-" suffix)
-                                                   :tf (tf-mul (tf* (euler-rpy rpy)
-                                                                    (vec3 xyz))
-                                                               offset))))
-                 (scene-graph-f scene-graph new-frame)
-                 (scene-frame-name new-frame))))
+                                (tf* nil nil)))
+                    (tf (tf-mul (tf* (euler-rpy rpy)
+                                     (vec3 xyz))
+                                offset)))
+               (if (equalp tf +tf-ident+)
+                   ;; same as parent, reuse frame
+                   frame-name
+                   ;; offset, add new frame
+                   (let ((new-frame (scene-frame-fixed frame-name
+                                                       (concatenate 'string frame-name "-" suffix)
+                                                       :tf (tf-mul (tf* (euler-rpy rpy)
+                                                                        (vec3 xyz))
+                                                                   offset))))
+                     (scene-graph-f scene-graph new-frame)
+                     (scene-frame-name new-frame)))))
            (node-options (&key rgba visual collision)
              `(,@(when rgba
                        `((:color . ,(subseq rgba 0 3))

@@ -104,6 +104,7 @@
    :make-matrix
    :matref
    ;; TF Types
+   :+tf-ident+
    :vec3 :vec3* :with-vec3
    :axis-angle :axis-angle*
    :quaternion :quaternion* :quaternion-x :quaternion-y :quaternion-z :quaternion-w

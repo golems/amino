@@ -2,15 +2,15 @@
 
 (defparameter *baxter-source-directory*
   (concatenate 'string
-               (namestring (asdf:system-source-directory :robray))
-               "/demo/baxter/"))
+               (namestring (asdf:system-source-directory :amino))
+               "../demo/baxter-raytrace/"))
 
 ;; Load robot scene graph from URDF
 (defparameter *scene-graph*
   (scene-graph
    ;; robot
-   (load-scene-file (urdf-resolve-file "package://baxter_description/urdf/baxter.urdf")
-                    :reload-meshes nil)
+   "package://baxter_description/urdf/baxter.urdf"
+
    ;; Text Label
    (scene-frame-fixed nil "textroot"
                       :tf (tf* (z-angle (* 0 pi)) nil))

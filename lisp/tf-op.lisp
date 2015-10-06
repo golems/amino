@@ -98,6 +98,9 @@
                  (tf-translation inverse))
   inverse)
 
+(deftype tf ()
+  'quaternion-translation)
+
 (defun tf (transform)
   "Convert TRANSFORM to TF type"
   (quaternion-translation transform))
