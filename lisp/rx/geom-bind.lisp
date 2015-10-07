@@ -41,11 +41,10 @@
 ;;; Geometry Options ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-geom-opt-create :pointer)
-
 (cffi:defcfun aa-rx-geom-opt-destroy :void
-  (value rx-geom-opt-t))
+  (value :pointer))
 
+(cffi:defcfun aa-rx-geom-opt-create rx-geom-opt-t)
 
 (defun make-geom-opt ()
   (amino-ffi::foreign-container-finalizer (aa-rx-geom-opt-create)
@@ -80,34 +79,33 @@
   (opts rx-geom-opt-t)
   (a :double))
 
-;;;;;;;;;;;;;;
-;;; Shapes ;;;
-;;;;;;;;;;;;;;
-
 ;;;;;;;;;;;;;;;;
 ;;; Geometry ;;;
 ;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-geom-box :pointer
+(cffi:defcfun aa-rx-geom-destroy :void
+  (geom :pointer))
+
+(cffi:defcfun aa-rx-geom-box rx-geom-t
   (opt rx-geom-opt-t)
   (dimension amino::vector-3-t))
 
-(cffi:defcfun aa-rx-geom-sphere :pointer
+(cffi:defcfun aa-rx-geom-sphere rx-geom-t
   (opt rx-geom-opt-t)
   (radius :double))
 
-(cffi:defcfun aa-rx-geom-cylinder :pointer
+(cffi:defcfun aa-rx-geom-cylinder rx-geom-t
   (opt rx-geom-opt-t)
   (height :double)
   (radius :double))
 
-(cffi:defcfun aa-rx-geom-cone :pointer
+(cffi:defcfun aa-rx-geom-cone rx-geom-t
   (opt rx-geom-opt-t)
   (height :double)
   (start-radius :double)
   (end-radius :double))
 
-(cffi:defcfun aa-rx-geom-grid :pointer
+(cffi:defcfun aa-rx-geom-grid rx-geom-t
   (opt rx-geom-opt-t)
   (dimension amino::vector-2-t)
   (delta amino::vector-2-t)
@@ -119,7 +117,7 @@
 
 (cffi:defcfun aa-rx-mesh-create :pointer)
 (cffi:defcfun aa-rx-mesh-destroy :void
-  (mesh rx-mesh-t))
+  (mesh :pointer))
 
 (cffi:defcfun aa-rx-mesh-set-vertices :void
   (mesh rx-mesh-t)

@@ -38,7 +38,8 @@
 (in-package :robray)
 
 ;; options
-(amino-ffi::def-foreign-container rx-geom-opt rx-geom-opt-t)
+(amino-ffi::def-foreign-container rx-geom-opt rx-geom-opt-t
+  aa-rx-geom-opt-destroy)
 
 ;; shapes
 (amino-ffi::def-foreign-container rx-shape-box rx-shape-box-t)
@@ -46,7 +47,7 @@
 (amino-ffi::def-foreign-container rx-shape-cylinder rx-shape-cylinder-t)
 (amino-ffi::def-foreign-container rx-shape-cone rx-shape-cone-t)
 (amino-ffi::def-foreign-container rx-shape-grid rx-shape-grid-t)
-(amino-ffi::def-foreign-container rx-mesh rx-mesh-t)
+(amino-ffi::def-foreign-container rx-mesh rx-mesh-t aa-rx-mesh-destroy)
 
 ;; geometry
-(amino-ffi::def-foreign-container rx-geom rx-geom-t)
+(amino-ffi::def-foreign-container rx-geom rx-geom-t aa-rx-geom-destroy)

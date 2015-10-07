@@ -43,22 +43,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FOREIGN CONTAINERS ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defstruct foreign-container
   pointer)
-
-(defmacro def-foreign-container (lisp-type cffi-type)
-  `(progn
-     (defstruct (,lisp-type (:include foreign-container)
-                            (:constructor ,(intern (concatenate 'string "%MAKE-" (string lisp-type))
-                                                   (symbol-package lisp-type))
-                                          (pointer))))
-     (cffi:define-foreign-type ,cffi-type ()
-       ()
-       (:simple-parser ,cffi-type)
-       (:actual-type :pointer))
-     (defmethod cffi:expand-to-foreign (value (type ,cffi-type))
-       `(foreign-container-pointer ,value))))
-
 
 (defun foreign-container-finalizer (pointer object-constructor pointer-destructor)
   "Register finalizer to call DESTRUCTOR on OBJECT's pointer.
@@ -67,6 +54,29 @@ RETURNS: OBJECT"
     (sb-ext:finalize object (lambda () (funcall pointer-destructor pointer)))
     object))
 
+(defmacro def-foreign-container (lisp-type cffi-type &optional destructor)
+"Define a new container for a foreign type along with CFFI type convertors.
+
+If destructor is provided, pointer instances returned from foreign
+code are automatically bound with a finalizer to call the destructor.
+Note that destructor must operate on the raw pointer type.
+"
+  (let ((%make-it (intern (concatenate 'string "%MAKE-" (string lisp-type))
+                          (symbol-package lisp-type))))
+    `(progn
+       (defstruct (,lisp-type (:include foreign-container)
+                              (:constructor ,%make-it (pointer))))
+       (cffi:define-foreign-type ,cffi-type ()
+         ()
+         (:simple-parser ,cffi-type)
+         (:actual-type :pointer))
+        (defmethod cffi:expand-to-foreign (value (type ,cffi-type))
+          (list 'progn
+                (list 'check-type value ',lisp-type)
+                (list 'foreign-container-pointer value)))
+        ,@(when destructor
+                `((defmethod cffi:expand-from-foreign (form (type ,cffi-type))
+                    (list 'foreign-container-finalizer form '#',%make-it '#',destructor)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; CALL BY REFERENCING ;;;
