@@ -121,6 +121,9 @@
          (list* 'with-foreign-fixed-vector var value ,length :input
                 body)))))
 
+;;; Point 2
+(def-specialized-array vec2 3 vector-2-t)
+
 ;;; Point 3
 
 ;; or should this just be an array deftype?

@@ -64,8 +64,13 @@
                (:file "tf-type" :depends-on ("foreign"))
                (:file "tf" :depends-on ("tf-type"))
                (:file "tf-op" :depends-on ("tf" "generic"))
-               ;; RX
+               ;;; RX
                (:file "rx/robray-package")
+               ;; bindings
+               (cffi-grovel:grovel-file "rx/rx-grovel" :depends-on ("rx/robray-package"))
+               (:file "rx/geom-type" :depends-on ("rx/rx-grovel"))
+               (:file "rx/geom-bind" :depends-on ("rx/geom-type"))
+               ;; other things
                (:file "rx/util" :depends-on ("rx/robray-package"))
                (:file "rx/mesh" :depends-on ("rx/util"))
                (:file "rx/wavefront" :depends-on ("rx/mesh"))

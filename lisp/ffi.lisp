@@ -40,6 +40,33 @@
 
 (in-package :amino-ffi)
 
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; FOREIGN CONTAINERS ;;
+;;;;;;;;;;;;;;;;;;;;;;;;
+(defstruct foreign-container
+  pointer)
+
+(defmacro def-foreign-container (lisp-type cffi-type)
+  `(progn
+     (defstruct (,lisp-type (:include foreign-container)
+                            (:constructor ,(intern (concatenate 'string "%MAKE-" (string lisp-type))
+                                                   (symbol-package lisp-type))
+                                          (pointer))))
+     (cffi:define-foreign-type ,cffi-type ()
+       ()
+       (:simple-parser ,cffi-type)
+       (:actual-type :pointer))
+     (defmethod cffi:expand-to-foreign (value (type ,cffi-type))
+       `(foreign-container-pointer ,value))))
+
+
+(defun foreign-container-finalizer (pointer object-constructor pointer-destructor)
+  "Register finalizer to call DESTRUCTOR on OBJECT's pointer.
+RETURNS: OBJECT"
+  (let ((object (funcall object-constructor pointer)))
+    (sb-ext:finalize object (lambda () (funcall pointer-destructor pointer)))
+    object))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; CALL BY REFERENCING ;;;
