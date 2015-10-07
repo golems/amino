@@ -39,15 +39,24 @@
 
 ;; options
 (amino-ffi::def-foreign-container rx-geom-opt rx-geom-opt-t
-  aa-rx-geom-opt-destroy)
+  :destructor aa-rx-geom-opt-destroy)
 
 ;; shapes
-(amino-ffi::def-foreign-container rx-shape-box rx-shape-box-t)
-(amino-ffi::def-foreign-container rx-shape-sphere rx-shape-sphere-t)
-(amino-ffi::def-foreign-container rx-shape-cylinder rx-shape-cylinder-t)
-(amino-ffi::def-foreign-container rx-shape-cone rx-shape-cone-t)
-(amino-ffi::def-foreign-container rx-shape-grid rx-shape-grid-t)
-(amino-ffi::def-foreign-container rx-mesh rx-mesh-t aa-rx-mesh-destroy)
+(amino-ffi::def-foreign-container rx-shape-box rx-shape-box-t
+  :struct-type shape-box)
+(amino-ffi::def-foreign-container rx-shape-sphere rx-shape-sphere-t
+  :struct-type shape-sphere)
+(amino-ffi::def-foreign-container rx-shape-cylinder rx-shape-cylinder-t
+  :struct-type shape-cylinder)
+(amino-ffi::def-foreign-container rx-shape-cone rx-shape-cone-t
+  :struct-type shape-cone)
+(amino-ffi::def-foreign-container rx-shape-grid rx-shape-grid-t
+  :struct-type shape-grid)
+
+;; mesh
+(amino-ffi::def-foreign-container rx-mesh rx-mesh-t
+  :destructor aa-rx-mesh-destroy)
 
 ;; geometry
-(amino-ffi::def-foreign-container rx-geom rx-geom-t aa-rx-geom-destroy)
+(amino-ffi::def-foreign-container rx-geom rx-geom-t
+  :destructor aa-rx-geom-destroy)

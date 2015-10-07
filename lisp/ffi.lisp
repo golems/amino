@@ -54,29 +54,66 @@ RETURNS: OBJECT"
     (sb-ext:finalize object (lambda () (funcall pointer-destructor pointer)))
     object))
 
-(defmacro def-foreign-container (lisp-type cffi-type &optional destructor)
-"Define a new container for a foreign type along with CFFI type convertors.
+
+
+
+(defmacro def-foreign-container (lisp-type cffi-type
+                                 &key
+                                   struct-type
+                                   destructor)
+  "Define a new container for a foreign type along with CFFI type convertors.
 
 If destructor is provided, pointer instances returned from foreign
 code are automatically bound with a finalizer to call the destructor.
 Note that destructor must operate on the raw pointer type.
 "
-  (let ((%make-it (intern (concatenate 'string "%MAKE-" (string lisp-type))
-                          (symbol-package lisp-type))))
-    `(progn
-       (defstruct (,lisp-type (:include foreign-container)
-                              (:constructor ,%make-it (pointer))))
-       (cffi:define-foreign-type ,cffi-type ()
-         ()
-         (:simple-parser ,cffi-type)
-         (:actual-type :pointer))
-        (defmethod cffi:expand-to-foreign (value (type ,cffi-type))
-          (list 'progn
-                (list 'check-type value ',lisp-type)
-                (list 'foreign-container-pointer value)))
-        ,@(when destructor
-                `((defmethod cffi:expand-from-foreign (form (type ,cffi-type))
-                    (list 'foreign-container-finalizer form '#',%make-it '#',destructor)))))))
+  (labels ((sym (&rest args)
+             (intern (apply #'concatenate 'string args)
+                     (symbol-package lisp-type))))
+    (let ((%make-it (sym "%MAKE-" (string lisp-type))))
+      `(progn
+         (defstruct (,lisp-type (:include foreign-container)
+                                (:constructor ,%make-it (pointer))))
+         (cffi:define-foreign-type ,cffi-type ()
+           ()
+           (:simple-parser ,cffi-type)
+           (:actual-type :pointer))
+         (defmethod cffi:expand-to-foreign (value (type ,cffi-type))
+           (list 'progn
+                 (list 'check-type value ',lisp-type)
+                 (list 'foreign-container-pointer value)))
+         ,@(when struct-type
+                 `((declaim (inline ,(sym (string lisp-type) "-SLOT-VALUE")))
+                   (defun ,(sym (string lisp-type) "-SLOT-VALUE") (object slot)
+                     (cffi:foreign-slot-value (,(sym (string lisp-type) "-POINTER") object)
+                                              '(:struct ,struct-type) slot))))
+         ,@(when destructor
+                 `((defmethod cffi:expand-from-foreign (form (type ,cffi-type))
+                     (list 'foreign-container-finalizer form '#',%make-it '#',destructor))))))))
+
+(defmacro def-foreign-container-accessor (lisp-type slot)
+  (let ((accessor-name (intern (concatenate 'string (string lisp-type) "-" (string slot))
+                               (symbol-package lisp-type)))
+        (slot-accessor (intern (concatenate 'string (string lisp-type) "-SLOT-VALUE")
+                               (symbol-package lisp-type)))
+        (object (gensym "OBJECT")))
+    `(progn (declaim (inline ,accessor-name))
+            (defun ,accessor-name (,object)
+              (,slot-accessor ,object ',slot)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Friendly Double Floats ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(cffi:define-foreign-type coercible-double ()
+  ()
+  (:simple-parser coercible-double)
+  (:actual-type :double))
+
+(defmethod expand-to-foreign-dyn (value var body (type coercible-double))
+  `(let ((,var (coerce ,value 'double-float)))
+     ,@body))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; CALL BY REFERENCING ;;;

@@ -73,8 +73,8 @@
            (radius "radius" :type :double)
            (height "height" :type :double))
   (cstruct shape-cone "struct aa_rx_shape_cone"
-           (radius "start_radius" :type :double)
-           (radius "end_radius" :type :double)
+           (start-radius "start_radius" :type :double)
+           (end-radius "end_radius" :type :double)
            (height "height" :type :double))
   (cstruct shape-grid "struct aa_rx_shape_grid"
            (dimension "dimension" :type :double :count 2)

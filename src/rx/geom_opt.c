@@ -78,3 +78,56 @@ aa_rx_geom_opt_set_alpha (
 {
     opt->color[3] = alpha;
 }
+
+AA_API int
+aa_rx_geom_opt_get_no_shadow ( struct aa_rx_geom_opt *opt )
+{
+    return opt->no_shadow;
+}
+AA_API int
+aa_rx_geom_opt_get_visual ( struct aa_rx_geom_opt *opt )
+{
+    return opt->visual;
+}
+AA_API int
+aa_rx_geom_opt_get_collision ( struct aa_rx_geom_opt *opt )
+{
+    return opt->collision;
+}
+
+AA_API double
+aa_rx_geom_opt_get_color_red ( struct aa_rx_geom_opt *opt )
+{
+    return opt->color[0];
+}
+AA_API double
+aa_rx_geom_opt_get_color_blue ( struct aa_rx_geom_opt *opt )
+{
+    return opt->color[1];
+}
+AA_API double
+aa_rx_geom_opt_get_color_green ( struct aa_rx_geom_opt *opt )
+{
+    return opt->color[2];
+}
+AA_API double
+aa_rx_geom_opt_get_alpha ( struct aa_rx_geom_opt *opt )
+{
+    return opt->color[3];
+}
+
+AA_API double
+aa_rx_geom_opt_get_specular_red ( struct aa_rx_geom_opt *opt )
+{
+    return opt->specular[0];
+}
+AA_API double
+aa_rx_geom_opt_get_specular_blue ( struct aa_rx_geom_opt *opt )
+{
+    return opt->specular[1];
+}
+AA_API double
+aa_rx_geom_opt_get_specular_green ( struct aa_rx_geom_opt *opt )
+{
+    return opt->specular[2];
+}
