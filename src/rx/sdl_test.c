@@ -87,8 +87,8 @@ void Init(void)
                                   aa_tf_quat_ident, aa_tf_vec_ident );
 
         struct aa_rx_geom_opt *opt = aa_rx_geom_opt_create();
-        aa_rx_geom_opt_set_color( opt, 0, 0, 1);
-        aa_rx_geom_opt_set_specular( opt, .3, .3, .3);
+        aa_rx_geom_opt_set_color3( opt, 0, 0, 1);
+        aa_rx_geom_opt_set_specular3( opt, .3, .3, .3);
 
         aa_rx_geom_attach( scenegraph, "cylinder",
                            aa_rx_geom_cylinder(opt, .2, .1) );
@@ -102,7 +102,7 @@ void Init(void)
                                   "", "grid",
                                   aa_tf_quat_ident, aa_tf_vec_ident );
         struct aa_rx_geom_opt *grid_opt = aa_rx_geom_opt_create();
-        aa_rx_geom_opt_set_color( grid_opt, .5, .5, .5);
+        aa_rx_geom_opt_set_color3( grid_opt, .5, .5, .5);
 
         double dim[2] = {1,1};
         double delta[2] = {.05, .05};

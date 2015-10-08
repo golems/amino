@@ -197,9 +197,6 @@ int display( void *cx_, int updated, const struct timespec *now )
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
-    SDL_Window* window = NULL;
-    SDL_GLContext gContext = NULL;
-    struct aa_gl_globals *globals;
 
     // Initialize scene graph
     aa_rx_cl_init();
@@ -211,10 +208,11 @@ int main(int argc, char *argv[])
     motion_plan(scenegraph);
 
     // setup window
-    baxter_demo_setup_window( scenegraph,
-                              &window, &gContext, &globals );
-    aa_gl_globals_set_show_visual(globals, 0);
-    aa_gl_globals_set_show_collision(globals, 1);
+    struct aa_rx_sdl_win * win = baxter_demo_setup_window(scenegraph);
+    struct aa_gl_globals *globals = aa_rx_sdl_win_gl_globals(win);
+    aa_gl_globals_set_show_visual(globals, 1);
+    aa_gl_globals_set_show_collision(globals, 0);
+
 
     struct display_cx cx = {0};
     cx.globals = globals;
@@ -240,19 +238,15 @@ int main(int argc, char *argv[])
         aa_rx_cl_set_destroy( allowed );
     }
 
-    aa_sdl_display_loop( window, globals,
-                         display,
-                         &cx );
+    aa_sdl_win_display_loop( win, display, &cx );
 
     // Cleanup
     if( g_path ) free( g_path );
     aa_rx_cl_destroy( cx.cl );
     aa_rx_sg_destroy(scenegraph);
-    aa_gl_globals_destroy(globals);
-    SDL_GL_DeleteContext(gContext);
-    SDL_DestroyWindow( window );
+    aa_rx_sdl_win_destroy(win);
     aa_mem_region_local_destroy();
-
     SDL_Quit();
+
     return 0;
 }

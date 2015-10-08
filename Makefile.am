@@ -240,7 +240,9 @@ libamino_gl_la_LIBADD = libamino.la $(GL_LIBS)
 ## SDL ##
 if HAVE_SDL2
 
-libamino_gl_la_SOURCES += src/amino_sdl.c
+libamino_gl_la_SOURCES += \
+	src/amino_sdl.c \
+	src/rx/sdl_win.c
 
 noinst_PROGRAMS += sdl_test
 sdl_test_SOURCES = src/rx/sdl_test.c

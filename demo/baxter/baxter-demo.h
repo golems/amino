@@ -42,10 +42,9 @@ static const int SCREEN_HEIGHT = 1000;
 
 struct aa_rx_sg *generate_scenegraph(struct aa_rx_sg *sg);
 
-void baxter_demo_setup_window( struct aa_rx_sg *sg,
-                               SDL_Window **window,
-                               SDL_GLContext *gContext,
-                               struct aa_gl_globals **globals );
+
+struct aa_rx_sdl_win *
+baxter_demo_setup_window( struct aa_rx_sg *sg );
 
 static void baxter_demo_check_error( const char *name ){
     for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {

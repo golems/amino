@@ -55,7 +55,8 @@ SceneFrame::SceneFrame(
     ) :
     type(type_),
     name(_name),
-    parent(_parent)
+    parent(_parent),
+    inertial(NULL)
 {
     AA_MEM_CPY(E+AA_TF_QUTR_Q, q ? q : aa_tf_quat_ident, 4);
     AA_MEM_CPY(E+AA_TF_QUTR_V, v ? v : aa_tf_vec_ident, 3);

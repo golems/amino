@@ -79,4 +79,57 @@ AA_API void aa_sdl_gl_window(
     SDL_Window **pwindow,
     SDL_GLContext *p_glcontext );
 
+
+/* Simple Asynchronous Window */
+
+struct aa_rx_sdl_win;
+
+AA_API struct aa_rx_sdl_win *
+aa_rx_sdl_win_create(
+    const char* title,
+    int x_pos,
+    int y_pos,
+    int width,
+    int height,
+    Uint32 flags );
+
+AA_API void
+aa_rx_sdl_win_destroy( struct aa_rx_sdl_win *  sdl_win);
+
+AA_API struct aa_gl_globals *
+aa_rx_sdl_win_gl_globals( struct aa_rx_sdl_win * sdl_win);
+
+
+AA_API void
+aa_rx_sdl_win_set_sg( struct aa_rx_sdl_win * sdl_win,
+                      const struct aa_rx_sg *sg );
+
+AA_API void
+aa_rx_sdl_win_set_config( struct aa_rx_sdl_win * sdl_win,
+                          size_t n,
+                          const double *q );
+
+/**
+ * Synchronous display using current thread
+ */
+AA_API void aa_sdl_win_display_loop(
+    struct aa_rx_sdl_win * window,
+    aa_sdl_display_fun display,
+    void *context );
+
+
+/**
+ * Asynchronous display using new thread
+ */
+AA_API void
+aa_rx_sdl_win_start( struct aa_rx_sdl_win * sdl_win,
+                     aa_sdl_display_fun display,
+                     void *context );
+
+AA_API void
+aa_rx_sdl_win_stop( struct aa_rx_sdl_win * sdl_win );
+
+AA_API void
+aa_rx_sdl_win_join( struct aa_rx_sdl_win * sdl_handler );
+
 #endif /*AMINO_RX_SCENE_SDL_H*/
