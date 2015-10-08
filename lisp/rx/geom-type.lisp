@@ -42,15 +42,15 @@
   :destructor aa-rx-geom-opt-destroy)
 
 ;; shapes
-(amino-ffi::def-foreign-container rx-shape-box rx-shape-box-t
+(amino-ffi::def-foreign-container scene-box rx-shape-box-t
   :struct-type shape-box)
-(amino-ffi::def-foreign-container rx-shape-sphere rx-shape-sphere-t
+(amino-ffi::def-foreign-container scene-sphere rx-shape-sphere-t
   :struct-type shape-sphere)
-(amino-ffi::def-foreign-container rx-shape-cylinder rx-shape-cylinder-t
+(amino-ffi::def-foreign-container scene-cylinder rx-shape-cylinder-t
   :struct-type shape-cylinder)
-(amino-ffi::def-foreign-container rx-shape-cone rx-shape-cone-t
+(amino-ffi::def-foreign-container scene-cone rx-shape-cone-t
   :struct-type shape-cone)
-(amino-ffi::def-foreign-container rx-shape-grid rx-shape-grid-t
+(amino-ffi::def-foreign-container scene-grid rx-shape-grid-t
   :struct-type shape-grid)
 
 ;; mesh

@@ -15,7 +15,7 @@
    (scene-frame-fixed nil "textroot"
                       :tf (tf* (z-angle (* 0 pi)) nil))
    (scene-frame-fixed "textroot" "textbox"
-                      :geometry (scene-geometry-box (draw-options-default :alpha .75) '(.001 .85 .20))
+                      :geometry (scene-geometry-box (draw-options-default :alpha .75) (vec .001 .85 .20))
                       :tf (tf* nil '(0 0 1)))
    (scene-frame-fixed "textroot" "text"
                       :geometry (scene-geometry-text (draw-options :scale .25

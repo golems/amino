@@ -43,6 +43,9 @@
 ;;; Array Types ;;;
 ;;;;;;;;;;;;;;;;;;;
 
+(deftype vec (length)
+  `(simple-array double-float (,length)))
+
 (defstruct real-array
   (data nil :type  (simple-array double-float (*))))
 

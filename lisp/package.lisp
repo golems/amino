@@ -41,6 +41,7 @@
   (:use :cl :cffi :alexandria)
   (:export
    ;; real-array
+   :vec
    :real-array
    :make-real-array
    :real-array-data

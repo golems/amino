@@ -53,45 +53,6 @@
   source-file
   povray-file)
 
-(defstruct scene-box
-  "A box object.
-The center of the box is at the origin, and it is aligned with the frame axes."
-  dimension)
-(defun scene-box (dimension)
-  (make-scene-box :dimension dimension))
-
-(defstruct scene-sphere
-  "A sphere object.
-The center of the sphere is at the origin."
-  radius)
-(defun scene-sphere (radius)
-  (make-scene-sphere :radius radius))
-
-
-(defstruct (scene-cylinder (:constructor scene-cylinder))
-  "A cylinder object.
-The cylinder starts at the origin and extends by HEIGHT in the Z direction."
-  height
-  radius)
-
-(defstruct (scene-cone (:constructor scene-cone))
-  "A cone object.
-The cone starts at the origin and extends by HEIGHT in the Z direction."
-  height
-  start-radius
-  end-radius)
-
-(defstruct scene-grid
-  "A grid object.
-The center of the grid plane is at the origin, and it is normal to the Z axis"
-  dimension
-  delta
-  thickness)
-(defun scene-grid (dimension delta thickness)
-  (make-scene-grid :dimension dimension
-                   :delta delta
-                   :thickness thickness))
-
 (defparameter *scene-font* :monospace)
 
 (defstruct scene-text
@@ -148,7 +109,8 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
   options
   type
   (collision t)
-  (visual t))
+  (visual t)
+  c-geom)
 
 (defun %scene-geometry (shape options)
   (make-scene-geometry :shape shape
@@ -161,25 +123,43 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
                        :collision (draw-option options :collision)
                        :visual (draw-option options :visual)))
 
+(defun %rx-scene-geometry (rx-geom options)
+  (make-scene-geometry :shape (rx-geom-shape rx-geom)
+                       :c-geom rx-geom
+                       :options options
+                       :type (let ((type (draw-option options :type)))
+                               (etypecase type
+                                 (list (apply #'tree-set #'rope-compare-fast type))
+                                 (tree-set type)
+                                 (rope (tree-set #'rope-compare-fast type))))
+                       :collision (draw-option options :collision)
+                       :visual (draw-option options :visual)))
 
 (defun scene-geometry-box (options dimension)
-  (%scene-geometry (scene-box dimension) options))
+  (%rx-scene-geometry (aa-rx-geom-box (alist-rx-geom-opt options)
+                                      (vec3 dimension))
+                      options))
 
 (defun scene-geometry-sphere (options radius)
-  (%scene-geometry (scene-sphere radius) options))
+  (%rx-scene-geometry (aa-rx-geom-sphere (alist-rx-geom-opt options)
+                                         radius)
+                      options))
 
 (defun scene-geometry-cylinder (options &key radius height)
-  (%scene-geometry (scene-cylinder :height height :radius radius)
+  (%rx-scene-geometry (aa-rx-geom-cylinder (alist-rx-geom-opt options)
+                                           height radius)
                    options))
 
 (defun scene-geometry-cone (options &key height start-radius end-radius)
-  (%scene-geometry (scene-cone :height height
-                               :start-radius start-radius
-                               :end-radius end-radius)
+  (%rx-scene-geometry (aa-rx-geom-cone (alist-rx-geom-opt options)
+                                       height
+                                       start-radius
+                                       end-radius)
                    options))
 
 (defun scene-geometry-grid (options &key dimension delta width)
-  (%scene-geometry (scene-grid dimension delta width)
+  (%rx-scene-geometry (aa-rx-geom-grid (alist-rx-geom-opt options)
+                                       dimension delta width)
                    options))
 
 (defun scene-geometry-text (options text &key (thickness 1))

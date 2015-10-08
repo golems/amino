@@ -187,78 +187,95 @@
       ;; Do not registor the destructor, memory is owned by the
       ;; containing geometry object.
       (ecase shape
-        (:box (%make-rx-shape-box ptr))
-        (:sphere (%make-rx-shape-sphere ptr))
-        (:cylinder (%make-rx-shape-cylinder ptr))
-        (:cone (%make-rx-shape-cone ptr))
-        (:grid (%make-rx-shape-grid ptr))))))
+        (:box (%make-scene-box ptr))
+        (:sphere (%make-scene-sphere ptr))
+        (:cylinder (%make-scene-cylinder ptr))
+        (:cone (%make-scene-cone ptr))
+        (:grid (%make-scene-grid ptr))))))
 
 ;;;;;;;;;;;;;;
 ;;; Shapes ;;;
 ;;;;;;;;;;;;;;
 
 ;;; Box ;;;
-(defun rx-shape-box-x (object)
-  (cffi:mem-aref (rx-shape-box-slot-value object 'dimension) :double 0))
+(defun scene-box-x (object)
+  (cffi:mem-aref (scene-box-slot-value object 'dimension) :double 0))
 
-(defun rx-shape-box-y (object)
-  (cffi:mem-aref (rx-shape-box-slot-value object 'dimension) :double 1))
+(defun scene-box-y (object)
+  (cffi:mem-aref (scene-box-slot-value object 'dimension) :double 1))
 
-(defun rx-shape-box-z (object)
-  (cffi:mem-aref (rx-shape-box-slot-value object 'dimension) :double 2))
+(defun scene-box-z (object)
+  (cffi:mem-aref (scene-box-slot-value object 'dimension) :double 2))
 
-(defmethod print-object ((object rx-shape-box) stream)
+(defun scene-box-dimension (object)
+  (vec (scene-box-x object)
+       (scene-box-y object)
+       (scene-box-z object)))
+
+(defmethod print-object ((object scene-box) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "~F ~F ~F (~x)"
-            (rx-shape-box-x object)
-            (rx-shape-box-y object)
-            (rx-shape-box-z object)
-            (cffi:pointer-address (rx-shape-box-pointer object)))))
+            (scene-box-x object)
+            (scene-box-y object)
+            (scene-box-z object)
+            (cffi:pointer-address (scene-box-pointer object)))))
 
 ;;; Sphere ;;;
-(amino-ffi::def-foreign-container-accessor rx-shape-sphere radius)
+(amino-ffi::def-foreign-container-accessor scene-sphere radius)
 
-(defmethod print-object ((object rx-shape-sphere) stream)
+(defmethod print-object ((object scene-sphere) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "~F (~x)"
-            (rx-shape-sphere-radius object)
+            (scene-sphere-radius object)
             (cffi:pointer-address (amino-ffi::foreign-container-pointer object)))))
 
 ;;; Cylinder ;;;
-(amino-ffi::def-foreign-container-accessor rx-shape-cylinder radius)
-(amino-ffi::def-foreign-container-accessor rx-shape-cylinder height)
+(amino-ffi::def-foreign-container-accessor scene-cylinder radius)
+(amino-ffi::def-foreign-container-accessor scene-cylinder height)
 
-(defmethod print-object ((object rx-shape-cylinder) stream)
+(defmethod print-object ((object scene-cylinder) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "height: ~F radius: ~F (~x)"
-            (rx-shape-cylinder-height object)
-            (rx-shape-cylinder-radius object)
+            (scene-cylinder-height object)
+            (scene-cylinder-radius object)
             (cffi:pointer-address (amino-ffi::foreign-container-pointer object)))))
 
 ;;; Cone ;;;
-(amino-ffi::def-foreign-container-accessor rx-shape-cone height)
-(amino-ffi::def-foreign-container-accessor rx-shape-cone start-radius)
-(amino-ffi::def-foreign-container-accessor rx-shape-cone end-radius)
-(defmethod print-object ((object rx-shape-cone) stream)
+(amino-ffi::def-foreign-container-accessor scene-cone height)
+(amino-ffi::def-foreign-container-accessor scene-cone start-radius)
+(amino-ffi::def-foreign-container-accessor scene-cone end-radius)
+(defmethod print-object ((object scene-cone) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "height: ~F start-radius: ~F end-radius: ~F (~x)"
-            (rx-shape-cone-height object)
-            (rx-shape-cone-start-radius object)
-            (rx-shape-cone-end-radius object)
+            (scene-cone-height object)
+            (scene-cone-start-radius object)
+            (scene-cone-end-radius object)
             (cffi:pointer-address (amino-ffi::foreign-container-pointer object)))))
 
 
 ;;; Grid ;;;
-(defun rx-shape-grid-x (object)
-  (cffi:mem-aref (rx-shape-grid-slot-value object 'dimension) :double 0))
-(defun rx-shape-grid-y (object)
-  (cffi:mem-aref (rx-shape-grid-slot-value object 'dimension) :double 1))
+(defun scene-grid-x (object)
+  (cffi:mem-aref (scene-grid-slot-value object 'dimension) :double 0))
+(defun scene-grid-y (object)
+  (cffi:mem-aref (scene-grid-slot-value object 'dimension) :double 1))
 
-(defun rx-shape-grid-delta-x (object)
-  (cffi:mem-aref (rx-shape-grid-slot-value object 'delta) :double 0))
-(defun rx-shape-grid-delta-y (object)
-  (cffi:mem-aref (rx-shape-grid-slot-value object 'delta) :double 1))
-(amino-ffi::def-foreign-container-accessor rx-shape-grid width)
+(defun scene-grid-dimension (object)
+  (vec (scene-grid-x object)
+       (scene-grid-y object)))
+
+(defun scene-grid-delta-x (object)
+  (cffi:mem-aref (scene-grid-slot-value object 'delta) :double 0))
+(defun scene-grid-delta-y (object)
+  (cffi:mem-aref (scene-grid-slot-value object 'delta) :double 1))
+
+(defun scene-grid-delta (object)
+  (vec (scene-grid-delta-x object)
+       (scene-grid-delta-y object)))
+
+(amino-ffi::def-foreign-container-accessor scene-grid width)
+
+(defun scene-grid-thickness (object)
+  (scene-grid-width object))
 
 ;;;;;;;;;;;;
 ;;; Mesh ;;;
