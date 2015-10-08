@@ -150,7 +150,7 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
   (collision t)
   (visual t))
 
-(defun scene-geometry (shape options)
+(defun %scene-geometry (shape options)
   (make-scene-geometry :shape shape
                        :options options
                        :type (let ((type (draw-option options :type)))
@@ -161,9 +161,45 @@ The center of the grid plane is at the origin, and it is normal to the Z axis"
                        :collision (draw-option options :collision)
                        :visual (draw-option options :visual)))
 
+
+(defun scene-geometry-box (options dimension)
+  (%scene-geometry (scene-box dimension) options))
+
+(defun scene-geometry-sphere (options radius)
+  (%scene-geometry (scene-sphere radius) options))
+
+(defun scene-geometry-cylinder (options &key radius height)
+  (%scene-geometry (scene-cylinder :height height :radius radius)
+                   options))
+
+(defun scene-geometry-cone (options &key height start-radius end-radius)
+  (%scene-geometry (scene-cone :height height
+                               :start-radius start-radius
+                               :end-radius end-radius)
+                   options))
+
+(defun scene-geometry-grid (options &key dimension delta width)
+  (%scene-geometry (scene-grid dimension delta width)
+                   options))
+
+(defun scene-geometry-text (options text &key (thickness 1))
+  (%scene-geometry (scene-text text :thickness thickness)
+                   options))
+
+(defun scene-geometry-mesh (options mesh)
+  (%scene-geometry mesh options))
+
 (defun scene-geometry-isa (geometry type)
   (let ((tree (scene-geometry-type geometry)))
     (when tree (tree-set-member-p tree type))))
+
+
+(defun scene-geometry-cylinder-p (geometry)
+  (when (scene-geometry-p geometry)
+    (scene-cylinder-p (scene-geometry-shape geometry))))
+
+(defun scene-geometry-cylinder-height (geometry)
+  (scene-cylinder-height (scene-geometry-shape geometry)))
 
 ;;;;;;;;;;;;;;
 ;;; FRAMES ;;;

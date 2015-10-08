@@ -484,21 +484,27 @@
              (insert-geom (properties parent)
                (let* ((shape-prop (get-prop properties "shape"))
                       (mesh-prop (get-prop properties "mesh"))
-                      (shape (cond
-                               (shape-prop (string-case shape-prop
-                                             ("box"
-                                              (scene-box (get-prop properties "dimension")))
-                                             ("grid"
-                                              (scene-grid (get-prop properties "dimension")
-                                                          (get-prop properties "delta")
-                                                          (get-prop properties "thickness")))
-                                             ("cylinder"
-                                              (scene-cylinder :height (get-prop properties "height")
-                                                              :radius (get-prop properties "radius")))
-                                             (otherwise (error "Unknown shape: ~A" (get-prop properties "shape")))))
-                               (mesh-prop (make-scene-mesh :source-file (file-resolve mesh-prop file-directory)))
-                               (t (error "No shape or mesh in ~A" parent))))
-                      (geometry (scene-geometry shape (property-options properties)))
+                      (options (property-options properties))
+                      (geometry
+                       (cond
+                         (shape-prop (string-case shape-prop
+                                       ("box"
+                                        (scene-geometry-box options (get-prop properties "dimension")))
+                                       ("grid"
+                                        (scene-geometry-grid options
+                                                             :dimension (get-prop properties "dimension")
+                                                             :delta (get-prop properties "delta")
+                                                             :width (get-prop properties "thickness")))
+                                       ("cylinder"
+                                        (scene-geometry-cylinder options :height (get-prop properties "height")
+                                                                 :radius (get-prop properties "radius")))
+                                       (otherwise (error "Unknown shape: ~A" (get-prop properties "shape")))))
+                         (mesh-prop
+                          (scene-geometry-mesh options
+                                               (make-scene-mesh :source-file
+                                                                (file-resolve mesh-prop file-directory))))
+                         (t (error "No shape or mesh in ~A" parent))))
+                      ;(geometry (scene-geometry shape (property-options properties)))
                       (parent (get-prop properties "parent" parent)))
                  (setf (scene-geometry-type geometry) (property-classes properties))
                  (push (cons parent geometry) geoms))))

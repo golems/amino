@@ -151,7 +151,7 @@
              (dom-select-path node path :singleton t :undefined-error nil :default default))
            (path-n (node path &optional default)
              (dom-select-path node path :singleton nil :undefined-error nil :default default))
-           (node-shape (node name)
+           (node-geometry (node options)
              (let* ((mesh-file (path-1 node '("geometry" "mesh" "@filename")))
                     (box-size (path-1 node '("geometry" "box" "@size")))
                     (sphere-radius (path-1 node '("geometry" "sphere" "@radius")))
@@ -159,22 +159,26 @@
                     (cylinder-length (path-1 node '("geometry" "cylinder" "@length"))))
                (unless (xor mesh-file box-size sphere-radius (and cylinder-length
                                                                   cylinder-radius))
-                 (error "bad shapes in frame ~A" name))
+                 (error "bad shapes in link ~A" (path-1 node '("@name"))))
                (cond (mesh-file
-                      (make-scene-mesh :source-file (urdf-resolve-file mesh-file)))
+                      (scene-geometry-mesh options
+                                           (make-scene-mesh :source-file (urdf-resolve-file mesh-file))))
                      (sphere-radius
-                      (make-scene-sphere :radius (parse-float sphere-radius)))
+                      (scene-geometry-sphere options (parse-float sphere-radius)))
                      (box-size
-                      (make-scene-box :dimension (parse-float-sequence box-size)))
+                      (scene-geometry-box options (parse-float-sequence box-size)))
                      ((and cylinder-length cylinder-radius)
-                      (scene-cylinder :height (parse-float cylinder-length)
-                                      :radius (parse-float cylinder-radius))))))
+                      (scene-geometry-cylinder options
+                                               :height (parse-float cylinder-length)
+                                               :radius (parse-float cylinder-radius))))))
            (node-origin (link-name node suffix geometry)
+             (check-type geometry (or null scene-geometry))
              (let* ((frame-name (gethash link-name link-parent-map))
                     (rpy (parse-float-sequence (path-1 node '("origin" "@rpy") "0 0 0")))
                     (xyz (parse-float-sequence (path-1 node '("origin" "@xyz") "0 0 0")))
-                    (offset (if (scene-cylinder-p geometry) ; URDF cylinders have origin at their center
-                                (tf* nil (vec3* 0d0 0d0 (/ (scene-cylinder-height geometry) -2)))
+                    ;; URDF cylinders have origin at their center
+                    (offset (if (scene-geometry-cylinder-p geometry)
+                                (tf* nil (vec3* 0d0 0d0 (/ (scene-geometry-cylinder-height geometry) -2)))
                                 (tf* nil nil)))
                     (tf (tf-mul (tf* (euler-rpy rpy)
                                      (vec3 xyz))
@@ -213,22 +217,20 @@
             for rgba-text = (when visual-node (path-1 visual-node '("material" "color" "@rgba")))
             for rgba = (if rgba-text (parse-float-sequence rgba-text)
                            (append default-color (list default-alpha)))
-            do (let* ((shape (node-shape visual-node name))
-                      (frame-name (node-origin name visual-node "visual" shape))
-                      (options (node-options :rgba rgba :visual t)))
+            do (let* ((options (node-options :rgba rgba :visual t))
+                      (geometry (node-geometry visual-node options))
+                      (frame-name (node-origin name visual-node "visual" geometry)))
                  ;; bind geometry
                  (setq scene-graph
-                       (scene-graph-add-geometry scene-graph frame-name
-                                                 (scene-geometry shape options)))))
+                       (scene-graph-add-geometry scene-graph frame-name geometry))))
        ;; Add collisions
          (loop for collision-node in (path-n link-node '("collision"))
             do
-              (let* ((shape (node-shape collision-node name))
-                     (frame-name (node-origin name collision-node "collision" shape))
-                     (options (node-options :rgba default-rgba :visual nil :collision t)))
+              (let* ((options (node-options :rgba default-rgba :visual nil :collision t))
+                     (geometry (node-geometry collision-node options))
+                     (frame-name (node-origin name collision-node "collision" geometry)))
                 (setq scene-graph
-                      (scene-graph-add-geometry scene-graph frame-name
-                                                (scene-geometry shape options)))))
+                      (scene-graph-add-geometry scene-graph frame-name geometry))))
        ;; Add inertials
          (when inertial-node
            (let* ((frame-name (node-origin name inertial-node "inertial" nil))

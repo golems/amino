@@ -15,15 +15,14 @@
    (scene-frame-fixed nil "textroot"
                       :tf (tf* (z-angle (* 0 pi)) nil))
    (scene-frame-fixed "textroot" "textbox"
-                      :geometry (scene-geometry (scene-box '(.001 .85 .20))
-                                                (draw-options-default :alpha .75))
+                      :geometry (scene-geometry-box (draw-options-default :alpha .75) '(.001 .85 .20))
                       :tf (tf* nil '(0 0 1)))
    (scene-frame-fixed "textroot" "text"
-                      :geometry (scene-geometry (scene-text "Baxter"
-                                                            :thickness .1)
-                                                (draw-options :scale .25
-                                                              :no-shadow t
-                                                              :color '(0 1 0)))
+                      :geometry (scene-geometry-text (draw-options :scale .25
+                                                                   :no-shadow t
+                                                                   :color '(0 1 0))
+                                                     "Baxter"
+                                                     :thickness .1)
                       :tf (tf* (z-angle (* .5 pi))
                                (vec3* (+ (* .1 .25) (* .5 .001)) -.35 .92)))
 

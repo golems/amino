@@ -51,8 +51,7 @@
                                   options)
   (scene-frame-fixed parent name
                      :tf (draw-tf-axis axis translation)
-                     :geometry (scene-geometry (scene-cylinder :height height :radius radius)
-                                               options)))
+                     :geometry (scene-geometry-cylinder options  :height height :radius radius)))
 
 
 (defun item-cone-axis (parent name
@@ -60,10 +59,9 @@
                          options)
   (scene-frame-fixed parent name
                      :tf (draw-tf-axis axis translation)
-                     :geometry (scene-geometry (scene-cone :height height
-                                                           :start-radius start-radius
-                                                           :end-radius end-radius)
-                                               options)))
+                     :geometry (scene-geometry-cone options :height height
+                                                    :start-radius start-radius
+                                                    :end-radius end-radius)))
 
 (defun item-arrow-axis (parent name
                         &key

@@ -138,9 +138,9 @@
                       (scene-frame-fixed nil name
                                          :tf (tf* (quaternion quaternion)
                                                   (vec3 translation))
-                                         :geometry (scene-geometry (scene-box size)
-                                                                   (draw-options-default :color (subseq rgba 0 3)
-                                                                                         :alpha (elt rgba 3)))))))
+                                         :geometry (scene-geometry-box (draw-options-default :color (subseq rgba 0 3)
+                                                                                             :alpha (elt rgba 3))
+                                                                       (scene-box size))))))
                  (parse-mesh (name)
                    (destructuring-bind (vertex-count face-count)
                        (int-line)
@@ -169,10 +169,11 @@
                           (scene-frame-fixed nil name
                                              :tf (tf* (quaternion quaternion)
                                                       (vec3 translation))
-                                             :geometry (scene-geometry (make-scene-mesh :name name
-                                                                                        :povray-file povray-file)
-                                                                       (draw-options-default :color color
-                                                                                             :alpha alpha)))))))))
+                                             :geometry
+                                             (scene-geometry-mesh (draw-options-default :color color
+                                                                                        :alpha alpha)
+                                                                  (make-scene-mesh :name name
+                                                                                   :povray-file povray-file)))))))))
           (let ((scene-name (line)))
             (format t "~&Reading scene '~A'...~%" scene-name))
           (loop for x = (next-object)
