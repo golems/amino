@@ -151,8 +151,8 @@ static void check_tf( struct aa_rx_sg *sg )
     aa_rx_frame_id fid2 = aa_rx_sg_frame_id(sg,"q2");
     aa_rx_frame_id fid3 = aa_rx_sg_frame_id(sg,"q3");
 
-    aa_rx_frame_id frame_cnt =  aa_rx_sg_frame_count(sg);
-    aa_rx_config_id config_cnt =  aa_rx_sg_config_count(sg);
+    size_t frame_cnt =  aa_rx_sg_frame_count(sg);
+    size_t config_cnt =  aa_rx_sg_config_count(sg);
     double q[config_cnt];
     double TF_rel[7*frame_cnt];
     double TF_abs[7*frame_cnt];

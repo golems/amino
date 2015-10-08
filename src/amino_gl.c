@@ -389,21 +389,21 @@ aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
     free(bufs);
 }
 
-static void quad_tr( unsigned *indices,
-                     unsigned pp,
-                     unsigned pm,
-                     unsigned mp,
-                     unsigned mm )
-{
-    size_t j = 0;
-    indices[j++] = pp;
-    indices[j++] = pm;
-    indices[j++] = mp;
+/* static void quad_tr( unsigned *indices, */
+/*                      unsigned pp, */
+/*                      unsigned pm, */
+/*                      unsigned mp, */
+/*                      unsigned mm ) */
+/* { */
+/*     size_t j = 0; */
+/*     indices[j++] = pp; */
+/*     indices[j++] = pm; */
+/*     indices[j++] = mp; */
 
-    indices[j++] = mm;
-    indices[j++] = pm;
-    indices[j++] = mp;
-}
+/*     indices[j++] = mm; */
+/*     indices[j++] = pm; */
+/*     indices[j++] = mp; */
+/* } */
 
 /* AA_API void aa_gl_normals( struct aa_gl_buffers *buffers, */
 /*                            size_t n_values, size_t n_indices, */
@@ -563,15 +563,15 @@ static void quad_mesh (
     bind_mesh( geom, mesh, 4 );
 }
 
-static void line_mesh (
-    struct aa_rx_geom *geom,
-    struct aa_rx_mesh *mesh
-    )
-{
-    geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
-    geom->gl_buffers->mode = GL_LINES;
-    bind_mesh( geom, mesh, 2 );
-}
+/* static void line_mesh ( */
+/*     struct aa_rx_geom *geom, */
+/*     struct aa_rx_mesh *mesh */
+/*     ) */
+/* { */
+/*     geom->gl_buffers = AA_NEW0(struct aa_gl_buffers); */
+/*     geom->gl_buffers->mode = GL_LINES; */
+/*     bind_mesh( geom, mesh, 2 ); */
+/* } */
 
 AA_API void aa_geom_gl_buffers_init_mesh(
     struct aa_rx_geom_mesh *geom
@@ -1104,6 +1104,8 @@ aa_rx_sg_render(
     size_t n_TF, double *TF_abs, size_t ld_tf)
 {
     aa_rx_sg_ensure_clean_gl( sg );
+
+    assert( n_TF == aa_rx_sg_frame_count(sg) );
 
     glUseProgram(aa_gl_id_program);
     check_error("glUseProgram");

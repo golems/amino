@@ -60,14 +60,14 @@ AA_API void aa_rx_sg_init ( struct aa_rx_sg *scene_graph )
     scene_graph->sg->index();
 }
 
-AA_API aa_rx_config_id aa_rx_sg_config_count(
+AA_API size_t aa_rx_sg_config_count(
     const struct aa_rx_sg *scene_graph )
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
     return scene_graph->sg->config_size;
 }
 
-AA_API aa_rx_config_id aa_rx_sg_frame_count(
+AA_API size_t aa_rx_sg_frame_count(
     const struct aa_rx_sg *scene_graph )
 {
     return scene_graph->sg->frames.size();
@@ -150,20 +150,20 @@ AA_API void aa_rx_sg_add_frame_revolute
 
 AA_API void aa_rx_sg_tf
 ( const struct aa_rx_sg *scene_graph,
-  aa_rx_config_id n_q, const double *q,
-  aa_rx_frame_id n_tf,
+  size_t n_q, const double *q,
+  size_t n_tf,
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs )
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
     amino::SceneGraph *sg = scene_graph->sg;
-    aa_rx_frame_id i_frame = 0;
+    size_t i_frame = 0;
     for( size_t i_rel = 0, i_abs = 0;
-         i_frame < n_tf && (size_t)i_frame < sg->frames.size();
+         i_frame < n_tf && i_frame < sg->frames.size();
          i_frame++, i_rel += ld_rel, i_abs += ld_abs )
     {
-        amino::SceneFrame *f = sg->frames[i_frame];
+        amino::SceneFrame *f = sg->frames[(aa_rx_frame_id)i_frame];
         double *E_rel = TF_rel + i_rel;
         double *E_abs = TF_abs + i_abs;
         // compute relative

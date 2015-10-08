@@ -135,7 +135,7 @@ int display( void *globals_, int updated, const struct timespec *now )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     check_error("glClear");
 
-    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
+    size_t n = aa_rx_sg_frame_count(scenegraph);
     double TF_rel[7*n];
     double TF_abs[7*n];
     aa_rx_sg_tf(scenegraph, 0, NULL,

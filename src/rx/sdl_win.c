@@ -129,7 +129,7 @@ aa_rx_sdl_win_set_sg( struct aa_rx_sdl_win * win,
 
     aa_checked_free( win->q );
     win->sg = sg;
-    win->n_config = (size_t)aa_rx_sg_config_count(sg);
+    win->n_config = aa_rx_sg_config_count(sg);
     win->q = AA_NEW0_AR( double, win->n_config );
     win->updated = 1;
 
@@ -184,13 +184,13 @@ static int default_display( void *cx_, int updated, const struct timespec *now )
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-        size_t n = (size_t)aa_rx_sg_frame_count(scenegraph);
-        size_t m = (size_t)aa_rx_sg_config_count(scenegraph);
+        size_t n = aa_rx_sg_frame_count(scenegraph);
+        size_t m = aa_rx_sg_config_count(scenegraph);
 
         double TF_rel[7*n];
         double TF_abs[7*n];
-        aa_rx_sg_tf(scenegraph, (aa_rx_config_id)m, cx->q,
-                    (aa_rx_config_id)n,
+        aa_rx_sg_tf(scenegraph, m, cx->q,
+                    n,
                     TF_rel, 7,
                     TF_abs, 7 );
         aa_rx_sg_render( scenegraph, globals,

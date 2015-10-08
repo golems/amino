@@ -135,14 +135,14 @@ aa_rx_sg_frame_parent (
 /**
  * Return the number of frames in scene_graph.
  */
-AA_API aa_rx_frame_id
+AA_API size_t
 aa_rx_sg_frame_count (
     const struct aa_rx_sg *scene_graph );
 
 /**
  * Return the number of configuration variables in scene_graph.
  */
-AA_API aa_rx_config_id
+AA_API size_t
 aa_rx_sg_config_count (
     const struct aa_rx_sg *scene_graph );
 
@@ -392,8 +392,8 @@ AA_API const double *aa_rx_sg_frame_axis
  */
 AA_API void aa_rx_sg_tf
 ( const struct aa_rx_sg *scene_graph,
-  aa_rx_config_id n_q, const double *q,
-  aa_rx_frame_id n_tf,
+  size_t n_q, const double *q,
+  size_t n_tf,
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
 

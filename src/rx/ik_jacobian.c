@@ -305,8 +305,8 @@ static int ksol_duqu ( const void *cx_, const double *q_s, double S[8],  double 
     struct aa_rx_sg_sub *ssg = (struct aa_rx_sg_sub *)cx_;
     const struct aa_rx_sg *sg = ssg->scenegraph;
 
-    size_t n_f = (size_t)aa_rx_sg_frame_count(sg);
-    size_t n_q = (size_t)aa_rx_sg_config_count(sg);
+    size_t n_f = aa_rx_sg_frame_count(sg);
+    size_t n_q = aa_rx_sg_config_count(sg);
     size_t n_sq = aa_rx_sg_sub_config_count(ssg);
     //size_t n_sf = aa_rx_sg_sub_frame_count(ssg);
 

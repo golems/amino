@@ -46,10 +46,10 @@ aa_rx_sg_config_names (
     const struct aa_rx_sg *scene_graph, size_t n_names,
     const char **names )
 {
-    aa_rx_config_id n_sg = aa_rx_sg_config_count(scene_graph);
-    aa_rx_config_id i = 0;
-    while( i < n_sg && i < (aa_rx_config_id)n_names ) {
-        names[i] = aa_rx_sg_config_name(scene_graph, i);
+    size_t n_sg = aa_rx_sg_config_count(scene_graph);
+    size_t i = 0;
+    while( i < n_sg && i < n_names ) {
+        names[i] = aa_rx_sg_config_name(scene_graph, (aa_rx_config_id)i);
         i++;
     }
     return (size_t)i;
