@@ -58,7 +58,7 @@
 
 #include <pthread.h>
 
-struct aa_rx_sdl_win {
+struct aa_rx_win {
     struct aa_gl_globals *gl_globals;
     const struct aa_rx_sg *sg;
     size_t n_config;
@@ -75,8 +75,8 @@ struct aa_rx_sdl_win {
     unsigned running : 1;
 };
 
-AA_API struct aa_rx_sdl_win *
-aa_rx_sdl_win_create(
+AA_API struct aa_rx_win *
+aa_rx_win_create(
     const char* title,
     int x_pos,
     int y_pos,
@@ -84,7 +84,7 @@ aa_rx_sdl_win_create(
     int height,
     Uint32 flags )
 {
-    struct aa_rx_sdl_win *win = AA_NEW0( struct aa_rx_sdl_win );
+    struct aa_rx_win *win = AA_NEW0( struct aa_rx_win );
     pthread_mutex_init( & win->mutex, NULL );
 
     aa_sdl_gl_window( title,
@@ -100,9 +100,21 @@ aa_rx_sdl_win_create(
     return win;
 }
 
+AA_API struct aa_rx_win *
+aa_rx_win_default_create(
+    const char* title, int width, int height )
+{
+    return aa_rx_win_create(
+        title,
+        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        width, height,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
+}
+
+
 
 AA_API void
-aa_rx_sdl_win_destroy( struct aa_rx_sdl_win *  win)
+aa_rx_win_destroy( struct aa_rx_win *  win)
 {
     aa_gl_globals_destroy( win->gl_globals );
     aa_checked_free( win->q );
@@ -115,15 +127,15 @@ aa_rx_sdl_win_destroy( struct aa_rx_sdl_win *  win)
 }
 
 AA_API struct aa_gl_globals *
-aa_rx_sdl_win_gl_globals( struct aa_rx_sdl_win * win)
+aa_rx_win_gl_globals( struct aa_rx_win * win)
 {
     return win->gl_globals;
 }
 
 
 AA_API void
-aa_rx_sdl_win_set_sg( struct aa_rx_sdl_win * win,
-                           const struct aa_rx_sg *sg )
+aa_rx_win_set_sg( struct aa_rx_win * win,
+                  const struct aa_rx_sg *sg )
 {
     pthread_mutex_lock( &win->mutex );
 
@@ -137,9 +149,9 @@ aa_rx_sdl_win_set_sg( struct aa_rx_sdl_win * win,
 }
 
 AA_API void
-aa_rx_sdl_win_set_config( struct aa_rx_sdl_win * win,
-                              size_t n,
-                              const double *q )
+aa_rx_win_set_config( struct aa_rx_win * win,
+                      size_t n,
+                      const double *q )
 {
     pthread_mutex_lock( &win->mutex );
 
@@ -150,8 +162,8 @@ aa_rx_sdl_win_set_config( struct aa_rx_sdl_win * win,
 }
 
 
-AA_API void aa_sdl_win_display_loop(
-    struct aa_rx_sdl_win * win,
+AA_API void aa_win_display_loop(
+    struct aa_rx_win * win,
     aa_sdl_display_fun display,
     void *context )
 {
@@ -171,31 +183,31 @@ AA_API void aa_sdl_win_display_loop(
 static int default_display( void *cx_, int updated, const struct timespec *now )
 {
     (void) now;
-    struct aa_rx_sdl_win *cx = (struct aa_rx_sdl_win*) cx_;
+    struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
     pthread_mutex_lock( &cx->mutex );
 
     if( updated || cx->updated ) {
         updated = 1;
 
-        const struct aa_gl_globals *globals = cx->gl_globals;
-        const struct aa_rx_sg *scenegraph = cx->sg;
-
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        const struct aa_rx_sg *scenegraph = cx->sg;
+        if( scenegraph ) {
+            const struct aa_gl_globals *globals = cx->gl_globals;
+            size_t n = aa_rx_sg_frame_count(scenegraph);
+            size_t m = aa_rx_sg_config_count(scenegraph);
 
-        size_t n = aa_rx_sg_frame_count(scenegraph);
-        size_t m = aa_rx_sg_config_count(scenegraph);
+            double TF_rel[7*n];
+            double TF_abs[7*n];
+            aa_rx_sg_tf(scenegraph, m, cx->q,
+                        n,
+                        TF_rel, 7,
+                        TF_abs, 7 );
+            aa_rx_sg_render( scenegraph, globals,
+                             (size_t)n, TF_abs, 7 );
 
-        double TF_rel[7*n];
-        double TF_abs[7*n];
-        aa_rx_sg_tf(scenegraph, m, cx->q,
-                    n,
-                    TF_rel, 7,
-                    TF_abs, 7 );
-        aa_rx_sg_render( scenegraph, globals,
-                         (size_t)n, TF_abs, 7 );
-
+        }
     }
 
     pthread_mutex_unlock( &cx->mutex );
@@ -204,7 +216,7 @@ static int default_display( void *cx_, int updated, const struct timespec *now )
 
 
 struct win_thread_cx {
-    struct aa_rx_sdl_win *win;
+    struct aa_rx_win *win;
     aa_sdl_display_fun display;
     void *display_cx;
 };
@@ -213,7 +225,7 @@ static void* win_thread_fun( void *arg )
 {
     struct win_thread_cx *cx =  (struct win_thread_cx*)arg;
 
-    aa_sdl_win_display_loop( cx->win, cx->display, cx->display_cx );
+    aa_win_display_loop( cx->win, cx->display, cx->display_cx );
 
     free(cx );
 
@@ -222,9 +234,9 @@ static void* win_thread_fun( void *arg )
 
 
 AA_API void
-aa_rx_sdl_win_start( struct aa_rx_sdl_win * win,
-                     aa_sdl_display_fun display,
-                     void *context )
+aa_rx_win_start( struct aa_rx_win * win,
+                 aa_sdl_display_fun display,
+                 void *context )
 {
 
     struct win_thread_cx *thread_cx = AA_NEW( struct win_thread_cx );
@@ -240,7 +252,7 @@ aa_rx_sdl_win_start( struct aa_rx_sdl_win * win,
 }
 
 AA_API void
-aa_rx_sdl_win_stop( struct aa_rx_sdl_win * win )
+aa_rx_win_stop( struct aa_rx_win * win )
 {
     pthread_mutex_lock( &win->mutex );
 
@@ -251,7 +263,7 @@ aa_rx_sdl_win_stop( struct aa_rx_sdl_win * win )
 }
 
 AA_API void
-aa_rx_sdl_win_join( struct aa_rx_sdl_win * win )
+aa_rx_win_join( struct aa_rx_win * win )
 {
     pthread_join( win->thread, NULL );
 }

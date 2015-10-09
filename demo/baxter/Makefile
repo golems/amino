@@ -16,19 +16,19 @@ OTHER_DEPS := scene.o baxter-demo.c
 ALL: $(PROGS)
 
 
-baxter-ik: baxter-ik.c $(OTHER_DEPS)
+baxter-ik: baxter-ik.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-ik.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o baxter-ik
 
-baxter-wksp: baxter-wksp.c $(OTHER_DEPS)
+baxter-wksp: baxter-wksp.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-wksp.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -lm -lopenblas -o baxter-wksp
 
-baxter-simple: baxter-simple.c $(OTHER_DEPS)
+baxter-simple: baxter-simple.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-simple.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o baxter-simple
 
-baxter-collision: baxter-collision.c $(OTHER_DEPS)
+baxter-collision: baxter-collision.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-collision.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o baxter-collision
 
-baxter-ompl: baxter-ompl.c $(OTHER_DEPS)
+baxter-ompl: baxter-ompl.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-ompl.c $(CFLAGS_OMPL) $(LDFLAGS_OMPL) -o baxter-ompl
 
 scene.o: scene.c

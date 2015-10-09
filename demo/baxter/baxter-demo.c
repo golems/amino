@@ -46,25 +46,21 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_sdl.h"
+#include "amino/rx/scene_win.h"
 
 #include "baxter-demo.h"
 
 
-struct aa_rx_sdl_win *
+struct aa_rx_win *
 baxter_demo_setup_window ( struct aa_rx_sg *sg  )
 {
 
-    struct aa_rx_sdl_win * win = aa_rx_sdl_win_create(
-        "SDL Test",
-        SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED,
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE );
+    struct aa_rx_win * win =
+        aa_rx_win_default_create ( "Baxter Demo", SCREEN_WIDTH, SCREEN_HEIGHT );
+
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
-    struct aa_gl_globals *globals = aa_rx_sdl_win_gl_globals(win);
+    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
 
     // global camera
     {
@@ -89,7 +85,7 @@ baxter_demo_setup_window ( struct aa_rx_sg *sg  )
     // setup scene graph
     aa_rx_sg_init(sg);
     aa_rx_sg_gl_init(sg);
-    aa_rx_sdl_win_set_sg( win, sg );
+    aa_rx_win_set_sg( win, sg );
 
     // result
     return win;

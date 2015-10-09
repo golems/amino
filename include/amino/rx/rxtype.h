@@ -59,4 +59,21 @@ struct aa_rx_geom;
  */
 struct aa_rx_cl_geom;
 
+
+/**
+ * Opaque type for a window
+ */
+struct aa_rx_win;
+
+/**
+ * @param context A pointer to local context
+ * @param updated Whether other parts of these scene are updated
+ * @param now The present time
+ * @return Whether any update has occurred
+ */
+typedef int (*aa_sdl_display_fun)(
+    void *context,
+    int updated,
+    const struct timespec *now);
+
 #endif /*AMINO_RX_RXTYPE_H*/

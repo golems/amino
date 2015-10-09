@@ -35,6 +35,26 @@
  *
  */
 
+#ifndef BAXTER_DEMO_H
+#define BAXTER_DEMO_H
+
+#define GL_GLEXT_PROTOTYPES
+
+#include <error.h>
+#include <stdio.h>
+#include <math.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <SDL.h>
+
+
+
+#include "amino.h"
+#include "amino/rx/rxtype.h"
+#include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_gl.h"
+#include "amino/rx/scene_win.h"
+#include "amino/rx/scene_geom.h"
 
 static const int SCREEN_WIDTH = 1000;
 static const int SCREEN_HEIGHT = 1000;
@@ -43,7 +63,7 @@ static const int SCREEN_HEIGHT = 1000;
 struct aa_rx_sg *generate_scenegraph(struct aa_rx_sg *sg);
 
 
-struct aa_rx_sdl_win *
+struct aa_rx_win *
 baxter_demo_setup_window( struct aa_rx_sg *sg );
 
 static void baxter_demo_check_error( const char *name ){
@@ -51,3 +71,5 @@ static void baxter_demo_check_error( const char *name ){
         fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
     }
 }
+
+#endif /*BAXTER_DEMO_H*/

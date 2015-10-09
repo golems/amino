@@ -34,21 +34,6 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#define GL_GLEXT_PROTOTYPES
-
-#include <error.h>
-#include <stdio.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <SDL.h>
-
-#include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_sdl.h"
-#include "amino/rx/scene_geom.h"
 
 #include "baxter-demo.h"
 
@@ -93,17 +78,17 @@ int main(int argc, char *argv[])
     struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
 
     // setup window
-    struct aa_rx_sdl_win * win = baxter_demo_setup_window(scenegraph);
-    struct aa_gl_globals *globals = aa_rx_sdl_win_gl_globals(win);
+    struct aa_rx_win * win = baxter_demo_setup_window(scenegraph);
+    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
     aa_gl_globals_set_show_visual(globals, 1);
     aa_gl_globals_set_show_collision(globals, 0);
 
-    aa_rx_sdl_win_start( win, NULL, NULL );
-    aa_rx_sdl_win_join( win );
+    aa_rx_win_start( win, NULL, NULL );
+    aa_rx_win_join( win );
 
     // Cleanup
     aa_rx_sg_destroy(scenegraph);
-    aa_rx_sdl_win_destroy(win);
+    aa_rx_win_destroy(win);
     SDL_Quit();
 
     return 0;
