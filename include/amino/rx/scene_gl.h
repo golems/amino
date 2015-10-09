@@ -67,12 +67,20 @@ struct aa_gl_globals;
 
 /**
  * Initialize OpenGL objects in scene graph
+ *
+ * This function is not threadsafe.  Do not attempt to access the same
+ * GL context from multiple threads.
+ *
+ * @see aa_rx_win_sg_gl_init()
  */
 AA_API void
 aa_rx_sg_gl_init( struct aa_rx_sg *sg );
 
 /**
  * Render the scene graph to the current GL context.
+ *
+ * This function is not threadsafe.  Do not attempt to access the same
+ * GL context from multiple threads.
  *
  * @param scengreaph   the scene graph to render
  * @param globals      the opengl global values

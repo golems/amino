@@ -42,7 +42,9 @@
  * @file scene_win.h
  */
 
-
+/**
+ * Create a new SDL / OpenGL window.
+ */
 AA_API struct aa_rx_win *
 aa_rx_win_create(
     const char* title,
@@ -52,22 +54,44 @@ aa_rx_win_create(
     int height,
     Uint32 flags );
 
+/**
+ * Create a new SDL / OpenGL window with default parameters.
+ */
 AA_API struct aa_rx_win *
 aa_rx_win_default_create(
     const char* title, int width, int height );
 
 
+/**
+ * Destroy SDL / OpenGL window.
+ */
 AA_API void
 aa_rx_win_destroy( struct aa_rx_win *  win);
 
+/**
+ * Return a pointer to the window's GL globals struct.
+ */
 AA_API struct aa_gl_globals *
 aa_rx_win_gl_globals( struct aa_rx_win * win);
 
 
+/**
+ * Set a scenegraph for the window.
+ *
+ * The scenegraph is used by the default rendering function.  Custom
+ * rendering functions may not need to set the window scene graph
+ * first.
+ */
 AA_API void
 aa_rx_win_set_sg( struct aa_rx_win * win,
                   const struct aa_rx_sg *sg );
 
+/**
+ * Set the configuration vector for the window.
+ *
+ * This configuration is used by the default rendering function.
+ * Custom rendering functions may not need to set the configuration with this function.
+ */
 AA_API void
 aa_rx_win_set_config( struct aa_rx_win * win,
                       size_t n,
@@ -75,6 +99,10 @@ aa_rx_win_set_config( struct aa_rx_win * win,
 
 /**
  * Synchronous display using current thread
+ *
+ * This function is thread-safe.  The window will be locked while
+ * display() is called.
+ *
  */
 AA_API void aa_win_display_loop(
     struct aa_rx_win * window,
@@ -91,13 +119,48 @@ aa_rx_win_start( struct aa_rx_win * win,
                  void *context );
 
 
+/**
+ * Asynchronous display using new thread and default rendering
+ * function.
+ *
+ * This function renders the previously set scenegraph and and
+ * configuration vector.  The configuration vector may be updated
+ * while the asynchronous thread is running.
+ *
+ * @see aa_rx_win_set_sg()
+ * @see aa_rx_win_set_config()
+ */
 AA_API void
 aa_rx_win_default_start( struct aa_rx_win * win );
 
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
 
+/**
+ * Join the asynchronous display thread.
+ */
 AA_API void
-aa_rx_win_join( struct aa_rx_win * sdl_handler );
+aa_rx_win_join( struct aa_rx_win * win );
+
+/**
+ * Initialize scenegraph GL values for the given window.
+ *
+ * This function is threadsafe.
+ */
+AA_API void
+aa_rx_win_sg_gl_init( struct aa_rx_win * win,
+                      struct aa_rx_sg *sg );
+
+/**
+ * Render scenegraph to the window.
+ *
+ * This function is threadsafe.
+ */
+AA_API void
+aa_rx_win_sg_render(
+    struct aa_rx_win *window,
+    const struct aa_rx_sg *scenegraph,
+    const struct aa_gl_globals *globals,
+    size_t n_TF, double *TF_abs, size_t ld_TF );
 
 #endif /*AMINO_RX_SCENE_WIN_H*/

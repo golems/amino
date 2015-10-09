@@ -38,41 +38,6 @@
 #include "baxter-demo.h"
 #include "amino/rx/scene_kin.h"
 
-
-struct display_cx {
-    const struct aa_gl_globals *globals;
-    const struct aa_rx_sg *scenegraph;
-    double *q;
-};
-
-int display( void *cx_, int updated, const struct timespec *now )
-{
-    if( !updated ) return 0;
-    struct display_cx *cx = (struct display_cx*) cx_;
-    const struct aa_gl_globals *globals = cx->globals;
-    const struct aa_rx_sg *scenegraph = cx->scenegraph;
-
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    baxter_demo_check_error("glClearColor");
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    baxter_demo_check_error("glClear");
-
-    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
-    //double q[m];
-    //AA_MEM_ZERO(q,m);
-    double TF_rel[7*n];
-    double TF_abs[7*n];
-    aa_rx_sg_tf(scenegraph, m, cx->q,
-                n,
-                TF_rel, 7,
-                TF_abs, 7 );
-    aa_rx_sg_render( scenegraph, globals,
-                     (size_t)n, TF_abs, 7 );
-    return updated;
-}
-
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
@@ -81,46 +46,44 @@ int main(int argc, char *argv[])
     struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
     aa_rx_sg_init(scenegraph);
 
-    // setup window
+    /*--- setup window ---*/
     struct aa_rx_win * win = baxter_demo_setup_window(scenegraph);
     struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
     aa_gl_globals_set_show_visual(globals, 1);
     aa_gl_globals_set_show_collision(globals, 0);
 
 
-    // Display Context
+    /* --- Solve IK --- */
     size_t n_q = aa_rx_sg_config_count(scenegraph);
-    struct display_cx dcx = { .globals=globals,
-                              .scenegraph=scenegraph,
-                              .q = AA_NEW0_AR(double,n_q) };
-
-
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     struct aa_rx_sg_sub *ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
 
     assert( 7 == n_qs );
-    double qstart_s[7] = {
-        .05 * M_PI, // s0
-        -.25 * M_PI, // s1
-        0, // e0
-        .25*M_PI, // e1
-        0, // w0
-        .25*M_PI, // w1
-        0 // w2
-    };
+
+    // seed position
     double qstart_all[n_q];
-    AA_MEM_ZERO(qstart_all, n_q);
-    aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
-                         qstart_s, qstart_all );
+    {
+        double qstart_s[7] = {
+            .05 * M_PI, // s0
+            -.25 * M_PI, // s1
+            0, // e0
+            .25*M_PI, // e1
+            0, // w0
+            .25*M_PI, // w1
+            0 // w2
+        };
+        AA_MEM_ZERO(qstart_all, n_q);
+        aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
+                             qstart_s, qstart_all );
+    }
 
-
-
+    // solver options
     struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
 
-
+    // solver goal
     double qs[n_qs];
     double E_ref[7];
     {
@@ -139,16 +102,21 @@ int main(int argc, char *argv[])
     if( r < 0 ) {
         fprintf(stderr, "Oops, IK failed\n");
     }
-    aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
-                         qs, dcx.q );
 
+    // set all-config joint position
+    {
+        double q_all[n_q];
+        aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
+                             qs, q_all );
 
+        aa_rx_win_set_config( win, n_q, q_all );
+    }
 
-    // Do Display
-    aa_win_display_loop( win, display, &dcx );
+    /*--- Do Display ---*/
+    aa_rx_win_default_start(win);
 
-
-    // cleanup
+    /*--- Cleanup ---*/
+    aa_rx_win_join(win);
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
     SDL_Quit();

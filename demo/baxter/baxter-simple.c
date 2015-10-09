@@ -37,56 +37,21 @@
 
 #include "baxter-demo.h"
 
-
-struct display_cx {
-    const struct aa_gl_globals *globals;
-    const struct aa_rx_sg *scenegraph;
-};
-
-/* int display( void *cx_, int updated, const struct timespec *now ) */
-/* { */
-/*     if( !updated ) return 0; */
-/*     struct display_cx *cx = (struct display_cx*) cx_; */
-/*     const struct aa_gl_globals *globals = cx->globals; */
-/*     const struct aa_rx_sg *scenegraph = cx->scenegraph; */
-
-/*     glClearColor(1.0f, 1.0f, 1.0f, 1.0f); */
-/*     baxter_demo_check_error("glClearColor"); */
-
-/*     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); */
-/*     baxter_demo_check_error("glClear"); */
-
-/*     aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph); */
-/*     aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph); */
-/*     double q[m]; */
-/*     AA_MEM_ZERO(q,m); */
-/*     double TF_rel[7*n]; */
-/*     double TF_abs[7*n]; */
-/*     aa_rx_sg_tf(scenegraph, m, q, */
-/*                 n, */
-/*                 TF_rel, 7, */
-/*                 TF_abs, 7 ); */
-/*     aa_rx_sg_render( scenegraph, globals, */
-/*                      (size_t)n, TF_abs, 7 ); */
-/*     return updated; */
-/* } */
-
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
+
     // Initialize scene graph
     struct aa_rx_sg *scenegraph = generate_scenegraph(NULL);
 
     // setup window
     struct aa_rx_win * win = baxter_demo_setup_window(scenegraph);
-    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
-    aa_gl_globals_set_show_visual(globals, 1);
-    aa_gl_globals_set_show_collision(globals, 0);
 
-    aa_rx_win_start( win, NULL, NULL );
-    aa_rx_win_join( win );
+    // start display
+    aa_rx_win_default_start(win);
 
     // Cleanup
+    aa_rx_win_join(win);
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
     SDL_Quit();

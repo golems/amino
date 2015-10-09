@@ -62,8 +62,8 @@ baxter_demo_setup_window ( struct aa_rx_sg *sg  )
 
     // setup scene graph
     aa_rx_sg_init(sg);
-    aa_rx_sg_gl_init(sg);
-    aa_rx_win_set_sg( win, sg );
+    aa_rx_win_sg_gl_init(win, sg);
+    aa_rx_win_set_sg(win, sg);
 
     // result
     return win;
