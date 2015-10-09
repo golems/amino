@@ -84,8 +84,9 @@
 (cffi:defcfun aa-rx-win-default-start :void
   (window rx-win-t))
 
-(cffi:defcfun aa-rx-sg-gl-init :void
-  (window rx-sg-t))
+(cffi:defcfun aa-rx-win-sg-gl-init :void
+  (win rx-win-t)
+  (sg rx-sg-t))
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
@@ -99,7 +100,8 @@
                         (height 600))
   (unless *window*
     (setq *window*
-          (aa-rx-win-default-create title width height)))
+          (aa-rx-win-default-create title width height))
+    (aa-rx-win-default-start *window*))
   (values))
 
 (defun win-destroy ()
@@ -110,10 +112,10 @@
 
 (defun win-set-scene-graph (scene-graph)
   (win-create)
-  (let ((m-sg (mutable-scene-graph (scene-graph scene-graph))))
-    (aa-rx-sg-gl-init m-sg)
-    (setf (rx-win-mutable-scene-graph *window*)
+  (let ((win *window*)
+        (m-sg (mutable-scene-graph (scene-graph scene-graph))))
+    (aa-rx-win-sg-gl-init win m-sg)
+    (setf (rx-win-mutable-scene-graph win)
           m-sg)
-    (aa-rx-win-set-sg *window* m-sg)
-    (aa-rx-win-default-start *window*)
-    (values)))
+    (aa-rx-win-set-sg win m-sg))
+  (values))
