@@ -151,6 +151,9 @@
 (cffi:defcfun aa-rx-geom-destroy :void
   (geom :pointer))
 
+(cffi:defcfun aa-rx-geom-copy :pointer
+  (value rx-geom-t))
+
 (cffi:defcfun aa-rx-geom-box rx-geom-t
   (opt rx-geom-opt-t)
   (dimension amino::vector-3-t))
@@ -192,6 +195,12 @@
         (:cylinder (%make-scene-cylinder ptr))
         (:cone (%make-scene-cone ptr))
         (:grid (%make-scene-grid ptr))))))
+
+
+(cffi:defcfun aa-rx-geom-attach :void
+  (sg rx-sg-t)
+  (frame :string)
+  (geom rx-geom-t))
 
 ;;;;;;;;;;;;;;
 ;;; Shapes ;;;

@@ -37,12 +37,18 @@
 
 (progn
   (in-package :robray)
+
+  ;; Look for source directory includes
   (cc-flags #.(concatenate 'string "-I"
                            (namestring (asdf:system-source-directory :amino))
                            "../include")
             "-std=gnu99")
   (include "amino.h")
   (include "amino/rx.h")
+
+  ;; Types
+  (ctype rx-frame-id "aa_rx_frame_id")
+  (ctype rx-config-id "aa_rx_config_id")
 
   ;; Frames
   (constant (+frame-id-root+ "AA_RX_FRAME_ROOT")

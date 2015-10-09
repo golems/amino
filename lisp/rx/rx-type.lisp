@@ -60,3 +60,12 @@
 ;; geometry
 (amino-ffi::def-foreign-container rx-geom rx-geom-t
   :destructor aa-rx-geom-destroy)
+
+;; scene graph
+(amino-ffi::def-foreign-container mutable-scene-graph rx-sg-t
+  :destructor aa-rx-sg-destroy
+  :slots ((scene-graph)))
+
+;; sdl
+(amino-ffi::def-foreign-container rx-win rx-win-t
+  :slots ((mutable-scene-graph)))

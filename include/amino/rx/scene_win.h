@@ -90,6 +90,10 @@ aa_rx_win_start( struct aa_rx_win * win,
                  aa_sdl_display_fun display,
                  void *context );
 
+
+AA_API void
+aa_rx_win_default_start( struct aa_rx_win * win );
+
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
 

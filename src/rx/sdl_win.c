@@ -55,6 +55,7 @@
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl.h"
+#include "amino/rx/scene_win.h"
 
 #include <pthread.h>
 
@@ -96,6 +97,7 @@ aa_rx_win_create(
                       &win->window, &win->gl_cx);
 
     win->gl_globals = aa_gl_globals_create();
+    aa_gl_globals_set_aspect( win->gl_globals, (double)width / (double)height );
 
     return win;
 }
@@ -232,6 +234,11 @@ static void* win_thread_fun( void *arg )
     return NULL;
 }
 
+AA_API void
+aa_rx_win_default_start( struct aa_rx_win * win )
+{
+    aa_rx_win_start( win, default_display, win );
+}
 
 AA_API void
 aa_rx_win_start( struct aa_rx_win * win,
@@ -239,16 +246,15 @@ aa_rx_win_start( struct aa_rx_win * win,
                  void *context )
 {
 
-    struct win_thread_cx *thread_cx = AA_NEW( struct win_thread_cx );
-    thread_cx->win = win;
     if( display ) {
+        struct win_thread_cx *thread_cx = AA_NEW( struct win_thread_cx );
+        thread_cx->win = win;
         thread_cx->display = display;
         thread_cx->display_cx = context;
+        pthread_create( &win->thread, NULL, win_thread_fun, thread_cx );
     } else {
-        thread_cx->display = default_display;
-        thread_cx->display_cx = win;
+        aa_rx_win_default_start(win);
     }
-    pthread_create( &win->thread, NULL, win_thread_fun, thread_cx );
 }
 
 AA_API void

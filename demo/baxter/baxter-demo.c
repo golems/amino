@@ -60,28 +60,6 @@ baxter_demo_setup_window ( struct aa_rx_sg *sg  )
 
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
-    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
-
-    // global camera
-    {
-        double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-        double eye[3] = {3,2,1.25};
-        double target[3] = {0,0,0};
-        double up[3] = {0,0,1};
-        aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
-        aa_gl_globals_set_camera_home( globals, world_E_camera_home );
-        aa_gl_globals_home_camera( globals );
-
-    }
-
-    // global lighting
-    {
-        double v_light[3] = {.5,1,5};
-        double ambient[3] = {.1,.1,.1};
-        aa_gl_globals_set_light_position( globals, v_light );
-        aa_gl_globals_set_ambient(globals, ambient);
-    }
-
     // setup scene graph
     aa_rx_sg_init(sg);
     aa_rx_sg_gl_init(sg);

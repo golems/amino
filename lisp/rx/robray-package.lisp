@@ -36,7 +36,7 @@
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
 (defpackage :robray
-  (:use :cl :alexandria :amino :sycamore :sycamore-util :sycamore-cgen)
+  (:use :cl :alexandria :amino :amino-ffi :sycamore :sycamore-util :sycamore-cgen)
   (:export
 
    ;; Frame Types

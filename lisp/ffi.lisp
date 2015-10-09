@@ -59,6 +59,7 @@ RETURNS: OBJECT"
 
 (defmacro def-foreign-container (lisp-type cffi-type
                                  &key
+                                   slots
                                    struct-type
                                    destructor)
   "Define a new container for a foreign type along with CFFI type convertors.
@@ -73,7 +74,8 @@ Note that destructor must operate on the raw pointer type.
     (let ((%make-it (sym "%MAKE-" (string lisp-type))))
       `(progn
          (defstruct (,lisp-type (:include foreign-container)
-                                (:constructor ,%make-it (pointer))))
+                                (:constructor ,%make-it (pointer)))
+           ,@slots)
          (cffi:define-foreign-type ,cffi-type ()
            ()
            (:simple-parser ,cffi-type)
@@ -87,9 +89,10 @@ Note that destructor must operate on the raw pointer type.
                    (defun ,(sym (string lisp-type) "-SLOT-VALUE") (object slot)
                      (cffi:foreign-slot-value (,(sym (string lisp-type) "-POINTER") object)
                                               '(:struct ,struct-type) slot))))
-         ,@(when destructor
-                 `((defmethod cffi:expand-from-foreign (form (type ,cffi-type))
-                     (list 'foreign-container-finalizer form '#',%make-it '#',destructor))))))))
+         (defmethod cffi:expand-from-foreign (form (type ,cffi-type))
+           ,(if destructor
+                `(list 'foreign-container-finalizer form '#',%make-it '#',destructor)
+                `(list ',%make-it form)))))))
 
 (defmacro def-foreign-container-accessor (lisp-type slot)
   (let ((accessor-name (intern (concatenate 'string (string lisp-type) "-" (string slot))

@@ -972,7 +972,16 @@ aa_gl_globals_create()
 {
     struct aa_gl_globals *G = AA_NEW0(struct aa_gl_globals);
 
-    aa_gl_globals_set_camera( G, aa_tf_qutr_ident );
+    {
+        double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+        double eye[3] = {2,2,2};
+        double target[3] = {0,0,0};
+        double up[3] = {0,0,1};
+        aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
+        aa_gl_globals_set_camera_home( G, world_E_camera_home );
+        aa_gl_globals_home_camera( G );
+
+    }
 
     double light_position[3] = {0,0,1};
     aa_gl_globals_set_light_position( G, light_position );
@@ -984,10 +993,13 @@ aa_gl_globals_create()
     double light_color[3] = {1,1,1};
     aa_gl_globals_set_light_color( G, light_color );
 
-    double ambient[3] = {0.5,0.5,0.5};
+    double ambient[3] = {0.1,0.1,0.1};
     aa_gl_globals_set_ambient( G, ambient );
 
-    aa_gl_globals_set_light_power( G, 50 );
+    double v_light[3] = {.5,1,5};
+    aa_gl_globals_set_light_position( G, v_light );
+
+    aa_gl_globals_set_light_power( G, 25 );
 
     G->scroll_ratio = .05;
     G->angle_ratio = .05;
