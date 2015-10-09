@@ -57,6 +57,8 @@ typedef signed long aa_rx_config_id;
  */
 #define AA_RX_FRAME_ROOT ((aa_rx_frame_id)-1)
 
+#define AA_RX_FRAME_NONE ((aa_rx_frame_id)-2)
+
 /**
  * Magic config_id for no configuration variable.
  */

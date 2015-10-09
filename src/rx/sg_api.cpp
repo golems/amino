@@ -90,8 +90,11 @@ AA_API aa_rx_config_id aa_rx_sg_config_id(
 AA_API aa_rx_frame_id aa_rx_sg_frame_id (
     const struct aa_rx_sg *scene_graph, const char *frame_name)
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->frame_map[frame_name]->frame_id;
+    auto itr = scene_graph->sg->frame_map.find(frame_name);
+    if( itr != scene_graph->sg->frame_map.end() ) {
+        return itr->second->frame_id;
+    }
+    return AA_RX_FRAME_NONE;
 }
 
 AA_API const char *
