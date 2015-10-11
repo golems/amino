@@ -225,9 +225,11 @@
        (cgen-call-stmt "aa_rx_mesh_destroy" (scene-genc-mesh-var mesh))))
 
 
-(defun scene-graph-genc (scene-graph &key file)
+(defun scene-graph-genc (scene-graph &key
+                                       file
+                                       (name "scenegraph"))
   (let ((argument-name "sg")
-        (function-name "generate_scenegraph")
+        (function-name (rope-string (rope "aa_rx_dl_sg__" name)))
         (stmts))
     (labels ((item (x) (push x stmts)))
       ;; Lazily create object

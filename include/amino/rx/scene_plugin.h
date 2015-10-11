@@ -28,44 +28,23 @@
  *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
  *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *   AND ON ANY HEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-#include <error.h>
-#include <stdio.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <SDL.h>
+#ifndef AMINO_RX_SCENE_PLUGIN_H
+#define AMINO_RX_SCENE_PLUGIN_H
 
-#include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_win.h"
-#include "amino/rx/scene_plugin.h"
+typedef struct aa_rx_sg *(*aa_rx_dl_sg_fun)(struct aa_rx_sg *sg);
 
-#include "baxter-demo.h"
+AA_API struct aa_rx_mesh *
+aa_rx_dl_mesh( const char *filename, const char *name );
 
+AA_API struct aa_rx_sg *
+aa_rx_dl_sg( const char *filename, const char *name,
+             struct aa_rx_sg *sg);
 
-struct aa_rx_win *
-baxter_demo_setup_window ( struct aa_rx_sg *sg  )
-{
-
-    struct aa_rx_win * win =
-        aa_rx_win_default_create ( "Baxter Demo", SCREEN_WIDTH, SCREEN_HEIGHT );
-
-    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-
-    // setup scene graph
-    aa_rx_sg_init(sg);
-    aa_rx_win_sg_gl_init(win, sg);
-    aa_rx_win_set_sg(win, sg);
-
-    // result
-    return win;
-}
+#endif /*AMINO_RX_SCENE_PLUGIN_H*/

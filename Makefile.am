@@ -88,6 +88,7 @@ libamino_la_SOURCES =                  \
 	src/rx/scene_kin.c             \
 	src/rx/ik_opt.c                \
 	src/rx/ik_jacobian.c           \
+	src/rx/plugin.c                \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \

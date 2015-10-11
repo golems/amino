@@ -35,37 +35,29 @@
  *
  */
 
-#include <error.h>
-#include <stdio.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <SDL.h>
-
-#include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_win.h"
-#include "amino/rx/scene_plugin.h"
-
 #include "baxter-demo.h"
+#include <amino/rx/scene_plugin.h>
 
+#include <dlfcn.h>
 
-struct aa_rx_win *
-baxter_demo_setup_window ( struct aa_rx_sg *sg  )
+int main(int argc, char *argv[])
 {
+    (void)argc; (void)argv;
 
-    struct aa_rx_win * win =
-        aa_rx_win_default_create ( "Baxter Demo", SCREEN_WIDTH, SCREEN_HEIGHT );
+    // Initialize scene graph
+    struct aa_rx_sg *scenegraph = aa_rx_dl_sg("baxter.so", "scenegraph", NULL);
 
-    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+    // setup window
+    struct aa_rx_win * win = baxter_demo_setup_window(scenegraph);
 
-    // setup scene graph
-    aa_rx_sg_init(sg);
-    aa_rx_win_sg_gl_init(win, sg);
-    aa_rx_win_set_sg(win, sg);
+    // start display
+    aa_rx_win_default_start(win);
 
-    // result
-    return win;
+    // Cleanup
+    aa_rx_win_join(win);
+    aa_rx_sg_destroy(scenegraph);
+    aa_rx_win_destroy(win);
+    SDL_Quit();
+
+    return 0;
 }
