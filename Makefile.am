@@ -62,6 +62,8 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/scene_gl.h     \
+	include/amino/rx/scene_kin.h    \
+	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_sdl.h    \

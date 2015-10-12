@@ -189,34 +189,49 @@
                        "rgba" 0)
        (cgen-call-stmt "aa_rx_mesh_set_uv" var m "uv" 0)))))
 
-(defun scene-genc-mesh (scene-graph)
+
+(defun scene-genc-mesh-function-name (mesh)
+  (rope "aa_rx_dl_mesh__" (scene-mesh-name mesh)))
+
+(defun scene-genc-mesh-functions (scene-graph static)
   ;; declare
   (loop for mesh in (scene-graph-meshes scene-graph)
      for var = (scene-genc-mesh-var mesh)
      for mesh-data = (load-mesh (scene-mesh-source-file mesh))
      for normed-data = (mesh-deindex-normals mesh-data)
-     nconc
-       (list (cgen-declare "struct aa_rx_mesh *" var (cgen-call "aa_rx_mesh_create"))
-             (cgen-block
-              ;; vertices
-              (cgen-declare-array "static const float" "vertices"
-                                  (mesh-data-vertex-vectors normed-data))
-              ;; normals
-              (cgen-declare-array "static const float" "normals"
-                                  (mesh-data-normal-vectors normed-data))
-              ;; indices
-              (cgen-declare-array "static const unsigned" "indices"
-                                  (mesh-data-vertex-indices normed-data))
-              ;; fill
-              (cgen-call-stmt "aa_rx_mesh_set_vertices" var (mesh-data-vertex-vectors-count normed-data)
-                              "vertices" 0)
-              (cgen-call-stmt "aa_rx_mesh_set_indices" var (mesh-data-vertex-indices-count normed-data)
-                              "indices" 0)
-              (cgen-call-stmt "aa_rx_mesh_set_normals" var (mesh-data-normal-vectors-count normed-data)
-                              "normals" 0)
-              ;; textures,
-              (scene-genc-mesh-texture var normed-data)))))
+     collect
+       (cgen-defun (rope (when static "static ") "struct aa_rx_mesh *")
+                   (scene-genc-mesh-function-name mesh)
+                   nil
+                   (list (cgen-declare "struct aa_rx_mesh *" var (cgen-call "aa_rx_mesh_create"))
+                         ;; vertices
+                         (cgen-declare-array "static const float" "vertices"
+                                             (mesh-data-vertex-vectors normed-data))
+                         ;; normals
+                         (cgen-declare-array "static const float" "normals"
+                                             (mesh-data-normal-vectors normed-data))
+                         ;; indices
+                         (cgen-declare-array "static const unsigned" "indices"
+                                             (mesh-data-vertex-indices normed-data))
+                         ;; fill
+                         (cgen-call-stmt "aa_rx_mesh_set_vertices" var (mesh-data-vertex-vectors-count normed-data)
+                                         "vertices" 0)
+                         (cgen-call-stmt "aa_rx_mesh_set_indices" var (mesh-data-vertex-indices-count normed-data)
+                                         "indices" 0)
+                         (cgen-call-stmt "aa_rx_mesh_set_normals" var (mesh-data-normal-vectors-count normed-data)
+                                         "normals" 0)
+                         ;; textures,
+                         (scene-genc-mesh-texture var normed-data)
+                         ;; result
+                         (cgen-return var)))))
 
+(defun scene-genc-mesh-vars (scene-graph)
+  ;; declare
+  (loop for mesh in (scene-graph-meshes scene-graph)
+     for var = (scene-genc-mesh-var mesh)
+     collect
+       (cgen-declare "struct aa_rx_mesh *" var
+                     (cgen-call (scene-genc-mesh-function-name mesh)))))
 
 
 (defun scene-genc-mesh-cleanup (scene-graph)
@@ -226,7 +241,7 @@
 
 
 (defun scene-graph-genc (scene-graph &key
-                                       file
+                                       (static-mesh t)
                                        (name "scenegraph"))
   (let ((argument-name "sg")
         (function-name (rope-string (rope "aa_rx_dl_sg__" name)))
@@ -241,7 +256,7 @@
                                             (scene-genc-frame argument-name frame))
                                     scene-graph))
       ;; Initialize meshes
-      (item (scene-genc-mesh scene-graph))
+      (item (scene-genc-mesh-vars scene-graph))
       ;; Map geometry
       (item (map-scene-graph-geometry 'list (lambda (frame geometry)
                                               (scene-genc-geom argument-name frame geometry))
@@ -251,14 +266,59 @@
       ;; Return create object
       (item (cgen-return argument-name))
       ;; Ropify
-      (let ((thing (sycamore-cgen::make-cgen-block
-                    :header (rope "struct aa_rx_sg *" function-name
-                                  (rope-parenthesize (rope "struct aa_rx_sg *" argument-name)))
-                    :stmts (flatten (reverse stmts)))))
-        (if file
-            (let ((*print-escape* nil))
-              (output (rope (cgen-include-system "amino.h")
-                            (cgen-include-system "amino/rx.h")
-                            thing)
-                      file))
-            thing)))))
+      (flatten (list
+                (scene-genc-mesh-functions scene-graph static-mesh)
+                (cgen-defun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name)
+                            (flatten (reverse stmts))))))))
+
+(defun scene-graph-so (source-file shared-object)
+  (uiop/run-program:run-program
+   (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
+
+
+(defun scene-graph-link-meshes (scene-graph shared-object
+                                &key
+                                  (directory *robray-tmp-directory*))
+
+  (loop for mesh in (scene-graph-meshes scene-graph)
+     for name = (format-pathname "~A/cache/~A.so"
+                                 directory
+                                 (scene-mesh-source-file mesh))
+     for dirname = (file-dirname name)
+     do
+       (progn
+         (uiop/run-program:run-program (list "mkdir" "-p" dirname))
+         (uiop/run-program:run-program
+          (list "ln" "-vsf" shared-object name)))))
+
+(defun scene-graph-compile (scene-graph source-file
+                            &key
+                              (name "scenegraph")
+                              shared-object
+                              (reload t)
+                              (static-mesh t)
+                              (link-meshes nil))
+  ;; source file
+  (when (or reload
+            (not (probe-file source-file)))
+    (with-open-file (stream source-file
+                            :if-exists :supersede
+                            :if-does-not-exist :create
+                            :direction :output)
+      (let ((source-rope (scene-graph-genc scene-graph
+                                           :name name
+                                           :static-mesh static-mesh)))
+        (output (rope (cgen-include-system "amino.h")
+                      (cgen-include-system "amino/rx.h")
+                      source-rope)
+                stream))))
+  ;; shared object
+  (when (and shared-object
+             (or reload
+                 (not (probe-file shared-object))
+                 (< (file-write-date shared-object)
+                    (file-write-date source-file))))
+    (scene-graph-so source-file shared-object))
+  ;; links
+  (when (and link-meshes shared-object)
+    (scene-graph-link-meshes scene-graph shared-object)))
