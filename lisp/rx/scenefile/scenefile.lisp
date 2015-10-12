@@ -50,16 +50,29 @@
                         &key
                           type
                           reload-meshes
+                          (compile t)
                           (mesh-up-axis "Z")
                           (mesh-forward-axis "Y"))
 
   (let* ((filename (rope-string (rope filename)))
-         (type (or type (scene-file-type filename))))
-    (ecase type
-      (:urdf (urdf-parse (urdf-resolve-file filename)
-                         :reload-meshes reload-meshes
-                         :mesh-up-axis mesh-up-axis
-                         :mesh-forward-axis mesh-forward-axis))
-      (:curly (load-curly-scene filename :reload-meshes reload-meshes))
-      (:moveit (load-moveit-scene filename
-                                  :reload-meshes reload-meshes)))))
+         (type (or type (scene-file-type filename)))
+         (truename (if (eq type :urdf)
+                       (urdf-resolve-file filename)
+                       filename))
+         (scene-graph
+          (ecase type
+            (:urdf (urdf-parse truename
+                               :reload-meshes reload-meshes
+                               :mesh-up-axis mesh-up-axis
+                               :mesh-forward-axis mesh-forward-axis))
+            (:curly (load-curly-scene truename :reload-meshes reload-meshes))
+            (:moveit (load-moveit-scene truename
+                                        :reload-meshes reload-meshes)))))
+    (when compile
+      (let ((base (format-pathname "~A/cache/~A" *robray-tmp-directory* truename)))
+        (scene-graph-compile scene-graph (format-pathname "~A.c" base)
+                             :shared-object (format-pathname "~A.so" base)
+                             :reload reload-meshes
+                             :static-mesh nil
+                             :link-meshes t)))
+    scene-graph))

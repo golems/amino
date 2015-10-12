@@ -285,9 +285,10 @@
                                  directory
                                  (scene-mesh-source-file mesh))
      for dirname = (file-dirname name)
+     unless (probe-file name)
      do
        (progn
-         (uiop/run-program:run-program (list "mkdir" "-p" dirname))
+         (create-parent-directories name)
          (uiop/run-program:run-program
           (list "ln" "-vsf" shared-object name)))))
 
@@ -301,6 +302,7 @@
   ;; source file
   (when (or reload
             (not (probe-file source-file)))
+    (create-parent-directories source-file)
     (with-open-file (stream source-file
                             :if-exists :supersede
                             :if-does-not-exist :create

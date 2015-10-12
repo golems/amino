@@ -104,6 +104,9 @@
         (subseq path (aref reg-start 0) (aref reg-end 0))
         nil)))
 
+(defun create-parent-directories (pathname)
+  (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))))
+
 (defun file-rope (&rest elements)
   (rope-map #'identity elements :separator '/))
 
