@@ -179,6 +179,10 @@
   (delta amino::vector-2-t)
   (width amino-ffi::coercible-double))
 
+(cffi:defcfun aa-rx-geom-mesh rx-geom-t
+  (opt rx-geom-opt-t)
+  (mesh rx-mesh-t))
+
 (cffi:defcfun aa-rx-geom-shape :pointer
   (geom rx-geom-t)
   (shape-type :pointer))
@@ -289,6 +293,8 @@
 ;;;;;;;;;;;;
 ;;; Mesh ;;;
 ;;;;;;;;;;;;
+
+
 
 (cffi:defcfun aa-rx-mesh-create :pointer)
 (cffi:defcfun aa-rx-mesh-destroy :void

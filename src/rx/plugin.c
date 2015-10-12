@@ -48,43 +48,52 @@
  * and scene graphs*/
 
 static void *
-rx_dlopen( const char *filename )
+rx_dlopen( const char *filename, const char *sym )
 {
     void *handle = dlopen(filename, RTLD_LOCAL | RTLD_LAZY);
-    return handle;
-}
-
-/* AA_API struct aa_rx_mesh * */
-/* aa_rx_dl_mesh( const char *filename, const char *name ) */
-/* { */
-/*     void *handle = rx_dlopen(filename); */
-/* } */
-
-AA_API struct aa_rx_sg *
-aa_rx_dl_sg( const char *filename, const char *name,
-             struct aa_rx_sg *sg)
-{
-    void *handle = rx_dlopen(filename);
     if( NULL == handle ) {
         fprintf(stderr, "ERROR: plugin '%s' not found\n", filename );
         return NULL;
     }
 
+    void *result = dlsym(handle, sym);
+    if( NULL == result ) {
+        dlclose(handle);
+        fprintf(stderr, "ERROR: symbol '%s' not found in plugin '%s'\n",
+                sym, filename);
+        return NULL;
+    }
+    return result;
+}
+
+AA_API struct aa_rx_mesh *
+aa_rx_dl_mesh( const char *filename, const char *name )
+{
+    size_t n = strlen(name);
+    char buf[32+n];
+    snprintf(buf, sizeof(buf), "aa_rx_dl_mesh__%s", name);
+
+    aa_rx_dl_mesh_fun fun = (aa_rx_dl_mesh_fun) rx_dlopen(filename, buf);
+    if(fun) {
+        return fun();
+    } else {
+        return NULL;
+    }
+}
+
+AA_API struct aa_rx_sg *
+aa_rx_dl_sg( const char *filename, const char *name,
+             struct aa_rx_sg *sg)
+{
     size_t n = strlen(name);
     char buf[32+n];
     snprintf(buf, sizeof(buf), "aa_rx_dl_sg__%s", name);
 
-    aa_rx_dl_sg_fun fun = (aa_rx_dl_sg_fun)dlsym(handle, buf);
-    if( NULL == fun ) {
-        fprintf(stderr, "ERROR: symbol '%s' not found in plugin '%s'\n",
-                buf, filename);
+    aa_rx_dl_sg_fun fun = (aa_rx_dl_sg_fun)rx_dlopen(filename, buf);
+
+    if(fun){
+        return fun(sg);
+    } else {
         return NULL;
     }
-
-    return fun(sg);
 }
-
-/* AA_API int */
-/* aa_rx_dl_close( const char *filename ) */
-/* { */
-/* } */

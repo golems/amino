@@ -472,7 +472,7 @@
 
 
 (defun scene-graph-meshes (scene-graph)
-  (let ((meshes (make-hash-table :test #'equal)))
+  (let ((meshes (make-hash-table :test #'equalp)))
     ;; hash meshes
     (do-scene-graph-geometry ((f g) scene-graph
                               (hash-table-values meshes))

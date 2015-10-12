@@ -69,10 +69,26 @@
             (:moveit (load-moveit-scene truename
                                         :reload-meshes reload-meshes)))))
     (when compile
+      ;; Compile the the thing
       (let ((base (format-pathname "~A/cache/~A" *robray-tmp-directory* truename)))
         (scene-graph-compile scene-graph (format-pathname "~A.c" base)
                              :shared-object (format-pathname "~A.so" base)
                              :reload reload-meshes
                              :static-mesh nil
-                             :link-meshes t)))
+                             :link-meshes t))
+      ;; Bind the C meshes
+      (let ((hash (make-hash-table :test #'equalp)))
+        ;; load C mesh
+        (loop for mesh in (scene-graph-meshes scene-graph)
+           do (setf (gethash mesh hash)
+                    (load-rx-mesh mesh)))
+        ;; Bind
+        (do-scene-graph-geometry ((frame geometry) scene-graph)
+          (declare (ignore frame))
+          (let ((shape (scene-geometry-shape geometry)))
+            (when (and (scene-mesh-p shape)
+                       (null (scene-geometry-c-geom geometry)))
+              (setf (scene-geometry-c-geom geometry)
+                    (aa-rx-geom-mesh (alist-rx-geom-opt (scene-geometry-options geometry))
+                                     (gethash shape hash))))))))
     scene-graph))

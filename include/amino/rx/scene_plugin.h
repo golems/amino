@@ -40,6 +40,8 @@
 
 typedef struct aa_rx_sg *(*aa_rx_dl_sg_fun)(struct aa_rx_sg *sg);
 
+typedef struct aa_rx_mesh *(*aa_rx_dl_mesh_fun)(void);
+
 AA_API struct aa_rx_mesh *
 aa_rx_dl_mesh( const char *filename, const char *name );
 

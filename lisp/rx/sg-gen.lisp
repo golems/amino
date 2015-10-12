@@ -276,14 +276,15 @@
    (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
 
 
-(defun scene-graph-link-meshes (scene-graph shared-object
-                                &key
-                                  (directory *robray-tmp-directory*))
+(defun genc-mesh-link (mesh)
+  (format-pathname "~A/cache/~A.so"
+                   *robray-tmp-directory*
+                   (scene-mesh-source-file mesh)))
+
+(defun scene-graph-link-meshes (scene-graph shared-object)
 
   (loop for mesh in (scene-graph-meshes scene-graph)
-     for name = (format-pathname "~A/cache/~A.so"
-                                 directory
-                                 (scene-mesh-source-file mesh))
+     for name = (genc-mesh-link mesh)
      for dirname = (file-dirname name)
      unless (probe-file name)
      do
@@ -324,3 +325,16 @@
   ;; links
   (when (and link-meshes shared-object)
     (scene-graph-link-meshes scene-graph shared-object)))
+
+
+;;;;;;;;;;;;;;;;;;;;
+;; Plugin loading ;;
+;;;;;;;;;;;;;;;;;;;;
+
+(cffi:defcfun aa-rx-dl-mesh rx-mesh-t
+  (filename :string)
+  (mesh-name :string))
+
+(defun load-rx-mesh (mesh)
+  (aa-rx-dl-mesh (genc-mesh-link mesh)
+                 (scene-mesh-name mesh)))

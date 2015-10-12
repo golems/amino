@@ -197,16 +197,20 @@
     ;; Insert Geometry
     (do-scene-graph-geometry ((frame geometry) scene-graph)
       (let* ((frame-name (rope-string (scene-frame-name frame)))
-             (shape (scene-geometry-shape geometry)))
-        (typecase shape
-          (scene-text
-           (warn "Text shape not implementated in mutable scene."))
-          (scene-mesh
-           (warn "Mesh shape not implementated in mutable scene.")))
-        (when-let ((c-geom (scene-geometry-c-geom geometry)))
-          ;; up refcount
-          (aa-rx-geom-copy c-geom)
-          ;; attach
+             (shape (scene-geometry-shape geometry))
+             (c-geom
+              (typecase shape
+                (scene-text
+                 (warn "Text shape not implementated in mutable scene."))
+                ;(scene-mesh
+                 ;(warn "Mesh shape not implementated in mutable scene."))
+                (t
+                 (when-let ((c-geom (scene-geometry-c-geom geometry)))
+                   ;; up refcount
+                   (aa-rx-geom-copy c-geom)
+                   c-geom)))))
+        ;; attach
+        (when c-geom
           (aa-rx-geom-attach sg frame-name c-geom))))
     ;; Result
     (aa-rx-sg-init sg)
