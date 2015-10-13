@@ -96,15 +96,17 @@ struct display_cx {
     double q;
     aa_rx_config_id i_q;
     int init;
-    struct timespec last;
     struct timespec t0;
 };
 
-int display( void *cx_, int updated, const struct timespec *now )
+int display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct aa_gl_globals *globals = cx->globals;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
+
+    const struct timespec *now = aa_sdl_display_params_get_time_now(params);
+    const struct timespec *last = aa_sdl_display_params_get_time_last(params);
 
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -113,10 +115,12 @@ int display( void *cx_, int updated, const struct timespec *now )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     baxter_demo_check_error("glClear");
 
-    if( 0 == cx->init ) {
-        cx->init = 1;
-        memcpy( &cx->t0, now, sizeof(*now) );
-        return updated;
+    if( aa_sdl_display_params_is_first(params) ) {
+        memcpy( &cx->t0,
+                aa_sdl_display_params_get_time_initial(params),
+                sizeof(cx->t0) );
+
+        return 0;
     }
 
     aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
@@ -136,7 +140,7 @@ int display( void *cx_, int updated, const struct timespec *now )
         t = 0;
         i1 = 0;
         i0 = 0;
-        memcpy( &cx->t0, now, sizeof(*now) );
+        memcpy( &cx->t0, now, sizeof(cx->t0) );
     }
 
     assert( i0 < g_n_path );
@@ -167,11 +171,12 @@ int display( void *cx_, int updated, const struct timespec *now )
     aa_rx_sg_render( scenegraph, globals,
                      (size_t)n, TF_abs, 7 );
 
-    memcpy( &cx->last, now, sizeof(*now) );
-
 
     aa_mem_region_local_pop( TF_rel );
-    return 1;
+
+    aa_sdl_display_params_set_update(params);
+
+    return 0;
 }
 
 int main(int argc, char *argv[])

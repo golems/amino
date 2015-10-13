@@ -68,6 +68,25 @@ AA_API void aa_sdl_gl_window(
     SDL_Window **pwindow,
     SDL_GLContext *p_glcontext );
 
+AA_API const struct timespec *
+aa_sdl_display_params_get_time_now( struct aa_sdl_display_params *params );
 
+AA_API const struct timespec *
+aa_sdl_display_params_get_time_last( struct aa_sdl_display_params *params );
+
+AA_API const struct timespec *
+aa_sdl_display_params_get_time_initial( struct aa_sdl_display_params *params );
+
+AA_API int
+aa_sdl_display_params_get_update( struct aa_sdl_display_params *params );
+
+AA_API void
+aa_sdl_display_params_set_quit( struct aa_sdl_display_params *params );
+
+AA_API void
+aa_sdl_display_params_set_update( struct aa_sdl_display_params *params );
+
+AA_API int
+aa_sdl_display_params_is_first( struct aa_sdl_display_params *params );
 
 #endif /*AMINO_RX_SCENE_SDL_H*/

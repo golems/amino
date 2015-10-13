@@ -72,6 +72,8 @@ struct aa_rx_win {
     pthread_mutex_t mutex;
 
     unsigned stop : 1;
+    unsigned stop_on_quit : 1;
+
     unsigned updated : 1;
     unsigned running : 1;
 };
@@ -98,6 +100,8 @@ aa_rx_win_create(
 
     win->gl_globals = aa_gl_globals_create();
     aa_gl_globals_set_aspect( win->gl_globals, (double)width / (double)height );
+
+    win->stop_on_quit = 1;
 
     return win;
 }
@@ -164,14 +168,14 @@ aa_rx_win_set_config( struct aa_rx_win * win,
 }
 
 
-static int default_display( void *cx_, int updated, const struct timespec *now )
+static int default_display( void *cx_, struct aa_sdl_display_params *params )
 {
     /* We hold the mutex now */
-    (void) now;
     struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
+    int updated = aa_sdl_display_params_get_update(params);
 
     if( updated || cx->updated ) {
-        updated = 1;
+        aa_sdl_display_params_set_update(params);
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -204,11 +208,11 @@ struct win_display_cx {
     void *context;
 };
 
-static int win_display( void *cx_, int updated, const struct timespec *now )
+static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct win_display_cx *cx = (struct win_display_cx*)cx_;
     pthread_mutex_lock( &cx->win->mutex );
-    int r = cx->display(cx->context, updated, now );
+    int r = cx->display(cx->context, params );
     pthread_mutex_unlock( &cx->win->mutex );
     return r;
 }
@@ -233,8 +237,24 @@ AA_API void aa_win_display_loop(
         cx.context = win;
     }
 
-    aa_sdl_display_loop( win->window, win->gl_globals,
-                         win_display, &cx );
+    int stop = 0;
+    int stop_on_quit = 0;
+
+    do {
+        aa_sdl_display_loop( win->window, win->gl_globals,
+                             win_display, &cx );
+
+        pthread_mutex_lock( &win->mutex );
+        stop = win->stop;
+        stop_on_quit = win->stop_on_quit;
+        pthread_mutex_unlock( &win->mutex );
+    } while( ! stop && !stop_on_quit );
+
+
+    pthread_mutex_lock( &win->mutex );
+    win->running = 0;
+    pthread_mutex_unlock( &win->mutex );
+
 }
 
 
@@ -283,6 +303,16 @@ aa_rx_win_stop( struct aa_rx_win * win )
     pthread_mutex_unlock( &win->mutex );
 
 }
+
+AA_API void
+aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value )
+{
+    pthread_mutex_lock( &win->mutex );
+    win->stop_on_quit = value ? 1 : 0;
+    pthread_mutex_unlock( &win->mutex );
+
+}
+
 
 AA_API void
 aa_rx_win_join( struct aa_rx_win * win )

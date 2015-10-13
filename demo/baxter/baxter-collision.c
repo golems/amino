@@ -45,12 +45,16 @@ struct display_cx {
     struct aa_rx_cl *cl;
     double q;
     aa_rx_config_id i_q;
-    struct timespec last;
+    //struct timespec last;
 };
 
-int display( void *cx_, int updated, const struct timespec *now )
+int display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
+    int updated = aa_sdl_display_params_get_update(params);
+    const struct timespec *now = aa_sdl_display_params_get_time_now(params);
+    const struct timespec *last = aa_sdl_display_params_get_time_last(params);
+
     const struct aa_gl_globals *globals = cx->globals;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
@@ -66,10 +70,10 @@ int display( void *cx_, int updated, const struct timespec *now )
     double q[m];
     AA_MEM_ZERO(q,m);
 
-    if( cx->last.tv_sec || cx->last.tv_nsec ) {
-        double dt = aa_tm_timespec2sec( aa_tm_sub(*now, cx->last) );
+    int first = aa_sdl_display_params_is_first(params);
+    if( ! first ) {
+        double dt = aa_tm_timespec2sec( aa_tm_sub(*now, *last) );
         cx->q += dt * 45 * (M_PI/180);
-
     }
     q[ cx->i_q ] = cx->q;
 
@@ -82,13 +86,13 @@ int display( void *cx_, int updated, const struct timespec *now )
     aa_rx_sg_render( scenegraph, globals,
                      (size_t)n, TF_abs, 7 );
 
-    memcpy( &cx->last, now, sizeof(*now) );
-
     int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7, NULL );
     printf("in collision: %s\n",
            col ? "yes" : "no" );
 
-    return 1;
+
+    aa_sdl_display_params_set_update(params);
+    return 0;
 }
 
 int main(int argc, char *argv[])

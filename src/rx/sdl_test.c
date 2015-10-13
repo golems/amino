@@ -123,9 +123,9 @@ void check_error( const char *name ){
 }
 
 
-int display( void *globals_, int updated, const struct timespec *now )
+int display( void *globals_, struct aa_sdl_display_params *param )
 {
-    (void) now;
+    int updated = aa_sdl_display_params_get_update(param);
     if( !updated ) return 0;
     const struct aa_gl_globals *globals = (const struct aa_gl_globals *) globals_;
 

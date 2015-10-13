@@ -55,6 +55,7 @@
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_win.h"
 #include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_sdl.h"
 
 static const int SCREEN_WIDTH = 1000;
 static const int SCREEN_HEIGHT = 1000;

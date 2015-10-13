@@ -66,6 +66,11 @@ struct aa_rx_cl_geom;
 struct aa_rx_win;
 
 /**
+ * Parameters for SDL display function.
+ */
+struct aa_sdl_display_params;
+
+/**
  * @param context A pointer to local context
  * @param updated Whether other parts of these scene are updated
  * @param now The present time
@@ -73,7 +78,7 @@ struct aa_rx_win;
  */
 typedef int (*aa_sdl_display_fun)(
     void *context,
-    int updated,
-    const struct timespec *now);
+    struct aa_sdl_display_params *params);
+
 
 #endif /*AMINO_RX_RXTYPE_H*/

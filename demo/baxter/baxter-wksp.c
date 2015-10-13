@@ -46,24 +46,20 @@ struct display_cx {
     const struct aa_rx_sg *scenegraph;
     const struct aa_rx_sg_sub *ssg;
     double *q;
-    struct timespec first;
-    struct timespec last;
 };
 
-int display( void *cx_, int updated, const struct timespec *now )
+int display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct aa_gl_globals *globals = cx->globals;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
-    if( 0 == cx->first.tv_sec && 0 == cx->first.tv_nsec ) {
-        memcpy( &cx->first, now, sizeof(*now) );
-        memcpy( &cx->last, now, sizeof(*now) );
-    }
+    const struct timespec *now = aa_sdl_display_params_get_time_now(params);
+    const struct timespec *first = aa_sdl_display_params_get_time_initial(params);
+    const struct timespec *last = aa_sdl_display_params_get_time_last(params);
 
-    double t = aa_tm_timespec2sec( aa_tm_sub(*now, cx->first) );
-    double dt = aa_tm_timespec2sec( aa_tm_sub(*now, cx->last) );
-
+    double t = aa_tm_timespec2sec( aa_tm_sub(*now, *first) );
+    double dt = aa_tm_timespec2sec( aa_tm_sub(*now, *last) );
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     baxter_demo_check_error("glClearColor");
@@ -134,8 +130,9 @@ int display( void *cx_, int updated, const struct timespec *now )
 
 
 
-    memcpy( &cx->last, now, sizeof(*now) );
-    return 1;
+    aa_sdl_display_params_set_update(params);
+
+    return 0;
 }
 
 int main(int argc, char *argv[])

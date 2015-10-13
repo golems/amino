@@ -56,6 +56,59 @@
 #include "amino/rx/scene_sdl.h"
 
 
+struct aa_sdl_display_params {
+    struct timespec time_now;
+    struct timespec time_initial;
+    struct timespec time_last;
+
+    int update;
+    int quit;
+
+    int first;
+};
+
+
+const struct timespec *
+aa_sdl_display_params_get_time_now( struct aa_sdl_display_params *params )
+{
+    return &params->time_now;
+}
+
+const struct timespec *
+aa_sdl_display_params_get_time_initial( struct aa_sdl_display_params *params )
+{
+    return &params->time_initial;
+}
+
+AA_API const struct timespec *
+aa_sdl_display_params_get_time_last( struct aa_sdl_display_params *params )
+{
+    return &params->time_last;
+}
+
+int
+aa_sdl_display_params_get_update( struct aa_sdl_display_params *params )
+{
+    return params->update;
+}
+
+void
+aa_sdl_display_params_set_quit( struct aa_sdl_display_params *params )
+{
+    params->quit = 1;
+}
+
+void
+aa_sdl_display_params_set_update( struct aa_sdl_display_params *params )
+{
+    params->update = 1;
+}
+
+int
+aa_sdl_display_params_is_first( struct aa_sdl_display_params *params )
+{
+    return params->first;
+}
 
 #ifdef HAVE_SPNAV_H
 
@@ -349,40 +402,51 @@ AA_API void aa_sdl_display_loop(
     aa_sdl_display_fun display,
     void *context )
 {
-    int quit=0, update=1;
     struct timespec delta = aa_tm_sec2timespec( 1.0 / globals->fps );
-    struct timespec now, next;
+    struct timespec next;
+
+    struct aa_sdl_display_params params;
+    params.update = 1;
+    params.quit = 0;
+    clock_gettime( CLOCK_MONOTONIC, &params.time_initial );
+    params.time_now = params.time_initial;
+    params.time_last = params.time_initial;
+    params.first = 1;
+
     do {
         // update screen
-        clock_gettime( CLOCK_MONOTONIC, &now );
-        update = display(context, update, &now);
-        if( update ) {
+        display(context, &params);
+        params.first = 0;
+        if( params.update ) {
             SDL_GL_SwapWindow(window);
-            update = 0;
+            params.update = 0;
         }
-        next = aa_tm_add(now, delta);
+        params.time_last = params.time_now;
+        next = aa_tm_add(params.time_now, delta);
 
         // wait for SDL events
         int timeout = 1;
-        do {
-            quit = 0;
-            clock_gettime( CLOCK_MONOTONIC, &now );
-            struct timespec ts_timeout = aa_tm_sub(next, now);
+        while( !params.quit && timeout > 0 ) {
+            clock_gettime( CLOCK_MONOTONIC, &params.time_now );
+            struct timespec ts_timeout = aa_tm_sub(next, params.time_now);
             timeout = (int) aa_tm_timespec2msec(ts_timeout);
 
             SDL_Event e;
             int r = SDL_WaitEventTimeout( &e, timeout < 0 ? 0 : timeout );
             if( r ) {
-                aa_sdl_scroll_event(globals, &update, &quit, &e);
+                aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
             }
 
-        } while( !quit && timeout > 0 );
+        }
 
         // poll spnav
 #ifdef HAVE_SPNAV_H
-        aa_spnav_scroll(globals, &update);
+        aa_spnav_scroll(globals, &params.update);
 #endif
-    } while ( !quit );
+
+        // update times
+        clock_gettime( CLOCK_MONOTONIC, &params.time_now );
+    } while ( !params.quit );
 }
 
 

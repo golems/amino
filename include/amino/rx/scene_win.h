@@ -136,6 +136,9 @@ aa_rx_win_default_start( struct aa_rx_win * win );
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
 
+AA_API void
+aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value );
+
 /**
  * Join the asynchronous display thread.
  */
