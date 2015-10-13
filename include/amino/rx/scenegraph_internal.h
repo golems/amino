@@ -177,6 +177,10 @@ struct SceneGraph  {
     /** Number of configuration variables */
     aa_rx_config_id config_size;
 
+
+    void (*destructor)(void *);
+    void *destructor_context;
+
     /** Are the indices invalid? */
     unsigned dirty_indices : 1;
     unsigned dirty_collision : 1;
@@ -215,6 +219,11 @@ aa_rx_sg_ensure_clean_gl( const struct aa_rx_sg *scene_graph );
 AA_API void
 aa_rx_sg_ensure_clean_collision( const struct aa_rx_sg *scene_graph );
 
+AA_API void
+aa_rx_sg_set_destructor(
+    const struct aa_rx_sg *scene_graph,
+    void (*destructor)(void*),
+    void *context );
 
 
 

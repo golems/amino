@@ -222,6 +222,10 @@ void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
 {
     mesh->refcount--;
     if( 0 == mesh->refcount ) {
+        if( mesh->destructor ) {
+            mesh->destructor( mesh->destructor_context );
+        }
+
         aa_checked_free(mesh->vertices_data);
         aa_checked_free(mesh->normals_data);
         aa_checked_free(mesh->indices_data);

@@ -363,3 +363,13 @@ aa_rx_sg_frame_get_inertia( struct aa_rx_sg *scenegraph,
         return NULL;
     }
 }
+
+AA_API void
+aa_rx_sg_set_destructor(
+    const struct aa_rx_sg *scene_graph,
+    void (*destructor)(void*),
+    void *context )
+{
+    scene_graph->sg->destructor = destructor;
+    scene_graph->sg->destructor_context = context;
+}

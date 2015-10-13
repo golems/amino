@@ -197,10 +197,17 @@ void SceneFrameRevolute::tf_rel( const double *q, double _E[7] )
 // }
 
 SceneGraph::SceneGraph()
-    : dirty_indices(0) {}
+    : dirty_indices(0),
+      destructor(NULL)
+{}
 
 SceneGraph::~SceneGraph()
 {
+    /* User destructor(s) */
+    if( destructor ) {
+        destructor(destructor_context);
+    }
+
     /* Delete Frames */
     for( auto &pair : frame_map ) delete pair.second;
 

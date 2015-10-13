@@ -134,6 +134,9 @@ struct aa_rx_mesh {
     size_t height_rgba;
 
     size_t refcount;
+
+    void (*destructor)(void*);
+    void *destructor_context;
 };
 
 #ifdef __cplusplus

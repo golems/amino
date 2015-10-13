@@ -90,5 +90,10 @@
                        (null (scene-geometry-c-geom geometry)))
               (setf (scene-geometry-c-geom geometry)
                     (aa-rx-geom-mesh (alist-rx-geom-opt (scene-geometry-options geometry))
-                                     (gethash shape hash))))))))
+                                     (gethash shape hash))))))
+        ;; Release meshes
+        (maphash (lambda (k rx-mesh)
+                   (declare (ignore k))
+                   (aa-rx-mesh-destroy (rx-mesh-pointer rx-mesh)))
+                 hash)))
     scene-graph))
