@@ -88,6 +88,14 @@
   (win rx-win-t)
   (sg rx-sg-t))
 
+
+(cffi:defcfun aa-rx-win-stop-on-quit :void
+  (win rx-win-t)
+  (value :boolean))
+
+(cffi:defcfun aa-rx-win-stop :void
+  (win rx-win-t))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -101,6 +109,7 @@
   (unless *window*
     (setq *window*
           (aa-rx-win-default-create title width height))
+    (aa-rx-win-stop-on-quit *window* nil)
     (aa-rx-win-default-start *window*))
   (values))
 
