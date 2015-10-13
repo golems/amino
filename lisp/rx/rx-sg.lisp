@@ -212,6 +212,18 @@
         ;; attach
         (when c-geom
           (aa-rx-geom-attach sg frame-name c-geom))))
-    ;; Result
+    ;; Index
     (aa-rx-sg-init sg)
+    ;; Create lisp indices between configuration names and IDs
+    (let* ((n-config (aa-rx-sg-config-count sg))
+           (hash (make-hash-table :test #'equal))
+           (array (make-array n-config)))
+      (loop for config-id below n-config
+         for config-name = (aa-rx-sg-config-name sg config-id)
+         do
+           (setf (gethash config-name hash) config-id
+                 (aref array config-id) config-name))
+      (setf (mutable-scene-graph-config-name-array sg) array
+            (mutable-scene-graph-config-index-map sg) hash))
+    ;; Result
     sg))

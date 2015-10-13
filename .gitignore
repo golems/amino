@@ -110,3 +110,4 @@ amino*.tar.gz
 /demo.png
 /aarx.core
 /demo/baxter/baxter-plugin
+/demo/baxter/baxter.so

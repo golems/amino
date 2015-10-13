@@ -64,8 +64,11 @@
 ;; scene graph
 (amino-ffi::def-foreign-container mutable-scene-graph rx-sg-t
   :destructor aa-rx-sg-destroy
-  :slots ((scene-graph)))
+  :slots ((scene-graph)
+          (config-name-array)
+          (config-index-map)))
 
 ;; sdl
 (amino-ffi::def-foreign-container rx-win rx-win-t
-  :slots ((mutable-scene-graph)))
+  :slots ((mutable-scene-graph)
+          (config-vector)))

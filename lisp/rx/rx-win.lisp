@@ -81,6 +81,15 @@
   (window rx-win-t)
   (sg rx-sg-t))
 
+(cffi:defcfun aa-rx-win-set-config :void
+  (window rx-win-t)
+  (n size-t)
+  (q :pointer))
+
+(defun rx-win-set-config (win config)
+  (with-foreign-simple-vector (pointer length) config :input
+    (aa-rx-win-set-config win length pointer)))
+
 (cffi:defcfun aa-rx-win-default-start :void
   (window rx-win-t))
 
@@ -124,7 +133,40 @@
   (let ((win *window*)
         (m-sg (mutable-scene-graph (scene-graph scene-graph))))
     (aa-rx-win-sg-gl-init win m-sg)
-    (setf (rx-win-mutable-scene-graph win)
-          m-sg)
+    (setf (rx-win-mutable-scene-graph win) m-sg
+          (rx-win-config-vector win) (make-vec (aa-rx-sg-config-count m-sg)))
     (aa-rx-win-set-sg win m-sg))
   (values))
+
+;; (defun win-set-config (scene-graph)
+;;   (let* ((win *window*)
+;;         (sg (rx-win-sc
+;;     (aa-rx-win-sg-gl-init win m-sg)
+;;     (setf (rx-win-mutable-scene-graph win)
+;;           m-sg)
+;;     (aa-rx-win-set-sg win m-sg))
+;;   (values))
+
+(declaim (inline win-set-config-helper))
+(defun win-set-config-helper (config-name config-value map q)
+  (setf (aref q (gethash (rope-string config-name) map))
+        (coerce config-value 'double-float)))
+
+(defmethod win-set-config ((configurations tree-map))
+  (let* ((win *window*)
+         (sg (rx-win-mutable-scene-graph win))
+         (map (mutable-scene-graph-config-index-map sg))
+         (q (rx-win-config-vector win)))
+    (do-tree-map ((config-name config-value) configurations)
+      (win-set-config-helper config-name config-value map q))
+    (rx-win-set-config win q)))
+
+(defmethod win-set-config ((configurations list))
+  (let* ((win *window*)
+         (sg (rx-win-mutable-scene-graph win))
+         (map (mutable-scene-graph-config-index-map sg))
+         (q (rx-win-config-vector win)))
+    (loop for (config-name . config-value) in configurations
+       do
+         (win-set-config-helper config-name config-value map q))
+    (rx-win-set-config win q)))
