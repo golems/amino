@@ -323,12 +323,13 @@
 (defun invert-scale (x)
     (- 1d0 (clamp x 0d0 1d0)))
 
+(defparameter *robray-root*
+  (format-pathname "~A/../"
+                   (namestring (asdf:system-source-directory :amino))))
+
 (defun find-script (name)
-  (let ((pathname
-         (clean-pathname (concatenate 'string
-                                      (namestring (asdf:system-source-directory :robray))
-                                      "/share/exec/"
-                                      name))))
+  (let ((pathname (format-pathname "~A/share/exec"
+                                   *robray-root*)))
     (assert (probe-file pathname) ()
             "Script '~A' not found" name)
     pathname))
@@ -354,7 +355,7 @@
 (defparameter *config-load-time* (make-hash-table :test #'equal))
 
 (defparameter *config-directories*
-  `(,(format-pathname "~A/share/config" (asdf:system-source-directory :robray))
+  `(,(format-pathname "~A/share/config" *robray-root*)
     "/etc/robray"
     "/usr/local/etc/robray"
     ,(format-pathname "~A/~A" (namestring (user-homedir-pathname)) ".robray")
