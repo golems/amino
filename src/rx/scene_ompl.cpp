@@ -42,6 +42,8 @@
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
+#include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_kin_internal.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 
@@ -54,13 +56,11 @@
 struct aa_rx_mp;
 
 AA_API struct aa_rx_mp*
-aa_rx_mp_create( const aa_rx_sg *scene_graph,
-                 size_t n_config,
-                 const char **config_names,
+aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg,
                  struct aa_rx_mp_opt *opt)
 {
     (void) opt;
-    struct aa_rx_mp *mp = new aa_rx_mp( scene_graph, n_config, config_names );
+    struct aa_rx_mp *mp = new aa_rx_mp(sub_sg);
     return mp;
 }
 

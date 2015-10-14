@@ -54,9 +54,7 @@ aa_rx_mp_opt_destroy( struct aa_rx_mp_opt *);
 struct aa_rx_mp;
 
 AA_API struct aa_rx_mp*
-aa_rx_mp_create( const struct aa_rx_sg *scene_graph,
-                 size_t n_config,
-                 const char **config_names,
+aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg,
                  struct aa_rx_mp_opt *opt);
 
 AA_API void

@@ -154,6 +154,33 @@ aa_rx_sg_chain_configs( const struct aa_rx_sg *sg,
 }
 
 
+AA_API void
+aa_rx_sg_sub_config_get(
+    const struct aa_rx_sg_sub *ssg,
+    size_t n_all, const double *config_all,
+    size_t n_subset, double *config_subset )
+{
+    aa_rx_sg_config_get( ssg->scenegraph,
+                         n_all, n_subset,
+                         aa_rx_sg_sub_configs(ssg),
+                         config_all, config_subset );
+}
+
+AA_API void
+aa_rx_sg_sub_config_set(
+    const struct aa_rx_sg_sub *ssg,
+    size_t n_sub, const double *config_subset,
+    size_t n_all, double *config_all
+    )
+{
+    aa_rx_sg_config_set( ssg->scenegraph,
+                         n_all, n_sub,
+                         aa_rx_sg_sub_configs(ssg),
+                         config_subset, config_all );
+
+}
+
+
 AA_API struct aa_rx_sg_sub *
 aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
                        aa_rx_frame_id root, aa_rx_frame_id tip )

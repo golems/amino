@@ -68,6 +68,21 @@ aa_rx_sg_sub_configs( const struct aa_rx_sg_sub *sg_sub );
 AA_API aa_rx_frame_id*
 aa_rx_sg_sub_frames( const struct aa_rx_sg_sub *sg_sub );
 
+
+AA_API void
+aa_rx_sg_sub_config_get(
+    const struct aa_rx_sg_sub *ssg,
+    size_t n_all, const double *config_all,
+    size_t n_subset, double *config_subset );
+
+AA_API void
+aa_rx_sg_sub_config_set(
+    const struct aa_rx_sg_sub *ssg,
+    size_t n_sub, const double *config_subset,
+    size_t n_all, double *config_all
+    );
+
+
 AA_API struct aa_rx_sg_sub *
 aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
                        aa_rx_frame_id root, aa_rx_frame_id tip );

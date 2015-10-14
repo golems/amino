@@ -36,6 +36,7 @@
  */
 
 #include "baxter-demo.h"
+#include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 
@@ -48,16 +49,11 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
 {
 
     // Initialize Spaces
-    const char *names[] = {"right_s0",
-                           "right_s1",
-                           "right_e0",
-                           "right_e1",
-                           "right_w0",
-                           "right_w1",
-                           "right_w2"};
+    struct aa_rx_sg_sub *ssg = aa_rx_sg_chain_create( scenegraph,
+                                                      AA_RX_FRAME_ROOT,
+                                                      aa_rx_sg_frame_id(scenegraph, "right_w2") );
 
-
-    struct aa_rx_mp *mp = aa_rx_mp_create( scenegraph, 7, names, NULL );
+    struct aa_rx_mp *mp = aa_rx_mp_create( ssg, NULL );
 
     size_t n_q = aa_rx_sg_config_count(scenegraph);
     double q0[n_q];
@@ -65,6 +61,7 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     aa_rx_mp_set_start( mp, n_q, q0);
 
     // set start and goal states
+    assert( 7 == aa_rx_sg_sub_config_count(ssg) );
     double q1[7] = {.05 * M_PI, // s0
                     -.25 * M_PI, // s1
                     0, // e0
@@ -81,6 +78,7 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
                            &g_path );
 
     aa_rx_mp_destroy(mp);
+    aa_rx_sg_sub_destroy(ssg);
 
     if( r < 0 ) {
         fprintf(stderr, "Planning failed!\n");

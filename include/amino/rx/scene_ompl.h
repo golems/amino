@@ -199,24 +199,22 @@ public:
 
 class sgStateSpace : public ompl::base::RealVectorStateSpace {
 public:
-    sgStateSpace( const aa_rx_sg *sg, size_t n_configs,
-                  const char **config_names ) :
-        ompl::base::RealVectorStateSpace((unsigned)n_configs),
-        ids(new aa_rx_config_id[n_configs]),
-        allowed(aa_rx_cl_set_create(sg)),
-        scene_graph(sg) {
-
-        // Fill indices
-        aa_rx_sg_config_indices( sg, n_configs, config_names, ids );
+    sgStateSpace( const struct aa_rx_sg_sub *sub_sg ) :
+        scene_graph(sub_sg->scenegraph),
+        sub_scene_graph(sub_sg),
+        ompl::base::RealVectorStateSpace((unsigned)aa_rx_sg_sub_config_count(sub_sg)),
+        allowed(aa_rx_cl_set_create(scene_graph)) {
 
         // TODO: get actual bounds
-        ompl::base::RealVectorBounds vb((unsigned int)n_configs);
+        size_t n_configs = config_count_subset();
+        ompl::base::RealVectorBounds vb( (unsigned int)n_configs );
         for( unsigned i = 0; i < (unsigned)n_configs; i ++ ) {
             double min,max;
-            int r = aa_rx_sg_get_limit_pos(sg, ids[i], &min, &max);
+            aa_rx_config_id cid = aa_rx_sg_sub_config(sub_scene_graph, i);
+            int r = aa_rx_sg_get_limit_pos(scene_graph, cid, &min, &max);
             if(r) {
                 fprintf(stderr, "ERROR: no position limits for %s\n",
-                        aa_rx_sg_config_name(sg, ids[i]));
+                        aa_rx_sg_config_name(scene_graph, cid));
                 /* This seems as good as anything */
                 min = -M_PI;
                 max = -M_PI;
@@ -236,7 +234,6 @@ public:
     }
 
     virtual ~sgStateSpace() {
-        delete[] ids;
         aa_rx_cl_set_destroy(allowed);
     }
 
@@ -272,8 +269,9 @@ public:
     }
 
     void extract_state( const double *q_all, double *q_set ) const {
-        aa_rx_sg_config_get( scene_graph, config_count_all(), config_count_subset(),
-                             ids, q_all, q_set );
+        aa_rx_sg_sub_config_get( sub_scene_graph,
+                                 config_count_all(), q_all,
+                                 config_count_subset(), q_set );
     }
 
     void extract_state( const double *q_all, StateType *state ) const {
@@ -281,8 +279,9 @@ public:
     }
 
     void insert_state( const double *q_set, double *q_all ) const {
-        aa_rx_sg_config_set( scene_graph, config_count_all(), config_count_subset(),
-                             ids, q_set, q_all );
+        aa_rx_sg_sub_config_set( sub_scene_graph,
+                                 config_count_subset(), q_set,
+                                 config_count_all(), q_all );
     }
 
     void insert_state( const StateType *state, double *q_all ) const {
@@ -295,7 +294,7 @@ public:
 
 
     const aa_rx_sg *scene_graph;
-    aa_rx_config_id *ids;
+    const aa_rx_sg_sub *sub_scene_graph;
     struct aa_rx_cl_set *allowed;
 };
 
@@ -355,13 +354,11 @@ public:
 } /* namespace amino */
 
 struct aa_rx_mp {
-    aa_rx_mp( const struct aa_rx_sg *sg,
-              size_t n,
-              const char **names ) :
+    aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
         space_information(
             new amino::sgSpaceInformation(
                 amino::sgSpaceInformation::SpacePtr(
-                    new amino::sgStateSpace (sg, n, names)))),
+                    new amino::sgStateSpace (sub_sg)))),
         problem_definition(new ompl::base::ProblemDefinition(space_information))
         { }
 
