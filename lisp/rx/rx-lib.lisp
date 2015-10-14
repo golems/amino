@@ -37,51 +37,34 @@
 
 (in-package :robray)
 
-;; options
-(amino-ffi::def-foreign-container rx-geom-opt rx-geom-opt-t
-  :destructor aa-rx-geom-opt-destroy)
 
-;; shapes
-(amino-ffi::def-foreign-container scene-box rx-shape-box-t
-  :struct-type shape-box)
-(amino-ffi::def-foreign-container scene-sphere rx-shape-sphere-t
-  :struct-type shape-sphere)
-(amino-ffi::def-foreign-container scene-cylinder rx-shape-cylinder-t
-  :struct-type shape-cylinder)
-(amino-ffi::def-foreign-container scene-cone rx-shape-cone-t
-  :struct-type shape-cone)
-(amino-ffi::def-foreign-container scene-grid rx-shape-grid-t
-  :struct-type shape-grid)
+;;;;;;;;;;;;;;;;;;;;;;;
+;;; Foreign Library ;;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
-;; mesh
-(amino-ffi::def-foreign-container rx-mesh rx-mesh-t
-  :destructor aa-rx-mesh-destroy)
+(cffi:define-foreign-library libgl
+  (:unix "libGL.so")
+  (t (:default "libGL")))
 
-;; geometry
-(amino-ffi::def-foreign-container rx-geom rx-geom-t
-  :destructor aa-rx-geom-destroy)
+(cffi:define-foreign-library libglu
+  (:unix "libGLU.so")
+  (t (:default "libGLU")))
 
-;; scene graph
-(amino-ffi::def-foreign-container mutable-scene-graph rx-sg-t
-  :destructor aa-rx-sg-destroy
-  :slots ((scene-graph)
-          (config-name-array)
-          (config-index-map)))
+(cffi:define-foreign-library libsdl
+  (:unix "libSDL2.so")
+  (t (:default "libSDL2")))
 
-;; sdl
-(amino-ffi::def-foreign-container rx-win rx-win-t
-  :slots ((mutable-scene-graph)
-          (config-vector)))
+(cffi:define-foreign-library libamino-gl
+  (:unix "libamino_gl.so")
+  (t (:default "libamino_gl")))
 
+(cffi:define-foreign-library libamino-planning
+  (:unix "libamino_planning.so")
+  (t (:default "libamino_planning")))
 
-;; Subgraph
-(amino-ffi::def-foreign-container sub-scene-graph rx-sg-sub-t
-  :destructor aa-rx-sg-sub-destroy
-  :slots ((mutable-scene-graph)
-          (config-index-map)
-          (config-name-array)))
-
-;; Planning
-
-(amino-ffi::def-foreign-container rx-mp rx-mp-t
-  :destructor aa-rx-mp-destroy)
+;; TODO: put in separate packages so reloads don't clobber static vars
+(cffi:use-foreign-library libgl)
+(cffi:use-foreign-library libglu)
+(cffi:use-foreign-library libsdl)
+(cffi:use-foreign-library libamino-gl)
+(cffi:use-foreign-library libamino-planning)

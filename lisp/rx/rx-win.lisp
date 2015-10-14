@@ -37,34 +37,6 @@
 
 (in-package :robray)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;
-;;; Foreign Library ;;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-;; TODO: generate from pkg-config and configure
-
-(cffi:define-foreign-library libgl
-  (:unix "libGL.so")
-  (t (:default "libGL")))
-
-(cffi:define-foreign-library libglu
-  (:unix "libGLU.so")
-  (t (:default "libGLU")))
-
-(cffi:define-foreign-library libsdl
-  (:unix "libSDL2.so")
-  (t (:default "libSDL2")))
-
-(cffi:define-foreign-library libamino-gl
-  (:unix "libamino_gl.so")
-  (t (:default "libamino_gl")))
-
-(cffi:use-foreign-library libgl)
-(cffi:use-foreign-library libglu)
-(cffi:use-foreign-library libsdl)
-(cffi:use-foreign-library libamino-gl)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Foreign Bindings ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,6 +59,8 @@
   (q :pointer))
 
 (defun rx-win-set-config (win config)
+
+
   (with-foreign-simple-vector (pointer length) config :input
     (aa-rx-win-set-config win length pointer)))
 
@@ -138,35 +112,9 @@
     (aa-rx-win-set-sg win m-sg))
   (values))
 
-;; (defun win-set-config (scene-graph)
-;;   (let* ((win *window*)
-;;         (sg (rx-win-sc
-;;     (aa-rx-win-sg-gl-init win m-sg)
-;;     (setf (rx-win-mutable-scene-graph win)
-;;           m-sg)
-;;     (aa-rx-win-set-sg win m-sg))
-;;   (values))
-
-(declaim (inline win-set-config-helper))
-(defun win-set-config-helper (config-name config-value map q)
-  (setf (aref q (gethash (rope-string config-name) map))
-        (coerce config-value 'double-float)))
-
-(defmethod win-set-config ((configurations tree-map))
+(defun win-set-config (configs)
   (let* ((win *window*)
          (sg (rx-win-mutable-scene-graph win))
-         (map (mutable-scene-graph-config-index-map sg))
          (q (rx-win-config-vector win)))
-    (do-tree-map ((config-name config-value) configurations)
-      (win-set-config-helper config-name config-value map q))
-    (rx-win-set-config win q)))
-
-(defmethod win-set-config ((configurations list))
-  (let* ((win *window*)
-         (sg (rx-win-mutable-scene-graph win))
-         (map (mutable-scene-graph-config-index-map sg))
-         (q (rx-win-config-vector win)))
-    (loop for (config-name . config-value) in configurations
-       do
-         (win-set-config-helper config-name config-value map q))
+    (mutable-scene-graph-config-vector sg configs q)
     (rx-win-set-config win q)))

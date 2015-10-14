@@ -142,10 +142,10 @@
 ;;; Mutable Scene Graphs ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod print-object ((object mutable-scene-graph) stream)
-  (print-unreadable-object (object stream :type t)
-    (format stream "(~x)"
-            (cffi:pointer-address (amino-ffi::foreign-container-pointer object)))))
+;; (defmethod print-object ((object mutable-scene-graph) stream)
+;;   (print-unreadable-object (object stream :type t)
+;;     (format stream "(~x)"
+;;             (cffi:pointer-address (amino-ffi::foreign-container-pointer object)))))
 
 (defun mutable-scene-graph (scene-graph)
   (let ((sg (aa-rx-sg-create))
@@ -227,3 +227,89 @@
             (mutable-scene-graph-config-index-map sg) hash))
     ;; Result
     sg))
+
+(defun config-vector-helper (map configs vector)
+  (labels ((helper (config-name config-value)
+             (setf (aref vector (gethash (rope-string config-name) map))
+                   (coerce config-value 'double-float))))
+    (etypecase configs
+      (tree-map
+       (do-tree-map ((config-name config-value) configs)
+         (helper config-name config-value)))
+      (list
+       (loop for (config-name . config-value) in configs
+          do (helper config-name config-value)))))
+  vector)
+
+(defun mutable-scene-graph-config-vector (mutable-scene-graph configs &optional vector)
+  (let* ((m-sg mutable-scene-graph)
+         (n (aa-rx-sg-config-count m-sg)))
+    (config-vector-helper (mutable-scene-graph-config-index-map m-sg)
+                          configs
+                          (or vector (make-vec n)))))
+
+;;;;;;;;;;;;;;;;;
+;;; Subgraphs ;;;
+;;;;;;;;;;;;;;;;;
+
+(cffi:defcfun aa-rx-sg-sub-destroy :void
+  (ssg :pointer))
+
+(cffi:defcfun aa-rx-sg-chain-create rx-sg-sub-t
+  (sg rx-sg-t)
+  (root rx-frame-id)
+  (tip rx-frame-id))
+
+(cffi:defcfun aa-rx-sg-sub-config rx-config-id
+  (sg rx-sg-sub-t)
+  (i size-t))
+
+(cffi:defcfun aa-rx-sg-sub-frame rx-frame-id
+  (sg rx-sg-sub-t)
+  (i size-t))
+
+(defun sub-scene-graph-init (m-sg ssg)
+  (setf (sub-scene-graph-mutable-scene-graph ssg)
+        m-sg)
+  (let* ((n (sub-scene-graph-config-count ssg))
+         (hash (make-hash-table :test #'equal))
+         (array (make-array n)))
+    (loop for i below n
+       for config-id = (aa-rx-sg-sub-config ssg i)
+       for config-name = (aa-rx-sg-config-name m-sg config-id)
+       do
+         (setf (gethash config-name hash) i
+               (aref array i) config-name))
+    (setf (sub-scene-graph-config-name-array ssg) array
+          (sub-scene-graph-config-index-map ssg) hash))
+  ssg)
+
+(defun scene-graph-chain (scenegraph root tip)
+  (let* ((m-sg (mutable-scene-graph scenegraph))
+         (root-id (aa-rx-sg-frame-id m-sg (rope-string root)))
+         (tip-id (aa-rx-sg-frame-id m-sg (rope-string tip))))
+    (when (and (< root-id 0)
+               (not (= root-id +frame-id-root+)))
+      (error "Unrecognized frame ~A" root))
+    (when (< tip-id 0)
+      (error "Unrecognized frame ~A" tip))
+    (let ((ssg (aa-rx-sg-chain-create m-sg root-id tip-id)))
+      (sub-scene-graph-init m-sg ssg))))
+
+(cffi:defcfun (sub-scene-graph-config-count "aa_rx_sg_sub_config_count") size-t
+  (sub-sg rx-sg-sub-t))
+
+(defun sub-scene-graph-all-config-count (ssg)
+  (let ((m-sg (sub-scene-graph-mutable-scene-graph ssg)))
+    (aa-rx-sg-config-count m-sg)))
+
+(defun sub-scene-graph-config-vector (ssg configs &optional vector)
+  (config-vector-helper (sub-scene-graph-config-index-map ssg)
+                        configs
+                        (or vector
+                            (make-vec (sub-scene-graph-config-count ssg)))))
+
+(defun sub-scene-graph-all-config-vector (ssg configs &optional vector)
+  (mutable-scene-graph-config-vector (sub-scene-graph-mutable-scene-graph ssg)
+                                     configs
+                                     vector))

@@ -90,6 +90,8 @@ AA_API aa_rx_config_id aa_rx_sg_config_id(
 AA_API aa_rx_frame_id aa_rx_sg_frame_id (
     const struct aa_rx_sg *scene_graph, const char *frame_name)
 {
+    if( '\0' == *frame_name ) return AA_RX_FRAME_ROOT;
+
     auto itr = scene_graph->sg->frame_map.find(frame_name);
     if( itr != scene_graph->sg->frame_map.end() ) {
         return itr->second->frame_id;
