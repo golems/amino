@@ -182,7 +182,8 @@ int main(int argc, char *argv[])
                          ids, q1, cx.q );
 
 
-    aa_win_display_loop( win, display, &cx );
+    aa_rx_win_set_display( win, display, &cx );
+    aa_rx_win_display_loop(win);
 
     // cleanup
     aa_rx_sg_destroy(scenegraph);

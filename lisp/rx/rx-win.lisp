@@ -64,7 +64,7 @@
   (with-foreign-simple-vector (pointer length) config :input
     (aa-rx-win-set-config win length pointer)))
 
-(cffi:defcfun aa-rx-win-default-start :void
+(cffi:defcfun aa-rx-win-start :void
   (window rx-win-t))
 
 (cffi:defcfun aa-rx-win-sg-gl-init :void
@@ -93,7 +93,7 @@
     (setq *window*
           (aa-rx-win-default-create title width height))
     (aa-rx-win-stop-on-quit *window* nil)
-    (aa-rx-win-default-start *window*))
+    (aa-rx-win-start *window*))
   (values))
 
 (defun win-destroy ()

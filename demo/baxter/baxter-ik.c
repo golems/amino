@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     }
 
     /*--- Do Display ---*/
-    aa_rx_win_default_start(win);
+    aa_rx_win_start(win);
 
     /*--- Cleanup ---*/
     aa_rx_win_join(win);

@@ -138,7 +138,8 @@ int main(int argc, char *argv[])
         aa_rx_cl_set_destroy( allowed );
     }
 
-    aa_win_display_loop( win, display, &cx );
+    aa_rx_win_set_display( win, display, &cx );
+    aa_rx_win_display_loop(win);
 
 
     // Cleanup

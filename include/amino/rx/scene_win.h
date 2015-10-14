@@ -97,6 +97,12 @@ aa_rx_win_set_config( struct aa_rx_win * win,
                       size_t n,
                       const double *q );
 
+
+AA_API void
+aa_rx_win_set_display( struct aa_rx_win * win,
+                       aa_sdl_display_fun display,
+                       void *context );
+
 /**
  * Synchronous display using current thread
  *
@@ -104,22 +110,18 @@ aa_rx_win_set_config( struct aa_rx_win * win,
  * display() is called.
  *
  */
-AA_API void aa_win_display_loop(
-    struct aa_rx_win * window,
-    aa_sdl_display_fun display,
-    void *context );
+AA_API void aa_rx_win_display_loop( struct aa_rx_win * window );
+
 
 
 /**
  * Asynchronous display using new thread
  */
 AA_API void
-aa_rx_win_start( struct aa_rx_win * win,
-                 aa_sdl_display_fun display,
-                 void *context );
+aa_rx_win_start( struct aa_rx_win * win );
 
 
-/**
+/*
  * Asynchronous display using new thread and default rendering
  * function.
  *
@@ -130,8 +132,8 @@ aa_rx_win_start( struct aa_rx_win * win,
  * @see aa_rx_win_set_sg()
  * @see aa_rx_win_set_config()
  */
-AA_API void
-aa_rx_win_default_start( struct aa_rx_win * win );
+//AA_API void
+//aa_rx_win_default_start( struct aa_rx_win * win );
 
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
@@ -154,16 +156,16 @@ AA_API void
 aa_rx_win_sg_gl_init( struct aa_rx_win * win,
                       struct aa_rx_sg *sg );
 
-/**
- * Render scenegraph to the window.
- *
- * This function is threadsafe.
- */
-AA_API void
-aa_rx_win_sg_render(
-    struct aa_rx_win *window,
-    const struct aa_rx_sg *scenegraph,
-    const struct aa_gl_globals *globals,
-    size_t n_TF, double *TF_abs, size_t ld_TF );
+/* /\** */
+/*  * Render scenegraph to the window. */
+/*  * */
+/*  * This function is threadsafe. */
+/*  *\/ */
+/* AA_API void */
+/* aa_rx_win_sg_render( */
+/*     struct aa_rx_win *window, */
+/*     const struct aa_rx_sg *scenegraph, */
+/*     const struct aa_gl_globals *globals, */
+/*     size_t n_TF, double *TF_abs, size_t ld_TF ); */
 
 #endif /*AMINO_RX_SCENE_WIN_H*/

@@ -59,11 +59,16 @@
 
 #include <pthread.h>
 
+static int default_display( void *cx_, struct aa_sdl_display_params *params );
+
 struct aa_rx_win {
     struct aa_gl_globals *gl_globals;
     const struct aa_rx_sg *sg;
     size_t n_config;
     double *q;
+
+    aa_sdl_display_fun display;
+    void *display_cx;
 
     SDL_Window* window;
     SDL_GLContext gl_cx;
@@ -100,6 +105,9 @@ aa_rx_win_create(
 
     win->gl_globals = aa_gl_globals_create();
     aa_gl_globals_set_aspect( win->gl_globals, (double)width / (double)height );
+
+    win->display = default_display;
+    win->display_cx = win;
 
     win->stop_on_quit = 1;
 
@@ -201,49 +209,41 @@ static int default_display( void *cx_, struct aa_sdl_display_params *params )
     return updated;
 }
 
-
-struct win_display_cx {
-    struct aa_rx_win *win;
-    aa_sdl_display_fun display;
-    void *context;
-};
-
 static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {
-    struct win_display_cx *cx = (struct win_display_cx*)cx_;
-    pthread_mutex_lock( &cx->win->mutex );
-    int r = cx->display(cx->context, params );
-    pthread_mutex_unlock( &cx->win->mutex );
+    struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
+    pthread_mutex_lock( &cx->mutex );
+    int r = cx->display(cx->display_cx, params );
+    pthread_mutex_unlock( &cx->mutex );
     return r;
 }
 
-AA_API void aa_win_display_loop(
-    struct aa_rx_win * win,
-    aa_sdl_display_fun display,
-    void *context )
+
+AA_API void
+aa_rx_win_set_display( struct aa_rx_win * win,
+                       aa_sdl_display_fun display,
+                       void *context )
+{
+    win->display = display;
+    win->display_cx = context;
+}
+
+AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
 {
 
     SDL_GL_MakeCurrent(win->window, win->gl_cx);
 
     pthread_mutex_lock( &win->mutex );
     win->running = 1;
-    pthread_mutex_unlock( &win->mutex );
 
-    struct win_display_cx cx = {.win = win,
-                                .display = display,
-                                .context = context };
-    if( NULL == display ) {
-        cx.display = default_display;
-        cx.context = win;
-    }
+    pthread_mutex_unlock( &win->mutex );
 
     int stop = 0;
     int stop_on_quit = 0;
 
     do {
         aa_sdl_display_loop( win->window, win->gl_globals,
-                             win_display, &cx );
-
+                             win_display, win );
         pthread_mutex_lock( &win->mutex );
         stop = win->stop;
         stop_on_quit = win->stop_on_quit;
@@ -257,42 +257,18 @@ AA_API void aa_win_display_loop(
 
 }
 
-
-
-struct win_thread_cx {
-    struct aa_rx_win *win;
-    aa_sdl_display_fun display;
-    void *display_cx;
-};
-
 static void* win_thread_fun( void *arg )
 {
-    struct win_thread_cx *cx =  (struct win_thread_cx*)arg;
-
-    aa_win_display_loop( cx->win, cx->display, cx->display_cx );
-
-    free(cx );
+    struct aa_rx_win * win = (struct aa_rx_win*)arg;
+    aa_rx_win_display_loop(win);
 
     return NULL;
 }
 
 AA_API void
-aa_rx_win_default_start( struct aa_rx_win * win )
+aa_rx_win_start( struct aa_rx_win * win )
 {
-    aa_rx_win_start( win, NULL, NULL );
-}
-
-AA_API void
-aa_rx_win_start( struct aa_rx_win * win,
-                 aa_sdl_display_fun display,
-                 void *context )
-{
-
-    struct win_thread_cx *thread_cx = AA_NEW( struct win_thread_cx );
-    thread_cx->win = win;
-    thread_cx->display = display;
-    thread_cx->display_cx = context;
-    pthread_create( &win->thread, NULL, win_thread_fun, thread_cx );
+    pthread_create( &win->thread, NULL, win_thread_fun, win );
 }
 
 AA_API void
@@ -331,16 +307,16 @@ aa_rx_win_sg_gl_init( struct aa_rx_win * win,
 }
 
 
-AA_API void
-aa_rx_win_sg_render(
-    struct aa_rx_win * win,
-    const struct aa_rx_sg *scenegraph,
-    const struct aa_gl_globals *globals,
-    size_t n_TF, double *TF_abs, size_t ld_TF )
-{
-    pthread_mutex_lock( &win->mutex );
-    SDL_GL_MakeCurrent(win->window, win->gl_cx);
-    aa_rx_sg_render( scenegraph, globals,
-                     n_TF, TF_abs, ld_TF );
-    pthread_mutex_unlock( &win->mutex );
-}
+/* AA_API void */
+/* aa_rx_win_sg_render( */
+/*     struct aa_rx_win * win, */
+/*     const struct aa_rx_sg *scenegraph, */
+/*     const struct aa_gl_globals *globals, */
+/*     size_t n_TF, double *TF_abs, size_t ld_TF ) */
+/* { */
+/*     pthread_mutex_lock( &win->mutex ); */
+/*     SDL_GL_MakeCurrent(win->window, win->gl_cx); */
+/*     aa_rx_sg_render( scenegraph, globals, */
+/*                      n_TF, TF_abs, ld_TF ); */
+/*     pthread_mutex_unlock( &win->mutex ); */
+/* } */
