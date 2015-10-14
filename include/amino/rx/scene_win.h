@@ -103,6 +103,13 @@ aa_rx_win_set_display( struct aa_rx_win * win,
                        aa_sdl_display_fun display,
                        void *context );
 
+
+AA_API void
+aa_rx_win_set_display_plan( struct aa_rx_win * win,
+                            size_t n_plan,
+                            const double *plan,
+                            enum aa_mem_refop refop );
+
 /**
  * Synchronous display using current thread
  *

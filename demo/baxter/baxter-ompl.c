@@ -86,97 +86,6 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     }
 }
 
-
-struct display_cx {
-    const struct aa_gl_globals *globals;
-    const struct aa_rx_sg *scenegraph;
-    struct aa_rx_cl *cl;
-    double q;
-    aa_rx_config_id i_q;
-    int init;
-    struct timespec t0;
-};
-
-int display( void *cx_, struct aa_sdl_display_params *params )
-{
-    struct display_cx *cx = (struct display_cx *)cx_;
-    const struct aa_gl_globals *globals = cx->globals;
-    const struct aa_rx_sg *scenegraph = cx->scenegraph;
-
-    const struct timespec *now = aa_sdl_display_params_get_time_now(params);
-    const struct timespec *last = aa_sdl_display_params_get_time_last(params);
-
-
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    baxter_demo_check_error("glClearColor");
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    baxter_demo_check_error("glClear");
-
-    if( aa_sdl_display_params_is_first(params) ) {
-        memcpy( &cx->t0,
-                aa_sdl_display_params_get_time_initial(params),
-                sizeof(cx->t0) );
-
-        return 0;
-    }
-
-    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
-    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-
-    double t = aa_tm_timespec2sec( aa_tm_sub( *now, cx->t0 ) );
-    double dt = .8;
-    //double t_max = (g_n_path-1) * dt;
-
-
-    int i0 = t / dt;
-    int i1 = i0 + 1;
-    double *q0, *q1;
-    if( g_n_path == i1 ) {
-        i1 = i0;
-    } else if( g_n_path < i1 ) {
-        t = 0;
-        i1 = 0;
-        i0 = 0;
-        memcpy( &cx->t0, now, sizeof(cx->t0) );
-    }
-
-    assert( i0 < g_n_path );
-    assert( i1 < g_n_path );
-    q0 = AA_MATCOL(g_path,m,i0);
-    q1 = AA_MATCOL(g_path,m,i1);
-
-
-    double q[m];
-    if( q0 == q1 ) {
-        AA_MEM_CPY( q, q0, m );
-    } else {
-        aa_la_linterp( m,
-                       i0*dt, q0,
-                       i1*dt, q1,
-                       t, q );
-    }
-    //double qs[ g_space->config_count_set() ];
-    //g_space->state_get( q, qs );
-
-
-    double *TF_rel = AA_MEM_REGION_LOCAL_NEW_N( double, 7*n );
-    double *TF_abs = AA_MEM_REGION_LOCAL_NEW_N( double, 7*n );
-    aa_rx_sg_tf(scenegraph, m, q,
-                n,
-                TF_rel, 7,
-                TF_abs, 7 );
-    aa_rx_sg_render( scenegraph, globals,
-                     (size_t)n, TF_abs, 7 );
-
-
-    aa_mem_region_local_pop( TF_rel );
-
-    aa_sdl_display_params_set_update(params);
-
-    return 0;
-}
-
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
@@ -196,37 +105,13 @@ int main(int argc, char *argv[])
     aa_gl_globals_set_show_visual(globals, 1);
     aa_gl_globals_set_show_collision(globals, 0);
 
+    aa_rx_win_set_display_plan(win, g_n_path * aa_rx_sg_config_count(scenegraph),
+                               g_path, AA_MEM_STEAL );
 
-    struct display_cx cx = {0};
-    cx.globals = globals;
-    cx.scenegraph = scenegraph;
-    cx.i_q = aa_rx_sg_config_id(scenegraph, "left_s0");
-    cx.cl = aa_rx_cl_create( scenegraph );
 
-    {
-        aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-        aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
-        double q[m];
-        AA_MEM_ZERO(q,m);
-        double TF_rel[7*n];
-        double TF_abs[7*n];
-        aa_rx_sg_tf(scenegraph, m, q,
-                    n,
-                    TF_rel, 7,
-                    TF_abs, 7 );
-
-        struct aa_rx_cl_set *allowed = aa_rx_cl_set_create( scenegraph );
-        int col = aa_rx_cl_check( cx.cl, n, TF_abs, 7, allowed );
-        aa_rx_cl_allow_set( cx.cl, allowed );
-        aa_rx_cl_set_destroy( allowed );
-    }
-
-    aa_rx_win_set_display(win, display, &cx);
     aa_rx_win_display_loop(win);
 
     // Cleanup
-    if( g_path ) free( g_path );
-    aa_rx_cl_destroy( cx.cl );
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
     aa_mem_region_local_destroy();
