@@ -42,20 +42,12 @@
  * @file scene_planning.h
  */
 
-/*--- Motion Planning Options ---*/
-struct aa_rx_mp_opt;
-
-AA_API struct aa_rx_mp_opt *
-aa_rx_mp_opt_create();
-
-void
-aa_rx_mp_opt_destroy( struct aa_rx_mp_opt *);
+/*--- Motion Planning ---*/
 
 struct aa_rx_mp;
 
 AA_API struct aa_rx_mp*
-aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg,
-                 struct aa_rx_mp_opt *opt);
+aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg );
 
 AA_API void
 aa_rx_mp_destroy( struct aa_rx_mp *mp );

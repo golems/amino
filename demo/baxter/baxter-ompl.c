@@ -53,7 +53,7 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
                                                       AA_RX_FRAME_ROOT,
                                                       aa_rx_sg_frame_id(scenegraph, "right_w2") );
 
-    struct aa_rx_mp *mp = aa_rx_mp_create( ssg, NULL );
+    struct aa_rx_mp *mp = aa_rx_mp_create( ssg );
 
     size_t n_q = aa_rx_sg_config_count(scenegraph);
     double q0[n_q];
