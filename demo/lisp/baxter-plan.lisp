@@ -8,7 +8,7 @@
 
 (win-set-scene-graph *scene-graph*)
 
-(win-set-config `(("left_s0" . ,(/ pi 4))))
+(win-set-config `(("left_s0" . ,(/ pi 5))))
 
 (defparameter *ssg* (scene-graph-chain *scene-graph* nil "left_w2"))
 
@@ -24,4 +24,9 @@
     ("left_w2" . ,(* 0 pi))))
 
 
-(motion-plan *ssg* *start* *goal*)
+(defvar *mp*)
+
+(setq  *mp*
+       (motion-plan *ssg* *start* *goal*))
+
+(win-view-plan *mp*)

@@ -79,6 +79,16 @@
 (cffi:defcfun aa-rx-win-stop :void
   (win rx-win-t))
 
+(cffi:defcfun aa-rx-win-pause :void
+  (win rx-win-t)
+  (paused :boolean))
+
+(cffi:defcfun aa-rx-win-set-display-plan :void
+  (win rx-win-t)
+  (n-plan amino-ffi:size-t)
+  (plan :pointer)
+  (refop ref-op))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -94,7 +104,7 @@
           (aa-rx-win-default-create title width height))
     (aa-rx-win-stop-on-quit *window* nil)
     (aa-rx-win-start *window*))
-  (values))
+  *window*)
 
 (defun win-destroy ()
   (assert *window*)
@@ -103,9 +113,8 @@
   (values))
 
 (defun win-set-scene-graph (scene-graph)
-  (win-create)
-  (let ((win *window*)
-        (m-sg (mutable-scene-graph (scene-graph scene-graph))))
+  (let ((win (win-create))
+        (m-sg (mutable-scene-graph scene-graph)))
     (aa-rx-win-sg-gl-init win m-sg)
     (setf (rx-win-mutable-scene-graph win) m-sg
           (rx-win-config-vector win) (make-vec (aa-rx-sg-config-count m-sg)))
@@ -113,8 +122,19 @@
   (values))
 
 (defun win-set-config (configs)
-  (let* ((win *window*)
+  (let* ((win (win-create))
          (sg (rx-win-mutable-scene-graph win))
          (q (rx-win-config-vector win)))
     (mutable-scene-graph-config-vector sg configs q)
     (rx-win-set-config win q)))
+
+(defun win-pause (&optional (paused t))
+  (aa-rx-win-pause (win-create) paused))
+
+(defun win-unpause ()
+  (aa-rx-win-pause (win-create) nil))
+
+(defun win-set-display-plan (plan)
+  (let ((win (win-create)))
+    (with-foreign-simple-vector (pointer length) plan :input
+      (aa-rx-win-set-display-plan win length pointer :copy))))

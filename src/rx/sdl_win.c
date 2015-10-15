@@ -86,6 +86,8 @@ struct aa_rx_win {
 
     unsigned updated : 1;
     unsigned running : 1;
+
+    unsigned paused : 1;
 };
 
 AA_API struct aa_rx_win *
@@ -220,8 +222,11 @@ static int default_display( void *cx_, struct aa_sdl_display_params *params )
 static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
+    int r = 0;
     pthread_mutex_lock( &cx->mutex );
-    int r = cx->display(cx->display_cx, params );
+    if( !cx->paused ) {
+        r = cx->display(cx->display_cx, params );
+    }
     pthread_mutex_unlock( &cx->mutex );
     return r;
 }
@@ -421,3 +426,11 @@ aa_rx_win_sg_gl_init( struct aa_rx_win * win,
 /*                      n_TF, TF_abs, ld_TF ); */
 /*     pthread_mutex_unlock( &win->mutex ); */
 /* } */
+
+AA_API void
+aa_rx_win_pause( struct aa_rx_win * win, int paused )
+{
+    pthread_mutex_lock( &win->mutex );
+    win->paused = paused ? 1 : 0;
+    pthread_mutex_unlock( &win->mutex );
+}

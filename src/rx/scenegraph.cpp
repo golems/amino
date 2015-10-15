@@ -325,7 +325,7 @@ aa_rx_sg_ensure_clean_frames( const struct aa_rx_sg *scene_graph )
 {
     amino::SceneGraph *sg = scene_graph->sg;
     if( sg->dirty_indices ) {
-        fprintf(stderr, "ERROR: scene graph indices are dirty.  Must call aa_rx_sg_index()\n");
+        fprintf(stderr, "ERROR: scene graph indices are dirty.  Must call aa_rx_sg_init()\n");
         abort();
         exit(EXIT_FAILURE);
     }

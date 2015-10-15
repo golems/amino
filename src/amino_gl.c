@@ -936,7 +936,7 @@ AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom
     )
 {
-    if( geom->gl_buffers ) aa_gl_buffers_destroy( geom->gl_buffers );
+    if( geom->gl_buffers ) return;
     //geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
 
     switch( geom->type ) {

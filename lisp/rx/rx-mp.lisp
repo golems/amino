@@ -68,6 +68,18 @@
 (cffi:defcfun aa-rx-sg-cl-init :void
   (sg rx-sg-t))
 
+(defstruct motion-plan
+  path
+  sub-scene-graph)
+
+(defun motion-plan-mutable-scene-graph (motion-plan)
+  (sub-scene-graph-mutable-scene-graph
+   (motion-plan-sub-scene-graph motion-plan)))
+
+(defun motion-plan-scene-graph (motion-plan)
+  (mutable-scene-graph-scene-graph
+   (motion-plan-mutable-scene-graph motion-plan)))
+
 (defun motion-plan (sub-scene-graph start-map goal-map
                     &key
                       (timeout 1d0))
@@ -97,7 +109,7 @@
                         (cffi:mem-ref plan-ptr :pointer)))))
         (if (< result 0)
             ;; error, no plan
-            (values nil nil)
+            nil
             ;; got a plan
             (let* ((m (* n-path n-all))
                    (result (make-vec m)))
@@ -107,4 +119,11 @@
                                        (* length (cffi:foreign-type-size :double))))
               ;; free c-space plan
               (amino-ffi:libc-free path-ptr)
-              (values result t)))))))
+              (make-motion-plan :path result
+                                :sub-scene-graph sub-scene-graph)))))))
+
+(defun win-view-plan (motion-plan)
+  (win-pause)
+  (win-set-scene-graph (motion-plan-mutable-scene-graph motion-plan))
+  (win-set-display-plan (motion-plan-path motion-plan))
+  (win-unpause))

@@ -60,6 +60,11 @@
          ((:frame-revolute "AA_RX_FRAME_REVOLUTE"))
          ((:frame-prismatic "AA_RX_FRAME_PRISMATIC")))
 
+  ;; Geometry
+  (cenum ref-op
+         ((:steal "AA_MEM_STEAL"))
+         ((:borrow "AA_MEM_BORROW"))
+         ((:copy "AA_MEM_COPY")))
 
   ;; Geometry
   (cenum geom-shape
@@ -70,6 +75,7 @@
          ((:cylinder "AA_RX_CYLINDER"))
          ((:cone "AA_RX_CONE"))
          ((:grid "AA_RX_GRID")))
+
 
   (cstruct shape-box "struct aa_rx_shape_box"
            (dimension "dimension" :type :double :count 3))

@@ -147,7 +147,7 @@
 ;;     (format stream "(~x)"
 ;;             (cffi:pointer-address (amino-ffi::foreign-container-pointer object)))))
 
-(defun mutable-scene-graph (scene-graph)
+(defun %mutable-scene-graph (scene-graph)
   (let ((sg (aa-rx-sg-create))
         (scene-graph (scene-graph scene-graph)))
     (setf (mutable-scene-graph-scene-graph sg) scene-graph)
@@ -227,6 +227,13 @@
             (mutable-scene-graph-config-index-map sg) hash))
     ;; Result
     sg))
+
+
+(defun mutable-scene-graph (scene-graph)
+  (etypecase scene-graph
+    (mutable-scene-graph scene-graph)
+    (scene-graph (%mutable-scene-graph scene-graph))
+    (sub-scene-graph (sub-scene-graph-mutable-scene-graph scene-graph))))
 
 (defun config-vector-helper (map configs vector)
   (labels ((helper (config-name config-value)
