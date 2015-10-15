@@ -406,13 +406,7 @@
 (defvar *scene-directory* (make-pathname))
 
 (defun %scene-graph (things)
-  (labels ((load-thing (thing)
-             (load-scene-file thing))
-              ;; (let ((dir (pathname-directory thing)))
-              ;;   (if (and dir (eq :absolute (car dir)))
-              ;;       thing
-              ;;       (merge-pathnames *scene-directory* thing))))
-           (rec (scene-graph thing)
+  (labels ((rec (scene-graph thing)
              (etypecase thing
                (scene-frame
                 (%scene-graph-add-frame scene-graph thing))
@@ -422,8 +416,7 @@
                 (%scene-graph-merge scene-graph
                                     (%scene-graph thing)))
                ((or pathname string)
-                (%scene-graph-merge scene-graph
-                                    (load-thing thing)))
+                (rec scene-graph (load-scene-file thing)))
                (rope
                 (rec scene-graph (rope-string thing))))))
     (fold #'rec (make-scene-graph) things)))

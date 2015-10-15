@@ -336,5 +336,8 @@
   (mesh-name :string))
 
 (defun load-rx-mesh (mesh)
-  (aa-rx-dl-mesh (genc-mesh-link mesh)
-                 (scene-mesh-name mesh)))
+  (let ((rx-mesh
+         (aa-rx-dl-mesh (genc-mesh-link mesh)
+                        (scene-mesh-name mesh))))
+    (assert (= 1 (aa-rx-mesh-refcount (rx-mesh-pointer rx-mesh))))
+    rx-mesh))

@@ -92,8 +92,10 @@
                     (aa-rx-geom-mesh (alist-rx-geom-opt (scene-geometry-options geometry))
                                      (gethash shape hash))))))
         ;; Release meshes
-        (maphash (lambda (k rx-mesh)
-                   (declare (ignore k))
-                   (aa-rx-mesh-destroy (rx-mesh-pointer rx-mesh)))
-                 hash)))
+        ;; Don't need to do this, the registered destructor will free the mesh
+        ;; (maphash (lambda (k rx-mesh)
+        ;;            (declare (ignore k))
+        ;;            (rx-mesh-destroy (rx-mesh-pointer rx-mesh)))
+        ;;          hash)
+        ))
     scene-graph))

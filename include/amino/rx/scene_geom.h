@@ -346,4 +346,11 @@ aa_rx_geom_attach (
     const char *frame,
     struct aa_rx_geom *geom );
 
+
+AA_API unsigned
+aa_rx_geom_refcount ( const struct aa_rx_geom *g );
+
+AA_API unsigned
+aa_rx_mesh_refcount ( struct aa_rx_mesh *sg );
+
 #endif /*AMINO_RX_SCENE_GEOM_H*/

@@ -63,7 +63,7 @@ struct aa_rx_geom {
      * Decrement on Destroy
      * Free when it reaches 0
      */
-    size_t refcount;
+    unsigned refcount;
     struct aa_gl_buffers *gl_buffers;
 };
 
@@ -133,7 +133,7 @@ struct aa_rx_mesh {
     size_t width_rgba;
     size_t height_rgba;
 
-    size_t refcount;
+    unsigned refcount;
 
     void (*destructor)(void*);
     void *destructor_context;

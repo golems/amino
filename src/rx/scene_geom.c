@@ -320,3 +320,15 @@ aa_rx_geom_shape_str( enum aa_rx_geom_shape shape )
     }
     return "?";
 }
+
+
+AA_API unsigned
+aa_rx_geom_refcount ( const struct aa_rx_geom *g ) {
+    return g->refcount;
+}
+
+AA_API unsigned
+aa_rx_mesh_refcount ( struct aa_rx_mesh *m )
+{
+    return  m->refcount;
+}
