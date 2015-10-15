@@ -183,12 +183,13 @@
                     (tf (tf-mul (tf* (euler-rpy rpy)
                                      (vec3 xyz))
                                 offset)))
-               (if (equalp tf +tf-ident+)
+               (if (and (equalp tf +tf-ident+)
+                        frame-name)
                    ;; same as parent, reuse frame
                    frame-name
                    ;; offset, add new frame
                    (let ((new-frame (scene-frame-fixed frame-name
-                                                       (concatenate 'string frame-name "-" suffix)
+                                                       (concatenate 'string link-name "-" suffix)
                                                        :tf (tf-mul (tf* (euler-rpy rpy)
                                                                         (vec3 xyz))
                                                                    offset))))
