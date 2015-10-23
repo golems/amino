@@ -153,6 +153,23 @@ AA_API void aa_rx_sg_add_frame_revolute
                                                          config_name, offset, axis) );
 }
 
+AA_API void aa_rx_sg_rm_frame
+( struct aa_rx_sg *scene_graph,
+  const char *name )
+{
+
+    amino::SceneGraph *sg = scene_graph->sg;
+    sg->dirty_indices = 1;
+
+    auto itr = sg->frame_map.find(name);
+    if( sg->frame_map.end() != itr ) {
+        amino::SceneFrame *f = itr->second;
+        delete f;
+    }
+
+    sg->frame_map.erase(name);
+}
+
 AA_API void aa_rx_sg_tf
 ( const struct aa_rx_sg *scene_graph,
   size_t n_q, const double *q,

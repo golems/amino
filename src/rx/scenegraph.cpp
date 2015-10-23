@@ -239,14 +239,16 @@ void SceneGraph::index()
     // Sort frames
     std::list<SceneFrame*> list;
     std::set<std::string> visited;
-    for( auto itr = frames.begin(); itr != frames.end(); itr++ ) {
+    for( auto itr = frame_map.begin(); itr != frame_map.end(); itr++ ) {
+        SceneFrame *f = itr->second;
         // invalidate indices
-        (*itr)->frame_id = (*itr)->parent_id = (size_t)-1;
+        f->frame_id = f->parent_id = (size_t)-1;
         // Recursive sort
-        sort_frame_helper( list, visited, frame_map, (*itr)->name );
+        sort_frame_helper( list, visited, frame_map, f->name );
     }
 
     // Index names and configs
+    frames.resize( frame_map.size() );
     {
         std::set<std::string> config_set;
         config_map.clear();
@@ -295,8 +297,14 @@ void SceneGraph::index()
 void SceneGraph::add(SceneFrame *f)
 {
     dirty_indices = 1;
-    frames.push_back(f);
-    /* TODO: handle duplicate frame */
+
+    /* delete if already exists */
+    auto itr = frame_map.find(f->name);
+    if( frame_map.end() != itr ) {
+        amino::SceneFrame *old_f = itr->second;
+        delete old_f;
+    }
+
     frame_map[f->name] = f;
 }
 
