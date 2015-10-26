@@ -253,7 +253,7 @@ sdl_test_SOURCES = src/rx/sdl_test.c
 sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
-sdl_test_LDADD += libamino_gl.la $(GL_LIBS) $(GLEW_LIBS)  -lglut -lspnav
+sdl_test_LDADD += libamino_gl.la $(GL_LIBS) $(GLEW_LIBS)  -lglut
 
 endif # SDL2
 
