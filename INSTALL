@@ -12,12 +12,18 @@ Dependencies
 * LAPACK
 * GNU Autotools
 * Java SDK (optional)
+* GLEW (optional)
+* SDL2 (optional)
+* FCL (optional)
+* OMPL (optional)
+* SBCL (optional)
 
 To install these on Debian or Ubuntu GNU/Linux, you can do:
 
     sudo apt-get install build-essential autoconf automake libtool \
 	 autoconf-archive autotools-dev \
-	 default-jdk maxima gfortran libblas-dev liblapack-dev
+	 default-jdk maxima gfortran libblas-dev liblapack-dev \
+         libglew-dev libsdl2-dev libfcl-dev libompl-dev sbcl
 
 Generic Instructions
 --------------------
@@ -435,4 +441,3 @@ operates.
 
 `configure' also accepts some other, not widely useful, options.  Run
 `configure --help' for more details.
-
