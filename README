@@ -42,17 +42,30 @@ DEPENDENCIES
 
 Required
 --------
+These dependecies are required to use Amino:
+
 * BLAS / LAPACK
 * Maxima (build-time dependency only)
 
 Optional
 --------
-* cl-ppcre: http://weitz.de/cl-ppcre/
-* Sycamore: https://github.com/ndantam/sycamore
-* CXML: https://common-lisp.net/project/cxml/
-* POV-Ray: http://www.povray.org/
-* Blender: http://www.blender.org
-* avconv: https://libav.org/
+These dependecies are optional and may be used to enable additional
+features in Amino:
+
+* Visualization Feature:
+  - OpenGL: https://www.opengl.org/
+  - SDL2: https://www.libsdl.org/
+* Motion Planning Feature:
+  - FCL: https://github.com/flexible-collision-library/fcl
+  - OMPL: http://ompl.kavrakilab.org/
+* Robot Model Compilation and Ray Tracing Features:
+  - SBCL: http://www.sbcl.org/
+  - cl-ppcre: http://weitz.de/cl-ppcre/
+  - Sycamore: https://github.com/ndantam/sycamore
+  - CXML: https://common-lisp.net/project/cxml/
+  - POV-Ray: http://www.povray.org/
+  - Blender: http://www.blender.org
+  - avconv: https://libav.org/
 
 INSTALLATION
 ============

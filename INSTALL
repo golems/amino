@@ -1,16 +1,15 @@
-************
-* Overview *
-************
+Overview
+=========
 
 Dependencies
 ------------
 * GCC
 * G++
-* GFORTRAN
+* GFORTRAN or F2C
+* GNU Autotools
 * Maxima
 * BLAS
 * LAPACK
-* GNU Autotools
 * Java SDK (optional)
 * GLEW (optional)
 * SDL2 (optional)
@@ -31,22 +30,27 @@ Generic Instructions
 0) If you have obtained amino from the git repo, you need to
 initialize the autotools build scripts.
 
-`$ autoreconf -i'
+    autoreconf -i
 
 This whole step is not necessary when you have obtained a distribution
 tarball which already contains the autoconf-generated configure script.
 
-1) Configure for your system:
+1) Configure for your system.  To see optional features which may be
+enabled or disabled, run:
 
-`$ ./configure'
+    ./configure --help
+
+Then run configure (adding any flags you may need for your system):
+
+    ./configure
 
 2) Build:
 
-`$ ./make'
+    ./make
 
 3) Install:
 
-`$ sudo ./make install'
+    sudo ./make install
 
 
 Debian/Ubuntu Instructions
@@ -56,25 +60,25 @@ Alternatively, if you want to build a debian package:
 
 0) Install debuild (if not already installed):
 
-`$ sudo apt-get install devscripts'
+sudo apt-get install devscripts
 
 1) If you've have obtained the packaged from Git, initialize autotools
 with:
 
-`$ autoreconf -i'
+    autoreconf -i
 
 2) Build amino and the debian packages:
 
-`$ debuild -us -uc'
+    debuild -us -uc
 
 3) (Optionally) Install the debian packages:
 
-`$ sudo dpkg -i ../libamino*.deb'
+    sudo dpkg -i ../libamino*.deb
 
 
-***************************************
-* GNU Autotools Standard Instructions *
-***************************************
+
+GNU Autotools Standard Instructions
+===================================
 
 
 Installation Instructions
