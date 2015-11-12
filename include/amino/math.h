@@ -782,16 +782,81 @@ typedef void aa_sys_fun( const void *cx,
                          double t, const double *AA_RESTRICT x,
                          double *AA_RESTRICT y );
 
+enum aa_ode_integrator {
+    /** Runge-Kutta 1 integration */
+    AA_ODE_RK1,
+    /** Runge-Kutta 2 integration */
+    AA_ODE_RK2,
+    /** Runge-Kutta 4 integration */
+    AA_ODE_RK4,
+    /** Runge-Kutta-Fehlberg integration */
+    AA_ODE_RK45_F,
+    /** Runge-Kutta 4-5 / Cash Karp integration */
+    AA_ODE_RK45_CK,
+    /** Runge-Kutta 4-5 / Dormand-Prince integration */
+    AA_ODE_RK45_DP,
+    /** Runge-Kutta 2-3 / Bogacki-Shampine integration */
+    AA_ODE_RK23_BS
+};
+
+#define AA_ODE_EULER AA_ODE_RK1
+#define AA_ODE_HEUN AA_ODE_RK2
+
+
+typedef int aa_ode_check( const void *cx, double t, double * AA_RESTRICT x, double *AA_RESTRICT y );
+
+struct aa_ode_sol_opts {
+    /** Decrease step size if error is greater than tol_shrink. */
+    double adapt_tol_dec;
+
+    /** Increase step size if error is below tol_grow. */
+    double adapt_tol_inc;
+
+    /** Factor to decrease step size.
+     * Less than 1.
+     */
+    double adapt_factor_dec;
+
+    /** Factor to increse step size.
+     * Greater than 1.
+     */
+    double adapt_factor_inc;
+};
+
+AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
+                       const struct aa_ode_sol_opts * AA_RESTRICT opts,
+                       size_t n,
+                       aa_sys_fun sys, const void *sys_cx,
+                       aa_ode_check check, const void *halt_cx,
+                       double t0, double dt0,
+                       const double *AA_RESTRICT x0,
+                       double *AA_RESTRICT x1 );
+
+typedef void aa_odestep_fixed( size_t n, aa_sys_fun sys, const void *cx,
+                               double t0, double dt,
+                               const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
+
+typedef void aa_odestep_adaptive( size_t n, aa_sys_fun sys, const void *cx,
+                                  double t0, double dt,
+                                  const double *AA_RESTRICT x0,
+                                  double *AA_RESTRICT k,
+                                  double *AA_RESTRICT x_n_1,
+                                  double *AA_RESTRICT x_n );
+
 /** Euler / Runge-Kutta-1 integration.
  *
  * \f[ x_1 \leftarrow dt*dx + x_0 \f]
  *
  */
-AA_API void aa_odestep_rk1( size_t n, double dt,
-                            const double *AA_RESTRICT dx,
-                            const double *AA_RESTRICT x0,
-                            double *AA_RESTRICT x1 );
+AA_API void aa_odestep_euler( size_t n, double dt,
+                              const double *AA_RESTRICT dx,
+                              const double *AA_RESTRICT x0,
+                              double *AA_RESTRICT x1 );
 
+
+AA_API void aa_odestep_rk1( size_t n, aa_sys_fun sys, const void *cx,
+                            double t0, double dt,
+                            const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
 
 /** Runge-Kutta-2 (Heun's Method) integration.
  *
@@ -820,7 +885,6 @@ AA_API void aa_odestep_rk2( size_t n, aa_sys_fun sys, const void *cx,
 AA_API void aa_odestep_rk4( size_t n, aa_sys_fun sys, const void *cx,
                             double t0, double dt,
                             const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
-
 
 /** Runge-Kutta-4-5 (Fehlberg Method) integration.
  *
@@ -881,7 +945,7 @@ AA_API void aa_odestep_rkck45( size_t n, aa_sys_fun sys, const void *cx,
                                double *AA_RESTRICT x5 );
 
 
-/** Runge-Kutta-4-5 (Dormand-Price Method) integration.
+/** Runge-Kutta-4-5 (Dormand-Prince Method) integration.
  *
  * See Dormand, J. R.; Prince, P. J. (1980), "A family of embedded
  * Runge-Kutta formulae", Journal of Computational and Applied

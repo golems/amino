@@ -132,11 +132,11 @@ aa_rx_ksol_opts_set_max_iterations( struct aa_rx_ksol_opts *opts, size_t n );
 
 AA_API void
 aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
-                        double *q, enum aa_mem_refop refop );
+                             double *q, enum aa_mem_refop refop );
 
 AA_API void
 aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
-                             double *q, enum aa_mem_refop refop );
+                                  double *q, enum aa_mem_refop refop );
 
 /**
  * Convenience function to set IK options to center joints

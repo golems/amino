@@ -1517,7 +1517,7 @@ void sigsys() {
         double dt = .1;
         double x1[2];
 
-        aa_odestep_rk1( 2, .1, dx, x0, x1 );
+        aa_odestep_euler( 2, .1, dx, x0, x1 );
 
         aveq( "odestep_rk1", 2, x1, (double[]){x0[0]+dt*dx[0], x0[1]+dt*dx[1]}, 0.001 );
     }

@@ -130,10 +130,10 @@ void aa_lsim_rk4step( size_t m, size_t n,
 }
 
 
-void aa_odestep_rk1( size_t n, double dt,
-                     const double *restrict dx,
-                     const double *restrict x0,
-                     double *restrict x1 ) {
+void aa_odestep_euler( size_t n, double dt,
+                       const double *restrict dx,
+                       const double *restrict x0,
+                       double *restrict x1 ) {
     // x1 = x0 + dt*dx
 
     // Method A
@@ -143,6 +143,16 @@ void aa_odestep_rk1( size_t n, double dt,
     /* // Method B */
     /* for( size_t i = 0; i < n; i ++ ) */
     /*     x1[i] = x0[i] + dt*dx[i]; */
+}
+
+
+void aa_odestep_rk1( size_t n, aa_sys_fun sys, const void *cx,
+                     double t0, double dt,
+                     const double *restrict x0, double *restrict x1 )
+{
+    double dx[n];
+    sys(cx, t0, x0, dx);
+    aa_odestep_euler(n,dt,dx,x0,x1);
 }
 
 /* Butcher Tableau for Heun's Method
@@ -161,7 +171,7 @@ void aa_odestep_rk2( size_t n, aa_sys_fun sys, const void *cx,
     sys( cx, t0, x0, k[0] );
 
     // k2
-    aa_odestep_rk1( n, dt, k[0], x0, x1 );
+    aa_odestep_euler( n, dt, k[0], x0, x1 );
     sys( cx, t0+dt, x1, k[1] );
 
     // output
@@ -199,15 +209,15 @@ void aa_odestep_rk4( size_t n, aa_sys_fun sys, const void *cx,
     sys( cx, t0, x0, k[0] );
 
     // k1
-    aa_odestep_rk1( n, dt/2, k[0], x0, x1 );
+    aa_odestep_euler( n, dt/2, k[0], x0, x1 );
     sys( cx, t0+dt/2, x1, k[1] );
 
     // k2
-    aa_odestep_rk1( n, dt/2, k[1], x0, x1 );
+    aa_odestep_euler( n, dt/2, k[1], x0, x1 );
     sys( cx, t0+dt/2, x1, k[2] );
 
     // k3
-    aa_odestep_rk1( n, dt, k[2], x0, x1 );
+    aa_odestep_euler( n, dt, k[2], x0, x1 );
     sys( cx, t0+dt, x1, k[3] );
 
     // output
@@ -544,4 +554,113 @@ void aa_sys_affine( const aa_sys_affine_t *cx,
                  x, 1,
                  1, dx, 1 );
 
+}
+
+AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
+                        const struct aa_ode_sol_opts * AA_RESTRICT opts,
+                        size_t n,
+                        aa_sys_fun sys, const void *sys_cx,
+                        aa_ode_check check, const void *check_cx,
+                        double t0, double dt0,
+                        const double *AA_RESTRICT x0,
+                        double *AA_RESTRICT x1 )
+{
+
+    /* default: RK4, fixed step */
+    aa_odestep_fixed *fixed_integrator = aa_odestep_rk4;
+    aa_odestep_adaptive *adaptive_integrator = NULL;
+    size_t n_k = 0;
+
+    /* Select Integration Function */
+    switch( integrator ) {
+    case AA_ODE_RK1:
+        fixed_integrator = aa_odestep_rk1;
+        break;
+    case AA_ODE_RK2:
+        fixed_integrator = aa_odestep_rk2;
+        break;
+    case AA_ODE_RK4:
+        fixed_integrator = aa_odestep_rk4;
+        break;
+    case AA_ODE_RK45_F:
+        adaptive_integrator = aa_odestep_rkf45;
+        n_k = 5;
+        break;
+    case AA_ODE_RK45_CK:
+        adaptive_integrator = aa_odestep_rkck45;
+        n_k = 5;
+        break;
+    case AA_ODE_RK45_DP:
+        n_k = 6;
+        adaptive_integrator = aa_odestep_dorpri45;
+        break;
+    case AA_ODE_RK23_BS:
+        n_k = 4;
+        adaptive_integrator = aa_odestep_rkbs23;
+        break;
+    }
+
+    double t = t0;
+    double dt = dt0;
+    if( adaptive_integrator ) {
+        /* Adaptive Step Integration */
+        double k[n_k*n]; /* intermediate derivative matrix */
+        double *kn = k + (n_k-1)*n; /* Last column of k */
+        double X[3*n];
+        double *px0 = X;
+        double *px1 = px0 + n;
+        double *px2 = px1 + n;
+        AA_MEM_CPY(px0, x0, n);
+
+        for(;;) {
+            for(;;) { /* adaptive loop */
+                adaptive_integrator( n, sys, sys_cx,
+                                     t, dt,
+                                     px0, k, px1, px2 );
+                double err = aa_la_ssd( n, px1, px2 );
+                // adapt the step size
+                if( err > opts->adapt_tol_dec ) {
+                    dt *= opts->adapt_factor_dec;
+                    continue;
+                } else if ( err < opts->adapt_tol_inc ) {
+                    dt *= opts->adapt_factor_inc;
+                }
+                break;
+            }
+
+            /* Check if complete */
+            if( check( check_cx, t, px2, kn) ) {
+                AA_MEM_CPY(x1, px2, n);
+                return 0;
+            } else {
+                double *tmp = px0; px0 = px2; px2 = tmp;
+            }
+
+            AA_MEM_CPY(k, kn, n); // extract dx to k0
+        }
+    } else {
+        /* Fixed Step Integration */
+        double X[2*n];
+        double y[n];
+        double *px0 = X;
+        double *px1 = X + n;
+        assert( px0 + n == px1 );
+        AA_MEM_CPY(px0, x0, n);
+        for(;;) {
+            fixed_integrator( n, sys, sys_cx,
+                              t, dt,
+                              px0, px1 );
+            t += dt;
+            /* TODO: avoid the duplicate sys() evaluation here */
+            sys( sys_cx, t, px1, y );
+            /* Check if complete */
+            if( check( check_cx, t, px1, y) ) {
+                AA_MEM_CPY( x1, px1, n );
+                return 0;
+            } else {
+                double *tmp = px0; px0 = px1; px1 = tmp;
+            }
+
+        }
+    }
 }
