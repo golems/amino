@@ -116,7 +116,16 @@ AA_API void
 aa_rx_ksol_opts_set_tol_trans( struct aa_rx_ksol_opts *opts, double tol);
 
 AA_API void
+aa_rx_ksol_opts_set_tol_angle_svd( struct aa_rx_ksol_opts *opts, double tol);
+
+AA_API void
+aa_rx_ksol_opts_set_tol_trans_svd( struct aa_rx_ksol_opts *opts, double tol);
+
+AA_API void
 aa_rx_ksol_opts_set_tol_dq( struct aa_rx_ksol_opts *opts, double tol);
+
+AA_API void
+aa_rx_ksol_opts_set_tol_k_dls( struct aa_rx_ksol_opts *opts, double s2min);
 
 AA_API void
 aa_rx_ksol_opts_set_tol_s2min( struct aa_rx_ksol_opts *opts, double s2min);

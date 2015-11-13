@@ -63,11 +63,18 @@ aa_rx_ksol_opts_create()
     /* Set sane defaults */
     opt->dt = .01;
     opt->tol_angle = 1*M_PI/180;
-    opt->tol_trans = 5e-3;
+    opt->tol_trans = 1e-3;
+
+    opt->tol_angle_svd = 10*M_PI/180;
+    opt->tol_trans_svd = 3e-2;
+
     opt->tol_dq = 1*M_PI/180;
     opt->gain_angle = .1;
     opt->gain_trans = .1;
     opt->max_iterations = 1000;
+
+    opt->s2min = 5e-3;
+    opt->k_dls = 5e-5;
 
     return opt;
 }
@@ -83,8 +90,13 @@ aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts)
 AA_DEF_SETTER( aa_rx_ksol_opts, double, dt )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_angle )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_trans )
+
+AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_angle_svd )
+AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_trans_svd )
+
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_dq )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, s2min )
+AA_DEF_SETTER( aa_rx_ksol_opts, double, k_dls )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_angle )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_trans )
 AA_DEF_SETTER( aa_rx_ksol_opts, size_t, max_iterations )

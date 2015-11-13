@@ -153,8 +153,18 @@ static void kin_solve_sys( const void *vcx,
         w_e[AA_TF_DX_W + i] *= -cx->opts->gain_angle;
     }
 
+    double theta_err, x_err;
+    rfx_kin_duqu_serr( S, cx->S1, &theta_err, &x_err );
+
     // damped least squares
-    aa_la_dzdpinv( 6, cx->n, cx->opts->s2min, J, J_star );
+    if( theta_err < cx->opts->tol_angle_svd &&
+        x_err < cx->opts->tol_trans_svd )
+    {
+        aa_la_dzdpinv( 6, cx->n, cx->opts->s2min, J, J_star );
+    } else {
+        aa_la_dpinv( 6, cx->n, cx->opts->k_dls, J, J_star );
+    }
+
     if( cx->opts->q_ref ) {
         //printf("nullspace projection\n");
         // nullspace projection

@@ -96,8 +96,13 @@ struct aa_rx_ksol_opts {
 
     double tol_angle;    ///< angle error tolerate
     double tol_trans;    ///< translation error tolerance
+
+    double tol_angle_svd;    ///< angle error tolerate
+    double tol_trans_svd;    ///< translation error tolerance
+
     double tol_dq;       ///< translation error tolerance
     double s2min;        ///< minimum square singular value for damped least squares
+    double k_dls;        ///< damped least squares constant
 
     //double dx_dt;        ///< scaling for cartesian error
     double gain_angle;     ///< scaling for cartesian error
