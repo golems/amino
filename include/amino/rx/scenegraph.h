@@ -399,6 +399,18 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
 
+AA_API void aa_rx_sg_tf_update
+( const struct aa_rx_sg *scene_graph,
+  size_t n_q,
+  const double *q0,
+  const double *q,
+  size_t n_tf,
+  const double *TF_rel0, size_t ld_rel0,
+  const double *TF_abs0, size_t ld_abs0,
+  double *TF_rel, size_t ld_rel,
+  double *TF_abs, size_t ld_abs );
+
+
 
 /**
  * Call function for every geometry object in the scene graph

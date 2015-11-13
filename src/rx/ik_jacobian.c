@@ -53,30 +53,49 @@
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
 
-static int ksol_duqu (  const struct aa_rx_sg_sub *ssg, const double *q_s, double S[8],  double *J)
+
+struct kin_solve_cx {
+    size_t n;
+    const struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_sg_sub *ssg;
+    const double *S1;
+    const double *dq_dt;
+
+    struct aa_mem_region *reg;
+
+    const double *q0_all;
+    size_t n_all;
+    double *TF_rel0;
+    double *TF_abs0;
+};
+
+
+static int ksol_duqu ( const struct kin_solve_cx *cx, const double *q_s, double S[8],  double *J)
 {
+    const struct aa_rx_sg_sub *ssg = cx->ssg;
     const struct aa_rx_sg *sg = ssg->scenegraph;
 
     size_t n_f = aa_rx_sg_frame_count(sg);
     size_t n_q = aa_rx_sg_config_count(sg);
     size_t n_sq = aa_rx_sg_sub_config_count(ssg);
-    //size_t n_sf = aa_rx_sg_sub_frame_count(ssg);
 
     double q_all[n_q];
-    AA_MEM_ZERO(q_all, n_q);
+    AA_MEM_CPY(q_all, cx->q0_all, n_q);
 
-    aa_rx_sg_config_set( ssg->scenegraph, n_q, n_sq, aa_rx_sg_sub_configs(ssg),
-                         q_s, q_all );
+    aa_rx_sg_sub_config_set( ssg,
+                             n_sq, q_s,
+                             n_q, q_all);
 
-    struct aa_mem_region *reg = aa_mem_region_local_get();
+    double *TF_rel = AA_MEM_REGION_NEW_N(cx->reg, double, 7*n_f);
+    double *TF_abs = AA_MEM_REGION_NEW_N(cx->reg, double, 7*n_f);
 
-    double *TF_rel = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
-    double *TF_abs = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
+    aa_rx_sg_tf_update( sg,
+                        n_q, cx->q0_all, q_all,
+                        n_f,
+                        cx->TF_rel0, 7, cx->TF_abs0, 7,
+                        TF_rel, 7, TF_abs, 7 );
 
-    aa_rx_sg_tf( sg, n_q, q_all,
-                 n_f,
-                 TF_rel, 7,
-                 TF_abs, 7 );
+
 
     if( S ) {
         aa_rx_frame_id id_ee = aa_rx_sg_sub_frame(ssg,
@@ -91,19 +110,9 @@ static int ksol_duqu (  const struct aa_rx_sg_sub *ssg, const double *q_s, doubl
                                J, 6 );
     }
 
-    aa_mem_region_pop(reg, TF_rel);
+    aa_mem_region_pop(cx->reg, TF_rel);
     return 0;
 }
-
-
-
-struct kin_solve_cx {
-    size_t n;
-    const struct aa_rx_ksol_opts *opts;
-    const struct aa_rx_sg_sub *ssg;
-    const double *S1;
-    const double *dq_dt;
-};
 
 
 static void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6] ) {
@@ -138,12 +147,13 @@ static void kin_solve_sys( const void *vcx,
                            double *AA_RESTRICT dq ) {
     (void) t; // time invariant
     const struct kin_solve_cx *cx = (const struct kin_solve_cx*)vcx;
+    //printf("ksolve\n");
 
     // compute kinematics
     double S[8];
     double J[6*cx->n];
     double J_star[6*cx->n];
-    ksol_duqu( cx->ssg, q, S, J );
+    ksol_duqu( cx, q, S, J );
 
     // position error
     double w_e[6];
@@ -186,6 +196,7 @@ static void kin_solve_sys( const void *vcx,
 
 static int kin_solve_check( const void *vcx, double t, double *AA_RESTRICT x, double *AA_RESTRICT y )
 {
+    //printf("check\n");
     (void)t;
     const struct kin_solve_cx *cx = (const struct kin_solve_cx*)vcx;
     const struct aa_rx_sg_sub *ssg  = cx->ssg;
@@ -202,7 +213,7 @@ static int kin_solve_check( const void *vcx, double t, double *AA_RESTRICT x, do
     double dq_norm = aa_la_dot( cx->n, y, y );
 
     double S[8];
-    ksol_duqu( cx->ssg, x, S, NULL );
+    ksol_duqu( cx, x, S, NULL );
     double theta_err, x_err;
     rfx_kin_duqu_serr( S, cx->S1, &theta_err, &x_err );
     //printf("%f, %f, %f\n", t, theta_err, x_err );
@@ -236,6 +247,9 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     assert(n_q == aa_rx_sg_sub_config_count(ssg) );
     (void)ld_TF;
 
+    const struct aa_rx_sg *sg = ssg->scenegraph;
+    size_t n_f = aa_rx_sg_frame_count(sg);
+
     double S[8];
     aa_tf_qutr2duqu( TF, S );
 
@@ -266,10 +280,25 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     sol_opts.adapt_factor_dec = 0.1;
     sol_opts.adapt_factor_inc = 2.0;
 
+    cx.q0_all = q_start_all;
+    cx.n_all = n_q_all;
+
+    cx.reg = aa_mem_region_local_get();
+    cx.TF_rel0 = AA_MEM_REGION_NEW_N(cx.reg, double, 7*n_f);
+    cx.TF_abs0 = AA_MEM_REGION_NEW_N(cx.reg, double, 7*n_f);
+
+    aa_rx_sg_tf( ssg->scenegraph,
+                 cx.n_all, cx.q0_all,
+                 n_f,
+                 cx.TF_rel0, 7,
+                 cx.TF_abs0, 7 );
+
     aa_ode_sol( AA_ODE_RK23_BS, &sol_opts, n_q,
                 kin_solve_sys, &cx,
                 kin_solve_check, &cx,
                 0, opts->dt, q0_sub, q_subset );
+
+    aa_mem_region_pop(cx.reg, cx.TF_rel0);
 
     return 0;
 

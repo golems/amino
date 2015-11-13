@@ -68,9 +68,9 @@ aa_rx_ksol_opts_create()
     opt->tol_angle_svd = 10*M_PI/180;
     opt->tol_trans_svd = 3e-2;
 
-    opt->tol_dq = 1*M_PI/180;
-    opt->gain_angle = .1;
-    opt->gain_trans = .1;
+    opt->tol_dq = .1*M_PI/180;
+    opt->gain_angle = 1;
+    opt->gain_trans = 1;
     opt->max_iterations = 1000;
 
     opt->s2min = 5e-3;

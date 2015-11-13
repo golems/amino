@@ -204,6 +204,80 @@ AA_API void aa_rx_sg_tf
 }
 
 
+
+AA_API void aa_rx_sg_tf_update
+( const struct aa_rx_sg *scene_graph,
+  size_t n_q,
+  const double *q0,
+  const double *q,
+  size_t n_tf,
+  const double *TF_rel0, size_t ld_rel0,
+  const double *TF_abs0, size_t ld_abs0,
+  double *TF_rel, size_t ld_rel,
+  double *TF_abs, size_t ld_abs )
+{
+    aa_rx_sg_ensure_clean_frames( scene_graph );
+
+    amino::SceneGraph *sg = scene_graph->sg;
+
+    bool updated[sg->frames.size()];
+
+    size_t i_frame = 0;
+    for( size_t i_rel0 = 0, i_abs0 = 0,
+             i_rel = 0, i_abs = 0;
+         i_frame < n_tf && i_frame < sg->frames.size();
+         i_frame++, i_rel += ld_rel, i_abs += ld_abs,
+             i_rel0 += ld_rel0, i_abs0 += ld_abs0
+        )
+    {
+        amino::SceneFrame *f = sg->frames[(aa_rx_frame_id)i_frame];
+        enum aa_rx_frame_type type = f->type;
+        bool update_abs = 0;
+        bool in_global =  f->in_global();
+
+        const double *E_rel0 = TF_rel0 + i_rel0;
+        const double *E_abs0 = TF_abs0 + i_abs0;
+        double *E_rel  = TF_rel + i_rel;
+        double *E_abs  = TF_abs + i_abs;
+
+        switch( type ) {
+        case AA_RX_FRAME_FIXED:
+            f->tf_rel(q, E_rel);
+            update_abs = !in_global && updated[f->parent_id];
+            break;
+        case AA_RX_FRAME_REVOLUTE:
+        case AA_RX_FRAME_PRISMATIC: {
+            amino::SceneFrameJoint *fj = static_cast<amino::SceneFrameJoint*>(f);
+            if( q0[fj->config_index] == q[fj->config_index] ) {
+                AA_MEM_CPY(E_rel, E_rel0, 7);
+                update_abs = !in_global && updated[f->parent_id];
+            } else {
+                f->tf_rel(q, E_rel);
+                update_abs = 1;
+            }
+            break; }
+        }
+
+        if( update_abs ) {
+            // chain to global
+            if( in_global ) {
+                // TODO: can we somehow get rid of this branch?
+                //       maybe a separate type for global frames
+                AA_MEM_CPY(E_abs, E_rel, 7);
+            } else {
+                assert( f->parent_id < (ssize_t)i_frame );
+                double *E_abs_parent = TF_abs + (ld_abs * f->parent_id);;
+                aa_tf_qutr_mul(E_abs_parent, E_rel, E_abs);
+            }
+            updated[i_frame] = 1;
+        } else {
+            AA_MEM_CPY(E_abs, E_abs0, 7);
+            updated[i_frame] = 0;
+        }
+    }
+}
+
+
 AA_API void aa_rx_sg_map_geom (
     const struct aa_rx_sg *scene_graph,
     void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),
