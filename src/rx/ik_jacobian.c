@@ -166,6 +166,8 @@ static void kin_solve_sys( const void *vcx,
     double theta_err, x_err;
     rfx_kin_duqu_serr( S, cx->S1, &theta_err, &x_err );
 
+    // TODO: Try DGECON to avoid damping when possible without taking the SVD
+
     // damped least squares
     if( theta_err < cx->opts->tol_angle_svd &&
         x_err < cx->opts->tol_trans_svd )

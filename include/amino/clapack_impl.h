@@ -66,6 +66,50 @@ static inline int AA_CLA_NAME(getri)
     return info;
 }
 
+
+/**
+ * Row Factor.
+ *
+ * \sa dgeqrf_
+ */
+static inline int AA_CLA_NAME(geqrf)
+( int m, int n, AA_TYPE *A, int lda,
+  AA_TYPE *tau, AA_TYPE *work, int lwork )
+{
+    int info;
+    AA_LAPACK_NAME(geqrf)
+        (&m, &n, A, &lda, tau,
+         work, &lwork,
+         &info );
+    return info;
+}
+
+static inline int AA_CLA_NAME(orgqr)
+( const int m, const int n, const int k,
+  AA_TYPE *A, const int lda, const AA_TYPE *tau,
+  AA_TYPE *work, const int lwork )
+{
+    int info;
+    AA_LAPACK_NAME(orgqr)(&m, &n, &k,
+                          A, &lda, tau,
+                          work, &lwork, &info);
+    return info;
+}
+
+
+static inline int AA_CLA_NAME(posv)
+( char uplo, int n, int nrhs,
+  AA_TYPE *A, int lda,
+  AA_TYPE *B, int ldb )
+{
+    int info;
+    AA_LAPACK_NAME(posv)(&uplo, &n, &nrhs,
+                         A, &lda,
+                         B, &ldb,
+                         &info );
+    return info;
+}
+
 /// part of worksize computation for xgelsd
 static inline int AA_CLA_NAME(gelsd_smlsiz) () {
     return aa_cla_ilaenv( 9, AA_LAPACK_PREFIX_STR

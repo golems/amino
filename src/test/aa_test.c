@@ -1832,6 +1832,73 @@ static void array(void)
     assert( aa_feq(m5, 3, 0) );
 }
 
+static void qr(void)
+{
+    {
+        double A[4] = {1, 3,
+                       2, 4};
+        double R[4], Q[4];
+        double Rr[4] = { -3.16228, 0.00000,
+                         -4.42719, -0.63246 };
+        double Qr[4] = { -0.31623, -0.94868,
+                         -0.94868, 0.31623 };
+
+
+        AA_MEM_SET(R,42,4);
+        AA_MEM_SET(Q,42,4);
+        aa_la_d_qr( 2, 2, A, 2, Q, 2, R, 2 );
+
+        aveq( "qr-r1", 4, R, Rr, 1e-4 );
+        aveq( "qr-q1", 4, Q, Qr, 1e-4 );
+    }
+
+
+    {
+        double A[6] = {1, 3, 5,
+                       2, 4, 6};
+
+        double R[6], Q[9];
+        double Qr[9] = {
+            -0.16903,  -0.50709,  -0.84515,
+            0.89709,   0.27603,  -0.34503,
+            0.40825,  -0.81650,   0.40825 };
+        double Rr[6] = {
+            -5.91608,  0.00000,  0.00000,
+            -7.43736,  0.82808,  0.00000 };
+
+        aa_la_d_qr( 3, 2, A, 3, Q, 3, R, 3 );
+
+        aveq( "qr-r2", 6, R, Rr, 1e-4 );
+        aveq( "qr-q2", 9, Q, Qr, 1e-4 );
+    }
+
+    {
+        double A[6] = {1, 2,
+                       3, 4,
+                       5, 6};
+
+        double R[6], Q[3];
+        /* double Qr[9] = { */
+        /*     -0.16903,  -0.50709,  -0.84515, */
+        /*     0.89709,   0.27603,  -0.34503, */
+        /*     0.40825,  -0.81650,   0.40825 }; */
+        /* double Rr[6] = { */
+        /*     -5.91608,  0.00000,  0.00000, */
+        /*     -7.43736,  0.82808,  0.00000 }; */
+
+        aa_la_d_qr( 2, 3, A, 2, Q, 2, R, 2 );
+
+        //aveq( "qr-r2", 6, R, Rr, 1e-4 );
+        //aveq( "qr-q2", 9, Q, Qr, 1e-4 );
+
+        //printf("\nQ:\n");
+        //aa_dump_mat( stdout, Q, 2, 2 );
+        //printf("\nR:\n");
+        //aa_dump_mat( stdout, R, 2, 3 );
+    }
+}
+
+
 int main( int argc, char **argv ) {
     printf("Init aa_test\n");
     (void) argc; (void) argv;
@@ -1897,6 +1964,8 @@ int main( int argc, char **argv ) {
     ang();
     plane();
     array();
+
+    qr();
 
     aa_mem_region_destroy(&g_region);
 

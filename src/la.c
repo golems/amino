@@ -240,10 +240,15 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     const int mi = (int)m;
     const int ni = (int)n;
 
-    // this method uses an LU factorization
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+
+
+    // TODO: Can we use QR to compute B and the later Cholesky at the
+    // same time?
+
     // B = AA^T
-    double *B = (double*)aa_mem_region_local_alloc( sizeof(double) *
-                                                    (m*m) );
+    double *B = AA_MEM_REGION_NEW_N( reg, double, m*m );
+
     cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni,
                  1, A, mi, A, mi, 0, B, mi );
 
@@ -251,14 +256,26 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     for( size_t i = 0; i < m; i ++ )
        B[i*m+i] += k;
 
-    // B = B^-1
-    aa_la_inv(m,B);
+    /* Solve via Cholesky Decomp */
+    // B^T (A^*)^T = A    and     B = B^T (Hermitian)
+    double *Ap = AA_MEM_REGION_NEW_N( reg, double, n*m );
+    AA_MEM_CPY(Ap, A, m*n);
 
-    // A^* = A^T*B
-    cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi,
-                 1, A, mi, B, mi, 0, A_star, ni );
+    aa_cla_dposv( 'U', (int)m, (int)n,
+                  B, (int)m,
+                  Ap, (int)m );
 
-    aa_mem_region_local_pop( B );
+    aa_la_d_transpose( m, n, Ap, m, A_star, n );
+
+    /* LU Decomp */
+
+    /* // B = B^-1 */
+    /* aa_la_inv(m,B); */
+    /* // A^* = A^T*B */
+    /* cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi, */
+    /*              1, A, mi, B, mi, 0, A_star, ni ); */
+
+    aa_mem_region_pop( reg, B );
 
     // This method uses the SVD
     /* double *W = (double*)aa_mem_region_local_alloc( sizeof(double) * */

@@ -114,6 +114,142 @@ AA_API void AA_LAPACK_NAME(getrf)
 ( const int *M, const int *N, AA_TYPE *A, const int *LDA,
   int *IPIV, int *INFO );
 
+/**
+ *  DGEQRF computes a QR factorization of a real M-by-N matrix A:
+ *  A = Q * R.
+ *
+ *  Arguments
+ *  =========
+ *
+ *  \param[in] M
+ *          The number of rows of the matrix A.  M >= 0.
+ *
+ * \param[in]  N
+ *          The number of columns of the matrix A.  N >= 0.
+ *
+ *  \param[in,out] A
+ *          dimension (LDA,N)
+ *          On entry, the M-by-N matrix A.
+ *          On exit, the elements on and above the diagonal of the array
+ *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+ *          upper triangular if m >= n); the elements below the diagonal,
+ *          with the array TAU, represent the orthogonal matrix Q as a
+ *          product of min(m,n) elementary reflectors (see Further
+ *          Details).
+ *
+ *  \param[in] LDA
+ *          The leading dimension of the array A.  LDA >= max(1,M).
+ *
+ *  \param[out] TAU
+ *          dimension (min(M,N))
+ *          The scalar factors of the elementary reflectors (see Further
+ *          Details).
+ *
+ *  \param[out] WORK
+ *          dimension (MAX(1,LWORK))
+ *          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+ *
+ *  \param[in] LWORK
+ *          The dimension of the array WORK.  LWORK >= max(1,N).
+ *          For optimum performance LWORK >= N*NB, where NB is
+ *          the optimal blocksize.
+ *
+ *          If LWORK = -1, then a workspace query is assumed; the routine
+ *          only calculates the optimal size of the WORK array, returns
+ *          this value as the first entry of the WORK array, and no error
+ *          message related to LWORK is issued by XERBLA.
+ *
+ *  \param[out] INFO
+ *          = 0:  successful exit
+ *
+ *
+ *  Further Details
+ *  ===============
+ *
+ *  The matrix Q is represented as a product of elementary reflectors
+ *
+ *     Q = H(1) H(2) . . . H(k), where k = min(m,n).
+ *
+ *  Each H(i) has the form
+ *
+ *     H(i) = I - tau * v * v'
+ *
+ *  where tau is a real scalar, and v is a real vector with
+ *  v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
+ *  and tau in TAU(i).
+ *
+ *
+ */
+
+AA_API void AA_LAPACK_NAME(geqrf)
+( const int *M, const int *N, AA_TYPE *A, const int *LDA,
+  AA_TYPE *TAU, AA_TYPE *WORK, int *LWORK, int *INFO );
+
+/**
+ *  Generates an M-by-N real matrix Q with orthonormal columns,
+ *  which is defined as the first N columns of a product of K elementary
+ *  reflectors of order M
+ *
+ *        Q  =  H(1) H(2) . . . H(k)
+ *
+ *  as returned by xGEQRF.
+ *
+ *
+ *  \param[in] M
+ *          The number of rows of the matrix Q. M >= 0.
+ *
+ *  \param[in] N
+ *          The number of columns of the matrix Q. M >= N >= 0.
+ *
+ *  \param[in] K
+ *          The number of elementary reflectors whose product defines the
+ *          matrix Q. N >= K >= 0.
+ *
+ *  \param[in,out] A
+ *          dimension (LDA,N)
+ *          On entry, the i-th column must contain the vector which
+ *          defines the elementary reflector H(i), for i = 1,2,...,k, as
+ *          returned by DGEQRF in the first k columns of its array
+ *          argument A.
+ *          On exit, the M-by-N matrix Q.
+ *
+ *  \param[in] LDA
+ *          The first dimension of the array A. LDA >= max(1,M).
+ *
+ *  \param[in] TAU
+ *          dimension (K)
+ *          TAU(i) must contain the scalar factor of the elementary
+ *          reflector H(i), as returned by DGEQRF.
+ *
+ *  \param[out] WORK
+ *          dimension (MAX(1,LWORK))
+ *          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+ *
+ *  \param[in] LWORK
+ *          The dimension of the array WORK. LWORK >= max(1,N).
+ *          For optimum performance LWORK >= N*NB, where NB is the
+ *          optimal blocksize.
+ *
+ *          If LWORK = -1, then a workspace query is assumed; the routine
+ *          only calculates the optimal size of the WORK array, returns
+ *          this value as the first entry of the WORK array, and no error
+ *          message related to LWORK is issued by XERBLA.
+ *
+ *  \param[out] INFO
+ *          = 0:  successful exit
+ *          < 0:  if INFO = -i, the i-th argument has an illegal value
+ */
+AA_API void AA_LAPACK_NAME(orgqr)
+( const int *M, const int *N, const int *K,
+  AA_TYPE *A, const int *LDA, const AA_TYPE *TAU,
+  AA_TYPE *WORK, const int *LWORK, int *INFO );
+
+
+AA_API void AA_LAPACK_NAME(posv)
+( const char UPLO[1], const int *N, const int *NRHS,
+  AA_TYPE *A, const int *LDA,
+  AA_TYPE *B, const int *LDB,
+  int *INFO );
 
 /** Compute SVD.
 *

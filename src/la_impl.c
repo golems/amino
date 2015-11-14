@@ -449,6 +449,7 @@ AA_API void AA_NAME(la,lls)
     size_t ldbp = AA_MAX(m,n);
     AA_TYPE *Ap = AA_MEM_REGION_NEW_N(reg, AA_TYPE, m*n);
     AA_TYPE *bp = AA_MEM_REGION_NEW_N(reg, AA_TYPE, ldbp*p);
+    AA_MEM_ZERO(bp, ldbp*p);
 
 
     AA_CLA_NAME(lacpy)(0, (int)m,(int)n, A, (int)lda, Ap, (int)m);
@@ -469,21 +470,53 @@ AA_API void AA_NAME(la,lls)
     aa_mem_region_pop(reg, Ap);
 }
 
+AA_API int AA_NAME(la,qr)
+(size_t m, size_t n, const AA_TYPE *A, size_t lda,
+ AA_TYPE *Q, size_t ldq,
+ AA_TYPE *R, size_t ldr)
+{
+    size_t mn = AA_MIN(m,n);
+    int mi = (int)m, ni=(int)n;
 
-        info = AA_CLA_NAME(gelsd)( mi, ni, pi,
-                                   Ap, mi, bp, (int)ldbp,
-                                   S, &rcond, &rank,
-                                   work, lwork, iwork );
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    AA_TYPE *tau = AA_MEM_REGION_NEW_N(reg, AA_TYPE, mn);
+    AA_TYPE *Ap = (AA_TYPE*)AA_MEM_REGION_NEW_N(reg, AA_TYPE, m*n);
 
-        if( lwork >= 0 ) break;
-        assert( -1 == lwork );
-        lwork = (int) work[0];
+    AA_CLA_NAME(lacpy)(0, mi, ni, A, (int)lda,
+                       Ap, mi);
+
+    int info;
+    //printf("\n\n");
+    //aa_dump_mat( stdout, Ap, mi, n );
+
+    LA_WORK( reg, work, lwork,
+             info = AA_CLA_NAME(geqrf)(mi, ni, Ap, (int)mi,
+                                       tau, work, lwork) );
+    //printf("\n\n");
+    //aa_dump_mat( stdout, Ap, mi, n );
+
+    if( R ) {
+        /* Fill R */
+        AA_CLA_NAME(laset)('L', mi, ni,
+                           0, 0,
+                           R, ldr );
+        AA_CLA_NAME(lacpy)('U', mn, ni, Ap, (int)lda,
+                           R, ldr);
+
     }
 
-    AA_CLA_NAME(lacpy)(0, (int)n,(int)p, bp, (int)ldbp, x, (int)ldx);
-    aa_mem_region_local_pop(Ap);
-}
+    if( Q ) {
+        /* Fill Q */
+        AA_CLA_NAME(lacpy)('L', mi, ni, Ap, (int)lda,
+                           Q, ldq);
+        LA_WORK( reg, work, lwork,
+                 AA_CLA_NAME(orgqr)(mi, mi, mn,
+                                    Q, ldq, tau,
+                                    work, lwork ) );
+    }
 
+    aa_mem_region_pop(reg, tau);
+}
 
 
 AA_API int AA_NAME(la,svd)

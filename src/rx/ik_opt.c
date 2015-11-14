@@ -61,14 +61,15 @@ aa_rx_ksol_opts_create()
     struct aa_rx_ksol_opts *opt = AA_NEW0(struct aa_rx_ksol_opts);
 
     /* Set sane defaults */
-    opt->dt = .01;
-    opt->tol_angle = 1*M_PI/180;
-    opt->tol_trans = 1e-3;
+    opt->dt = 1;
+    opt->tol_angle = .1*M_PI/180;
+    opt->tol_trans = .1e-3;
 
-    opt->tol_angle_svd = 10*M_PI/180;
-    opt->tol_trans_svd = 3e-2;
+    opt->tol_angle_svd = 10*opt->tol_angle;
+    opt->tol_trans_svd = 10*opt->tol_trans;
 
     opt->tol_dq = .1*M_PI/180;
+
     opt->gain_angle = 1;
     opt->gain_trans = 1;
     opt->max_iterations = 1000;
