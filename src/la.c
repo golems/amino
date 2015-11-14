@@ -233,7 +233,7 @@ int aa_la_inv_( int *n, double *A ) {
 }
 
 void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star ) {
-    // A^T (AA^T + kI)^{-1}
+    // A^* := A^T (AA^T + kI)^{-1}
     // A is m*n
     // x = Aq, x is m, q is n
 
@@ -241,32 +241,42 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     const int ni = (int)n;
 
     struct aa_mem_region *reg = aa_mem_region_local_get();
+    double *Ap = AA_MEM_REGION_NEW_N( reg, double, n*m );
 
     // B = AA^T
-    double *B = AA_MEM_REGION_NEW_N( reg, double, m*m );
+    double *B;
+    int ldb;
+    if( m <= n ) {
+        /* Use A_star as workspace when it's big enough */
+        B = A_star;
+        ldb = ni;
+    } else {
+        B = AA_MEM_REGION_NEW_N( reg, double, m*m );
+        ldb = mi;
+    }
 
-    /* cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni, */
-    /*              1, A, mi, A, mi, 0, B, mi ); */
+    AA_MEM_CPY(Ap, A, m*n);
 
+    // B is symmetric.  Only compute the upper half.
     cblas_dsyrk( CblasColMajor, CblasUpper, CblasNoTrans,
                  mi, ni,
-                 1, A, mi,
-                 0, B, mi );
+                 1, Ap, mi,
+                 0, B, ldb );
 
     // B += kI
-    for( size_t i = 0; i < m; i ++ )
-       B[i*m+i] += k;
+    for( size_t i = 0; i < m*(size_t)ldb; i += ((size_t)ldb+1) )
+        B[i] += k;
 
     /* Solve via Cholesky Decomp */
     // B^T (A^*)^T = A    and     B = B^T (Hermitian)
-    double *Ap = AA_MEM_REGION_NEW_N( reg, double, n*m );
-    AA_MEM_CPY(Ap, A, m*n);
 
-    aa_cla_dposv( 'U', (int)m, (int)n,
-                  B, (int)m,
-                  Ap, (int)m );
+    aa_cla_dposv( 'U', mi, ni,
+                  B, ldb,
+                  Ap, mi );
 
     aa_la_d_transpose( m, n, Ap, m, A_star, n );
+
+    aa_mem_region_pop( reg, Ap );
 
     /* LU Decomp */
 
@@ -276,7 +286,6 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
     /* cblas_dgemm( CblasColMajor, CblasTrans, CblasNoTrans, ni, mi, mi, */
     /*              1, A, mi, B, mi, 0, A_star, ni ); */
 
-    aa_mem_region_pop( reg, B );
 
     // This method uses the SVD
     /* double *W = (double*)aa_mem_region_local_alloc( sizeof(double) * */

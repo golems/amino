@@ -434,6 +434,14 @@ void AA_NAME(la,colcov)
 }
 
 
+AA_API AA_TYPE * AA_NAME(la,dup) ( struct aa_mem_region *reg,
+                                   size_t m, size_t n,
+                                   const AA_TYPE *A, size_t lda )
+{
+    AA_TYPE *Ap = AA_MEM_REGION_NEW_N(reg, AA_TYPE, m*n);
+    AA_CLA_NAME(lacpy)(0, (int)m,(int)n, A, (int)lda, Ap, (int)m);
+    return Ap;
+}
 
 
 AA_API void AA_NAME(la,lls)
@@ -446,14 +454,12 @@ AA_API void AA_NAME(la,lls)
     AA_TYPE rcond=-1;
     struct aa_mem_region *reg = aa_mem_region_local_get();
 
+    AA_TYPE *Ap = AA_NAME(la,dup)(reg, m, n, A, lda );
+
     size_t ldbp = AA_MAX(m,n);
-    AA_TYPE *Ap = AA_MEM_REGION_NEW_N(reg, AA_TYPE, m*n);
     AA_TYPE *bp = AA_MEM_REGION_NEW_N(reg, AA_TYPE, ldbp*p);
     AA_MEM_ZERO(bp, ldbp*p);
-
-
-    AA_CLA_NAME(lacpy)(0, (int)m,(int)n, A, (int)lda, Ap, (int)m);
-    AA_CLA_NAME(lacpy)(0, (int)m,(int)p, b, (int)ldb, bp, (int)ldbp);
+    AA_CLA_NAME(lacpy)(0, mi, pi, b, (int)ldb, bp, (int)ldbp);
 
     int rank, info;
     size_t liwork = (size_t)AA_CLA_NAME(gelsd_miniwork)(mi,ni);
@@ -475,15 +481,13 @@ AA_API int AA_NAME(la,qr)
  AA_TYPE *Q, size_t ldq,
  AA_TYPE *R, size_t ldr)
 {
-    size_t mn = AA_MIN(m,n);
     int mi = (int)m, ni=(int)n;
+    int mn = AA_MIN(mi,ni);
 
     struct aa_mem_region *reg = aa_mem_region_local_get();
-    AA_TYPE *tau = AA_MEM_REGION_NEW_N(reg, AA_TYPE, mn);
-    AA_TYPE *Ap = (AA_TYPE*)AA_MEM_REGION_NEW_N(reg, AA_TYPE, m*n);
+    AA_TYPE *tau = AA_MEM_REGION_NEW_N(reg, AA_TYPE, (size_t)mn);
 
-    AA_CLA_NAME(lacpy)(0, mi, ni, A, (int)lda,
-                       Ap, mi);
+    AA_TYPE *Ap = AA_NAME(la,dup)(reg, m, n, A, lda );
 
     int info;
     //printf("\n\n");
@@ -499,23 +503,24 @@ AA_API int AA_NAME(la,qr)
         /* Fill R */
         AA_CLA_NAME(laset)('L', mi, ni,
                            0, 0,
-                           R, ldr );
+                           R, (int)ldr );
         AA_CLA_NAME(lacpy)('U', mn, ni, Ap, (int)lda,
-                           R, ldr);
+                           R, (int)ldr);
 
     }
 
     if( Q ) {
         /* Fill Q */
         AA_CLA_NAME(lacpy)('L', mi, ni, Ap, (int)lda,
-                           Q, ldq);
+                           Q, (int)ldq);
         LA_WORK( reg, work, lwork,
                  AA_CLA_NAME(orgqr)(mi, mi, mn,
-                                    Q, ldq, tau,
+                                    Q, (int)ldq, tau,
                                     work, lwork ) );
     }
 
     aa_mem_region_pop(reg, tau);
+    return info;
 }
 
 
@@ -527,21 +532,32 @@ AA_API int AA_NAME(la,svd)
 
     int mi = (int)m, ni=(int)n;
     struct aa_mem_region *reg = aa_mem_region_local_get();
-
-    AA_TYPE *Ap = AA_MEM_REGION_NEW_N( reg, AA_TYPE, m*n );
-    AA_CLA_NAME(lacpy)(0, mi, ni, A, (int)lda,
-                       Ap, mi);
-
-    const char *jobu = (U && ldu > 0) ? "A" : "N";
-    const char *jobvt = (Vt && ldvt > 0) ? "A" : "N";
+    AA_TYPE *Ap = AA_NAME(la,dup)(reg, m, n, A, lda );
     int info;
 
-    LA_WORK( reg, work, lwork,
-             AA_LAPACK_NAME(gesvd)( jobu, jobvt, &mi, &ni,
-                                    Ap, &mi,
-                                    S, U, &mi,
-                                    Vt, &ni,
-                                    &work[0], &lwork, &info ) );
+    if( U && Vt ) {
+        /* Divide-and-Conquer */
+        char jobz = 'A'; /* All singular vectors */
+        size_t mn = AA_MIN(m,n);
+        int *iwork = AA_MEM_REGION_NEW_N(reg, int, 8*mn);
+        LA_WORK( reg, work, lwork,
+                 info = AA_CLA_NAME(gesdd) (jobz, mi, ni,
+                                            Ap, (int)lda,
+                                            S, U, (int)ldu,
+                                            Vt, (int)ldvt,
+                                            work, lwork, iwork) );
+    } else {
+        /* Simple */
+        const char *jobu = (U && ldu > 0) ? "A" : "N";
+        const char *jobvt = (Vt && ldvt > 0) ? "A" : "N";
+
+        LA_WORK( reg, work, lwork,
+                 AA_LAPACK_NAME(gesvd)( jobu, jobvt, &mi, &ni,
+                                        Ap, &mi,
+                                        S, U, &mi,
+                                        Vt, &ni,
+                                        &work[0], &lwork, &info ) );
+    }
 
     aa_mem_region_pop(reg, Ap);
 
@@ -568,9 +584,7 @@ AA_API int AA_NAME(la,eev)
     const char *jobvr = Vr ? "V" : "N";
     int ldvri = Vr ? (int)ldvr : 1;
 
-    AA_TYPE *Ap = AA_MEM_REGION_NEW_N( reg, AA_TYPE, n*n );
-    AA_CLA_NAME(lacpy)(0, ni, ni, A, (int)lda,
-                       Ap, ni);
+    AA_TYPE *Ap = AA_NAME(la,dup)(reg, n, n, A, lda );
 
     LA_WORK( reg, work, lwork,
              AA_LAPACK_NAME(geev)( jobvl, jobvr,

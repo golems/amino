@@ -67,6 +67,27 @@ static inline int AA_CLA_NAME(getri)
 }
 
 
+static inline int AA_CLA_NAME(gesdd)
+(char jobz, int m, int n,
+ AA_TYPE *A, int lda,
+ AA_TYPE *S,
+ AA_TYPE *U, int ldu,
+ AA_TYPE *VT, int  ldvt,
+ AA_TYPE *work, int lwork,
+ int *iwork )
+{
+    int info;
+    AA_LAPACK_NAME(gesdd)( &jobz, &m, &n,
+                           A, &lda,
+                           S,
+                           U, &ldu,
+                           VT, &ldvt,
+                           work, &lwork,
+                           iwork, &info );
+    return info;
+}
+
+
 /**
  * Row Factor.
  *

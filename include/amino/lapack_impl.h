@@ -356,6 +356,14 @@ AA_API void AA_LAPACK_NAME(gesvd)
   const int *ldu, AA_TYPE *Vt, const int *ldvt,
   AA_TYPE *work, const int *lwork, int *info );
 
+AA_API void AA_LAPACK_NAME(gesdd)
+(const char *JOBZ, const int *M, const int *N,
+ AA_TYPE *A, const int *LDA,
+ AA_TYPE *S,
+ AA_TYPE *U, const int *LDU,
+ AA_TYPE *VT, const int * LDVT,
+ AA_TYPE *WORK, const int *LWORK,
+ int *IWORK, int *INFO);
 
 AA_API int AA_LAPACK_NAME(geev)
 (const char *jobvl, const char *jobvr,
