@@ -242,15 +242,16 @@ void aa_la_dpinv( size_t m, size_t n, double k, const double *A, double *A_star 
 
     struct aa_mem_region *reg = aa_mem_region_local_get();
 
-
-    // TODO: Can we use QR to compute B and the later Cholesky at the
-    // same time?
-
     // B = AA^T
     double *B = AA_MEM_REGION_NEW_N( reg, double, m*m );
 
-    cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni,
-                 1, A, mi, A, mi, 0, B, mi );
+    /* cblas_dgemm( CblasColMajor, CblasNoTrans, CblasTrans, mi, mi, ni, */
+    /*              1, A, mi, A, mi, 0, B, mi ); */
+
+    cblas_dsyrk( CblasColMajor, CblasUpper, CblasNoTrans,
+                 mi, ni,
+                 1, A, mi,
+                 0, B, mi );
 
     // B += kI
     for( size_t i = 0; i < m; i ++ )
