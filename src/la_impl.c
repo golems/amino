@@ -53,6 +53,19 @@ void AA_NAME(la,transpose) ( size_t m, size_t n,
 }
 
 
+#define LA_WORK(WORK, LWORK, EXP )                                      \
+    {                                                                   \
+        int LWORK = -1;                                                 \
+        for(;;) {                                                       \
+            AA_TYPE *WORK =                                             \
+                (AA_TYPE*)aa_mem_region_local_tmpalloc( sizeof(AA_TYPE)* \
+                                                        (size_t)(LWORK < 0 ? 1 : LWORK) ); \
+            EXP;                                                        \
+            if( LWORK >= 0 ) break;                                     \
+            LWORK = (int) WORK[0];                                      \
+        }                                                               \
+    }
+
 
 static void AA_NAME(la,opt_hungarian) (
     size_t n, AA_TYPE *A, size_t lda,
@@ -307,7 +320,7 @@ AA_API void AA_NAME(la,assign_hungarian) (
 
 
     /* copy A into work */
-    AA_TYPE *B = (double*)aa_mem_region_local_alloc( sizeof(AA_TYPE)*p*p);
+    AA_TYPE *B = (AA_TYPE*)aa_mem_region_local_alloc( sizeof(AA_TYPE)*p*p);
     AA_CLA_NAME(lacpy)( 0, (int)m, (int)n, A, (int)lda, B, (int)p );
 
     /* zero pad work */
@@ -450,11 +463,15 @@ AA_API void AA_NAME(la,lls)
     int *iwork = (int*)
         aa_mem_region_local_alloc(sizeof(int)*liwork);
 
-    int lwork=-1;
-    while(1) {
-        AA_TYPE *work =
-            (AA_TYPE*)aa_mem_region_local_tmpalloc( sizeof(AA_TYPE)*
-                                                (size_t)(lwork < 0 ? 1 : lwork) );
+    LA_WORK( work, lwork,
+             info = AA_CLA_NAME(gelsd)( mi, ni, pi,
+                                        Ap, mi, bp, (int)ldbp,
+                                        S, &rcond, &rank,
+                                        work, lwork, iwork ) );
+    AA_CLA_NAME(lacpy)(0, (int)n,(int)p, bp, (int)ldbp, x, (int)ldx);
+    aa_mem_region_local_pop(Ap);
+}
+
 
         info = AA_CLA_NAME(gelsd)( mi, ni, pi,
                                    Ap, mi, bp, (int)ldbp,
@@ -486,22 +503,14 @@ AA_API int AA_NAME(la,svd)
 
     const char *jobu = (U && ldu > 0) ? "A" : "N";
     const char *jobvt = (Vt && ldvt > 0) ? "A" : "N";
-    int lwork = -1;
     int info;
 
-    while(1) {
-        AA_TYPE *work =
-            (AA_TYPE*)aa_mem_region_local_tmpalloc( sizeof(AA_TYPE)*
-                                                (size_t)(lwork < 0 ? 1 : lwork) );
-        AA_LAPACK_NAME(gesvd)( jobu, jobvt, &mi, &ni,
-                               Ap, &mi,
-                               S, U, &mi,
-                               Vt, &ni,
-                               &work[0], &lwork, &info );
-        if( lwork >= 0 ) break;
-        assert( -1 == lwork );
-        lwork = (int) work[0];
-    }
+    LA_WORK( work, lwork,
+             AA_LAPACK_NAME(gesvd)( jobu, jobvt, &mi, &ni,
+                                    Ap, &mi,
+                                    S, U, &mi,
+                                    Vt, &ni,
+                                    &work[0], &lwork, &info ) );
 
     aa_mem_region_local_pop(Ap);
 
@@ -531,21 +540,13 @@ AA_API int AA_NAME(la,eev)
     AA_CLA_NAME(lacpy)(0, ni, ni, A, (int)lda,
                        Ap, ni);
 
-    while(1) {
-        AA_TYPE *work =
-            (AA_TYPE*)aa_mem_region_local_tmpalloc( sizeof(AA_TYPE)*
-                                                    (size_t)(lwork < 0 ? 1 : lwork) );
-        AA_LAPACK_NAME(geev)( jobvl, jobvr,
-                              &ni, Ap, &ldai,
-                              wr, wi,
-                              Vl, &ldvli,
-                              Vr, &ldvri,
-                              work, &lwork, &info );
-        if( lwork >= 0 ) break;
-        assert( -1 == lwork );
-        lwork = (int) work[0];
-
-    }
+    LA_WORK( work, lwork,
+             AA_LAPACK_NAME(geev)( jobvl, jobvr,
+                                   &ni, Ap, &ldai,
+                                   wr, wi,
+                                   Vl, &ldvli,
+                                   Vr, &ldvri,
+                                   work, &lwork, &info ) );
 
     aa_mem_region_local_pop(Ap);
     return info;
