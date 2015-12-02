@@ -2,7 +2,7 @@
 
 COMMON_LISP=$1
 
-LD_LIBRARY_PATH=.libs:$LD_LIBRARY_PATH $COMMON_LISP --script <<EOF
+LD_LIBRARY_PATH=.libs:$LD_LIBRARY_PATH exec $COMMON_LISP --script <<EOF
 
 
 (unless (find-package :quicklisp)
