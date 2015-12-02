@@ -1,10 +1,3 @@
-#!/bin/sh
-
-COMMON_LISP=$1
-
-LD_LIBRARY_PATH=.libs:$LD_LIBRARY_PATH exec $COMMON_LISP --script <<EOF
-
-
 (unless (find-package :quicklisp)
   (let ((ql (find-if #'probe-file
                      (map 'list (lambda (setup) (merge-pathnames setup (user-homedir-pathname)))
@@ -15,12 +8,12 @@ LD_LIBRARY_PATH=.libs:$LD_LIBRARY_PATH exec $COMMON_LISP --script <<EOF
        (require :asdf)))))
 
 
-(cond
-  ((find-package :quicklisp)
-   (ql:quickload :amino))
-  (t (require :amino)))
-
+(let ((ql-package (find-package :quicklisp)))
+  (cond
+    (ql-package
+     (funcall (intern "QUICKLOAD" ql-package)
+              :amino))
+    (t
+      (require :amino))))
 
 (sb-ext:save-lisp-and-die "aarx.core" :executable t)
-EOF
-echo end
