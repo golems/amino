@@ -402,7 +402,7 @@ aarx_core_SOURCES = \
 	lisp/rx/sg-gen.lisp
 
 aarx.core: share/make-aarx.lisp $(aarx_core_SOURCES)
-	LD_LIBRARY_PATH=.libs:$LD_LIBRARY_PATH $(COMMON_LISP) --script $(top_srcdir)/share/make-aarx.lisp
+	$(top_srcdir)/share/make-aarx.sh $(COMMON_LISP) $(top_srcdir)
 
 endif # HAVE_COMMON_LISP
 
