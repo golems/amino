@@ -53,15 +53,11 @@
   (t (:default "liblapack")))
 
 (define-foreign-library libamino
-  (:unix (:or #.(concatenate 'string (namestring (user-homedir-pathname)) "/lib/libamino.so")
-              #.(concatenate 'string (namestring (user-homedir-pathname)) "/local/lib/libamino.so")
-              "libamino.so"))
+  (:unix "libamino.so")
   (t (:default "libamino")))
 
 (define-foreign-library libamino-xerbla
-  (:unix (:or #.(concatenate 'string (namestring (user-homedir-pathname)) "/lib/libamino_xerbla_nop.so")
-              #.(concatenate 'string (namestring (user-homedir-pathname)) "/local/lib/libamino_xerbla_nop.so")
-              "libamino_xerbla_nop.so"))
+  (:unix "libamino_xerbla_nop.so")
   (t (:default "libamino_xerbla_nop")))
 
 

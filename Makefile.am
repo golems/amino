@@ -401,7 +401,7 @@ aarx_core_SOURCES = \
 	lisp/rx/inex.lisp \
 	lisp/rx/sg-gen.lisp
 
-aarx.core: share/make-aarx.lisp $(aarx_core_SOURCES)
+aarx.core: share/make-aarx.lisp $(aarx_core_SOURCES) $(lib_LTLIBRARIES)
 	$(top_srcdir)/share/make-aarx.sh $(COMMON_LISP) $(top_srcdir)
 
 endif # HAVE_COMMON_LISP
