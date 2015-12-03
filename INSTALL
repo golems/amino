@@ -16,6 +16,8 @@ Dependencies
 * FCL (optional)
 * OMPL (optional)
 * SBCL (optional)
+* Quicklisp: https://www.quicklisp.org (optional)
+* Sycamore: https://github.com/ndantam/sycamore (optional)
 
 To install these on Debian or Ubuntu GNU/Linux, you can do:
 
@@ -23,6 +25,12 @@ To install these on Debian or Ubuntu GNU/Linux, you can do:
 	 autoconf-archive autotools-dev \
 	 default-jdk maxima gfortran libblas-dev liblapack-dev \
          libglew-dev libsdl2-dev libfcl-dev libompl-dev sbcl
+
+Then, install the following, if desired for ray tracing and robot
+model compilation:
+
+  * Quicklisp: https://www.quicklisp.org (optional)
+  * Sycamore: https://github.com/ndantam/sycamore (optional)
 
 Generic Instructions
 --------------------
