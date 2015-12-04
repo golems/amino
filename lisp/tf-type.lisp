@@ -122,7 +122,7 @@
                 body)))))
 
 ;;; Point 2
-(def-specialized-array vec2 3 vector-2-t)
+(def-specialized-array vec2 2 vector-2-t)
 
 ;;; Point 3
 
