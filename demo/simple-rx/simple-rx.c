@@ -54,7 +54,7 @@ const int SCREEN_WIDTH = 1000;
 const int SCREEN_HEIGHT = 1000;
 
 
-struct aa_rx_sg *generate_scenegraph(struct aa_rx_sg *sg);
+struct aa_rx_sg *aa_rx_dl_sg__scenegraph(struct aa_rx_sg *sg);
 struct aa_rx_sg *scenegraph;
 
 void check_error( const char *name ){
@@ -63,9 +63,9 @@ void check_error( const char *name ){
     }
 }
 
-void display( void *globals_, const struct timespec *now )
+int display( void *context, struct aa_sdl_display_params *params)
 {
-    const struct aa_gl_globals *globals = (const struct aa_gl_globals *) globals_;
+    const struct aa_gl_globals *globals = (const struct aa_gl_globals *) context;
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     check_error("glClearColor");
@@ -85,6 +85,7 @@ void display( void *globals_, const struct timespec *now )
                 TF_abs, 7 );
     aa_rx_sg_render( scenegraph, globals,
                      (size_t)n, TF_abs, 7 );
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
     // Initialize scene graph
-    scenegraph = generate_scenegraph(NULL);
+    scenegraph = aa_rx_dl_sg__scenegraph(NULL);
 
     // mesh
     {
@@ -130,7 +131,7 @@ int main(int argc, char *argv[])
         struct aa_rx_geom * geom;
         struct aa_rx_geom_opt * opt = aa_rx_geom_opt_create();
         double d = .5;
-        aa_rx_geom_opt_set_color(opt, d*.91, d*.96, d*.88);
+        aa_rx_geom_opt_set_color3(opt, d*.91, d*.96, d*.88);
 
         aa_rx_geom_opt_set_alpha(opt, 1.0);
         aa_rx_geom_opt_set_visual(opt, 1);
