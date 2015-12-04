@@ -154,6 +154,7 @@
                      ("Ks"
                       (setq current-specular (parse-float-sequence data)))
                      ("Ka" (rgb-prop :ambient))
+                     ("Ke" (rgb-prop :emission))
                      ;("Ka" (prop :ambient '(.1 .1 .1))
                      ("Kd" (rgb-prop :diffuse))
                      ("Ni" (float-prop :index-of-refraction))
