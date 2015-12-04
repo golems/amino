@@ -71,7 +71,8 @@
                (:file "rx/rx-lib" :depends-on ("rx/robray-package"))
                (:file "rx/rx-type" :depends-on ("rx/rx-grovel"))
                (:file "rx/geom-bind" :depends-on ("rx/rx-lib" "rx/rx-type"))
-               (:file "rx/rx-sg" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/scenegraph"))
+               (:file "rx/sg-cfun" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/scenegraph"))
+               (:file "rx/rx-sg" :depends-on ("rx/sg-cfun" "rx/rx-lib" "rx/rx-type" "rx/scenegraph"))
                (:file "rx/rx-win" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
                (:file "rx/rx-mp" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
                ;; other things
