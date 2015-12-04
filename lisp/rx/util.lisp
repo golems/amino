@@ -105,7 +105,9 @@
         nil)))
 
 (defun create-parent-directories (pathname)
-  (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))))
+  (let ((parents (file-dirname pathname)))
+    (when parents
+      (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))))))
 
 (defun file-rope (&rest elements)
   (rope-map #'identity elements :separator '/))
@@ -328,8 +330,8 @@
                    (namestring (asdf:system-source-directory :amino))))
 
 (defun find-script (name)
-  (let ((pathname (format-pathname "~A/share/exec"
-                                   *robray-root*)))
+  (let ((pathname (format-pathname "~A/share/exec/~A"
+                                   *robray-root* name)))
     (assert (probe-file pathname) ()
             "Script '~A' not found" name)
     pathname))
