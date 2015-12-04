@@ -326,6 +326,26 @@ AC_ARG_WITH([common-lisp],
             [with_common_lisp="$with_ompl"])
 AS_IF([test "x$COMMON_LISP" = x -a "x$with_common_lisp" != xno], [
 AC_CHECK_PROGS([COMMON_LISP], [sbcl])
+
+AC_DEFUN([CL_CHECK_SYSTEM],
+         [AC_MSG_CHECKING([for Common Lisp system $1])
+          AS_IF(["$srcdir/share/check-clpkg.sh" "$COMMON_LISP" "$srcdir" ":$1"],
+                [AC_MSG_RESULT([yes])
+                 $2],
+                [AC_MSG_RESULT([no])
+                 $3])])
+
+AC_DEFUN([CL_CHECK_SYSTEM_ERROR],
+         [CL_CHECK_SYSTEM([$1],[],[AC_MSG_ERROR([$1 not found])])])
+
+CL_CHECK_SYSTEM([quicklisp],[],
+                [AC_MSG_WARN([Quicklisp not found: Common Lisp dependencies may not load])])
+CL_CHECK_SYSTEM_ERROR([alexandria])
+CL_CHECK_SYSTEM_ERROR([cffi])
+CL_CHECK_SYSTEM_ERROR([cffi-grovel])
+CL_CHECK_SYSTEM_ERROR([cxml])
+CL_CHECK_SYSTEM_ERROR([cl-ppcre])
+CL_CHECK_SYSTEM_ERROR([sycamore])
 ])
 
 AC_SUBST([COMMON_LISP])
