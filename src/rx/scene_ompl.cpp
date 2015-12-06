@@ -103,6 +103,49 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
     mp->problem_definition->setGoalState(state);
 }
 
+
+AA_API void
+aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
+                     size_t n_e,
+                     double *E, size_t ldE )
+{
+    // TODO: use an OMPL goal sampler
+    // TODO: add interface to set IK options for motion planner
+
+    amino::sgStateSpace *ss = mp->space_information->getTypedStateSpace();
+    const struct aa_rx_sg_sub *ssg = ss->sub_scene_graph;
+    const struct aa_rx_sg *sg = ss->scene_graph;
+    size_t n_all = aa_rx_sg_config_count(sg);
+    size_t n_s = aa_rx_sg_sub_config_count(ssg);
+    double q0[n_all], qs[n_s];
+
+    // Find IK Solution
+    for( size_t i = 0; i < n_all; i ++ ) {
+        double min=0 ,max=0;
+        int r = aa_rx_sg_get_limit_pos( sg, i, &min, &max );
+        assert(0 == r);
+        q0[i] = (max + min) / 2;
+    }
+
+
+    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
+    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
+    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+
+    if( 1 == n_e ) {
+        int r = aa_rx_sg_chain_ksol_dls( ssg, ko,
+                                         E, n_all, q0,
+                                         n_s, qs );
+    } else {
+        assert(0);
+    }
+
+
+    // Set JS Goal
+    aa_rx_mp_set_goal(mp, n_s, qs);
+}
+
+
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
                double timeout,

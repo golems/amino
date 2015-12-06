@@ -60,17 +60,32 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     AA_MEM_ZERO(q0, n_q);
     aa_rx_mp_set_start( mp, n_q, q0);
 
-    // set start and goal states
-    assert( 7 == aa_rx_sg_sub_config_count(ssg) );
-    double q1[7] = {.05 * M_PI, // s0
-                    -.25 * M_PI, // s1
-                    0, // e0
-                    .25*M_PI, // e1
-                    0, // w0
-                    .25*M_PI, // w1
-                    0 // w2
-    };
-    aa_rx_mp_set_goal( mp, 7, q1 );
+    // set joint space start and goal states
+    /* assert( 7 == aa_rx_sg_sub_config_count(ssg) ); */
+    /* double q1[7] = {.05 * M_PI, // s0 */
+    /*                 -.25 * M_PI, // s1 */
+    /*                 0, // e0 */
+    /*                 .25*M_PI, // e1 */
+    /*                 0, // w0 */
+    /*                 .25*M_PI, // w1 */
+    /*                 0 // w2 */
+    /* }; */
+    /* aa_rx_mp_set_goal( mp, 7, q1 ); */
+
+
+    // set work space start and goal states
+    double E_ref[7];
+    {
+        double E0[7] = {0, 1, 0, 0,
+                        0.7, -0.0, 0.5};
+        double E1[7] = {0, 0, 0, 1,
+                        0, 0, 0 };
+        aa_tf_xangle2quat(-.5*M_PI, E1 );
+        aa_tf_qutr_mul( E0, E1, E_ref );
+    }
+    aa_tick("Inverse Kinematics: ");
+    aa_rx_mp_set_wsgoal( mp, 1, E_ref, 7 );
+    aa_tock();
 
     // plan
     int r = aa_rx_mp_plan( mp, 5.0,

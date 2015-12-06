@@ -62,6 +62,10 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
                    size_t n_q,
                    double *q_subset);
 
+AA_API void
+aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
+                     size_t n_e,
+                     double *E, size_t ldE );
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
