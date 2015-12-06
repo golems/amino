@@ -1,3 +1,5 @@
+SUBDIRS = . lisp
+
 ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac
 EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
@@ -15,7 +17,7 @@ include_HEADERS = include/amino.h include/amino.hpp
 noinst_PROGRAMS =
 
 bin_PROGRAMS =
-bin_SCRIPTS =
+bin_SCRIPTS = share/aarxc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = share/amino.pc \
@@ -354,57 +356,6 @@ libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
-if HAVE_COMMON_LISP
-
-bin_PROGRAMS += aarx.core
-bin_SCRIPTS += share/aarxc
-
-aarx_core_SOURCES = \
-	lisp/amino-la.lisp \
-	lisp/basic-ops.lisp \
-	lisp/basic-type.lisp \
-	lisp/blas-generic.lisp \
-	lisp/blas.lisp \
-	lisp/deprecated.lisp \
-	lisp/ffi.lisp \
-	lisp/foreign.lisp \
-	lisp/generic.lisp \
-	lisp/grovel.lisp \
-	lisp/io.lisp \
-	lisp/libc.lisp \
-	lisp/mem.lisp \
-	lisp/op.lisp \
-	lisp/package.lisp \
-	lisp/test.lisp \
-	lisp/tf.lisp \
-	lisp/tf-op.lisp \
-	lisp/tf-type.lisp \
-	lisp/rx/povray.lisp \
-	lisp/rx/animate.lisp \
-	lisp/rx/config.lisp \
-	lisp/rx/animation-plan.lisp \
-	lisp/rx/draw.lisp \
-	lisp/rx/lexer.lisp \
-	lisp/rx/assimp.lisp \
-	lisp/rx/scenefile/curly.lisp \
-	lisp/rx/scenefile/scenefile.lisp \
-	lisp/rx/scenefile/urdf.lisp \
-	lisp/rx/scenefile/moveit.lisp \
-	lisp/rx/scenegraph.lisp \
-	lisp/rx/wavefront.lisp \
-	lisp/rx/util.lisp \
-	lisp/rx/robray-package.lisp \
-	lisp/rx/collada.lisp \
-	lisp/rx/mesh.lisp \
-	lisp/rx/trajectory.lisp \
-	lisp/rx/parameters.lisp \
-	lisp/rx/inex.lisp \
-	lisp/rx/sg-gen.lisp
-
-aarx.core: share/make-aarx.lisp $(aarx_core_SOURCES) $(lib_LTLIBRARIES)
-	$(top_srcdir)/share/make-aarx.sh $(COMMON_LISP) $(top_srcdir)
-
-endif # HAVE_COMMON_LISP
 
 # noinst_PROGRAMS += test_vec
 # test_vec_SOURCES = src/test/test_vec.c
