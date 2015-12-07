@@ -48,7 +48,7 @@ static void test_box()
 
     {
         struct aa_rx_cl *cl = aa_rx_cl_create(sg);
-        aa_rx_frame_id n = aa_rx_sg_frame_count(sg);
+        size_t n = aa_rx_sg_frame_count(sg);
         double TF_rel[7*n];
         double TF_abs[7*n];
         aa_rx_sg_tf(sg, 0, NULL,
@@ -61,7 +61,7 @@ static void test_box()
 
     {
         struct aa_rx_cl *cl = aa_rx_cl_create(sg1);
-        aa_rx_frame_id n = aa_rx_sg_frame_count(sg1);
+        size_t n = aa_rx_sg_frame_count(sg1);
         double TF_rel[7*n];
         double TF_abs[7*n];
         aa_rx_sg_tf(sg1, 0, NULL,
@@ -105,7 +105,7 @@ void test_cylinder()
 
     {
         struct aa_rx_cl *cl = aa_rx_cl_create(sg);
-        aa_rx_frame_id n = aa_rx_sg_frame_count(sg);
+        size_t n = aa_rx_sg_frame_count(sg);
         double TF_rel[7*n];
         double TF_abs[7*n];
         aa_rx_sg_tf(sg, 0, NULL,
@@ -122,7 +122,7 @@ void test_cylinder()
     {
         struct aa_rx_cl *cl = aa_rx_cl_create(sg);
         struct aa_rx_cl_set *set = aa_rx_cl_set_create(sg);
-        aa_rx_frame_id n = aa_rx_sg_frame_count(sg);
+        size_t n = aa_rx_sg_frame_count(sg);
         double TF_rel[7*n];
         double TF_abs[7*n];
         aa_rx_sg_tf(sg, 0, NULL,
@@ -147,6 +147,7 @@ void test_cylinder()
 int main( int argc, char **argv)
 {
     (void) argc; (void) argv;
+    aa_rx_cl_init();
     test_box();
     test_cylinder();
 
