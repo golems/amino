@@ -803,7 +803,7 @@ enum aa_ode_integrator {
 #define AA_ODE_HEUN AA_ODE_RK2
 
 
-typedef int aa_ode_check( const void *cx, double t, double * AA_RESTRICT x, double *AA_RESTRICT y );
+typedef int aa_ode_check( void *cx, double t, double * AA_RESTRICT x, double *AA_RESTRICT y );
 
 struct aa_ode_sol_opts {
     /** Decrease step size if error is greater than tol_shrink. */
@@ -827,7 +827,7 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
                        const struct aa_ode_sol_opts * AA_RESTRICT opts,
                        size_t n,
                        aa_sys_fun sys, const void *sys_cx,
-                       aa_ode_check check, const void *halt_cx,
+                       aa_ode_check check, void *check_cx,
                        double t0, double dt0,
                        const double *AA_RESTRICT x0,
                        double *AA_RESTRICT x1 );

@@ -61,6 +61,8 @@ struct kin_solve_cx {
     const double *S1;
     const double *dq_dt;
 
+    size_t iteration;
+
     struct aa_mem_region *reg;
 
     const double *q0_all;
@@ -196,11 +198,11 @@ static void kin_solve_sys( const void *vcx,
 /*     const struct aa_rx_sg_sub *ssg; */
 /* } */
 
-static int kin_solve_check( const void *vcx, double t, double *AA_RESTRICT x, double *AA_RESTRICT y )
+static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *AA_RESTRICT y )
 {
     //printf("check\n");
     (void)t;
-    const struct kin_solve_cx *cx = (const struct kin_solve_cx*)vcx;
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     const struct aa_rx_sg_sub *ssg  = cx->ssg;
     /* Clamp */
     for( size_t i = 0; i < cx->n; i ++ ) {
@@ -224,11 +226,14 @@ static int kin_solve_check( const void *vcx, double t, double *AA_RESTRICT x, do
     //printf("y: ");
     //aa_dump_vec(stdout, y, cx->n);
 
+    cx->iteration++;
     if( (theta_err < cx->opts->tol_angle) &&
         (x_err < cx->opts->tol_trans) &&
         (dq_norm < cx->opts->tol_dq) )
     {
         return 1;
+    } else if( cx->iteration > cx->opts->max_iterations ) {
+        return -1;
     } else {
         return 0;
     }
@@ -275,6 +280,7 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     cx.S1 = S;
     cx.ssg = ssg;
     cx.dq_dt = opts->dq_dt;
+    cx.iteration = 0;
 
     struct aa_ode_sol_opts sol_opts;
     sol_opts.adapt_tol_dec = opts->tol_dq / 16;
@@ -295,14 +301,14 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
                  cx.TF_rel0, 7,
                  cx.TF_abs0, 7 );
 
-    aa_ode_sol( AA_ODE_RK23_BS, &sol_opts, n_q,
-                kin_solve_sys, &cx,
-                kin_solve_check, &cx,
-                0, opts->dt, q0_sub, q_subset );
+    int r = aa_ode_sol( AA_ODE_RK23_BS, &sol_opts, n_q,
+                        kin_solve_sys, &cx,
+                        kin_solve_check, &cx,
+                        0, opts->dt, q0_sub, q_subset );
 
     aa_mem_region_pop(cx.reg, cx.TF_rel0);
 
-    return 0;
+    return r;
 
     /* return kin_solve( ssg, */
     /*            n_q, q0_sub, S, */

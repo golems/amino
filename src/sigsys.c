@@ -560,7 +560,7 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
                         const struct aa_ode_sol_opts * AA_RESTRICT opts,
                         size_t n,
                         aa_sys_fun sys, const void *sys_cx,
-                        aa_ode_check check, const void *check_cx,
+                        aa_ode_check check, void *check_cx,
                         double t0, double dt0,
                         const double *AA_RESTRICT x0,
                         double *AA_RESTRICT x1 )
@@ -602,6 +602,9 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
 
     double t = t0;
     double dt = dt0;
+
+    int check_result;
+
     if( adaptive_integrator ) {
         /* Adaptive Step Integration */
         double k[n_k*n]; /* intermediate derivative matrix */
@@ -632,14 +635,13 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
             }
 
             /* Check if complete */
-            if( check( check_cx, t, px2, kn) ) {
+            if( (check_result = check( check_cx, t, px2, kn)) ) {
                 AA_MEM_CPY(x1, px2, n);
-                return 0;
+                break;
             } else {
                 double *tmp = px0; px0 = px2; px2 = tmp;
+                AA_MEM_CPY(k, kn, n); // extract dx to k0
             }
-
-            AA_MEM_CPY(k, kn, n); // extract dx to k0
         }
     } else {
         /* Fixed Step Integration */
@@ -657,13 +659,19 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
             /* TODO: avoid the duplicate sys() evaluation here */
             sys( sys_cx, t, px1, y );
             /* Check if complete */
-            if( check( check_cx, t, px1, y) ) {
+            if( (check_result = check( check_cx, t, px1, y)) ) {
                 AA_MEM_CPY( x1, px1, n );
-                return 0;
+                break;
             } else {
                 double *tmp = px0; px0 = px1; px1 = tmp;
             }
 
         }
+    }
+
+    if( check_result > 0 ) {
+        return 0;
+    } else {
+        return check_result;
     }
 }
