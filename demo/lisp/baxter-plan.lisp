@@ -8,25 +8,33 @@
 
 (win-set-scene-graph *scene-graph*)
 
-(win-set-config `(("left_s0" . ,(/ pi 5))))
+(win-set-config `(("right_s0" . ,(/ pi 5))))
 
-(defparameter *ssg* (scene-graph-chain *scene-graph* nil "left_w2"))
+(defparameter *ssg* (scene-graph-chain *scene-graph* nil "right_w2"))
 
 (defparameter *start*  nil)
 
 (defparameter *goal*
-  `(("left_s0" . ,(* .05 pi))
-    ("left_s1" . ,(* -.25 pi))
-    ("left_e0" . ,(* 0 pi))
-    ("left_e1" . ,(* .25 pi))
-    ("left_w0" . ,(* 0 pi))
-    ("left_w1" . ,(* .25 pi))
-    ("left_w2" . ,(* 0 pi))))
+  `(("right_s0" . ,(* .05 pi))
+    ("right_s1" . ,(* -.25 pi))
+    ("right_e0" . ,(* 0 pi))
+    ("right_e1" . ,(* .25 pi))
+    ("right_w0" . ,(* 0 pi))
+    ("right_w1" . ,(* .25 pi))
+    ("right_w2" . ,(* 0 pi))))
 
+(defparameter *ws-goal*
+  (g* (quaternion-translation-2 (quaternion* 0 1 0 0)
+                                (vec3* .7 0 .5))
+      (quaternion-translation-2 (x-angle (* -.5 pi))
+                                nil)))
 
 (defvar *mp*)
 
 (setq  *mp*
-       (motion-plan *ssg* *start* *goal*))
+       (motion-plan *ssg* *start*
+                    ;:jointspace-goal *goal*
+                    :workspace-goal *ws-goal*
+                    ))
 
 (win-view-plan *mp*)

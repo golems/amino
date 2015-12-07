@@ -82,6 +82,6 @@
           (config-name-array)))
 
 ;; Planning
-
 (amino-ffi::def-foreign-container rx-mp rx-mp-t
-  :destructor aa-rx-mp-destroy)
+  :destructor aa-rx-mp-destroy
+  :slots ((sub-scene-graph)))

@@ -105,6 +105,13 @@
   "Convert TRANSFORM to TF type"
   (quaternion-translation transform))
 
+
+(defun tf-array (tf &optional (array (make-vec 7)))
+  "Convert transform object to an array."
+  (let ((tf (tf tf)))
+    (replace array (quaternion-data (tf-quaternion tf)))
+    (replace array (vec3-data (tf-translation tf)) :start1 4)))
+
 (defun tf* (rotation translation)
   "Convert ROTATION and TRANSLATION to TF type"
   (make-tf :quaternion (quaternion rotation)

@@ -46,8 +46,8 @@
 (cffi:defcfun aa-rx-mp-create rx-mp-t
   (ssg rx-sg-sub-t))
 
-(defun motion-planner (sub-scene-graph)
-  (aa-rx-mp-create sub-scene-graph))
+
+
 
 (cffi:defcfun aa-rx-mp-set-start :void
   (mp rx-mp-t)
@@ -59,6 +59,13 @@
   (n-subset size-t)
   (q-subset :pointer))
 
+
+(cffi:defcfun aa-rx-mp-set-wsgoal :void
+  (mp rx-mp-t)
+  (n-e size-t)
+  (E :pointer)
+  (ld-e size-t))
+
 (cffi:defcfun aa-rx-mp-plan :int
   (mp rx-mp-t)
   (timeout amino-ffi::coercible-double)
@@ -67,6 +74,36 @@
 
 (cffi:defcfun aa-rx-sg-cl-init :void
   (sg rx-sg-t))
+
+(defun motion-planner (sub-scene-graph)
+  (let ((mp (aa-rx-mp-create sub-scene-graph)))
+    (setf (rx-mp-sub-scene-graph mp)
+          sub-scene-graph)
+    mp))
+
+(defun motion-planner-set-start (motion-planner start)
+  (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
+         (n-all (sub-scene-graph-all-config-count ssg))
+         (q-start (make-vec n-all)))
+      (sub-scene-graph-all-config-vector ssg start q-start)
+      (with-foreign-simple-vector (pointer length) q-start :input
+        (aa-rx-mp-set-start motion-planner length pointer))))
+
+(defun motion-planner-set-joint-goal (motion-planner joint-goal)
+  (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
+         (n-all (sub-scene-graph-all-config-count ssg))
+         (q-goal (make-vec n-all)))
+    ;; TODO: copy unset elements from start
+    (sub-scene-graph-config-vector ssg joint-goal q-goal)
+    (with-foreign-simple-vector (pointer length) q-goal :input
+      (aa-rx-mp-set-goal motion-planner length pointer))))
+
+(defun motion-planner-set-work-goal (motion-planner work-goal)
+  ;; TODO: multiple goals
+  (let ((array (tf-array work-goal)))
+    (with-foreign-simple-vector (pointer length) array :input
+      (assert (= 7 length))
+      (aa-rx-mp-set-wsgoal motion-planner 1 pointer 7))))
 
 (defstruct motion-plan
   path
@@ -80,25 +117,25 @@
   (mutable-scene-graph-scene-graph
    (motion-plan-mutable-scene-graph motion-plan)))
 
-(defun motion-plan (sub-scene-graph start-map goal-map
+(defun motion-plan (sub-scene-graph start-map
                     &key
+                      jointspace-goal
+                      workspace-goal
                       (timeout 1d0))
   (let* ((ssg sub-scene-graph)
          (m-sg (sub-scene-graph-mutable-scene-graph ssg)))
     (aa-rx-sg-cl-init m-sg)
     (let* ((planner (motion-planner sub-scene-graph))
-           (n-all (sub-scene-graph-all-config-count ssg))
-           (q-start (make-vec n-all))
-           (q-goal (make-vec (sub-scene-graph-config-count ssg))))
+           (n-all (sub-scene-graph-all-config-count ssg)))
       ;; Set start state
-      (sub-scene-graph-all-config-vector ssg start-map q-start)
-      (with-foreign-simple-vector (pointer length) q-start :input
-        (aa-rx-mp-set-start planner length pointer))
+      (motion-planner-set-start planner start-map)
       ;; Set goal state
-      ;; TODO: copy unset elements from start
-      (sub-scene-graph-config-vector ssg goal-map q-goal)
-      (with-foreign-simple-vector (pointer length) q-goal :input
-        (aa-rx-mp-set-goal planner length pointer))
+      (cond
+        (jointspace-goal
+         (motion-planner-set-joint-goal planner jointspace-goal))
+        (workspace-goal
+         (motion-planner-set-work-goal planner workspace-goal))
+        (t (error "No goal given")))
       ;; Call Planner
       (multiple-value-bind (result n-path path-ptr)
           (cffi:with-foreign-object (plan-length 'amino-ffi:size-t)

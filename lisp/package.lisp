@@ -125,6 +125,7 @@
    :tf
    :tf*
    :tf-inverse
+   :tf-array
    :tf-mul
    :tf-copy
    :tf-normalize
