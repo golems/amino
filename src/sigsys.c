@@ -612,6 +612,9 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
         double *px2 = px1 + n;
         AA_MEM_CPY(px0, x0, n);
 
+        /* Initialize derivative at first timestep */
+        sys( sys_cx, t0, x0, k );
+
         for(;;) {
             for(;;) { /* adaptive loop */
                 adaptive_integrator( n, sys, sys_cx,
