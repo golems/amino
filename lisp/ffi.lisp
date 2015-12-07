@@ -47,16 +47,6 @@
 (defstruct foreign-container
   pointer)
 
-(defun foreign-container-finalizer (pointer object-constructor pointer-destructor)
-  "Register finalizer to call DESTRUCTOR on OBJECT's pointer.
-RETURNS: OBJECT"
-  (let ((object (funcall object-constructor pointer)))
-    (sb-ext:finalize object (lambda () (funcall pointer-destructor pointer)))
-    object))
-
-
-
-
 (defmacro def-foreign-container (lisp-type cffi-type
                                  &key
                                    slots
@@ -71,7 +61,8 @@ Note that destructor must operate on the raw pointer type.
   (labels ((sym (&rest args)
              (intern (apply #'concatenate 'string args)
                      (symbol-package lisp-type))))
-    (let ((%make-it (sym "%MAKE-" (string lisp-type))))
+    (let ((%make-it (sym "%MAKE-" (string lisp-type)))
+          (%finalize-it (sym "%FINALIZE-" (string lisp-type))))
       `(progn
          (defstruct (,lisp-type (:include foreign-container)
                                 (:constructor ,%make-it (pointer)))
@@ -89,9 +80,15 @@ Note that destructor must operate on the raw pointer type.
                    (defun ,(sym (string lisp-type) "-SLOT-VALUE") (object slot)
                      (cffi:foreign-slot-value (,(sym (string lisp-type) "-POINTER") object)
                                               '(:struct ,struct-type) slot))))
+
+         ,@(when destructor
+                 `((defun ,%finalize-it (pointer)
+                     (let ((object (,%make-it pointer)))
+                       (sb-ext:finalize object (lambda () (,destructor pointer)))
+                       object))))
          (defmethod cffi:expand-from-foreign (form (type ,cffi-type))
            ,(if destructor
-                `(list 'foreign-container-finalizer form '#',%make-it '#',destructor)
+                `(list ',%finalize-it form)
                 `(list ',%make-it form)))))))
 
 (defmacro def-foreign-container-accessor (lisp-type slot)
