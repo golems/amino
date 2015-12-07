@@ -43,6 +43,7 @@
 (asdf:defsystem amino
   :description "Basic utilities, numerics, and kinematics"
   :depends-on ("cffi" "sycamore" "cxml" "cl-ppcre")
+  ;; Keep these components in sync with Makefile.am
   :components ((:file "package")
                ;; TYPE
                (:file "basic-type" :depends-on ("package"))
@@ -71,6 +72,7 @@
                (:file "rx/rx-lib" :depends-on ("rx/robray-package"))
                (:file "rx/rx-type" :depends-on ("rx/rx-grovel" "tf-type"))
                (:file "rx/geom-bind" :depends-on ("rx/rx-lib" "rx/rx-type"))
+               (:file "rx/cl-init" :depends-on ("rx/geom-bind"))
                (:file "rx/sg-cfun" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/scenegraph"))
                (:file "rx/rx-sg" :depends-on ("rx/sg-cfun" "rx/rx-lib" "rx/rx-type" "rx/scenegraph"))
                (:file "rx/rx-win" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))

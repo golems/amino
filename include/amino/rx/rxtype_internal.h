@@ -58,7 +58,16 @@ struct aa_rx_cl_geom;
 AA_API void
 aa_rx_cl_geom_destroy( struct aa_rx_cl_geom *cl_geom );
 
-/* Cleanup function set in collision module */
+/* Cleanup function set in collision module.
+ *
+ * This separate variable exists for linking reasons.  The variable
+ * lives in the geometry library, and the geometry library destroys
+ * collision objects by calling the destructor via this function.  The
+ * collision library sets this variable to the actual destructor
+ * function when aa_rx_cl_init() is called.  This avoid the need to
+ * link against both geometry and collision libraries if collision
+ * checking is not required.
+ */
 AA_EXTERN void
 (*aa_rx_cl_geom_destroy_fun)( struct aa_rx_cl_geom *cl_geom );
 

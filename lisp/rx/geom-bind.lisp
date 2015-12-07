@@ -345,3 +345,9 @@
 (cffi:defcfun aa-rx-mesh-set-texture :void
   (mesh rx-mesh-t)
   (opt rx-geom-opt-t))
+
+;;;;;;;;;;;;;;;;;
+;;; Collision ;;;
+;;;;;;;;;;;;;;;;;
+
+(cffi:defcfun aa-rx-cl-init :void)
