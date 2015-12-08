@@ -84,19 +84,29 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
         aa_tf_qutr_mul( E0, E1, E_ref );
     }
     aa_tick("Inverse Kinematics: ");
-    aa_rx_mp_set_wsgoal( mp, 1, E_ref, 7 );
+    {
+        int r = aa_rx_mp_set_wsgoal( mp, 1, E_ref, 7 );
+        if( r ) {
+            char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
+            fprintf(stderr, "Inverse Kinematics failed: `%s' (0x%x)\n", e, r);
+            aa_mem_region_local_pop(e);
+            exit(EXIT_FAILURE);
+        }
+    }
     aa_tock();
 
     // plan
-    int r = aa_rx_mp_plan( mp, 5.0,
+    int r = aa_rx_mp_plan( mp, 5,
                            &g_n_path,
                            &g_path );
 
     aa_rx_mp_destroy(mp);
     aa_rx_sg_sub_destroy(ssg);
 
-    if( r < 0 ) {
-        fprintf(stderr, "Planning failed!\n");
+    if( r ) {
+        char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
+        fprintf(stderr, "Oops, planning failed: `%s' (0x%x)\n", e, r);
+        aa_mem_region_local_pop(e);
         exit(EXIT_FAILURE);
     }
 }

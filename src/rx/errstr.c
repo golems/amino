@@ -35,65 +35,42 @@
  *
  */
 
-#ifndef AMINO_RX_RXTYPE_H
-#define AMINO_RX_RXTYPE_H
+#include "amino.h"
+#include "amino/rx/rxtype.h"
 
-/* Opaque types shared between different RX modules
- */
-
-/**
- *  Opaque type for a scene_graph.
- *
- * A scene graph is a set of frames in SE(3).
- *
- */
-struct aa_rx_sg;
-
-/**
- * Container for scene geometry
- */
-struct aa_rx_geom;
-
-/**
- * Container for collision info
- */
-struct aa_rx_cl_geom;
-
-
-/**
- * Opaque type for a window
- */
-struct aa_rx_win;
-
-/**
- * Parameters for SDL display function.
- */
-struct aa_sdl_display_params;
-
-/**
- * @param context A pointer to local context
- * @param updated Whether other parts of these scene are updated
- * @param now The present time
- * @return Whether any update has occurred
- */
-typedef int (*aa_sdl_display_fun)(
-    void *context,
-    struct aa_sdl_display_params *params);
-
-/** OK */
-#define AA_RX_OK 0
-
-/** No Solution */
-#define AA_RX_NO_SOLUTION  (1<<0)
-
-/** No Solution */
-#define AA_RX_NO_IK  (1<<1)
-
-/** No Motion Plan */
-#define AA_RX_NO_MP  (1<<2)
+static const char *errstrs[] = {"no_solution",
+                                "no_inverse_kinematics",
+                                "no_motion_plan"};
 
 
 char *aa_rx_errstr( struct aa_mem_region *reg,
-                    int e );
+                          int e )
+{
+    size_t n = 0;
+    const char *strs[65];
+    strs[0] = "OK";;
+    strs[1] = NULL;
 
-#endif /*AMINO_RX_RXTYPE_H*/
+    for( size_t i = 0; i < sizeof(errstrs) / sizeof(*errstrs); i ++ ) {
+        if( e & (1<<i) ) {
+            strs[n] = errstrs[i];
+            n++;
+            strs[n] = NULL;
+        }
+    }
+
+    if( 0 == n ) { n++; }
+
+    /* TODO: compute exact size */
+
+    char *buf = (char*)aa_mem_region_alloc(reg, 256);
+    *buf = '\0';
+    for( size_t i = 0; i < n; i ++ ) {
+        strcat(buf, strs[i]);
+        if(strs[i+1]) {
+            strcat(buf, ":");
+        }
+    }
+
+    return buf;
+}

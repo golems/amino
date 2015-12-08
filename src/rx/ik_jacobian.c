@@ -308,7 +308,11 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
 
     aa_mem_region_pop(cx.reg, cx.TF_rel0);
 
-    return r;
+    if( r ) {
+        return AA_RX_NO_SOLUTION | AA_RX_NO_IK;
+    } else {
+        return 0;
+    }
 
     /* return kin_solve( ssg, */
     /*            n_q, q0_sub, S, */

@@ -99,8 +99,10 @@ int main(int argc, char *argv[])
                                      E_ref, n_q, qstart_all,
                                      n_qs, qs );
     aa_tock();
-    if( r < 0 ) {
-        fprintf(stderr, "Oops, IK failed\n");
+    if( r ) {
+        char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
+        fprintf(stderr, "Oops, IK failed: `%s' (0x%x)\n", e, r);
+        aa_mem_region_local_pop(e);
     }
 
     // set all-config joint position

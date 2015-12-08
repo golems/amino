@@ -92,7 +92,7 @@ aa_rx_mp_set_start( struct aa_rx_mp *mp,
     si->setup();
 }
 
-AA_API void
+AA_API int
 aa_rx_mp_set_goal( struct aa_rx_mp *mp,
                    size_t n_q,
                    double *q_subset)
@@ -101,10 +101,12 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
     amino::sgSpaceInformation::ScopedStateType state(mp->space_information);
     ss->copy_state( q_subset, state.get() );
     mp->problem_definition->setGoalState(state);
+
+    return AA_RX_OK;
 }
 
 
-AA_API void
+AA_API int
 aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
                      size_t n_e,
                      double *E, size_t ldE )
@@ -136,6 +138,7 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
         int r = aa_rx_sg_chain_ksol_dls( ssg, ko,
                                          E, n_all, q0,
                                          n_s, qs );
+        if( r ) return r;
     } else {
         assert(0);
     }
@@ -143,6 +146,8 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
 
     // Set JS Goal
     aa_rx_mp_set_goal(mp, n_s, qs);
+
+    return AA_RX_OK;
 }
 
 
@@ -179,10 +184,10 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
             ss->insert_state( state, ptr );
             //aa_dump_vec( stdout, ptr, ss->config_count_all() );
         }
-        return 0;
+        return AA_RX_OK;
     } else {
         *n_path = 0;
         *p_path_all = NULL;
-        return -1;
+        return AA_RX_NO_SOLUTION | AA_RX_NO_MP;
     }
 }

@@ -84,6 +84,7 @@ libamino_la_SOURCES =                  \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
+	src/rx/errstr.c 	       \
 	src/rx/scenegraph.cpp 	       \
 	src/rx/sg_api.cpp 	       \
 	src/rx/sg_capi.c 	       \
