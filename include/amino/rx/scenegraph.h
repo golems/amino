@@ -91,7 +91,7 @@ AA_API void aa_rx_sg_destroy(struct aa_rx_sg *scene_graph);
  * This function must be called before any frame_ids or config_ids can
  * be used with the scenegraph.
  */
-AA_API void aa_rx_sg_init ( struct aa_rx_sg *scene_graph );
+AA_API int aa_rx_sg_init ( struct aa_rx_sg *scene_graph );
 
 /**
  * Return the type of the given frame

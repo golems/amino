@@ -36,6 +36,7 @@
  */
 
 #include "amino.h"
+#include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_geom.h"
@@ -232,9 +233,19 @@ static void sort_frame_helper( std::list<SceneFrame*> &list,
     list.push_back(f);
 }
 
-void SceneGraph::index()
+int SceneGraph::index()
 {
-    if( ! dirty_indices ) return;
+    if( ! dirty_indices ) return 0;
+
+    // Check parents
+    for( auto itr = frame_map.begin(); itr != frame_map.end(); itr++ ) {
+        SceneFrame *f = itr->second;
+        if( 0 != f->parent.size() ) {
+            if( frame_map.end() == frame_map.find(f->parent) ) {
+                return AA_RX_INVALID_FRAME;
+            }
+        }
+    }
 
     // Sort frames
     std::list<SceneFrame*> list;
@@ -291,6 +302,7 @@ void SceneGraph::index()
     }
 
     dirty_indices = 0;
+    return 0;
 }
 
 

@@ -153,7 +153,7 @@ struct SceneGraph  {
     SceneGraph();
     ~SceneGraph();
 
-    void index();
+    int index();
     void add(SceneFrame *f);
 
     /** Map from frame name to frame */

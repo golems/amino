@@ -463,6 +463,16 @@
                                     scene-graph)))
     (t (error "Unsupported result-type ~A" result-type))))
 
+(defun check-scene-graph-parents (scene-graph)
+  (do-scene-graph-frames (frame scene-graph)
+    (let ((name (rope-string (scene-frame-name frame)))
+          (parent (rope-string (scene-frame-parent frame))))
+      (unless (or (null parent)
+                  (zerop (length parent))
+                  (scene-graph-lookup scene-graph parent))
+        (error "Parent frame `~A' not found for child `~A'"
+               parent name))))
+  scene-graph)
 
 (defun scene-graph-meshes (scene-graph)
   (let ((meshes (make-hash-table :test #'equalp)))

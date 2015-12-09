@@ -92,6 +92,8 @@ typedef int (*aa_sdl_display_fun)(
 /** No Motion Plan */
 #define AA_RX_NO_MP  (1<<2)
 
+/** No Motion Plan */
+#define AA_RX_INVALID_FRAME  (1<<3)
 
 char *aa_rx_errstr( struct aa_mem_region *reg,
                     int e );

@@ -46,7 +46,7 @@
 
 (cffi:defcfun aa-rx-sg-create rx-sg-t)
 
-(cffi:defcfun aa-rx-sg-init :void
+(cffi:defcfun aa-rx-sg-init :int
   (sg rx-sg-t))
 
 (cffi:defcfun aa-rx-sg-frame-type frame-type

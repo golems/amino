@@ -47,8 +47,8 @@
 ;;             (cffi:pointer-address (amino-ffi::foreign-container-pointer object)))))
 
 (defun %mutable-scene-graph (scene-graph)
-  (let ((sg (aa-rx-sg-create))
-        (scene-graph (scene-graph scene-graph)))
+  (let ((scene-graph (check-scene-graph-parents (scene-graph scene-graph)))
+        (sg (aa-rx-sg-create)))
     (setf (mutable-scene-graph-scene-graph sg) scene-graph)
     ;; Insert Frames
     (do-scene-graph-frames (frame scene-graph)
@@ -57,6 +57,7 @@
              (v (tf-translation tf))
              (name (rope-string (scene-frame-name frame)))
              (parent (rope-string (scene-frame-parent frame))))
+
         (etypecase frame
           ;; fix frame
           (scene-frame-fixed
@@ -112,7 +113,9 @@
         (when c-geom
           (aa-rx-geom-attach sg frame-name c-geom))))
     ;; Index
-    (aa-rx-sg-init sg)
+    (let ((result (aa-rx-sg-init sg)))
+      (unless (zerop result)
+        (error "Could not initialize mutable-scene-graph: 0x~x" result)))
     ;; Create lisp indices between configuration names and IDs
     (let* ((n-config (aa-rx-sg-config-count sg))
            (hash (make-hash-table :test #'equal))

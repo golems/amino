@@ -40,7 +40,8 @@
 
 static const char *errstrs[] = {"no_solution",
                                 "no_inverse_kinematics",
-                                "no_motion_plan"};
+                                "no_motion_plan",
+                                "invalid_frame"};
 
 
 char *aa_rx_errstr( struct aa_mem_region *reg,
