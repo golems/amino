@@ -157,6 +157,10 @@
                           configs
                           (or vector (make-vec n)))))
 
+(defun mutable-scene-graph-config-name (m-sg i)
+  (aref (mutable-scene-graph-config-name-array m-sg)
+        i))
+
 ;;;;;;;;;;;;;;;;;
 ;;; Subgraphs ;;;
 ;;;;;;;;;;;;;;;;;
@@ -176,6 +180,20 @@
 (cffi:defcfun aa-rx-sg-sub-frame rx-frame-id
   (sg rx-sg-sub-t)
   (i size-t))
+
+(cffi:defcfun aa-rx-sg-sub-config-get :void
+  (ssg rx-sg-sub-t)
+  (n-all size-t)
+  (config-all :pointer)
+  (n-sub size-t)
+  (config-sub :pointer))
+
+(cffi:defcfun aa-rx-sg-sub-config-set :void
+  (ssg rx-sg-sub-t)
+  (n-sub size-t)
+  (config-sub :pointer)
+  (n-all size-t)
+  (config-all :pointer))
 
 (defun sub-scene-graph-init (m-sg ssg)
   (setf (sub-scene-graph-mutable-scene-graph ssg)
@@ -222,3 +240,33 @@
   (mutable-scene-graph-config-vector (sub-scene-graph-mutable-scene-graph ssg)
                                      configs
                                      vector))
+
+(defun sub-scene-graph-config-map (ssg sub-vector &optional (map (make-configuration-map)))
+  (assert (= (length sub-vector)
+             (sub-scene-graph-config-count ssg)))
+  (dotimes (i (length sub-vector))
+    (tree-map-insertf map
+                      (sub-scene-graph-config-name ssg i)
+                      (aref sub-vector i)))
+  map)
+
+(defun sub-scene-graph-all-config-map (ssg all-vector &optional (map (make-configuration-map)))
+  (assert (= (length all-vector)
+             (sub-scene-graph-all-config-count ssg)))
+  (dotimes (i (length all-vector))
+    (tree-map-insertf map
+                      (sub-scene-graph-all-config-name ssg i)
+                      (aref all-vector i)))
+  (print map)
+  map)
+
+(defun sub-scene-graph-config-name (ssg i)
+  (aref (sub-scene-graph-config-name-array ssg)
+        i))
+
+(defun sub-scene-graph-all-config-name (ssg i)
+  (mutable-scene-graph-config-name (sub-scene-graph-mutable-scene-graph ssg)
+                                   i))
+
+(defun sub-scene-graph-scene-graph (ssg)
+  (mutable-scene-graph-scene-graph (sub-scene-graph-mutable-scene-graph ssg)))

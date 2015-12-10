@@ -8,11 +8,24 @@
 
 (win-set-scene-graph *scene-graph*)
 
-(win-set-config `(("right_s0" . ,(/ pi 5))))
+(win-set-config `(("right_s0" . ,(* .2 pi))))
 
-(defparameter *ssg* (scene-graph-chain *scene-graph* nil "right_w2"))
+(defparameter *ssg* (scene-graph-chain *scene-graph* nil "right_endpoint"))
 
 (defparameter *start*  nil)
+
+
+
+
+;(win-set-config (
+
+;; (win-set-config (sub-scene-graph-config-map *ssg*
+;;                                             ;(vec 0.700658 -0.412207 0.188664 1.00646 -0.206635 0.99295 0.10569)
+;;                                             (vec 0.700658 -0.412207 0.188664 1.00646 -0.206635 0.99295 0.10569)))
+
+
+
+
 
 (defparameter *goal*
   `(("right_s0" . ,(* .05 pi))
@@ -29,12 +42,11 @@
       (quaternion-translation-2 (x-angle (* -.5 pi))
                                 nil)))
 
-(defvar *mp*)
+(win-set-config (scene-graph-ik *scene-graph* :frame "right_endpoint" :tf *ws-goal*))
 
-(setq  *mp*
-       (motion-plan *ssg* *start*
-                    ;:jointspace-goal *goal*
-                    :workspace-goal *ws-goal*
-                    ))
+(defparameter *mp*
+  (motion-plan *ssg* *start*
+               ;;:jointspace-goal *goal*
+               :workspace-goal *ws-goal*))
 
 (win-view-plan *mp*)

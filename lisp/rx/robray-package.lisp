@@ -78,10 +78,24 @@
    :scene-graph-f
    :scene-graph-remove-frame
    :scene-graph-reparent
+   :scene-graph-tf-absolute
    :*scene-directory*
    :load-scene-file
+
 
    ;; variables
    :*render-host-alist
    :*urdf-package-alist
+
+
+   ;; sub-scene-graph
+   :sub-scene-graph
+   :sub-scene-graph-scene-graph
+   :scene-graph-chain
+
+   ;; motion-plan
+   :motion-plan
+   :motion-plan-endpoint-map
+   :motion-plan-endpoint-array
+
    ))

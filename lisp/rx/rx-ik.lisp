@@ -37,55 +37,44 @@
 
 (in-package :robray)
 
-;; options
-(amino-ffi::def-foreign-container rx-geom-opt rx-geom-opt-t
-  :destructor aa-rx-geom-opt-destroy)
+(cffi:defcfun aa-rx-ksol-opts-destroy :void
+  (obj :pointer))
 
-;; shapes
-(amino-ffi::def-foreign-container scene-box rx-shape-box-t
-  :struct-type shape-box)
-(amino-ffi::def-foreign-container scene-sphere rx-shape-sphere-t
-  :struct-type shape-sphere)
-(amino-ffi::def-foreign-container scene-cylinder rx-shape-cylinder-t
-  :struct-type shape-cylinder)
-(amino-ffi::def-foreign-container scene-cone rx-shape-cone-t
-  :struct-type shape-cone)
-(amino-ffi::def-foreign-container scene-grid rx-shape-grid-t
-  :struct-type shape-grid)
+(cffi:defcfun aa-rx-ksol-opts-create rx-ksol-opts-t)
 
-;; mesh
-(amino-ffi::def-foreign-container rx-mesh rx-mesh-t
-  :destructor rx-mesh-destroy)
-
-;; geometry
-(amino-ffi::def-foreign-container rx-geom rx-geom-t
-  :destructor rx-geom-destroy)
-
-;; scene graph
-(amino-ffi::def-foreign-container mutable-scene-graph rx-sg-t
-  :destructor aa-rx-sg-destroy
-  :slots ((scene-graph)
-          (config-name-array)
-          (config-index-map)))
-
-;; sdl
-(amino-ffi::def-foreign-container rx-win rx-win-t
-  :slots ((mutable-scene-graph)
-          (config-vector)))
+(cffi:defcfun aa-rx-sg-sub-ksol-dls :int
+  (ssg rx-sg-sub-t)
+  (opts (rx-ksol-opts-t))
+  (n-tf size-t)
+  (tf :pointer)
+  (ld-tf size-t)
+  (n-q-all size-t)
+  (q-all :pointer)
+  (n-q size-t)
+  (q-subset :pointer))
 
 
-;; Subgraph
-(amino-ffi::def-foreign-container sub-scene-graph rx-sg-sub-t
-  :destructor aa-rx-sg-sub-destroy
-  :slots ((mutable-scene-graph)
-          (config-index-map)
-          (config-name-array)))
-
-;; Planning
-(amino-ffi::def-foreign-container rx-mp rx-mp-t
-  :destructor aa-rx-mp-destroy
-  :slots ((sub-scene-graph)))
-
-;; Inverse Kinematics
-(amino-ffi::def-foreign-container rx-ksol-opts rx-ksol-opts-t
-  :destructor aa-rx-ksol-opts-destroy)
+(defun scene-graph-ik (scene-graph
+                       &key
+                         frame
+                         tf
+                         options)
+  (let* ((opts (or options (aa-rx-ksol-opts-create)))
+         (ssg (scene-graph-chain scene-graph nil frame))
+         (q-all (make-vec (sub-scene-graph-all-config-count ssg)))
+         (q-sub (make-vec (sub-scene-graph-config-count ssg)))
+         (tf-array (tf-array tf)))
+    ;; TODO: start position
+    ;; TODO: Option arguments
+    (let ((r))
+      (with-foreign-simple-vector (q-all-ptr q-all-length) q-all :input
+        (with-foreign-simple-vector (q-sub-ptr q-sub-length) q-sub :output
+          (with-foreign-simple-vector (tf-ptr tf-length) tf-array :input
+            (assert (= 7 tf-length))
+            (setq r
+                  (aa-rx-sg-sub-ksol-dls ssg opts
+                                         1 tf-ptr 7
+                                         q-all-length q-all-ptr
+                                         q-sub-length q-sub-ptr)))))
+      (when (zerop r)
+        (sub-scene-graph-config-map ssg q-sub)))))

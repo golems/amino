@@ -231,6 +231,12 @@
 (deftype configuration-map ()
   `tree-map)
 
+(defun make-configuration-map ()
+  (make-tree-map #'frame-name-compare))
+
+(defun configuration-map-merge (original-map update-map)
+  (tree-map-insert-map original-map update-map))
+
 (defun configuration-map-equal (a b)
   (let ((a (tree-map-alist a))
         (b (tree-map-alist b)))
@@ -248,7 +254,7 @@
 (defun prefix-configuration-map (prefix map)
   (fold-tree-map (lambda (map key value)
                    (tree-map-insert map (rope prefix key) value))
-                 (make-tree-map #'frame-name-compare)
+                 (make-configuration-map)
                  map))
 
 (defstruct joint-limit
@@ -587,7 +593,7 @@
 (defun alist-configuration-map (alist &optional default-map)
   (fold (lambda (map item)
           (tree-map-insert map (car item) (cdr item)))
-        (or default-map (make-tree-map #'frame-name-compare))
+        (or default-map (make-configuration-map))
         alist))
 
 (defun pairlist-configuration-map (names values &optional default-map)

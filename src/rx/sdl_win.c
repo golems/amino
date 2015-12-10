@@ -172,20 +172,6 @@ aa_rx_win_set_sg( struct aa_rx_win * win,
     pthread_mutex_unlock( &win->mutex );
 }
 
-AA_API void
-aa_rx_win_set_config( struct aa_rx_win * win,
-                      size_t n,
-                      const double *q )
-{
-    pthread_mutex_lock( &win->mutex );
-
-    AA_MEM_CPY( win->q, q, AA_MIN(n, win->n_config) );
-    win->updated = 1;
-
-    pthread_mutex_unlock( &win->mutex );
-}
-
-
 static int default_display( void *cx_, struct aa_sdl_display_params *params )
 {
     /* We hold the mutex now */
@@ -218,6 +204,23 @@ static int default_display( void *cx_, struct aa_sdl_display_params *params )
 
     return updated;
 }
+
+
+AA_API void
+aa_rx_win_set_config( struct aa_rx_win * win,
+                      size_t n,
+                      const double *q )
+{
+    pthread_mutex_lock( &win->mutex );
+
+    AA_MEM_CPY( win->q, q, AA_MIN(n, win->n_config) );
+    win->updated = 1;
+
+    win->display = default_display;
+
+    pthread_mutex_unlock( &win->mutex );
+}
+
 
 static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {

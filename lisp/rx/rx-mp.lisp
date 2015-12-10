@@ -164,3 +164,23 @@
   (win-set-scene-graph (motion-plan-mutable-scene-graph motion-plan))
   (win-set-display-plan (motion-plan-path motion-plan))
   (win-unpause))
+
+
+(defun motion-plan-endpoint-map (motion-plan)
+  (let* ((ssg (motion-plan-sub-scene-graph motion-plan))
+         (n-sub (sub-scene-graph-config-count ssg))
+         (path (motion-plan-path motion-plan))
+         (i-0 (- (length path) n-sub))
+         (map (make-configuration-map)))
+    (dotimes (i n-sub)
+      (tree-map-insertf map (sub-scene-graph-config-name ssg i)
+                        (aref path (+ i-0 i))))
+    map))
+
+
+(defun motion-plan-endpoint-array (motion-plan)
+  (let* ((ssg (motion-plan-sub-scene-graph motion-plan))
+         (n-sub (sub-scene-graph-config-count ssg))
+         (path (motion-plan-path motion-plan))
+         (i-0 (- (length path) n-sub)))
+    (subseq path i-0)))
