@@ -300,6 +300,7 @@
     (t
      (error "invalid joint-limit arguments"))))
 
+
 (defun joint-limits (&key
                        effort-limit min-effort max-effort
                        acceleration-limit min-acceleration max-acceleration
@@ -361,6 +362,8 @@
     (frame-name-compare (name frame-a)
                         (name frame-b))))
 
+;; TODO: Make separate config set
+
 (defstruct scene-graph
   (frames (make-tree-set #'scene-frame-compare)))
 
@@ -408,6 +411,16 @@
             (map-tree-set 'list #'scene-frame-name intersection))
     (make-scene-graph :frames (tree-set-union set-1 set-2))))
 
+
+
+(defun scene-graph-joint-center (scene-graph name)
+  (let* ((frame (scene-graph-lookup scene-graph name))
+         (limits (scene-frame-joint-limits frame))
+         (position-limit (when limits (joint-limits-position limits))))
+    (if position-limit
+        (* .5d0 (+ (joint-limit-max position-limit)
+                   (joint-limit-min position-limit)))
+        0d0)))
 
 (defvar *scene-directory* (make-pathname))
 

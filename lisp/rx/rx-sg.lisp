@@ -270,3 +270,11 @@
 
 (defun sub-scene-graph-scene-graph (ssg)
   (mutable-scene-graph-scene-graph (sub-scene-graph-mutable-scene-graph ssg)))
+
+(defun sub-scene-graph-center-map (ssg &optional (configuration-map (make-configuration-map)))
+  ;; TODO: configs vs frames
+  (dotimes (i (sub-scene-graph-config-count ssg))
+    (let ((name (sub-scene-graph-config-name ssg i)))
+      (tree-map-insertf configuration-map name (scene-graph-joint-center (sub-scene-graph-scene-graph ssg)
+                                                                         name))))
+  configuration-map)

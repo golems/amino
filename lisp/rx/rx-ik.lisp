@@ -56,6 +56,7 @@
 
 (defun scene-graph-ik (scene-graph
                        &key
+                         start
                          frame
                          tf
                          options)
@@ -63,9 +64,10 @@
          (ssg (scene-graph-chain scene-graph nil frame))
          (q-all (make-vec (sub-scene-graph-all-config-count ssg)))
          (q-sub (make-vec (sub-scene-graph-config-count ssg)))
-         (tf-array (tf-array tf)))
-    ;; TODO: start position
+         (tf-array (tf-array tf))
+         (start (or start (sub-scene-graph-center-map ssg))))
     ;; TODO: Option arguments
+    (sub-scene-graph-all-config-vector ssg start q-all)
     (let ((r))
       (with-foreign-simple-vector (q-all-ptr q-all-length) q-all :input
         (with-foreign-simple-vector (q-sub-ptr q-sub-length) q-sub :output
