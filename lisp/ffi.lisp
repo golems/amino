@@ -62,6 +62,7 @@ Note that destructor must operate on the raw pointer type.
              (intern (apply #'concatenate 'string args)
                      (symbol-package lisp-type))))
     (let ((%make-it (sym "%MAKE-" (string lisp-type)))
+          (null-fun (sym "NULL-" (string lisp-type)))
           (%finalize-it (sym "%FINALIZE-" (string lisp-type))))
       `(progn
          (defstruct (,lisp-type (:include foreign-container)
@@ -71,6 +72,8 @@ Note that destructor must operate on the raw pointer type.
            ()
            (:simple-parser ,cffi-type)
            (:actual-type :pointer))
+         (defun ,null-fun ()
+           (,%make-it (cffi:null-pointer)))
          (defmethod cffi:expand-to-foreign (value (type ,cffi-type))
            (list 'progn
                  (list 'check-type value ',lisp-type)

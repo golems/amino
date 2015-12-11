@@ -57,6 +57,12 @@ aa_rx_sg_sub_config_count( const struct aa_rx_sg_sub *sg_sub )
 }
 
 AA_API size_t
+aa_rx_sg_sub_all_config_count( const struct aa_rx_sg_sub *sg_sub )
+{
+    return aa_rx_sg_config_count( sg_sub->scenegraph );
+}
+
+AA_API size_t
 aa_rx_sg_sub_frame_count( const struct aa_rx_sg_sub *sg_sub )
 {
     return sg_sub->frame_count;
@@ -279,4 +285,22 @@ aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                              ssg->frame_count, ssg->frames,
                              ssg->config_count, ssg->configs,
                              J, ld_J );
+}
+
+AA_API void
+aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
+                             size_t n, double *q )
+{
+    size_t n_qs = aa_rx_sg_sub_config_count(ssg);
+    size_t n_min = AA_MIN(n,n_qs);
+    for( size_t i = 0; i < n_min; i ++ ) {
+        double min=0 ,max=0;
+        aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg, i);
+        int r = aa_rx_sg_get_limit_pos( ssg->scenegraph, config_id, &min, &max );
+        if( 0 == r ) {
+            q[i] = (max + min) / 2;
+        } else {
+            q[i] = 0;
+        }
+    }
 }

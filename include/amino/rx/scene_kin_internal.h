@@ -109,11 +109,16 @@ struct aa_rx_ksol_opts {
     double gain_trans;     ///< scaling for cartesian error
 
     const double *dq_dt;       ///< scaling for joint error
-    const double *q_ref;
-
-
+    size_t n_dq_dt;
     double *dq_dt_data;
+
+    const double *q_ref;
+    size_t n_q_ref;
     double *q_ref_data;
+
+    const double *q_all_seed;
+    size_t n_all_seed;
+    double *q_all_seed_data;
 
     size_t max_iterations;
 };

@@ -47,6 +47,7 @@
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
+#include "amino/rx/rxerr.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
@@ -253,6 +254,14 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     assert(n_tf == 1 );
     assert(n_q == aa_rx_sg_sub_config_count(ssg) );
     (void)ld_TF;
+
+    if( 0 == n_q_all || NULL == q_start_all ) {
+        q_start_all = opts->q_all_seed;
+        n_q_all = opts->n_all_seed;
+    }
+    if( 0 == n_q_all || NULL == q_start_all ) {
+        return AA_RX_INVALID_PARAMETER;
+    }
 
     const struct aa_rx_sg *sg = ssg->scenegraph;
     size_t n_f = aa_rx_sg_frame_count(sg);

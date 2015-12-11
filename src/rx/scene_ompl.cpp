@@ -37,6 +37,7 @@
 
 
 #include "amino.h"
+#include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
@@ -66,6 +67,11 @@ AA_API void
 aa_rx_mp_destroy( struct aa_rx_mp *mp )
 {
     delete mp;
+}
+
+
+aa_rx_mp::~aa_rx_mp()
+{
 }
 
 AA_API void
@@ -108,6 +114,7 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
 
 AA_API int
 aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
+                     const struct aa_rx_ksol_opts *opts,
                      size_t n_e,
                      double *E, size_t ldE )
 {
@@ -121,33 +128,36 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
     size_t n_s = aa_rx_sg_sub_config_count(ssg);
     double q0[n_all], qs[n_s];
 
-    // Find IK Solution
-    for( size_t i = 0; i < n_all; i ++ ) {
-        double min=0 ,max=0;
-        int r = aa_rx_sg_get_limit_pos( sg, i, &min, &max );
-        assert(0 == r);
-        q0[i] = (max + min) / 2;
+    struct aa_rx_ksol_opts *ko = NULL;
+    if( NULL == opts ) {
+        ko = aa_rx_ksol_opts_create();
+        aa_rx_ksol_opts_center_seed( ko, ssg );
+        aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
+        aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+        opts = ko;
     }
 
-
-    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
-    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
-
+    int r;
     if( 1 == n_e ) {
-        int r = aa_rx_sg_chain_ksol_dls( ssg, ko,
-                                         E, n_all, q0,
-                                         n_s, qs );
-        if( r ) return r;
+        r = aa_rx_sg_chain_ksol_dls( ssg, opts,
+                                     E,
+                                     0, NULL,
+                                     n_s, qs );
     } else {
         assert(0);
     }
 
 
     // Set JS Goal
-    aa_rx_mp_set_goal(mp, n_s, qs);
+    if( AA_RX_OK == r ) {
+        aa_rx_mp_set_goal(mp, n_s, qs);
+    }
 
-    return AA_RX_OK;
+    if( ko ) {
+        aa_rx_ksol_opts_destroy(ko);
+    }
+
+    return r;
 }
 
 

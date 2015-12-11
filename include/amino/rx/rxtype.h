@@ -80,22 +80,4 @@ typedef int (*aa_sdl_display_fun)(
     void *context,
     struct aa_sdl_display_params *params);
 
-/** OK */
-#define AA_RX_OK 0
-
-/** No Solution */
-#define AA_RX_NO_SOLUTION  (1<<0)
-
-/** No Solution */
-#define AA_RX_NO_IK  (1<<1)
-
-/** No Motion Plan */
-#define AA_RX_NO_MP  (1<<2)
-
-/** No Motion Plan */
-#define AA_RX_INVALID_FRAME  (1<<3)
-
-char *aa_rx_errstr( struct aa_mem_region *reg,
-                    int e );
-
 #endif /*AMINO_RX_RXTYPE_H*/

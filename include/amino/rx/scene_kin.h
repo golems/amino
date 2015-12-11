@@ -53,6 +53,10 @@ aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *sg );
 AA_API size_t
 aa_rx_sg_sub_config_count( const struct aa_rx_sg_sub *sg_sub );
 
+
+AA_API size_t
+aa_rx_sg_sub_all_config_count( const struct aa_rx_sg_sub *sg_sub );
+
 AA_API size_t
 aa_rx_sg_sub_frame_count( const struct aa_rx_sg_sub *sg_sub );
 
@@ -86,6 +90,14 @@ aa_rx_sg_sub_config_set(
 AA_API struct aa_rx_sg_sub *
 aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
                        aa_rx_frame_id root, aa_rx_frame_id tip );
+
+
+/**
+ * Fill q with the centered positions of each configuration.
+ */
+AA_API void
+aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
+                             size_t n, double *q );
 
 /*-- Jacobians --*/
 AA_API void
@@ -146,6 +158,15 @@ aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
 AA_API void
 aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
                                   double *q, enum aa_mem_refop refop );
+
+AA_API void
+aa_rx_ksol_opts_take_seed( struct aa_rx_ksol_opts *opts, size_t n_q,
+                           double *q_all, enum aa_mem_refop refop );
+
+
+AA_API void
+aa_rx_ksol_opts_center_seed( struct aa_rx_ksol_opts *opts,
+                             const struct aa_rx_sg_sub *ssg );
 
 /**
  * Convenience function to set IK options to center joints

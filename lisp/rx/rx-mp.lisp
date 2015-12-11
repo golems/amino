@@ -62,6 +62,7 @@
 
 (cffi:defcfun aa-rx-mp-set-wsgoal :void
   (mp rx-mp-t)
+  (opts rx-ksol-opts-t)
   (n-e size-t)
   (E :pointer)
   (ld-e size-t))
@@ -103,7 +104,7 @@
   (let ((array (tf-array work-goal)))
     (with-foreign-simple-vector (pointer length) array :input
       (assert (= 7 length))
-      (aa-rx-mp-set-wsgoal motion-planner 1 pointer 7))))
+      (aa-rx-mp-set-wsgoal motion-planner (null-rx-ksol-opts) 1 pointer 7))))
 
 (defstruct motion-plan
   path

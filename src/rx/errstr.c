@@ -41,14 +41,15 @@
 static const char *errstrs[] = {"no_solution",
                                 "no_inverse_kinematics",
                                 "no_motion_plan",
-                                "invalid_frame"};
+                                "invalid_frame",
+                                "invalid_parameter" };
 
 
 char *aa_rx_errstr( struct aa_mem_region *reg,
                           int e )
 {
     size_t n = 0;
-    const char *strs[65];
+    const char *strs[sizeof(e) * 8 + 1];
     strs[0] = "OK";;
     strs[1] = NULL;
 

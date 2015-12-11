@@ -37,6 +37,8 @@
 
 (in-package :robray)
 
+(defparameter *ik-options* nil)
+
 (cffi:defcfun aa-rx-ksol-opts-destroy :void
   (obj :pointer))
 
@@ -59,7 +61,7 @@
                          start
                          frame
                          tf
-                         options)
+                         (options *ik-options*))
   (let* ((opts (or options (aa-rx-ksol-opts-create)))
          (ssg (scene-graph-chain scene-graph nil frame))
          (q-all (make-vec (sub-scene-graph-all-config-count ssg)))

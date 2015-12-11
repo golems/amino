@@ -36,6 +36,7 @@
  */
 
 #include "baxter-demo.h"
+#include "amino/rx/rxerr.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
@@ -85,7 +86,7 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     }
     aa_tick("Inverse Kinematics: ");
     {
-        int r = aa_rx_mp_set_wsgoal( mp, 1, E_ref, 7 );
+        int r = aa_rx_mp_set_wsgoal( mp, NULL, 1, E_ref, 7 );
         if( r ) {
             char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
             fprintf(stderr, "Inverse Kinematics failed: `%s' (0x%x)\n", e, r);

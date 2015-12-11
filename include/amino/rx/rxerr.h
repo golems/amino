@@ -35,43 +35,28 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_PLANNING_H
-#define AMINO_RX_SCENE_PLANNING_H
+#ifndef AMINO_RX_RXERR_H
+#define AMINO_RX_RXERR_H
 
-/**
- * @file scene_planning.h
- */
+/** OK */
+#define AA_RX_OK 0
 
-/*--- Motion Planning ---*/
+/** No Solution */
+#define AA_RX_NO_SOLUTION  (1<<0)
 
-struct aa_rx_mp;
+/** No Solution */
+#define AA_RX_NO_IK  (1<<1)
 
-AA_API struct aa_rx_mp*
-aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg );
+/** No Motion Plan */
+#define AA_RX_NO_MP  (1<<2)
 
-AA_API void
-aa_rx_mp_destroy( struct aa_rx_mp *mp );
+/** Invalid frame */
+#define AA_RX_INVALID_FRAME  (1<<3)
 
-AA_API void
-aa_rx_mp_set_start( struct aa_rx_mp *mp,
-                    size_t n_all,
-                    double *q_all );
+/** Invalid Parameter */
+#define AA_RX_INVALID_PARAMETER  (1<<4)
 
-AA_API int
-aa_rx_mp_set_goal( struct aa_rx_mp *mp,
-                   size_t n_q,
-                   double *q_subset);
+char *aa_rx_errstr( struct aa_mem_region *reg,
+                    int e );
 
-AA_API int
-aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
-                     const struct aa_rx_ksol_opts *opts,
-                     size_t n_e,
-                     double *E, size_t ldE );
-
-AA_API int
-aa_rx_mp_plan( struct aa_rx_mp *mp,
-               double timeout,
-               size_t *n_path,
-               double **p_path_all );
-
-#endif /*AMINO_RX_SCENE_PLANNING_H*/
+#endif /*AMINO_RX_RXERR_H*/
