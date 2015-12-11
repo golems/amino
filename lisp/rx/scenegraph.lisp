@@ -191,6 +191,10 @@
 (defun frame-name-compare (a b)
   (rope-compare-lexographic a b))
 
+(defun frame-name-global-p (frame-name)
+  (or (null frame-name)
+      (zerop (length (rope-string frame-name)))))
+
 (defstruct frame-inertial
   (mass 0d0 :type double-float)
   (inertia nil))
@@ -667,7 +671,7 @@
   (declare (type hash-table tf-absolute-map))
   (labels ((rec (frame-name)
              (cond
-               ((null frame-name) ; global frame
+               ((frame-name-global-p frame-name) ; global frame
                 (tf nil))
                ((gethash frame-name tf-absolute-map) ; already in hash
                 (gethash frame-name tf-absolute-map))
@@ -856,6 +860,42 @@
       (helper (- (vec-y delta)) (vec-y dim) (vec-x dim) (- (vec-y delta)) (lambda (y x z) (vec3* x y z)))
       (make-mesh-data :vertex-vectors (vec-flatten verts)
                       :vertex-indices (fnvec-flatten indices)))))
+
+
+
+(defun scene-graph-dot (scene-graph &key output)
+  (output-dot output
+              (lambda (s)
+                (labels ((sanitize (name)
+                           (substitute #\_ #\- name))
+                         (node (frame)
+                           (let ((n (scene-frame-name frame))
+                                 (shape (if (scene-frame-joint-p frame)
+                                            "oval"
+                                            "box")))
+
+                             (format s "~&  ~A[label=\"~A\",shape=~A];"
+                                     (sanitize n)
+                                     n
+                                     shape)))
+                         (edge (frame)
+                           (let ((n (scene-frame-name frame))
+                                 (p (scene-frame-parent frame))
+                                 (q (if (scene-frame-joint-p frame)
+                                        (scene-frame-joint-configuration-name frame)
+                                        "")))
+                           (format s "~&  ~A -> ~A[label=\"~A\"];"
+                                   (if (frame-name-global-p p)
+                                       "ROOT"
+                                       (sanitize p))
+                                   (sanitize n)
+                                   (sanitize q)))))
+                  (format s "~&digraph {  ~&")
+                  (do-scene-graph-frames (frame scene-graph)
+                    (node frame))
+                  (do-scene-graph-frames (frame scene-graph)
+                    (edge frame))
+                  (format s "~&}~&")))))
 
 (defun scene-graph-pov-frame (scene-graph
                               &key
