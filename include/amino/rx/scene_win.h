@@ -86,6 +86,9 @@ AA_API void
 aa_rx_win_set_sg( struct aa_rx_win * win,
                   const struct aa_rx_sg *sg );
 
+AA_API const struct aa_rx_sg *
+aa_rx_win_get_sg( struct aa_rx_win * win );
+
 /**
  * Set the configuration vector for the window.
  *

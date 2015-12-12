@@ -74,6 +74,8 @@ struct aa_gl_globals {
     double angle_ratio;
     double fps;
 
+    aa_bits *frame_mask;
+    size_t frame_mask_size;
 
     /* Flags */
     unsigned show_visual : 1;

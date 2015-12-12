@@ -1101,6 +1101,7 @@ void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom 
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
     double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
     if( geom->gl_buffers &&
+        ( !aa_gl_globals_is_masked(cx->globals, (size_t)frame_id) ) &&
         ((cx->globals->show_visual && geom->opt.visual) ||
          (cx->globals->show_collision && geom->opt.collision)) )
     {
@@ -1171,4 +1172,32 @@ aa_rx_sg_gl_init( struct aa_rx_sg *sg )
 {
     aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
     aa_rx_sg_clean_gl(sg);
+}
+
+AA_API void
+aa_gl_globals_unmask_all( struct aa_gl_globals *globals )
+{
+    aa_checked_free(globals->frame_mask);
+    globals->frame_mask_size = 0;
+}
+
+AA_API int
+aa_gl_globals_is_masked( const struct aa_gl_globals *globals, size_t i )
+{
+    return aa_bits_getn( globals->frame_mask, globals->frame_mask_size, i);
+}
+
+AA_API void
+aa_gl_globals_mask( struct aa_gl_globals *globals, size_t i, int value ) {
+    if( aa_bits_size(i+1) > globals->frame_mask_size ) {
+        size_t old_size = globals->frame_mask_size;
+        size_t new_bits = 2*(i+1);
+        size_t new_size = aa_bits_size(new_bits);
+
+        globals->frame_mask_size = new_size;
+        globals->frame_mask = (aa_bits*)realloc( globals->frame_mask, new_size );
+        memset( globals->frame_mask + old_size, 0, new_size - old_size );
+    }
+
+    aa_bits_set(globals->frame_mask, i, value);
 }

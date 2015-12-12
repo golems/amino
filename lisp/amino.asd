@@ -75,7 +75,8 @@
                (:file "rx/cl-init" :depends-on ("rx/geom-bind"))
                (:file "rx/sg-cfun" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/scenegraph"))
                (:file "rx/rx-sg" :depends-on ("rx/sg-cfun" "rx/rx-lib" "rx/rx-type" "rx/scenegraph"))
-               (:file "rx/rx-win" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
+               (:file "rx/rx-gl" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
+               (:file "rx/rx-win" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg" "rx/rx-gl"))
                (:file "rx/rx-ik" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
                (:file "rx/rx-mp" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
                ;; other things

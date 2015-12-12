@@ -169,7 +169,15 @@ aa_rx_win_set_sg( struct aa_rx_win * win,
     win->q = AA_NEW0_AR( double, win->n_config );
     win->updated = 1;
 
+    aa_gl_globals_unmask_all( win->gl_globals );
+
     pthread_mutex_unlock( &win->mutex );
+}
+
+AA_API const struct aa_rx_sg *
+aa_rx_win_get_sg( struct aa_rx_win * win )
+{
+    return win->sg;
 }
 
 static int default_display( void *cx_, struct aa_sdl_display_params *params )

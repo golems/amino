@@ -235,6 +235,15 @@ aa_gl_globals_set_show_visual(
     struct aa_gl_globals *globals,
     int show_visual );
 
+AA_API void
+aa_gl_globals_unmask_all( struct aa_gl_globals *globals );
+
+AA_API int
+aa_gl_globals_is_masked( const struct aa_gl_globals *globals, size_t i );
+
+AA_API void
+aa_gl_globals_mask( struct aa_gl_globals *globals, size_t i, int value );
+
 /**
  * Set flag to enable render of collision geometry
  */

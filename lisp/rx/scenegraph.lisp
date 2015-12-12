@@ -371,6 +371,8 @@
 (defstruct scene-graph
   (frames (make-tree-set #'scene-frame-compare)))
 
+
+
 ;;; Basic Operations ;;;
 
 (defun scene-graph-lookup (scene-graph frame-name)
@@ -485,6 +487,10 @@
                                          collect (funcall function f g)))
                                     scene-graph)))
     (t (error "Unsupported result-type ~A" result-type))))
+
+
+(defun scene-graph-frame-names (scene-graph)
+  (map-scene-graph-frames 'list #'scene-frame-name scene-graph))
 
 (defun check-scene-graph-parents (scene-graph)
   (do-scene-graph-frames (frame scene-graph)

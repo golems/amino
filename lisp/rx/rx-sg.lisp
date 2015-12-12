@@ -41,6 +41,9 @@
 ;;; Mutable Scene Graphs ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun mutable-scene-graph-frame-id (m-sg frame)
+  (aa-rx-sg-frame-id m-sg (rope-string frame)))
+
 ;; (defmethod print-object ((object mutable-scene-graph) stream)
 ;;   (print-unreadable-object (object stream :type t)
 ;;     (format stream "(~x)"
@@ -213,8 +216,8 @@
 
 (defun scene-graph-chain (scenegraph root tip)
   (let* ((m-sg (mutable-scene-graph scenegraph))
-         (root-id (aa-rx-sg-frame-id m-sg (rope-string root)))
-         (tip-id (aa-rx-sg-frame-id m-sg (rope-string tip))))
+         (root-id (mutable-scene-graph-frame-id m-sg root))
+         (tip-id (mutable-scene-graph-frame-id m-sg tip)))
     (when (and (< root-id 0)
                (not (= root-id +frame-id-root+)))
       (error "Unrecognized frame ~A" root))

@@ -59,8 +59,6 @@
   (q :pointer))
 
 (defun rx-win-set-config (win config)
-
-
   (with-foreign-simple-vector (pointer length) config :input
     (aa-rx-win-set-config win length pointer)))
 
@@ -89,6 +87,9 @@
   (plan :pointer)
   (refop ref-op))
 
+(cffi:defcfun aa-rx-win-gl-globals :pointer
+  (win rx-win-t))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -112,6 +113,7 @@
   (setq *window* nil)
   (values))
 
+
 (defun win-set-scene-graph (scene-graph)
   (let ((win (win-create))
         (m-sg (mutable-scene-graph scene-graph)))
@@ -134,7 +136,43 @@
 (defun win-unpause ()
   (aa-rx-win-pause (win-create) nil))
 
+(defmacro with-win-paused (window &body body)
+  `(progn (let ((*window* ,window))
+            (win-pause)
+            (unwind-protect (progn ,@body)
+              (win-unpause)))))
+
 (defun win-set-display-plan (plan)
+  (when (zerop (length plan))
+    (error "Cannot view empty plan"))
   (let ((win (win-create)))
     (with-foreign-simple-vector (pointer length) plan :input
       (aa-rx-win-set-display-plan win length pointer :copy))))
+
+(defmacro with-win-gl-globals ((var &optional (window *window*)) &body body)
+  `(with-win-paused ,window
+     (let ((,var (%make-rx-gl-globals (aa-rx-win-gl-globals ,window))))
+       ,@body)))
+
+(defun win-mask-frames (frames &key
+                                 (hide t)
+                                 (window *window*))
+  (with-win-gl-globals (gl-globals window)
+    (let ((m-sg (rx-win-mutable-scene-graph window)))
+      (map nil (lambda (frame)
+                 (aa-gl-globals-mask gl-globals
+                                     (mutable-scene-graph-frame-id m-sg frame)
+                                     hide))
+           (ensure-list frames)))))
+
+
+(defun win-mask-all (&key (window *window*)
+                       (hide t))
+  (with-win-gl-globals (gl-globals window)
+    (if hide
+        (let* ((m-sg (rx-win-mutable-scene-graph window))
+               (sg (mutable-scene-graph-scene-graph m-sg)))
+          (win-mask-frames (scene-graph-frame-names sg)
+                           :window window
+                           :hide hide))
+        (gl-globals-unmask-all gl-globals))))

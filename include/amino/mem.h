@@ -560,7 +560,7 @@ aa_bits_get( aa_bits *b, size_t i )
 static inline int
 aa_bits_getn( aa_bits *b, size_t n, size_t i )
 {
-    if( aa_bits_size(i) > n ) return 0;
+    if( aa_bits_size(i+1) > n ) return 0;
     else return aa_bits_get( b, i );
 }
 
