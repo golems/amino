@@ -44,39 +44,89 @@
 
 /*--- Motion Planning ---*/
 
+/**
+ * Opaque structure for a motion planning context
+ */
 struct aa_rx_mp;
 
+/**
+ * Create a new motion plannet context for the given sub-scenegraph.
+ */
 AA_API struct aa_rx_mp*
 aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg );
 
+/**
+ * Destroy a motion planning context.
+ */
 AA_API void
 aa_rx_mp_destroy( struct aa_rx_mp *mp );
 
+/**
+ * Set the motion planning start configuration.
+ *
+ * \param mp The motion planning context
+ * \param n_all Length of array q_all
+ * \param q_all Array of start configurations for the entire scene graph.
+ */
 AA_API void
 aa_rx_mp_set_start( struct aa_rx_mp *mp,
                     size_t n_all,
                     double *q_all );
 
 
+/**
+ * Indicate a valid configuration for the motion planning context.
+ *
+ * All collisions at the given configuration are assumed to be
+ * allowed.
+ *
+ * \param mp The motion planning context
+ * \param n_all Length of array q_all
+ * \param q_all A valid configuration array (for the entire scene graph).
+ */
 AA_API void
 aa_rx_mp_allow_config( struct aa_rx_mp *mp,
                        size_t n_all,
                        double *q_all );
-
+/**
+ * Indicate whether collisions between the two given frames are
+ * allowed.
+ *
+ * By default, no collisions are allowed.
+ */
 AA_API void
 aa_rx_mp_allow_collision( struct aa_rx_mp *mp,
                           aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed );
 
+/**
+ * Set the goal as a joint-space configuration.
+ */
 AA_API int
 aa_rx_mp_set_goal( struct aa_rx_mp *mp,
                    size_t n_q,
                    double *q_subset);
 
+/**
+ * Set the goal as workspace pose.
+ */
 AA_API int
 aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
                      const struct aa_rx_ksol_opts *opts,
                      size_t n_e,
                      double *E, size_t ldE );
+/**
+ * Execute the planner.
+ *
+ * \param mp The motion planning context
+ *
+ * \param timeout Maximum time to execute the planner
+ *
+ * \param n_path Number of waypoints in the path.
+ *
+ * \param p_path_all Output path data.  Contains configurations at
+ * each waypoint for the entire scene graph.  Size is n_path times the
+ * configuration space size of the entire scene graph.
+ */
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
