@@ -355,8 +355,6 @@
 ;;; SCENE GRAPH STRUCTURE ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: dot output
-
 (defun scene-frame-compare (frame-a frame-b)
   (labels ((name (frame)
              (etypecase frame
@@ -417,16 +415,34 @@
             (map-tree-set 'list #'scene-frame-name intersection))
     (make-scene-graph :frames (tree-set-union set-1 set-2))))
 
-
+;; TODO: don't assume frame name == config-name
+(defun scene-graph-config-limits (scene-graph config-name)
+  (let* ((frame (scene-graph-lookup scene-graph config-name))
+         (limits (scene-frame-joint-limits frame)))
+    limits))
 
 (defun scene-graph-joint-center (scene-graph name)
-  (let* ((frame (scene-graph-lookup scene-graph name))
-         (limits (scene-frame-joint-limits frame))
+  (let* ((limits (scene-graph-config-limits scene-graph name))
          (position-limit (when limits (joint-limits-position limits))))
     (if position-limit
         (* .5d0 (+ (joint-limit-max position-limit)
                    (joint-limit-min position-limit)))
         0d0)))
+
+(defun scene-graph-position-limit-p (scene-graph configuration-map)
+  (fold-tree-map (lambda (violations name position)
+                   (if-let ((limits (scene-graph-config-limits scene-graph name)))
+                     (let ((position-limit (joint-limits-position limits)))
+                       (if (or (null position-limit)
+                               (and (<= position (joint-limit-max position-limit))
+                                    (>= position (joint-limit-min position-limit))))
+                           ;; in limits
+                           violations
+                           ;; out of limits
+                           (cons name violations)))
+                     ;; no limits
+                     violations))
+                 nil configuration-map))
 
 (defvar *scene-directory* (make-pathname))
 

@@ -88,14 +88,36 @@ aa_rx_mp_set_start( struct aa_rx_mp *mp,
     ss->extract_state( q_all, state.get() );
     mp->problem_definition->addStartState(state);
 
+    /* Assume the start state is valid */
+    aa_rx_mp_allow_config(mp, n_all, q_all);
+
     /* Configure State Validty Checker */
-    ss->allow_config(q_all);
     si->setStateValidityChecker(
         ompl::base::StateValidityCheckerPtr(
             new amino::sgStateValidityChecker(si.get(), q_all)) );
 
     /* Setup Space */
     si->setup();
+}
+
+AA_API void
+aa_rx_mp_allow_config( struct aa_rx_mp *mp,
+                       size_t n_all,
+                       double *q_all )
+{
+    amino::sgSpaceInformation::Ptr &si = mp->space_information;
+    amino::sgStateSpace *ss = si->getTypedStateSpace();
+    ss->allow_config(q_all);
+}
+
+
+AA_API void
+aa_rx_mp_allow_collision( struct aa_rx_mp *mp,
+                          aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed )
+{
+    amino::sgSpaceInformation::Ptr &si = mp->space_information;
+    amino::sgStateSpace *ss = si->getTypedStateSpace();
+    aa_rx_cl_set_set( ss->allowed, id0, id1, allowed );
 }
 
 AA_API int
@@ -126,7 +148,7 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
     const struct aa_rx_sg *sg = ss->scene_graph;
     size_t n_all = aa_rx_sg_config_count(sg);
     size_t n_s = aa_rx_sg_sub_config_count(ssg);
-    double q0[n_all], qs[n_s];
+    double qs[n_s];
 
     struct aa_rx_ksol_opts *ko = NULL;
     if( NULL == opts ) {
@@ -147,6 +169,8 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
         assert(0);
     }
 
+    //aa_dump_vec( stdout, opts->q_all_seed, n_all );
+    //aa_dump_vec( stdout, qs, n_s );
 
     // Set JS Goal
     if( AA_RX_OK == r ) {

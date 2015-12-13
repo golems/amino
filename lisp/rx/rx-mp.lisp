@@ -76,6 +76,13 @@
 (cffi:defcfun aa-rx-sg-cl-init :void
   (sg rx-sg-t))
 
+
+(cffi:defcfun aa-rx-mp-allow-collision :void
+  (mp rx-mp-t)
+  (id0 rx-frame-id)
+  (id1 rx-frame-id)
+  (allowed :boolean))
+
 (defun motion-planner (sub-scene-graph)
   (let ((mp (aa-rx-mp-create sub-scene-graph)))
     (setf (rx-mp-sub-scene-graph mp)
@@ -106,9 +113,23 @@
       (assert (= 7 length))
       (aa-rx-mp-set-wsgoal motion-planner (null-rx-ksol-opts) 1 pointer 7))))
 
+(defun motion-planner-allow-collision (motion-planner frame-0 frame-1 &optional (allowed t))
+  (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
+         (m-sg (sub-scene-graph-mutable-scene-graph ssg))
+         (id-0 (mutable-scene-graph-frame-id m-sg frame-0))
+         (id-1 (mutable-scene-graph-frame-id m-sg frame-1)))
+    (aa-rx-mp-allow-collision motion-planner id-0 id-1 allowed)))
+
+(defun motion-planner-allow-all (motion-planner allowed-list)
+  (loop for (frame-0 . frame-1) in allowed-list
+     do (motion-planner-allow-collision motion-planner frame-0 frame-1)))
+
 (defstruct motion-plan
   path
   sub-scene-graph)
+
+(defun motion-plan-valid-p (motion-plan)
+  (not (zerop (length (motion-plan-path motion-plan)))))
 
 (defun motion-plan-mutable-scene-graph (motion-plan)
   (sub-scene-graph-mutable-scene-graph
@@ -120,9 +141,11 @@
 
 (defun motion-plan (sub-scene-graph start-map
                     &key
+                      allowed-list
                       jointspace-goal
                       workspace-goal
                       (timeout 1d0))
+  ;;(print workspace-goal)
   (let* ((ssg sub-scene-graph)
          (m-sg (sub-scene-graph-mutable-scene-graph ssg)))
     (aa-rx-sg-cl-init m-sg)
@@ -130,6 +153,8 @@
            (n-all (sub-scene-graph-all-config-count ssg)))
       ;; Set start state
       (motion-planner-set-start planner start-map)
+      ;; Allow things
+      (motion-planner-allow-all planner allowed-list)
       ;; Set goal state
       (cond
         (jointspace-goal

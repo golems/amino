@@ -6,6 +6,7 @@
 
 (setq *scene-graph* (load-scene-file "package://baxter_description/urdf/baxter.urdf"))
 
+
 (win-set-scene-graph *scene-graph*)
 
 (win-set-config `(("right_s0" . ,(* .2 pi))))
@@ -24,7 +25,8 @@
 ;;                                             (vec 0.700658 -0.412207 0.188664 1.00646 -0.206635 0.99295 0.10569)))
 
 
-
+(defparameter *allowed-collision*
+  '(("right_w0_fixed" . "right_wrist-collision")))
 
 
 (defparameter *goal*
@@ -36,17 +38,24 @@
     ("right_w1" . ,(* .25 pi))
     ("right_w2" . ,(* 0 pi))))
 
+;; (defparameter *ws-goal*
+;;   (g* (quaternion-translation-2 (quaternion* 0 1 0 0)
+;;                                 (vec3* .7 0 .5))
+;;       (quaternion-translation-2 (x-angle (* -.5 pi))
+;;                                 nil)))
+
 (defparameter *ws-goal*
-  (g* (quaternion-translation-2 (quaternion* 0 1 0 0)
-                                (vec3* .7 0 .5))
-      (quaternion-translation-2 (x-angle (* -.5 pi))
-                                nil)))
+  (tf* (quaternion* 0.0d0 1.0d0 0.0d0 0)
+       (vec3* .8 -.25 .3051)))
+
+(defparameter *goal-ik* (scene-graph-ik *scene-graph* :frame "right_endpoint" :tf *ws-goal*))
 
 (win-set-config (scene-graph-ik *scene-graph* :frame "right_endpoint" :tf *ws-goal*))
 
 (defparameter *mp*
   (motion-plan *ssg* *start*
                ;;:jointspace-goal *goal*
+               :allowed-list *allowed-collision*
                :workspace-goal *ws-goal*))
 
 (win-view-plan *mp*)

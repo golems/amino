@@ -68,6 +68,10 @@
           (config-name-array)
           (config-index-map)))
 
+;; GL
+(amino-ffi::def-foreign-container rx-gl-globals rx-gl-globals-t
+  :destructor aa-rx-gl-globals-destroy)
+
 ;; sdl
 (amino-ffi::def-foreign-container rx-win rx-win-t
   :slots ((mutable-scene-graph)

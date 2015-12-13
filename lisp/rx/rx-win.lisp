@@ -160,9 +160,9 @@
   (with-win-gl-globals (gl-globals window)
     (let ((m-sg (rx-win-mutable-scene-graph window)))
       (map nil (lambda (frame)
-                 (aa-gl-globals-mask gl-globals
-                                     (mutable-scene-graph-frame-id m-sg frame)
-                                     hide))
+                 (let ((id (mutable-scene-graph-frame-id m-sg frame)))
+                   (check-type id frame-id)
+                   (aa-gl-globals-mask gl-globals id hide)))
            (ensure-list frames)))))
 
 

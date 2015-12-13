@@ -1178,6 +1178,7 @@ AA_API void
 aa_gl_globals_unmask_all( struct aa_gl_globals *globals )
 {
     aa_checked_free(globals->frame_mask);
+    globals->frame_mask = NULL;
     globals->frame_mask_size = 0;
 }
 

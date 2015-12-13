@@ -309,6 +309,10 @@ cl_check_callback( ::fcl::CollisionObject *o1,
     aa_rx_frame_id id1 = (intptr_t) o1->getUserData();
     aa_rx_frame_id id2 = (intptr_t) o2->getUserData();
 
+    //const struct aa_rx_sg *sg = data->cl->sg;
+    //const char *name1 = aa_rx_sg_frame_name(sg, id1);
+    //const char *name2 = aa_rx_sg_frame_name(sg, id2);
+
     /* Skip geometry in the same frame */
     if( id1 == id2 ) return false;
 
@@ -323,6 +327,7 @@ cl_check_callback( ::fcl::CollisionObject *o1,
     fcl::collide(o1, o2, request, result);
 
     if(!request.enable_cost && (result.isCollision()) && (result.numContacts() >= request.num_max_contacts)) {
+        //printf("collide: %s x %s\n", name1, name2 );
         /* In Collision */
         data->result = 1;
 

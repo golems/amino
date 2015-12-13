@@ -86,15 +86,18 @@ int main(int argc, char *argv[])
 
     // solver goal
     double qs[n_qs];
-    double E_ref[7];
-    {
-        double E0[7] = {0, 1, 0, 0,
-                        0.6, -0.0, 0.3};
-        double E1[7] = {0, 0, 0, 1,
-                        0, 0, 0 };
-        aa_tf_xangle2quat(-.5*M_PI, E1 );
-        aa_tf_qutr_mul( E0, E1, E_ref );
-    }
+    //double E_ref[7];
+
+    double E_ref[7] = {0, 1, 0, 0,
+                       .8, -.25, .3051};
+    /* { */
+    /*     double E0[7] = {0, 1, 0, 0, */
+    /*                     0.6, -0.0, 0.3}; */
+    /*     double E1[7] = {0, 0, 0, 1, */
+    /*                     0, 0, 0 }; */
+    /*     aa_tf_xangle2quat(-.5*M_PI, E1 ); */
+    /*     aa_tf_qutr_mul( E0, E1, E_ref ); */
+    /* } */
     aa_tick("Inverse Kinematics: ");
     int r = aa_rx_sg_chain_ksol_dls( ssg, ko,
                                      E_ref, n_q, qstart_all,

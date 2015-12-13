@@ -44,6 +44,8 @@
 #include "amino/rx/scene_geom_internal.h"
 #include "amino/rx/scene_collision.h"
 
+// TODO: packed storage for the triangular bit vector
+
 struct aa_rx_cl_set {
     size_t n;
     std::vector<bool> *v;

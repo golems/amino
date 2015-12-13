@@ -41,6 +41,9 @@
 ;;; Mutable Scene Graphs ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(deftype frame-id ()
+  `(unsigned-byte 31))
+
 (defun mutable-scene-graph-frame-id (m-sg frame)
   (aa-rx-sg-frame-id m-sg (rope-string frame)))
 

@@ -57,6 +57,16 @@ aa_rx_mp_set_start( struct aa_rx_mp *mp,
                     size_t n_all,
                     double *q_all );
 
+
+AA_API void
+aa_rx_mp_allow_config( struct aa_rx_mp *mp,
+                       size_t n_all,
+                       double *q_all );
+
+AA_API void
+aa_rx_mp_allow_collision( struct aa_rx_mp *mp,
+                          aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed );
+
 AA_API int
 aa_rx_mp_set_goal( struct aa_rx_mp *mp,
                    size_t n_q,

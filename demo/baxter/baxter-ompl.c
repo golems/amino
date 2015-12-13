@@ -45,6 +45,8 @@
 double *g_path = NULL;
 size_t g_n_path = 0;
 
+const char *allowed_collision[][2] = {{"right_w0_fixed" , "right_wrist-collision"},
+                                      {NULL,NULL}};
 
 static void motion_plan( const struct aa_rx_sg *scenegraph)
 {
@@ -56,10 +58,18 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
 
     struct aa_rx_mp *mp = aa_rx_mp_create( ssg );
 
+    /* Start state state */
     size_t n_q = aa_rx_sg_config_count(scenegraph);
     double q0[n_q];
     AA_MEM_ZERO(q0, n_q);
     aa_rx_mp_set_start( mp, n_q, q0);
+
+    /* Allow some collisions */
+    for (size_t i = 0; NULL != allowed_collision[i][0]; i ++ ) {
+        aa_rx_frame_id id0 = aa_rx_sg_frame_id(scenegraph, allowed_collision[i][0]);
+        aa_rx_frame_id id1 = aa_rx_sg_frame_id(scenegraph, allowed_collision[i][1]);
+        aa_rx_mp_allow_collision( mp, id0, id1, 1 );
+    }
 
     // set joint space start and goal states
     /* assert( 7 == aa_rx_sg_sub_config_count(ssg) ); */
@@ -75,15 +85,16 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
 
 
     // set work space start and goal states
-    double E_ref[7];
-    {
-        double E0[7] = {0, 1, 0, 0,
-                        0.7, -0.0, 0.5};
-        double E1[7] = {0, 0, 0, 1,
-                        0, 0, 0 };
-        aa_tf_xangle2quat(-.5*M_PI, E1 );
-        aa_tf_qutr_mul( E0, E1, E_ref );
-    }
+    double E_ref[7] = {0, 1, 0, 0,
+                       .8, -.25, .3051};
+    /* { */
+    /*     double E0[7] = {0, 1, 0, 0, */
+    /*                     0.7, -0.0, 0.5}; */
+    /*     double E1[7] = {0, 0, 0, 1, */
+    /*                     0, 0, 0 }; */
+    /*     aa_tf_xangle2quat(-.5*M_PI, E1 ); */
+    /*     aa_tf_qutr_mul( E0, E1, E_ref ); */
+    /* } */
     aa_tick("Inverse Kinematics: ");
     {
         int r = aa_rx_mp_set_wsgoal( mp, NULL, 1, E_ref, 7 );
