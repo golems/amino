@@ -102,7 +102,7 @@ aa_rx_sg_chain_frame_count( const struct aa_rx_sg *sg,
         enum aa_rx_frame_type ft = aa_rx_sg_frame_type( sg, tip );
         switch(ft) {
         case AA_RX_FRAME_FIXED:
-            break;
+            /* break; */
         case AA_RX_FRAME_REVOLUTE:
         case AA_RX_FRAME_PRISMATIC:
             a++;
@@ -125,7 +125,7 @@ aa_rx_sg_chain_frames( const struct aa_rx_sg *sg,
         enum aa_rx_frame_type ft = aa_rx_sg_frame_type( sg, tip );
         switch(ft) {
         case AA_RX_FRAME_FIXED:
-            break;
+        /*     break; */
         case AA_RX_FRAME_REVOLUTE:
         case AA_RX_FRAME_PRISMATIC:
             *ptr = tip;
@@ -141,10 +141,20 @@ AA_API size_t
 aa_rx_sg_chain_config_count( const struct aa_rx_sg *sg,
                              size_t n_frames, const aa_rx_frame_id  *chain_frames )
 {
-    (void)chain_frames;
-    (void)sg;
-    // TODO: handle multi-variate frames, when such frames exist
-    return n_frames;
+    size_t a = 0;
+    while( n_frames ) {
+        enum aa_rx_frame_type ft = aa_rx_sg_frame_type(sg, chain_frames[--n_frames]);
+        switch(ft) {
+        case AA_RX_FRAME_FIXED:
+            break;
+        case AA_RX_FRAME_REVOLUTE:
+        case AA_RX_FRAME_PRISMATIC:
+            a++;
+            break;
+        }
+    }
+
+    return a;
 }
 
 
@@ -153,9 +163,21 @@ aa_rx_sg_chain_configs( const struct aa_rx_sg *sg,
                         size_t n_frames, const aa_rx_frame_id *chain_frames,
                         size_t n_configs, aa_rx_config_id *chain_configs )
 {
-    assert( n_configs == n_frames );
-    for( size_t i = 0, j = 0; i<n_frames && j<n_configs; i++, j++ ) {
-        chain_configs[j] = aa_rx_sg_frame_config(sg, chain_frames[i]);
+    /* TODO: handle duplicate configs */
+    for( size_t i_config = 0, i_frame = 0;
+         i_frame < n_frames && i_config < n_configs;
+         i_frame++ )
+    {
+        enum aa_rx_frame_type ft = aa_rx_sg_frame_type(sg, chain_frames[i_frame]);
+
+        switch(ft) {
+        case AA_RX_FRAME_FIXED:
+            break;
+        case AA_RX_FRAME_REVOLUTE:
+        case AA_RX_FRAME_PRISMATIC:
+            chain_configs[i_config++] = aa_rx_sg_frame_config(sg, chain_frames[i_frame]);
+            break;
+        }
     }
 }
 
@@ -214,27 +236,25 @@ aa_rx_sg_chain_jacobian( const struct aa_rx_sg *sg,
                          size_t n_configs, aa_rx_frame_id *chain_configs,
                          double *J, size_t ld_J )
 {
-    (void)n_configs; (void)chain_configs; /* Use these for multivariate frame support */
+    (void)chain_configs; /* Use these for multivariate frame support */
 
     aa_rx_frame_id frame_ee = chain_frames[n_frames-1];
     const double *pe = &TF_abs[(size_t)frame_ee * ld_TF] + AA_TF_QUTR_T;
 
-    for( size_t i = 0; i < n_frames;
-         i++, J+= ld_J )
+    for( size_t i_frame=0, i_config=0;
+         i_frame < n_frames && i_config < n_configs;
+         i_frame++ )
     {
         double *Jr = J + AA_TF_DX_W; // rotational part
         double *Jt = J + AA_TF_DX_V; // translational part
 
-        aa_rx_frame_id frame = chain_frames[i];
+        aa_rx_frame_id frame = chain_frames[i_frame];
         assert( frame >= 0 );
         assert( (size_t)frame < n_tf );
         enum aa_rx_frame_type ft = aa_rx_sg_frame_type(sg, frame);
 
         switch(ft) {
         case AA_RX_FRAME_FIXED:
-            fprintf(stderr,"ERROR: fixed frame found in kinematic chain\n");
-            /* I guess we zero this column? */
-            AA_MEM_ZERO(J, 6);
             break;
 
         case AA_RX_FRAME_REVOLUTE:
@@ -260,6 +280,8 @@ aa_rx_sg_chain_jacobian( const struct aa_rx_sg *sg,
             default: assert(0);
             }
 
+            i_config++;
+            J += ld_J;
             break;
         } /* end joint */
         } /* end switch */
