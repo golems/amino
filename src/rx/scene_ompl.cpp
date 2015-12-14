@@ -191,13 +191,20 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
                size_t *n_path,
                double **p_path_all )
 {
+    *n_path = 0;
+    *p_path_all = NULL;
+
     amino::sgSpaceInformation::Ptr &si = mp->space_information;
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
     ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
     planner->setProblemDefinition(pdef);
-    planner->solve(timeout);
+    try {
+        planner->solve(timeout);
+    } catch(...) {
+        return AA_RX_NO_SOLUTION;
+    }
     if( pdef->hasSolution() ) {
         const ompl::base::PathPtr &path0 = pdef->getSolutionPath();
         ompl::geometric::PathGeometric &path = static_cast<ompl::geometric::PathGeometric&>(*path0);
@@ -220,8 +227,6 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
         }
         return AA_RX_OK;
     } else {
-        *n_path = 0;
-        *p_path_all = NULL;
         return AA_RX_NO_SOLUTION | AA_RX_NO_MP;
     }
 }
