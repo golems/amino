@@ -206,10 +206,12 @@ INTENT: One of (or :input :output :inout). When value
         is (or :output :inout), return the vector after evaluating
         BODY.
 "
-  (with-gensyms (increment)
-    `(with-foreign-vector (,pointer ,increment ,length) ,vector ,intent
-       (unless (= 1 ,increment) (matrix-storage-error "Not a simple vector"))
-       ,@body)))
+  (with-gensyms (increment simple-vector-fun)
+    `(flet ((,simple-vector-fun (,pointer ,length)
+              ,@body))
+       (with-foreign-vector (,pointer ,increment ,length) ,vector ,intent
+         (unless (= 1 ,increment) (matrix-storage-error "Not a simple vector"))
+         (,simple-vector-fun ,pointer ,length)))))
 
 (defmacro with-foreign-fixed-vector (pointer vector fixed-length intent &body body)
   "Bind POINTER corresponding values of VECTOR, then evaluate BODY.

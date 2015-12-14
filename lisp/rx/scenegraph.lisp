@@ -285,6 +285,13 @@
 (defun configuration-map-merge (original-map update-map)
   (tree-map-insert-map original-map update-map))
 
+(defun configuration-map-pairs (names values)
+  (let ((result (make-configuration-map)))
+    (map nil (lambda (name value)
+               (tree-map-insertf result name value))
+         names values)
+    result))
+
 (defun configuration-map-equal (a b)
   (let ((a (tree-map-alist a))
         (b (tree-map-alist b)))
@@ -386,6 +393,25 @@
                               :%limits limits
                               :tf (tf tf)))
 
+
+;;;;;;;;;;;;;;;;;;;;;
+;;; Collision Sets ;;
+;;;;;;;;;;;;;;;;;;;;;
+(deftype collision-set ()
+  `tree-set)
+
+(defun make-collision-set ()
+  (make-tree-set #'compare-allowed-collision))
+
+(defun collision-set-insert (collision-set frame-1 frame-2)
+  (multiple-value-bind (frame-1 frame-2)
+      (cond-compare (frame-1 frame-2 #'frame-name-compare)
+                    (values frame-1 frame-2)
+                    (values frame-1 frame-2)
+                    (values frame-2 frame-1))
+    (tree-set-insert collision-set
+                     (cons frame-1 frame-2))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SCENE GRAPH STRUCTURE ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -398,7 +424,7 @@
 
 (defstruct scene-graph
   (frames (make-tree-set #'scene-object-compare) :type tree-set)
-  (allowed-collisions (make-tree-set #'compare-allowed-collision) :type tree-set)
+  (allowed-collisions (make-collision-set) :type collision-set)
   (configs (make-tree-set #'scene-object-compare) :type tree-set))
 
 (defun %scene-graph-merge (scene-graph-1 scene-graph-2)
@@ -428,22 +454,20 @@
 
 (defun scene-graph-allow-collision (scene-graph frame-1 frame-2)
   (let ((scene-graph (copy-scene-graph scene-graph)))
-    ;; Normalize frame order
-    (multiple-value-bind (frame-1 frame-2)
-        (cond-compare (frame-1 frame-2 #'frame-name-compare)
-                      (values frame-1 frame-2)
-                      (values frame-1 frame-2)
-                      (values frame-2 frame-1))
-      (tree-set-insertf (scene-graph-allowed-collisions scene-graph)
-                        (cons frame-1 frame-2)))
+    (setf (scene-graph-allowed-collisions scene-graph)
+          (collision-set-insert (scene-graph-allowed-collisions scene-graph)
+                                frame-1
+                                frame-2))
     scene-graph))
 
-(defun scene-graph-allow-collisions (scene-graph frame-pair-list)
-  (fold (lambda (scene-graph cons)
-          (destructuring-bind (a . b) cons
-            (scene-graph-allow-collision scene-graph a b)))
-        scene-graph
-        frame-pair-list))
+(defun scene-graph-allow-collisions (scene-graph collision-set)
+  (flet ((add-cons (scene-graph cons)
+           (destructuring-bind (a . b) cons
+             (scene-graph-allow-collision scene-graph a b))))
+    (funcall (etypecase collision-set
+               (list #'fold)
+               (tree-set #'fold-tree-set))
+             #'add-cons scene-graph collision-set)))
 
 (defun %scene-graph-add-frame (scene-graph frame)
   "Add a frame to the scene."

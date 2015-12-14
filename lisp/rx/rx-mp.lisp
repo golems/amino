@@ -126,11 +126,12 @@
       (motion-planner-allow-collision motion-planner frame-0 frame-1))))
 
 (defstruct motion-plan
-  path
-  sub-scene-graph)
+  sub-scene-graph
+  path)
 
 (defun motion-plan-valid-p (motion-plan)
-  (not (zerop (length (motion-plan-path motion-plan)))))
+  (when (motion-plan-p motion-plan)
+    (not (zerop (length (motion-plan-path motion-plan))))))
 
 (defun motion-plan-mutable-scene-graph (motion-plan)
   (sub-scene-graph-mutable-scene-graph
@@ -146,6 +147,7 @@
                       workspace-goal
                       (timeout 1d0))
   ;;(print workspace-goal)
+  ;;(declare (optimize (speed 0) (debug 3)))
   (let* ((ssg sub-scene-graph)
          (m-sg (sub-scene-graph-mutable-scene-graph ssg))
          (sg (mutable-scene-graph-scene-graph m-sg)))
@@ -172,20 +174,18 @@
                 (values result
                         (cffi:mem-ref plan-length 'amino-ffi:size-t)
                         (cffi:mem-ref plan-ptr :pointer)))))
-        (if (< result 0)
-            ;; error, no plan
-            nil
-            ;; got a plan
-            (let* ((m (* n-path n-all))
-                   (result (make-vec m)))
-              ;; copy plan to lisp-space
-              (with-foreign-simple-vector (pointer length) result :output
-                (amino-ffi:libc-memcpy pointer path-ptr
-                                       (* length (cffi:foreign-type-size :double))))
-              ;; free c-space plan
-              (amino-ffi:libc-free path-ptr)
-              (make-motion-plan :path result
-                                :sub-scene-graph sub-scene-graph)))))))
+        (when (zerop result)
+          ;; got a plan
+          (let* ((m (* n-path n-all))
+                 (result (make-vec m)))
+            ;; copy plan to lisp-space
+            (with-foreign-simple-vector (pointer length) result :output
+              (amino-ffi:libc-memcpy pointer path-ptr
+                                     (* length (cffi:foreign-type-size :double))))
+            ;; free c-space plan
+            (amino-ffi:libc-free path-ptr)
+            (make-motion-plan :path result
+                              :sub-scene-graph sub-scene-graph)))))))
 
 (defun win-view-plan (motion-plan)
   (win-pause)

@@ -4,12 +4,33 @@
 
 (sb-posix:setenv "ROS_PACKAGE_PATH" "/opt/ros/indigo/share/" 1)
 
-(defparameter *allowed-collision*
-  '(("right_w0_fixed" . "right_wrist-collision")))
+
+
 
 (setq *scene-graph* (load-scene-file "package://baxter_description/urdf/baxter.urdf"))
+
+(defparameter *config-names*
+  '("right_s0" "right_s1"
+    "right_e0" "right_e1"
+    "right_w0" "right_w1" "right_w2"))
+
+;; Allow Collisions
+(defparameter *allowed-collision*
+  '(("right_w0_fixed" . "right_wrist-collision")))
+(defun joint-config (values)
+  (configuration-map-pairs *config-names* values))
+
 (setq *scene-graph* (scene-graph-allow-collisions *scene-graph*
                                                   *allowed-collision*))
+(setq *scene-graph*
+      (scene-graph-allow-configuration *scene-graph*
+                                       (joint-config '(0.375973 -1.44985 0.555649
+                                                       2.54396 -0.133194 0.498291 0.260089))))
+
+(setq *scene-graph* (scene-graph-allow-configuration *scene-graph* nil))
+
+
+
 
 
 (win-set-scene-graph *scene-graph*)
@@ -23,14 +44,8 @@
 
 
 
-;(win-set-config (
-
-;; (win-set-config (sub-scene-graph-config-map *ssg*
-;;                                             ;(vec 0.700658 -0.412207 0.188664 1.00646 -0.206635 0.99295 0.10569)
-;;                                             (vec 0.700658 -0.412207 0.188664 1.00646 -0.206635 0.99295 0.10569)))
-
-
-
+;; some configs
+(win-set-config (joint-config '(0.375973 -1.44985 0.555649 2.54396 -0.133194 0.498291 0.260089)))
 
 (defparameter *goal*
   `(("right_s0" . ,(* .05 pi))

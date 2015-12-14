@@ -78,6 +78,7 @@
                (:file "rx/rx-gl" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
                (:file "rx/rx-win" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg" "rx/rx-gl"))
                (:file "rx/rx-ik" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
+               (:file "rx/rx-cl" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
                (:file "rx/rx-mp" :depends-on ("rx/rx-lib" "rx/rx-type" "rx/rx-sg"))
                ;; other things
                (:file "rx/util" :depends-on ("rx/robray-package"))

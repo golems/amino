@@ -167,6 +167,34 @@
   (aref (mutable-scene-graph-config-name-array m-sg)
         i))
 
+(defun mutable-scene-graph-frame-count (m-sg)
+  (aa-rx-sg-frame-count m-sg))
+
+(defun mutable-scene-graph-tf-array (m-sg &key
+                                            configuration-map
+                                            tf-absolute
+                                            tf-relative)
+  (let* ((config-array (mutable-scene-graph-config-vector m-sg configuration-map))
+         (frame-count (mutable-scene-graph-frame-count m-sg))
+         (tf-absolute (or tf-absolute (make-vec (* 7 frame-count))))
+         (tf-relative (or tf-relative (make-vec (* 7 frame-count)))))
+    (assert (>= (length tf-relative)
+                (* 7 frame-count)))
+    (assert (>= (length tf-absolute)
+                (* 7 frame-count)))
+    (with-foreign-simple-vector (config-ptr config-length) config-array :input
+      (with-foreign-simple-vector (rel-ptr rel-length) tf-relative :output
+        (declare (ignore rel-length))
+        (with-foreign-simple-vector (abs-ptr abs-length) tf-absolute :output
+          (declare (ignore abs-length))
+          (aa-rx-sg-tf m-sg
+                       config-length config-ptr
+                       frame-count
+                       rel-ptr 7
+                       abs-ptr 7))))
+    (values tf-absolute
+            tf-relative)))
+
 ;;;;;;;;;;;;;;;;;
 ;;; Subgraphs ;;;
 ;;;;;;;;;;;;;;;;;

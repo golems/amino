@@ -31,6 +31,7 @@ aarx_core_SOURCES = \
 	rx/rx-sg.lisp \
 	rx/rx-gl.lisp \
 	rx/rx-win.lisp \
+	rx/rx-cl.lisp \
 	rx/rx-mp.lisp \
 	rx/rx-ik.lisp \
 	rx/util.lisp \

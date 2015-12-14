@@ -90,6 +90,16 @@
   (q amino::quaternion-t)
   (v amino::vector-3-t))
 
+(cffi:defcfun aa-rx-sg-tf :void
+  (sg rx-sg-t)
+  (n-q size-t)
+  (q :pointer)
+  (n-tf size-t)
+  (tf-rel :pointer)
+  (ld-rel size-t)
+  (tf-abs :pointer)
+  (ld-abs size-t))
+
 (cffi:defcfun aa-rx-sg-add-frame-prismatic :void
   (sg rx-sg-t)
   (parent :string)

@@ -85,6 +85,16 @@
           (config-index-map)
           (config-name-array)))
 
+;; Collision
+(amino-ffi::def-foreign-container rx-cl-set rx-cl-set-t
+  :destructor aa-rx-cl-set-destroy
+  :slots ((mutable-scene-graph)))
+
+
+(amino-ffi::def-foreign-container rx-cl rx-cl-t
+  :destructor aa-rx-cl-destroy
+  :slots ((mutable-scene-graph)))
+
 ;; Planning
 (amino-ffi::def-foreign-container rx-mp rx-mp-t
   :destructor aa-rx-mp-destroy
