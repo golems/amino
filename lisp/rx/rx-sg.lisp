@@ -70,10 +70,10 @@
            (aa-rx-sg-add-frame-fixed sg parent name q v))
           ;; joint frame
           (scene-frame-joint
-           (let ((axis (scene-frame-joint-axis frame))
-                 (offset (scene-frame-joint-configuration-offset frame))
-                 (config-name (scene-frame-joint-configuration-name frame))
-                 (limits (scene-frame-joint-limits frame)))
+           (let* ((axis (scene-frame-joint-axis frame))
+                  (offset (scene-frame-joint-configuration-offset frame))
+                  (config-name (scene-frame-joint-configuration-name frame))
+                  (limits (scene-graph-config-limits scene-graph config-name)))
              ;; add the frame
              (etypecase frame
                (scene-frame-revolute

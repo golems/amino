@@ -120,9 +120,10 @@
          (id-1 (mutable-scene-graph-frame-id m-sg frame-1)))
     (aa-rx-mp-allow-collision motion-planner id-0 id-1 allowed)))
 
-(defun motion-planner-allow-all (motion-planner allowed-list)
-  (loop for (frame-0 . frame-1) in allowed-list
-     do (motion-planner-allow-collision motion-planner frame-0 frame-1)))
+(defun motion-planner-allow-all (motion-planner allowed-set)
+  (do-tree-set (pair allowed-set)
+    (destructuring-bind (frame-0 . frame-1) pair
+      (motion-planner-allow-collision motion-planner frame-0 frame-1))))
 
 (defstruct motion-plan
   path
@@ -141,20 +142,21 @@
 
 (defun motion-plan (sub-scene-graph start-map
                     &key
-                      allowed-list
                       jointspace-goal
                       workspace-goal
                       (timeout 1d0))
   ;;(print workspace-goal)
   (let* ((ssg sub-scene-graph)
-         (m-sg (sub-scene-graph-mutable-scene-graph ssg)))
+         (m-sg (sub-scene-graph-mutable-scene-graph ssg))
+         (sg (mutable-scene-graph-scene-graph m-sg)))
     (aa-rx-sg-cl-init m-sg)
     (let* ((planner (motion-planner sub-scene-graph))
            (n-all (sub-scene-graph-all-config-count ssg)))
       ;; Set start state
       (motion-planner-set-start planner start-map)
       ;; Allow things
-      (motion-planner-allow-all planner allowed-list)
+      ;(print (scene-graph-allowed-collisions sg))
+      (motion-planner-allow-all planner (scene-graph-allowed-collisions sg))
       ;; Set goal state
       (cond
         (jointspace-goal

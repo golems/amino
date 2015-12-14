@@ -4,7 +4,12 @@
 
 (sb-posix:setenv "ROS_PACKAGE_PATH" "/opt/ros/indigo/share/" 1)
 
+(defparameter *allowed-collision*
+  '(("right_w0_fixed" . "right_wrist-collision")))
+
 (setq *scene-graph* (load-scene-file "package://baxter_description/urdf/baxter.urdf"))
+(setq *scene-graph* (scene-graph-allow-collisions *scene-graph*
+                                                  *allowed-collision*))
 
 
 (win-set-scene-graph *scene-graph*)
@@ -25,8 +30,6 @@
 ;;                                             (vec 0.700658 -0.412207 0.188664 1.00646 -0.206635 0.99295 0.10569)))
 
 
-(defparameter *allowed-collision*
-  '(("right_w0_fixed" . "right_wrist-collision")))
 
 
 (defparameter *goal*
@@ -55,7 +58,7 @@
 (defparameter *mp*
   (motion-plan *ssg* *start*
                ;;:jointspace-goal *goal*
-               :allowed-list *allowed-collision*
+               ;;:allowed-list *allowed-collision*
                :workspace-goal *ws-goal*))
 
 (win-view-plan *mp*)

@@ -181,15 +181,60 @@
 (defun scene-geometry-cylinder-height (geometry)
   (scene-cylinder-height (scene-geometry-shape geometry)))
 
+;;;;;;;;;;;;;;;;;;;;
+;;; Scene Object ;;;
+;;;;;;;;;;;;;;;;;;;;
+
+(deftype scene-object-name ()
+  `rope)
+
+(defstruct scene-object
+  (name nil :type config-name))
+
+(defun scene-object-name-compare (a b)
+  (rope-compare-lexographic a b))
+
+(defun scene-object-compare (obj-a obj-b)
+  (labels ((name (obj)
+             (etypecase obj
+               (rope obj)
+               (scene-object (scene-object-name obj)))))
+    (declare (dynamic-extent #'name))
+    (scene-object-name-compare (name obj-a)
+                               (name obj-b))))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;;; Configurations ;;;
+;;;;;;;;;;;;;;;;;;;;;
+
+(deftype config-name ()
+  `scene-object-name)
+
+(defun config-name-compare (a b)
+  (scene-object-name-compare a b))
+
+(defstruct joint-limit
+  (min 0 :type double-float)
+  (max 0 :type double-float))
+
+(defstruct joint-limits
+  (position nil :type (or null joint-limit))
+  (velocity nil :type (or null joint-limit))
+  (acceleration nil :type (or null joint-limit))
+  (effort nil :type (or null joint-limit)))
+
+(defstruct (scene-config (:include scene-object))
+  (limits nil :type (or nil joint-limits)))
+
 ;;;;;;;;;;;;;;
 ;;; FRAMES ;;;
 ;;;;;;;;;;;;;;
 
 (deftype frame-name ()
-  `rope)
+  `scene-object-name)
 
 (defun frame-name-compare (a b)
-  (rope-compare-lexographic a b))
+  (scene-object-name-compare a b))
 
 (defun frame-name-global-p (frame-name)
   (or (null frame-name)
@@ -199,9 +244,8 @@
   (mass 0d0 :type double-float)
   (inertia nil))
 
-(defstruct scene-frame
+(defstruct (scene-frame (:include scene-object))
   "Base struct for frames in the scene."
-  (name nil :type frame-name)
   (parent nil :type frame-name)
   (inertial nil :type (or null frame-inertial))
   (tf +tf-ident+ :type tf)
@@ -261,22 +305,13 @@
                  (make-configuration-map)
                  map))
 
-(defstruct joint-limit
-  (min 0 :type double-float)
-  (max 0 :type double-float))
-
-(defstruct joint-limits
-  (position nil :type (or null joint-limit))
-  (velocity nil :type (or null joint-limit))
-  (acceleration nil :type (or null joint-limit))
-  (effort nil :type (or null joint-limit)))
 
 (defstruct (scene-frame-joint (:include scene-frame))
   "Base struct for varying scene frames."
   (configuration-name nil :type frame-name)
   (configuration-offset 0d0 :type double-float)
   (axis (vec3* 0d0 0d0 1d0) :type vec3)
-  (limits nil :type (or null joint-limits)))
+  (%limits nil :type (or null joint-limits)))
 
 (defstruct (scene-frame-revolute (:include scene-frame-joint))
   "A frame representing a revolute (rotating) joint.")
@@ -328,7 +363,7 @@
                              :configuration-name configuration-name
                              :configuration-offset (coerce configuration-offset 'double-float)
                              :parent parent
-                             :limits limits
+                             :%limits limits
                              :axis (vec3 axis)
                              :tf (tf tf)))
 
@@ -348,28 +383,41 @@
                               :configuration-offset (coerce configuration-offset 'double-float)
                               :parent parent
                               :axis (vec3 axis)
-                              :limits limits
+                              :%limits limits
                               :tf (tf tf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SCENE GRAPH STRUCTURE ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun scene-frame-compare (frame-a frame-b)
-  (labels ((name (frame)
-             (etypecase frame
-               (rope frame)
-               (scene-frame (scene-frame-name frame)))))
-    (declare (dynamic-extent #'name))
-    (frame-name-compare (name frame-a)
-                        (name frame-b))))
-
 ;; TODO: Make separate config set
 
+(defun compare-allowed-collision (a b)
+  (or-compare (config-name-compare (car a) (car b))
+              (config-name-compare (cdr a) (cdr b))))
+
 (defstruct scene-graph
-  (frames (make-tree-set #'scene-frame-compare)))
+  (frames (make-tree-set #'scene-object-compare) :type tree-set)
+  (allowed-collisions (make-tree-set #'compare-allowed-collision) :type tree-set)
+  (configs (make-tree-set #'scene-object-compare) :type tree-set))
 
-
+(defun %scene-graph-merge (scene-graph-1 scene-graph-2)
+  "Combine two scene graphs."
+  (labels ((merge-set (set-1 set-2 type-string)
+             (let ((intersection (tree-set-intersection set-1 set-2)))
+               (assert (zerop (tree-set-count intersection)) ()
+                       "Duplicate ~A in merged trees: ~A"
+                       type-string
+                       (map-tree-set 'list #'scene-object-name intersection))
+               (tree-set-union set-1 set-2))))
+    (make-scene-graph :frames (merge-set (scene-graph-frames scene-graph-1)
+                                         (scene-graph-frames scene-graph-2)
+                                         "frames")
+                      :configs (merge-set (scene-graph-configs scene-graph-1)
+                                          (scene-graph-configs scene-graph-2)
+                                          "configs")
+                      :allowed-collisions (tree-set-union (scene-graph-allowed-collisions scene-graph-1)
+                                                          (scene-graph-allowed-collisions scene-graph-2)))))
 
 ;;; Basic Operations ;;;
 
@@ -378,15 +426,48 @@
   (tree-set-find (scene-graph-frames scene-graph)
                  frame-name))
 
+(defun scene-graph-allow-collision (scene-graph frame-1 frame-2)
+  (let ((scene-graph (copy-scene-graph scene-graph)))
+    ;; Normalize frame order
+    (multiple-value-bind (frame-1 frame-2)
+        (cond-compare (frame-1 frame-2 #'frame-name-compare)
+                      (values frame-1 frame-2)
+                      (values frame-1 frame-2)
+                      (values frame-2 frame-1))
+      (tree-set-insertf (scene-graph-allowed-collisions scene-graph)
+                        (cons frame-1 frame-2)))
+    scene-graph))
+
+(defun scene-graph-allow-collisions (scene-graph frame-pair-list)
+  (fold (lambda (scene-graph cons)
+          (destructuring-bind (a . b) cons
+            (scene-graph-allow-collision scene-graph a b)))
+        scene-graph
+        frame-pair-list))
+
 (defun %scene-graph-add-frame (scene-graph frame)
   "Add a frame to the scene."
+  ;; TODO: handle duplicate configs
   (make-scene-graph :frames (tree-set-replace (scene-graph-frames scene-graph)
-                                              frame)))
+                                              frame)
+                    :allowed-collisions (scene-graph-allowed-collisions scene-graph)
+                    :configs (if (scene-frame-joint-p frame)
+                                 ;; add config
+                                 (tree-set-insert (scene-graph-configs scene-graph)
+                                                  (make-scene-config
+                                                   :name (scene-frame-joint-configuration-name frame)
+                                                   :limits (scene-frame-joint-%limits frame)))
+                                 ;; now new config
+                                 (scene-graph-configs scene-graph))))
 
 (defun scene-graph-remove-frame (scene-graph frame-name)
   "Remove a frame from the scene."
+  ;; TODO: remove allowed collisions and configs
   (make-scene-graph :frames (tree-set-remove (scene-graph-frames scene-graph)
-                                             frame-name)))
+                                             frame-name)
+                    :allowed-collisions (scene-graph-allowed-collisions scene-graph)
+                    :configs (scene-graph-configs scene-graph)))
+
 
 (defun scene-graph-add-geometry (scene-graph frame-name geometry)
   "Bind collision geometry to a frame in the scene."
@@ -405,21 +486,11 @@
                                :inertia inertia))
     (%scene-graph-add-frame scene-graph frame)))
 
-(defun %scene-graph-merge (scene-graph-1 scene-graph-2)
-  "Combine two scene graphs."
-  (let* ((set-1 (scene-graph-frames scene-graph-1))
-         (set-2 (scene-graph-frames scene-graph-2))
-         (intersection (tree-set-intersection set-1 set-2)))
-    (assert (zerop (tree-set-count intersection)) ()
-            "Duplicate frames in merged trees: ~A"
-            (map-tree-set 'list #'scene-frame-name intersection))
-    (make-scene-graph :frames (tree-set-union set-1 set-2))))
-
 ;; TODO: don't assume frame name == config-name
 (defun scene-graph-config-limits (scene-graph config-name)
-  (let* ((frame (scene-graph-lookup scene-graph config-name))
-         (limits (scene-frame-joint-limits frame)))
-    limits))
+  (when-let ((scene-config (tree-set-find (scene-graph-configs scene-graph)
+                                          config-name)))
+    (scene-config-limits scene-config)))
 
 (defun scene-graph-joint-center (scene-graph name)
   (let* ((limits (scene-graph-config-limits scene-graph name))
@@ -430,6 +501,7 @@
         0d0)))
 
 (defun scene-graph-position-limit-p (scene-graph configuration-map)
+  "Check if configuration-map is within the position limits of scene-graph"
   (fold-tree-map (lambda (violations name position)
                    (if-let ((limits (scene-graph-config-limits scene-graph name)))
                      (let ((position-limit (joint-limits-position limits)))

@@ -81,6 +81,7 @@
    :scene-graph-tf-absolute
    :*scene-directory*
    :load-scene-file
+   :scene-graph-allow-collisions
 
 
    ;; variables
