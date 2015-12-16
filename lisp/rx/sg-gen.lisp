@@ -41,7 +41,7 @@
 (defun scene-genc-mesh-var (mesh)
   (rope "mesh__" (scene-mesh-name mesh)))
 
-(defun scene-genc-frame (argument-name frame)
+(defun scene-genc-frame (scene-graph argument-name frame)
   (let* ((tf (scene-frame-tf frame))
          (name (scene-frame-name frame))
          (name-string (cgen-string (scene-frame-name frame)))
@@ -72,13 +72,15 @@
                           (cgen-string (scene-frame-joint-configuration-name frame))
                           "axis"
                           (scene-frame-joint-configuration-offset frame))
-          (when-let ((limits (scene-frame-joint-limits frame)))
+          ;; TODO: Map over limits separately from frames
+          (when-let* ((config-name (scene-frame-joint-configuration-name frame))
+                      (limits (scene-graph-config-limits scene-graph config-name)))
             (labels ((emit-limit (fun limit-fun)
                        (when-let* ((limit (funcall limit-fun limits))
                                    (min (joint-limit-min limit))
                                    (max (joint-limit-max limit)))
                          (cgen-call-stmt fun argument-name
-                                         (cgen-string (scene-frame-joint-configuration-name frame))
+                                         (cgen-string config-name)
                                          min max))))
               (list (emit-limit "aa_rx_sg_set_limit_pos" #'joint-limits-position)
                     (emit-limit "aa_rx_sg_set_limit_vel" #'joint-limits-velocity)
@@ -253,7 +255,7 @@
                                              (cgen-call "aa_rx_sg_create")))))
       ;; Map Frames
       (item (map-scene-graph-frames 'list (lambda (frame)
-                                            (scene-genc-frame argument-name frame))
+                                            (scene-genc-frame scene-graph argument-name frame))
                                     scene-graph))
       ;; Initialize meshes
       (item (scene-genc-mesh-vars scene-graph))
