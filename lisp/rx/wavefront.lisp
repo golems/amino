@@ -291,10 +291,15 @@
                          (format nil "--forward=~A" mesh-forward-axis))))
         (format t "~&~{~A~^ ~}" args)
         (ensure-directories-exist output-file)
+        ;; check blender return value
         (multiple-value-bind (output error-output status)
             (uiop:run-program args)
           (declare (ignore output error-output))
-          (assert (zerop status) () "mesh conversion failed")))
+          (assert (zerop status) () "mesh conversion failed"))
+        ;; check that file was generated
+        (unless (probe-file output-file)
+          (error "Blender could not convert `~A' to Wavefront OBJ.  Does your Blender have support for ~A files?"
+                 source-file (file-type source-file))))
       ;; cache
       (progn
         ;(format t "~&obj cached ~A" output-file)
