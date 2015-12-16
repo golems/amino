@@ -133,3 +133,15 @@ Scene Graphs
   - Compile the scene graph to a shared library and load the library
     with dlopen().  To reload the scene graph, recompile the scene
     graph and dlopen() the library again.
+
+Common Errors
+-------------
+
+* I get error messages about missing .obj files or Blender being
+  unable to convert a .dae to Wavefront OBJ.
+
+  - We use Blender to convert various mesh formats to Wavefront OBJ,
+    then import the OBJ file.  The Blender binaries in the Debian and
+    Ubuntu repositories (as of Jessie and Trusty) are not built with
+    COLLADA (.dae) support.  You can download the prebuilt binaries
+    from http://www.blender.org/ which do support COLLADA.
