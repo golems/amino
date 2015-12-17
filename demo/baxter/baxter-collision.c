@@ -40,7 +40,7 @@
 
 
 struct display_cx {
-    const struct aa_gl_globals *globals;
+    struct aa_rx_win *win;
     const struct aa_rx_sg *scenegraph;
     struct aa_rx_cl *cl;
     double q;
@@ -51,19 +51,10 @@ struct display_cx {
 int display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
-    int updated = aa_sdl_display_params_get_update(params);
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
     const struct timespec *last = aa_sdl_display_params_get_time_last(params);
 
-    const struct aa_gl_globals *globals = cx->globals;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
-
-
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    baxter_demo_check_error("glClearColor");
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    baxter_demo_check_error("glClear");
 
     aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
     aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
@@ -83,15 +74,15 @@ int display( void *cx_, struct aa_sdl_display_params *params )
                 n,
                 TF_rel, 7,
                 TF_abs, 7 );
-    aa_rx_sg_render( scenegraph, globals,
-                     (size_t)n, TF_abs, 7 );
+
+    aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
+                             n, TF_abs, 7 );
 
     int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7, NULL );
     printf("in collision: %s\n",
            col ? "yes" : "no" );
 
 
-    aa_sdl_display_params_set_update(params);
     return 0;
 }
 
@@ -115,7 +106,7 @@ int main(int argc, char *argv[])
     aa_gl_globals_set_show_collision(globals, 1);
 
     struct display_cx cx = {0};
-    cx.globals = globals;
+    cx.win = win;
     cx.scenegraph = scenegraph;
     cx.i_q = aa_rx_sg_config_id(scenegraph, "left_s0");
     cx.cl = aa_rx_cl_create( scenegraph );

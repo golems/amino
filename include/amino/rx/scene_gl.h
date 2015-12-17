@@ -96,7 +96,7 @@ AA_API void
 aa_rx_sg_render(
     const struct aa_rx_sg *scenegraph,
     const struct aa_gl_globals *globals,
-    size_t n_TF, double *TF_abs, size_t ld_TF);
+    size_t n_TF, const double *TF_abs, size_t ld_TF);
 
 /**
  * Convert a quaternion-translation to an OpenGL matrix

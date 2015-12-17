@@ -1091,7 +1091,7 @@ AA_DEF_BOOL_SETTER( aa_gl_globals, show_collision );
 
 struct sg_render_cx {
     const struct aa_rx_sg *sg;
-    double *TF;
+    const double *TF;
     size_t ld_tf;
     const struct aa_gl_globals *globals;
 };
@@ -1099,7 +1099,7 @@ struct sg_render_cx {
 void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
 {
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
-    double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
+    const double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
     if( geom->gl_buffers &&
         ( !aa_gl_globals_is_masked(cx->globals, (size_t)frame_id) ) &&
         ((cx->globals->show_visual && geom->opt.visual) ||
@@ -1114,7 +1114,7 @@ AA_API void
 aa_rx_sg_render(
     const struct aa_rx_sg *sg,
     const struct aa_gl_globals *globals,
-    size_t n_TF, double *TF_abs, size_t ld_tf)
+    size_t n_TF, const double *TF_abs, size_t ld_tf)
 {
     aa_rx_sg_ensure_clean_gl( sg );
 

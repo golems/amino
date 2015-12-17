@@ -42,7 +42,7 @@
 
 
 struct display_cx {
-    const struct aa_gl_globals *globals;
+    struct aa_rx_win *win;
     const struct aa_rx_sg *scenegraph;
     const struct aa_rx_sg_sub *ssg;
     double *q;
@@ -51,7 +51,6 @@ struct display_cx {
 int display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
-    const struct aa_gl_globals *globals = cx->globals;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
@@ -61,11 +60,6 @@ int display( void *cx_, struct aa_sdl_display_params *params )
     double t = aa_tm_timespec2sec( aa_tm_sub(*now, *first) );
     double dt = aa_tm_timespec2sec( aa_tm_sub(*now, *last) );
 
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    baxter_demo_check_error("glClearColor");
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    baxter_demo_check_error("glClear");
 
     aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
     aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
@@ -78,9 +72,10 @@ int display( void *cx_, struct aa_sdl_display_params *params )
                 n,
                 TF_rel, 7,
                 TF_abs, 7 );
-    aa_rx_sg_render( scenegraph, globals,
-                     (size_t)n, TF_abs, 7 );
 
+
+    aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
+                             n, TF_abs, 7 );
 
     double dx_r[6] = {0};
     size_t rows,cols;
@@ -152,7 +147,7 @@ int main(int argc, char *argv[])
     // setup control context
     size_t n_q = aa_rx_sg_config_count(scenegraph);
     struct display_cx cx = {0};
-    cx.globals = globals;
+    cx.win = win;
     cx.scenegraph = scenegraph;
     cx.q = AA_NEW0_AR(double, n_q );
 

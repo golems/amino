@@ -90,6 +90,20 @@ AA_API const struct aa_rx_sg *
 aa_rx_win_get_sg( struct aa_rx_win * win );
 
 /**
+ * Render a scenegraph at the given configuration in the window.
+ */
+AA_API void
+aa_rx_win_display_sg_config( struct aa_rx_win *win, struct aa_sdl_display_params *params,
+                             const struct aa_rx_sg *scenegraph,
+                             size_t n_q, const double *q );
+
+
+AA_API void
+aa_rx_win_display_sg_tf( struct aa_rx_win *win, struct aa_sdl_display_params *params,
+                         const struct aa_rx_sg *scenegraph,
+                         size_t n_tf, const double *tf_abs, size_t ld_tf );
+
+/**
  * Set the configuration vector for the window.
  *
  * This configuration is used by the default rendering function.

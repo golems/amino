@@ -180,34 +180,48 @@ aa_rx_win_get_sg( struct aa_rx_win * win )
     return win->sg;
 }
 
+AA_API void
+aa_rx_win_display_sg_tf( struct aa_rx_win *win, struct aa_sdl_display_params *params,
+                   const struct aa_rx_sg *scenegraph,
+                   size_t n_tf, const double *tf_abs, size_t ld_tf )
+{
+    aa_sdl_display_params_set_update(params);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    const struct aa_gl_globals *globals = win->gl_globals;
+    aa_rx_sg_render( scenegraph, globals, n_tf, tf_abs, ld_tf );
+}
+
+
+AA_API void aa_rx_win_display_sg_config(
+    struct aa_rx_win *win, struct aa_sdl_display_params *params,
+    const struct aa_rx_sg *scenegraph,
+    size_t n_q, const double *q )
+{
+    size_t n = aa_rx_sg_frame_count(scenegraph);
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    double *TF_rel = AA_MEM_REGION_NEW_N( reg, double, 2 * 7 * n );
+    double *TF_abs = TF_rel + 7*n;
+    aa_rx_sg_tf(scenegraph, n_q, q,
+                n,
+                TF_rel, 7,
+                TF_abs, 7 );
+    aa_rx_win_display_sg_tf( win, params, scenegraph,
+                             n, TF_abs, 7 );
+
+    aa_mem_region_pop(reg,TF_rel);
+}
+
+
 static int default_display( void *cx_, struct aa_sdl_display_params *params )
 {
     /* We hold the mutex now */
     struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
     int updated = aa_sdl_display_params_get_update(params);
 
-    if( updated || cx->updated ) {
-        aa_sdl_display_params_set_update(params);
-
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        const struct aa_rx_sg *scenegraph = cx->sg;
-        if( scenegraph ) {
-            const struct aa_gl_globals *globals = cx->gl_globals;
-            size_t n = aa_rx_sg_frame_count(scenegraph);
-            size_t m = aa_rx_sg_config_count(scenegraph);
-
-            double TF_rel[7*n];
-            double TF_abs[7*n];
-            aa_rx_sg_tf(scenegraph, m, cx->q,
-                        n,
-                        TF_rel, 7,
-                        TF_abs, 7 );
-            aa_rx_sg_render( scenegraph, globals,
-                             (size_t)n, TF_abs, 7 );
-
-        }
+    if( (updated || cx->updated) && cx->sg ) {
+        aa_rx_win_display_sg_config( cx, params,
+                                     cx->sg, aa_rx_sg_frame_count(cx->sg), cx->q );
     }
 
     return updated;
@@ -256,15 +270,11 @@ aa_rx_win_set_display( struct aa_rx_win * win,
 static int plan_display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
-    const struct aa_gl_globals *globals = cx->gl_globals;
     const struct aa_rx_sg *scenegraph = cx->sg;
 
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
     //const struct timespec *last = aa_sdl_display_params_get_time_last(params);
 
-
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if( aa_sdl_display_params_is_first(params) ) {
         memcpy( &cx->plan_t0,
@@ -275,7 +285,6 @@ static int plan_display( void *cx_, struct aa_sdl_display_params *params )
     }
 
     size_t m = aa_rx_sg_config_count(scenegraph);
-    size_t n = aa_rx_sg_frame_count(scenegraph);
 
     double t = aa_tm_timespec2sec( aa_tm_sub( *now, cx->plan_t0 ) );
     double dt = .8;
@@ -313,19 +322,8 @@ static int plan_display( void *cx_, struct aa_sdl_display_params *params )
     //g_space->state_get( q, qs );
 
 
-    double *TF_rel = AA_MEM_REGION_LOCAL_NEW_N( double, 7*n );
-    double *TF_abs = AA_MEM_REGION_LOCAL_NEW_N( double, 7*n );
-    aa_rx_sg_tf(scenegraph, m, q,
-                n,
-                TF_rel, 7,
-                TF_abs, 7 );
-    aa_rx_sg_render( scenegraph, globals,
-                     (size_t)n, TF_abs, 7 );
-
-
-    aa_mem_region_local_pop( TF_rel );
-
-    aa_sdl_display_params_set_update(params);
+    aa_rx_win_display_sg_config( cx, params,
+                                 scenegraph, m, q );
 
     return 0;
 }
