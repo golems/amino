@@ -41,9 +41,6 @@
 ;;; Geometry Options ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-geom-opt-destroy :void
-  (value :pointer))
-
 (cffi:defcfun aa-rx-geom-opt-create rx-geom-opt-t)
 
 (defun make-geom-opt ()
@@ -151,14 +148,11 @@
 (cffi:defcfun aa-rx-geom-refcount :unsigned-int
   (geom-ptr :pointer))
 
-(cffi:defcfun aa-rx-geom-destroy :void
-  (geom :pointer))
-
-(defun rx-geom-destroy (pointer)
-  (let ((refcount (aa-rx-geom-refcount pointer)))
-    (if (= 0 refcount)
-        (error "Attempting to free geom with zero refcount")
-        (aa-rx-geom-destroy pointer))))
+;; (defun rx-geom-destroy (pointer)
+;;   (let ((refcount (aa-rx-geom-refcount pointer)))
+;;     (if (= 0 refcount)
+;;         (error "Attempting to free geom with zero refcount")
+;;         (aa-rx-geom-destroy pointer))))
 
 (cffi:defcfun aa-rx-geom-copy :pointer
   (value rx-geom-t))
@@ -304,18 +298,16 @@
 ;;;;;;;;;;;;
 
 (cffi:defcfun aa-rx-mesh-create :pointer)
-(cffi:defcfun aa-rx-mesh-destroy :void
-  (mesh :pointer))
 
 (cffi:defcfun aa-rx-mesh-refcount :unsigned-int
   (mesh-ptr :pointer))
 
 
-(defun rx-mesh-destroy (pointer)
-  (let ((refcount (aa-rx-mesh-refcount pointer)))
-    (if (= 0 refcount)
-        (error "Attempting to free mesh with 0 refcount")
-        (aa-rx-mesh-destroy pointer))))
+;; (defun rx-mesh-destroy (pointer)
+;;   (let ((refcount (aa-rx-mesh-refcount pointer)))
+;;     (if (= 0 refcount)
+;;         (error "Attempting to free mesh with 0 refcount")
+;;         (aa-rx-mesh-destroy pointer))))
 
 (cffi:defcfun aa-rx-mesh-set-vertices :void
   (mesh rx-mesh-t)

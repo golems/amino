@@ -41,9 +41,6 @@
 ;;; Foreign Bindings ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-win-destroy :void
-  (obj :pointer))
-
 (cffi:defcfun aa-rx-win-default-create rx-win-t
   (title :string)
   (width :int)

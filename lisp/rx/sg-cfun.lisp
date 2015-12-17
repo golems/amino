@@ -41,9 +41,6 @@
 ;;; Foreign Binding ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-sg-destroy :void
-  (value :pointer))
-
 (cffi:defcfun aa-rx-sg-create rx-sg-t)
 
 (cffi:defcfun aa-rx-sg-init :int

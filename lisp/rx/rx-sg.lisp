@@ -199,9 +199,6 @@
 ;;; Subgraphs ;;;
 ;;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-sg-sub-destroy :void
-  (ssg :pointer))
-
 (cffi:defcfun aa-rx-sg-chain-create rx-sg-sub-t
   (sg rx-sg-t)
   (root rx-frame-id)

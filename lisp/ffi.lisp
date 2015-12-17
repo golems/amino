@@ -85,7 +85,9 @@ Note that destructor must operate on the raw pointer type.
                                               '(:struct ,struct-type) slot))))
 
          ,@(when destructor
-                 `((defun ,%finalize-it (pointer)
+                 `((cffi:defcfun ,destructor :void
+                     (object :pointer))
+                   (defun ,%finalize-it (pointer)
                      (let ((object (,%make-it pointer)))
                        (sb-ext:finalize object (lambda () (,destructor pointer)))
                        object))))

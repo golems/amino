@@ -40,9 +40,6 @@
 
 ;;; MP struct ;;;
 
-(cffi:defcfun aa-rx-mp-destroy :void
-  (mp :pointer))
-
 (cffi:defcfun aa-rx-mp-create rx-mp-t
   (ssg rx-sg-sub-t))
 

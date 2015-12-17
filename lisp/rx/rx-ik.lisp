@@ -44,9 +44,6 @@
 ;;; IK OPTIONS ;;;
 ;;;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-ksol-opts-destroy :void
-  (obj :pointer))
-
 (cffi:defcfun aa-rx-ksol-opts-create rx-ksol-opts-t)
 
 (cffi:defcfun aa-rx-ksol-opts-set-dt :void
@@ -123,10 +120,6 @@
 (cffi:defcfun aa-rx-ik-jac-cx-create rx-ik-jac-cx-t
   (sub-scene-graph rx-sg-sub-t)
   (opts rx-ksol-opts-t))
-
-(cffi:defcfun aa-rx-jac-cx-destroy :void
-  (obj :pointer))
-
 
 (cffi:defcfun aa-rx-ik-jac-solve :int
   (context rx-ik-jac-cx-t)

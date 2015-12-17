@@ -41,9 +41,6 @@
 ;;; CL Set ;;;
 ;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-cl-set-destroy :void
-  (cl-set :pointer))
-
 (cffi:defcfun aa-rx-cl-set-create rx-cl-set-t
   (m-sg rx-sg-t))
 
@@ -61,9 +58,6 @@
 ;;;;;;;;;;;;;;;;;;
 ;;; Collisions ;;;
 ;;;;;;;;;;;;;;;;;;
-
-(cffi:defcfun aa-rx-cl-destroy :void
-  (cl :pointer))
 
 (cffi:defcfun aa-rx-cl-create rx-cl-t
   (m-sg rx-sg-t))

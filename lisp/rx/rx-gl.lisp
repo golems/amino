@@ -41,10 +41,6 @@
 ;;; Foreign Bindings ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-(cffi:defcfun aa-rx-globals-destroy :void
-  (obj :pointer))
-
 (cffi:defcfun aa-rx-gl-globals-create rx-gl-globals-t)
 
 (cffi:defcfun (gl-globals-show-collision "aa_gl_globals_set_show_collision") :void

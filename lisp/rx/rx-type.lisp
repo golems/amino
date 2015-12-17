@@ -55,11 +55,11 @@
 
 ;; mesh
 (amino-ffi::def-foreign-container rx-mesh rx-mesh-t
-  :destructor rx-mesh-destroy)
+  :destructor aa-rx-mesh-destroy)
 
 ;; geometry
 (amino-ffi::def-foreign-container rx-geom rx-geom-t
-  :destructor rx-geom-destroy)
+  :destructor aa-rx-geom-destroy)
 
 ;; scene graph
 (amino-ffi::def-foreign-container mutable-scene-graph rx-sg-t
