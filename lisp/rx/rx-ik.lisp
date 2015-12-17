@@ -39,22 +39,118 @@
 
 (defparameter *ik-options* nil)
 
+
+;;;;;;;;;;;;;;;;;;
+;;; IK OPTIONS ;;;
+;;;;;;;;;;;;;;;;;;
+
 (cffi:defcfun aa-rx-ksol-opts-destroy :void
   (obj :pointer))
 
 (cffi:defcfun aa-rx-ksol-opts-create rx-ksol-opts-t)
 
-(cffi:defcfun aa-rx-sg-sub-ksol-dls :int
+(cffi:defcfun aa-rx-ksol-opts-set-dt :void
+  (opts rx-ksol-opts-t)
+  (dt :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-tol-angle :void
+  (opts rx-ksol-opts-t)
+  (tol :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-tol-trans :void
+  (opts rx-ksol-opts-t)
+  (tol :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-tol-angle-svd :void
+  (opts rx-ksol-opts-t)
+  (tol :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-tol-trans-svd :void
+  (opts rx-ksol-opts-t)
+  (tol :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-tol-dq :void
+  (opts rx-ksol-opts-t)
+  (tol :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-tol-k-dls :void
+  (opts rx-ksol-opts-t)
+  (k :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-tol-s2min :void
+  (opts rx-ksol-opts-t)
+  (s2min :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-gain-angle :void
+  (opts rx-ksol-opts-t)
+  (k :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-gain-trans :void
+  (opts rx-ksol-opts-t)
+  (k :double))
+
+(cffi:defcfun aa-rx-ksol-opts-set-max-iterations :void
+  (opts rx-ksol-opts-t)
+  (n size-t))
+
+(cffi:defcfun aa-rx-ksol-opts-take-config :void
+  (opts rx-ksol-opts-t)
+  (n size-t)
+  (q :pointer)
+  (refop ref-op))
+
+(cffi:defcfun aa-rx-ksol-opts-take-gain-config :void
+  (opts rx-ksol-opts-t)
+  (n size-t)
+  (q :pointer)
+  (refop ref-op))
+
+(cffi:defcfun aa-rx-ksol-opts-take-seed :void
+  (opts rx-ksol-opts-t)
+  (n size-t)
+  (q :pointer)
+  (refop ref-op))
+
+(cffi:defcfun aa-rx-ksol-opts-center-configs :void
+  (opts rx-ksol-opts-t)
   (ssg rx-sg-sub-t)
-  (opts (rx-ksol-opts-t))
+  (gain :double))
+
+;;;;;;;;;;;;;;;;;;;
+;;; Jacobian IK ;;;
+;;;;;;;;;;;;;;;;;;;
+
+(cffi:defcfun aa-rx-ik-jac-cx-create rx-ik-jac-cx-t
+  (sub-scene-graph rx-sg-sub-t)
+  (opts rx-ksol-opts-t))
+
+(cffi:defcfun aa-rx-jac-cx-destroy :void
+  (obj :pointer))
+
+
+(cffi:defcfun aa-rx-ik-jac-solve :int
+  (context rx-ik-jac-cx-t)
   (n-tf size-t)
   (tf :pointer)
   (ld-tf size-t)
-  (n-q-all size-t)
-  (q-all :pointer)
   (n-q size-t)
-  (q-subset :pointer))
+  (q :pointer))
 
+;; (cffi:defcfun aa-rx-sg-sub-ksol-dls :int
+;;   (ssg rx-sg-sub-t)
+;;   (opts (rx-ksol-opts-t))
+;;   (n-tf size-t)
+;;   (tf :pointer)
+;;   (ld-tf size-t)
+;;   (n-q-all size-t)
+;;   (q-all :pointer)
+;;   (n-q size-t)
+;;   (q-subset :pointer))
+
+
+;;;;;;;;;;;;;;;
+;;; Wrapper ;;;
+;;;;;;;;;;;;;;;
 
 (defun scene-graph-ik (scene-graph
                        &key
@@ -64,21 +160,23 @@
                          (options *ik-options*))
   (let* ((opts (or options (aa-rx-ksol-opts-create)))
          (ssg (scene-graph-chain scene-graph nil frame))
-         (q-all (make-vec (sub-scene-graph-all-config-count ssg)))
+         (ik-cx (aa-rx-ik-jac-cx-create ssg opts))
          (q-sub (make-vec (sub-scene-graph-config-count ssg)))
          (tf-array (tf-array tf))
-         (start (or start (sub-scene-graph-center-map ssg))))
+         (start (or start (sub-scene-graph-center-map ssg)))
+         (q-all (make-vec (sub-scene-graph-all-config-count ssg))))
     ;; TODO: Option arguments
     (sub-scene-graph-all-config-vector ssg start q-all)
+    ;; Set options
+    (with-foreign-simple-vector (q-all-ptr q-all-length) q-all :input
+      (aa-rx-ksol-opts-take-seed opts q-all-length q-all-ptr :borrow))
     (let ((r))
-      (with-foreign-simple-vector (q-all-ptr q-all-length) q-all :input
-        (with-foreign-simple-vector (q-sub-ptr q-sub-length) q-sub :output
-          (with-foreign-simple-vector (tf-ptr tf-length) tf-array :input
-            (assert (= 7 tf-length))
-            (setq r
-                  (aa-rx-sg-sub-ksol-dls ssg opts
-                                         1 tf-ptr 7
-                                         q-all-length q-all-ptr
-                                         q-sub-length q-sub-ptr)))))
+      (with-foreign-simple-vector (q-sub-ptr q-sub-length) q-sub :output
+        (with-foreign-simple-vector (tf-ptr tf-length) tf-array :input
+          (assert (= 7 tf-length))
+          (setq r
+                (aa-rx-ik-jac-solve ik-cx
+                                    1 tf-ptr 7
+                                    q-sub-length q-sub-ptr))))
       (when (zerop r)
         (sub-scene-graph-config-map ssg q-sub)))))

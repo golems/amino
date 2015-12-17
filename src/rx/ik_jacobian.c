@@ -242,7 +242,7 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
 }
 
 
-AA_API int
+static int
 aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
                        const struct aa_rx_ksol_opts *opts,
                        size_t n_tf, const double *TF, size_t ld_TF,
@@ -330,6 +330,47 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
 
 }
 
+struct aa_rx_ik_jac_cx
+{
+    const struct aa_rx_sg_sub *ssg;
+    const struct aa_rx_ksol_opts *opts;
+};
+
+AA_API struct aa_rx_ik_jac_cx *
+aa_rx_ik_jac_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts )
+{
+    struct aa_rx_ik_jac_cx *cx = AA_NEW0(struct aa_rx_ik_jac_cx);
+    cx->ssg = ssg;
+    cx->opts = opts;
+    return cx;
+}
+
+AA_API void
+aa_rx_ik_jac_cx_destroy( struct aa_rx_ik_jac_cx *cx )
+{
+    free(cx);
+}
+
+
+AA_API int aa_rx_ik_jac_solve( const struct aa_rx_ik_jac_cx *context,
+                               size_t n_tf, const double *TF, size_t ld_TF,
+                               size_t n_q, double *q )
+{
+    return aa_rx_sg_sub_ksol_dls( context->ssg, context->opts,
+                                  n_tf, TF, ld_TF,
+                                  0, NULL,
+                                  n_q, q );
+}
+
+AA_API int aa_rx_ik_jac_fun( void *context_,
+                             size_t n_tf, const double *TF, size_t ld_TF,
+                             size_t n_q, double *q )
+{
+    struct aa_rx_ik_jac_cx *cx = (struct aa_rx_ik_jac_cx*)context_;
+    return aa_rx_ik_jac_solve( cx,
+                               n_tf, TF, ld_TF,
+                               n_q, q );
+}
 
 
 

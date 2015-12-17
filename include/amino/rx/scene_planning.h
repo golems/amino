@@ -111,7 +111,8 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
  */
 AA_API int
 aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
-                     const struct aa_rx_ksol_opts *opts,
+                     aa_rx_ik_fun *ik_fun,
+                     void *ik_cx,
                      size_t n_e,
                      double *E, size_t ldE );
 /**

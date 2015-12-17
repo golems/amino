@@ -97,13 +97,23 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     /* } */
     aa_tick("Inverse Kinematics: ");
     {
-        int r = aa_rx_mp_set_wsgoal( mp, NULL, 1, E_ref, 7 );
+
+        struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
+        struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
+        aa_rx_ksol_opts_center_seed( ko, ssg );
+        aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
+        aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+
+        int r = aa_rx_mp_set_wsgoal( mp, aa_rx_ik_jac_fun, ik_cx, 1, E_ref, 7 );
         if( r ) {
             char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
             fprintf(stderr, "Inverse Kinematics failed: `%s' (0x%x)\n", e, r);
             aa_mem_region_local_pop(e);
             exit(EXIT_FAILURE);
         }
+
+        aa_rx_ksol_opts_destroy(ko);
+        aa_rx_ik_jac_cx_destroy(ik_cx);
     }
     aa_tock();
 

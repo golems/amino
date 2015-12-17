@@ -149,10 +149,21 @@
     (with-foreign-simple-vector (pointer length) plan :input
       (aa-rx-win-set-display-plan win length pointer :copy))))
 
-(defmacro with-win-gl-globals ((var &optional (window *window*)) &body body)
+(defmacro with-win-gl-globals ((var &optional (window '*window*)) &body body)
   `(with-win-paused ,window
      (let ((,var (%make-rx-gl-globals (aa-rx-win-gl-globals ,window))))
        ,@body)))
+
+
+(defun win-view-visual ()
+  (with-win-gl-globals (gl-globals)
+    (gl-globals-show-visual gl-globals t)
+    (gl-globals-show-collision gl-globals nil)))
+
+(defun win-view-collision ()
+  (with-win-gl-globals (gl-globals)
+    (gl-globals-show-visual gl-globals nil)
+    (gl-globals-show-collision gl-globals t)))
 
 (defun win-mask-frames (frames &key
                                  (hide t)

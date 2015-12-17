@@ -42,6 +42,9 @@
  * @file scene_kin.h
  */
 
+
+
+
 /**
  * A scenegraph subset.
  */
@@ -110,6 +113,15 @@ aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                        double *J, size_t ld_J );
 
 /*-- Kinematic Solvers --*/
+
+/**
+ * General type for an IK solver function
+ */
+typedef int aa_rx_ik_fun( void *context,
+                          size_t n_tf, const double *TF, size_t ld_TF,
+                          size_t n_q, double *q );
+
+
 struct aa_rx_ksol_opts;
 
 AA_API struct aa_rx_ksol_opts*
@@ -176,24 +188,44 @@ aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
                                 const struct aa_rx_sg_sub *ssg,
                                 double gain );
 
-AA_API int
-aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
-                       const struct aa_rx_ksol_opts *opts,
-                       size_t n_tf, const double *TF, size_t ld_TF,
-                       size_t n_q_all, const double *q_start_all,
-                       size_t n_q, double *q_subset );
+/*-- Jacobian IK Solver --*/
 
-static inline int
-aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg_sub *ssg,
-                         const struct aa_rx_ksol_opts *opts,
-                         const double *TF,
-                         size_t n_q_all, const double *q_start_all,
-                         size_t n_qs, double *q_subset )
-{
-    return aa_rx_sg_sub_ksol_dls( ssg, opts, 1, TF, 7,
-                                  n_q_all, q_start_all,
-                                  n_qs, q_subset );
-}
+struct aa_rx_ik_jac_cx;
+
+AA_API struct aa_rx_ik_jac_cx *
+aa_rx_ik_jac_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts );
+
+AA_API void
+aa_rx_ik_jac_cx_destroy( struct aa_rx_ik_jac_cx *cx );
+
+
+AA_API int aa_rx_ik_jac_solve( const struct aa_rx_ik_jac_cx *context,
+                               size_t n_tf, const double *TF, size_t ld_TF,
+                               size_t n_q, double *q );
+
+AA_API int aa_rx_ik_jac_fun( void *context,
+                             size_t n_tf, const double *TF, size_t ld_TF,
+                             size_t n_q, double *q );
+
+
+/* AA_API int */
+/* aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg, */
+/*                        const struct aa_rx_ksol_opts *opts, */
+/*                        size_t n_tf, const double *TF, size_t ld_TF, */
+/*                        size_t n_q_all, const double *q_start_all, */
+/*                        size_t n_q, double *q_subset ); */
+
+/* static inline int */
+/* aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg_sub *ssg, */
+/*                          const struct aa_rx_ksol_opts *opts, */
+/*                          const double *TF, */
+/*                          size_t n_q_all, const double *q_start_all, */
+/*                          size_t n_qs, double *q_subset ) */
+/* { */
+/*     return aa_rx_sg_sub_ksol_dls( ssg, opts, 1, TF, 7, */
+/*                                   n_q_all, q_start_all, */
+/*                                   n_qs, q_subset ); */
+/* } */
 
 
 #endif /*AMINO_RX_SCENE_KIN_H*/
