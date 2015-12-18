@@ -40,17 +40,41 @@
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
+#include "amino/rx/mp_seq.h"
 
 //amino::sgStateValidityChecker *g_checker;
 double *g_path = NULL;
 size_t g_n_path = 0;
 
+double *g_path_2 = NULL;
+size_t g_n_path_2 = 0;
+
 const char *allowed_collision[][2] = {{"right_w0_fixed" , "right_wrist-collision"},
                                       {NULL,NULL}};
 
-static void motion_plan( const struct aa_rx_sg *scenegraph)
-{
+static void check_mp_error( int r ) {
+    if( r ) {
+        char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
+        fprintf(stderr, "Inverse Kinematics failed: `%s' (0x%x)\n", e, r);
+        aa_mem_region_local_pop(e);
+        exit(EXIT_FAILURE);
+    }
+}
 
+int main(int argc, char *argv[])
+{
+    (void)argc; (void)argv;
+
+    // Initialize scene graph
+    aa_rx_cl_init();
+    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph(NULL);
+    aa_rx_sg_init(scenegraph);
+    aa_rx_sg_cl_init(scenegraph);
+
+    //setup sequence
+    struct aa_rx_mp_seq *mp_seq = aa_rx_mp_seq_create();
+
+    // Do Planning
     // Initialize Spaces
     struct aa_rx_sg_sub *ssg = aa_rx_sg_chain_create( scenegraph,
                                                       AA_RX_FRAME_ROOT,
@@ -72,15 +96,15 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     }
 
     // set joint space start and goal states
-    /* assert( 7 == aa_rx_sg_sub_config_count(ssg) ); */
-    /* double q1[7] = {.05 * M_PI, // s0 */
-    /*                 -.25 * M_PI, // s1 */
-    /*                 0, // e0 */
-    /*                 .25*M_PI, // e1 */
-    /*                 0, // w0 */
-    /*                 .25*M_PI, // w1 */
-    /*                 0 // w2 */
-    /* }; */
+    assert( 7 == aa_rx_sg_sub_config_count(ssg) );
+    double q1[7] = {.05 * M_PI, // s0
+                    -.25 * M_PI, // s1
+                    0, // e0
+                    .25*M_PI, // e1
+                    0, // w0
+                    .25*M_PI, // w1
+                    0 // w2
+    };
     /* aa_rx_mp_set_goal( mp, 7, q1 ); */
 
 
@@ -105,12 +129,7 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
         aa_rx_ksol_opts_set_tol_dq( ko, .01 );
 
         int r = aa_rx_mp_set_wsgoal( mp, aa_rx_ik_jac_fun, ik_cx, 1, E_ref, 7 );
-        if( r ) {
-            char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
-            fprintf(stderr, "Inverse Kinematics failed: `%s' (0x%x)\n", e, r);
-            aa_mem_region_local_pop(e);
-            exit(EXIT_FAILURE);
-        }
+        if(r)  check_mp_error(r);
 
         aa_rx_ksol_opts_destroy(ko);
         aa_rx_ik_jac_cx_destroy(ik_cx);
@@ -118,12 +137,23 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
     aa_tock();
 
     // plan
-    int r = aa_rx_mp_plan( mp, 5,
-                           &g_n_path,
-                           &g_path );
+    int r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
+    if(r)  check_mp_error(r);
 
-    aa_rx_mp_destroy(mp);
-    aa_rx_sg_sub_destroy(ssg);
+    //aa_rx_mp_destroy(mp);
+    //aa_rx_sg_sub_destroy(ssg);
+
+
+    aa_rx_mp_seq_append_all(mp_seq, scenegraph, g_n_path, g_path );
+
+    // plan again
+    mp = aa_rx_mp_create( ssg );
+    assert(g_n_path > 2 );
+    double *end = g_path + n_q * (g_n_path-1);
+    aa_rx_mp_set_start( mp, n_q, end );
+    aa_rx_mp_set_goal( mp, 7, q0 );
+    r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
+
 
     if( r ) {
         char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
@@ -131,20 +161,27 @@ static void motion_plan( const struct aa_rx_sg *scenegraph)
         aa_mem_region_local_pop(e);
         exit(EXIT_FAILURE);
     }
-}
+    aa_rx_mp_seq_append_all(mp_seq, scenegraph, g_n_path, g_path );
 
-int main(int argc, char *argv[])
-{
-    (void)argc; (void)argv;
+    // plan once again
+    mp = aa_rx_mp_create( ssg );
+    aa_rx_mp_set_start( mp, n_q, q0 );
+    aa_rx_mp_set_goal( mp, 7, q1 );
 
-    // Initialize scene graph
-    aa_rx_cl_init();
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph(NULL);
-    aa_rx_sg_init(scenegraph);
-    aa_rx_sg_cl_init(scenegraph);
+    // plan
+    r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
+    if(r)  check_mp_error(r);
 
-    // Do Planning
-    motion_plan(scenegraph);
+    //aa_rx_mp_destroy(mp);
+    //aa_rx_sg_sub_destroy(ssg);
+
+    /* //setup sequence */
+    aa_rx_mp_seq_append_all(mp_seq, scenegraph, g_n_path, g_path );
+
+
+
+    aa_rx_mp_destroy(mp);
+    aa_rx_sg_sub_destroy(ssg);
 
     // setup window
     struct aa_rx_win * win = baxter_demo_setup_window(scenegraph);
@@ -152,8 +189,7 @@ int main(int argc, char *argv[])
     aa_gl_globals_set_show_visual(globals, 1);
     aa_gl_globals_set_show_collision(globals, 0);
 
-    aa_rx_win_set_display_plan(win, g_n_path * aa_rx_sg_config_count(scenegraph),
-                               g_path, AA_MEM_STEAL );
+    aa_rx_win_set_display_seq(win, mp_seq );
 
 
     aa_rx_win_display_loop(win);

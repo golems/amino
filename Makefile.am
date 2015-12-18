@@ -94,6 +94,7 @@ libamino_la_SOURCES =                  \
 	src/rx/ik_opt.c                \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
+	src/rx/mp_seq.cpp              \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \

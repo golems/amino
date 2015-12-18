@@ -230,7 +230,7 @@ AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size );
 
 /** Duplicate size bytes at p, allocated out of region.
  */
-AA_API void *aa_mem_region_dup( aa_mem_region_t *region, void *p, size_t size );
+AA_API void *aa_mem_region_dup( aa_mem_region_t *region, const void *p, size_t size );
 
 
 /** Deallocates all allocated objects from the region.  If the region
@@ -442,12 +442,20 @@ AA_API void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
         memcpy( (dst), (src), sizeof((dst)[0])*(n_elem) );      \
     }
 
+static inline void *aa_mem_dup( const void *src, size_t size )
+{
+    void *dst = malloc(size);
+    memcpy(dst,src,size);
+    return dst;
+}
+
+#define AA_MEM_DUP( type, src, count )                  \
+    (type*)aa_mem_dup( (src), sizeof(type)*(count) );
 
 #define AA_MEM_DUPOP( refop, type, const_dst, dst_data, src, n_elem )   \
     switch(refop) {                                                     \
     case AA_MEM_COPY:                                                   \
-        dst_data = (type*)malloc(sizeof(type) * n_elem);                \
-        AA_MEM_CPY(dst_data, src, n_elem);                              \
+        dst_data = AA_MEM_DUP(type, src, n_elem);                       \
         const_dst = dst_data;                                           \
         break;                                                          \
     case AA_MEM_STEAL:                                                  \
