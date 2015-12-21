@@ -53,6 +53,7 @@
 #include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/sbl/SBL.h>
 #include <ompl/geometric/PathGeometric.h>
+#include <ompl/geometric/PathSimplifier.h>
 
 struct aa_rx_mp;
 
@@ -182,6 +183,17 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
     return r;
 }
 
+static void
+path_cleanup( struct aa_rx_mp *mp, ompl::geometric::PathGeometric &path )
+{
+    amino::sgSpaceInformation::Ptr &si = mp->space_information;
+    //amino::sgStateSpace *ss = si->getTypedStateSpace();
+
+    if( mp->simplify ) {
+        ompl::geometric::PathSimplifier ps(si);
+        ps.simplifyMax(path);
+    }
+}
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
@@ -204,8 +216,11 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
         return AA_RX_NO_SOLUTION;
     }
     if( pdef->hasSolution() ) {
-        const ompl::base::PathPtr &path0 = pdef->getSolutionPath();
-        ompl::geometric::PathGeometric &path = static_cast<ompl::geometric::PathGeometric&>(*path0);
+        const ompl::base::PathPtr &path_ptr = pdef->getSolutionPath();
+        ompl::geometric::PathGeometric &path = static_cast<ompl::geometric::PathGeometric&>(*path_ptr);
+        path_cleanup(mp, path);
+
+
         /* Allocate a simple array */
         *n_path = path.getStateCount();
         *p_path_all = (double*)calloc( *n_path * ss->config_count_all(),
@@ -227,4 +242,11 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
     } else {
         return AA_RX_NO_SOLUTION | AA_RX_NO_MP;
     }
+}
+
+AA_API void
+aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
+                       int simplify )
+{
+    mp->simplify = simplify ? 1 : 0;
 }

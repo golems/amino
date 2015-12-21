@@ -115,6 +115,15 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
                      void *ik_cx,
                      size_t n_e,
                      double *E, size_t ldE );
+
+
+/**
+ * Set whether to simplify the planned path.
+ */
+AA_API void
+aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
+                       int simplify );
+
 /**
  * Execute the planner.
  *

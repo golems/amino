@@ -359,12 +359,15 @@ struct aa_rx_mp {
             new amino::sgSpaceInformation(
                 amino::sgSpaceInformation::SpacePtr(
                     new amino::sgStateSpace (sub_sg)))),
-        problem_definition(new ompl::base::ProblemDefinition(space_information))
+        problem_definition(new ompl::base::ProblemDefinition(space_information)),
+        simplify(0)
         { }
     ~aa_rx_mp();
 
     amino::sgSpaceInformation::Ptr space_information;
     ompl::base::ProblemDefinitionPtr problem_definition;
+
+    unsigned simplify : 1;
 };
 
 

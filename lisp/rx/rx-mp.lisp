@@ -79,12 +79,15 @@
 (cffi:defcfun aa-rx-sg-cl-init :void
   (sg rx-sg-t))
 
-
 (cffi:defcfun aa-rx-mp-allow-collision :void
   (mp rx-mp-t)
   (id0 rx-frame-id)
   (id1 rx-frame-id)
   (allowed :boolean))
+
+(cffi:defcfun aa-rx-mp-set-simplify :void
+  (mp rx-mp-t)
+  (simplify :boolean))
 
 (defun motion-planner (sub-scene-graph)
   (let ((mp (aa-rx-mp-create sub-scene-graph)))
@@ -176,6 +179,7 @@
                     &key
                       jointspace-goal
                       workspace-goal
+                      (simplify t)
                       (timeout 1d0))
   ;;(print workspace-goal)
   ;;(declare (optimize (speed 0) (debug 3)))
@@ -197,6 +201,8 @@
         (workspace-goal
          (motion-planner-set-work-goal planner workspace-goal))
         (t (error "No goal given")))
+      ;; Setup Simplification
+      (aa-rx-mp-set-simplify planner simplify)
       ;; Call Planner
       (multiple-value-bind (result n-path path-ptr)
           (cffi:with-foreign-object (plan-length 'amino-ffi:size-t)

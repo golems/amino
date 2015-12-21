@@ -98,6 +98,9 @@ int main(int argc, char *argv[])
     };
     aa_rx_mp_set_goal( mp, 7, q1 );
 
+    /* Enable path simplification */
+    aa_rx_mp_set_simplify(mp,1);
+
     /* Execute Planner */
     int r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
     if(r)  check_mp_error(r);

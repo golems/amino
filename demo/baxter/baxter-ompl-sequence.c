@@ -80,6 +80,8 @@ int main(int argc, char *argv[])
                                                       aa_rx_sg_frame_id(scenegraph, "right_w2") );
 
     struct aa_rx_mp *mp = aa_rx_mp_create( ssg );
+    /* Enable path simplification */
+    aa_rx_mp_set_simplify(mp,1);
 
     /* Start state state */
     size_t n_q = aa_rx_sg_config_count(scenegraph);
@@ -147,7 +149,9 @@ int main(int argc, char *argv[])
 
     // plan again
     mp = aa_rx_mp_create( ssg );
-    assert(g_n_path > 2 );
+    aa_rx_mp_set_simplify(mp,1);
+
+    assert(g_n_path > 1 );
     double *end = g_path + n_q * (g_n_path-1);
     aa_rx_mp_set_start( mp, n_q, end );
     aa_rx_mp_set_goal( mp, 7, q0 );
@@ -164,6 +168,8 @@ int main(int argc, char *argv[])
 
     // plan once again
     mp = aa_rx_mp_create( ssg );
+    aa_rx_mp_set_simplify(mp,1);
+
     aa_rx_mp_set_start( mp, n_q, q0 );
     aa_rx_mp_set_goal( mp, 7, q1 );
 
