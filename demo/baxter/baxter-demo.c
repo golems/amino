@@ -62,9 +62,9 @@ baxter_demo_setup_window ( struct aa_rx_sg *sg  )
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
     // setup scene graph
-    aa_rx_sg_init(sg);
-    aa_rx_win_sg_gl_init(win, sg);
-    aa_rx_win_set_sg(win, sg);
+    aa_rx_sg_init(sg); /* initialize scene graph internal structures */
+    aa_rx_win_sg_gl_init(win, sg); /* Initialize scene graph GL-rendering objects */
+    aa_rx_win_set_sg(win, sg); /* Set the scenegraph for the window */
 
     // result
     return win;

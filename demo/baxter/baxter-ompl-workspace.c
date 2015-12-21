@@ -41,7 +41,6 @@
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 
-
 const char *allowed_collision[][2] = {{"right_w0_fixed" , "right_wrist-collision"},
                                       {NULL,NULL}};
 
@@ -56,9 +55,7 @@ static void check_mp_error( int r ) {
 
 int main(int argc, char *argv[])
 {
-    (void)argc; (void)argv;
-
-    // Initialize scene graph
+    /* Initialize scene graph */
     aa_rx_cl_init(); /* initialize the collision library */
     struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph(NULL); /* load compiled URDF for robot scenegraph */
     aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
@@ -86,17 +83,23 @@ int main(int argc, char *argv[])
         aa_rx_mp_allow_collision( mp, id0, id1, 1 );
     }
 
-    /* set joint space goal state */
-    assert( 7 == aa_rx_sg_sub_config_count(ssg) );
-    double q1[7] = {.05 * M_PI, // s0
-                    -.25 * M_PI, // s1
-                    0, // e0
-                    .25*M_PI, // e1
-                    0, // w0
-                    .25*M_PI, // w1
-                    0 // w2
-    };
-    aa_rx_mp_set_goal( mp, 7, q1 );
+    /* set work space goal */
+    {
+        double E_ref[7] = { 0.0, 1.0, 0.0, 0.0, /* quaternion x-y-z-w */
+                        0.8, -.25, .3051 /* translation x-y-z */
+        };
+        struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
+        struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
+        aa_rx_ksol_opts_center_seed( ko, ssg );
+        aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
+        aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+
+        int r = aa_rx_mp_set_wsgoal( mp, aa_rx_ik_jac_fun, ik_cx, 1, E_ref, 7 );
+        if(r)  check_mp_error(r);
+
+        aa_rx_ksol_opts_destroy(ko);
+        aa_rx_ik_jac_cx_destroy(ik_cx);
+    }
 
     /* Execute Planner */
     int r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
@@ -113,11 +116,11 @@ int main(int argc, char *argv[])
     /* Run display loop */
     aa_rx_win_display_loop(win);
 
-    /* Cleanup */
-    aa_rx_mp_destroy(mp);
-    aa_rx_sg_sub_destroy(ssg);
+    // Cleanup
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
+    aa_rx_mp_destroy(mp);
+    aa_rx_sg_sub_destroy(ssg);
     aa_mem_region_local_destroy();
     SDL_Quit();
 

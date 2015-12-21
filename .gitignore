@@ -114,3 +114,5 @@ amino*.tar.gz
 /lisp/Makefile
 /lisp/Makefile.in
 /lisp/aarx.core
+/demo/baxter/baxter-ompl-sequence
+/demo/baxter/baxter-ompl-workspace

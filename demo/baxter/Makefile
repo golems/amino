@@ -11,7 +11,15 @@ OMPL_LIBS := -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lbo
 CFLAGS_OMPL := $(CFLAGS_ALL) -g `pkg-config --cflags $(OMPL_MODULES)`
 LDFLAGS_OMPL :=  `pkg-config --libs $(OMPL_MODULES)` $(LDFLAGS_ALL) $(OMPL_LIBS)
 
-PROGS := baxter-simple baxter-collision baxter-ompl baxter-wksp baxter-ik baxter-plugin
+PROGS := baxter-simple \
+	baxter-collision \
+	baxter-ompl \
+	baxter-ompl-workspace \
+	baxter-ompl-sequence \
+	baxter-wksp \
+	baxter-ik \
+	baxter-plugin
+
 OTHER_DEPS := scene.o baxter-demo.c
 ALL: $(PROGS)
 
@@ -33,6 +41,12 @@ baxter-collision: baxter-collision.c $(OTHER_DEPS) baxter-demo.h
 
 baxter-ompl: baxter-ompl.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-ompl.c $(CFLAGS_OMPL) $(LDFLAGS_OMPL) -o baxter-ompl
+
+baxter-ompl-workspace: baxter-ompl-workspace.c $(OTHER_DEPS) baxter-demo.h
+	$(CC) $(OTHER_DEPS) baxter-ompl-workspace.c $(CFLAGS_OMPL) $(LDFLAGS_OMPL) -o baxter-ompl-workspace
+
+baxter-ompl-sequence: baxter-ompl-sequence.c $(OTHER_DEPS) baxter-demo.h
+	$(CC) $(OTHER_DEPS) baxter-ompl-sequence.c $(CFLAGS_OMPL) $(LDFLAGS_OMPL) -o baxter-ompl-sequence
 
 scene.o: scene.c
 	$(CC) -c scene.c $(CFLAGS_ALL) -fPIC
