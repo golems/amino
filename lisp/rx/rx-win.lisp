@@ -81,11 +81,14 @@
 (cffi:defcfun aa-rx-win-set-display-plan :void
   (win rx-win-t)
   (n-plan amino-ffi:size-t)
-  (plan :pointer)
-  (refop ref-op))
+  (plan :pointer))
 
 (cffi:defcfun aa-rx-win-gl-globals :pointer
   (win rx-win-t))
+
+(cffi:defcfun aa-rx-win-set-display-seq :void
+  (win rx-win-t)
+  (mp-seq (rx-mp-seq-t)))
 
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
@@ -104,6 +107,9 @@
     (aa-rx-win-start *window*))
   *window*)
 
+(cffi:defcfun aa-rx-win-destroy :void
+  (obj :pointer))
+
 (defun win-destroy ()
   (assert *window*)
   (aa-rx-win-destroy (rx-win-pointer *window*))
@@ -111,9 +117,10 @@
   (values))
 
 
-(defun win-set-scene-graph (scene-graph)
-  (let ((win (win-create))
+(defun win-set-scene-graph (scene-graph &optional (window (win-create)))
+  (let ((win window)
         (m-sg (mutable-scene-graph scene-graph)))
+    (setf (rx-win-display-object window) m-sg)
     (aa-rx-win-sg-gl-init win m-sg)
     (setf (rx-win-mutable-scene-graph win) m-sg
           (rx-win-config-vector win) (make-vec (aa-rx-sg-config-count m-sg)))
@@ -139,12 +146,7 @@
             (unwind-protect (progn ,@body)
               (win-unpause)))))
 
-(defun win-set-display-plan (plan)
-  (when (zerop (length plan))
-    (error "Cannot view empty plan"))
-  (let ((win (win-create)))
-    (with-foreign-simple-vector (pointer length) plan :input
-      (aa-rx-win-set-display-plan win length pointer :copy))))
+
 
 (defmacro with-win-gl-globals ((var &optional (window '*window*)) &body body)
   `(with-win-paused ,window
@@ -184,3 +186,31 @@
                            :window window
                            :hide hide))
         (gl-globals-unmask-all gl-globals))))
+
+(defun win-display-motion-plan (motion-plan)
+  (let ((window (win-create))
+        (m-sg (motion-plan-mutable-scene-graph motion-plan))
+        (path (motion-plan-path motion-plan))
+        (n-path (motion-plan-length motion-plan)))
+    (setf (rx-win-display-object window) motion-plan)
+    (when (zerop (length path))
+      (error "Cannot view empty plan"))
+    (with-win-paused window
+      (win-set-scene-graph m-sg)
+      (with-foreign-simple-vector (pointer length) path :input
+        (declare (ignore length))
+        (aa-rx-win-set-display-plan window n-path pointer)))))
+
+(defun win-display-mp-seq (mp-seq)
+  (let ((window (win-create)))
+    (setf (rx-win-display-object window) mp-seq)
+    (with-win-paused window
+      (aa-rx-win-set-display-seq window mp-seq))))
+
+(defun win-display-motion-plan-sequence (motion-plans)
+  (let ((window (win-create)))
+    (win-display-mp-seq (fold (lambda (mp-seq motion-plan)
+                                (aa-rx-win-sg-gl-init window (motion-plan-mutable-scene-graph motion-plan))
+                                (mp-seq-append-mp mp-seq motion-plan))
+                              (make-mp-seq)
+                              motion-plans))))

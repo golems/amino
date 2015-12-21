@@ -469,12 +469,8 @@ static int mp_seq_display( void *cx_, struct aa_sdl_display_params *params )
 AA_API void
 aa_rx_win_set_display_seq( struct aa_rx_win * win, struct aa_rx_mp_seq *mp_seq)
 {
-
-    if( win->mp_seq ) aa_rx_mp_seq_destroy(win->mp_seq);
-
     win->mp_seq = mp_seq;
     aa_rx_win_set_display( win, mp_seq_display, win );
-
 }
 
 AA_API void

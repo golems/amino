@@ -197,6 +197,7 @@ int main(int argc, char *argv[])
     // Cleanup
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
+    aa_rx_mp_seq_destroy(mp_seq);
     aa_mem_region_local_destroy();
     SDL_Quit();
 

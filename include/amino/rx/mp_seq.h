@@ -39,22 +39,51 @@
 #define AMINO_RX_SCENE_MP_SEQ_H
 
 
-struct aa_rx_sg;;
+/**
+ * Scene Graph forward declaration
+ */
+struct aa_rx_sg;
+
+/**
+ * Opaque type for a motion plan sequence.
+ *
+ * Container type for a sequence of motion plans, potentially
+ * operating on difference scene graphs.
+ */
 struct aa_rx_mp_seq;
 
+/**
+ * Create a motion plan sequence
+ */
 AA_API struct aa_rx_mp_seq *
 aa_rx_mp_seq_create();
 
 
+/**
+ * Destroy a motion plan sequence
+ */
 AA_API void
 aa_rx_mp_seq_destroy( struct aa_rx_mp_seq * );
 
+/**
+ * Append a new motion plan to the mp_seq.
+ *
+ * This functions copies q_all_path and borrows the reference to sg.
+ *
+ * @param mp_seq The motion plan sequence
+ * @param sg Scene graph that the motion plan operates on
+ * @param n_path Number of waypoints in the path
+ * @param q_all_path The path points, total size is n_path*config_size(sg)
+ */
 AA_API void
 aa_rx_mp_seq_append_all( struct aa_rx_mp_seq * mp_seq,
                          const struct aa_rx_sg *sg,
                          size_t n_path, const double *q_all_path );
 
 
+/**
+ * Return the number of separate motion plans in mp_seq
+ */
 AA_API size_t
 aa_rx_mp_seq_count( struct aa_rx_mp_seq * mp_seq );
 

@@ -76,4 +76,4 @@
                ;;:allowed-list *allowed-collision*
                :workspace-goal *ws-goal*))
 
-(win-view-plan *mp*)
+(win-display-motion-plan-sequence (list *mp*))

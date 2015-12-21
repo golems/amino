@@ -74,7 +74,8 @@
 
 ;; sdl
 (amino-ffi::def-foreign-container rx-win rx-win-t
-  :slots ((mutable-scene-graph)
+  :slots ((display-object)
+          (mutable-scene-graph)
           (config-vector)))
 
 
@@ -99,6 +100,10 @@
 (amino-ffi::def-foreign-container rx-mp rx-mp-t
   :destructor aa-rx-mp-destroy
   :slots ((sub-scene-graph)))
+
+(amino-ffi::def-foreign-container rx-mp-seq rx-mp-seq-t
+  :destructor aa-rx-mp-seq-destroy
+  :slots (list))
 
 ;; Inverse Kinematics
 (amino-ffi::def-foreign-container rx-ksol-opts rx-ksol-opts-t

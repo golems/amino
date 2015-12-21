@@ -56,6 +56,11 @@
   (n-subset size-t)
   (q-subset :pointer))
 
+(cffi:defcfun (mutable-scene-graph-config-count "aa_rx_sg_config_count") size-t
+  (m-sg rx-sg-t))
+
+(cffi:defcfun (mutable-scene-graph-frame-count "aa_rx_sg_frame_count") size-t
+  (m-sg rx-sg-t))
 
 (cffi:defcfun aa-rx-mp-set-wsgoal :void
   (mp rx-mp-t)
@@ -158,6 +163,15 @@
   (mutable-scene-graph-scene-graph
    (motion-plan-mutable-scene-graph motion-plan)))
 
+(defun motion-plan-length (motion-plan)
+  (let* ((path (motion-plan-path motion-plan))
+         (m-sg (motion-plan-mutable-scene-graph motion-plan))
+         (n-config (mutable-scene-graph-config-count m-sg))
+         (n-path (/ (length path)
+                    n-config)))
+    (check-type n-path integer)
+    n-path))
+
 (defun motion-plan (sub-scene-graph start-map
                     &key
                       jointspace-goal
@@ -204,11 +218,11 @@
             (make-motion-plan :path result
                               :sub-scene-graph sub-scene-graph)))))))
 
-(defun win-view-plan (motion-plan)
-  (win-pause)
-  (win-set-scene-graph (motion-plan-mutable-scene-graph motion-plan))
-  (win-set-display-plan (motion-plan-path motion-plan))
-  (win-unpause))
+;; (defun win-view-plan (motion-plan)
+;;   (win-pause)
+;;   (win-set-scene-graph (motion-plan-mutable-scene-graph motion-plan))
+;;   (win-set-display-plan (motion-plan-path motion-plan))
+;;   (win-unpause))
 
 
 (defun motion-plan-endpoint-map (motion-plan)
@@ -229,3 +243,28 @@
          (path (motion-plan-path motion-plan))
          (i-0 (- (length path) n-sub)))
     (subseq path i-0)))
+
+
+
+;;;;;;;;;;;;;;;
+;;; MP Seq. ;;;
+;;;;;;;;;;;;;;;
+
+(cffi:defcfun (make-mp-seq "aa_rx_mp_seq_create") rx-mp-seq-t)
+
+(cffi:defcfun aa-rx-mp-seq-append-all :void
+  (mp-seq rx-mp-seq-t)
+  (m-sg rx-sg-t)
+  (n-path size-t)
+  (q-all-path :pointer))
+
+
+;; TODO: retain reference to the mutable scene graph
+(defun mp-seq-append-mp (mp-seq motion-plan)
+  (let* ((m-sg (motion-plan-mutable-scene-graph motion-plan))
+         (path (motion-plan-path motion-plan))
+         (n-path (motion-plan-length motion-plan)))
+    (with-foreign-simple-vector (path-ptr path-length) path :input
+      (declare (ignore path-length))
+      (aa-rx-mp-seq-append-all mp-seq m-sg n-path path-ptr)))
+  mp-seq)
