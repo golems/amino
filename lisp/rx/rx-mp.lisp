@@ -51,16 +51,17 @@
   (n-all size-t)
   (q-all :pointer))
 
-(cffi:defcfun aa-rx-mp-set-goal :void
-  (mp rx-mp-t)
-  (n-subset size-t)
-  (q-subset :pointer))
 
 (cffi:defcfun (mutable-scene-graph-config-count "aa_rx_sg_config_count") size-t
   (m-sg rx-sg-t))
 
 (cffi:defcfun (mutable-scene-graph-frame-count "aa_rx_sg_frame_count") size-t
   (m-sg rx-sg-t))
+
+(cffi:defcfun aa-rx-mp-set-goal :int
+  (mp rx-mp-t)
+  (n-subset size-t)
+  (q-subset :pointer))
 
 (cffi:defcfun aa-rx-mp-set-wsgoal :int
   (mp rx-mp-t)
@@ -108,12 +109,14 @@
 
 (defun motion-planner-set-joint-goal (motion-planner joint-goal)
   (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
-         (n-all (sub-scene-graph-all-config-count ssg))
-         (q-goal (make-vec n-all)))
-    ;; TODO: copy unset elements from start
-    (sub-scene-graph-config-vector ssg joint-goal q-goal)
-    (with-foreign-simple-vector (pointer length) q-goal :input
-      (aa-rx-mp-set-goal motion-planner length pointer))))
+         (start-vec (sub-scene-graph-config-vector ssg joint-goal))
+         (result))
+    (with-foreign-simple-vector (pointer length) start-vec :input
+      (assert (= length
+                 (sub-scene-graph-config-count ssg)))
+      (setq result
+            (aa-rx-mp-set-goal motion-planner length pointer)))
+    (zerop result)))
 
 (defun motion-planner-set-work-goal (motion-planner work-goal)
   ;; TODO: multiple goals
@@ -198,15 +201,16 @@
       ;(print (scene-graph-allowed-collisions sg))
       (motion-planner-allow-all planner (scene-graph-allowed-collisions sg))
       ;; Set goal state
-      (cond
-        (jointspace-goal
-         (motion-planner-set-joint-goal planner jointspace-goal))
-        (workspace-goal
-         (unless (motion-planner-set-work-goal planner workspace-goal)
-           ;; bail out early if goal setting fails
-           (print 'bailing-out)
-           (return-from motion-plan nil)))
-        (t (error "No goal given")))
+      (unless (cond
+                (jointspace-goal
+                 (motion-planner-set-joint-goal planner jointspace-goal))
+                (workspace-goal
+                 (motion-planner-set-work-goal planner workspace-goal))
+                (t (error "No goal given")))
+        ;; bail out early if goal setting fails
+        (print 'bailing-out)
+        (return-from motion-plan nil)
+        )
       ;; Setup Simplification
       (aa-rx-mp-set-simplify planner simplify)
       ;; Call Planner

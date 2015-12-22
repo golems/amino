@@ -126,15 +126,21 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
                    size_t n_q,
                    double *q_subset)
 {
-    amino::sgStateSpace *ss = mp->space_information->getTypedStateSpace();
+
+    amino::sgSpaceInformation::Ptr &si = mp->space_information;
+    amino::sgStateSpace *ss = si->getTypedStateSpace();
     const struct aa_rx_sg_sub *ssg = ss->sub_scene_graph;
     size_t n_s = aa_rx_sg_sub_config_count(ssg);
     assert( n_q == n_s );
     amino::sgSpaceInformation::ScopedStateType state(mp->space_information);
     ss->copy_state( q_subset, state.get() );
-    mp->problem_definition->setGoalState(state);
 
-    return AA_RX_OK;
+    if( si->isValid( state.get() ) ) {
+        mp->problem_definition->setGoalState(state);
+        return AA_RX_OK;
+    } else {
+        return AA_RX_INVALID_STATE;
+    }
 }
 
 

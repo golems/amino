@@ -56,6 +56,9 @@
 /** Invalid Parameter */
 #define AA_RX_INVALID_PARAMETER  (1<<4)
 
+/** Invalid Parameter */
+#define AA_RX_INVALID_STATE  (1<<5)
+
 char *aa_rx_errstr( struct aa_mem_region *reg,
                     int e );
 
