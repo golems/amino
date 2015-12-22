@@ -234,14 +234,18 @@
 (defun motion-plan-endpoint-map (motion-plan)
   (let* ((ssg (motion-plan-sub-scene-graph motion-plan))
          (n-sub (sub-scene-graph-config-count ssg))
+         (n-all (sub-scene-graph-all-config-count ssg))
          (path (motion-plan-path motion-plan))
-         (i-0 (- (length path) n-sub))
+         (i-0 (- (length path) n-all))
          (map (make-configuration-map)))
-    (dotimes (i n-sub)
-      (tree-map-insertf map (sub-scene-graph-config-name ssg i)
-                        (aref path (+ i-0 i))))
+    (loop for i-sub below n-sub
+       for i-all = (aa-rx-sg-sub-config ssg i-sub)
+       for name = (sub-scene-graph-config-name ssg i-sub)
+       for i-array = (+ i-0 i-all)
+         do
+         (tree-map-insertf map name
+                           (aref path i-array)))
     map))
-
 
 (defun motion-plan-endpoint-array (motion-plan)
   (let* ((ssg (motion-plan-sub-scene-graph motion-plan))

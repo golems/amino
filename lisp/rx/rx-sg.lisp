@@ -129,6 +129,8 @@
       (loop for config-id below n-config
          for config-name = (aa-rx-sg-config-name sg config-id)
          do
+           (assert (= config-id
+                      (aa-rx-sg-config-id sg config-name)))
            (setf (gethash config-name hash) config-id
                  (aref array config-id) config-name))
       (setf (mutable-scene-graph-config-name-array sg) array
