@@ -62,7 +62,7 @@
 (cffi:defcfun (mutable-scene-graph-frame-count "aa_rx_sg_frame_count") size-t
   (m-sg rx-sg-t))
 
-(cffi:defcfun aa-rx-mp-set-wsgoal :void
+(cffi:defcfun aa-rx-mp-set-wsgoal :int
   (mp rx-mp-t)
   (ik-fun :pointer)
   (ik-context :pointer)
@@ -122,7 +122,8 @@
          (ssg (motion-planner-sub-scene-graph motion-planner))
          (ik-cx (aa-rx-ik-jac-cx-create ssg opts))
          (q-all (make-vec (sub-scene-graph-all-config-count ssg)))
-         (start-map (sub-scene-graph-center-map ssg)))
+         (start-map (sub-scene-graph-center-map ssg))
+         (result))
     ;; Set options
     ;; Set Start
     (sub-scene-graph-all-config-vector ssg start-map q-all)
@@ -133,10 +134,12 @@
     ;; Solve
     (with-foreign-simple-vector (pointer length) array :input
       (assert (= 7 length))
-      (aa-rx-mp-set-wsgoal motion-planner
-                           (cffi:foreign-symbol-pointer "aa_rx_ik_jac_fun")
-                           (rx-ik-jac-cx-pointer ik-cx)
-                           1 pointer 7))))
+      (setq result
+            (aa-rx-mp-set-wsgoal motion-planner
+                                 (cffi:foreign-symbol-pointer "aa_rx_ik_jac_fun")
+                                 (rx-ik-jac-cx-pointer ik-cx)
+                                 1 pointer 7)))
+    (zerop result)))
 
 (defun motion-planner-allow-collision (motion-planner frame-0 frame-1 &optional (allowed t))
   (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
@@ -199,7 +202,10 @@
         (jointspace-goal
          (motion-planner-set-joint-goal planner jointspace-goal))
         (workspace-goal
-         (motion-planner-set-work-goal planner workspace-goal))
+         (unless (motion-planner-set-work-goal planner workspace-goal)
+           ;; bail out early if goal setting fails
+           (print 'bailing-out)
+           (return-from motion-plan nil)))
         (t (error "No goal given")))
       ;; Setup Simplification
       (aa-rx-mp-set-simplify planner simplify)

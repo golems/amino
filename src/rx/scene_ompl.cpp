@@ -176,6 +176,8 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
         aa_rx_mp_set_goal(mp, n_s, qs);
     }
 
+    // TODO: check state validity
+
     // if( ko ) {
     //     aa_rx_ksol_opts_destroy(ko);
     // }
