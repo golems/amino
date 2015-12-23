@@ -179,7 +179,9 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
 
     // Set JS Goal
     if( AA_RX_OK == r ) {
-        aa_rx_mp_set_goal(mp, n_s, qs);
+        return aa_rx_mp_set_goal(mp, n_s, qs);
+    } else {
+        return r;
     }
 
     // TODO: check state validity
@@ -188,7 +190,6 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
     //     aa_rx_ksol_opts_destroy(ko);
     // }
 
-    return r;
 }
 
 static void
