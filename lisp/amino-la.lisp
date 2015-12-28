@@ -65,8 +65,9 @@
           (assert (= m x-rows))
           (assert (= n b-rows))
           (assert (= p x-cols))
-          (aa-la-d-lls m n p
-                       a ld-a
-                       b ld-b
-                       x ld-x))))
+          (sb-int:with-float-traps-masked (:divide-by-zero)
+            (aa-la-d-lls m n p
+                         a ld-a
+                         b ld-b
+                         x ld-x)))))
     x))
