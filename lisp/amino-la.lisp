@@ -43,3 +43,30 @@
 ;;   (n size-t (:length x) (:length y))
 ;;   (x :vector)
 ;;   (y :vector))
+
+
+(def-la-cfun ("aa_la_d_lls" aa-la-d-lls :pointer-type :pointer) :void
+  (m size-t)
+  (n size-t)
+  (p size-t)
+  (a :matrix)
+  (b :matrix)
+  (x :matrix))
+
+(defun linear-least-squares (a b &optional x)
+  (let ((x x))
+    (with-foreign-matrix (a ld-a m n) a :input
+      (with-foreign-matrix (b ld-b b-rows p) b :input
+        (unless x
+          (setq x (if (= 1 p)
+                      (make-vec m)
+                      (make-matrix m p))))
+        (with-foreign-matrix (x ld-x x-rows x-cols) x :output
+          (assert (= m x-rows))
+          (assert (= n b-rows))
+          (assert (= p x-cols))
+          (aa-la-d-lls m n p
+                       a ld-a
+                       b ld-b
+                       x ld-x))))
+    x))
