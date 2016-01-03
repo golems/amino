@@ -69,12 +69,12 @@ AA_API int aa_opt_qp_solve_cgal (
     double *x )
 {
 
-    aa_dump_mat(stderr, A, m, n);
-    aa_dump_vec(stderr, b, m );
-    aa_dump_vec(stderr, c, n );
-    aa_dump_mat(stderr, D, n, n);
-    aa_dump_vec(stderr, l, n);
-    aa_dump_vec(stderr, u, n);
+    // aa_dump_mat(stderr, A, m, n);
+    // aa_dump_vec(stderr, b, m );
+    // aa_dump_vec(stderr, c, n );
+    // aa_dump_mat(stderr, D, n, n);
+    // aa_dump_vec(stderr, l, n);
+    // aa_dump_vec(stderr, u, n);
 
     int mi = (int)m;
     int ni = (int)n;
@@ -121,15 +121,15 @@ AA_API int aa_opt_qp_solve_cgal (
 
     Solution s = CGAL::solve_quadratic_program(qp, ET());
     if( s.solves_quadratic_program(qp) ) {
-        printf("solved\n");
+        //printf("solved\n");
 
-        std::cout << s;
+        //std::cout << s;
 
         // return result
         size_t j = 0;
         for( auto itr = s.variable_values_begin (); itr != s.variable_values_end(); itr++ ) {
             x[j] = CGAL::to_double(*itr);
-            printf("x[%d] = %f\n", j, x[j] );
+            //printf("x[%d] = %f\n", j, x[j] );
             j++;
         }
         return 0;
