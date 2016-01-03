@@ -45,13 +45,18 @@
 #include <CGAL/QP_models.h>
 #include <CGAL/QP_functions.h>
 
-#ifdef CGAL_USE_GMP
-#include <CGAL/Gmpz.h>
-typedef CGAL::Gmpz ET;
-#else
-#include <CGAL/MP_Float.h>
-typedef CGAL::MP_Float ET;
-#endif
+// #ifdef CGAL_USE_GMP
+// #include <CGAL/Gmpz.h>
+// typedef CGAL::Gmpz ET;
+// #else
+// #include <CGAL/MP_Float.h>
+// typedef CGAL::MP_Float ET;
+// #endif
+
+
+#include <CGAL/Gmpq.h>
+typedef CGAL::Gmpq ET;
+
 // program and solution types
 typedef CGAL::Quadratic_program<ET> Program;
 typedef CGAL::Quadratic_program_solution<ET> Solution;
