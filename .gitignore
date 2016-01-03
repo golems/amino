@@ -116,3 +116,5 @@ amino*.tar.gz
 /lisp/aarx.core
 /demo/baxter/baxter-ompl-sequence
 /demo/baxter/baxter-ompl-workspace
+/src/opt/.dirstamp
+/opt_test

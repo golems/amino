@@ -190,11 +190,12 @@
          with type = (matrix-type matrix)
          for row in rows
          for i from 0
-         do (loop
-               for x in row
-               for j from 0
-               do (setf (matref matrix i j)
-                        (coerce x type))))
+         for j = -1
+         do (progn
+              (map nil (lambda (x)
+                         (setf (matref matrix i (incf j))
+                               (coerce x type)))
+                   row)))
       matrix)))
 
 (defun col-matrix (&rest cols)

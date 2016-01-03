@@ -65,6 +65,9 @@
                (:file "tf-type" :depends-on ("foreign"))
                (:file "tf" :depends-on ("tf-type"))
                (:file "tf-op" :depends-on ("tf" "generic"))
+               ;; Opt
+               (:file "opt/opt-lib" :depends-on ("basic-ops"))
+               (:file "opt/opt" :depends-on ("opt/opt-lib"))
                ;;; RX
                (:file "rx/robray-package")
                ;; bindings
