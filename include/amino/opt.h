@@ -40,7 +40,13 @@
 #ifndef AMINO_OPT_H
 #define AMINO_OPT_H
 
+enum aa_opt_qp_type {
+    AA_OPT_QP_EQ,
+    AA_OPT_QP_LEQ,
+};
+
 typedef int aa_opt_qp_solver (
+    enum aa_opt_qp_type type,
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b,
@@ -51,6 +57,7 @@ typedef int aa_opt_qp_solver (
 
 
 AA_API int aa_opt_qp_solve_cgal (
+    enum aa_opt_qp_type type,
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b,

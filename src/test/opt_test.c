@@ -73,7 +73,8 @@ int main( int argc, char **argv ) {
 
     double x[2];
 
-    int r = aa_opt_qp_solve_cgal( 2,2,
+    int r = aa_opt_qp_solve_cgal( AA_OPT_QP_LEQ,
+                                  2,2,
                                   A, 2,
                                   b,  c, c0,
                                   D, 2,

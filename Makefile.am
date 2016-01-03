@@ -42,6 +42,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/la.h              \
 	include/amino/la_impl.h         \
 	include/amino/mem.h             \
+	include/amino/opt.h             \
 	include/amino/plot.h            \
 	include/amino/tf.h              \
 	include/amino/time.h            \

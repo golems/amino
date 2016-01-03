@@ -60,6 +60,7 @@ typedef CGAL::Quotient<ET> Quotient;
 
 
 AA_API int aa_opt_qp_solve_cgal (
+    enum aa_opt_qp_type type,
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b,
@@ -78,8 +79,16 @@ AA_API int aa_opt_qp_solve_cgal (
 
     int mi = (int)m;
     int ni = (int)n;
+
+    CGAL::Comparison_result cr;
+    switch(type) {
+    case AA_OPT_QP_EQ: cr=CGAL::EQUAL; break;
+    case AA_OPT_QP_LEQ: cr=CGAL::SMALLER; break;
+    default: return -1;
+    }
+
     // by default, we have a nonnegative QP with Ax <= b
-    Program qp (CGAL::SMALLER,
+    Program qp (cr,
                 l ? true : false,
                 0,
                 u ? true : false,
@@ -120,10 +129,13 @@ AA_API int aa_opt_qp_solve_cgal (
     //std::cout << qp;
 
     Solution s = CGAL::solve_quadratic_program(qp, ET());
+
+
+    std::cout << s << std::endl;
+
     if( s.solves_quadratic_program(qp) ) {
         //printf("solved\n");
 
-        //std::cout << s;
 
         // return result
         size_t j = 0;

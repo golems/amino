@@ -66,7 +66,8 @@
                (:file "tf" :depends-on ("tf-type"))
                (:file "tf-op" :depends-on ("tf" "generic"))
                ;; Opt
-               (:file "opt/opt-lib" :depends-on ("basic-ops"))
+               (cffi-grovel:grovel-file "opt/opt-grovel" :depends-on ("package"))
+               (:file "opt/opt-lib" :depends-on ("basic-ops" "opt/opt-grovel"))
                (:file "opt/opt" :depends-on ("opt/opt-lib"))
                ;;; RX
                (:file "rx/robray-package")

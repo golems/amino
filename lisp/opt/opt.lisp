@@ -40,19 +40,21 @@
 
 (def-la-cfun ("aa_opt_qp_solve_cgal" aa-opt-qp-solve-cgal
                                      :pointer-type :pointer) :int
-    (m size-t)
-    (n size-t)
-    (A :matrix)
-    (b :pointer)
-    (c :pointer)
-    (c0 :double)
-    (D :matrix)
-    (l :pointer)
-    (u :pointer)
-    (x :pointer))
+  (type opt-type)
+  (m size-t)
+  (n size-t)
+  (A :matrix)
+  (b :pointer)
+  (c :pointer)
+  (c0 :double)
+  (D :matrix)
+  (l :pointer)
+  (u :pointer)
+  (x :pointer))
 
 
 (defstruct qp
+  type
   A
   B
   C
@@ -77,7 +79,8 @@
                   (assert (= rows-a n-b))
                   ;(break)
                   (setq r
-                        (aa-opt-qp-solve-cgal rows-a cols-a
+                        (aa-opt-qp-solve-cgal (qp-type qp)
+                                              rows-a cols-a
                                               a ld-a
                                               b c (qp-c0 qp)
                                               d ld-d
@@ -100,6 +103,13 @@
        (destructuring-bind (,type (,op &rest ,terms) ,value) ,constraint
          (assert (eq ,op '+))
          (,fun ,type ,terms (coerce ,value 'double-float))))))
+
+(defmacro do-constraints ((type terms value &optional result) constraints &body body)
+  (with-gensyms (c)
+    `(dolist (,c ,constraints ,result)
+       (with-constraint (,type ,terms ,value) ,c
+         ,@body))))
+
 
 (defmacro with-term ((factor variable) term &body body)
   (with-gensyms (op fun term-var)
@@ -129,6 +139,16 @@
     (= '=)
     (<= '>=)
     (>= '<=)))
+
+(defun opt-constraints-equality-p (constraints)
+  (dolist (c constraints)
+    (unless (opt-constraint-bounds-p c)
+      (with-constraint (type terms value) c
+        (declare (ignore terms value))
+        (unless (eq type '=)
+          (return-from opt-constraints-equality-p nil)))))
+  t)
+
 
 (defun opt-bounds (variables constraints
                    &key
@@ -172,30 +192,36 @@
                (with-term (factor variable) term
                  (declare (ignore factor))
                  (setf (gethash variable hash-vars) t))))
-      (dolist (c constraints)
-        (with-constraint (type terms value) c
-          (declare (ignore value))
-          (assert (find type '(= <= >=)))
-          (map nil #'add-term terms)))
+      (do-constraints (type terms value) constraints
+        (declare (ignore value))
+        (assert (find type '(= <= >=)))
+        (map nil #'add-term terms))
       (map nil #'add-term objectives))
     (hash-table-keys hash-vars)))
 
-(defun qp-constraint-rows (variables constraint &key)
-  (with-constraint (type terms value) constraint
+(defun qp-constraint-rows (variables constraint
+                           &key
+                             (type :<=))
+  (with-constraint (c-type terms value) constraint
     (let ((v (make-vec (opt-variable-count variables))))
       ;; get initial row
       (dolist (term terms)
         (with-term (factor variable) term
           (setf (vecref v (opt-variable-position variables variable))
                 factor)))
-      ;; munge constraint
       (ecase type
-        (<= (values (list v) (list value)))
-        (>= (values (list (g* -1 v))
+        (:<=
+         (ecase c-type
+           (<=
+            (values (list v) (list value)))
+           (>=
+            (values (list (g* -1 v))
                     (list (- value))))
-        (= (values (list v (g* -1 v))
-                   (list value (- value))))
-        ))))
+           (= (values (list v (g* -1 v))
+                      (list value (- value))))))
+        (:=
+         (assert (eq '= c-type))
+         (values (list v) (list value)))))))
 
 
 (defun qp-objectives (variables objectives)
@@ -213,18 +239,24 @@
              (default-upper most-positive-double-float))
   (let* ((vars (opt-variables constraints objectives))
          (n-var (opt-variable-count vars))
+         (equality (opt-constraints-equality-p  constraints))
          (a-rows)
          (b-list))
+    (format t "~&equality: ~A" equality)
     ;; construct constraints
     (dolist (c constraints)
-      (multiple-value-bind (row b-elt) (qp-constraint-rows vars c)
-        (setq a-rows (append row a-rows)
-              b-list (append b-elt b-list))))
+      (unless (opt-constraint-bounds-p c)
+        (multiple-value-bind (row b-elt)
+            (qp-constraint-rows vars c
+                                :type (if equality := :<=))
+          (setq a-rows (append row a-rows)
+                b-list (append b-elt b-list)))))
     ;; upper/lower
     (multiple-value-bind (lower upper) (opt-bounds vars constraints
                                                    :default-lower default-lower
                                                    :default-upper default-upper)
-      (let* ((qp (make-qp :a (apply #'row-matrix a-rows)
+      (let* ((qp (make-qp :type (if equality := :<=)
+                          :a (apply #'row-matrix a-rows)
                           :b (make-array (length b-list)
                                          :element-type 'double-float
                                          :initial-contents b-list)
