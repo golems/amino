@@ -152,9 +152,11 @@
                     (values type (/ bound f)))
               (let ((i (opt-variable-position variables v)))
                 (labels ((upper ()
+                           (assert (>= bound (aref lower i)))
                            (setf (aref upper i)
                                  (min (aref upper i) bound)))
                          (lower ()
+                           (assert (<= bound (aref upper i)))
                            (setf (aref lower i)
                                  (max (aref lower i) bound))))
 
@@ -188,7 +190,12 @@
                 factor)))
       ;; munge constraint
       (ecase type
-        (<= (values v value))))))
+        (<= (values (list v) (list value)))
+        (>= (values (list (g* -1 v))
+                    (list (- value))))
+        (= (values (list v (g* -1 v))
+                   (list value (- value))))
+        ))))
 
 
 (defun qp-objectives (variables objectives)
@@ -201,6 +208,7 @@
 
 (defun qp (constraints objectives
            &key
+             (result-type :alist)
              (default-lower 0d0)
              (default-upper most-positive-double-float))
   (let* ((vars (opt-variables constraints objectives))
@@ -210,20 +218,22 @@
     ;; construct constraints
     (dolist (c constraints)
       (multiple-value-bind (row b-elt) (qp-constraint-rows vars c)
-        (push row a-rows)
-        (push b-elt b-list)))
+        (setq a-rows (append row a-rows)
+              b-list (append b-elt b-list))))
     ;; upper/lower
     (multiple-value-bind (lower upper) (opt-bounds vars constraints
                                                    :default-lower default-lower
                                                    :default-upper default-upper)
-      (let ((qp (make-qp :a (apply #'row-matrix a-rows)
-                         :b (make-array (length b-list)
-                                        :element-type 'double-float
-                                        :initial-contents b-list)
-                         :c (qp-objectives vars objectives)
-                         :d (make-matrix n-var n-var)
-                         :l lower
-                         :u upper)))
-        (qp-solve qp)
-       ; qp
-        ))))
+      (let* ((qp (make-qp :a (apply #'row-matrix a-rows)
+                          :b (make-array (length b-list)
+                                         :element-type 'double-float
+                                         :initial-contents b-list)
+                          :c (qp-objectives vars objectives)
+                          :d (make-matrix n-var n-var)
+                          :l lower
+                          :u upper))
+             (solution-vector (qp-solve qp)))
+        (ecase result-type
+          (:alist (loop for v in vars
+                     for x across solution-vector
+                     collect (cons v x))))))))
