@@ -359,17 +359,20 @@ libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
+if HAVE_CGAL
 
 lib_LTLIBRARIES += libamino_opt_cgal.la
 libamino_opt_cgal_la_SOURCES = \
 	src/opt/opt_cgal.cpp
 #libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
 #libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
-libamino_opt_cgal_la_LIBADD = libamino.la
+libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
 
 noinst_PROGRAMS += opt_test
 opt_test_SOURCES = src/test/opt_test.c
-opt_test_LDADD = libamino_opt_cgal.la libamino.la -lCGAL -lgmp libtestutil.la
+opt_test_LDADD = libamino_opt_cgal.la libamino.la libtestutil.la
+
+endif
 
 
 # noinst_PROGRAMS += test_vec
