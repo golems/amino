@@ -44,8 +44,7 @@
   :description "Basic utilities, numerics, and kinematics"
   :depends-on ("amino")
   ;; Keep these components in sync with Makefile.am
-  :components ((:file "package")
-               ;; Opt
+  :components ( ;; Opt
                (cffi-grovel:grovel-file "opt/opt-grovel" :depends-on ())
                (:file "opt/opt-lib" :depends-on ("opt/opt-grovel"))
                (:file "opt/opt" :depends-on ("opt/opt-lib"))))
