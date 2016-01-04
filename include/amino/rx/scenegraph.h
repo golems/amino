@@ -427,4 +427,20 @@ AA_API void aa_rx_sg_map_geom (
     void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),
     void *context );
 
+/**
+  * Get transform between two given frames
+  *
+  * @param scene_graph The scene graph container
+  * @param frame_from
+  * @param frame_to
+  * @param tf_rel      Relative transform from the from frame to the to frame
+  */
+
+
+AA_API void aa_rx_sg_get_tf (
+  const struct aa_rx_sg *scene_graph,
+  const aa_rx_frame_id frame_from,
+  const aa_rx_frame_id frame_to,
+  double * tf_rel);
+
 #endif /*AMINO_SCENEGRAPH_H*/
