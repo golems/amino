@@ -40,28 +40,11 @@
 (cl:eval-when (:load-toplevel :execute)
     (asdf:operate 'asdf:load-op 'cffi-grovel))
 
-(asdf:defsystem amino
+(asdf:defsystem amino-opt
   :description "Basic utilities, numerics, and kinematics"
-  :depends-on ("cffi" "sycamore" "cxml" "cl-ppcre")
+  :depends-on ("amino")
   ;; Keep these components in sync with Makefile.am
-  :components ((:file "package")
-               ;; TYPE
-               (:file "basic-type" :depends-on ("package"))
-               ;; FFI
-               (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
-               (:file "ffi" :depends-on ("grovel" "basic-type"))
-               ;; LA
-               (:file "basic-ops" :depends-on ("basic-type"))
-               (:file "foreign" :depends-on ("basic-ops" "ffi"))
-               (:file "blas" :depends-on ("foreign"))
-               (:file "libc" :depends-on ("foreign"))
-               (:file "amino-la" :depends-on ("foreign"))
-               (:file "op" :depends-on ("package"))
-               (:file "generic" :depends-on ("op" "tf-type"))
-               (:file "blas-generic" :depends-on ("generic" "blas"))
-               (:file "mem" :depends-on ("foreign"))
-               (:file "io" :depends-on ("mem"))
-               ;; TF
-               (:file "tf-type" :depends-on ("foreign"))
-               (:file "tf" :depends-on ("tf-type"))
-               (:file "tf-op" :depends-on ("tf" "generic"))))
+  :components ( ;; Opt
+               (cffi-grovel:grovel-file "opt/opt-grovel" :depends-on ())
+               (:file "opt/opt-lib" :depends-on ("opt/opt-grovel"))
+               (:file "opt/opt" :depends-on ("opt/opt-lib"))))

@@ -319,6 +319,21 @@ AS_IF([test "x$with_spacenave" != xno], [
 
 AM_CONDITIONAL([HAVE_SPACENAV], [test "x$HAVE_SPACENAV" = xyes])
 
+## CGAL ##
+AC_LANG([C++])
+AC_ARG_WITH([cgal],
+            [AS_HELP_STRING([--without-cgal], [Disable support for CGAL])],
+            [],
+            [with_cgal=auto])
+
+AS_IF([test "x$with_cgal" = xauto], [
+  AC_CHECK_HEADERS([CGAL/basic.h], [HAVE_CGAL=yes], [HAVE_CGAL=no])
+],[
+  HAVE_CGAL="$with_cgal"
+])
+
+AM_CONDITIONAL([HAVE_CGAL], [test "x$HAVE_CGAL" = xyes])
+
 ## Lisp ##
 AC_ARG_WITH([common-lisp],
             [AS_HELP_STRING([--with-common-lisp=LISP], [Set the lisp system to use, or set to 'no' to disable])],
@@ -377,6 +392,7 @@ AC_MSG_NOTICE([Use SDL2:          $HAVE_SDL2])
 AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
 AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
 AC_MSG_NOTICE([Use OMPL:          $HAVE_OMPL])
+AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
 
 
 AS_IF([test "x$CC" = "x"],

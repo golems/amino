@@ -242,7 +242,6 @@
          (equality (opt-constraints-equality-p  constraints))
          (a-rows)
          (b-list))
-    (format t "~&equality: ~A" equality)
     ;; construct constraints
     (dolist (c constraints)
       (unless (opt-constraint-bounds-p c)
