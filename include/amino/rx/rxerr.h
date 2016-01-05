@@ -59,7 +59,7 @@
 /** Invalid Parameter */
 #define AA_RX_INVALID_STATE  (1<<5)
 
-char *aa_rx_errstr( struct aa_mem_region *reg,
+AA_API char *aa_rx_errstr( struct aa_mem_region *reg,
                     int e );
 
 #endif /*AMINO_RX_RXERR_H*/
