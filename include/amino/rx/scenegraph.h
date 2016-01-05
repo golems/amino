@@ -433,6 +433,7 @@ AA_API void aa_rx_sg_map_geom (
   * @param scene_graph The scene graph container
   * @param frame_from
   * @param frame_to
+  * @param q           Current configs
   * @param tf_rel      Relative transform from the from frame to the to frame
   */
 
@@ -441,6 +442,7 @@ AA_API void aa_rx_sg_get_tf (
   const struct aa_rx_sg *scene_graph,
   const aa_rx_frame_id frame_from,
   const aa_rx_frame_id frame_to,
-  double * tf_rel);
+  const double * q,
+  double * from_tf_to);
 
 #endif /*AMINO_SCENEGRAPH_H*/

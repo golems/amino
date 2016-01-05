@@ -471,55 +471,21 @@ AA_API void aa_rx_sg_get_tf (
   const struct aa_rx_sg *scene_graph,
   const aa_rx_frame_id frame_from,
   const aa_rx_frame_id frame_to,
-  double *tf_rel)
+  const double * q,
+  double *from_tf_to)
 {
-    amino::SceneFrame* from = NULL;
-    amino::SceneFrame* to = NULL;
-    if (frame_from==AA_RX_FRAME_NONE || frame_to==AA_RX_FRAME_NONE){
-        return;
-    }
-    if (frame_from!=AA_RX_FRAME_ROOT){
-        from = scene_graph->sg->frames[frame_from];
-    }
-    if (frame_to!=AA_RX_FRAME_ROOT){
-        to = scene_graph->sg->frames[frame_to];
-    }
-
-    double tf_from_to_root[7];
-    double tf_to_to_root[7];
-    AA_MEM_CPY(tf_from_to_root,aa_tf_qutr_ident,7);
-    AA_MEM_CPY(tf_to_to_root,aa_tf_qutr_ident,7);
-    double tf_temp[7];
-    while (from != NULL){
-        aa_tf_qv_chain( from->E + AA_TF_QUTR_Q, from->E + AA_TF_QUTR_V,
-                        tf_from_to_root + AA_TF_QUTR_Q, tf_from_to_root + AA_TF_QUTR_V,
-                        tf_temp + AA_TF_QUTR_Q, tf_temp + AA_TF_QUTR_V);
-        AA_MEM_CPY(tf_from_to_root, tf_temp, 7);
-        aa_rx_frame_id next = from->parent_id;
-        if (next == AA_RX_FRAME_ROOT){
-            from = NULL;
-        } else {
-            from = scene_graph->sg->frames[next];
-        }
-    }
-    while (to != NULL){
-        aa_tf_qv_chain(to->E + AA_TF_QUTR_Q, to->E + AA_TF_QUTR_V,
-                        tf_to_to_root + AA_TF_QUTR_Q, tf_to_to_root + AA_TF_QUTR_V,
-                        tf_temp + AA_TF_QUTR_Q, tf_temp + AA_TF_QUTR_V);
-        AA_MEM_CPY(tf_to_to_root, tf_temp, 7);
-        aa_rx_frame_id next = to->parent_id;
-        if (next == AA_RX_FRAME_ROOT){
-            to = NULL;
-        } else {
-            to = scene_graph->sg->frames[next];
-        }
-    }
-    aa_tf_qv_conj(tf_from_to_root + AA_TF_QUTR_Q, tf_from_to_root + AA_TF_QUTR_V,
-                    tf_temp + AA_TF_QUTR_Q, tf_temp + AA_TF_QUTR_V);
-    AA_MEM_CPY(tf_from_to_root, tf_temp, 7);
-    aa_tf_qv_chain(tf_from_to_root + AA_TF_QUTR_Q, tf_from_to_root + AA_TF_QUTR_V,
-                        tf_to_to_root + AA_TF_QUTR_Q, tf_to_to_root + AA_TF_QUTR_V,
-                        tf_temp + AA_TF_QUTR_Q, tf_temp + AA_TF_QUTR_V);
-
-    AA_MEM_CPY(tf_rel,tf_temp,7);
+    double tf_rel[aa_rx_sg_frame_count(scene_graph)*7];
+    double tf_abs[aa_rx_sg_frame_count(scene_graph)*7];
+    size_t ld_rel = 7;
+    size_t ld_abs = 7;
+    aa_rx_sg_tf(scene_graph, aa_rx_sg_config_count(scene_graph), q, aa_rx_sg_frame_count(scene_graph),
+                tf_rel, ld_rel, tf_abs, ld_abs );
+    double from_tf_root[7];
+    aa_tf_qv_conj((frame_from==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : &tf_abs[frame_from * ld_abs]) + AA_TF_QUTR_Q, 
+                    (frame_from==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : tf_abs + frame_from * ld_abs) + AA_TF_QUTR_V, 
+                    from_tf_root + AA_TF_QUTR_Q, from_tf_root + AA_TF_QUTR_V);
+    aa_tf_qv_chain(from_tf_root + AA_TF_QUTR_Q, from_tf_root + AA_TF_QUTR_V,
+                   (frame_to==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : tf_abs + frame_to * ld_abs) + AA_TF_QUTR_Q, 
+                   (frame_to==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : tf_abs + frame_to * ld_abs) + AA_TF_QUTR_V,
+                     from_tf_to + AA_TF_QUTR_Q, from_tf_to + AA_TF_QUTR_V);
 }
