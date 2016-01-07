@@ -37,7 +37,7 @@
 
 
 #include "amino.h"
-#include "amino/opt.h"
+#include "amino/opt/qp.h"
 
 
 #include <iostream>
@@ -65,7 +65,7 @@ typedef CGAL::Quotient<ET> Quotient;
 
 
 AA_API int aa_opt_qp_solve_cgal (
-    enum aa_opt_qp_type type,
+    enum aa_opt_rel_type type,
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b,
@@ -87,8 +87,8 @@ AA_API int aa_opt_qp_solve_cgal (
 
     CGAL::Comparison_result cr;
     switch(type) {
-    case AA_OPT_QP_EQ: cr=CGAL::EQUAL; break;
-    case AA_OPT_QP_LEQ: cr=CGAL::SMALLER; break;
+    case AA_OPT_REL_EQ: cr=CGAL::EQUAL; break;
+    case AA_OPT_REL_LEQ: cr=CGAL::SMALLER; break;
     default: return -1;
     }
 

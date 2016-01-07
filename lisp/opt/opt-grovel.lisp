@@ -44,10 +44,11 @@
                            "../include")
             "-std=gnu99")
   (include "amino.h")
-  (include "amino/opt.h")
+  (include "amino/opt/opt.h")
 
   (cenum opt-type
-         ((:<= "AA_OPT_QP_LEQ"))
-         ((:= "AA_OPT_QP_EQ")))
+         ((:<= "AA_OPT_REL_LEQ"))
+         ((:>= "AA_OPT_REL_GEQ"))
+         ((:= "AA_OPT_REL_EQ")))
 
   )

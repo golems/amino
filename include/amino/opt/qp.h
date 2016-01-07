@@ -37,16 +37,13 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef AMINO_OPT_H
-#define AMINO_OPT_H
+#ifndef AMINO_OPT_QP_H
+#define AMINO_OPT_QP_H
 
-enum aa_opt_qp_type {
-    AA_OPT_QP_EQ,
-    AA_OPT_QP_LEQ,
-};
+#include "opt.h"
 
 typedef int aa_opt_qp_solver (
-    enum aa_opt_qp_type type,
+    enum aa_opt_rel_type type,
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b,
@@ -54,10 +51,9 @@ typedef int aa_opt_qp_solver (
     const double *D, size_t ldD,
     const double *l, const double *u,
     double *x );
-
 
 AA_API int aa_opt_qp_solve_cgal (
-    enum aa_opt_qp_type type,
+    enum aa_opt_rel_type type,
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b,
@@ -66,4 +62,4 @@ AA_API int aa_opt_qp_solve_cgal (
     const double *l, const double *u,
     double *x );
 
-#endif //AMINO_OPT_H
+#endif //AMINO_OPT_QP_H

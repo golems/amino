@@ -43,7 +43,7 @@
 //#define AA_ALLOC_STACK_MAX
 #include "amino.h"
 #include "amino/test.h"
-#include "amino/opt/qp.h"
+#include "amino/opt/lp.h"
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -55,32 +55,30 @@ int main( int argc, char **argv ) {
     (void) argc; (void) argv;
 
 
-    double A[] = {1, 0, 0, 1};
-    double b[] = {20, 10};
+    double A[] = {120, 110, 1,  210, 30, 1};
+    double b[] = {15000, 4000, 75};
     double c[] = {1, 1};
-    double c0 = 0;
-    double D[] = {0,0,0,0};
-    double l[] = {1,1};
-    double u[] = {20,10};
 
-    /* double A[] = {1, -1, 1, 2}; */
-    /* double b[] = {7, 4}; */
-    /* double c[] = {0, -32}; */
-    /* double c0 = 64; */
-    /* double D[] = {1,0,4,0}; */
-    /* double l[] = {1,1}; */
-    /* double u[] = {100,4}; */
+    double l[] = {0,0};
+    double u[] = {1000,1000};
 
     double x[2];
 
-    int r = aa_opt_qp_solve_cgal( AA_OPT_REL_LEQ,
-                                  2,2,
-                                  A, 2,
-                                  b,  c, c0,
-                                  D, 2,
-                                  l, u,
-                                  x );
+    enum aa_opt_rel_type types[] = {AA_OPT_REL_LEQ,
+                                    AA_OPT_REL_LEQ,
+                                    AA_OPT_REL_LEQ };
+
+    int r = aa_opt_lp_lpsolve( 3,2,
+                               types,
+                               A, 3,
+                               b,  c,
+                               l, u,
+                               x );
     printf("r: %d\n", r );
 
     aa_dump_vec( stdout, x, 2 );
+
+    double xref[] = {21.875, 53.125};
+
+    aveq( "lp_solve", 2, xref, x, 1e-6 );
 }

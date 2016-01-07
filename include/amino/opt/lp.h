@@ -5,9 +5,6 @@
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
- * Georgia Tech Humanoid Robotics Lab
- * Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
- *
  *
  * This file is provided under the following "BSD-style" License:
  *
@@ -15,14 +12,15 @@
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
  *   conditions are met:
- *
  *   * Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
- *
  *   * Redistributions in binary form must reproduce the above
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
+ *   * Neither the name of copyright holder the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -39,48 +37,28 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#ifndef AMINO_OPT_LP_H
+#define AMINO_OPT_LP_H
 
-//#define AA_ALLOC_STACK_MAX
-#include "amino.h"
-#include "amino/test.h"
-#include "amino/opt/qp.h"
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <inttypes.h>
-#include <sys/resource.h>
+#include "opt.h"
 
 
-int main( int argc, char **argv ) {
-    (void) argc; (void) argv;
+typedef int aa_opt_lp_solver (
+    size_t m, size_t n,
+    enum aa_opt_rel_type *types,
+    const double *A, size_t ldA,
+    const double *b,
+    const double *c,
+    const double *l, const double *u,
+    double *x );
 
+int aa_opt_lp_lpsolve (
+    size_t m, size_t n,
+    enum aa_opt_rel_type *types,
+    const double *A, size_t ldA,
+    const double *b,
+    const double *c,
+    const double *l, const double *u,
+    double *x );
 
-    double A[] = {1, 0, 0, 1};
-    double b[] = {20, 10};
-    double c[] = {1, 1};
-    double c0 = 0;
-    double D[] = {0,0,0,0};
-    double l[] = {1,1};
-    double u[] = {20,10};
-
-    /* double A[] = {1, -1, 1, 2}; */
-    /* double b[] = {7, 4}; */
-    /* double c[] = {0, -32}; */
-    /* double c0 = 64; */
-    /* double D[] = {1,0,4,0}; */
-    /* double l[] = {1,1}; */
-    /* double u[] = {100,4}; */
-
-    double x[2];
-
-    int r = aa_opt_qp_solve_cgal( AA_OPT_REL_LEQ,
-                                  2,2,
-                                  A, 2,
-                                  b,  c, c0,
-                                  D, 2,
-                                  l, u,
-                                  x );
-    printf("r: %d\n", r );
-
-    aa_dump_vec( stdout, x, 2 );
-}
+#endif //AMINO_OPT_H

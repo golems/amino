@@ -319,6 +319,28 @@ AS_IF([test "x$with_spacenave" != xno], [
 
 AM_CONDITIONAL([HAVE_SPACENAV], [test "x$HAVE_SPACENAV" = xyes])
 
+## LP_SOLVE ##
+AC_LANG([C])
+AC_ARG_WITH([lpsolve],
+            [AS_HELP_STRING([--without-lpsolve], [Disable support for LP_Solve])],
+            [],
+            [with_lpsolve=auto])
+# check header
+AS_IF([test "x$with_lpsolve" = xauto], [
+  AC_CHECK_HEADERS([lpsolve/lp_lib.h], [HAVE_LPSOLVE=yes], [HAVE_LPSOLVE=no])
+],[
+  HAVE_LPSOLVE="$with_lpsolve"
+])
+
+# check library
+AS_IF([test "x$HAVE_LPSOLVE" = xyes], [
+  AC_SEARCH_LIBS([make_lp],[lpsolve55],
+                 [HAVE_LPSOLVE=yes],
+                 [HAVE_LPSOLVE=no])
+])
+
+AM_CONDITIONAL([HAVE_LPSOLVE], [test "x$HAVE_LPSOLVE" = xyes])
+
 ## CGAL ##
 AC_LANG([C++])
 AC_ARG_WITH([cgal],
@@ -393,6 +415,7 @@ AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
 AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
 AC_MSG_NOTICE([Use OMPL:          $HAVE_OMPL])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
+AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 
 
 AS_IF([test "x$CC" = "x"],
