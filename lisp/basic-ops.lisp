@@ -290,8 +290,11 @@ N: cols in the block."
 ;;;;;;;;;;;;;;;
 
 ;; Lisp array vectors
-(defun make-vec (n)
-  (make-array n :element-type 'double-float))
+(declaim (inline make-vec n))
+(defun make-vec (n &key (initial-element 0d0))
+  (make-array n
+              :element-type 'double-float
+              :initial-element initial-element))
 
 (defun make-fnvec (n)
   (make-array n :element-type 'fixnum))

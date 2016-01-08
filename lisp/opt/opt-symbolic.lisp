@@ -115,13 +115,12 @@
                    &key
                      (default-lower 0d0)
                      (default-upper most-positive-double-float))
-  (let ((lower (make-array (opt-variable-count variables)
-                           :element-type 'double-float
-                           :initial-element default-lower))
-
-        (upper (make-array (opt-variable-count variables)
-                           :element-type 'double-float
-                           :initial-element default-upper)))
+  (let* ((n (opt-variable-count variables))
+         (has-lower (make-array n :element-type 'bit  :initial-element 0))
+         (has-upper (make-array n :element-type 'bit :initial-element 0))
+         (lower (make-vec n :initial-element most-negative-double-float))
+         (upper (make-vec n :initial-element most-positive-double-float)))
+    ;(declare (dynamic-extent has-lower has-upper))
     (dolist (c constraints)
       (when (opt-constraint-bounds-p c)
         (with-constraint (type terms bound) c
@@ -132,19 +131,24 @@
                     (values (opt-type-flip type) (/ bound f))
                     (values type (/ bound f)))
               (let ((i (opt-variable-position variables v)))
-                (labels ((upper ()
-                           (assert (>= bound (aref lower i)))
-                           (setf (aref upper i)
-                                 (min (aref upper i) bound)))
+                (labels ((setit (v h b)
+                           (setf (aref v i) b
+                                 (aref h i) 1))
+                         (upper ()
+                           (setit upper has-upper (min (aref upper i) bound)))
                          (lower ()
-                           (assert (<= bound (aref upper i)))
-                           (setf (aref lower i)
-                                 (max (aref lower i) bound))))
-
+                           (setit lower has-lower (max (aref lower i) bound))))
                   (ecase type
                     (<= (upper))
                     (>= (lower))
                     (= (lower) (upper))))))))))
+    ;; Set Defaults
+    (dotimes (i n)
+      (when (zerop (aref has-lower i))
+        (setf (aref lower i) default-lower))
+      (when (zerop (aref has-upper i))
+        (setf (aref upper i) default-upper)))
+    ;; Result
     (values lower upper)))
 
 (defun opt-terms-vec (variables terms &optional vec)

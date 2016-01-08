@@ -151,7 +151,7 @@
 
 (defun opt-result (result-type variables vec)
   (ecase result-type
-    ((:vector 'vector 'vec)
+    ((:vector vector vec)
      vec)
     ((list :list) (loop for x across vec
                      collect x))
