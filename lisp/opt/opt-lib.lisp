@@ -38,6 +38,7 @@
 
 (in-package :amino)
 
+;; CGAL
 (define-foreign-library libamino-opt-cgal
   (:unix (:or "libamino_opt_cgal.so"
               "libamino_opt_cgal.so"
@@ -60,3 +61,35 @@
 (use-foreign-library libgmp)
 (use-foreign-library libcgal)
 (use-foreign-library libamino-opt-cgal)
+
+;; LPSOLVE
+(define-foreign-library libamino-opt-lpsolve
+  (:unix (:or "libamino_opt_lpsolve.so"
+              "libamino_opt_lpsolve.so"
+              (:default "libamino_opt_lpsolve")))
+  (t (:default "libamino_opt_lpsolve")))
+
+(define-foreign-library liblpsolve
+  (:unix (:or "liblpsolve55.so"
+              "liblpsolve55.so"
+              (:default "liblpsolve55")))
+  (t (:default "liblpsolve55")))
+
+(use-foreign-library liblpsolve)
+(use-foreign-library libamino-opt-lpsolve)
+
+;; CLP
+(define-foreign-library libamino-opt-clp
+  (:unix (:or "libamino_opt_clp.so"
+              "libamino_opt_clp.so"
+              (:default "libamino_opt_clp")))
+  (t (:default "libamino_opt_clp")))
+
+(define-foreign-library libclp
+  (:unix (:or "liblClp.so"
+              "liblClp.so"
+              (:default "libClp")))
+  (t (:default "libClp")))
+
+(use-foreign-library libclp)
+(use-foreign-library libamino-opt-clp)
