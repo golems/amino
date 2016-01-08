@@ -56,23 +56,20 @@ int main( int argc, char **argv ) {
 
 
     double A[] = {120, 110, 1,  210, 30, 1};
-    double b[] = {15000, 4000, 75};
+    double b_u[] = {15000, 4000, 75};
+    double b_l[] = {-DBL_MAX, -DBL_MAX, -DBL_MAX};
     double c[] = {1, 1};
 
-    double l[] = {0,0};
-    double u[] = {1000,1000};
+    double x_l[] = {0,0};
+    double x_u[] = {1000,1000};
 
     double x[2];
 
-    enum aa_opt_rel_type types[] = {AA_OPT_REL_LEQ,
-                                    AA_OPT_REL_LEQ,
-                                    AA_OPT_REL_LEQ };
-
     int r = aa_opt_lp_lpsolve( 3,2,
-                               types,
                                A, 3,
-                               b,  c,
-                               l, u,
+                               b_l, b_u,
+                               c,
+                               x_l, x_u,
                                x );
     printf("r: %d\n", r );
 

@@ -45,30 +45,27 @@
 
 typedef int aa_opt_lp_solver (
     size_t m, size_t n,
-    enum aa_opt_rel_type *types,
     const double *A, size_t ldA,
-    const double *b,
+    const double *b_lower, const double *b_upper,
     const double *c,
-    const double *l, const double *u,
+    const double *x_lower, const double *x_upper,
     double *x );
 
 AA_API int aa_opt_lp_lpsolve (
     size_t m, size_t n,
-    enum aa_opt_rel_type *types,
     const double *A, size_t ldA,
-    const double *b,
+    const double *b_lower, const double *b_upper,
     const double *c,
-    const double *l, const double *u,
+    const double *x_lower, const double *x_upper,
     double *x );
 
 
 AA_API int aa_opt_lp_clp (
     size_t m, size_t n,
-    enum aa_opt_rel_type *types,
     const double *A, size_t ldA,
-    const double *b,
+    const double *b_lower, const double *b_upper,
     const double *c,
-    const double *l, const double *u,
+    const double *x_lower, const double *x_upper,
     double *x );
 
 #endif //AMINO_OPT_H

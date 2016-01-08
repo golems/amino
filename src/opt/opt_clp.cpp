@@ -43,11 +43,10 @@
 
 int aa_opt_lp_clp (
     size_t m, size_t n,
-    enum aa_opt_rel_type *types,
     const double *A, size_t ldA,
-    const double *b,
+    const double *b_lower, const double *b_upper,
     const double *c,
-    const double *l, const double *u,
+    const double *x_lower, const double *x_upper,
     double *x )
 {
     ClpSimplex M;
@@ -60,30 +59,14 @@ int aa_opt_lp_clp (
 
     /* b */
     for( int i = 0; i < mi; i ++ ) {
-        double rl,ru;
-        switch( types[i] ) {
-        case AA_OPT_REL_EQ:
-            rl = b[i];
-            ru = b[i];
-            break;
-        case AA_OPT_REL_LEQ:
-            ru = b[i];
-            rl = -DBL_MAX;
-            break;
-        case AA_OPT_REL_GEQ:
-            rl = b[i];
-            ru = DBL_MAX;
-            break;
-        default: return -1;
-        }
-        M.setRowBounds(i,rl,ru);
+        M.setRowBounds(i,b_lower[i],b_upper[i]);
     }
 
     /* A, c, l, u */
     for( size_t j = 0; j < n; j ++ ) {
         M.addColumn( mi, rows,
                      AA_MATCOL(A,ldA,j),
-                     l[j], u[j], c[j] );
+                     x_lower[j], x_upper[j], c[j] );
     }
 
     M.setOptimizationDirection( -1 );

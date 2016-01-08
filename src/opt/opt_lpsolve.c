@@ -43,11 +43,10 @@
 
 int aa_opt_lp_lpsolve (
     size_t m, size_t n,
-    enum aa_opt_rel_type *types,
     const double *A, size_t ldA,
-    const double *b,
+    const double *b_lower, const double *b_upper,
     const double *c,
-    const double *l, const double *u,
+    const double *x_lower, const double *x_upper,
     double *x )
 {
     assert( sizeof(REAL) == sizeof(*A) );
@@ -68,42 +67,57 @@ int aa_opt_lp_lpsolve (
         set_obj( lp, 1+(int)j, c[j] );
     }
 
-    /* A */
-    for( size_t j = 0; j < n; j ++ ) {
-        for( size_t i = 0; i < m; i ++ ) {
-            int row = 1+(int)i, col = 1 + (int)j;
+    /* A, b */
+    int ilp = 1;
+    for( size_t i = 0; i < m; i ++ ) {
+        /* set row */
+        for( size_t j = 0; j < n; j ++ ) {
+            int col = 1 + (int)j;
             double v = AA_MATREF(A, ldA, i, j);
-            printf("%f\n",v);
-            set_mat( lp, row, col, AA_MATREF(A, ldA, i, j) );
+            set_mat( lp, ilp, col, v );
         }
-    }
 
-    /* types */
-    for( int i = 0; i < mi; i ++ ) {
-        switch( types[i] ) {
-        case AA_OPT_REL_EQ:
-            if( ! set_constr_type( lp, 1+i, EQ ) ) goto ERROR;
-            break;
-        case AA_OPT_REL_LEQ:
-            if( ! set_constr_type( lp, 1+i, LE ) ) goto ERROR;
-            break;
-        case AA_OPT_REL_GEQ:
-            if( ! set_constr_type( lp, 1+i, GE ) ) goto ERROR;
-            break;
-        default: {
-            goto ERROR;
+        /* set row bound */
+        double rh;
+        int con_type;
+        {
+            double l=b_lower[i], u=b_upper[i];
+            if( aa_feq(l,u,0) ) {
+                // equality
+                rh = u;
+                con_type = EQ;
+            } else if (-DBL_MAX >= l ||
+                       -1 == isinf(l) ) {
+                // less than
+                rh = u;
+                con_type = LE;
+            } else if (DBL_MAX <= u ||
+                       1 == isinf(u)) {
+                rh = l;
+                con_type = GE;
+            } else {
+                // leq
+                set_rh(lp,ilp,u);
+                if( ! set_constr_type( lp, ilp, LE ) ) goto ERROR;
+                ilp++;
+                // geq
+                for( size_t j = 0; j < n; j ++ ) {
+                    int col = 1 + (int)j;
+                    double v = AA_MATREF(A, ldA, i, j);
+                    set_mat( lp, ilp, col, v );
+                }
+                rh = l;
+                con_type = GE;
+            }
         }
-        }
-    }
-
-    /* b */
-    for( int i = 0; i < mi; i ++ ) {
-        set_rh(lp,i+1,b[i]);
+        set_rh(lp,ilp,rh);
+        if( ! set_constr_type( lp, ilp, con_type ) ) goto ERROR;
+        ilp++;
     }
 
     /* l/u */
     for( size_t j = 0; j < n; j ++ ) {
-        set_bounds( lp, 1+(int)j, l[j], u[j] );
+        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
     }
 
     /* solve */
