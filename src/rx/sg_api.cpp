@@ -489,3 +489,13 @@ AA_API void aa_rx_sg_get_tf (
                    (frame_to==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : tf_abs + frame_to * ld_abs) + AA_TF_QUTR_V,
                      from_tf_to + AA_TF_QUTR_Q, from_tf_to + AA_TF_QUTR_V);
 }
+
+AA_API void aa_rx_sg_reparent (const struct aa_rx_sg *scene_graph,
+			       const aa_rx_frame_id frame,
+			       const aa_rx_frame_id new_parent,
+			       const double * q){
+    struct amino::SceneFrame* f = scene_graph->sg->frames[frame];
+    f->parent = aa_rx_sg_frame_name(scene_graph, new_parent);
+    AA_MEM_CPY(f->E, q, 7);
+
+}

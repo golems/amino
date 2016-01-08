@@ -445,4 +445,10 @@ AA_API void aa_rx_sg_get_tf (
   const double * q,
   double * from_tf_to);
 
+AA_API void aa_rx_sg_reparent (
+			       const struct aa_rx_sg *scene_graph,
+			       const aa_rx_frame_id frame,
+			       const aa_rx_frame_id new_parent,
+			       const double * q);
+
 #endif /*AMINO_SCENEGRAPH_H*/
