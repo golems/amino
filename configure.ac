@@ -341,6 +341,23 @@ AS_IF([test "x$HAVE_LPSOLVE" = xyes], [
 
 AM_CONDITIONAL([HAVE_LPSOLVE], [test "x$HAVE_LPSOLVE" = xyes])
 
+
+## CLP ##
+AC_LANG([C++])
+AC_ARG_WITH([clp],
+            [AS_HELP_STRING([--without-clp], [Disable support for CLP])],
+            [],
+            [with_clp=auto])
+
+AS_IF([test "x$with_clp" = xauto], [
+  AC_CHECK_HEADERS([coin/ClpModel.hpp], [HAVE_CLP=yes], [HAVE_CLP=no])
+],[
+  HAVE_CLP="$with_clp"
+])
+
+AM_CONDITIONAL([HAVE_CLP], [test "x$HAVE_CLP" = xyes])
+
+
 ## CGAL ##
 AC_LANG([C++])
 AC_ARG_WITH([cgal],
@@ -414,8 +431,9 @@ AC_MSG_NOTICE([Use SDL2:          $HAVE_SDL2])
 AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
 AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
 AC_MSG_NOTICE([Use OMPL:          $HAVE_OMPL])
-AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
 AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
+AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
+AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
 
 
 AS_IF([test "x$CC" = "x"],

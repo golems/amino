@@ -5,6 +5,9 @@
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
+ * Georgia Tech Humanoid Robotics Lab
+ * Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
+ *
  *
  * This file is provided under the following "BSD-style" License:
  *
@@ -12,15 +15,14 @@
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
  *   conditions are met:
+ *
  *   * Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
+ *
  *   * Redistributions in binary form must reproduce the above
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
- *   * Neither the name of copyright holder the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
  *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -37,38 +39,48 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef AMINO_OPT_LP_H
-#define AMINO_OPT_LP_H
 
-#include "opt.h"
-
-
-typedef int aa_opt_lp_solver (
-    size_t m, size_t n,
-    enum aa_opt_rel_type *types,
-    const double *A, size_t ldA,
-    const double *b,
-    const double *c,
-    const double *l, const double *u,
-    double *x );
-
-AA_API int aa_opt_lp_lpsolve (
-    size_t m, size_t n,
-    enum aa_opt_rel_type *types,
-    const double *A, size_t ldA,
-    const double *b,
-    const double *c,
-    const double *l, const double *u,
-    double *x );
+//#define AA_ALLOC_STACK_MAX
+#include "amino.h"
+#include "amino/test.h"
+#include "amino/opt/lp.h"
+#include <assert.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <inttypes.h>
+#include <sys/resource.h>
 
 
-AA_API int aa_opt_lp_clp (
-    size_t m, size_t n,
-    enum aa_opt_rel_type *types,
-    const double *A, size_t ldA,
-    const double *b,
-    const double *c,
-    const double *l, const double *u,
-    double *x );
+int main( int argc, char **argv ) {
+    (void) argc; (void) argv;
 
-#endif //AMINO_OPT_H
+
+    double A[] = {120, 110, 1,  210, 30, 1};
+    double b[] = {15000, 4000, 75};
+    double c[] = {1, 1};
+
+    double l[] = {0,0};
+    double u[] = {1000,1000};
+
+    double x[2];
+
+    enum aa_opt_rel_type types[] = {AA_OPT_REL_LEQ,
+                                    AA_OPT_REL_LEQ,
+                                    AA_OPT_REL_LEQ };
+
+    int r = aa_opt_lp_clp( 3,2,
+                           types,
+                           A, 3,
+                           b,  c,
+                           l, u,
+                           x );
+    printf("r: %d\n", r );
+
+    aa_dump_vec( stdout, x, 2 );
+
+    double xref[] = {21.875, 53.125};
+
+    assert( aa_feq( x[0] + x[1],
+                    xref[0] + xref[1],
+                    1e-6 ) );
+}
