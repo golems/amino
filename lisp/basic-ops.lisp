@@ -148,7 +148,12 @@
   "Return I'th element of column vector VECTOR"
   (etypecase vector
     (simple-vector (svref vector i))
-    (matrix (matref vector i 0))
+    (matrix
+     (cond ((= 1 (matrix-cols vector))
+            (matref vector i 0))
+           ((= 1 (matrix-rows vector))
+            (matref vector 0 1))
+           (t (matrix-storage-error "Matrix is not a vector\n"))))
     (real-array (aref (real-array-data vector) i))
     (array (aref vector i))
     (cons (nth i vector))))
@@ -157,7 +162,12 @@
   (etypecase vec
     (simple-vector (setf (svref vec i) value))
     (array (setf (aref vec i) value))
-    (matrix (setf (matref vec i 0) value))))
+    (matrix
+     (cond ((= 1 (matrix-cols vec))
+            (setf (matref vec i 0) value))
+           ((= 1 (matrix-rows vec))
+            (setf (matref vec 0 i) value))
+           (t (matrix-storage-error "Matrix is not a vector\n"))))))
 
 (defun (setf matref) (value matrix i j)
   "Set element at row i, col j."

@@ -1,4 +1,4 @@
-/* -*- mode: C++; c-basic-offset: 4; -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2016, Rice University
@@ -61,6 +61,13 @@ int aa_opt_lp_lpsolve (
     set_maxim(lp);
 
     /* TODO: maybe rearrange c/A and give to lp_solve together? */
+
+    /*  printf("A:\n"); aa_dump_mat(stdout, A, ldA, n ); */
+    /* printf("bl:"); aa_dump_vec(stdout, b_lower, m ); */
+    /* printf("bu:"); aa_dump_vec(stdout, b_upper, m ); */
+    /* printf("c:"); aa_dump_vec(stdout, c, n ); */
+    /* printf("xl:"); aa_dump_vec(stdout, x_lower, n ); */
+    /* printf("xu:"); aa_dump_vec(stdout, x_upper, n ); */
 
     /* c */
     for( size_t j = 0; j < n; j ++ ) {
@@ -126,6 +133,8 @@ int aa_opt_lp_lpsolve (
 
     /* result */
     get_variables(lp,x);
+
+     /* printf("x:"); aa_dump_vec(stdout, x, n ); */
 
 ERROR:
     if( lp ) delete_lp(lp);

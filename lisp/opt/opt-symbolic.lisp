@@ -38,57 +38,6 @@
 
 (in-package :amino)
 
-(def-la-cfun ("aa_opt_qp_solve_cgal" aa-opt-qp-solve-cgal
-                                     :pointer-type :pointer) :int
-  (type opt-type)
-  (m size-t)
-  (n size-t)
-  (A :matrix)
-  (b :pointer)
-  (c :pointer)
-  (c0 :double)
-  (D :matrix)
-  (l :pointer)
-  (u :pointer)
-  (x :pointer))
-
-
-(defstruct qp
-  type
-  A
-  B
-  C
-  (c0 0d0 :type double-float)
-  D
-  L
-  U)
-
-(defun qp-var-count (qp)
-  (matrix-cols (qp-a qp)))
-
-(defun qp-solve (qp &optional (x (make-vec (qp-var-count qp))))
-  (let ((r))
-    (with-foreign-matrix (a ld-a rows-a cols-a) (qp-a qp) :input
-      (with-foreign-simple-vector (b n-b) (qp-b qp) :input
-        (with-foreign-simple-vector (c n-c) (qp-c qp) :input
-          (with-foreign-matrix (d ld-d rows-d cols-d) (qp-d qp) :input
-            (with-foreign-simple-vector (l n-l) (qp-l qp) :input
-              (with-foreign-simple-vector (u n-u) (qp-u qp) :input
-                (with-foreign-simple-vector (x n-x) x :output
-                  (assert (= n-x cols-a rows-d cols-d n-c n-l n-u))
-                  (assert (= rows-a n-b))
-                  ;(break)
-                  (setq r
-                        (aa-opt-qp-solve-cgal (qp-type qp)
-                                              rows-a cols-a
-                                              a ld-a
-                                              b c (qp-c0 qp)
-                                              d ld-d
-                                              l u
-                                              x)))))))))
-    (assert (zerop r))
-    x))
-
 
 (defun opt-term (factor variable)
   `(* ,factor ,variable))
@@ -149,6 +98,18 @@
           (return-from opt-constraints-equality-p nil)))))
   t)
 
+(defun opt-variables (constraints objectives)
+  (let ((hash-vars (make-hash-table :test #'equal)))
+    (labels ((add-term (term)
+               (with-term (factor variable) term
+                 (declare (ignore factor))
+                 (setf (gethash variable hash-vars) t))))
+      (do-constraints (type terms value) constraints
+        (declare (ignore value))
+        (assert (find type '(= <= >=)))
+        (map nil #'add-term terms))
+      (map nil #'add-term objectives))
+    (hash-table-keys hash-vars)))
 
 (defun opt-bounds (variables constraints
                    &key
@@ -186,85 +147,58 @@
                     (= (lower) (upper))))))))))
     (values lower upper)))
 
-(defun opt-variables (constraints objectives)
-  (let ((hash-vars (make-hash-table :test #'equal)))
-    (labels ((add-term (term)
-               (with-term (factor variable) term
-                 (declare (ignore factor))
-                 (setf (gethash variable hash-vars) t))))
-      (do-constraints (type terms value) constraints
-        (declare (ignore value))
-        (assert (find type '(= <= >=)))
-        (map nil #'add-term terms))
-      (map nil #'add-term objectives))
-    (hash-table-keys hash-vars)))
+(defun opt-terms-vec (variables terms &optional vec)
+  (let ((vec (or vec (make-vec (opt-variable-count variables)))))
+    ;; get initial row
+    (dolist (term terms)
+      (with-term (factor variable) term
+        (setf (vecref vec (opt-variable-position variables variable))
+              factor)))
+    vec))
 
-(defun qp-constraint-rows (variables constraint
-                           &key
-                             (type :<=))
+(defun opt-constraint-row (variables constraint
+                            &key
+                              vec
+                              (default-lower most-negative-double-float)
+                              (default-upper most-positive-double-float))
   (with-constraint (c-type terms value) constraint
-    (let ((v (make-vec (opt-variable-count variables))))
-      ;; get initial row
-      (dolist (term terms)
-        (with-term (factor variable) term
-          (setf (vecref v (opt-variable-position variables variable))
-                factor)))
-      (ecase type
-        (:<=
-         (ecase c-type
-           (<=
-            (values (list v) (list value)))
-           (>=
-            (values (list (g* -1 v))
-                    (list (- value))))
-           (= (values (list v (g* -1 v))
-                      (list value (- value))))))
-        (:=
-         (assert (eq '= c-type))
-         (values (list v) (list value)))))))
+    (let ((v (opt-terms-vec variables terms vec)))
+      (ecase c-type
+        (<= (values default-lower v value))
+        (>= (values value v default-upper))
+        (=  (values value v value))))))
+
+(defun opt-constraint-matrices (variables constraints
+                                &key
+                                  (default-lower most-negative-double-float)
+                                  (default-upper most-positive-double-float))
+  (let* ((constraints (loop for c in constraints
+                         unless (opt-constraint-bounds-p c)
+                         collect c))
+         (m (length constraints))
+         (n (length variables))
+         (lower (make-vec m))
+         (upper (make-vec m))
+         (A (make-matrix m n)))
+    (loop
+       for c in constraints
+       for i below m
+       do (let ((row (matrix-block A i 0 1 n)))
+            (multiple-value-bind (l r u)
+                (opt-constraint-row variables c
+                                    :vec row
+                                    :default-lower default-lower
+                                    :default-upper default-upper)
+              (declare (ignore r))
+              (setf (vecref lower i) l
+                    (vecref upper i) u))))
+    (values lower A upper)))
+
+(defun opt-linear-objective (variables objectives)
+  (opt-terms-vec variables objectives))
 
 
-(defun qp-objectives (variables objectives)
-  (let ((c (make-vec (opt-variable-count variables))))
-    (dolist (o objectives)
-      (with-term (f v) o
-        (setf (vecref c (opt-variable-position variables v))
-              f)))
-    c))
-
-(defun qp (constraints objectives
-           &key
-             (result-type :alist)
-             (default-lower 0d0)
-             (default-upper most-positive-double-float))
-  (let* ((vars (opt-variables constraints objectives))
-         (n-var (opt-variable-count vars))
-         (equality (opt-constraints-equality-p  constraints))
-         (a-rows)
-         (b-list))
-    ;; construct constraints
-    (dolist (c constraints)
-      (unless (opt-constraint-bounds-p c)
-        (multiple-value-bind (row b-elt)
-            (qp-constraint-rows vars c
-                                :type (if equality := :<=))
-          (setq a-rows (append row a-rows)
-                b-list (append b-elt b-list)))))
-    ;; upper/lower
-    (multiple-value-bind (lower upper) (opt-bounds vars constraints
-                                                   :default-lower default-lower
-                                                   :default-upper default-upper)
-      (let* ((qp (make-qp :type (if equality := :<=)
-                          :a (apply #'row-matrix a-rows)
-                          :b (make-array (length b-list)
-                                         :element-type 'double-float
-                                         :initial-contents b-list)
-                          :c (qp-objectives vars objectives)
-                          :d (make-matrix n-var n-var)
-                          :l lower
-                          :u upper))
-             (solution-vector (qp-solve qp)))
-        (ecase result-type
-          (:alist (loop for v in vars
-                     for x across solution-vector
-                     collect (cons v x))))))))
+;; (opt-constraint-matrices '(x y)
+;;                          '((:<= (+ (* 120 x) (* 210 y)) 1500)
+;;                            (:<= (+ (* 110 x) (* 30 y)) 4000)
+;;                            (:<= (+ (* 1 x) (* 1 y)) 75)))
