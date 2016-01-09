@@ -146,10 +146,15 @@
                                    b-lower b-upper
                                    c
                                    x-lower x-upper
-                                   x))))))))))))
+                                   x))))))))))
+    (unless (zerop r)
+      (error "Could not solve LP"))
+    x))
 
 
 (defun opt-result (result-type variables vec)
+  (assert (= (length variables)
+             (length vec)))
   (ecase result-type
     ((:vector vector vec)
      vec)
@@ -184,7 +189,7 @@
                                :default-b-upper default-b-upper)))
     (if (eq :matrix result-type)
         matrices
-        (opt-result result-type variables
+        (opt-result result-type (lp-matrices-variables matrices)
                     (lp-solve matrices :solver solver)))))
 
 
