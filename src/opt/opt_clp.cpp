@@ -1,13 +1,10 @@
-/* -*- mode: C; c-basic-offset: 4 -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@gatech.edu>
- *
- * This file is provided under the following "BSD-style" License:
- *
+ * Author(s): Neil T. Dantam <ntd@rice.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -37,33 +34,61 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef AMINO_OPT_H
-#define AMINO_OPT_H
 
-enum aa_opt_qp_type {
-    AA_OPT_QP_EQ,
-    AA_OPT_QP_LEQ,
-};
 
-typedef int aa_opt_qp_solver (
-    enum aa_opt_qp_type type,
+#include "amino.h"
+#include "amino/opt/lp.h"
+
+#include <coin/ClpSimplex.hpp>
+
+int aa_opt_lp_clp (
     size_t m, size_t n,
     const double *A, size_t ldA,
-    const double *b,
-    const double *c, double c0,
-    const double *D, size_t ldD,
-    const double *l, const double *u,
-    double *x );
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    ClpSimplex M;
+    int rows[m];
+    int mi = (int)m;
+    int ni = (int)n;
+    M.resize(mi,0);
 
+    for( int i = 0; i < mi; i ++ ) rows[i] = i;
 
-AA_API int aa_opt_qp_solve_cgal (
-    enum aa_opt_qp_type type,
-    size_t m, size_t n,
-    const double *A, size_t ldA,
-    const double *b,
-    const double *c, double c0,
-    const double *D, size_t ldD,
-    const double *l, const double *u,
-    double *x );
+    /* b */
+    for( int i = 0; i < mi; i ++ ) {
+        M.setRowBounds(i,b_lower[i],b_upper[i]);
+    }
 
-#endif //AMINO_OPT_H
+    /* A, c, l, u */
+    for( size_t j = 0; j < n; j ++ ) {
+        M.addColumn( mi, rows,
+                     AA_MATCOL(A,ldA,j),
+                     x_lower[j], x_upper[j], c[j] );
+    }
+
+    M.setOptimizationDirection( -1 );
+
+    /* Solve */
+    int r = M.initialSolve();
+
+    // const double * columnPrimal = M.getColSolution();
+    // const double * columnLower = M.columnLower();  // Alternatively getColUpper()
+    // const double * columnUpper = M.columnUpper();
+    // const double * columnObjective = M.objective();
+
+    // printf("x: "); aa_dump_vec(stdout, columnPrimal, n );
+    // printf("l: "); aa_dump_vec(stdout, columnLower, n );
+    // printf("u: "); aa_dump_vec(stdout, columnUpper, n );
+    // printf("c: "); aa_dump_vec(stdout, columnObjective, n );
+    // printf("rl: "); aa_dump_vec(stdout, M.rowLower(), m );
+    // printf("ru: "); aa_dump_vec(stdout, M.rowUpper(), m );
+    // printf("ra: "); aa_dump_vec(stdout, M.getRowActivity(), m );
+
+    /* Result */
+    AA_MEM_CPY( x, M.getColSolution(), n );
+
+    return 0;
+}

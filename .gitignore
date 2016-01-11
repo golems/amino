@@ -118,3 +118,5 @@ amino*.tar.gz
 /demo/baxter/baxter-ompl-workspace
 /src/opt/.dirstamp
 /opt_test
+/test_clp
+/test_lpsolve

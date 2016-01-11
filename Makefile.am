@@ -42,7 +42,9 @@ pkginclude_HEADERS = 	                \
 	include/amino/la.h              \
 	include/amino/la_impl.h         \
 	include/amino/mem.h             \
-	include/amino/opt.h             \
+	include/amino/opt/opt.h         \
+	include/amino/opt/qp.h          \
+	include/amino/opt/lp.h          \
 	include/amino/plot.h            \
 	include/amino/tf.h              \
 	include/amino/time.h            \
@@ -359,6 +361,40 @@ libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
+if HAVE_LPSOLVE
+
+lib_LTLIBRARIES += libamino_opt_lpsolve.la
+libamino_opt_lpsolve_la_SOURCES = \
+	src/opt/opt_lpsolve.c
+#libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
+#libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
+#libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
+
+noinst_PROGRAMS += test_lpsolve
+test_lpsolve_SOURCES = src/test/test_lpsolve.c
+test_lpsolve_LDADD = libamino_opt_lpsolve.la libamino.la libtestutil.la
+TESTS += test_lpsolve
+
+endif
+
+if HAVE_CLP
+
+lib_LTLIBRARIES += libamino_opt_clp.la
+libamino_opt_clp_la_SOURCES = \
+	src/opt/opt_clp.cpp
+#libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
+#libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
+libamino_opt_clp_la_LIBADD = libamino.la -lClp
+
+noinst_PROGRAMS += test_clp
+test_clp_SOURCES = src/test/test_clp.c
+test_clp_LDADD = libamino_opt_clp.la libamino.la libtestutil.la
+TESTS += test_clp
+
+endif
+
+
+
 if HAVE_CGAL
 
 lib_LTLIBRARIES += libamino_opt_cgal.la
@@ -373,6 +409,8 @@ opt_test_SOURCES = src/test/opt_test.c
 opt_test_LDADD = libamino_opt_cgal.la libamino.la libtestutil.la
 
 endif
+
+
 
 
 # noinst_PROGRAMS += test_vec
