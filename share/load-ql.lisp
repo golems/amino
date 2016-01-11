@@ -9,7 +9,7 @@
        (require :asdf)))))
 
 ;; Define System loading function
-(defun aa-load-system (system)
+(defun aa-load-system (system &optional (system-package system))
   (let ((ql-package (find-package :quicklisp))
         (asdf-package (find-package :asdf)))
     (cond
@@ -21,4 +21,4 @@
                 system))
       (t
        (require system))))
-  (assert (find-package system)))
+  (assert (find-package system-package)))
