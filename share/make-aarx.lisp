@@ -12,6 +12,7 @@
 
 ;; Try to load Amino
 (aa-load-system :amino)
+(aa-load-system :amino-rx :amino)
 
 ;; Make core file
 (sb-ext:save-lisp-and-die "aarx.core" :executable t)
