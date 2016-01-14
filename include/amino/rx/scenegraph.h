@@ -451,4 +451,6 @@ AA_API void aa_rx_sg_reparent (
 			       const aa_rx_frame_id new_parent,
 			       const double * q);
 
+AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig);
+
 #endif /*AMINO_SCENEGRAPH_H*/
