@@ -91,6 +91,19 @@ aa_rx_mp_seq_count( struct aa_rx_mp_seq * mp_seq );
 AA_API size_t
 aa_rx_mp_seq_point_count( struct aa_rx_mp_seq * mp_seq );
 
+
+/**
+ * Return the i'th motion plan in the sequence
+ *
+ * The output values are copied by reference to sg_ptr, n_path_ptr,
+ * and q_all_path_ptr.  No additional memory is allocated.
+ *
+ * @param[in] mp_seq           The motion plan sequence
+ * @param[in] i                The element index
+ * @param[out] sg_ptr          Pointer to scene graph for the i'th motion plan
+ * @param[out] n_path_ptr      Number of waypoints in the i'th motion plan
+ * @param[out] q_all_path_ptr  Array of waypoints in the i'th motion plan
+ */
 AA_API void
 aa_rx_mp_seq_elt( struct aa_rx_mp_seq * mp_seq, size_t i,
                   const struct aa_rx_sg **sg_ptr,
