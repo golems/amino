@@ -39,12 +39,6 @@
 (in-package :amino)
 
 
-(defun opt-term (factor variable)
-  `(* ,factor ,variable))
-
-(defun opt-constraint (type terms value)
-  `(,type (+ ,@terms) ,value))
-
 (defmacro with-constraint ((type terms value) constraint &body body)
   (with-gensyms (op fun)
     `(flet ((,fun (,type ,terms ,value)
@@ -71,6 +65,26 @@
                (declare (ignore ,op))
                (,fun (coerce ,factor 'double-float) ,variable))
              (,fun 1d0 ,term-var))))))
+
+
+(defun opt-term (factor variable)
+  `(* ,factor ,variable))
+
+(defun opt-terms-normalize (terms)
+  (let ((m (sycamore:make-tree-map #'sycamore-util:gsymbol-compare)))
+    (dolist (term terms)
+      (with-term (f v) term
+        (let ((f1 (multiple-value-bind (f0 key present) (sycamore:tree-map-find m v)
+                    (declare (ignore key))
+                    (print (list v f f0 present))
+                    (if present
+                        (+ f f0)
+                        f))))
+        (sycamore:tree-map-insertf m v f1))))
+    (sycamore:map-tree-map :inorder 'list (lambda (v f) (opt-term f v)) m)))
+
+(defun opt-constraint (type terms value)
+  `(,type (+ ,@(opt-terms-normalize terms)) ,value))
 
 (defun opt-variable-position (variables var)
   (position var variables :test #'equal))
