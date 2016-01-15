@@ -70,21 +70,56 @@
 (defun opt-term (factor variable)
   `(* ,factor ,variable))
 
-(defun opt-terms-normalize (terms)
+(defun opt-constraint (type terms value)
+  `(,type (+ ,@terms) ,value))
+
+(defstruct normalized-constraint
+  (lower nil :type (or double-float null))
+  (terms nil :type list)
+  (upper nil :type (or double-float null)))
+
+(defun normalized-constraint-bounds-p (normalized-constraint)
+  (let ((terms (normalized-constraint-terms normalized-constraint)))
+    (and terms (null (cdr terms)))))
+
+(defun normalize-terms (terms)
   (let ((m (sycamore:make-tree-map #'sycamore-util:gsymbol-compare)))
     (dolist (term terms)
       (with-term (f v) term
         (let ((f1 (multiple-value-bind (f0 key present) (sycamore:tree-map-find m v)
                     (declare (ignore key))
-                    (print (list v f f0 present))
                     (if present
                         (+ f f0)
                         f))))
         (sycamore:tree-map-insertf m v f1))))
-    (sycamore:map-tree-map :inorder 'list (lambda (v f) (opt-term f v)) m)))
+    (sycamore:map-tree-map :inorder 'list #'cons m)))
 
-(defun opt-constraint (type terms value)
-  `(,type (+ ,@(opt-terms-normalize terms)) ,value))
+(defun normalize-constraints (constraints)
+  (let ((hash (make-hash-table :test #'equal)))
+    (dolist (c constraints)
+      (with-constraint (type terms value) c
+        (let* ((terms (normalize-terms terms))
+               (nc (or (gethash terms hash)
+                       (setf (gethash terms hash)
+                             (make-normalized-constraint :terms terms)))))
+          (ecase type
+                  (<= (setf (normalized-constraint-upper nc)
+                            (if-let ((current (normalized-constraint-upper nc)))
+                              (min current value)
+                              value)))
+                  (>= (setf (normalized-constraint-lower nc)
+                            (if-let ((current (normalized-constraint-lower nc)))
+                              (max current value)
+                              value)))
+                  (= (if-let ((current (normalized-constraint-lower nc)))
+                       (unless (= current value)
+                         (error "Unable to satisfy constraint ~A" c))
+                       (setf (normalized-constraint-lower nc) value))
+                     (if-let ((current (normalized-constraint-upper nc)))
+                       (unless (= current value)
+                         (error "Unable to satisfy constraint ~A" c))
+                       (setf (normalized-constraint-upper nc) value)))))))
+    (hash-table-values hash)))
 
 (defun opt-variable-position (variables var)
   (position var variables :test #'equal))
