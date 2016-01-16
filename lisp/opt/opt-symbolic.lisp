@@ -164,47 +164,34 @@
                    &key
                      (default-lower 0d0)
                      (default-upper most-positive-double-float))
+  (declare (type double-float default-lower default-upper))
   (let* ((n (opt-variable-count variables))
-         (has-lower (make-array n :element-type 'bit  :initial-element 0))
-         (has-upper (make-array n :element-type 'bit :initial-element 0))
-         (lower (make-vec n :initial-element most-negative-double-float))
-         (upper (make-vec n :initial-element most-positive-double-float)))
-    ;(declare (dynamic-extent has-lower has-upper))
+         (has-bound (make-array n :element-type 'bit  :initial-element 0))
+         (lower (make-vec n :initial-element default-lower))
+         (upper (make-vec n :initial-element default-upper)))
     (dolist (c constraints)
-      (when (opt-constraint-bounds-p c)
-        (with-constraint (type terms bound) c
-          (assert (= 1 (length terms)))
-          (with-term (f v) (car terms)
-            (multiple-value-bind (type bound)
-                (if (< f 0)
-                    (values (opt-type-flip type) (/ bound f))
-                    (values type (/ bound f)))
+      (when (normalized-constraint-bounds-p c)
+        (destructuring-bind ((v . f)) (normalized-constraint-terms c)
+            (multiple-value-bind (xl xu)
+                (let ((l (normalized-constraint-lower c))
+                      (u (normalized-constraint-upper c)))
+                  (if (< f 0)
+                      (values u l)
+                      (values l u)))
               (let ((i (opt-variable-position variables v)))
-                (labels ((setit (v h b)
-                           (setf (aref v i) b
-                                 (aref h i) 1))
-                         (upper ()
-                           (setit upper has-upper (min (aref upper i) bound)))
-                         (lower ()
-                           (setit lower has-lower (max (aref lower i) bound))))
-                  (ecase type
-                    (<= (upper))
-                    (>= (lower))
-                    (= (lower) (upper))))))))))
-    ;; Set Defaults
-    (dotimes (i n)
-      (when (zerop (aref has-lower i))
-        (setf (aref lower i) default-lower))
-      (when (zerop (aref has-upper i))
-        (setf (aref upper i) default-upper)))
+                (assert (zerop (aref has-bound i)))
+                (setf (aref has-bound i) 1)
+                (when xl (setf (aref lower i) (/ xl f)))
+                (when xu (setf (aref upper i) (/ xu f))))))))
     ;; Result
     (values lower upper)))
+
 
 (defun opt-terms-vec (variables terms &optional vec)
   (let ((vec (or vec (make-vec (opt-variable-count variables)))))
     ;; get initial row
     (dolist (term terms)
-      (with-term (factor variable) term
+      (destructuring-bind (variable . factor) term
         (setf (vecref vec (opt-variable-position variables variable))
               factor)))
     vec))
@@ -214,19 +201,19 @@
                               vec
                               (default-lower most-negative-double-float)
                               (default-upper most-positive-double-float))
-  (with-constraint (c-type terms value) constraint
-    (let ((v (opt-terms-vec variables terms vec)))
-      (ecase c-type
-        (<= (values default-lower v value))
-        (>= (values value v default-upper))
-        (=  (values value v value))))))
+  (let ((lower (or (normalized-constraint-lower constraint)
+                   default-lower))
+        (row (opt-terms-vec variables (normalized-constraint-terms constraint) vec))
+        (upper (or (normalized-constraint-upper constraint)
+                   default-upper)))
+  (values lower row upper)))
 
 (defun opt-constraint-matrices (variables constraints
                                 &key
                                   (default-lower most-negative-double-float)
                                   (default-upper most-positive-double-float))
   (let* ((constraints (loop for c in constraints
-                         unless (opt-constraint-bounds-p c)
+                         unless (normalized-constraint-bounds-p c)
                          collect c))
          (m (length constraints))
          (n (length variables))
@@ -248,7 +235,7 @@
     (values lower A upper)))
 
 (defun opt-linear-objective (variables objectives)
-  (opt-terms-vec variables objectives))
+  (opt-terms-vec variables (normalize-terms objectives)))
 
 
 ;; (opt-constraint-matrices '(x y)

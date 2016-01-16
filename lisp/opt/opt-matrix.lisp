@@ -100,25 +100,26 @@
   (let* ((variables (or variables
                         (opt-variables constraints objectives)))
          (lp-matrices (or lp-matrices
-                          (make-lp-matrices :variables variables))))
+                          (make-lp-matrices :variables variables)))
+         (constraints (normalize-constraints constraints)))
     ;; constraints
-    (multiple-value-bind (b-lower A b-upper)
+    (symbol-macrolet ((b-lower (lp-matrices-b-lower lp-matrices))
+                      (A (lp-matrices-A lp-matrices))
+                      (b-upper (lp-matrices-b-upper lp-matrices)))
+      (multiple-value-setq (b-lower A b-upper)
         (opt-constraint-matrices variables constraints
                                  :default-lower default-b-lower
-                                 :default-upper default-b-upper)
-      (setf (lp-matrices-b-lower lp-matrices) b-lower
-            (lp-matrices-A lp-matrices) A
-            (lp-matrices-b-upper lp-matrices) b-upper))
+                                 :default-upper default-b-upper)))
     ;; objectives
     (setf (lp-matrices-c lp-matrices)
           (opt-linear-objective variables objectives))
     ;; bounds
-    (multiple-value-bind (x-lower x-upper)
+    (symbol-macrolet ((x-lower (lp-matrices-x-lower lp-matrices))
+                      (x-upper (lp-matrices-x-upper lp-matrices)))
+      (multiple-value-setq (x-lower x-upper)
         (opt-bounds variables constraints
                     :default-lower default-x-lower
-                    :default-lower default-x-upper)
-      (setf (lp-matrices-x-lower lp-matrices) x-lower
-            (lp-matrices-x-upper lp-matrices) x-upper))
+                    :default-lower default-x-upper)))
     lp-matrices))
 
 
