@@ -127,26 +127,6 @@
 (defun opt-variable-count (variables)
   (length variables))
 
-(defun opt-constraint-bounds-p (constraint)
-  (with-constraint (type terms value) constraint
-    (declare (ignore type value))
-    (and terms (null (cdr terms)))))
-
-(defun opt-type-flip (type)
-  (ecase type
-    (= '=)
-    (<= '>=)
-    (>= '<=)))
-
-(defun opt-constraints-equality-p (constraints)
-  (dolist (c constraints)
-    (unless (opt-constraint-bounds-p c)
-      (with-constraint (type terms value) c
-        (declare (ignore terms value))
-        (unless (eq type '=)
-          (return-from opt-constraints-equality-p nil)))))
-  t)
-
 (defun opt-variables (constraints objectives)
   (let ((hash-vars (make-hash-table :test #'equal)))
     (labels ((add-term (term)
@@ -196,18 +176,6 @@
               factor)))
     vec))
 
-(defun opt-constraint-row (variables constraint
-                            &key
-                              vec
-                              (default-lower most-negative-double-float)
-                              (default-upper most-positive-double-float))
-  (let ((lower (or (normalized-constraint-lower constraint)
-                   default-lower))
-        (row (opt-terms-vec variables (normalized-constraint-terms constraint) vec))
-        (upper (or (normalized-constraint-upper constraint)
-                   default-upper)))
-  (values lower row upper)))
-
 (defun opt-constraint-matrices (variables constraints
                                 &key
                                   (default-lower most-negative-double-float)
@@ -216,22 +184,21 @@
                          unless (normalized-constraint-bounds-p c)
                          collect c))
          (m (length constraints))
-         (n (length variables))
-         (lower (make-vec m))
-         (upper (make-vec m))
+         (n (opt-variable-count variables))
+         (lower (make-vec m :initial-element default-lower))
+         (upper (make-vec m :initial-element default-upper))
          (A (make-matrix m n)))
     (loop
        for c in constraints
-       for i below m
-       do (let ((row (matrix-block A i 0 1 n)))
-            (multiple-value-bind (l r u)
-                (opt-constraint-row variables c
-                                    :vec row
-                                    :default-lower default-lower
-                                    :default-upper default-upper)
-              (declare (ignore r))
-              (setf (vecref lower i) l
-                    (vecref upper i) u))))
+       for i from 0
+       for row = (matrix-block A i 0 1 n)
+       for terms = (normalized-constraint-terms c)
+       for l = (normalized-constraint-lower c)
+       for u = (normalized-constraint-upper c)
+       do
+         (opt-terms-vec variables terms row)
+         (when l (setf (vecref lower i) l))
+         (when u (setf (vecref upper i) u)))
     (values lower A upper)))
 
 (defun opt-linear-objective (variables objectives)
@@ -242,3 +209,24 @@
 ;;                          '((:<= (+ (* 120 x) (* 210 y)) 1500)
 ;;                            (:<= (+ (* 110 x) (* 30 y)) 4000)
 ;;                            (:<= (+ (* 1 x) (* 1 y)) 75)))
+
+
+;; (defun opt-constraint-bounds-p (constraint)
+;;   (with-constraint (type terms value) constraint
+;;     (declare (ignore type value))
+;;     (and terms (null (cdr terms)))))
+
+;; (defun opt-type-flip (type)
+;;   (ecase type
+;;     (= '=)
+;;     (<= '>=)
+;;     (>= '<=)))
+
+;; (defun opt-constraints-equality-p (constraints)
+;;   (dolist (c constraints)
+;;     (unless (opt-constraint-bounds-p c)
+;;       (with-constraint (type terms value) c
+;;         (declare (ignore terms value))
+;;         (unless (eq type '=)
+;;           (return-from opt-constraints-equality-p nil)))))
+;;   t)
