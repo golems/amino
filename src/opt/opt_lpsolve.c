@@ -39,6 +39,8 @@
 #include "amino.h"
 #include "amino/opt/lp.h"
 
+#include "opt_internal.h"
+
 #include <lpsolve/lp_lib.h>
 
 static int aa_opt_lp_lpsolve_finish (
@@ -122,28 +124,30 @@ int aa_opt_lp_lpsolve (
                 // equality
                 rh = u;
                 con_type = EQ;
-            } else if (-DBL_MAX >= l ||
-                       -1 == isinf(l) ) {
-                // less than
-                rh = u;
-                con_type = LE;
-            } else if (DBL_MAX <= u ||
-                       1 == isinf(u)) {
-                rh = l;
-                con_type = GE;
             } else {
-                // leq
-                set_rh(lp,ilp,u);
-                if( ! set_constr_type( lp, ilp, LE ) ) goto ERROR;
-                ilp++;
-                // geq
-                for( size_t j = 0; j < n; j ++ ) {
-                    int col = 1 + (int)j;
-                    double v = AA_MATREF(A, ldA, i, j);
-                    set_mat( lp, ilp, col, v );
+                int lb = aa_opt_is_lbound(l);
+                int ub = aa_opt_is_ubound(u);
+                if ( aa_opt_is_leq(lb,ub) ) {
+                    // less than
+                    rh = u;
+                    con_type = LE;
+                } else if ( aa_opt_is_geq(lb,ub) ) {
+                    rh = l;
+                    con_type = GE;
+                } else {
+                    // leq
+                    set_rh(lp,ilp,u);
+                    if( ! set_constr_type( lp, ilp, LE ) ) goto ERROR;
+                    ilp++;
+                    // geq
+                    for( size_t j = 0; j < n; j ++ ) {
+                        int col = 1 + (int)j;
+                        double v = AA_MATREF(A, ldA, i, j);
+                        set_mat( lp, ilp, col, v );
+                    }
+                    rh = l;
+                    con_type = GE;
                 }
-                rh = l;
-                con_type = GE;
             }
         }
         set_rh(lp,ilp,rh);
@@ -196,20 +200,22 @@ AA_API int aa_opt_lp_crs_lpsolve (
             // equality
             con_type = EQ;
             rh = u;
-        } else if (-DBL_MAX >= l ||
-                   -1 == isinf(l) ) {
-            // less than
-            con_type = LE;
-            rh = u;
-        } else if (DBL_MAX <= u ||
-                   1 == isinf(u)) {
-            rh = l;
-            con_type = GE;
         } else {
-            // leq
-            add_constraintex(lp, count, vals, inds, LE, u);
-            con_type = GE;
-            rh = l;
+            int lb = aa_opt_is_lbound(l);
+            int ub = aa_opt_is_ubound(u);
+            if ( aa_opt_is_leq(lb,ub) )  {
+                // less than
+                con_type = LE;
+                rh = u;
+            } else if ( aa_opt_is_geq(lb,ub) )  {
+                rh = l;
+                con_type = GE;
+            } else {
+                // leq
+                add_constraintex(lp, count, vals, inds, LE, u);
+                con_type = GE;
+                rh = l;
+            }
         }
         add_constraintex(lp, count, vals, inds, con_type, rh);
     }
