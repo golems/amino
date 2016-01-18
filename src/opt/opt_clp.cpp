@@ -92,3 +92,43 @@ int aa_opt_lp_clp (
 
     return 0;
 }
+
+AA_API int aa_opt_lp_crs_clp (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    ClpSimplex M;
+    int rows[m];
+    int mi = (int)m;
+    int ni = (int)n;
+    M.resize(0,ni);
+
+    /* A, b */
+    for( int i = 0; i < mi; i ++ ) {
+        int start = A_row_ptr[i];
+        int end = A_row_ptr[i + 1];
+        M.addRow( end - start,
+                  A_cols+start,
+                  A_values+start,
+                  b_lower[i],
+                  b_upper[i] );
+    }
+
+    /* c, xl, xu */
+    M.chgColumnLower(x_lower);
+    M.chgColumnUpper(x_upper);
+    M.chgObjCoefficients(c);
+
+    /* Solve */
+    M.setOptimizationDirection( -1 );
+    int r = M.initialSolve();
+
+    /* Result */
+    AA_MEM_CPY( x, M.getColSolution(), n );
+
+    return 0;
+}

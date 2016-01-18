@@ -82,6 +82,9 @@
   (let ((terms (normalized-constraint-terms normalized-constraint)))
     (and terms (null (cdr terms)))))
 
+(defun normalized-constraint-length (normalized-constraint)
+  (length (normalized-constraint-terms normalized-constraint)))
+
 (defun normalize-terms (terms)
   (let ((m (sycamore:make-tree-map #'sycamore-util:gsymbol-compare)))
     (dolist (term terms)
@@ -166,14 +169,19 @@
     ;; Result
     (values lower upper)))
 
+(defun map-opt-terms (function terms)
+  (dolist (term terms)
+    (destructuring-bind (variable . factor) term
+      (funcall function variable factor))))
+
 
 (defun opt-terms-vec (variables terms &optional vec)
   (let ((vec (or vec (make-vec (opt-variable-count variables)))))
     ;; get initial row
-    (dolist (term terms)
-      (destructuring-bind (variable . factor) term
-        (setf (vecref vec (opt-variable-position variables variable))
-              factor)))
+    (map-opt-terms (lambda (variable factor)
+                     (setf (vecref vec (opt-variable-position variables variable))
+                           factor))
+                   terms)
     vec))
 
 (defun opt-constraint-matrices (variables constraints
@@ -197,6 +205,38 @@
        for u = (normalized-constraint-upper c)
        do
          (opt-terms-vec variables terms row)
+         (when l (setf (vecref lower i) l))
+         (when u (setf (vecref upper i) u)))
+    (values lower A upper)))
+
+(defun opt-constraint-crs (variables constraints
+                           &key
+                             (default-lower most-negative-double-float)
+                             (default-upper most-positive-double-float))
+  (let* ((constraints (loop for c in constraints
+                         unless (normalized-constraint-bounds-p c)
+                         collect c))
+         (m (length constraints))
+         (n (opt-variable-count variables))
+         (e (loop for c in constraints
+               summing (normalized-constraint-length c)))
+         (lower (make-vec m :initial-element default-lower))
+         (upper (make-vec m :initial-element default-upper))
+         (A (make-crs-matrix m n e)))
+    (loop
+       for c in constraints
+       for i from 0
+       ;for row = (matrix-block A i 0 1 n)
+       for terms = (normalized-constraint-terms c)
+       for l = (normalized-constraint-lower c)
+       for u = (normalized-constraint-upper c)
+       do
+         (map-opt-terms (lambda (var factor)
+                          (amino-type::crs-matrix-add-elt A
+                                                          (opt-variable-position variables var)
+                                                          factor))
+                        terms)
+         (amino-type::crs-matrix-inc-row A)
          (when l (setf (vecref lower i) l))
          (when u (setf (vecref upper i) u)))
     (values lower A upper)))

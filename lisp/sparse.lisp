@@ -113,6 +113,25 @@
       crs-matrix)))
 
 
+(defmacro with-foreign-crs ((row-count col-count element-count values col-indices row-ptr)
+                            crs &body body)
+  (with-gensyms (v-crs v-data v-col-ind v-row-ptr)
+    `(let* ((,v-crs ,crs)
+            (,row-count (%crs-matrix-rows ,v-crs))
+            (,col-count (%crs-matrix-cols ,v-crs))
+            (,v-data (%crs-matrix-data ,v-crs))
+            (,v-col-ind (%crs-matrix-col-ind ,v-crs))
+            (,v-row-ptr (%crs-matrix-row-ptr ,v-crs))
+            (,element-count (length ,v-data)))
+       (unless (= ,element-count (length ,v-col-ind))
+         (error "Mismatched column indices and values arrays in CRS matrix"))
+       (unless (= (1+ ,row-count) (length ,v-row-ptr))
+         (error "Mismatched row count and row pointer array length"))
+       ;; TODO: check elements?
+       (with-pointer-to-vector-data (,values ,v-data)
+         (with-pointer-to-vector-data (,col-indices ,v-col-ind)
+           (with-pointer-to-vector-data (,row-ptr ,v-row-ptr)
+             ,@body))))))
 
 ;; (crs-matrix '((0 4)
 ;;               (0 1 5)
