@@ -41,6 +41,37 @@
 
 #include <lpsolve/lp_lib.h>
 
+static int aa_opt_lp_lpsolve_finish (
+    lprec *lp,
+    size_t m, size_t n,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    int ni = (int)n;
+    int mi = (int)m;
+    (void)mi;
+
+    /* c */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_obj( lp, 1+(int)j, c[j] );
+    }
+
+    /* l/u */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
+    }
+
+    /* solve */
+    int r = solve(lp);
+    assert(ni == get_Ncolumns(lp));
+
+    /* result */
+    get_variables(lp,x);
+    return r;
+}
+
+
 int aa_opt_lp_lpsolve (
     size_t m, size_t n,
     const double *A, size_t ldA,
@@ -69,10 +100,6 @@ int aa_opt_lp_lpsolve (
     /* printf("xl:"); aa_dump_vec(stdout, x_lower, n ); */
     /* printf("xu:"); aa_dump_vec(stdout, x_upper, n ); */
 
-    /* c */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_obj( lp, 1+(int)j, c[j] );
-    }
 
     /* A, b */
     int ilp = 1;
@@ -122,19 +149,68 @@ int aa_opt_lp_lpsolve (
         ilp++;
     }
 
-    /* l/u */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
+    r = aa_opt_lp_lpsolve_finish( lp, m, n, c, x_lower, x_upper, x);
+
+ERROR:
+    if( lp ) delete_lp(lp);
+    return r;
+
+}
+
+AA_API int aa_opt_lp_crs_lpsolve (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    assert( sizeof(REAL) == sizeof(*A_values) );
+
+    int mi = (int)m;
+    int ni = (int)n;
+    int r = -1;
+    lprec *lp = make_lp(0, ni);
+
+    if( NULL == lp ) goto ERROR;
+    set_maxim(lp);
+
+    /* A, b_l, b_u */
+    set_add_rowmode(lp, TRUE);
+    for( int i = 0; i < mi; i ++ ) {
+        double l=b_lower[i], u=b_upper[i];
+        int start = A_row_ptr[i];
+        int end = A_row_ptr[i + 1];
+        int count = end - start;
+        double *vals = (double*)A_values + start;
+        int *inds = (int*)A_cols + start;
+        double rh;
+        int con_type;
+        if( aa_feq(l,u,0) ) {
+            // equality
+            rh = u;
+            con_type = EQ;
+        } else if (-DBL_MAX >= l ||
+                   -1 == isinf(l) ) {
+            // less than
+            rh = u;
+            con_type = LE;
+            add_constraintex(lp, count, vals, inds, EQ, u);
+        } else if (DBL_MAX <= u ||
+                   1 == isinf(u)) {
+            rh = l;
+            con_type = GE;
+        } else {
+            // leq
+            add_constraintex(lp, count, vals, inds, LE, u);
+            rh = l;
+            con_type = GE;
+        }
+        add_constraintex(lp, count, vals, inds, con_type, rh);
     }
+    set_add_rowmode(lp, FALSE);
 
-    /* solve */
-    r = solve(lp);
-    assert(ni == get_Ncolumns(lp));
-
-    /* result */
-    get_variables(lp,x);
-
-     /* printf("x:"); aa_dump_vec(stdout, x, n ); */
+    r = aa_opt_lp_lpsolve_finish( lp, m, n, c, x_lower, x_upper, x);
 
 ERROR:
     if( lp ) delete_lp(lp);
