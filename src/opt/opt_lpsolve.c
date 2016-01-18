@@ -184,13 +184,13 @@ AA_API int aa_opt_lp_crs_lpsolve (
     /* A, b_l, b_u */
     set_add_rowmode(lp, TRUE);
     for( int i = 0; i < mi; i ++ ) {
-        int inds[ni];
         double l=b_lower[i], u=b_upper[i];
         int start = A_row_ptr[i];
         int end = A_row_ptr[i + 1];
         int count = end - start;
         double *vals = (double*)A_values + start;
         int *raw_inds = (int*)A_cols + start;
+        int inds[count];
         for( int j = 0; j < count; j ++ ) {
             inds[j] = raw_inds[j] + 1;
         }

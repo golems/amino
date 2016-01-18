@@ -377,6 +377,23 @@ TESTS += test_lpsolve
 
 endif
 
+
+if HAVE_LPSOLVE
+
+lib_LTLIBRARIES += libamino_opt_glpk.la
+libamino_opt_glpk_la_SOURCES = \
+	src/opt/opt_glpk.c
+#libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
+#libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
+#libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
+
+#noinst_PROGRAMS += test_lpsolve
+#test_lpsolve_SOURCES = src/test/test_lpsolve.c
+#test_lpsolve_LDADD = libamino_opt_lpsolve.la libamino.la libtestutil.la
+#TESTS += test_lpsolve
+
+endif
+
 if HAVE_CLP
 
 lib_LTLIBRARIES += libamino_opt_clp.la

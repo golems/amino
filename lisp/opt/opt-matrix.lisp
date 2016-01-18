@@ -71,9 +71,25 @@
   (x :pointer))
 
 
+(def-la-cfun ("aa_opt_lp_crs_glpk" aa-opt-lp-crs-glpk
+                                      :pointer-type :pointer) :int
+  (m size-t)
+  (n size-t)
+  (A-values :pointer)
+  (A-cols :pointer)
+  (A-row-ptr :pointer)
+  (b-lower :pointer)
+  (b-upper :pointer)
+  (c :pointer)
+  (x-lower :pointer)
+  (x-upper :pointer)
+  (x :pointer))
+
+
 (defun solver-function (solver)
   (ecase solver
     (:clp #'aa-opt-lp-crs-clp)
+    (:glpk #'aa-opt-lp-crs-glpk)
     (:lpsolve #'aa-opt-lp-crs-lpsolve)))
 
 (defstruct lp-matrices

@@ -342,6 +342,29 @@ AS_IF([test "x$HAVE_LPSOLVE" = xyes], [
 AM_CONDITIONAL([HAVE_LPSOLVE], [test "x$HAVE_LPSOLVE" = xyes])
 
 
+## GLPK ##
+AC_LANG([C])
+AC_ARG_WITH([glpk],
+            [AS_HELP_STRING([--without-glpk], [Disable support for GLPK])],
+            [],
+            [with_glpk=auto])
+# check header
+AS_IF([test "x$with_glpk" = xauto], [
+  AC_CHECK_HEADERS([glpk.h], [HAVE_GLPK=yes], [HAVE_GLPK=no])
+],[
+  HAVE_LPSOLVE="$with_glpk"
+])
+
+# check library
+AS_IF([test "x$HAVE_GLPK" = xyes], [
+  AC_SEARCH_LIBS([glp_create_prob],[glpk],
+                 [HAVE_GLPK=yes],
+                 [HAVE_GLPK=no])
+])
+
+AM_CONDITIONAL([HAVE_GLPK], [test "x$HAVE_GLPK" = xyes])
+
+
 ## CLP ##
 AC_LANG([C++])
 AC_ARG_WITH([clp],
@@ -433,6 +456,7 @@ AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
 AC_MSG_NOTICE([Use OMPL:          $HAVE_OMPL])
 AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
+AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
 
 
