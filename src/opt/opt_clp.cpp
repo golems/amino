@@ -90,7 +90,7 @@ int aa_opt_lp_clp (
     /* Result */
     AA_MEM_CPY( x, M.getColSolution(), n );
 
-    return 0;
+    return r;
 }
 
 AA_API int aa_opt_lp_crs_clp (
@@ -130,5 +130,5 @@ AA_API int aa_opt_lp_crs_clp (
     /* Result */
     AA_MEM_CPY( x, M.getColSolution(), n );
 
-    return 0;
+    return r;
 }

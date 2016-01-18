@@ -148,6 +148,7 @@
 
 (defun lp-solve (lp-matrices
                  &key
+                   (strict nil)
                    (solver *default-lp-solver*)
                    x)
   (let ((r)
@@ -171,12 +172,13 @@
                                    c
                                    x-lower x-upper
                                    x))))))))))
-    (unless (zerop r)
-      (error "Could not solve LP"))
+    (when (and strict (not (zerop r)))
+      (error "Could not solve LP: ~D" r))
     x))
 
 (defun lp-crs-solve (lp-matrices
                      &key
+                       (strict nil)
                        ;(solver *default-lp-solver*)
                        x)
   (let ((r)
@@ -200,8 +202,8 @@
                                              c
                                              x-lower x-upper
                                              x))))))))))
-    (unless (zerop r)
-      (error "Could not solve LP"))
+    (when (and strict (not (zerop r)))
+      (error "Could not solve LP: ~D" r))
     x))
 
 
