@@ -39,6 +39,8 @@
 
 (in-package :amino-type)
 
+(deftype foreign-int ()
+  '(signed-byte #.(* 8 (cffi:foreign-type-size :int))))
 
 (defstruct (crs-matrix (:include real-array)
                        (:constructor %make-crs-matrix)
@@ -46,8 +48,8 @@
   "Descriptor for a Compressed-Row-Storage matrix following LAPACK conventions."
   (cols 0 :type (integer 1 #.most-positive-fixnum))
   (rows 0 :type (integer 1 #.most-positive-fixnum))
-  (col-ind nil :type (simple-array fixnum (*)))
-  (row-ptr nil :type (simple-array fixnum (*)))
+  (col-ind nil :type (simple-array foreign-int (*)))
+  (row-ptr nil :type (simple-array foreign-int (*)))
   (data-fill 0 :type (integer 0 #.most-positive-fixnum))
   (row-fill 0 :type (integer 0 #.most-positive-fixnum)))
 
@@ -61,15 +63,16 @@
 (defun make-crs-matrix (row-count column-count element-count)
   (let ((result (%make-crs-matrix :cols column-count
                                   :rows row-count
-                                  :col-ind (make-array element-count :element-type 'fixnum)
-                                  :row-ptr (make-array row-count :element-type 'fixnum)
+                                  :col-ind (make-array element-count :element-type '(foreign-int))
+                                  :row-ptr (make-array (1+ row-count) :element-type '(foreign-int))
                                   :data (make-array element-count :element-type 'double-float))))
     (crs-matrix-inc-row result)
     result))
 
 (defun crs-matrix-add-elt (crs-matrix column element)
   (assert (< column (%crs-matrix-cols crs-matrix)))
-  (let ((k (%crs-matrix-data-fill crs-matrix)))
+  (let ((k (%crs-matrix-data-fill crs-matrix))
+        (element (coerce element 'double-float)))
     ;; set element and column index
     (setf (aref (%crs-matrix-data crs-matrix) k) element
           (aref (%crs-matrix-col-ind crs-matrix) k) column))
@@ -87,4 +90,40 @@
   crs-matrix)
 
 
-;;(defun crs-matrix (columns-list values-list))
+(defun crs-matrix (columns-sequence values-sequence)
+  (let ((m (length columns-sequence))
+        (n -1)
+        (e 0))
+    (assert (= m (length values-sequence)))
+    ;; Find counts
+    (map nil (lambda (columns values)
+               (let ((k (length columns)))
+                 (assert (= k (length values)))
+                 (incf e k))
+               (map nil (lambda (j)
+                          (setq n (max n j)))
+                    columns))
+         columns-sequence
+         values-sequence)
+    (incf n) ;; 0 indexes
+    (let ((crs-matrix (make-crs-matrix m n e)))
+      (map nil (lambda (columns values)
+                 (crs-matrix-add-row crs-matrix columns values))
+           columns-sequence values-sequence)
+      crs-matrix)))
+
+
+
+;; (crs-matrix '((0 4)
+;;               (0 1 5)
+;;               (1 2 3)
+;;               (0 2 3 4)
+;;               (1 3 4 5)
+;;               (1 4 5))
+
+;;             '((10 -2)
+;;               (3 9 3)
+;;               (7 8 7)
+;;               (3 8 7 5)
+;;               (8 9 9 13)
+;;               (4 2 -1)))
