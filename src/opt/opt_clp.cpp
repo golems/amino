@@ -57,17 +57,18 @@ int aa_opt_lp_clp (
 
     for( int i = 0; i < mi; i ++ ) rows[i] = i;
 
-    /* b */
-    for( int i = 0; i < mi; i ++ ) {
-        M.setRowBounds(i,b_lower[i],b_upper[i]);
-    }
-
     /* A, c, l, u */
     for( size_t j = 0; j < n; j ++ ) {
         M.addColumn( mi, rows,
                      AA_MATCOL(A,ldA,j),
                      x_lower[j], x_upper[j], c[j] );
     }
+
+    /* b */
+    for( int i = 0; i < mi; i ++ ) {
+        M.setRowBounds(i,b_lower[i],b_upper[i]);
+    }
+
 
     M.setOptimizationDirection( -1 );
 

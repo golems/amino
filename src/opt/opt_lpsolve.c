@@ -52,6 +52,11 @@ static int aa_opt_lp_lpsolve_finish (
     int mi = (int)m;
     (void)mi;
 
+
+    /* printf("c:"); aa_dump_vec(stdout, c, n ); */
+    /* printf("xl:"); aa_dump_vec(stdout, x_lower, n ); */
+    /* printf("xu:"); aa_dump_vec(stdout, x_upper, n ); */
+
     /* c */
     for( size_t j = 0; j < n; j ++ ) {
         set_obj( lp, 1+(int)j, c[j] );
@@ -96,9 +101,6 @@ int aa_opt_lp_lpsolve (
     /*  printf("A:\n"); aa_dump_mat(stdout, A, ldA, n ); */
     /* printf("bl:"); aa_dump_vec(stdout, b_lower, m ); */
     /* printf("bu:"); aa_dump_vec(stdout, b_upper, m ); */
-    /* printf("c:"); aa_dump_vec(stdout, c, n ); */
-    /* printf("xl:"); aa_dump_vec(stdout, x_lower, n ); */
-    /* printf("xu:"); aa_dump_vec(stdout, x_upper, n ); */
 
 
     /* A, b */
@@ -178,24 +180,27 @@ AA_API int aa_opt_lp_crs_lpsolve (
     /* A, b_l, b_u */
     set_add_rowmode(lp, TRUE);
     for( int i = 0; i < mi; i ++ ) {
+        int inds[ni];
         double l=b_lower[i], u=b_upper[i];
         int start = A_row_ptr[i];
         int end = A_row_ptr[i + 1];
         int count = end - start;
         double *vals = (double*)A_values + start;
-        int *inds = (int*)A_cols + start;
+        int *raw_inds = (int*)A_cols + start;
+        for( int j = 0; j < count; j ++ ) {
+            inds[j] = raw_inds[j] + 1;
+        }
         double rh;
         int con_type;
         if( aa_feq(l,u,0) ) {
             // equality
-            rh = u;
             con_type = EQ;
+            rh = u;
         } else if (-DBL_MAX >= l ||
                    -1 == isinf(l) ) {
             // less than
-            rh = u;
             con_type = LE;
-            add_constraintex(lp, count, vals, inds, EQ, u);
+            rh = u;
         } else if (DBL_MAX <= u ||
                    1 == isinf(u)) {
             rh = l;
@@ -203,8 +208,8 @@ AA_API int aa_opt_lp_crs_lpsolve (
         } else {
             // leq
             add_constraintex(lp, count, vals, inds, LE, u);
-            rh = l;
             con_type = GE;
+            rh = l;
         }
         add_constraintex(lp, count, vals, inds, con_type, rh);
     }
