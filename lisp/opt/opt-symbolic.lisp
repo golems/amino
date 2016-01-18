@@ -184,31 +184,6 @@
                    terms)
     vec))
 
-(defun opt-constraint-matrices (variables constraints
-                                &key
-                                  (default-lower most-negative-double-float)
-                                  (default-upper most-positive-double-float))
-  (let* ((constraints (loop for c in constraints
-                         unless (normalized-constraint-bounds-p c)
-                         collect c))
-         (m (length constraints))
-         (n (opt-variable-count variables))
-         (lower (make-vec m :initial-element default-lower))
-         (upper (make-vec m :initial-element default-upper))
-         (A (make-matrix m n)))
-    (loop
-       for c in constraints
-       for i from 0
-       for row = (matrix-block A i 0 1 n)
-       for terms = (normalized-constraint-terms c)
-       for l = (normalized-constraint-lower c)
-       for u = (normalized-constraint-upper c)
-       do
-         (opt-terms-vec variables terms row)
-         (when l (setf (vecref lower i) l))
-         (when u (setf (vecref upper i) u)))
-    (values lower A upper)))
-
 (defun opt-constraint-crs (variables constraints
                            &key
                              (default-lower most-negative-double-float)
@@ -226,7 +201,6 @@
     (loop
        for c in constraints
        for i from 0
-       ;for row = (matrix-block A i 0 1 n)
        for terms = (normalized-constraint-terms c)
        for l = (normalized-constraint-lower c)
        for u = (normalized-constraint-upper c)
@@ -270,3 +244,29 @@
 ;;         (unless (eq type '=)
 ;;           (return-from opt-constraints-equality-p nil)))))
 ;;   t)
+
+
+;; (defun opt-constraint-matrices (variables constraints
+;;                                 &key
+;;                                   (default-lower most-negative-double-float)
+;;                                   (default-upper most-positive-double-float))
+;;   (let* ((constraints (loop for c in constraints
+;;                          unless (normalized-constraint-bounds-p c)
+;;                          collect c))
+;;          (m (length constraints))
+;;          (n (opt-variable-count variables))
+;;          (lower (make-vec m :initial-element default-lower))
+;;          (upper (make-vec m :initial-element default-upper))
+;;          (A (make-matrix m n)))
+;;     (loop
+;;        for c in constraints
+;;        for i from 0
+;;        for row = (matrix-block A i 0 1 n)
+;;        for terms = (normalized-constraint-terms c)
+;;        for l = (normalized-constraint-lower c)
+;;        for u = (normalized-constraint-upper c)
+;;        do
+;;          (opt-terms-vec variables terms row)
+;;          (when l (setf (vecref lower i) l))
+;;          (when u (setf (vecref upper i) u)))
+;;     (values lower A upper)))

@@ -78,7 +78,6 @@
 
 (defstruct lp-matrices
   variables
-;  A
   A-crs
   b-lower
   b-upper
@@ -86,15 +85,9 @@
   x-lower
   x-upper)
 
-(defstruct (qp-matrices (:include lp-matrices))
-  D
-  c0)
-
 
 (defun opt-var-count (problem)
   (amino-type::%crs-matrix-cols (lp-matrices-a-crs problem)))
-
-
 
 (defun lp-matrices (constraints objectives
                     &key
@@ -110,20 +103,13 @@
                           (make-lp-matrices :variables variables)))
          (constraints (normalize-constraints constraints)))
     ;; constraints
-    ;; (symbol-macrolet ((b-lower (lp-matrices-b-lower lp-matrices))
-    ;;                   (A (lp-matrices-A lp-matrices))
-    ;;                   (b-upper (lp-matrices-b-upper lp-matrices)))
-    ;;   (multiple-value-setq (b-lower A b-upper)
-    ;;     (opt-constraint-matrices variables constraints
-    ;;                              :default-lower default-b-lower
-    ;;                              :default-upper default-b-upper)))
     (symbol-macrolet ((b-lower (lp-matrices-b-lower lp-matrices))
                       (A-crs (lp-matrices-a-crs lp-matrices))
                       (b-upper (lp-matrices-b-upper lp-matrices)))
       (multiple-value-setq (b-lower A-crs b-upper)
         (opt-constraint-crs variables constraints
-                                 :default-lower default-b-lower
-                                 :default-upper default-b-upper)))
+                            :default-lower default-b-lower
+                            :default-upper default-b-upper)))
     ;; objectives
     (setf (lp-matrices-c lp-matrices)
           (opt-linear-objective variables objectives))
@@ -209,6 +195,12 @@
         (opt-result result-type
                     (lp-matrices-variables matrices)
                     (lp-crs-solve matrices :solver solver)))))
+
+
+
+;; (defstruct (qp-matrices (:include lp-matrices))
+;;   D
+;;   c0)
 
 
 ;; (lp-solve (lp-matrices '((<= (+ (* 120 x) (* 210 y)) 15000)
