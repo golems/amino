@@ -49,10 +49,14 @@ static int bounds_type (double l, double u) {
         int lb = aa_opt_is_lbound(l);
         int ub = aa_opt_is_ubound(u);
         if( aa_opt_is_leq(lb,ub) ) {
+            assert( u < DBL_MAX );
             return GLP_UP;
         } else if( aa_opt_is_geq(lb,ub) ) {
+            assert( l > -DBL_MAX );
             return GLP_LO;
         } else if( aa_opt_is_bound(lb,ub) ) {
+            assert( u < DBL_MAX );
+            assert( l > -DBL_MAX );
             return GLP_DB;
         } else if( aa_opt_is_free(lb,ub) ) {
             return GLP_FR;
