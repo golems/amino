@@ -339,7 +339,10 @@ AS_IF([test "x$HAVE_LPSOLVE" = xyes], [
                  [HAVE_LPSOLVE=no])
 ])
 
+AH_TEMPLATE([HAVE_LPSOLVE],
+            [Define presense of LP-solve library])
 AM_CONDITIONAL([HAVE_LPSOLVE], [test "x$HAVE_LPSOLVE" = xyes])
+AS_IF([test "x$HAVE_LPSOLVE" = xyes], [AC_DEFINE([HAVE_LPSOLVE])])
 
 
 ## GLPK ##
@@ -352,7 +355,7 @@ AC_ARG_WITH([glpk],
 AS_IF([test "x$with_glpk" = xauto], [
   AC_CHECK_HEADERS([glpk.h], [HAVE_GLPK=yes], [HAVE_GLPK=no])
 ],[
-  HAVE_LPSOLVE="$with_glpk"
+  HAVE_GLPK="$with_glpk"
 ])
 
 # check library
@@ -363,6 +366,9 @@ AS_IF([test "x$HAVE_GLPK" = xyes], [
 ])
 
 AM_CONDITIONAL([HAVE_GLPK], [test "x$HAVE_GLPK" = xyes])
+AH_TEMPLATE([HAVE_GLPK],
+            [Define presense of GLPK library])
+AS_IF([test "x$HAVE_GLPK" = xyes], [AC_DEFINE([HAVE_GLPK])])
 
 
 ## CLP ##
@@ -379,6 +385,9 @@ AS_IF([test "x$with_clp" = xauto], [
 ])
 
 AM_CONDITIONAL([HAVE_CLP], [test "x$HAVE_CLP" = xyes])
+AH_TEMPLATE([HAVE_CLP],
+            [Define presense of CLP library])
+AS_IF([test "x$HAVE_CLP" = xyes], [AC_DEFINE([HAVE_CLP])])
 
 
 ## CGAL ##

@@ -37,8 +37,8 @@
 
 
 #include "amino.h"
-#include "amino/opt.h"
 #include "amino/opt/lp.h"
+#include "amino/opt/opt.h"
 #include "opt_internal.h"
 
 #include <glpk.h>
@@ -71,13 +71,27 @@ static int s_destroy( struct aa_opt_cx *cx )
     return 0;
 }
 
+
+static int
+s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
+{
+    glp_prob *lp = (glp_prob*)(cx->data);
+    switch(dir) {
+    case AA_OPT_MAXIMIZE:
+        glp_set_obj_dir(lp, GLP_MAX);
+        return 0;
+    case AA_OPT_MINIMIZE:
+        glp_set_obj_dir(lp, GLP_MIN);
+        return 0;
+    }
+    return -1;
+}
+
 static struct aa_opt_vtab s_vtab = {
     .solve = s_solve,
-    .destroy = s_destroy
+    .destroy = s_destroy,
+    .set_direction = s_set_direction
 };
-
-
-
 
 static int bounds_type (double l, double u) {
     if( aa_opt_is_eq(l,u) ) {

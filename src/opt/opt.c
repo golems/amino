@@ -52,3 +52,9 @@ AA_API int
 aa_opt_destroy( struct aa_opt_cx *cx ) {
     return cx->vtab->destroy(cx);
 }
+
+AA_API int
+aa_opt_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
+{
+    return cx->vtab->set_direction(cx, dir);
+}

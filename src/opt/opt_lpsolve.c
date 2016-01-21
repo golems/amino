@@ -112,9 +112,25 @@ int s_destroy( struct aa_opt_cx *cx )
     return 0;
 }
 
+static int
+s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
+{
+    lprec *lp = (lprec*)cx->data;
+    switch(dir) {
+    case AA_OPT_MAXIMIZE:
+        set_maxim(lp);
+        return 0;
+    case AA_OPT_MINIMIZE:
+        set_minim(lp);
+        return 0;
+    }
+    return -1;
+}
+
 static struct aa_opt_vtab vtab = {
     .solve = s_solve,
-    .destroy = s_destroy
+    .destroy = s_destroy,
+    .set_direction = s_set_direction
 };
 
 static struct aa_opt_cx*

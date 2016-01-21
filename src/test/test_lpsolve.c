@@ -41,6 +41,7 @@
  */
 
 //#define AA_ALLOC_STACK_MAX
+#include "config.h"
 #include "amino.h"
 #include "amino/test.h"
 #include "amino/opt/lp.h"
@@ -51,9 +52,7 @@
 #include <sys/resource.h>
 
 
-int main( int argc, char **argv ) {
-    (void) argc; (void) argv;
-
+void helper( const char *name, aa_opt_gmcreate_fun fun) {
 
     double A[] = {120, 110, 1,  210, 30, 1};
     double b_u[] = {15000, 4000, 75};
@@ -65,17 +64,39 @@ int main( int argc, char **argv ) {
 
     double x[2];
 
-    int r = aa_opt_lp_lpsolve( 3,2,
-                               A, 3,
-                               b_l, b_u,
-                               c,
-                               x_l, x_u,
-                               x );
+    struct aa_opt_cx *cx = fun( 3,2,
+                                A, 3,
+                                b_l, b_u,
+                                c,
+                                x_l, x_u );
+
+
+    aa_opt_set_direction(cx, AA_OPT_MAXIMIZE );
+    int r = aa_opt_solve(cx,2,x);
+
     printf("r: %d\n", r );
 
     aa_dump_vec( stdout, x, 2 );
 
     double xref[] = {21.875, 53.125};
 
-    aveq( "lp_solve", 2, xref, x, 1e-6 );
+    aafeq( name, xref[0] + xref[1], x[0]+x[1], 1e-3 );
+}
+
+int main( int argc, char **argv ) {
+    (void) argc; (void) argv;
+
+
+#ifdef HAVE_LPSOLVE
+    helper("LP Solve", aa_opt_lpsolve_gmcreate);
+#endif
+
+#ifdef HAVE_GLPK
+    helper("GLPK", aa_opt_glpk_gmcreate);
+#endif
+
+#ifdef HAVE_CLP
+    helper("CLP", aa_opt_clp_gmcreate);
+#endif
+
 }

@@ -362,64 +362,39 @@ libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
-if HAVE_LPSOLVE
-
-lib_LTLIBRARIES += libamino_opt_lpsolve.la
-libamino_opt_lpsolve_la_SOURCES = \
-	src/opt/opt_lpsolve.c
-#libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
-#libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
-#libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
 
 noinst_PROGRAMS += test_lpsolve
 test_lpsolve_SOURCES = src/test/test_lpsolve.c
-test_lpsolve_LDADD = libamino_opt_lpsolve.la libamino.la libtestutil.la
+test_lpsolve_LDADD =
 TESTS += test_lpsolve
 
+if HAVE_LPSOLVE
+lib_LTLIBRARIES += libamino_opt_lpsolve.la
+libamino_opt_lpsolve_la_SOURCES = src/opt/opt_lpsolve.c
+test_lpsolve_LDADD += libamino_opt_lpsolve.la
 endif
 
 
-if HAVE_LPSOLVE
-
+if HAVE_GLPK
 lib_LTLIBRARIES += libamino_opt_glpk.la
-libamino_opt_glpk_la_SOURCES = \
-	src/opt/opt_glpk.c
-#libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
-#libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
-#libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
-
-noinst_PROGRAMS += test_glpk
-test_glpk_SOURCES = src/test/test_glpk.c
-test_glpk_LDADD = libamino_opt_glpk.la libamino.la libtestutil.la
-TESTS += test_glpk
-
+libamino_opt_glpk_la_SOURCES = src/opt/opt_glpk.c
+test_lpsolve_LDADD += libamino_opt_glpk.la
 endif
 
 if HAVE_CLP
 
 lib_LTLIBRARIES += libamino_opt_clp.la
-libamino_opt_clp_la_SOURCES = \
-	src/opt/opt_clp.cpp
-#libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
-#libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
+libamino_opt_clp_la_SOURCES = src/opt/opt_clp.cpp
 libamino_opt_clp_la_LIBADD = libamino.la -lClp
-
-noinst_PROGRAMS += test_clp
-test_clp_SOURCES = src/test/test_clp.c
-test_clp_LDADD = libamino_opt_clp.la libamino.la libtestutil.la
-TESTS += test_clp
-
+test_lpsolve_LDADD += libamino_opt_clp.la
 endif
 
-
+test_lpsolve_LDADD += libamino.la libtestutil.la
 
 if HAVE_CGAL
 
 lib_LTLIBRARIES += libamino_opt_cgal.la
-libamino_opt_cgal_la_SOURCES = \
-	src/opt/opt_cgal.cpp
-#libamino_opt_cgal_la_CFLAGS = $(OMPL_CFLAGS)
-#libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
+libamino_opt_cgal_la_SOURCES = src/opt/opt_cgal.cpp
 libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
 
 noinst_PROGRAMS += opt_test
