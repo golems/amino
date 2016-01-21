@@ -43,42 +43,6 @@
 
 #include <lpsolve/lp_lib.h>
 
-static int aa_opt_lp_lpsolve_finish (
-    lprec *lp,
-    size_t m, size_t n,
-    const double *c,
-    const double *x_lower, const double *x_upper,
-    double *x )
-{
-    int ni = (int)n;
-    int mi = (int)m;
-    (void)mi;
-
-
-    /* printf("c:"); aa_dump_vec(stdout, c, n ); */
-    /* printf("xl:"); aa_dump_vec(stdout, x_lower, n ); */
-    /* printf("xu:"); aa_dump_vec(stdout, x_upper, n ); */
-
-    /* c */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_obj( lp, 1+(int)j, c[j] );
-    }
-
-    /* l/u */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
-    }
-
-    /* solve */
-    int r = solve(lp);
-    assert(ni == get_Ncolumns(lp));
-
-    /* result */
-    get_variables(lp,x);
-    return r;
-}
-
-
 int aa_opt_lp_lpsolve (
     size_t m, size_t n,
     const double *A, size_t ldA,
@@ -241,16 +205,7 @@ AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
     }
 
 ERROR:
-    if( lp ) {
-        struct aa_opt_cx *cx = AA_NEW(struct aa_opt_cx);
-        cx->vtab = &vtab;
-        cx->data = lp;
-        return cx;
-    } else {
-        return NULL;
-    }
-
-
+    return cx_finish( &vtab, lp );
 }
 
 AA_API struct aa_opt_cx *
@@ -265,7 +220,6 @@ aa_opt_lpsolve_crscreate (
 
     int mi = (int)m;
     int ni = (int)n;
-    int r = -1;
     lprec *lp = make_lp(0, ni);
 
     if( NULL == lp ) goto ERROR;
@@ -322,12 +276,5 @@ aa_opt_lpsolve_crscreate (
     }
 
 ERROR:
-    if( lp ) {
-        struct aa_opt_cx *cx = AA_NEW(struct aa_opt_cx);
-        cx->vtab = &vtab;
-        cx->data = lp;
-        return cx;
-    } else {
-        return NULL;
-    }
+    return cx_finish( &vtab, lp );
 }

@@ -90,4 +90,16 @@ struct aa_opt_cx {
     void *data;
 };
 
+static inline struct aa_opt_cx* cx_finish ( struct aa_opt_vtab *vtab, void *p )
+{
+    if( p ) {
+        struct aa_opt_cx *cx = AA_NEW(struct aa_opt_cx);
+        cx->vtab = vtab;
+        cx->data = p;
+        return cx;
+    } else {
+        return NULL;
+    }
+}
+
 #endif /*AMINO_OPT_INTERNAL_H*/

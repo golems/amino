@@ -38,18 +38,57 @@
 
 #include "amino.h"
 #include "amino/opt/lp.h"
+#include "amino/opt/opt.h"
+#include "opt_internal.h"
 
 #include <coin/ClpSimplex.hpp>
 
-int aa_opt_lp_clp (
+typedef ClpSimplex SolverType;
+
+
+int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
+{
+    SolverType * M = static_cast<SolverType*>(cx->data);
+
+    /* Solve */
+    int r = M->initialSolve();
+
+    /* Result */
+    AA_MEM_CPY( x, M->getColSolution(), n );
+
+    return r;
+}
+int s_destroy( struct aa_opt_cx *cx )
+{
+    if( cx ) {
+        SolverType * M = static_cast<SolverType*>(cx->data);
+        if( M ) {
+            delete M;
+        }
+        free(cx);
+    }
+    return 0;
+}
+
+static struct aa_opt_vtab s_vtab = {
+    .solve = s_solve,
+    .destroy = s_destroy
+};
+
+
+AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b_lower, const double *b_upper,
     const double *c,
-    const double *x_lower, const double *x_upper,
-    double *x )
+    const double *x_lower, const double *x_upper
+    )
 {
-    ClpSimplex M;
+
+
+    ClpSimplex *pM = new ClpSimplex();
+    ClpSimplex &M = *pM;
+
     int rows[m];
     int mi = (int)m;
     int ni = (int)n;
@@ -72,37 +111,20 @@ int aa_opt_lp_clp (
 
     M.setOptimizationDirection( -1 );
 
-    /* Solve */
-    int r = M.initialSolve();
 
-    // const double * columnPrimal = M.getColSolution();
-    // const double * columnLower = M.columnLower();  // Alternatively getColUpper()
-    // const double * columnUpper = M.columnUpper();
-    // const double * columnObjective = M.objective();
-
-    // printf("x: "); aa_dump_vec(stdout, columnPrimal, n );
-    // printf("l: "); aa_dump_vec(stdout, columnLower, n );
-    // printf("u: "); aa_dump_vec(stdout, columnUpper, n );
-    // printf("c: "); aa_dump_vec(stdout, columnObjective, n );
-    // printf("rl: "); aa_dump_vec(stdout, M.rowLower(), m );
-    // printf("ru: "); aa_dump_vec(stdout, M.rowUpper(), m );
-    // printf("ra: "); aa_dump_vec(stdout, M.getRowActivity(), m );
-
-    /* Result */
-    AA_MEM_CPY( x, M.getColSolution(), n );
-
-    return r;
+    return cx_finish( &s_vtab, pM );
 }
 
-AA_API int aa_opt_lp_crs_clp (
+
+AA_API struct aa_opt_cx* aa_opt_clp_crscreate (
     size_t m, size_t n,
     const double *A_values, int *A_cols, int *A_row_ptr,
     const double *b_lower, const double *b_upper,
     const double *c,
-    const double *x_lower, const double *x_upper,
-    double *x )
+    const double *x_lower, const double *x_upper )
 {
-    ClpSimplex M;
+    ClpSimplex *pM = new ClpSimplex();
+    ClpSimplex &M = *pM;
     int rows[m];
     int mi = (int)m;
     int ni = (int)n;
@@ -126,10 +148,46 @@ AA_API int aa_opt_lp_crs_clp (
 
     /* Solve */
     M.setOptimizationDirection( -1 );
-    int r = M.initialSolve();
 
-    /* Result */
-    AA_MEM_CPY( x, M.getColSolution(), n );
+
+    return cx_finish( &s_vtab, pM );
+}
+
+int aa_opt_lp_clp (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+
+    struct aa_opt_cx *cx = aa_opt_clp_gmcreate( m, n,
+                                                A, ldA,
+                                                b_lower, b_upper,
+                                                c,
+                                                x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
+
+    return r;
+}
+
+AA_API int aa_opt_lp_crs_clp (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    struct aa_opt_cx *cx = aa_opt_clp_crscreate( m, n,
+                                                 A_values, A_cols, A_row_ptr,
+                                                 b_lower, b_upper,
+                                                 c,
+                                                 x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
 
     return r;
 }
