@@ -117,6 +117,26 @@ static struct aa_opt_vtab vtab = {
     .destroy = s_destroy
 };
 
+static struct aa_opt_cx*
+s_finish (
+    size_t m, size_t n,
+    lprec *lp,
+    const double *c,
+    const double *x_lower, const double *x_upper )
+{
+    (void)m;
+    /* c */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_obj( lp, 1+(int)j, c[j] );
+    }
+
+    /* l/u */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
+    }
+
+    return cx_finish( &vtab, lp );
+}
 
 AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
     size_t m, size_t n,
@@ -135,13 +155,6 @@ AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
     if( NULL == lp ) goto ERROR;
     set_add_rowmode(lp, FALSE);
     set_maxim(lp);
-
-    /* TODO: maybe rearrange c/A and give to lp_solve together? */
-
-    /*  printf("A:\n"); aa_dump_mat(stdout, A, ldA, n ); */
-    /* printf("bl:"); aa_dump_vec(stdout, b_lower, m ); */
-    /* printf("bu:"); aa_dump_vec(stdout, b_upper, m ); */
-
 
     /* A, b */
     int ilp = 1;
@@ -193,19 +206,15 @@ AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
         ilp++;
     }
 
-
-    /* c */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_obj( lp, 1+(int)j, c[j] );
-    }
-
-    /* l/u */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
-    }
+    return s_finish(m,n,lp,
+                    c, x_lower, x_upper);
 
 ERROR:
-    return cx_finish( &vtab, lp );
+    if( lp ) {
+        delete_lp(lp);
+    }
+    return NULL;
+
 }
 
 AA_API struct aa_opt_cx *
@@ -222,7 +231,7 @@ aa_opt_lpsolve_crscreate (
     int ni = (int)n;
     lprec *lp = make_lp(0, ni);
 
-    if( NULL == lp ) goto ERROR;
+    if( NULL == lp ) return NULL;
     set_maxim(lp);
 
     /* A, b_l, b_u */
@@ -265,16 +274,6 @@ aa_opt_lpsolve_crscreate (
     }
     set_add_rowmode(lp, FALSE);
 
-   /* c */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_obj( lp, 1+(int)j, c[j] );
-    }
-
-    /* l/u */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
-    }
-
-ERROR:
-    return cx_finish( &vtab, lp );
+    return s_finish(m,n,lp,
+                    c, x_lower, x_upper);
 }
