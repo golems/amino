@@ -388,10 +388,10 @@ libamino_opt_glpk_la_SOURCES = \
 #libamino_opt_cgal_la_CXXFLAGS = $(OMPL_CFLAGS)
 #libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
 
-#noinst_PROGRAMS += test_lpsolve
-#test_lpsolve_SOURCES = src/test/test_lpsolve.c
-#test_lpsolve_LDADD = libamino_opt_lpsolve.la libamino.la libtestutil.la
-#TESTS += test_lpsolve
+noinst_PROGRAMS += test_glpk
+test_glpk_SOURCES = src/test/test_glpk.c
+test_glpk_LDADD = libamino_opt_glpk.la libamino.la libtestutil.la
+TESTS += test_glpk
 
 endif
 

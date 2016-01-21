@@ -105,6 +105,54 @@ static int bounds_type (double l, double u) {
 
 
 AA_API struct aa_opt_cx *
+aa_opt_glpk_gmcreate (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper )
+{
+    glp_prob *lp = glp_create_prob();
+    int ni = (int)n;
+    int mi = (int)m;
+
+    glp_set_obj_dir(lp, GLP_MAX);
+
+    glp_add_rows(lp,mi);
+    glp_add_cols(lp,ni);
+
+    /* b_lower / b_upper */
+    for( int i = 0; i < mi; i ++ ) {
+        double l=b_lower[i], u=b_upper[i];
+        int type = bounds_type(l,u);;
+        glp_set_row_bnds(lp, i+1, type, l, u);
+    }
+
+    /* u_lower / u_upper */
+    for( int j = 0; j < ni; j ++ ) {
+        double l=x_lower[j], u=x_upper[j];
+        int type = bounds_type(l,u);;
+        glp_set_col_bnds(lp, j+1, type, l, u);
+    }
+
+    /* c */
+    for( int j = 0; j < ni; j ++ ) {
+        glp_set_obj_coef(lp, j+1, c[j]);
+    }
+
+    /* A */
+    int rows[m];
+    for( int i = 0; i < mi; i ++ ) rows[i] = i+1;
+    for( int j = 0; j < ni; j ++ ) {
+        glp_set_mat_col( lp, j+1, mi,
+                         rows-1, AA_MATCOL(A,ldA,(size_t)j) - 1 );
+    }
+
+    return cx_finish( &s_vtab, lp );
+}
+
+
+AA_API struct aa_opt_cx *
 aa_opt_glpk_crscreate (
     size_t m, size_t n,
     const double *A_values, int *A_cols, int *A_row_ptr,
@@ -168,16 +216,33 @@ AA_API int aa_opt_lp_crs_glpk (
     const double *x_lower, const double *x_upper,
     double *x )
 {
-
-
     struct aa_opt_cx *cx = aa_opt_glpk_crscreate( m, n,
                                                   A_values, A_cols, A_row_ptr,
                                                   b_lower, b_upper,
                                                   c,
                                                   x_lower, x_upper );
-    assert( cx->vtab == &s_vtab );
-    assert( cx->vtab->solve == &s_solve );
-    assert( cx->vtab->destroy == &s_destroy );
+
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
+
+    return r;
+}
+
+
+AA_API int
+aa_opt_lp_glpk (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    struct aa_opt_cx *cx = aa_opt_glpk_gmcreate( m, n,
+                                                 A, ldA,
+                                                 b_lower, b_upper,
+                                                 c,
+                                                 x_lower, x_upper );
 
     int r = aa_opt_solve( cx, n, x);
     aa_opt_destroy(cx);
