@@ -37,10 +37,47 @@
 
 
 #include "amino.h"
+#include "amino/opt.h"
 #include "amino/opt/lp.h"
 #include "opt_internal.h"
 
 #include <glpk.h>
+
+static int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
+{
+    glp_prob *lp = (glp_prob*)(cx->data);
+
+    /* Solve */
+    int r = glp_interior( lp, NULL );
+
+    /* Result */
+    for( int j = 0; j < (int)n; j ++ ) {
+        x[j] = glp_ipt_col_prim( lp, j+1 );
+    }
+
+    return r;
+}
+
+static int s_destroy( struct aa_opt_cx *cx )
+
+{
+    if( cx ) {
+        glp_prob *lp = (glp_prob*)(cx->data);
+        if( lp ) {
+            glp_delete_prob(lp);
+        }
+        free(cx);
+    }
+    return 0;
+}
+
+static struct aa_opt_vtab s_vtab = {
+    .solve = s_solve,
+    .destroy = s_destroy
+};
+
+
+
 
 static int bounds_type (double l, double u) {
     if( aa_opt_is_eq(l,u) ) {
@@ -67,13 +104,13 @@ static int bounds_type (double l, double u) {
 }
 
 
-AA_API int aa_opt_lp_crs_glpk (
+AA_API struct aa_opt_cx *
+aa_opt_glpk_crscreate (
     size_t m, size_t n,
     const double *A_values, int *A_cols, int *A_row_ptr,
     const double *b_lower, const double *b_upper,
     const double *c,
-    const double *x_lower, const double *x_upper,
-    double *x )
+    const double *x_lower, const double *x_upper )
 {
     glp_prob *lp = glp_create_prob();
     int ni = (int)n;
@@ -117,13 +154,33 @@ AA_API int aa_opt_lp_crs_glpk (
         glp_set_mat_row(lp, i+1, count, inds-1, vals-1);
     }
 
-    /* Solve */
-    int r = glp_interior( lp, NULL );
 
-    /* Result */
-    for( int j = 0; j < ni; j ++ ) {
-        x[j] = glp_ipt_col_prim( lp, j+1 );
-    }
+    return cx_finish( &s_vtab, lp );
+}
+
+
+
+AA_API int aa_opt_lp_crs_glpk (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+
+
+    struct aa_opt_cx *cx = aa_opt_glpk_crscreate( m, n,
+                                                  A_values, A_cols, A_row_ptr,
+                                                  b_lower, b_upper,
+                                                  c,
+                                                  x_lower, x_upper );
+    assert( cx->vtab == &s_vtab );
+    assert( cx->vtab->solve == &s_solve );
+    assert( cx->vtab->destroy == &s_destroy );
+
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
 
     return r;
 }
