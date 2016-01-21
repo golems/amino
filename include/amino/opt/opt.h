@@ -46,5 +46,66 @@ enum aa_opt_rel_type {
     AA_OPT_REL_GEQ,
 };
 
+struct aa_opt_cx;
+
+
+AA_API int
+aa_opt_solve( struct aa_opt_cx *cx, size_t n, double *x );
+
+
+AA_API int
+aa_opt_destroy( struct aa_opt_cx *cx );
+
+
+
+
+AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    );
+
+
+AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    );
+
+
+AA_API struct aa_opt_cx* aa_opt_glpk_gmcreate (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    );
+
+AA_API struct aa_opt_cx* aa_opt_lpsolve_crscreate (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper );
+
+
+AA_API struct aa_opt_cx* aa_opt_clp_crscreate (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper );
+
+
+AA_API struct aa_opt_cx* aa_opt_glpk_crscreate (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper );
 
 #endif //AMINO_OPT_H

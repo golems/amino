@@ -1,13 +1,10 @@
-/* -*- mode: C; c-basic-offset: 4 -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@gatech.edu>
- *
- * This file is provided under the following "BSD-style" License:
- *
+ * Author(s): Neil T. Dantam <ntd@rice.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -37,57 +34,21 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef AMINO_OPT_INTERNAL_H
-#define AMINO_OPT_INTERNAL_H
 
-static inline int
-aa_opt_is_eq( double l, double u)
+
+#include "amino.h"
+#include "amino/opt/opt.h"
+
+#include "opt_internal.h"
+
+AA_API int
+aa_opt_solve( struct aa_opt_cx *cx, size_t n, double *x )
 {
-    return aa_feq(l,u,0);
-}
-
-static inline int
-aa_opt_is_lbound( double l )
-{
-    return -DBL_MAX < l && !isinf(l);
-}
-
-static inline int
-aa_opt_is_ubound( double u )
-{
-    return DBL_MAX > u && !isinf(u);
-}
-
-static inline int
-aa_opt_is_leq( int lb, int ub ) {
-    return !lb && ub;
-}
-
-static inline int
-aa_opt_is_geq( int lb, int ub ) {
-    return lb && !ub;
-}
-
-static inline int
-aa_opt_is_bound( int lb, int ub ) {
-    return lb && ub;
-}
-
-static inline int
-aa_opt_is_free( int lb, int ub ) {
-    return !lb && !ub;
+    return cx->vtab->solve(cx,n,x);
 }
 
 
-struct aa_opt_vtab {
-    int (*solve)( struct aa_opt_cx *cx, size_t n, double *x );
-    int (*destroy)( struct aa_opt_cx *cx );
-};
-
-
-struct aa_opt_cx {
-    struct aa_opt_vtab *vtab;
-    void *data;
-};
-
-#endif /*AMINO_OPT_INTERNAL_H*/
+AA_API int
+aa_opt_destroy( struct aa_opt_cx *cx ) {
+    return cx->vtab->destroy(cx);
+}

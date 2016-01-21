@@ -87,11 +87,85 @@ int aa_opt_lp_lpsolve (
     const double *x_lower, const double *x_upper,
     double *x )
 {
+    struct aa_opt_cx *cx = aa_opt_lpsolve_gmcreate( m, n,
+                                                    A, ldA,
+                                                    b_lower, b_upper,
+                                                    c,
+                                                    x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
+
+    return r;
+
+
+}
+
+AA_API int aa_opt_lp_crs_lpsolve (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    struct aa_opt_cx *cx = aa_opt_lpsolve_crscreate( m, n,
+                                                     A_values, A_cols, A_row_ptr,
+                                                     b_lower, b_upper,
+                                                     c,
+                                                     x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
+
+    return r;
+}
+
+
+
+
+
+
+int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
+{
+
+    lprec *lp = (lprec*)cx->data;
+    int r = solve(lp);
+    assert((int)n == get_Ncolumns(lp));
+
+    /* result */
+    get_variables(lp,x);
+
+    return r;
+}
+int s_destroy( struct aa_opt_cx *cx )
+{
+    if( cx ) {
+        lprec *lp = (lprec*)cx->data;
+        if( lp ) {
+            delete_lp( lp );
+        }
+        free(cx);
+    }
+    return 0;
+}
+
+static struct aa_opt_vtab vtab = {
+    .solve = s_solve,
+    .destroy = s_destroy
+};
+
+
+AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    )
+{
     assert( sizeof(REAL) == sizeof(*A) );
 
     int mi = (int)m;
     int ni = (int)n;
-    int r = -1;
     lprec *lp = make_lp(mi, ni);
 
     if( NULL == lp ) goto ERROR;
@@ -155,21 +229,37 @@ int aa_opt_lp_lpsolve (
         ilp++;
     }
 
-    r = aa_opt_lp_lpsolve_finish( lp, m, n, c, x_lower, x_upper, x);
+
+    /* c */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_obj( lp, 1+(int)j, c[j] );
+    }
+
+    /* l/u */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
+    }
 
 ERROR:
-    if( lp ) delete_lp(lp);
-    return r;
+    if( lp ) {
+        struct aa_opt_cx *cx = AA_NEW(struct aa_opt_cx);
+        cx->vtab = &vtab;
+        cx->data = lp;
+        return cx;
+    } else {
+        return NULL;
+    }
+
 
 }
 
-AA_API int aa_opt_lp_crs_lpsolve (
+AA_API struct aa_opt_cx *
+aa_opt_lpsolve_crscreate (
     size_t m, size_t n,
     const double *A_values, int *A_cols, int *A_row_ptr,
     const double *b_lower, const double *b_upper,
     const double *c,
-    const double *x_lower, const double *x_upper,
-    double *x )
+    const double *x_lower, const double *x_upper )
 {
     assert( sizeof(REAL) == sizeof(*A_values) );
 
@@ -221,10 +311,23 @@ AA_API int aa_opt_lp_crs_lpsolve (
     }
     set_add_rowmode(lp, FALSE);
 
-    r = aa_opt_lp_lpsolve_finish( lp, m, n, c, x_lower, x_upper, x);
+   /* c */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_obj( lp, 1+(int)j, c[j] );
+    }
+
+    /* l/u */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
+    }
 
 ERROR:
-    if( lp ) delete_lp(lp);
-    return r;
-
+    if( lp ) {
+        struct aa_opt_cx *cx = AA_NEW(struct aa_opt_cx);
+        cx->vtab = &vtab;
+        cx->data = lp;
+        return cx;
+    } else {
+        return NULL;
+    }
 }

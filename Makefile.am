@@ -83,6 +83,7 @@ libamino_la_SOURCES =                  \
 	src/mem.c                      \
 	src/la.c                       \
 	src/la2.c                      \
+	src/opt/opt.c                  \
 	src/tf.c                       \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
