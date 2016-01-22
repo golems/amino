@@ -46,6 +46,7 @@
   b-lower
   b-upper
   c
+  q
   x-lower
   x-upper)
 
@@ -75,8 +76,10 @@
                             :default-lower default-b-lower
                             :default-upper default-b-upper)))
     ;; objectives
-    (setf (lp-matrices-c lp-matrices)
-          (opt-linear-objective variables objectives))
+    (symbol-macrolet ((c (lp-matrices-c lp-matrices))
+                      (q (lp-matrices-q lp-matrices)))
+      (multiple-value-setq (c q)
+        (opt-objective variables objectives)))
     ;; bounds
     (symbol-macrolet ((x-lower (lp-matrices-x-lower lp-matrices))
                       (x-upper (lp-matrices-x-upper lp-matrices)))

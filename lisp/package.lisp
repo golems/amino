@@ -155,5 +155,13 @@
    :inverse
    ;; Misc
    :parse-float
+   ;; optimization
+   :linear-term
+   :quadratic-term
+   :lp
+   :with-linear-term
+   :with-quadratic-term
+   :with-constraint
+   :opt-constraint
    )
   (:nicknames :aa))

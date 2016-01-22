@@ -38,6 +38,9 @@
 
 (in-package :amino)
 
+;;;;;;;;;;;;;;;;;;;
+;;; Expressions ;;;
+;;;;;;;;;;;;;;;;;;;
 
 (defmacro with-constraint ((type terms value) constraint &body body)
   (with-gensyms (op fun)
@@ -54,24 +57,44 @@
          ,@body))))
 
 
-(defmacro with-term ((factor variable) term &body body)
+(defmacro with-linear-term ((factor variable) term &body body)
   (with-gensyms (op fun term-var)
     `(let ((,term-var ,term))
        (flet ((,fun (,factor ,variable)
                 ,@body))
          (if (and (listp ,term-var)
                   (eq '* (car ,term-var)))
-             (destructuring-bind (,op ,factor ,variable) ,term
+             (destructuring-bind (,op ,factor ,variable) ,term-var
                (declare (ignore ,op))
-               (,fun (coerce ,factor 'double-float) ,variable))
+               (,fun ,factor ,variable))
              (,fun 1d0 ,term-var))))))
 
+(defmacro with-quadratic-term ((factor variable-1 variable-2) term &body body)
+  (with-gensyms (op fun term-var)
+    `(let ((,term-var ,term))
+       (flet ((,fun (,factor ,variable-1 ,variable-2)
+                ,@body))
+         (destructuring-bind (,op ,factor ,variable-1 ,variable-2) ,term-var
+           (declare (ignore ,op))
+           (,fun ,factor ,variable-1 ,variable-2))))))
 
-(defun opt-term (factor variable)
+(defun linear-term (factor variable)
   `(* ,factor ,variable))
+
+(defun quadratic-term (factor variable-1 variable-2)
+  `(* ,factor ,variable-1 ,variable-2))
 
 (defun opt-constraint (type terms value)
   `(,type (+ ,@terms) ,value))
+
+(defun linear-term-p (term)
+  (or (atom term)
+      (not (eq '* (car term)))
+      (= 3 (length term))))
+
+(defun quadratic-term-p (term)
+  (= 4 (length term)))
+
 
 (defstruct normalized-constraint
   (lower nil :type (or double-float null))
@@ -88,12 +111,12 @@
 (defun normalize-terms (terms)
   (let ((m (sycamore:make-tree-map #'sycamore-util:gsymbol-compare)))
     (dolist (term terms)
-      (with-term (f v) term
+      (with-linear-term (f v) term
         (let ((f1 (multiple-value-bind (f0 key present) (sycamore:tree-map-find m v)
                     (declare (ignore key))
                     (if present
                         (+ f f0)
-                        f))))
+                        (coerce f 'double-float)))))
         (sycamore:tree-map-insertf m v f1))))
     (sycamore:map-tree-map :inorder 'list #'cons m)))
 
@@ -133,7 +156,7 @@
 (defun opt-variables (constraints objectives)
   (let ((hash-vars (make-hash-table :test #'equal)))
     (labels ((add-term (term)
-               (with-term (factor variable) term
+               (with-linear-term (factor variable) term
                  (declare (ignore factor))
                  (setf (gethash variable hash-vars) t))))
       (do-constraints (type terms value) constraints
@@ -215,8 +238,56 @@
          (when u (setf (vecref upper i) u)))
     (values lower A upper)))
 
-(defun opt-linear-objective (variables objectives)
-  (opt-terms-vec variables (normalize-terms objectives)))
+(defun opt-linear-objective (variables linear-terms)
+  (opt-terms-vec variables (normalize-terms linear-terms)))
+
+(defun opt-quadratic-objective (variables quadratic-terms)
+  (let ((hash (make-hash-table :test #'equal)))
+    ;; Collect terms
+    (dolist (o quadratic-terms)
+      (with-quadratic-term (f v1 v2) o
+        (let ((i (opt-variable-position variables v1))
+              (j (opt-variable-position variables v2)))
+          (let ((key (if (< i j)
+                         (cons i j)
+                         (cons j i))))
+            (setf (gethash key hash)
+                  (+ f (gethash key hash 0d0)))))))
+    ;; construct sparse matrix
+    (let* ((keys (sort (hash-table-keys hash) (lambda (a b)
+                                                (destructuring-bind (i1 . j1) a
+                                                  (destructuring-bind (i2 . j2) b
+                                                    ;; order by row, then colum
+                                                    (if (= i1 i2)
+                                                       (< j1 j2)
+                                                       (< i1 i2)))))))
+           (n (opt-variable-count variables))
+           (crs (make-crs-matrix n n (length keys)))
+           (i0 0))
+      (dolist (key keys)
+        (destructuring-bind (i . j) key
+          (unless (= i i0)
+            (incf i)
+            (amino-type::crs-matrix-inc-row crs))
+          (amino-type::crs-matrix-add-elt crs j (gethash key hash))))
+      (amino-type::crs-matrix-inc-row crs)
+      crs)))
+
+
+(defun opt-objective (variables objectives)
+  (let ((linear-terms)
+        (quadratic-terms))
+    ;; filter terms
+    (dolist (o objectives)
+      (cond ((linear-term-p o) (push o linear-terms))
+            ((quadratic-term-p o) (push o quadratic-terms))
+            (t (error "Unrecognized term type: ~A" o))))
+    ;; Result
+    (values (when linear-terms
+              (opt-linear-objective variables linear-terms))
+            (when quadratic-terms
+              (opt-quadratic-objective variables quadratic-terms)))))
+
 
 
 ;; (opt-constraint-matrices '(x y)
