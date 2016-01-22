@@ -109,3 +109,8 @@
 
 (use-foreign-library libglpk)
 (use-foreign-library libamino-opt-glpk)
+
+
+;; Type
+(amino-ffi::def-foreign-container opt-cx opt-cx-t
+  :destructor aa-opt-destroy)
