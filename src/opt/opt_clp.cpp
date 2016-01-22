@@ -89,11 +89,20 @@ s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
 static int s_set_quad_obj_crs( struct aa_opt_cx *cx,
                                const double *Q_values, int *Q_cols, int *Q_row_ptr )
 {
-    (void)cx;
-    (void)Q_values;
-    (void)Q_cols;
-    (void)Q_row_ptr;
-    return -1;
+    CoinPackedMatrix Q;
+    SolverType * M = static_cast<SolverType*>(cx->data);
+    int n = M->getNumCols();
+
+    for( int j = 0; j < n; j ++ ) {
+        int i0 = Q_row_ptr[j];
+        int i1 = Q_row_ptr[j+1];
+        if( i1 > i0 ) {
+            Q.appendRow( i1-i0, Q_cols+i0, Q_values+i0 );
+        }
+    }
+    M->loadQuadraticObjective(Q);
+
+    return 0;
 }
 
 static struct aa_opt_vtab s_vtab = {
