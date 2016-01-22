@@ -86,11 +86,21 @@ s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
     return -1;
 }
 
+static int s_set_quad_obj_crs( struct aa_opt_cx *cx,
+                               const double *Q_values, int *Q_cols, int *Q_row_ptr )
+{
+    (void)cx;
+    (void)Q_values;
+    (void)Q_cols;
+    (void)Q_row_ptr;
+    return -1;
+}
 
 static struct aa_opt_vtab s_vtab = {
     .solve = s_solve,
     .destroy = s_destroy,
-    .set_direction = s_set_direction
+    .set_direction = s_set_direction,
+    .set_quad_obj_crs = s_set_quad_obj_crs
 };
 
 

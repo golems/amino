@@ -83,6 +83,8 @@ struct aa_opt_vtab {
     int (*solve)( struct aa_opt_cx *cx, size_t n, double *x );
     int (*destroy)( struct aa_opt_cx *cx );
     int (*set_direction)( struct aa_opt_cx *cx, enum aa_opt_direction dir );
+    int (*set_quad_obj_crs)( struct aa_opt_cx *cx,
+                             const double *Q_values, int *Q_cols, int *Q_row_ptr );
 };
 
 
