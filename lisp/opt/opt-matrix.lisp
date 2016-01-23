@@ -112,7 +112,7 @@
 (defun lp (constraints objectives
            &key
              x
-             strict
+             (strict t)
              variables
              (solver *default-lp-solver*)
              (result-type :alist)
