@@ -77,6 +77,7 @@
   (let ((r)
         (solver (opt-create-function solver)))
     (amino-type::with-foreign-crs (m n e a-ptr col-ind row-ptr) a-crs
+      (declare (ignore e))
       (with-foreign-simple-vector (b-lower n-b-lower) b-lower :input
         (with-foreign-simple-vector (b-upper n-b-upper) b-upper :input
           (with-foreign-simple-vector (c n-c) c :input
@@ -93,3 +94,24 @@
                                  c
                                  x-lower x-upper)))))))))
     r))
+
+
+(defcfun aa-opt-set-quad-obj-crs :int
+  (cx opt-cx-t)
+  (n size-t)
+  (q-values :pointer)
+  (q-cols :pointer)
+  (q-row-ptr :pointer))
+
+(defun opt-set-quad-obj (cx q-crs)
+  (print q-crs)
+  ;(break)
+  (let ((r))
+    (amino-type::with-foreign-crs (m n e q-values q-cols q-row-ptr) q-crs
+      (assert (= m n))
+      (print (list m n e))
+      (setq r (aa-opt-set-quad-obj-crs cx n q-values q-cols q-row-ptr)))
+    (unless (zerop r)
+      (error "Could not set quadratic objective: ~D" r)))
+  (print 2)
+  (values))

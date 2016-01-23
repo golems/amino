@@ -66,7 +66,7 @@ AA_API int
 aa_opt_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction );
 
 AA_API int
-aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx,
+aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
                          const double *Q_values, int *Q_cols, int *Q_row_ptr );
 
 typedef struct aa_opt_cx*

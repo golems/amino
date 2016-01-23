@@ -128,7 +128,7 @@ s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
 }
 
 
-static int s_set_quad_obj_crs( struct aa_opt_cx *cx,
+static int s_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
                                const double *Q_values, int *Q_cols, int *Q_row_ptr )
 {
     (void)cx;

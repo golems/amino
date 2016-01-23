@@ -58,3 +58,10 @@ aa_opt_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
 {
     return cx->vtab->set_direction(cx, dir);
 }
+
+AA_API int
+aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
+                         const double *Q_values, int *Q_cols, int *Q_row_ptr )
+{
+    return cx->vtab->set_quad_obj_crs( cx, n, Q_values, Q_cols, Q_row_ptr );
+}

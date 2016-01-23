@@ -126,6 +126,7 @@
                                :default-x-upper default-x-upper
                                :default-b-lower default-b-lower
                                :default-b-upper default-b-upper))
+         ;; context
          (cx (opt-create (lp-matrices-a-crs matrices)
                          (lp-matrices-b-lower matrices)
                          (lp-matrices-b-upper matrices)
@@ -135,7 +136,10 @@
                          :solver solver))
          (x (or x (make-vec (opt-var-count matrices))))
          (r))
-    ;; context
+    ;; parameters
+    (when-let ((q-crs (lp-matrices-q matrices)))
+      (opt-set-quad-obj cx q-crs))
+    ;; solve
     (with-foreign-simple-vector (x n-x) x :output
       (sb-int:with-float-traps-masked (:divide-by-zero :overflow)
         (setq r (aa-opt-solve cx n-x x))))

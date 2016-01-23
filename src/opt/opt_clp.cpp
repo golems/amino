@@ -51,7 +51,17 @@ int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
     SolverType * M = static_cast<SolverType*>(cx->data);
 
     /* Solve */
-    int r = M->initialSolve();
+    int r;
+
+
+    try {
+        r = M->initialSolve();
+    } catch (CoinError e) {
+        e.print();
+        return -1;
+    } catch(...) {
+        return -1;
+    }
 
     /* Result */
     AA_MEM_CPY( x, M->getColSolution(), n );
@@ -87,22 +97,42 @@ s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
 }
 
 static int s_set_quad_obj_crs( struct aa_opt_cx *cx,
-                               const double *Q_values, int *Q_cols, int *Q_row_ptr )
+                               size_t n, const double *Q_values, int *Q_cols, int *Q_row_ptr )
 {
-    CoinPackedMatrix Q;
-    SolverType * M = static_cast<SolverType*>(cx->data);
-    int n = M->getNumCols();
+    //int ni = (int)n;
+    // std::vector<int> Q_rows;
+    // for( int i = 0; i < ni; i ++ ) {
+    //     int k0 = Q_row_ptr[i];
+    //     int k1 = Q_row_ptr[i+1];
+    //     for( int k = k0; k < k1; k++ ) {
+    //         Q_rows.push_back(i);
+    //     }
+    // }
 
-    for( int j = 0; j < n; j ++ ) {
-        int i0 = Q_row_ptr[j];
-        int i1 = Q_row_ptr[j+1];
-        if( i1 > i0 ) {
-            Q.appendRow( i1-i0, Q_cols+i0, Q_values+i0 );
-        }
-    }
-    M->loadQuadraticObjective(Q);
+    // CoinPackedMatrix Q( false, &Q_rows[0], Q_cols, Q_values, (int)Q_rows.size() );
 
-    return 0;
+
+    // Q.dumpMatrix();
+
+    //SolverType * M = static_cast<SolverType*>(cx->data);
+    //int n = M->getNumCols();
+
+    // for( int j = 0; j < ni; j ++ ) {
+    //     int i0 = Q_row_ptr[j];
+    //     int i1 = Q_row_ptr[j+1];
+    //     fprintf(stderr, "%d: %d, %d\n", j, i0, i1 );
+    //     if( i1 > i0 ) {
+    //         Q.appendRow( i1-i0, Q_cols+i0, Q_values+i0 );
+    //     }
+    // }
+
+
+
+    // M->loadQuadraticObjective(Q);
+    // M->loadQuadraticObjective( (int)n, Q_row_ptr, Q_cols, Q_values );
+
+    // return 0;
+    return -1;
 }
 
 static struct aa_opt_vtab s_vtab = {
