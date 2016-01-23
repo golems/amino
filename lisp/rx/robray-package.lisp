@@ -76,6 +76,7 @@
    ;; Scene Graph Manipulation
    :scene-graph
    :scene-graph-find
+   :scene-graph-parent-name
    :scene-graph-f
    :scene-graph-remove-frame
    :scene-graph-reparent

@@ -456,6 +456,11 @@
   "Find a frame"
   (scene-graph-find scene-graph frame-name))
 
+(defun scene-graph-parent-name (scene-graph frame-name)
+  "Find a parent frame name"
+  (scene-frame-parent (scene-graph-find scene-graph
+                                        frame-name) ))
+
 (defun scene-graph-allow-collision (scene-graph frame-1 frame-2)
   (let ((scene-graph (copy-scene-graph scene-graph)))
     (setf (scene-graph-allowed-collisions scene-graph)
