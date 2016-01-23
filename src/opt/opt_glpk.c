@@ -47,12 +47,21 @@ static int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
 {
     glp_prob *lp = (glp_prob*)(cx->data);
 
+    /* /\* Solve *\/ */
+    /* int r = glp_interior( lp, NULL ); */
+
+    /* /\* Result *\/ */
+    /* for( int j = 0; j < (int)n; j ++ ) { */
+    /*     x[j] = glp_ipt_col_prim( lp, j+1 ); */
+    /* } */
+
+
     /* Solve */
-    int r = glp_interior( lp, NULL );
+    int r = glp_simplex( lp, NULL );
 
     /* Result */
     for( int j = 0; j < (int)n; j ++ ) {
-        x[j] = glp_ipt_col_prim( lp, j+1 );
+        x[j] = glp_get_col_prim( lp, j+1 );
     }
 
     return r;
@@ -91,6 +100,7 @@ static int s_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
                                const double *Q_values, int *Q_cols, int *Q_row_ptr )
 {
     (void)cx;
+    (void)n;
     (void)Q_values;
     (void)Q_cols;
     (void)Q_row_ptr;
