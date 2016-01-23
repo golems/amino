@@ -87,6 +87,10 @@
 (defun opt-constraint (type terms value)
   `(,type (+ ,@terms) ,value))
 
+(defun opt-constraint-bounds (lower terms upper)
+  `((>= (+ ,@terms) ,lower)
+    (<= (+ ,@terms) ,upper)))
+
 (defun linear-term-p (term)
   (or (atom term)
       (not (eq '* (car term)))

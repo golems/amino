@@ -163,5 +163,6 @@
    :with-quadratic-term
    :with-constraint
    :opt-constraint
+   :opt-constraint-bounds
    )
   (:nicknames :aa))
