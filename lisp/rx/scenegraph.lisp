@@ -447,10 +447,14 @@
 
 ;;; Basic Operations ;;;
 
-(defun scene-graph-lookup (scene-graph frame-name)
+(defun scene-graph-find (scene-graph frame-name)
   "Find a frame"
   (tree-set-find (scene-graph-frames scene-graph)
                  frame-name))
+
+(defun scene-graph-lookup (scene-graph frame-name)
+  "Find a frame"
+  (scene-graph-find scene-graph frame-name))
 
 (defun scene-graph-allow-collision (scene-graph frame-1 frame-2)
   (let ((scene-graph (copy-scene-graph scene-graph)))
