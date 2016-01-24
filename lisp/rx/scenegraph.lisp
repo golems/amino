@@ -305,6 +305,8 @@
               (return-from configuration-map-equal nil)))
       t)))
 
+(defun configuration-map-find (config-map name &optional (default 0d0))
+  (tree-map-find config-map name default))
 
 (defun prefix-configuration-map (prefix map)
   (fold-tree-map (lambda (map key value)

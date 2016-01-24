@@ -181,6 +181,24 @@
     (check-type n-path integer)
     n-path))
 
+(defun sequence-motion-plan (sub-scene-graph points)
+  (let* ((n-p  (length points))
+         (n-q (sub-scene-graph-all-config-count sub-scene-graph))
+         (path (make-matrix n-q n-p)))
+    ;; fill in path
+    (loop for j from 0
+       for p in points
+       do (loop for i below n-q
+             for name = (sub-scene-graph-all-config-name sub-scene-graph i)
+             for q = (robray::configuration-map-find p name)
+             do
+               (setf (matref path i j) q)))
+    (print path)
+    (make-motion-plan :sub-scene-graph sub-scene-graph
+                      :path (amino::matrix-data path))))
+
+
+
 (defun motion-plan (sub-scene-graph start-map
                     &key
                       jointspace-goal
