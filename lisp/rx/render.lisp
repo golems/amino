@@ -83,6 +83,7 @@
 
 (defun render-scene-graph (scene-graph
                            &key
+                             (camera-tf (tf nil))
                              render
                              (options (render-options-default))
                              configuration-map
@@ -102,6 +103,10 @@
                (push thing pov-things))
              (include (file)
                (thing (pov-include file))))
+      ;; Camera
+      (thing (pov-camera camera-tf
+                         :width (get-render-option options :width)
+                         :height (get-render-option options :height)))
       ;; push frame geometry
       (do-scene-graph-geometry ((frame geometry) scene-graph)
         ;(format t "~&converting frame: ~A" (scene-frame-name frame))

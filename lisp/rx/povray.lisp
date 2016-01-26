@@ -581,6 +581,23 @@ RATIO: Floating point quality value in the range [0,1]"
 
 ;(defmethod print-object
 
+(defun pov-camera (tf &key
+                        (width 16)
+                        (height 9))
+  (let* ((quat (tf-quaternion tf))
+         (trans (tf-translation tf))
+         (lookat (g+ trans
+                     (transform quat (vec3* 0 0 -1))))
+         (sky (transform quat (vec3* 0 1 0))))
+  (pov-block "camera"
+             (list
+              ;(pov-item "location" (pov-float-vector-right (vec3* 0 0 0)))
+              (pov-item "location" (pov-float-vector-right trans))
+              (pov-item "look_at"  (pov-float-vector-right lookat))
+              (pov-item "sky"  (pov-float-vector-right sky))
+              (pov-item "right" (rope "x*" width "/" height))))))
+
+
 (defun pov-args (file
                  &key
                    output
