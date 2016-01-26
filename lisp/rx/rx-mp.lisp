@@ -284,6 +284,30 @@
 
 
 
+(defun motion-plan-rope (mp)
+  (let* ((ssg (motion-plan-sub-scene-graph mp))
+         (path (motion-plan-path mp))
+         (m (sub-scene-graph-all-config-count ssg))
+         (n (/ (length path) m))
+         (names (loop for i below m collect (sub-scene-graph-all-config-name ssg i))))
+    (rope
+     (format nil "~&# ~{~A, ~}" names)
+     (format nil "~{~&~{~F ~}~}"
+             (loop for j below n
+                collect
+                  (loop for i below m
+                     collect (aref path (+ i (* j m)))))))))
+
+(defun output-motion-plans (list directory)
+  (loop for mp in list
+     for rope = (motion-plan-rope mp)
+     for i from 0
+     do (output-rope rope
+                     (rope directory "/" (format nil "mp-~D.dat" i))
+                     :if-exists :supersede)))
+
+
+
 ;;;;;;;;;;;;;;;
 ;;; MP Seq. ;;;
 ;;;;;;;;;;;;;;;
