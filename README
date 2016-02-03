@@ -125,3 +125,21 @@ Common Errors
     are installed.  Please ensure that you have SBCL, Quicklisp, and
     Sycamore installed and rebuild amino if necessary.  See
     `./INSTALL` for details.
+
+* When building aarx.core, I get an enormous stack trace, starting
+  with:
+  'Unable to load any of the alternatives:
+     ("libamino_planning.so" (:DEFAULT "libamino_planning"))'.
+
+  - This means that SBCL is unable to load the planning library or one
+    of its dependecies, such as OMPL.  Typically, this means your
+    linker is not configured properly.  The easiest fix is to set the
+    LD_LIBRARY_PATH variable.  First, find the location of libompl.so,
+    e.g., by calling `locate libompl.so`.  Then, add the directory to
+    your LD_LIBRARY_PATH variable.  Most commonly, this will mean
+    adding one of the following lines to your shell startup files
+    (e.g., .bashrc):
+
+    `export LD_LIBRARY_PATH="/usr/local/lib/:$LD_LIBRARY_PATH"`
+
+    `export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"`
