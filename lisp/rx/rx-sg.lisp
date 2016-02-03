@@ -165,6 +165,17 @@
                           configs
                           (or vector (make-vec n)))))
 
+(defun mutable-scene-graph-config-map (mutable-scene-graph vector &key (start 0))
+  (let ((n (mutable-scene-graph-config-count mutable-scene-graph))
+        (map (make-configuration-map)))
+    (loop for i below n
+       for name = (mutable-scene-graph-config-name mutable-scene-graph i)
+       for i-array = (+ start i)
+       do
+         (tree-map-insertf map name
+                           (aref vector i-array)))
+    map))
+
 (defun mutable-scene-graph-config-name (m-sg i)
   (aref (mutable-scene-graph-config-name-array m-sg)
         i))

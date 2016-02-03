@@ -226,12 +226,16 @@
       (aa-rx-win-get-tf-cam window vec))
     (tf vec)))
 
+(defun win-config-map (&optional (window *window*))
+  (mutable-scene-graph-config-map (rx-win-mutable-scene-graph window)
+                                  (rx-win-config-vector window)))
 
 (defun render-win (&key
                      (window *window*)
+                     (camera-tf (win-tf-camera window))
                      (render t)
                      (options (render-options-default))
-                     configuration-map
+                     (configuration-map (win-config-map window))
                      output
                      (directory *robray-tmp-directory*)
                      include
@@ -239,7 +243,7 @@
   "Render the scene graph currently displayed in WINDOW"
   ;; TODO: configurations
   (render-scene-graph (mutable-scene-graph-scene-graph (rx-win-mutable-scene-graph window))
-                      :camera-tf (win-tf-camera window)
+                      :camera-tf camera-tf
                       :render render
                       :options options
                       :configuration-map configuration-map
