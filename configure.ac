@@ -4,7 +4,7 @@ AC_PREREQ([2.65])
 AC_INIT([amino], [0.20140818], [ntd@gatech.edu])
 
 AM_INIT_AUTOMAKE([subdir-objects])
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([no])])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_SRCDIR([include/amino.h])
 AC_CONFIG_HEADERS([config.h])
