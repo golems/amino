@@ -1,4 +1,3 @@
-
 DEPENDENCIES
 ============
 
@@ -16,27 +15,42 @@ Optional
 These dependecies are optional and may be used to enable additional
 features in Amino:
 
-* Visualization Feature:
+* Visualization:
   - OpenGL: https://www.opengl.org/
   - SDL2: https://www.libsdl.org/
-* Motion Planning Feature:
+* Motion Planning:
   - FCL: https://github.com/flexible-collision-library/fcl
   - OMPL: http://ompl.kavrakilab.org/
-* Robot Model Compilation and Ray Tracing Features:
+* Robot Models
   - SBCL: http://www.sbcl.org/
-  - Sycamore: https://github.com/ndantam/sycamore
   - Quicklisp: https://www.quicklisp.org
+  - Sycamore: https://github.com/ndantam/sycamore
   - Blender: http://www.blender.org
+* Raytracing (everything under Robot Models, plus):
+  - POV-ray: http://www.povray.org/
   - avconv: https://libav.org/
 * Java Bindings
-  - Java SDK (optional)
+  - Java SDK
+* Optimization, any or all of the following:
+  - CLP: http://www.coin-or.org/projects/Clp.xml
+  - GLPK: https://www.gnu.org/software/glpk/
+  - LP-Solve: http://lpsolve.sourceforge.net/5.5/
 
 To install these on Debian or Ubuntu GNU/Linux, you can do:
 
-    sudo apt-get install build-essential autoconf automake libtool \
-	 autoconf-archive autotools-dev \
-	 default-jdk maxima gfortran libblas-dev liblapack-dev \
-         libglew-dev libsdl2-dev libfcl-dev libompl-dev sbcl
+    sudo apt-get install build-essential gfortran \
+         autoconf automake libtool autoconf-archive autotools-dev \
+	 maxima libblas-dev liblapack-dev \
+         libglew-dev libsdl2-dev \
+         libfcl-dev libompl-dev \
+         sbcl \
+         default-jdk
+         blender povray libav-tools \
+         coinor-libclp-dev libglpk-dev liblpsolve55-dev
+
+(Note that some versions of blender in Ubuntu and Debian do not
+support the Collada format for 3D meshes, so you may need to install
+blender manually in this case.)
 
 Then, install the following manually, if desired for ray tracing and
 robot model compilation:
