@@ -37,42 +37,13 @@ Ray Tracing
 * Generate POV-ray scene files for animation frames
 * Distribute POV-ray rendering over multiple machines
 
-DEPENDENCIES
-============
-
-Required
---------
-These dependecies are required to use Amino:
-
-* BLAS / LAPACK
-* Maxima (build-time dependency only)
-
-Optional
---------
-These dependecies are optional and may be used to enable additional
-features in Amino:
-
-* Visualization Feature:
-  - OpenGL: https://www.opengl.org/
-  - SDL2: https://www.libsdl.org/
-* Motion Planning Feature:
-  - FCL: https://github.com/flexible-collision-library/fcl
-  - OMPL: http://ompl.kavrakilab.org/
-* Robot Model Compilation and Ray Tracing Features:
-  - SBCL: http://www.sbcl.org/
-  - cl-ppcre: http://weitz.de/cl-ppcre/
-  - Sycamore: https://github.com/ndantam/sycamore
-  - CXML: https://common-lisp.net/project/cxml/
-  - POV-Ray: http://www.povray.org/
-  - Blender: http://www.blender.org
-  - avconv: https://libav.org/
-
 INSTALLATION
 ============
 
     ./configure && make && make install
 
-See the INSTALL file and `./configure --help` for details.
+See the INSTALL file and `./configure --help` for details and
+dependencies.
 
 RAY TRACING PERFORMANCE
 =======================
@@ -125,7 +96,8 @@ Scene Graphs
 * How can I load a URDF file?
 
   - Use the scene graph compiler, `aarxc`, to generate code from the
-    URDF file.
+    URDF file.  Note that URDF support has additional dependencies;
+    see `./INSTALL` for details.
 
 * How can I reload a modified scene graph file without restarting my
   program?
@@ -145,3 +117,11 @@ Common Errors
     Ubuntu repositories (as of Jessie and Trusty) are not built with
     COLLADA (.dae) support.  You can download the prebuilt binaries
     from http://www.blender.org/ which do support COLLADA.
+
+* When I try to compile a URDF file, I receive the error "aarx.core:
+  not found".
+
+  - URDF support in amino is only built if the necessary dependencies
+    are installed.  Please ensure that you have SBCL, Quicklisp, and
+    Sycamore installed and rebuild amino if necessary.  See
+    `./INSTALL` for details.

@@ -1,23 +1,35 @@
-Overview
-=========
 
-Dependencies
-------------
-* GCC
-* G++
-* GFORTRAN or F2C
-* GNU Autotools
-* Maxima
-* BLAS
-* LAPACK
-* Java SDK (optional)
-* GLEW (optional)
-* SDL2 (optional)
-* FCL (optional)
-* OMPL (optional)
-* SBCL (optional)
-* Quicklisp: https://www.quicklisp.org (optional)
-* Sycamore: https://github.com/ndantam/sycamore (optional)
+DEPENDENCIES
+============
+
+Required
+--------
+These dependecies are required to use Amino:
+
+* GCC, G++
+* GFortran or F2C
+* BLAS / LAPACK
+* Maxima (build-time dependency only)
+
+Optional
+--------
+These dependecies are optional and may be used to enable additional
+features in Amino:
+
+* Visualization Feature:
+  - OpenGL: https://www.opengl.org/
+  - SDL2: https://www.libsdl.org/
+* Motion Planning Feature:
+  - FCL: https://github.com/flexible-collision-library/fcl
+  - OMPL: http://ompl.kavrakilab.org/
+* Robot Model Compilation and Ray Tracing Features:
+  - SBCL: http://www.sbcl.org/
+  - Sycamore: https://github.com/ndantam/sycamore
+  - Quicklisp: https://www.quicklisp.org
+  - Blender: http://www.blender.org
+  - avconv: https://libav.org/
+* Java Bindings
+  - Java SDK (optional)
 
 To install these on Debian or Ubuntu GNU/Linux, you can do:
 
@@ -26,11 +38,14 @@ To install these on Debian or Ubuntu GNU/Linux, you can do:
 	 default-jdk maxima gfortran libblas-dev liblapack-dev \
          libglew-dev libsdl2-dev libfcl-dev libompl-dev sbcl
 
-Then, install the following, if desired for ray tracing and robot
-model compilation:
+Then, install the following manually, if desired for ray tracing and
+robot model compilation:
 
-  * Quicklisp: https://www.quicklisp.org (optional)
-  * Sycamore: https://github.com/ndantam/sycamore (optional)
+  * Quicklisp: https://www.quicklisp.org
+  * Sycamore: https://github.com/ndantam/sycamore
+
+Overview
+=========
 
 Generic Instructions
 --------------------
