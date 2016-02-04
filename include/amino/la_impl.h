@@ -382,7 +382,7 @@ AA_FDEC(AA_TYPE, la, angle,
  * \param x solution matrix
  * \param ldx leading dimension of x
  */
-AA_API void AA_NAME(la,lls)
+AA_API int AA_NAME(la,lls)
 ( size_t m, size_t n, size_t p,
   const AA_TYPE *A, size_t lda,
   const AA_TYPE *b, size_t ldb,

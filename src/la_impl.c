@@ -444,7 +444,7 @@ AA_API AA_TYPE * AA_NAME(la,dup) ( struct aa_mem_region *reg,
 }
 
 
-AA_API void AA_NAME(la,lls)
+AA_API int AA_NAME(la,lls)
 ( size_t m, size_t n, size_t p,
   const AA_TYPE *A, size_t lda,
   const AA_TYPE *b, size_t ldb,
@@ -474,6 +474,8 @@ AA_API void AA_NAME(la,lls)
                                         work, lwork, iwork ) );
     AA_CLA_NAME(lacpy)(0, (int)n,(int)p, bp, (int)ldbp, x, (int)ldx);
     aa_mem_region_pop(reg, Ap);
+
+    return info;
 }
 
 AA_API int AA_NAME(la,qr)

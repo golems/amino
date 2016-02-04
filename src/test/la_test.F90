@@ -115,11 +115,11 @@ contains
 
   subroutine test_ssd()
     call test("ssd1", &
-         2.0 == aa_la_ssd([0.0, 0.0], [1.0, 1.0]) .and. &
-         5.0 == aa_la_ssd([0.0, 0.0], [1.0, 2.0]) .and. &
-         5.0 == aa_la_ssd([0.0, 0.0], [2.0, 1.0]) .and. &
-         8.0 == aa_la_ssd([0.0, 0.0], [2.0, 2.0]) .and. &
-         5.0 == aa_la_ssd([1.0, 0.0], [2.0, 2.0]) &
+         0.0 >= abs(2.0 - aa_la_ssd([0.0, 0.0], [1.0, 1.0])) .and. &
+         0.0 >= abs(5.0 - aa_la_ssd([0.0, 0.0], [1.0, 2.0])) .and. &
+         0.0 >= abs(5.0 - aa_la_ssd([0.0, 0.0], [2.0, 1.0])) .and. &
+         0.0 >= abs(8.0 - aa_la_ssd([0.0, 0.0], [2.0, 2.0])) .and. &
+         0.0 >= abs(5.0 - aa_la_ssd([1.0, 0.0], [2.0, 2.0])) &
          )
   end subroutine test_ssd
 

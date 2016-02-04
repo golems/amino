@@ -352,7 +352,7 @@ AA_API void aa_tf_tfmat_inv2( const double T[AA_RESTRICT 12],
                               double Ti[AA_RESTRICT 12] )
 {
     aa_tf_rotmat_inv2(T,Ti);
-    double *v = T + AA_TF_TFMAT_V;
+    const double *v = T + AA_TF_TFMAT_V;
     double vv[3] = {-v[0],-v[1],-v[2]};
     aa_tf_9rot( Ti, vv, Ti + AA_TF_TFMAT_V );
 }

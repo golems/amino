@@ -68,17 +68,32 @@ void scalar() {
     aneq( 1, 2, .1 );
 
     // min/max loc
-    assert( 1 == aa_fminloc( 3, AA_FAR( 1, 0, 10 ) ) );
-    assert( 2 == aa_fminloc( 3, AA_FAR( 1, 0, -10 ) ) );
-    assert( 2 == aa_fmaxloc( 3, AA_FAR( 1, 0, 10 ) ) );
-    assert( 0 == aa_fmaxloc( 3, AA_FAR( 100, 0, 10 ) ) );
+    {
+        double x[3]={1,0,10};
+        assert( 1 == aa_fminloc( 3, x ) );
+    }
+    {
+        double x[3]={1,0,-10};
+        assert( 2 == aa_fminloc( 3, x ) );
+    }
+    {
+        double x[3]={1,0,10};
+        assert( 2 == aa_fmaxloc( 3, x ) );
+    }
+    {
+        double x[3]={100,0,10};
+        assert( 0 == aa_fmaxloc( 3, x ) );
+    }
 }
 
 void la0() {
-    // min
-    afeq( 2, aa_la_min( 3, (double[3]) {10, 2, 4} ), 0 );
-    // max
-    afeq( 10, aa_la_max( 3, (double[3]) {10, 2, 4} ), 0 );
+    {
+        double x[3] = {10,2,4};
+        // min
+        afeq( 2, aa_la_min( 3,  x ), 0 );
+        // max
+        afeq( 10, aa_la_max( 3, x ), 0 );
+    }
     // dot
     {
         double x[] = {1,2,3};
@@ -237,24 +252,33 @@ void la1() {
 
     // point_plane
     {
-        afeq( aa_la_point_plane( 3, (double[]){1,1,1},
-                                 (double[]){1,1,1,1} ),
+        double x1[3] = {1,1,1};
+        double y1[4] = {1,1,1,1};
+        afeq( aa_la_point_plane( 3, x1, y1 ),
               2.3094,
               .001 );
-        afeq( aa_la_point_plane( 3, (double[]){1,2,3},
-                                 (double[]){1,1,1,0} ),
+
+        double x2[3] = {1,2,3};
+        double y2[4] = {1,1,1,0};
+        afeq( aa_la_point_plane( 3, x2, y2 ),
               3.4641,
               .01 );
-       afeq( aa_la_point_plane( 3, (double[]){2,0,0},
-                                 (double[]){1,0,0,0} ),
+
+        double x3[3] = {2,0,0};
+        double y3[4] = {1,0,0,0};
+        afeq( aa_la_point_plane( 3, x3, y3),
               2,
               .01 );
-        afeq( aa_la_point_plane( 3, (double[]){1,0,0},
-                                 (double[]){1,0,0,1} ),
+
+        double x4[3] = {1,0,0};
+        double y4[4] = {1,0,0,1};
+        afeq( aa_la_point_plane( 3, x4, y4 ),
               2,
               .01 );
-        afeq( aa_la_point_plane( 3, (double[]){1,0,0},
-                                 (double[]){1,0,0,-1} ),
+
+        double x5[3] = {1,0,0};
+        double y5[4] = {1,0,0,-1};
+        afeq( aa_la_point_plane( 3, x5, y5 ),
               0,
               .01 );
     }
@@ -343,10 +367,8 @@ void la2() {
 
         double A[2*4];
         double Ar[] = {1,0, 0,0, 0,1, 0,0};
-        aa_la_transpose2( 4, 2,
-                          AA_FAR( 1, 0, 0, 0,
-                                  0, 0, 1, 0),
-                          A );
+        double x[8] = {1, 0, 0, 0,    0, 0, 1, 0};
+        aa_la_transpose2( 4, 2, x, A );
         aveq( "la_transpose2", 2*4, A, Ar, 0 );
     }
     // inverse3x3
@@ -360,7 +382,7 @@ void la2() {
     // det3x3
     {
         double R[9] = {0,-1,0, 1,0,0, 0,0,-1};
-        double S[9];
+        //double S[9];
         //aa_la_inverse3x3( R, S );
         double d = aa_la_det3x3( R );
         //double dt = aa_la_det3x3( S );
@@ -408,22 +430,21 @@ void la2() {
         double X0[] = {0, 1, 2, 3};
         double X1[] = {0, 2, 4, 8};
         double Xi[sizeof(X0)/sizeof(double)];
-        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
-                      0.5, Xi );
-        aveq( "la_linterp", sizeof(X0)/sizeof(double),
-              Xi, AA_FAR(0, 1.5, 3, (3.0+8.0)/2 ), .00001 );
-        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
-                      0.75, Xi );
-        aveq( "la_linterp1", sizeof(X0)/sizeof(double),
-              Xi, AA_FAR(0, 1.75, 3.5, 3+(8.0-3.0)*3/4 ), .00001 );
-        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
-                      2, Xi );
-        aveq( "la_linterp2", sizeof(X0)/sizeof(double),
-              Xi, AA_FAR(0, 3, 6, 13 ), .00001 );
-        aa_la_linterp(sizeof(X0)/sizeof(double), t0, X0, t1, X1,
-                      -1, Xi );
-        aveq( "la_linterp3", sizeof(X0)/sizeof(double),
-              Xi, AA_FAR(0, 0, 0, -2 ), .00001 );
+
+        double y0[4] = {0, 1.5, 3, (3.0+8.0)/2 };
+        double y1[4] = {0, 1.75, 3.5, 3+(8.0-3.0)*3/4 };
+        double y2[4] = {0, 3, 6, 13 };
+        double y3[4] = {0, 0, 0, -2 };
+        size_t n = sizeof(X0)/sizeof(double);
+
+        aa_la_linterp(n, t0, X0, t1, X1, 0.5, Xi );
+        aveq( "la_linterp", n, Xi, y0, .00001 );
+        aa_la_linterp(n, t0, X0, t1, X1, 0.75, Xi );
+        aveq( "la_linterp1", n, Xi, y1, .00001 );
+        aa_la_linterp(n, t0, X0, t1, X1, 2, Xi );
+        aveq( "la_linterp2", n, Xi, y2, .00001 );
+        aa_la_linterp(n, t0, X0, t1, X1, -1, Xi );
+        aveq( "la_linterp3", n, Xi, y3, .00001 );
     }
 }
 
@@ -431,8 +452,11 @@ void la3() {
     {
         double X[4];
         double Xr[] = {1.1649, 1.4987, 1.4987, 2.6484};
+        double y0[] = {1,2,3,4};
+        double y1[] = {1,2};
+        double y2[] = {3,4};
         aa_la_care_laub( 2, 1, 1,
-                         AA_FAR(1, 2, 3, 4), AA_FAR(1,2), AA_FAR(3,4), X );
+                         y0, y1, y2, X );
 
         aveq( "la_care_laub0", sizeof(X)/sizeof(double),
               X, Xr, .001 );
@@ -465,9 +489,10 @@ void la3() {
                       3,4};
         aa_la_transpose( 2, A );
         double x[2];
-        aa_la_lls( 2, 2, 1, A, (double[]){1,2}, x );
-        aveq( "la_lls", sizeof(x)/sizeof(double),
-              x, (double[]){0,0.5}, 0.001 );
+        double y[2] = {1,2};
+        double z[2] = {0,.5};
+        aa_la_lls( 2, 2, 1, A, y, x );
+        aveq( "la_lls", 2, x, z, 0.001 );
     }
 
 }
@@ -536,8 +561,14 @@ void clapack() {
         aa_cla_dlacpy(0, 2, 2, X, 3, Y22, 2 );
 
         aveq( "cla_dlacpy", 6, Y32, X, 0.001 );
-        aveq( "cla_dlacpy", 8, Y42, (double[]){1,2,3,0,4,5,6,0}, 0.001 );
-        aveq( "cla_dlacpy", 4, Y22, (double[]){1,2, 4,5}, 0.001 );
+        {
+            double x[] = {1,2,3,0,4,5,6,0};
+            aveq( "cla_dlacpy", 8, Y42, x, 0.001 );
+        }
+        {
+            double x[] = {1,2, 4,5};
+            aveq( "cla_dlacpy", 4, Y22, x, 0.001 );
+        }
     }
 
     // lapy2/3
@@ -572,9 +603,12 @@ void la2_0() {
         aa_la_d_transpose( 3, 2, X, 3, Y33, 3 );
         aa_la_d_transpose( 2, 2, X, 3, Y22, 2 );
 
-        aveq( "la_d_transpose", 6, Y32, (double[]){1,4, 2,5, 3,6}, 0.001 );
-        aveq( "la_d_transpose", 9, Y33, (double[]){1,4,0, 2,5,0, 3,6,0}, 0.001 );
-        aveq( "la_d_transpose", 4, Y22, (double[]){1,4, 2,5}, 0.001 );
+        double x0[] = {1,4, 2,5, 3,6};
+        double x1[] = {1,4,0, 2,5,0, 3,6,0};
+        double x2[] = {1,4, 2,5};
+        aveq( "la_d_transpose", 6, Y32, x0, 0.001 );
+        aveq( "la_d_transpose", 9, Y33, x1, 0.001 );
+        aveq( "la_d_transpose", 4, Y22, x2, 0.001 );
     }
 
 }
@@ -734,7 +768,7 @@ void quat() {
     {
         double ra_r[4] = {0,0,0,0};
         double ra[4];
-        aa_tf_quat2axang( AA_FAR(0,0,0,1), ra);
+        aa_tf_quat2axang( aa_tf_quat_ident, ra);
         aveq( "tf_quat2axang-2", 4, ra, ra_r, 0.001 );
     }
 
@@ -742,20 +776,23 @@ void quat() {
     {
         double q_r[4] = {0,0,0,1};
         double q[4];
-        aa_tf_axang2quat( AA_FAR(0,0,0,0), q);
+        double x0[] = {0,0,0,0};
+        double x1[] = {1,1,1,0};
+        double x2[] = {1,2,3,0};
+        aa_tf_axang2quat( x0, q);
         aveq( "tf_axang2quat", 4, q, q_r, 0.00001 );
-        aa_tf_axang2quat( AA_FAR(1,1,1,0), q);
+        aa_tf_axang2quat( x1, q);
         aveq( "tf_axang2quat", 4, q, q_r, 0.00001 );
-        aa_tf_axang2quat( AA_FAR(1,2,3,0), q);
+        aa_tf_axang2quat( x2, q);
         aveq( "tf_axang2quat", 4, q, q_r, 0.00001 );
     }
     // rotvec identity
     {
         double rv[3], q[4];
-        aa_tf_rotvec2quat(AA_TF_ROTVEC_IDENT, q);
-        aveq( "tf_rotvec2quat", 4,AA_TF_QUAT_IDENT,q,0.000001 );
-        aa_tf_quat2rotvec(AA_TF_QUAT_IDENT, rv);
-        aveq( "tf_rotvec2quat", 3,AA_TF_ROTVEC_IDENT,rv,0.000001 );
+        aa_tf_rotvec2quat(aa_tf_rotvec_ident, q);
+        aveq( "tf_rotvec2quat", 4,aa_tf_quat_ident,q,0.000001 );
+        aa_tf_quat2rotvec(aa_tf_quat_ident, rv);
+        aveq( "tf_rotvec2quat", 3,aa_tf_rotvec_ident,rv,0.000001 );
     }
     // rotations
     {
@@ -774,8 +811,8 @@ void quat() {
     }
     {
         double q[4];
-        aa_tf_rotmat2quat(AA_TF_IDENT,q);
-        aveq( "tf_rotmat2quat", 4, q, AA_TF_QUAT_IDENT, .001 );
+        aa_tf_rotmat2quat(aa_tf_ident,q);
+        aveq( "tf_rotmat2quat", 4, q, aa_tf_quat_ident, .001 );
     }
     // nearby
     {
@@ -956,45 +993,45 @@ void mem() {
 
         aa_mem_region_destroy(&reg);
     }
-    // topsize
-    {
-        aa_mem_region_t reg;
-        aa_mem_region_init(&reg, 16);
-        size_t old_n = aa_mem_region_topsize(&reg);
-        void *ptr = aa_mem_region_ptr(&reg);
-        assert( ptr == aa_mem_region_tmpalloc(&reg,old_n) );
-        assert( ptr == aa_mem_region_tmpalloc(&reg,old_n) );
-        assert( ptr != aa_mem_region_tmpalloc(&reg,old_n+1) );
+    /* // topsize */
+    /* { */
+    /*     aa_mem_region_t reg; */
+    /*     aa_mem_region_init(&reg, 16); */
+    /*     size_t old_n = aa_mem_region_topsize(&reg); */
+    /*     void *ptr = aa_mem_region_ptr(&reg); */
+    /*     assert( ptr == aa_mem_region_tmpalloc(&reg,old_n) ); */
+    /*     assert( ptr == aa_mem_region_tmpalloc(&reg,old_n) ); */
+    /*     assert( ptr != aa_mem_region_tmpalloc(&reg,old_n+1) ); */
 
-    }
-    // region growth
-    {
-        aa_mem_region_t reg;
-        aa_mem_region_init(&reg, 16);
-        for( size_t i = 0; i < 10; i ++ ) {
-            assert( ! reg.node->next );
-            size_t old_n = aa_mem_region_topsize(&reg);
-            size_t n = old_n / 16 + 1;
-            for( size_t j = 0; j < n; j ++ ) {
-                aa_mem_region_alloc(&reg, 16);
-            }
-            assert( reg.node->next );
-            assert( ! reg.node->next->next );
-            assert( aa_mem_region_topsize(&reg) > old_n );
-            aa_mem_region_release(&reg);
-            assert( ! reg.node->next );
-            assert( aa_mem_region_topsize(&reg) >= old_n + 16 );
-            assert( aa_mem_region_topsize(&reg) <= 8*old_n );
-        }
-        for( size_t i = 0; i < 256; i ++ ) {
-            for( size_t j = 0; j < i + 2; j ++ ) {
-                aa_mem_region_alloc(&reg, 16);
-            }
-            assert( NULL == reg.node->next );
-            aa_mem_region_release(&reg);
-        }
-        aa_mem_region_destroy(&reg);
-    }
+    /* } */
+    /* // region growth */
+    /* { */
+    /*     aa_mem_region_t reg; */
+    /*     aa_mem_region_init(&reg, 16); */
+    /*     for( size_t i = 0; i < 10; i ++ ) { */
+    /*         assert( ! reg.node->next ); */
+    /*         size_t old_n = aa_mem_region_topsize(&reg); */
+    /*         size_t n = old_n / 16 + 1; */
+    /*         for( size_t j = 0; j < n; j ++ ) { */
+    /*             aa_mem_region_alloc(&reg, 16); */
+    /*         } */
+    /*         assert( reg.node->next ); */
+    /*         assert( ! reg.node->next->next ); */
+    /*         assert( aa_mem_region_topsize(&reg) > old_n ); */
+    /*         aa_mem_region_release(&reg); */
+    /*         assert( ! reg.node->next ); */
+    /*         assert( aa_mem_region_topsize(&reg) >= old_n + 16 ); */
+    /*         assert( aa_mem_region_topsize(&reg) <= 8*old_n ); */
+    /*     } */
+    /*     for( size_t i = 0; i < 256; i ++ ) { */
+    /*         for( size_t j = 0; j < i + 2; j ++ ) { */
+    /*             aa_mem_region_alloc(&reg, 16); */
+    /*         } */
+    /*         assert( NULL == reg.node->next ); */
+    /*         aa_mem_region_release(&reg); */
+    /*     } */
+    /*     aa_mem_region_destroy(&reg); */
+    /* } */
     // pop simple
     {
         aa_mem_region_t reg;

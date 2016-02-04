@@ -146,10 +146,10 @@ static void check_tf( struct aa_rx_sg *sg )
     aa_rx_config_id cid2 = aa_rx_sg_config_id(sg,"q2");
     aa_rx_config_id cid3 = aa_rx_sg_config_id(sg,"q3");
 
-    aa_rx_frame_id fid0 = aa_rx_sg_frame_id(sg,"q0");
-    aa_rx_frame_id fid1 = aa_rx_sg_frame_id(sg,"q1");
-    aa_rx_frame_id fid2 = aa_rx_sg_frame_id(sg,"q2");
-    aa_rx_frame_id fid3 = aa_rx_sg_frame_id(sg,"q3");
+    // aa_rx_frame_id fid0 = aa_rx_sg_frame_id(sg,"q0");
+    // aa_rx_frame_id fid1 = aa_rx_sg_frame_id(sg,"q1");
+    // aa_rx_frame_id fid2 = aa_rx_sg_frame_id(sg,"q2");
+    // aa_rx_frame_id fid3 = aa_rx_sg_frame_id(sg,"q3");
 
     size_t frame_cnt =  aa_rx_sg_frame_count(sg);
     size_t config_cnt =  aa_rx_sg_config_count(sg);

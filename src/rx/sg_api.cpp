@@ -248,7 +248,7 @@ AA_API void aa_rx_sg_tf_update
         case AA_RX_FRAME_REVOLUTE:
         case AA_RX_FRAME_PRISMATIC: {
             amino::SceneFrameJoint *fj = static_cast<amino::SceneFrameJoint*>(f);
-            if( q0[fj->config_index] == q[fj->config_index] ) {
+            if( aa_feq(q0[fj->config_index], q[fj->config_index], 0 )) {
                 AA_MEM_CPY(E_rel, E_rel0, 7);
                 update_abs = !in_global && updated[f->parent_id];
             } else {
