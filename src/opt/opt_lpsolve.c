@@ -138,11 +138,34 @@ static int s_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
     return -1;
 }
 
+static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
+    lprec *lp = (lprec*)cx->data;
+    int ii = (int) i + 1;
+
+    switch( type ) {
+    case AA_OPT_CONTINUOUS:
+        set_int(lp, ii, 0);
+        set_binary(lp, ii, 0);
+        break;
+    case AA_OPT_BINARY:
+        set_binary(lp, ii, 1);
+        break;
+    case AA_OPT_INTEGER:
+        set_int(lp, ii, 1);
+        break;
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
 static struct aa_opt_vtab vtab = {
     .solve = s_solve,
     .destroy = s_destroy,
     .set_direction = s_set_direction,
-    .set_quad_obj_crs = s_set_quad_obj_crs
+    .set_quad_obj_crs = s_set_quad_obj_crs,
+    .set_type = s_set_type
 };
 
 static struct aa_opt_cx*
