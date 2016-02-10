@@ -109,11 +109,24 @@
         for x across vec
         collect (cons v x)))))
 
+
+(defun opt-set-type (cx variables var type)
+  (let* ((i (opt-variable-position variables var))
+         (r (progn
+              (assert i)
+              (aa-opt-set-type cx i type))))
+    (unless (zerop r)
+      (error "Could not set variable type of `~A' to `~A'"
+             var type))
+    (values)))
+
 (defun lp (constraints objectives
            &key
              x
              (strict t)
              variables
+             binary-variables
+             integer-variables
              (solver *default-lp-solver*)
              (result-type :alist)
              (default-x-lower 0d0)
@@ -139,6 +152,13 @@
     ;; parameters
     (when-let ((q-crs (lp-matrices-q matrices)))
       (opt-set-quad-obj cx q-crs))
+    ;; variable type
+    (flet ((set-type (type vv)
+             (let ((variables (lp-matrices-variables matrices)))
+               (dolist (v vv)
+                 (opt-set-type cx variables v type)))))
+      (set-type :integer integer-variables)
+      (set-type :binary binary-variables))
     ;; solve
     (with-foreign-simple-vector (x n-x) x :output
       (sb-int:with-float-traps-masked (:divide-by-zero :overflow  :invalid)

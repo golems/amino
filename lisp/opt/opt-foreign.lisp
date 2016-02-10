@@ -115,3 +115,10 @@
       (error "Could not set quadratic objective: ~D" r)))
   (print 2)
   (values))
+
+
+
+(defcfun aa-opt-set-type :int
+  (cx opt-cx-t)
+  (i size-t)
+  (type opt-type))

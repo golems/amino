@@ -46,9 +46,13 @@
   (include "amino.h")
   (include "amino/opt/opt.h")
 
+  (cenum opt-direction
+         ((:maximize "AA_OPT_MAXIMIZE"))
+         ((:minimize "AA_OPT_MINIMIZE")))
+
   (cenum opt-type
-         ((:<= "AA_OPT_REL_LEQ"))
-         ((:>= "AA_OPT_REL_GEQ"))
-         ((:= "AA_OPT_REL_EQ")))
+         ((:continuous "AA_OPT_CONTINUOUS"))
+         ((:binary "AA_OPT_BINARY"))
+         ((:integer "AA_OPT_INTEGER")))
 
   )

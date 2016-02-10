@@ -65,3 +65,10 @@ aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
 {
     return cx->vtab->set_quad_obj_crs( cx, n, Q_values, Q_cols, Q_row_ptr );
 }
+
+
+AA_API int
+aa_opt_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type )
+{
+    return cx->vtab->set_type(cx, i, type);
+}
