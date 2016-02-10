@@ -52,6 +52,13 @@ enum aa_opt_direction {
     AA_OPT_MINIMIZE,
 };
 
+
+enum aa_opt_type {
+    AA_OPT_CONTINUOUS,
+    AA_OPT_BINARY,
+    AA_OPT_INTEGER
+};
+
 struct aa_opt_cx;
 
 
@@ -68,6 +75,10 @@ aa_opt_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction );
 AA_API int
 aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
                          const double *Q_values, int *Q_cols, int *Q_row_ptr );
+
+
+AA_API int
+aa_opt_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type );
 
 typedef struct aa_opt_cx*
 aa_opt_gmcreate_fun (

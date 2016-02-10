@@ -135,11 +135,17 @@ static int s_set_quad_obj_crs( struct aa_opt_cx *cx,
     return -1;
 }
 
+static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
+    return -1;
+}
+
+
 static struct aa_opt_vtab s_vtab = {
     .solve = s_solve,
     .destroy = s_destroy,
     .set_direction = s_set_direction,
-    .set_quad_obj_crs = s_set_quad_obj_crs
+    .set_quad_obj_crs = s_set_quad_obj_crs,
+    .set_type = s_set_type
 };
 
 

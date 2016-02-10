@@ -107,11 +107,33 @@ static int s_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
     return -1;
 }
 
+
+static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
+    glp_prob *lp = (glp_prob*)(cx->data);
+
+    int type_glpk;
+    switch( type ) {
+    case AA_OPT_CONTINUOUS:
+        type_glpk = GLP_CV; break;
+    case AA_OPT_BINARY:
+        type_glpk = GLP_BV; break;
+    case AA_OPT_INTEGER:
+        type_glpk = GLP_IV; break;
+    default:
+        return -1;
+    }
+
+    glp_set_col_kind( lp, (int)i+1, type_glpk );
+
+    return 0;
+}
+
 static struct aa_opt_vtab s_vtab = {
     .solve = s_solve,
     .destroy = s_destroy,
     .set_direction = s_set_direction,
-    .set_quad_obj_crs = s_set_quad_obj_crs
+    .set_quad_obj_crs = s_set_quad_obj_crs,
+    .set_type = s_set_type
 };
 
 static int bounds_type (double l, double u) {
