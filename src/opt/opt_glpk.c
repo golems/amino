@@ -57,12 +57,24 @@ static int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
 
 
     /* Solve */
-    int r = glp_simplex( lp, NULL );
-
-    /* Result */
-    for( int j = 0; j < (int)n; j ++ ) {
-        x[j] = glp_get_col_prim( lp, j+1 );
+    int r;
+    int nb = glp_get_num_bin(lp);
+    int ni = glp_get_num_int(lp);
+    if( nb + ni > 0 ) {
+        glp_simplex( lp, NULL );
+        r = glp_intopt( lp, NULL );
+        /* Result */
+        for( int j = 0; j < (int)n; j ++ ) {
+            x[j] = glp_mip_col_val( lp, j+1 );
+        }
+    } else {
+        r = glp_simplex( lp, NULL );
+        /* Result */
+        for( int j = 0; j < (int)n; j ++ ) {
+            x[j] = glp_get_col_prim( lp, j+1 );
+        }
     }
+
 
     return r;
 }
@@ -114,11 +126,14 @@ static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
     int type_glpk;
     switch( type ) {
     case AA_OPT_CONTINUOUS:
-        type_glpk = GLP_CV; break;
+        type_glpk = GLP_CV;
+        break;
     case AA_OPT_BINARY:
-        type_glpk = GLP_BV; break;
+        type_glpk = GLP_BV;
+        break;
     case AA_OPT_INTEGER:
-        type_glpk = GLP_IV; break;
+        type_glpk = GLP_IV;
+        break;
     default:
         return -1;
     }
