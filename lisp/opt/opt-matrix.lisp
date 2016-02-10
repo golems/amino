@@ -123,6 +123,7 @@
 (defun lp (constraints objectives
            &key
              x
+             time
              (strict t)
              variables
              binary-variables
@@ -162,7 +163,9 @@
     ;; solve
     (with-foreign-simple-vector (x n-x) x :output
       (sb-int:with-float-traps-masked (:divide-by-zero :overflow  :invalid)
-        (setq r (aa-opt-solve cx n-x x))))
+        (setq r (if time
+                    (time (aa-opt-solve cx n-x x))
+                    (aa-opt-solve cx n-x x)))))
     ;; check
     (when (and strict (not (zerop r)))
       (error "Could not solve LP: ~D" r))
