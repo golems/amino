@@ -141,7 +141,7 @@
       (opt-set-quad-obj cx q-crs))
     ;; solve
     (with-foreign-simple-vector (x n-x) x :output
-      (sb-int:with-float-traps-masked (:divide-by-zero :overflow)
+      (sb-int:with-float-traps-masked (:divide-by-zero :overflow  :invalid)
         (setq r (aa-opt-solve cx n-x x))))
     ;; check
     (when (and strict (not (zerop r)))
