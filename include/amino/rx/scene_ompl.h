@@ -205,6 +205,8 @@ public:
         ompl::base::RealVectorStateSpace((unsigned)aa_rx_sg_sub_config_count(sub_sg)),
         allowed(aa_rx_cl_set_create(scene_graph)) {
 
+        aa_mem_region_init(&reg, 4000);
+
         // TODO: get actual bounds
         size_t n_configs = config_count_subset();
         ompl::base::RealVectorBounds vb( (unsigned int)n_configs );
@@ -225,7 +227,6 @@ public:
 
         }
         setBounds(vb);
-
         // // allowed
         // size_t n_q = config_count_all();
         // double q[n_q];
@@ -234,6 +235,7 @@ public:
     }
 
     virtual ~sgStateSpace() {
+        aa_mem_region_destroy(&reg);
         aa_rx_cl_set_destroy(allowed);
     }
 
@@ -255,9 +257,8 @@ public:
     void allow_config( double *q ) {
         size_t n_f = frame_count();
         size_t n_q = config_count_all();
-
-        double TF_rel[7*n_f];
-        double TF_abs[7*n_f];
+        double *TF_rel = AA_MEM_REGION_NEW_N(&reg, double, 7*n_f);
+        double *TF_abs = AA_MEM_REGION_NEW_N(&reg, double, 7*n_f);
         aa_rx_sg_tf(scene_graph, n_q, q,
                     n_f,
                     TF_rel, 7,
@@ -266,6 +267,7 @@ public:
         struct aa_rx_cl *cl = aa_rx_cl_create(scene_graph);
         aa_rx_cl_check(cl, n_f, TF_abs, 7, allowed);
         aa_rx_cl_destroy(cl);
+        aa_mem_region_pop(&reg, TF_rel);
     }
 
     void extract_state( const double *q_all, double *q_set ) const {
@@ -296,6 +298,7 @@ public:
     const aa_rx_sg *scene_graph;
     const aa_rx_sg_sub *sub_scene_graph;
     struct aa_rx_cl_set *allowed;
+    struct aa_mem_region reg;
 };
 
 typedef TypedSpaceInformation<amino::sgStateSpace> sgSpaceInformation;
