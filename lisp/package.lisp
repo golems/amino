@@ -90,7 +90,7 @@
    ))
 
 (defpackage :amino
-  (:use :cl :cffi :alexandria :amino-type :amino-ffi)
+  (:use :cl :cffi :alexandria :amino-type :amino-ffi :sycamore :sycamore-util)
   (:export
    ;; General types
    :vec
@@ -164,5 +164,16 @@
    :with-constraint
    :opt-constraint
    :opt-constraint-bounds
+   :optexp
+   :optexp-add-bounds
+   :optexp-add-constraint
+   :optexp=
+   :optexp>=
+   :optexp<=
+   :optexp-add-constraint-exp
+   :optexp-add-objective
+   :optexp-set-integer
+   :optexp-set-binary
+   :optexp-solve
    )
   (:nicknames :aa))

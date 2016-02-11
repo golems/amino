@@ -99,6 +99,9 @@
 (defun quadratic-term-p (term)
   (= 4 (length term)))
 
+;;;;;;;;;;;;;;;;;;;;;
+;;; Normalization ;;;
+;;;;;;;;;;;;;;;;;;;;;
 
 (defstruct normalized-constraint
   (lower nil :type (or double-float null))
@@ -112,17 +115,46 @@
 (defun normalized-constraint-length (normalized-constraint)
   (length (normalized-constraint-terms normalized-constraint)))
 
+(defun normalized-linear-term (variable factor)
+  (cons variable factor))
+
+(defmacro with-normalized-term ((factor variable) term &body body)
+  `(destructuring-bind (,variable . ,factor) ,term
+     (declare (type double-float ,factor))
+     ,@body))
+
 (defun normalize-terms (terms)
-  (let ((m (sycamore:make-tree-map #'sycamore-util:gsymbol-compare)))
+  (let ((m (make-tree-map #'gsymbol-compare)))
     (dolist (term terms)
       (with-linear-term (f v) term
-        (let ((f1 (multiple-value-bind (f0 key present) (sycamore:tree-map-find m v)
+        (let ((f1 (multiple-value-bind (f0 key present) (tree-map-find m v)
                     (declare (ignore key))
                     (if present
                         (+ f f0)
                         (coerce f 'double-float)))))
-        (sycamore:tree-map-insertf m v f1))))
-    (sycamore:map-tree-map :inorder 'list #'cons m)))
+          (declare (type double-float f1))
+          (tree-map-insertf m v f1))))
+    (map-tree-map :inorder 'list #'normalized-linear-term m)))
+
+(defun update-normalized-constraint (nc type value)
+  (ecase type
+    (<= (setf (normalized-constraint-upper nc)
+              (if-let ((current (normalized-constraint-upper nc)))
+                (min current value)
+                value)))
+    (>= (setf (normalized-constraint-lower nc)
+              (if-let ((current (normalized-constraint-lower nc)))
+                (max current value)
+                value)))
+    (= (if-let ((current (normalized-constraint-lower nc)))
+         (unless (= current value)
+           (error "Unable to satisfy constraint ~A" nc))
+         (setf (normalized-constraint-lower nc) value))
+       (if-let ((current (normalized-constraint-upper nc)))
+         (unless (= current value)
+           (error "Unable to satisfy constraint ~A" nc))
+         (setf (normalized-constraint-upper nc) value))))
+  nc)
 
 (defun normalize-constraints (constraints)
   (let ((hash (make-hash-table :test #'equal)))
@@ -132,24 +164,12 @@
                (nc (or (gethash terms hash)
                        (setf (gethash terms hash)
                              (make-normalized-constraint :terms terms)))))
-          (ecase type
-                  (<= (setf (normalized-constraint-upper nc)
-                            (if-let ((current (normalized-constraint-upper nc)))
-                              (min current value)
-                              value)))
-                  (>= (setf (normalized-constraint-lower nc)
-                            (if-let ((current (normalized-constraint-lower nc)))
-                              (max current value)
-                              value)))
-                  (= (if-let ((current (normalized-constraint-lower nc)))
-                       (unless (= current value)
-                         (error "Unable to satisfy constraint ~A" c))
-                       (setf (normalized-constraint-lower nc) value))
-                     (if-let ((current (normalized-constraint-upper nc)))
-                       (unless (= current value)
-                         (error "Unable to satisfy constraint ~A" c))
-                       (setf (normalized-constraint-upper nc) value)))))))
+          (update-normalized-constraint nc type value))))
     (hash-table-values hash)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Matrix Generation ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun opt-variable-position (variables var)
   (position var variables :test #'equal))
@@ -198,7 +218,7 @@
 
 (defun map-opt-terms (function terms)
   (dolist (term terms)
-    (destructuring-bind (variable . factor) term
+    (with-normalized-term (factor variable) term
       (funcall function variable factor))))
 
 
@@ -243,7 +263,7 @@
     (values lower A upper)))
 
 (defun opt-linear-objective (variables linear-terms)
-  (opt-terms-vec variables (normalize-terms linear-terms)))
+  (opt-terms-vec variables linear-terms))
 
 (defun opt-quadratic-objective (variables quadratic-terms)
   (let ((hash (make-hash-table :test #'equal)))
@@ -279,19 +299,227 @@
 
 
 (defun opt-objective (variables objectives)
-  (let ((linear-terms)
-        (quadratic-terms))
-    ;; filter terms
-    (dolist (o objectives)
-      (cond ((linear-term-p o) (push o linear-terms))
-            ((quadratic-term-p o) (push o quadratic-terms))
-            (t (error "Unrecognized term type: ~A" o))))
-    ;; Result
-    (values (when linear-terms
-              (opt-linear-objective variables linear-terms))
-            (when quadratic-terms
-              (opt-quadratic-objective variables quadratic-terms)))))
+  (opt-linear-objective variables objectives))
+;; TODO: fix quadratic things
 
+  ;; (let ((linear-terms)
+  ;;       (quadratic-terms))
+  ;;   ;; filter terms
+  ;;   (dolist (o objectives)
+  ;;     (cond ((linear-term-p o) (push o linear-terms))
+  ;;           ((quadratic-term-p o) (push o quadratic-terms))
+  ;;           (t (error "Unrecognized term type: ~A" o))))
+  ;;   ;; Result
+  ;;   (values (when linear-terms
+  ;;             (opt-linear-objective variables linear-terms))
+  ;;           (when quadratic-terms
+  ;;             (opt-quadratic-objective variables quadratic-terms)))))
+
+;;;;;;;;;;;;;;;;;
+;;; Container ;;;
+;;;;;;;;;;;;;;;;;
+
+(defun compare-normterms (a b)
+  (with-normalized-term (a-f a-v) a
+    (with-normalized-term (b-f b-v) b
+      (or-compare (gsymbol-compare a-v b-v)
+                  (double-compare a-f b-f)))))
+
+(defun compare-normterm-list (a b)
+  (if a
+      (if b
+          (or-compare (compare-normterms (car a) (car b))
+                      (compare-normterm-list (cdr a) (cdr b)))
+          1)
+      (if b
+          -1
+          0)))
+
+
+(defclass optexp ()
+  ((constraints ;; terms -> normalized constaint
+    :initform (make-tree-map #'compare-normterm-list)
+    :initarg :constraints
+    :accessor optexp-constraints)
+   (objective ;; variable -> coefficient
+    :initform (make-tree-map #'gsymbol-compare)
+    :initarg :objective
+    :accessor optexp-objective)
+   (variables
+    :initform (make-tree-set #'gsymbol-compare)
+    :initarg :variables
+    :accessor optexp-variables)
+   (binary-variables
+    :initform (make-tree-set #'gsymbol-compare)
+    :initarg :binary-variables
+    :accessor optexp-binary-variables)
+   (integer-variables
+    :initform (make-tree-set #'gsymbol-compare)
+    :initarg :integer-variables
+    :accessor optexp-integer-variables)
+   (default-x-lower
+     :initform 0
+     :initarg :default-x-lower
+     :accessor optexp-default-x-lower)
+   (default-x-upper
+     :initform most-positive-double-float
+     :initarg :default-x-upper
+     :accessor optexp-default-x-upper)
+   (default-b-lower
+     :initform most-negative-double-float
+     :initarg :default-b-lower
+     :accessor optexp-default-x-upper
+     :accessor optexp-default-b-lower)
+   (default-b-upper
+     :initform most-positive-double-float
+     :initarg :default-b-upper
+     :accessor optexp-default-b-upper)))
+
+(defmacro optexp-slot (optexp slot)
+  `(slot-value ,optexp ',slot))
+
+(defun make-optexp ()
+  (make-instance 'optexp))
+
+(defun optexp-variable-list (oe)
+  (tree-set-list (optexp-variables oe)))
+
+(defun update-optexp (optexp &key
+                               (constraints (optexp-slot optexp constraints))
+                               (objective (optexp-slot optexp objective))
+                               (variables (optexp-slot optexp variables))
+                               (binary-variables (optexp-slot optexp binary-variables))
+                               (integer-variables (optexp-slot optexp integer-variables))
+                               (default-x-lower (optexp-slot optexp default-x-lower))
+                               (default-x-upper (optexp-slot optexp default-x-upper))
+                               (default-b-lower (optexp-slot optexp default-b-lower))
+                               (default-b-upper (optexp-slot optexp default-b-upper)))
+  (make-instance 'optexp
+                 :constraints constraints
+                 :objective objective
+                 :variables variables
+                 :binary-variables binary-variables
+                 :integer-variables integer-variables
+                 :default-x-lower default-x-lower
+                 :default-x-upper default-x-upper
+                 :default-b-lower default-b-lower
+                 :default-b-upper default-b-upper))
+
+(defun normalized-terms-variables (variables terms)
+  (fold (lambda (set term)
+          (with-normalized-term (factor variable) term
+            (declare (ignore factor))
+            (tree-set-insert set variable)))
+        variables terms))
+
+
+(defun optexp-add-constraint (oe type terms rhs)
+  (let* ((rhs (coerce rhs 'double-float))
+         (terms (normalize-terms terms))
+         (map (optexp-constraints oe))
+         (nc (if-let ((nc (tree-map-find map terms)))
+               (copy-structure nc)
+               (make-normalized-constraint :terms terms))))
+    (setq nc (update-normalized-constraint nc type rhs))
+    (update-optexp oe
+                   :constraints (tree-map-insert map terms nc)
+                   :variables (normalized-terms-variables (optexp-variables oe) terms))))
+
+(defun optexp= (oe terms rhs)
+  (optexp-add-constraint oe '= terms rhs))
+
+(defun optexp<= (oe terms rhs)
+  (optexp-add-constraint oe '<= terms rhs))
+
+(defun optexp>= (oe terms rhs)
+  (optexp-add-constraint oe '>= terms rhs))
+
+(defun optexp-add-constraint-exp (oe constraint)
+  (with-constraint (type terms rhs) constraint
+    (optexp-add-constraint oe type terms rhs)))
+
+(defun optexp-add-bounds (oe lower terms upper)
+  (let* ((lower (coerce lower 'double-float))
+         (upper (coerce upper 'double-float))
+         (terms (normalize-terms terms))
+         (map (optexp-constraints oe))
+         (nc (if-let ((nc (tree-map-find map terms)))
+               (progn (setq nc (copy-structure nc))
+                      (setq nc (update-normalized-constraint nc '>= lower))
+                      (setq nc (update-normalized-constraint nc '<= upper)))
+               (make-normalized-constraint :lower lower :terms terms :upper upper))))
+    (update-optexp oe
+                   :constraints (tree-map-insert map terms nc)
+                   :variables (normalized-terms-variables (optexp-variables oe) terms))))
+
+(defun optexp-add-objective (oe factor variable)
+  (let* ((map (optexp-objective oe))
+         (factor (coerce factor 'double-float))
+         (old-factor (tree-map-find map variable))
+         (new-factor (if old-factor
+                         (+ old-factor factor)
+                         factor)))
+    (update-optexp oe
+                   :objective (tree-map-insert map variable new-factor)
+                   :variables (tree-set-insert (optexp-variables oe) variable))))
+
+(defun optexp-set-binary (oe variable)
+  (update-optexp oe
+                 :binary-variables (tree-set-insert (optexp-binary-variables oe)
+                                                    variable)))
+
+(defun optexp-set-integer (oe variable)
+  (update-optexp oe
+                 :integer-variables (tree-set-insert (optexp-integer-variables oe)
+                                                    variable)))
+
+(defun optexp (&key optexp constraints objective binary-variables integer-variables
+                 default-x-lower default-x-upper
+                 default-b-lower default-b-upper)
+  (let ((oe (or optexp (make-optexp))))
+    ;; constraints
+    (setq oe (fold (lambda (oe c)
+                     (with-constraint (type terms value) c
+                       (optexp-add-constraint oe type terms value)))
+                   oe constraints))
+    ;; objective
+    (setq oe (fold (lambda (oe o)
+                     (with-linear-term (factor variable) o
+                       (optexp-add-objective oe factor variable)))
+                   oe objective))
+    ;; binary
+    (setq oe (fold #'optexp-set-binary oe binary-variables))
+    ;; integer
+    (setq oe (fold #'optexp-set-binary oe integer-variables))
+    ;; default bounds
+    (when default-x-lower
+      (setf (optexp-default-x-lower oe) (coerce default-x-lower 'double-float)))
+    (when default-x-upper
+      (setf (optexp-default-x-upper oe) (coerce default-x-upper 'double-float)))
+    (when default-b-lower
+      (setf (optexp-default-b-lower oe) (coerce default-b-lower 'double-float)))
+    (when default-b-upper
+      (setf (optexp-default-b-upper oe) (coerce default-b-upper 'double-float)))
+    ;; result
+    oe))
+
+(defun optexp-constraint-matrix (oe)
+  (opt-constraint-crs (optexp-variable-list oe)
+                      (tree-map-values (optexp-constraints oe))
+                      :default-lower (optexp-default-b-lower oe)
+                      :default-upper (optexp-default-b-upper oe)))
+
+(defun optexp-bounds-matrix (oe)
+  (opt-bounds (optexp-variable-list oe)
+              (tree-map-values (optexp-constraints oe))
+              :default-lower (optexp-default-x-lower oe)
+              :default-lower (optexp-default-x-upper oe)))
+
+;; TODO: quadratic objectives
+(defun optexp-objective-matrix (oe)
+  (opt-objective (optexp-variable-list oe)
+                 (map-tree-map :inorder 'list #'normalized-linear-term
+                               (optexp-objective oe))))
 
 
 ;; (opt-constraint-matrices '(x y)

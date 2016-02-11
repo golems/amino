@@ -54,40 +54,26 @@
 (defun opt-var-count (problem)
   (amino-type::%crs-matrix-cols (lp-matrices-a-crs problem)))
 
-(defun lp-matrices (constraints objectives
-                    &key
-                      variables
-                      lp-matrices
-                      (default-x-lower 0d0)
-                      (default-x-upper most-positive-double-float)
-                      (default-b-lower most-negative-double-float)
-                      (default-b-upper most-positive-double-float))
-  (let* ((variables (or variables
-                        (opt-variables constraints objectives)))
-         (lp-matrices (or lp-matrices
-                          (make-lp-matrices :variables variables)))
-         (constraints (normalize-constraints constraints)))
+(defun optexp-matrix (oe)
+  (let* ((matrices (make-lp-matrices :variables (optexp-variable-list oe))))
     ;; constraints
-    (symbol-macrolet ((b-lower (lp-matrices-b-lower lp-matrices))
-                      (A-crs (lp-matrices-a-crs lp-matrices))
-                      (b-upper (lp-matrices-b-upper lp-matrices)))
+    (symbol-macrolet ((b-lower (lp-matrices-b-lower matrices))
+                      (A-crs (lp-matrices-a-crs matrices))
+                      (b-upper (lp-matrices-b-upper matrices)))
       (multiple-value-setq (b-lower A-crs b-upper)
-        (opt-constraint-crs variables constraints
-                            :default-lower default-b-lower
-                            :default-upper default-b-upper)))
+        (optexp-constraint-matrix oe)))
     ;; objectives
-    (symbol-macrolet ((c (lp-matrices-c lp-matrices))
-                      (q (lp-matrices-q lp-matrices)))
+    (symbol-macrolet ((c (lp-matrices-c matrices))
+                      (q (lp-matrices-q matrices)))
       (multiple-value-setq (c q)
-        (opt-objective variables objectives)))
+        (optexp-objective-matrix oe)))
     ;; bounds
-    (symbol-macrolet ((x-lower (lp-matrices-x-lower lp-matrices))
-                      (x-upper (lp-matrices-x-upper lp-matrices)))
+    (symbol-macrolet ((x-lower (lp-matrices-x-lower matrices))
+                      (x-upper (lp-matrices-x-upper matrices)))
       (multiple-value-setq (x-lower x-upper)
-        (opt-bounds variables constraints
-                    :default-lower default-x-lower
-                    :default-lower default-x-upper)))
-    lp-matrices))
+        (optexp-bounds-matrix oe)))
+    matrices))
+
 
 (defun opt-result (result-type variables vec)
   (assert (= (length variables)
@@ -120,26 +106,14 @@
              var type))
     (values)))
 
-(defun lp (constraints objectives
-           &key
-             x
-             time
-             (strict t)
-             variables
-             binary-variables
-             integer-variables
-             (solver *default-lp-solver*)
-             (result-type :alist)
-             (default-x-lower 0d0)
-             (default-x-upper most-positive-double-float)
-             (default-b-lower most-negative-double-float)
-             (default-b-upper most-positive-double-float))
-  (let* ((matrices (lp-matrices constraints objectives
-                               :variables variables
-                               :default-x-lower default-x-lower
-                               :default-x-upper default-x-upper
-                               :default-b-lower default-b-lower
-                               :default-b-upper default-b-upper))
+(defun optexp-solve (oe
+                     &key
+                       x
+                       time
+                       (strict t)
+                       (solver *default-lp-solver*)
+                       (result-type :alist))
+  (let* ((matrices (optexp-matrix oe))
          ;; context
          (cx (opt-create (lp-matrices-a-crs matrices)
                          (lp-matrices-b-lower matrices)
@@ -156,10 +130,10 @@
     ;; variable type
     (flet ((set-type (type vv)
              (let ((variables (lp-matrices-variables matrices)))
-               (dolist (v vv)
+               (do-tree-set (v vv)
                  (opt-set-type cx variables v type)))))
-      (set-type :integer integer-variables)
-      (set-type :binary binary-variables))
+      (set-type :integer (optexp-integer-variables oe))
+      (set-type :binary (optexp-binary-variables oe)))
     ;; solve
     (with-foreign-simple-vector (x n-x) x :output
       (sb-int:with-float-traps-masked (:divide-by-zero :overflow  :invalid)
@@ -176,7 +150,32 @@
                     (lp-matrices-variables matrices)
                     x))))
 
-
+(defun lp (constraints objectives
+           &key
+             x
+             time
+             (strict t)
+             binary-variables
+             integer-variables
+             (solver *default-lp-solver*)
+             (result-type :alist)
+             (default-x-lower 0d0)
+             (default-x-upper most-positive-double-float)
+             (default-b-lower most-negative-double-float)
+             (default-b-upper most-positive-double-float))
+  (optexp-solve (optexp :constraints constraints
+                        :objective objectives
+                        :binary-variables binary-variables
+                        :integer-variables integer-variables
+                        :default-x-lower default-x-lower
+                        :default-x-upper default-x-upper
+                        :default-b-lower default-b-lower
+                        :default-b-upper default-b-upper)
+                :x x
+                :time time
+                :strict strict
+                :solver solver
+                :result-type result-type))
 
 ;; (defstruct (qp-matrices (:include lp-matrices))
 ;;   D
