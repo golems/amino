@@ -47,6 +47,7 @@
   :components ((:file "package")
                ;; TYPE
                (:file "basic-type" :depends-on ("package"))
+               (:file "sparse" :depends-on ("package"))
                ;; FFI
                (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
                (:file "ffi" :depends-on ("grovel" "basic-type"))

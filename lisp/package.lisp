@@ -53,6 +53,8 @@
    :%matrix-stride
    :%matrix-cols
    :%matrix-rows
+   ;; Sparse
+   :make-crs-matrix
    ;; conditions
    :matrix-storage-error
    :matrix-dimension-error
@@ -104,6 +106,8 @@
    :fnvec-flatten
    :make-matrix
    :matref
+   ;; Sparse
+   :make-crs-matrix
    ;; TF Types
    :+tf-ident+
    :vec3 :vec3* :with-vec3
@@ -151,5 +155,14 @@
    :inverse
    ;; Misc
    :parse-float
+   ;; optimization
+   :linear-term
+   :quadratic-term
+   :lp
+   :with-linear-term
+   :with-quadratic-term
+   :with-constraint
+   :opt-constraint
+   :opt-constraint-bounds
    )
   (:nicknames :aa))

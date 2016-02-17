@@ -93,3 +93,24 @@
 
 (use-foreign-library libclp)
 (use-foreign-library libamino-opt-clp)
+
+;; GLPK
+(define-foreign-library libamino-opt-glpk
+  (:unix (:or "libamino_opt_glpk.so"
+              "libamino_opt_glpk.so"
+              (:default "libamino_opt_glpk")))
+  (t (:default "libamino_opt_glpk")))
+
+(define-foreign-library libglpk
+  (:unix (:or "liblglpk.so"
+              "liblglpk.so"
+              (:default "libglpk")))
+  (t (:default "libglpk")))
+
+(use-foreign-library libglpk)
+(use-foreign-library libamino-opt-glpk)
+
+
+;; Type
+(amino-ffi::def-foreign-container opt-cx opt-cx-t
+  :destructor aa-opt-destroy)

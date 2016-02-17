@@ -187,6 +187,10 @@ AA_API void
 aa_rx_win_sg_gl_init( struct aa_rx_win * win,
                       struct aa_rx_sg *sg );
 
+
+AA_API void
+aa_rx_win_get_tf_cam( const struct aa_rx_win * win, double *E );
+
 /* /\** */
 /*  * Render scenegraph to the window. */
 /*  * */

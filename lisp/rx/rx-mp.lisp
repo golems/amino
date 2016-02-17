@@ -181,6 +181,24 @@
     (check-type n-path integer)
     n-path))
 
+(defun sequence-motion-plan (sub-scene-graph points)
+  (let* ((n-p  (length points))
+         (n-q (sub-scene-graph-all-config-count sub-scene-graph))
+         (path (make-matrix n-q n-p)))
+    ;; fill in path
+    (loop for j from 0
+       for p in points
+       do (loop for i below n-q
+             for name = (sub-scene-graph-all-config-name sub-scene-graph i)
+             for q = (robray::configuration-map-find p name)
+             do
+               (setf (matref path i j) q)))
+    (print path)
+    (make-motion-plan :sub-scene-graph sub-scene-graph
+                      :path (amino::matrix-data path))))
+
+
+
 (defun motion-plan (sub-scene-graph start-map
                     &key
                       jointspace-goal
@@ -263,6 +281,30 @@
          (path (motion-plan-path motion-plan))
          (i-0 (- (length path) n-sub)))
     (subseq path i-0)))
+
+
+
+(defun motion-plan-rope (mp)
+  (let* ((ssg (motion-plan-sub-scene-graph mp))
+         (path (motion-plan-path mp))
+         (m (sub-scene-graph-all-config-count ssg))
+         (n (/ (length path) m))
+         (names (loop for i below m collect (sub-scene-graph-all-config-name ssg i))))
+    (rope
+     (format nil "~&# ~{~A, ~}" names)
+     (format nil "~{~&~{~F ~}~}"
+             (loop for j below n
+                collect
+                  (loop for i below m
+                     collect (aref path (+ i (* j m)))))))))
+
+(defun output-motion-plans (list directory)
+  (loop for mp in list
+     for rope = (motion-plan-rope mp)
+     for i from 0
+     do (output-rope rope
+                     (rope directory "/" (format nil "mp-~D.dat" i))
+                     :if-exists :supersede)))
 
 
 

@@ -47,5 +47,6 @@
   :components ( ;; Opt
                (cffi-grovel:grovel-file "opt/opt-grovel" :depends-on ())
                (:file "opt/opt-lib" :depends-on ("opt/opt-grovel"))
+               (:file "opt/opt-foreign" :depends-on ("opt/opt-lib"))
                (:file "opt/opt-symbolic" :depends-on ("opt/opt-lib"))
-               (:file "opt/opt-matrix" :depends-on ("opt/opt-symbolic"))))
+               (:file "opt/opt-matrix" :depends-on ("opt/opt-symbolic" "opt/opt-foreign"))))

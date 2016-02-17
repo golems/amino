@@ -1,28 +1,23 @@
-/* -*- mode: C; c-basic-offset: 4 -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2013, Georgia Tech Research Corporation
+ * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@gatech.edu>
- * Georgia Tech Humanoid Robotics Lab
- * Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
- *
- *
- * This file is provided under the following "BSD-style" License:
- *
+ * Author(s): Neil T. Dantam <ntd@rice.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
  *   conditions are met:
- *
  *   * Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
- *
  *   * Redistributions in binary form must reproduce the above
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
+ *   * Neither the name of copyright holder the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -40,20 +35,33 @@
  *
  */
 
-#ifndef AMINO_TEST_H
-#define AMINO_TEST_H
+
+#include "amino.h"
+#include "amino/opt/opt.h"
+
+#include "opt_internal.h"
+
+AA_API int
+aa_opt_solve( struct aa_opt_cx *cx, size_t n, double *x )
+{
+    return cx->vtab->solve(cx,n,x);
+}
 
 
-void test( const char *name, int check ) ;
-void test_feq( const char *name, double a, double b, double tol );
+AA_API int
+aa_opt_destroy( struct aa_opt_cx *cx ) {
+    return cx->vtab->destroy(cx);
+}
 
-void afeq( double a, double b, double tol ) ;
-void aafeq( const char *name, double a, double b, double tol ) ;
-void aveq( const char * name, size_t n, const double *a, const double *b, double tol ) ;
-void aneq( double a, double b, double tol ) ;
+AA_API int
+aa_opt_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
+{
+    return cx->vtab->set_direction(cx, dir);
+}
 
-/* Set limits*/
-void aa_test_ulimit( void );
-
-
-#endif
+AA_API int
+aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
+                         const double *Q_values, int *Q_cols, int *Q_row_ptr )
+{
+    return cx->vtab->set_quad_obj_crs( cx, n, Q_values, Q_cols, Q_row_ptr );
+}

@@ -391,7 +391,11 @@ AA_API void aa_tf_12inv( const double T[AA_RESTRICT 12],
 AA_API void aa_tf_93inv( const double R[AA_RESTRICT 9],
                          const double v[AA_RESTRICT 3],
                          double Ri[AA_RESTRICT 9], double vi[AA_RESTRICT 3] );
-/// invert transform
+/**
+ * Invert transform
+ *
+ * Unit quaternion inverse is equal to the conjuage
+ */
 AA_API void aa_tf_qv_conj( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                            double qc[AA_RESTRICT 4], double vc[AA_RESTRICT 3]  );
 

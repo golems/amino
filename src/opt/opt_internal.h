@@ -5,9 +5,6 @@
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
- * Georgia Tech Humanoid Robotics Lab
- * Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
- *
  *
  * This file is provided under the following "BSD-style" License:
  *
@@ -15,14 +12,15 @@
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
  *   conditions are met:
- *
  *   * Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
- *
  *   * Redistributions in binary form must reproduce the above
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
+ *   * Neither the name of copyright holder the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -39,45 +37,74 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#ifndef AMINO_OPT_INTERNAL_H
+#define AMINO_OPT_INTERNAL_H
 
-//#define AA_ALLOC_STACK_MAX
-#include "amino.h"
-#include "amino/test.h"
-#include "amino/opt/lp.h"
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <inttypes.h>
-#include <sys/resource.h>
-
-
-int main( int argc, char **argv ) {
-    (void) argc; (void) argv;
-
-
-    double A[] = {120, 110, 1,  210, 30, 1};
-    double b_l[] = {-DBL_MAX, -DBL_MAX, -DBL_MAX};
-    double b_u[] = {15000, 4000, 75};
-    double c[] = {1, 1};
-
-    double x_l[] = {0,0};
-    double x_u[] = {1000,1000};
-
-    double x[2];
-
-    int r = aa_opt_lp_clp( 3,2,
-                           A, 3,
-                           b_l, b_u,
-                           c,
-                           x_l, x_u,
-                           x );
-    printf("r: %d\n", r );
-
-    aa_dump_vec( stdout, x, 2 );
-
-    double xref[] = {21.875, 53.125};
-
-    assert( aa_feq( x[0] + x[1],
-                    xref[0] + xref[1],
-                    1e-6 ) );
+static inline int
+aa_opt_is_eq( double l, double u)
+{
+    return aa_feq(l,u,0);
 }
+
+static inline int
+aa_opt_is_lbound( double l )
+{
+    return -DBL_MAX < l && !isinf(l);
+}
+
+static inline int
+aa_opt_is_ubound( double u )
+{
+    return DBL_MAX > u && !isinf(u);
+}
+
+static inline int
+aa_opt_is_leq( int lb, int ub ) {
+    return !lb && ub;
+}
+
+static inline int
+aa_opt_is_geq( int lb, int ub ) {
+    return lb && !ub;
+}
+
+static inline int
+aa_opt_is_bound( int lb, int ub ) {
+    return lb && ub;
+}
+
+static inline int
+aa_opt_is_free( int lb, int ub ) {
+    return !lb && !ub;
+}
+
+
+struct aa_opt_vtab {
+    int (*solve)( struct aa_opt_cx *cx, size_t n, double *x );
+    int (*destroy)( struct aa_opt_cx *cx );
+    int (*set_direction)( struct aa_opt_cx *cx, enum aa_opt_direction dir );
+    int (*set_quad_obj_crs)( struct aa_opt_cx *cx, size_t n,
+                             const double *Q_values, int *Q_cols, int *Q_row_ptr );
+    int
+    (*set_type)( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type );
+};
+
+
+struct aa_opt_cx {
+    struct aa_opt_vtab *vtab;
+    void *data;
+};
+
+static inline struct aa_opt_cx* cx_finish ( struct aa_opt_vtab *vtab, void *p )
+{
+    if( p ) {
+        struct aa_opt_cx *cx = AA_NEW(struct aa_opt_cx);
+        cx->vtab = vtab;
+        cx->data = p;
+        return cx;
+    } else {
+        return NULL;
+    }
+}
+
+#endif /*AMINO_OPT_INTERNAL_H*/

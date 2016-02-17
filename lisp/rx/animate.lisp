@@ -298,12 +298,12 @@
        (let ((frame-file (format nil "frame-~D.pov" frame)))
          ;(print frame-file)
          ;(print configuration)
-         (scene-graph-pov-frame scene-graph
-                                :options options
-                                :configuration-map configuration
-                                :output frame-file
-                                :directory output-directory
-                                :include include)))
+         (render-scene-graph scene-graph
+                             :options options
+                             :configuration-map configuration
+                             :output frame-file
+                             :directory output-directory
+                             :include include)))
   ;; Convert Frames
   (when render-frames
     (net-render :directory output-directory

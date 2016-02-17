@@ -72,9 +72,12 @@
    :render-options-fast
    :render-options-medium
    :render-options-full-hd
+   :render-scene-graph
 
    ;; Scene Graph Manipulation
    :scene-graph
+   :scene-graph-find
+   :scene-graph-parent-name
    :scene-graph-f
    :scene-graph-remove-frame
    :scene-graph-reparent

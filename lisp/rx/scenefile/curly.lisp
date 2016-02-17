@@ -276,8 +276,15 @@
                  (case type
                    ((:float :integer :identifier) (expr-next (cons token e)))
                    (- (expr-val (list* '_  e)))
+                   (#\( (expr-next (cons (expr-paren) e)))
                    (otherwise (values (expr-result e)
                                       type token)))))
+             (expr-paren ()
+               (multiple-value-bind (r type token) (expr)
+                 (declare (ignore token))
+                 (case type
+                   (#\) r)
+                   (otherwise (parse-error type ")")))))
              (array (elements)
                (multiple-value-bind (e type token) (expr)
                  (declare (ignore token))

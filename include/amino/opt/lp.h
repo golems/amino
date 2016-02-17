@@ -51,6 +51,7 @@ typedef int aa_opt_lp_solver (
     const double *x_lower, const double *x_upper,
     double *x );
 
+
 AA_API int aa_opt_lp_lpsolve (
     size_t m, size_t n,
     const double *A, size_t ldA,
@@ -63,6 +64,47 @@ AA_API int aa_opt_lp_lpsolve (
 AA_API int aa_opt_lp_clp (
     size_t m, size_t n,
     const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x );
+
+AA_API int aa_opt_lp_glpk (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x );
+
+typedef int aa_opt_lp_crs_solver (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x );
+
+
+AA_API int aa_opt_lp_crs_lpsolve (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x );
+
+AA_API int aa_opt_lp_crs_clp (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x );
+
+AA_API int aa_opt_lp_crs_glpk (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
     const double *b_lower, const double *b_upper,
     const double *c,
     const double *x_lower, const double *x_upper,

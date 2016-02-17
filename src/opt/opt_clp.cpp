@@ -38,8 +38,193 @@
 
 #include "amino.h"
 #include "amino/opt/lp.h"
+#include "amino/opt/opt.h"
+#include "opt_internal.h"
 
 #include <coin/ClpSimplex.hpp>
+
+typedef ClpSimplex SolverType;
+
+
+int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
+{
+    SolverType * M = static_cast<SolverType*>(cx->data);
+
+    /* Solve */
+    int r;
+
+
+    try {
+        r = M->initialSolve();
+    } catch (CoinError e) {
+        e.print();
+        return -1;
+    } catch(...) {
+        return -1;
+    }
+
+    /* Result */
+    AA_MEM_CPY( x, M->getColSolution(), n );
+
+    return r;
+}
+int s_destroy( struct aa_opt_cx *cx )
+{
+    if( cx ) {
+        SolverType * M = static_cast<SolverType*>(cx->data);
+        if( M ) {
+            delete M;
+        }
+        free(cx);
+    }
+    return 0;
+}
+
+
+static int
+s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
+{
+    SolverType * M = static_cast<SolverType*>(cx->data);
+    switch(dir) {
+    case AA_OPT_MAXIMIZE:
+        M->setOptimizationDirection( -1 );
+        return 0;
+    case AA_OPT_MINIMIZE:
+        M->setOptimizationDirection( 1 );
+        return 0;
+    }
+    return -1;
+}
+
+static int s_set_quad_obj_crs( struct aa_opt_cx *cx,
+                               size_t n, const double *Q_values, int *Q_cols, int *Q_row_ptr )
+{
+    //int ni = (int)n;
+    // std::vector<int> Q_rows;
+    // for( int i = 0; i < ni; i ++ ) {
+    //     int k0 = Q_row_ptr[i];
+    //     int k1 = Q_row_ptr[i+1];
+    //     for( int k = k0; k < k1; k++ ) {
+    //         Q_rows.push_back(i);
+    //     }
+    // }
+
+    // CoinPackedMatrix Q( false, &Q_rows[0], Q_cols, Q_values, (int)Q_rows.size() );
+
+
+    // Q.dumpMatrix();
+
+    //SolverType * M = static_cast<SolverType*>(cx->data);
+    //int n = M->getNumCols();
+
+    // for( int j = 0; j < ni; j ++ ) {
+    //     int i0 = Q_row_ptr[j];
+    //     int i1 = Q_row_ptr[j+1];
+    //     fprintf(stderr, "%d: %d, %d\n", j, i0, i1 );
+    //     if( i1 > i0 ) {
+    //         Q.appendRow( i1-i0, Q_cols+i0, Q_values+i0 );
+    //     }
+    // }
+
+
+
+    // M->loadQuadraticObjective(Q);
+    // M->loadQuadraticObjective( (int)n, Q_row_ptr, Q_cols, Q_values );
+
+    // return 0;
+    return -1;
+}
+
+static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
+    return -1;
+}
+
+
+static struct aa_opt_vtab s_vtab = {
+    .solve = s_solve,
+    .destroy = s_destroy,
+    .set_direction = s_set_direction,
+    .set_quad_obj_crs = s_set_quad_obj_crs,
+    .set_type = s_set_type
+};
+
+
+AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    )
+{
+
+
+    ClpSimplex *pM = new ClpSimplex();
+    ClpSimplex &M = *pM;
+
+    int rows[m];
+    int mi = (int)m;
+    int ni = (int)n;
+    M.resize(mi,0);
+
+    for( int i = 0; i < mi; i ++ ) rows[i] = i;
+
+    /* A, c, l, u */
+    for( size_t j = 0; j < n; j ++ ) {
+        M.addColumn( mi, rows,
+                     AA_MATCOL(A,ldA,j),
+                     x_lower[j], x_upper[j], c[j] );
+    }
+
+    /* b */
+    for( int i = 0; i < mi; i ++ ) {
+        M.setRowBounds(i,b_lower[i],b_upper[i]);
+    }
+
+
+    M.setOptimizationDirection( -1 );
+
+
+    return cx_finish( &s_vtab, pM );
+}
+
+
+AA_API struct aa_opt_cx* aa_opt_clp_crscreate (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper )
+{
+    ClpSimplex *pM = new ClpSimplex();
+    ClpSimplex &M = *pM;
+    int rows[m];
+    int mi = (int)m;
+    int ni = (int)n;
+    M.resize(0,ni);
+
+    /* A, b */
+    for( int i = 0; i < mi; i ++ ) {
+        int start = A_row_ptr[i];
+        int end = A_row_ptr[i + 1];
+        M.addRow( end - start,
+                  A_cols+start,
+                  A_values+start,
+                  b_lower[i],
+                  b_upper[i] );
+    }
+
+    /* c, xl, xu */
+    M.chgColumnLower(x_lower);
+    M.chgColumnUpper(x_upper);
+    M.chgObjCoefficients(c);
+
+    /* Solve */
+    M.setOptimizationDirection( -1 );
+
+
+    return cx_finish( &s_vtab, pM );
+}
 
 int aa_opt_lp_clp (
     size_t m, size_t n,
@@ -49,46 +234,33 @@ int aa_opt_lp_clp (
     const double *x_lower, const double *x_upper,
     double *x )
 {
-    ClpSimplex M;
-    int rows[m];
-    int mi = (int)m;
-    int ni = (int)n;
-    M.resize(mi,0);
 
-    for( int i = 0; i < mi; i ++ ) rows[i] = i;
+    struct aa_opt_cx *cx = aa_opt_clp_gmcreate( m, n,
+                                                A, ldA,
+                                                b_lower, b_upper,
+                                                c,
+                                                x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
 
-    /* b */
-    for( int i = 0; i < mi; i ++ ) {
-        M.setRowBounds(i,b_lower[i],b_upper[i]);
-    }
+    return r;
+}
 
-    /* A, c, l, u */
-    for( size_t j = 0; j < n; j ++ ) {
-        M.addColumn( mi, rows,
-                     AA_MATCOL(A,ldA,j),
-                     x_lower[j], x_upper[j], c[j] );
-    }
+AA_API int aa_opt_lp_crs_clp (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    struct aa_opt_cx *cx = aa_opt_clp_crscreate( m, n,
+                                                 A_values, A_cols, A_row_ptr,
+                                                 b_lower, b_upper,
+                                                 c,
+                                                 x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
 
-    M.setOptimizationDirection( -1 );
-
-    /* Solve */
-    int r = M.initialSolve();
-
-    // const double * columnPrimal = M.getColSolution();
-    // const double * columnLower = M.columnLower();  // Alternatively getColUpper()
-    // const double * columnUpper = M.columnUpper();
-    // const double * columnObjective = M.objective();
-
-    // printf("x: "); aa_dump_vec(stdout, columnPrimal, n );
-    // printf("l: "); aa_dump_vec(stdout, columnLower, n );
-    // printf("u: "); aa_dump_vec(stdout, columnUpper, n );
-    // printf("c: "); aa_dump_vec(stdout, columnObjective, n );
-    // printf("rl: "); aa_dump_vec(stdout, M.rowLower(), m );
-    // printf("ru: "); aa_dump_vec(stdout, M.rowUpper(), m );
-    // printf("ra: "); aa_dump_vec(stdout, M.getRowActivity(), m );
-
-    /* Result */
-    AA_MEM_CPY( x, M.getColSolution(), n );
-
-    return 0;
+    return r;
 }

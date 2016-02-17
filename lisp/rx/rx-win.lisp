@@ -90,6 +90,10 @@
   (win rx-win-t)
   (mp-seq (rx-mp-seq-t)))
 
+(cffi:defcfun aa-rx-win-get-tf-cam :void
+  (win rx-win-t)
+  (e :pointer))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -214,3 +218,32 @@
                                 (mp-seq-append-mp mp-seq motion-plan))
                               (make-mp-seq)
                               motion-plans))))
+
+(defun win-tf-camera (&optional (window *window*))
+  (let ((vec (make-vec 7)))
+    (declare (dynamic-extent vec))
+    (cffi:with-pointer-to-vector-data (vec vec)
+      (aa-rx-win-get-tf-cam window vec))
+    (tf vec)))
+
+
+(defun render-win (&key
+                     (window *window*)
+                     (render t)
+                     (options (render-options-default))
+                     configuration-map
+                     output
+                     (directory *robray-tmp-directory*)
+                     include
+                     (default-configuration 0d0))
+  "Render the scene graph currently displayed in WINDOW"
+  ;; TODO: configurations
+  (render-scene-graph (mutable-scene-graph-scene-graph (rx-win-mutable-scene-graph window))
+                      :camera-tf (win-tf-camera window)
+                      :render render
+                      :options options
+                      :configuration-map configuration-map
+                      :output output
+                      :directory directory
+                      :include include
+                      :default-configuration default-configuration))

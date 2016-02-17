@@ -40,54 +40,19 @@
 
 (defparameter *default-lp-solver* :clp)
 
-(def-la-cfun ("aa_opt_lp_clp" aa-opt-lp-clp
-                              :pointer-type :pointer) :int
-  (m size-t)
-  (n size-t)
-  (A :matrix)
-  (b-lower :pointer)
-  (b-upper :pointer)
-  (c :pointer)
-  (x-lower :pointer)
-  (x-upper :pointer)
-  (x :pointer))
-
-(def-la-cfun ("aa_opt_lp_lpsolve" aa-opt-lp-lpsolve
-                              :pointer-type :pointer) :int
-  (m size-t)
-  (n size-t)
-  (A :matrix)
-  (b-lower :pointer)
-  (b-upper :pointer)
-  (c :pointer)
-  (x-lower :pointer)
-  (x-upper :pointer)
-  (x :pointer))
-
-
-(defun solver-function (solver)
-  (ecase solver
-    (:clp #'aa-opt-lp-clp)
-    (:lpsolve #'aa-opt-lp-lpsolve)))
-
 (defstruct lp-matrices
   variables
-  A
+  A-crs
   b-lower
   b-upper
   c
+  q
   x-lower
   x-upper)
 
-(defstruct (qp-matrices (:include lp-matrices))
-  D
-  c0)
-
 
 (defun opt-var-count (problem)
-  (matrix-cols (lp-matrices-a problem)))
-
-
+  (amino-type::%crs-matrix-cols (lp-matrices-a-crs problem)))
 
 (defun lp-matrices (constraints objectives
                     &key
@@ -100,57 +65,29 @@
   (let* ((variables (or variables
                         (opt-variables constraints objectives)))
          (lp-matrices (or lp-matrices
-                          (make-lp-matrices :variables variables))))
+                          (make-lp-matrices :variables variables)))
+         (constraints (normalize-constraints constraints)))
     ;; constraints
-    (multiple-value-bind (b-lower A b-upper)
-        (opt-constraint-matrices variables constraints
-                                 :default-lower default-b-lower
-                                 :default-upper default-b-upper)
-      (setf (lp-matrices-b-lower lp-matrices) b-lower
-            (lp-matrices-A lp-matrices) A
-            (lp-matrices-b-upper lp-matrices) b-upper))
+    (symbol-macrolet ((b-lower (lp-matrices-b-lower lp-matrices))
+                      (A-crs (lp-matrices-a-crs lp-matrices))
+                      (b-upper (lp-matrices-b-upper lp-matrices)))
+      (multiple-value-setq (b-lower A-crs b-upper)
+        (opt-constraint-crs variables constraints
+                            :default-lower default-b-lower
+                            :default-upper default-b-upper)))
     ;; objectives
-    (setf (lp-matrices-c lp-matrices)
-          (opt-linear-objective variables objectives))
+    (symbol-macrolet ((c (lp-matrices-c lp-matrices))
+                      (q (lp-matrices-q lp-matrices)))
+      (multiple-value-setq (c q)
+        (opt-objective variables objectives)))
     ;; bounds
-    (multiple-value-bind (x-lower x-upper)
+    (symbol-macrolet ((x-lower (lp-matrices-x-lower lp-matrices))
+                      (x-upper (lp-matrices-x-upper lp-matrices)))
+      (multiple-value-setq (x-lower x-upper)
         (opt-bounds variables constraints
                     :default-lower default-x-lower
-                    :default-lower default-x-upper)
-      (setf (lp-matrices-x-lower lp-matrices) x-lower
-            (lp-matrices-x-upper lp-matrices) x-upper))
+                    :default-lower default-x-upper)))
     lp-matrices))
-
-
-(defun lp-solve (lp-matrices
-                 &key
-                   (solver *default-lp-solver*)
-                   x)
-  (let ((r)
-        (x (or x (make-vec (opt-var-count lp-matrices))))
-        (solver (solver-function solver)))
-    (with-foreign-matrix (a ld-a m n) (lp-matrices-a lp-matrices) :input
-      (with-foreign-simple-vector (b-lower n-b-lower) (lp-matrices-b-lower lp-matrices) :input
-        (with-foreign-simple-vector (b-upper n-b-upper) (lp-matrices-b-upper lp-matrices) :input
-          (with-foreign-simple-vector (c n-c) (lp-matrices-c lp-matrices) :input
-            (with-foreign-simple-vector (x-lower n-x-lower) (lp-matrices-x-lower lp-matrices) :input
-              (with-foreign-simple-vector (x-upper n-x-upper) (lp-matrices-x-upper lp-matrices) :input
-                (with-foreign-simple-vector (x n-x) x :output
-                  (assert (= m n-b-lower n-b-upper))
-                  (assert (= n n-c n-x-lower n-x-upper n-x))
-                  (sb-int:with-float-traps-masked (:divide-by-zero :overflow)
-                    (setq r
-                          (funcall solver
-                                   m n
-                                   a ld-a
-                                   b-lower b-upper
-                                   c
-                                   x-lower x-upper
-                                   x))))))))))
-    (unless (zerop r)
-      (error "Could not solve LP"))
-    x))
-
 
 (defun opt-result (result-type variables vec)
   (assert (= (length variables)
@@ -174,6 +111,8 @@
 
 (defun lp (constraints objectives
            &key
+             x
+             (strict t)
              variables
              (solver *default-lp-solver*)
              (result-type :alist)
@@ -181,16 +120,44 @@
              (default-x-upper most-positive-double-float)
              (default-b-lower most-negative-double-float)
              (default-b-upper most-positive-double-float))
-  (let ((matrices (lp-matrices constraints objectives
+  (let* ((matrices (lp-matrices constraints objectives
                                :variables variables
                                :default-x-lower default-x-lower
                                :default-x-upper default-x-upper
                                :default-b-lower default-b-lower
-                               :default-b-upper default-b-upper)))
+                               :default-b-upper default-b-upper))
+         ;; context
+         (cx (opt-create (lp-matrices-a-crs matrices)
+                         (lp-matrices-b-lower matrices)
+                         (lp-matrices-b-upper matrices)
+                         (lp-matrices-c matrices)
+                         (lp-matrices-x-lower matrices)
+                         (lp-matrices-x-upper matrices)
+                         :solver solver))
+         (x (or x (make-vec (opt-var-count matrices))))
+         (r))
+    ;; parameters
+    (when-let ((q-crs (lp-matrices-q matrices)))
+      (opt-set-quad-obj cx q-crs))
+    ;; solve
+    (with-foreign-simple-vector (x n-x) x :output
+      (sb-int:with-float-traps-masked (:divide-by-zero :overflow  :invalid)
+        (setq r (aa-opt-solve cx n-x x))))
+    ;; check
+    (when (and strict (not (zerop r)))
+      (error "Could not solve LP: ~D" r))
+    ;; result
     (if (eq :matrix result-type)
         matrices
-        (opt-result result-type (lp-matrices-variables matrices)
-                    (lp-solve matrices :solver solver)))))
+        (opt-result result-type
+                    (lp-matrices-variables matrices)
+                    x))))
+
+
+
+;; (defstruct (qp-matrices (:include lp-matrices))
+;;   D
+;;   c0)
 
 
 ;; (lp-solve (lp-matrices '((<= (+ (* 120 x) (* 210 y)) 15000)
@@ -201,6 +168,67 @@
 ;;                        '((* 1 x) (* 1 y))
 ;;                        :variables '(x y))
 ;;           :solver :clp)
+
+
+
+;; (def-la-cfun ("aa_opt_lp_clp" aa-opt-lp-clp
+;;                               :pointer-type :pointer) :int
+;;   (m size-t)
+;;   (n size-t)
+;;   (A :matrix)
+;;   (b-lower :pointer)
+;;   (b-upper :pointer)
+;;   (c :pointer)
+;;   (x-lower :pointer)
+;;   (x-upper :pointer)
+;;   (x :pointer))
+
+
+;; (def-la-cfun ("aa_opt_lp_lpsolve" aa-opt-lp-lpsolve
+;;                               :pointer-type :pointer) :int
+;;   (m size-t)
+;;   (n size-t)
+;;   (A :matrix)
+;;   (b-lower :pointer)
+;;   (b-upper :pointer)
+;;   (c :pointer)
+;;   (x-lower :pointer)
+;;   (x-upper :pointer)
+;;   (x :pointer))
+
+
+
+;; (defun lp-solve (lp-matrices
+;;                  &key
+;;                    (strict nil)
+;;                    (solver *default-lp-solver*)
+;;                    x)
+;;   (let ((r)
+;;         (x (or x (make-vec (opt-var-count lp-matrices))))
+;;         (solver (solver-function solver)))
+;;     (with-foreign-matrix (a ld-a m n) (lp-matrices-a lp-matrices) :input
+;;       (with-foreign-simple-vector (b-lower n-b-lower) (lp-matrices-b-lower lp-matrices) :input
+;;         (with-foreign-simple-vector (b-upper n-b-upper) (lp-matrices-b-upper lp-matrices) :input
+;;           (with-foreign-simple-vector (c n-c) (lp-matrices-c lp-matrices) :input
+;;             (with-foreign-simple-vector (x-lower n-x-lower) (lp-matrices-x-lower lp-matrices) :input
+;;               (with-foreign-simple-vector (x-upper n-x-upper) (lp-matrices-x-upper lp-matrices) :input
+;;                 (with-foreign-simple-vector (x n-x) x :output
+;;                   (assert (= m n-b-lower n-b-upper))
+;;                   (assert (= n n-c n-x-lower n-x-upper n-x))
+;;                   (sb-int:with-float-traps-masked (:divide-by-zero :overflow)
+;;                     (setq r
+;;                           (funcall solver
+;;                                    m n
+;;                                    a ld-a
+;;                                    b-lower b-upper
+;;                                    c
+;;                                    x-lower x-upper
+;;                                    x))))))))))
+;;     (when (and strict (not (zerop r)))
+;;       (error "Could not solve LP: ~D" r))
+;;     x))
+
+
 
 
 ;; (defstruct qp

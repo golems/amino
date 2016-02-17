@@ -64,6 +64,14 @@ void test_feq( const char *name, double a, double b, double tol )
     }
 }
 
+void aafeq( const char * name, double a, double b, double tol ) {
+    if( !aa_feq( a, b, tol) ) {
+        fprintf( stderr, "FAILED: %s\n",name);
+        fprintf( stderr, "a: %f, b: %f\n", a, b);
+        abort();
+    }
+}
+
 void aveq( const char * name,
                   size_t n, const double *a, const double *b, double tol ) {
     if( !aa_veq(n, a, b, tol) ) {

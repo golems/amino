@@ -57,7 +57,8 @@
                (:file "src/scenefile/moveit" :depends-on ("src/scenegraph" "src/mesh"))
                (:file "src/scenefile/scenefile"
                       :depends-on ("src/scenefile/urdf" "src/scenefile/curly" "src/scenefile/moveit"))
-               (:file "src/animate" :depends-on ("src/scenegraph" "src/povray"))
+               (:file "src/render" :depends-on ("src/scenegraph" "src/povray"))
+               (:file "src/animate" :depends-on ("src/scenegraph" "src/povray" "src/render"))
                (:file "src/draw" :depends-on ("src/scenegraph"))
                (:file "src/trajectory" :depends-on ("src/scenegraph"))
                (:file "src/config" :depends-on ("src/util" "src/scenefile/urdf" "src/parameters"))

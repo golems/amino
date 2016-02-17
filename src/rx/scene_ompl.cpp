@@ -196,11 +196,19 @@ static void
 path_cleanup( struct aa_rx_mp *mp, ompl::geometric::PathGeometric &path )
 {
     amino::sgSpaceInformation::Ptr &si = mp->space_information;
-    //amino::sgStateSpace *ss = si->getTypedStateSpace();
 
     if( mp->simplify ) {
         ompl::geometric::PathSimplifier ps(si);
-        ps.simplifyMax(path);
+        int n = (int)path.getStateCount();
+        path.interpolate(n*10);
+
+        for( int i = 0; i < 10; i ++ ) {
+            ps.reduceVertices(path);
+            ps.collapseCloseVertices(path);
+            ps.shortcutPath(path);
+        }
+
+        ps.smoothBSpline(path, 3, path.length()/100.0);
     }
 }
 

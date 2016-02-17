@@ -590,3 +590,9 @@ aa_rx_win_pause( struct aa_rx_win * win, int paused )
     win->paused = paused ? 1 : 0;
     pthread_mutex_unlock( &win->mutex );
 }
+
+AA_API void
+aa_rx_win_get_tf_cam( const struct aa_rx_win * win, double *E )
+{
+    AA_MEM_CPY(E, win->gl_globals->world_E_cam, 7 );
+}

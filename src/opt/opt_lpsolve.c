@@ -39,6 +39,8 @@
 #include "amino.h"
 #include "amino/opt/lp.h"
 
+#include "opt_internal.h"
+
 #include <lpsolve/lp_lib.h>
 
 int aa_opt_lp_lpsolve (
@@ -49,30 +51,161 @@ int aa_opt_lp_lpsolve (
     const double *x_lower, const double *x_upper,
     double *x )
 {
+    struct aa_opt_cx *cx = aa_opt_lpsolve_gmcreate( m, n,
+                                                    A, ldA,
+                                                    b_lower, b_upper,
+                                                    c,
+                                                    x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
+
+    return r;
+
+
+}
+
+AA_API int aa_opt_lp_crs_lpsolve (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper,
+    double *x )
+{
+    struct aa_opt_cx *cx = aa_opt_lpsolve_crscreate( m, n,
+                                                     A_values, A_cols, A_row_ptr,
+                                                     b_lower, b_upper,
+                                                     c,
+                                                     x_lower, x_upper );
+    int r = aa_opt_solve( cx, n, x);
+    aa_opt_destroy(cx);
+
+    return r;
+}
+
+
+
+
+
+
+int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
+{
+
+    lprec *lp = (lprec*)cx->data;
+    int r = solve(lp);
+    assert((int)n == get_Ncolumns(lp));
+
+    /* result */
+    get_variables(lp,x);
+
+    return r;
+}
+int s_destroy( struct aa_opt_cx *cx )
+{
+    if( cx ) {
+        lprec *lp = (lprec*)cx->data;
+        if( lp ) {
+            delete_lp( lp );
+        }
+        free(cx);
+    }
+    return 0;
+}
+
+static int
+s_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction dir )
+{
+    lprec *lp = (lprec*)cx->data;
+    switch(dir) {
+    case AA_OPT_MAXIMIZE:
+        set_maxim(lp);
+        return 0;
+    case AA_OPT_MINIMIZE:
+        set_minim(lp);
+        return 0;
+    }
+    return -1;
+}
+
+
+static int s_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
+                               const double *Q_values, int *Q_cols, int *Q_row_ptr )
+{
+    (void)cx;
+    (void)Q_values;
+    (void)Q_cols;
+    (void)Q_row_ptr;
+    return -1;
+}
+
+static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
+    lprec *lp = (lprec*)cx->data;
+    int ii = (int) i + 1;
+
+    switch( type ) {
+    case AA_OPT_CONTINUOUS:
+        set_int(lp, ii, 0);
+        set_binary(lp, ii, 0);
+        break;
+    case AA_OPT_BINARY:
+        set_binary(lp, ii, 1);
+        break;
+    case AA_OPT_INTEGER:
+        set_int(lp, ii, 1);
+        break;
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
+static struct aa_opt_vtab vtab = {
+    .solve = s_solve,
+    .destroy = s_destroy,
+    .set_direction = s_set_direction,
+    .set_quad_obj_crs = s_set_quad_obj_crs,
+    .set_type = s_set_type
+};
+
+static struct aa_opt_cx*
+s_finish (
+    size_t m, size_t n,
+    lprec *lp,
+    const double *c,
+    const double *x_lower, const double *x_upper )
+{
+    (void)m;
+    /* c */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_obj( lp, 1+(int)j, c[j] );
+    }
+
+    /* l/u */
+    for( size_t j = 0; j < n; j ++ ) {
+        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
+    }
+
+    return cx_finish( &vtab, lp );
+}
+
+AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    )
+{
     assert( sizeof(REAL) == sizeof(*A) );
 
     int mi = (int)m;
     int ni = (int)n;
-    int r = -1;
     lprec *lp = make_lp(mi, ni);
 
     if( NULL == lp ) goto ERROR;
     set_add_rowmode(lp, FALSE);
     set_maxim(lp);
-
-    /* TODO: maybe rearrange c/A and give to lp_solve together? */
-
-    /*  printf("A:\n"); aa_dump_mat(stdout, A, ldA, n ); */
-    /* printf("bl:"); aa_dump_vec(stdout, b_lower, m ); */
-    /* printf("bu:"); aa_dump_vec(stdout, b_upper, m ); */
-    /* printf("c:"); aa_dump_vec(stdout, c, n ); */
-    /* printf("xl:"); aa_dump_vec(stdout, x_lower, n ); */
-    /* printf("xu:"); aa_dump_vec(stdout, x_upper, n ); */
-
-    /* c */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_obj( lp, 1+(int)j, c[j] );
-    }
 
     /* A, b */
     int ilp = 1;
@@ -93,28 +226,30 @@ int aa_opt_lp_lpsolve (
                 // equality
                 rh = u;
                 con_type = EQ;
-            } else if (-DBL_MAX >= l ||
-                       -1 == isinf(l) ) {
-                // less than
-                rh = u;
-                con_type = LE;
-            } else if (DBL_MAX <= u ||
-                       1 == isinf(u)) {
-                rh = l;
-                con_type = GE;
             } else {
-                // leq
-                set_rh(lp,ilp,u);
-                if( ! set_constr_type( lp, ilp, LE ) ) goto ERROR;
-                ilp++;
-                // geq
-                for( size_t j = 0; j < n; j ++ ) {
-                    int col = 1 + (int)j;
-                    double v = AA_MATREF(A, ldA, i, j);
-                    set_mat( lp, ilp, col, v );
+                int lb = aa_opt_is_lbound(l);
+                int ub = aa_opt_is_ubound(u);
+                if ( aa_opt_is_leq(lb,ub) ) {
+                    // less than
+                    rh = u;
+                    con_type = LE;
+                } else if ( aa_opt_is_geq(lb,ub) ) {
+                    rh = l;
+                    con_type = GE;
+                } else {
+                    // leq
+                    set_rh(lp,ilp,u);
+                    if( ! set_constr_type( lp, ilp, LE ) ) goto ERROR;
+                    ilp++;
+                    // geq
+                    for( size_t j = 0; j < n; j ++ ) {
+                        int col = 1 + (int)j;
+                        double v = AA_MATREF(A, ldA, i, j);
+                        set_mat( lp, ilp, col, v );
+                    }
+                    rh = l;
+                    con_type = GE;
                 }
-                rh = l;
-                con_type = GE;
             }
         }
         set_rh(lp,ilp,rh);
@@ -122,22 +257,74 @@ int aa_opt_lp_lpsolve (
         ilp++;
     }
 
-    /* l/u */
-    for( size_t j = 0; j < n; j ++ ) {
-        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
-    }
-
-    /* solve */
-    r = solve(lp);
-    assert(ni == get_Ncolumns(lp));
-
-    /* result */
-    get_variables(lp,x);
-
-     /* printf("x:"); aa_dump_vec(stdout, x, n ); */
+    return s_finish(m,n,lp,
+                    c, x_lower, x_upper);
 
 ERROR:
-    if( lp ) delete_lp(lp);
-    return r;
+    if( lp ) {
+        delete_lp(lp);
+    }
+    return NULL;
 
+}
+
+AA_API struct aa_opt_cx *
+aa_opt_lpsolve_crscreate (
+    size_t m, size_t n,
+    const double *A_values, int *A_cols, int *A_row_ptr,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper )
+{
+    assert( sizeof(REAL) == sizeof(*A_values) );
+
+    int mi = (int)m;
+    int ni = (int)n;
+    lprec *lp = make_lp(0, ni);
+
+    if( NULL == lp ) return NULL;
+    set_maxim(lp);
+
+    /* A, b_l, b_u */
+    set_add_rowmode(lp, TRUE);
+    for( int i = 0; i < mi; i ++ ) {
+        double l=b_lower[i], u=b_upper[i];
+        int start = A_row_ptr[i];
+        int end = A_row_ptr[i + 1];
+        int count = end - start;
+        double *vals = (double*)A_values + start;
+        int *raw_inds = (int*)A_cols + start;
+        int inds[count];
+        for( int j = 0; j < count; j ++ ) {
+            inds[j] = raw_inds[j] + 1;
+        }
+        double rh;
+        int con_type;
+        if( aa_feq(l,u,0) ) {
+            // equality
+            con_type = EQ;
+            rh = u;
+        } else {
+            int lb = aa_opt_is_lbound(l);
+            int ub = aa_opt_is_ubound(u);
+            if ( aa_opt_is_leq(lb,ub) )  {
+                // less than
+                con_type = LE;
+                rh = u;
+            } else if ( aa_opt_is_geq(lb,ub) )  {
+                rh = l;
+                con_type = GE;
+            } else {
+                // leq
+                add_constraintex(lp, count, vals, inds, LE, u);
+                con_type = GE;
+                rh = l;
+            }
+        }
+        add_constraintex(lp, count, vals, inds, con_type, rh);
+    }
+    set_add_rowmode(lp, FALSE);
+
+    return s_finish(m,n,lp,
+                    c, x_lower, x_upper);
 }
