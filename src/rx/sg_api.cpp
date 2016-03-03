@@ -472,23 +472,22 @@ AA_API void aa_rx_sg_get_tf (
   const struct aa_rx_sg *scene_graph,
   const aa_rx_frame_id frame_from,
   const aa_rx_frame_id frame_to,
-  const double * q,
+  const double * tf_abs,
   double *from_tf_to)
 {
-    double tf_rel[aa_rx_sg_frame_count(scene_graph)*7];
-    double tf_abs[aa_rx_sg_frame_count(scene_graph)*7];
-    size_t ld_rel = 7;
-    size_t ld_abs = 7;
-    aa_rx_sg_tf(scene_graph, aa_rx_sg_config_count(scene_graph), q, aa_rx_sg_frame_count(scene_graph),
-                tf_rel, ld_rel, tf_abs, ld_abs );
-    double from_tf_root[7];
-    aa_tf_qv_conj((frame_from==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : &tf_abs[frame_from * ld_abs]) + AA_TF_QUTR_Q, 
-                    (frame_from==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : tf_abs + frame_from * ld_abs) + AA_TF_QUTR_V, 
-                    from_tf_root + AA_TF_QUTR_Q, from_tf_root + AA_TF_QUTR_V);
-    aa_tf_qv_chain(from_tf_root + AA_TF_QUTR_Q, from_tf_root + AA_TF_QUTR_V,
-                   (frame_to==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : tf_abs + frame_to * ld_abs) + AA_TF_QUTR_Q, 
-                   (frame_to==AA_RX_FRAME_ROOT ? aa_tf_qutr_ident : tf_abs + frame_to * ld_abs) + AA_TF_QUTR_V,
-                     from_tf_to + AA_TF_QUTR_Q, from_tf_to + AA_TF_QUTR_V);
+    if (frame_from == AA_RX_FRAME_ROOT){
+        if (frame_to == AA_RX_FRAME_ROOT){
+            AA_MEM_CPY(from_tf_to, aa_tf_qutr_ident, 7);
+        } else {
+            AA_MEM_CPY(from_tf_to, &tf_abs[frame_to * 7], 7);
+        }
+    } else {
+        if (frame_to == AA_RX_FRAME_ROOT){
+            aa_tf_qutr_conj(&tf_abs[frame_from * 7], from_tf_to);
+        } else {
+            aa_tf_qutr_cmul(&tf_abs[frame_from * 7], &tf_abs[frame_from * 7], from_tf_to);
+        }
+    }
 }
 
 AA_API void aa_rx_sg_reparent (const struct aa_rx_sg *scene_graph,
