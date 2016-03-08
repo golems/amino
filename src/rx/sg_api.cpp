@@ -475,7 +475,7 @@ aa_rx_sg_set_destructor(
     scene_graph->sg->destructor_context = context;
 }
 
-AA_API void aa_rx_sg_get_tf (
+AA_API void aa_rx_sg_rel_tf (
   const struct aa_rx_sg *scene_graph,
   const aa_rx_frame_id frame_from,
   const aa_rx_frame_id frame_to,
