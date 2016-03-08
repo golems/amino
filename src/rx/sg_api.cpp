@@ -491,9 +491,9 @@ AA_API void aa_rx_sg_get_tf (
 }
 
 AA_API void aa_rx_sg_reparent (const struct aa_rx_sg *scene_graph,
-			       const aa_rx_frame_id frame,
-			       const aa_rx_frame_id new_parent,
-			       const double * q){
+                               const aa_rx_frame_id frame,
+                               const aa_rx_frame_id new_parent,
+                               const double * q){
     scene_graph->sg->frames[frame]->parent = scene_graph->sg->frames[new_parent]->name;
     AA_MEM_CPY(scene_graph->sg->frames[frame]->E, q, 7);
     scene_graph->sg->dirty_indices = 1;
