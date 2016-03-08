@@ -40,6 +40,7 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
+ #include "amino/rx/scene_geom.h"
 
 
 AA_API struct aa_rx_sg *aa_rx_sg_create()
@@ -465,4 +466,92 @@ aa_rx_sg_set_destructor(
 {
     scene_graph->sg->destructor = destructor;
     scene_graph->sg->destructor_context = context;
+}
+
+AA_API void aa_rx_sg_get_tf (
+  const struct aa_rx_sg *scene_graph,
+  const aa_rx_frame_id frame_from,
+  const aa_rx_frame_id frame_to,
+  const double * tf_abs,
+  double *from_tf_to)
+{
+    if (frame_from == AA_RX_FRAME_ROOT){
+        if (frame_to == AA_RX_FRAME_ROOT){
+            AA_MEM_CPY(from_tf_to, aa_tf_qutr_ident, 7);
+        } else {
+            AA_MEM_CPY(from_tf_to, &tf_abs[frame_to * 7], 7);
+        }
+    } else {
+        if (frame_to == AA_RX_FRAME_ROOT){
+            aa_tf_qutr_conj(&tf_abs[frame_from * 7], from_tf_to);
+        } else {
+            aa_tf_qutr_cmul(&tf_abs[frame_from * 7], &tf_abs[frame_from * 7], from_tf_to);
+        }
+    }
+}
+
+AA_API void aa_rx_sg_reparent (const struct aa_rx_sg *scene_graph,
+			       const aa_rx_frame_id frame,
+			       const aa_rx_frame_id new_parent,
+			       const double * q){
+    scene_graph->sg->frames[frame]->parent = scene_graph->sg->frames[new_parent]->name;
+    AA_MEM_CPY(scene_graph->sg->frames[frame]->E, q, 7);
+    scene_graph->sg->dirty_indices = 1;
+}
+
+struct sg_copy_geom_cx{
+    const aa_rx_sg *sg_old;
+    aa_rx_sg *sg_new;
+};
+
+static void sg_copy_geom(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom){
+    sg_copy_geom_cx * cx = (sg_copy_geom_cx* ) context;
+    aa_rx_geom_attach(cx->sg_new, aa_rx_sg_frame_name(cx->sg_old, frame_id), geom);
+};
+
+AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
+    aa_rx_sg * dest = aa_rx_sg_create();
+
+    // add frames
+    for (size_t i=0; i<orig->sg->frames.size(); i++){
+        amino::SceneFrame * f = orig->sg->frames[i];
+        amino::SceneFrame * f_new;
+        switch (f->type){
+        case AA_RX_FRAME_FIXED: {
+            f_new = new amino::SceneFrameFixed(f->parent.c_str(), f->name.c_str(), f->E + AA_TF_QUTR_Q, f->E + AA_TF_QUTR_V);
+            } break;
+        case AA_RX_FRAME_REVOLUTE: {
+            amino::SceneFrameRevolute * fr = (amino::SceneFrameRevolute*) f;
+            f_new = new amino::SceneFrameRevolute(fr->parent.c_str(), fr->name.c_str(),
+                fr->E + AA_TF_QUTR_Q, fr->E + AA_TF_QUTR_V,
+                fr->config_name.c_str(), fr->offset, fr->axis);
+            } break;
+        case AA_RX_FRAME_PRISMATIC: {
+            amino::SceneFramePrismatic * fp = (amino::SceneFramePrismatic*) f;
+            f_new = new amino::SceneFramePrismatic(fp->parent.c_str(), fp->name.c_str(),
+                fp->E + AA_TF_QUTR_Q, fp->E + AA_TF_QUTR_V,
+                fp->config_name.c_str(), fp->offset, fp->axis);
+            } break;
+        }
+        dest->sg->add(f_new);
+    }
+
+    // set limits
+    for( auto &pair : orig->sg->limits_map ) {
+        aa_rx_config_limits * nl = new aa_rx_config_limits();
+        *nl = *pair.second;
+        dest->sg->limits_map[pair.first] = nl;
+    }
+
+    // set geometries
+    sg_copy_geom_cx * cx = new sg_copy_geom_cx();
+    cx->sg_old = orig;
+    cx->sg_new = dest;
+    aa_rx_sg_map_geom(orig, sg_copy_geom, cx);
+
+    // initialize sg
+    dest->sg->index();
+
+    return dest;
+
 }
