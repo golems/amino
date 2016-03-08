@@ -544,10 +544,10 @@ AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
     }
 
     // set geometries
-    sg_copy_geom_cx * cx = new sg_copy_geom_cx();
-    cx->sg_old = orig;
-    cx->sg_new = dest;
-    aa_rx_sg_map_geom(orig, sg_copy_geom, cx);
+    sg_copy_geom_cx cx;
+    cx.sg_old = orig;
+    cx.sg_new = dest;
+    aa_rx_sg_map_geom(orig, sg_copy_geom, &cx);
 
     // initialize sg
     dest->sg->index();
