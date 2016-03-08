@@ -504,9 +504,12 @@ struct sg_copy_geom_cx{
     aa_rx_sg *sg_new;
 };
 
-static void sg_copy_geom(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom){
+static void sg_copy_geom(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom0){
     sg_copy_geom_cx * cx = (sg_copy_geom_cx* ) context;
-    aa_rx_geom_attach(cx->sg_new, aa_rx_sg_frame_name(cx->sg_old, frame_id), geom);
+    struct aa_rx_geom *geom1 = aa_rx_geom_copy(geom0);
+    aa_rx_geom_attach( cx->sg_new,
+                       aa_rx_sg_frame_name(cx->sg_old, frame_id),
+                       geom1);
 };
 
 AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
