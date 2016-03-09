@@ -480,21 +480,29 @@ AA_API void aa_rx_sg_rel_tf (
   const aa_rx_frame_id frame_from,
   const aa_rx_frame_id frame_to,
   const double * tf_abs,
+  size_t ld_abs,
   double *from_tf_to)
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
     if (frame_from == AA_RX_FRAME_ROOT){
         if (frame_to == AA_RX_FRAME_ROOT){
-            AA_MEM_CPY(from_tf_to, aa_tf_qutr_ident, 7);
+            AA_MEM_CPY( from_tf_to,
+                        aa_tf_qutr_ident,
+                        7 );
         } else {
-            AA_MEM_CPY(from_tf_to, &tf_abs[frame_to * 7], 7);
+            AA_MEM_CPY( from_tf_to,
+                        &tf_abs[frame_to * ld_abs],
+                        7 );
         }
     } else {
         if (frame_to == AA_RX_FRAME_ROOT){
-            aa_tf_qutr_conj(&tf_abs[frame_from * 7], from_tf_to);
+            aa_tf_qutr_conj( &tf_abs[frame_from * ld_abs],
+                             from_tf_to );
         } else {
-            aa_tf_qutr_cmul(&tf_abs[frame_from * 7], &tf_abs[frame_from * 7], from_tf_to);
+            aa_tf_qutr_cmul( &tf_abs[frame_from * ld_abs],
+                             &tf_abs[frame_from * ld_abs],
+                             from_tf_to );
         }
     }
 }
