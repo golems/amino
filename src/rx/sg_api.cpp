@@ -501,7 +501,7 @@ AA_API void aa_rx_sg_rel_tf (
                              from_tf_to );
         } else {
             aa_tf_qutr_cmul( &tf_abs[frame_from * ld_abs],
-                             &tf_abs[frame_from * ld_abs],
+                             &tf_abs[frame_to * ld_abs],
                              from_tf_to );
         }
     }
