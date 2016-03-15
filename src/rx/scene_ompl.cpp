@@ -267,3 +267,9 @@ aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
 {
     mp->simplify = simplify ? 1 : 0;
 }
+
+AA_API struct aa_rx_cl_set*
+aa_rx_mp_get_allowed( const struct aa_rx_mp* mp)
+{
+    return mp->space_information->getTypedStateSpace()->allowed;
+}
