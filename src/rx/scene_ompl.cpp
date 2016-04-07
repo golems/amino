@@ -52,6 +52,9 @@
 
 #include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/sbl/SBL.h>
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
+#include <ompl/geometric/planners/prm/PRM.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
 
@@ -214,6 +217,7 @@ path_cleanup( struct aa_rx_mp *mp, ompl::geometric::PathGeometric &path )
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
+               enum aa_rx_mp_type mp_type,
                double timeout,
                size_t *n_path,
                double **p_path_all )
@@ -225,7 +229,21 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
-    ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
+    ompl::base::PlannerPtr planner(NULL);
+    switch (mp_type){
+        case RRTCONNECT:
+            planner = ompl::base::PlannerPtr(new ompl::geometric::RRTConnect(si));
+            break;
+        case SBL:
+            planner = ompl::base::PlannerPtr(new ompl::geometric::SBL(si));
+            break;
+        case KPIECE:
+            planner = ompl::base::PlannerPtr(new ompl::geometric::LBKPIECE1(si));
+            break;
+        case PRM:
+            planner = ompl::base::PlannerPtr(new ompl::geometric::PRM(si));
+            break;
+    }
     planner->setProblemDefinition(pdef);
     try {
         planner->solve(timeout);
