@@ -41,160 +41,14 @@
 
 #include <ompl/base/StateValidityChecker.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <ompl/base/ScopedState.h>
 #include <ompl/base/ProblemDefinition.h>
 #include <ompl/base/spaces/RealVectorBounds.h>
 
+#include <ompl/base/ScopedState.h>
+#include <ompl/base/TypedSpaceInformation.h>
+#include <ompl/base/TypedStateValidityChecker.h>
+
 namespace amino {
-
-template<class SpaceType_>
-class TypedSpaceInformation : public ::ompl::base::SpaceInformation {
-public:
-
-    /*--- Type Definitions ---*/
-
-    /**
-     * The actual type of the state space
-     */
-    typedef SpaceType_ SpaceType;
-
-    /**
-     * The actual type of states in the space.
-     */
-    typedef typename SpaceType::StateType StateType;
-
-    /**
-     * The actual type for a Scoped State.
-     */
-    typedef ::ompl::base::ScopedState<SpaceType> ScopedStateType;
-
-    /**
-     * Shared Pointer to the actual type of the space.
-     */
-    typedef boost::shared_ptr<SpaceType> SpacePtr;
-
-    /**
-     * Shared pointer to the typed space.
-     */
-    typedef boost::shared_ptr< TypedSpaceInformation<SpaceType> > Ptr;
-
-
-    /*--- Constructor ---*/
-
-    /**
-     * Construct from shared pointer to the actual space.
-     */
-    TypedSpaceInformation( const SpacePtr &space ) :
-        ::ompl::base::SpaceInformation(space)
-        {}
-
-    /*--- Space Accessors ---*/
-
-    /**
-     * Get space pointer of the proper type, const.
-     */
-    const SpaceType *getTypedStateSpace() const {
-        const ::ompl::base::StateSpacePtr &ptr = getStateSpace();
-        return ptr->as<SpaceType>();
-    }
-
-    /**
-     * Get space pointer of the proper type.
-     */
-    SpaceType *getTypedStateSpace() {
-        const ::ompl::base::StateSpacePtr &ptr = getStateSpace();
-        return ptr->as<SpaceType>();
-    }
-
-    /*--- State Memory Management ---*/
-
-    /**
-     * Allocate a state of the proper type.
-     */
-    StateType * allocTypedState () const {
-        ompl::base::State *s = this->allocState();
-        return s->as<StateType>();
-    }
-
-    /**
-     * Allocate memory for typed states in array
-     */
-    void allocTypedStates (std::vector<StateType *> &states) const {
-        allocStates(states);
-    }
-
-    /**
-     * Free a state of the proper type.
-     */
-    void freeTypedState ( StateType *state ) const {
-        freeState(state);
-    }
-
-    /**
-     * Free typed states in array
-     */
-    void freeTypedStates (std::vector<StateType *> &states) const {
-        freeStates(states);
-    }
-
-    /**
-     * Copy a state of the proper type.
-     */
-    void copyTypedState ( StateType *destination,
-                          const StateType *source ) const {
-        copyState(destination, source );
-    }
-
-    /**
-     * Clone a state of the proper type.
-     */
-    StateType * cloneTypedState ( const StateType *source ) const {
-        ompl::base::State *s = this->cloneState();
-        return s->as<StateType>();
-    }
-
-    static StateType * state_as ( ompl::base::State *s ) {
-        return s->as<StateType>();
-    }
-
-    static const StateType * state_as( const ompl::base::State *s ) {
-        return s->as<StateType>();
-    }
-
-};
-
-template <class SpaceType_>
-class TypedStateValidityChecker : public ompl::base::StateValidityChecker {
-public:
-
-    typedef SpaceType_ SpaceType;
-    typedef TypedSpaceInformation<SpaceType> SpaceInformationType;
-
-    TypedStateValidityChecker(SpaceInformationType *si) :
-        ompl::base::StateValidityChecker(si) { }
-
-    TypedStateValidityChecker(const typename SpaceInformationType::Ptr si) :
-        ompl::base::StateValidityChecker(si) { }
-
-    SpaceInformationType *getTypedSpaceInformation() const {
-        return static_cast<SpaceInformationType*>(si_);
-    }
-
-    SpaceType *getTypedStateSpace() const {
-        return getTypedSpaceInformation()->getTypedStateSpace();
-    }
-
-    static typename SpaceType::StateType *
-    state_as ( ompl::base::State *s ) {
-        return SpaceInformationType::state_as(s);
-    }
-
-    static const typename SpaceType::StateType *
-    state_as( const ompl::base::State *s ) {
-        return SpaceInformationType::state_as(s);
-    }
-};
-
 
 
 class sgStateSpace : public ompl::base::RealVectorStateSpace {
@@ -301,10 +155,10 @@ public:
     struct aa_mem_region reg;
 };
 
-typedef TypedSpaceInformation<amino::sgStateSpace> sgSpaceInformation;
+typedef ::ompl::base::TypedSpaceInformation<amino::sgStateSpace> sgSpaceInformation;
 
 
-class sgStateValidityChecker : public TypedStateValidityChecker<sgStateSpace> {
+class sgStateValidityChecker : public ::ompl::base::TypedStateValidityChecker<sgStateSpace> {
 public:
     sgStateValidityChecker(sgSpaceInformation *si,
                            const double *q_initial ) :
