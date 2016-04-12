@@ -13,7 +13,7 @@ int main( int argc, char **argv)
     double Eb[7] = AA_TF_QUTR_IDENT_INITIALIZER;
     double Ec[7] = {0,0,0,1, 2,0,0};
 
-    boost::shared_ptr<fcl::CollisionGeometry> a( new fcl::Box(1,1,1) );
+    std::shared_ptr<fcl::CollisionGeometry> a( new fcl::Box(1,1,1) );
 
     fcl::CollisionObject* obj_a = new fcl::CollisionObject(a, amino::fcl::qutr2fcltf(Ea));
     fcl::CollisionObject* obj_b = new fcl::CollisionObject(a, amino::fcl::qutr2fcltf(Eb));

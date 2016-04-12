@@ -65,7 +65,7 @@ aa_rx_cl_init( )
 }
 
 struct aa_rx_cl_geom {
-    boost::shared_ptr<fcl::CollisionGeometry> ptr;
+    std::shared_ptr<fcl::CollisionGeometry> ptr;
     aa_rx_cl_geom( fcl::CollisionGeometry *ptr_) :
         ptr(ptr_) { }
 
