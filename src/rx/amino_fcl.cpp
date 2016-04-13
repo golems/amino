@@ -205,6 +205,15 @@ void aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph )
         exit(EXIT_FAILURE);
     }
     aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
+    amino::SceneGraph *sg = scene_graph->sg;
+    sg->allowed_indices1.clear();
+    sg->allowed_indices2.clear();
+
+    for (auto it = sg->allowed.begin(); it!= sg->allowed.end(); it++){
+        sg->allowed_indices1.push_back(aa_rx_sg_frame_id(scene_graph, it->first));
+        sg->allowed_indices2.push_back(aa_rx_sg_frame_id(scene_graph, it->second));
+    }
+
     aa_rx_sg_clean_collision(scene_graph);
 }
 
@@ -385,4 +394,36 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
 
     cl->manager->collide( &data, cl_check_callback );
     return data.result;
+}
+
+AA_API void aa_rx_cl_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q)
+{
+    size_t n_f = aa_rx_sg_frame_count(scene_graph);
+    if (n_q != aa_rx_sg_config_count(scene_graph)){
+        printf("Error: DoF specified different from scenegraph. Allowable config not set.\n");
+        return;
+    }
+    double TF_rel[7*n_f];
+    double TF_abs[7*n_f];
+    aa_rx_sg_tf(scene_graph, n_q, q,
+                n_f,
+                TF_rel, 7,
+                TF_abs, 7 );
+
+
+    struct aa_rx_cl *cl = aa_rx_cl_create(scene_graph);
+    struct aa_rx_cl_set* allowed = aa_rx_cl_set_create(scene_graph);
+    aa_rx_cl_check(cl, n_f, TF_abs, 7, allowed);
+
+    for (size_t i = 0; i<n_f; i++){
+        for (size_t j=0; j<i; j++){
+            if (aa_rx_cl_set_get(allowed, i, j)) {
+                aa_rx_sg_allow_collision(scene_graph, i, j, 1);
+            }
+        }
+    }
+
+    aa_rx_cl_set_destroy(allowed);
+    aa_rx_cl_destroy(cl);
+
 }

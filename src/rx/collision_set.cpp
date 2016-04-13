@@ -59,6 +59,10 @@ aa_rx_cl_set_create( const struct aa_rx_sg *sg )
     set->n = aa_rx_sg_frame_count(sg);
     set->v = new std::vector<bool>(set->n*set->n);
 
+    for (size_t i=0; i<sg->sg->allowed_indices1.size(); i++){
+      aa_rx_cl_set_set(set, sg->sg->allowed_indices1[i], sg->sg->allowed_indices2[i], 1);
+    }
+
     return set;
 }
 

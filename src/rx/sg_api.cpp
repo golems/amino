@@ -582,3 +582,17 @@ AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
     return dest;
 
 }
+
+AA_API void
+aa_rx_sg_allow_collision( aa_rx_sg *scene_graph,
+                        aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed )
+{
+    const char* name0 = aa_rx_sg_frame_name(scene_graph, id0<id1 ? id0 : id1);
+    const char* name1 = aa_rx_sg_frame_name(scene_graph, id0<id1 ? id1 : id0);
+    if (allowed){
+        scene_graph->sg->allowed.insert(std::pair<const char*, const char*>(name0, name1));
+    } else {
+        scene_graph->sg->allowed.erase(std::pair<const char*, const char*>(name0, name1));
+    }
+    scene_graph->sg->dirty_collision = 1;
+}
