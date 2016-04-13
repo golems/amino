@@ -662,7 +662,7 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
 #define AA_VECTOR_PUSH( max, fill, ptr, value )         \
     if( (fill) >= (max) ) {                             \
         (max) = 2*(fill+1);                             \
-        (ptr) = (typeof(ptr))realloc(sizeof(*ptr)*max); \
+        (ptr) = (__typeof__(ptr))realloc(sizeof(*ptr)*max); \
     }                                                   \
     ptr[(fill)++] = (value);
 

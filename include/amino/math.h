@@ -57,14 +57,14 @@
 
 /// maximum of a and b
 #define AA_MAX(a,b) \
-    ({ const typeof(a) aa_$_max_a = (a); \
-       const typeof(b) aa_$_max_b = (b); \
+    ({ const __typeof__(a) aa_$_max_a = (a); \
+       const __typeof__(b) aa_$_max_b = (b); \
        (aa_$_max_a > aa_$_max_b) ? aa_$_max_a : aa_$_max_b; })
 
 /// minimum of a and b
 #define AA_MIN(a,b) \
-    ({ const typeof(a) aa_$_min_a = (a); \
-       const typeof(b) aa_$_min_b = (b); \
+    ({ const __typeof__(a) aa_$_min_a = (a); \
+       const __typeof__(b) aa_$_min_b = (b); \
        (aa_$_min_a < aa_$_min_b) ? aa_$_min_a : aa_$_min_b; })
 
 /// force value to be within +/- level
