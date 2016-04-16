@@ -193,7 +193,8 @@ libamino_la_SOURCES += src/mac/euler_f2c.c
 
 endif
 
-
+## EMACS ##
+lisp_LISP = share/robray-mode.el
 
 ## JAVA ##
 JSOURCES =                                        \

@@ -120,3 +120,4 @@ amino*.tar.gz
 /opt_test
 /test_clp
 /test_lpsolve
+/share/robray-mode.elc
