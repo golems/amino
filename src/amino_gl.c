@@ -1006,7 +1006,7 @@ aa_gl_globals_create()
 
     G->show_visual = 1;
 
-    G->fps = 60;
+    G->fps = 30;
 
     return G;
 }
