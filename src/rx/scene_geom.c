@@ -154,15 +154,25 @@ aa_rx_geom_attach (
 struct aa_rx_geom *
 aa_rx_geom_copy( struct aa_rx_geom *src )
 {
-    src->refcount++;
+    unsigned oldcount = __atomic_fetch_add(&src->refcount, 1, __ATOMIC_SEQ_CST);
+    if( 0 == oldcount ) {
+        fprintf(stderr, "Error, copied geom with 0 refcount\n");
+        abort();
+    }
     return src;
 }
 
 void
 aa_rx_geom_destroy( struct aa_rx_geom *geom )
 {
-    geom->refcount--;
-    if( 0 == geom->refcount ) {
+    unsigned oldcount = __atomic_fetch_sub(&geom->refcount, 1, __ATOMIC_SEQ_CST);
+
+    if( 0 == oldcount) {
+        fprintf(stderr, "Error, destroying geom with 0 refcount\n");
+        abort();
+    }
+
+    if( 1 == oldcount ) {
         /* Free Mesh */
         if( AA_RX_MESH == geom->type ) {
             struct aa_rx_geom_mesh *mesh_geom = (struct aa_rx_geom_mesh *)geom;
