@@ -178,6 +178,13 @@ aa_rx_win_join( struct aa_rx_win * win );
 AA_API void
 aa_rx_win_pause( struct aa_rx_win * win, int paused );
 
+
+AA_API void
+aa_rx_win_lock( struct aa_rx_win * win );
+
+AA_API void
+aa_rx_win_unlock( struct aa_rx_win * win );
+
 /**
  * Initialize scenegraph GL values for the given window.
  *

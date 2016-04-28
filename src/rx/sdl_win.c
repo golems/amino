@@ -84,6 +84,8 @@ struct aa_rx_win {
     pthread_t thread;
     pthread_mutex_t mutex;
 
+    pthread_mutexattr_t mattr;
+
     unsigned stop : 1;
     unsigned stop_on_quit : 1;
 
@@ -103,7 +105,22 @@ aa_rx_win_create(
     Uint32 flags )
 {
     struct aa_rx_win *win = AA_NEW0( struct aa_rx_win );
-    pthread_mutex_init( & win->mutex, NULL );
+
+
+    if( pthread_mutexattr_init(&win->mattr) ) {
+        perror("pthread_mutexattr_init");
+        abort();
+    }
+    if( pthread_mutexattr_settype(&win->mattr, PTHREAD_MUTEX_RECURSIVE) ) {
+        perror("pthread_mutexattr_settype");
+        abort();
+    }
+
+    if( pthread_mutex_init( & win->mutex, &win->mattr) ) {
+        perror("pthread_mutex_init");
+        abort();
+    }
+
 
     aa_sdl_gl_window( title,
                       x_pos,
@@ -146,6 +163,7 @@ aa_rx_win_destroy( struct aa_rx_win *  win)
     aa_checked_free( win->plan_q_data );
 
     pthread_mutex_destroy( &win->mutex );
+    pthread_mutexattr_destroy( &win->mattr );
 
     SDL_GL_DeleteContext(win->gl_cx);
     SDL_DestroyWindow(win->window);
@@ -164,7 +182,7 @@ AA_API void
 aa_rx_win_set_sg( struct aa_rx_win * win,
                   const struct aa_rx_sg *sg )
 {
-    pthread_mutex_lock( &win->mutex );
+    aa_rx_win_lock(win);
 
     aa_checked_free( win->q );
     win->sg = sg;
@@ -174,7 +192,7 @@ aa_rx_win_set_sg( struct aa_rx_win * win,
 
     aa_gl_globals_unmask_all( win->gl_globals );
 
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 }
 
 AA_API const struct aa_rx_sg *
@@ -236,14 +254,14 @@ aa_rx_win_set_config( struct aa_rx_win * win,
                       size_t n,
                       const double *q )
 {
-    pthread_mutex_lock( &win->mutex );
+    aa_rx_win_lock(win);
 
     AA_MEM_CPY( win->q, q, AA_MIN(n, win->n_config) );
     win->updated = 1;
 
     win->display = default_display;
 
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 }
 
 
@@ -251,11 +269,11 @@ static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
     int r = 0;
-    pthread_mutex_lock( &cx->mutex );
+    aa_rx_win_lock(cx);
     if( !cx->paused ) {
         r = cx->display(cx->display_cx, params );
     }
-    pthread_mutex_unlock( &cx->mutex );
+    aa_rx_win_unlock(cx);
     return r;
 }
 
@@ -493,12 +511,14 @@ aa_rx_win_set_display_plan( struct aa_rx_win * win,
 AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
 {
 
+
+    aa_rx_win_lock(win);
+
     SDL_GL_MakeCurrent(win->window, win->gl_cx);
 
-    pthread_mutex_lock( &win->mutex );
     win->running = 1;
 
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 
     int stop = 0;
     int stop_on_quit = 0;
@@ -506,16 +526,16 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
     do {
         aa_sdl_display_loop( win->window, win->gl_globals,
                              win_display, win );
-        pthread_mutex_lock( &win->mutex );
+        aa_rx_win_lock(win);
         stop = win->stop;
         stop_on_quit = win->stop_on_quit;
-        pthread_mutex_unlock( &win->mutex );
+        aa_rx_win_unlock(win);
     } while( ! stop && !stop_on_quit );
 
 
-    pthread_mutex_lock( &win->mutex );
+    aa_rx_win_lock(win);
     win->running = 0;
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 
 }
 
@@ -536,18 +556,18 @@ aa_rx_win_start( struct aa_rx_win * win )
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win )
 {
-    pthread_mutex_lock( &win->mutex );
+    aa_rx_win_lock(win);
     win->stop = 1;
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 
 }
 
 AA_API void
 aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value )
 {
-    pthread_mutex_lock( &win->mutex );
+    aa_rx_win_lock(win);
     win->stop_on_quit = value ? 1 : 0;
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 
 }
 
@@ -562,10 +582,10 @@ AA_API void
 aa_rx_win_sg_gl_init( struct aa_rx_win * win,
                       struct aa_rx_sg *sg )
 {
-    pthread_mutex_lock( &win->mutex );
+    aa_rx_win_lock(win);
     SDL_GL_MakeCurrent(win->window, win->gl_cx);
     aa_rx_sg_gl_init(sg);
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 }
 
 
@@ -586,13 +606,31 @@ aa_rx_win_sg_gl_init( struct aa_rx_win * win,
 AA_API void
 aa_rx_win_pause( struct aa_rx_win * win, int paused )
 {
-    pthread_mutex_lock( &win->mutex );
+    aa_rx_win_lock(win);
     win->paused = paused ? 1 : 0;
-    pthread_mutex_unlock( &win->mutex );
+    aa_rx_win_unlock(win);
 }
 
 AA_API void
 aa_rx_win_get_tf_cam( const struct aa_rx_win * win, double *E )
 {
     AA_MEM_CPY(E, win->gl_globals->world_E_cam, 7 );
+}
+
+AA_API void
+aa_rx_win_lock( struct aa_rx_win * win )
+{
+    if( pthread_mutex_lock( &win->mutex ) ) {
+        perror("Mutex Lock");
+        abort();
+    }
+}
+
+AA_API void
+aa_rx_win_unlock( struct aa_rx_win * win )
+{
+    if( pthread_mutex_unlock( &win->mutex ) ) {
+        perror("Mutex Unlock");
+        abort();
+    }
 }

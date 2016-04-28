@@ -50,6 +50,13 @@
   (window rx-win-t)
   (sg rx-sg-t))
 
+
+(cffi:defcfun aa-rx-win-lock :void
+  (window rx-win-t))
+
+(cffi:defcfun aa-rx-win-unlock :void
+  (window rx-win-t))
+
 (cffi:defcfun aa-rx-win-set-config :void
   (window rx-win-t)
   (n size-t)
@@ -100,6 +107,13 @@
 
 (defvar *window* nil)
 
+(defmacro with-win-lock (win &body body)
+  (with-gensyms (v-win)
+    `(let ((,v-win ,win))
+       (aa-rx-win-lock ,v-win)
+       (unwind-protect (progn ,@body)
+         (aa-rx-win-unlock ,v-win)))))
+
 (defun win-create (&key
                         (title "AminoGL")
                         (width 800)
@@ -124,11 +138,12 @@
 (defun win-set-scene-graph (scene-graph &optional (window (win-create)))
   (let ((win window)
         (m-sg (mutable-scene-graph scene-graph)))
-    (setf (rx-win-display-object window) m-sg)
-    (aa-rx-win-sg-gl-init win m-sg)
-    (setf (rx-win-mutable-scene-graph win) m-sg
-          (rx-win-config-vector win) (make-vec (aa-rx-sg-config-count m-sg)))
-    (aa-rx-win-set-sg win m-sg))
+    (with-win-lock win
+      (aa-rx-win-sg-gl-init win m-sg)
+      (aa-rx-win-set-sg win m-sg)
+      (setf (rx-win-display-object window) m-sg
+            (rx-win-mutable-scene-graph win) m-sg
+            (rx-win-config-vector win) (make-vec (aa-rx-sg-config-count m-sg)))))
   (values))
 
 (defun win-set-config (configs)
