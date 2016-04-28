@@ -680,5 +680,20 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
     };
 
 
+/***********************************/
+/* Synchronized Reference Counting */
+/***********************************/
+
+/**
+ * Atomically increment the reference count and return the previous count.
+ */
+AA_API unsigned
+aa_mem_ref_inc( unsigned *count );
+
+/**
+ * Atomically decrement the reference count and return the previous count.
+ */
+AA_API unsigned
+aa_mem_ref_dec( unsigned *count );
 
 #endif //AA_MEM_H

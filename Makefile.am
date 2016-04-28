@@ -81,6 +81,7 @@ lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
+	src/refcount.c                 \
 	src/la.c                       \
 	src/la2.c                      \
 	src/opt/opt.c                  \

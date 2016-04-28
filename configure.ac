@@ -34,6 +34,8 @@ AC_SEARCH_LIBS([clock_gettime],[rt])
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([dl],[dlopen])
 
+AC_CHECK_HEADERS([stdatomic.h])
+
 AC_SEARCH_LIBS([dgemm_],[openblas blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])
 
