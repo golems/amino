@@ -1170,8 +1170,10 @@ void gl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom 
 AA_API void
 aa_rx_sg_gl_init( struct aa_rx_sg *sg )
 {
-    aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
-    aa_rx_sg_clean_gl(sg);
+    if( ! aa_rx_sg_is_clean_gl(sg) ) {
+        aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
+        aa_rx_sg_clean_gl(sg);
+    }
 }
 
 AA_API void
