@@ -5,10 +5,8 @@
 
 
 ;; Try to register lisp directory with ASDF
-(when (find-package :asdf)
-  (eval `(push (make-pathname :directory (append (pathname-directory (truename *top-srcdir*))
-                                                 '("lisp")))
-               ,(intern "*CENTRAL-REGISTRY*" :asdf))))
+(aa-register-directory (make-pathname :directory (append (pathname-directory (truename *top-srcdir*))
+                                                         '("lisp"))))
 
 ;; Try to load Amino
 (aa-load-system :amino)

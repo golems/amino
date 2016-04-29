@@ -22,3 +22,12 @@
       (t
        (require system))))
   (assert (find-package system-package)))
+
+(defun aa-register-directory (pathname)
+  (when (find-package :asdf)
+    (eval `(push ,pathname
+                 ,(intern "*CENTRAL-REGISTRY*" :asdf)))))
+
+
+(aa-register-directory (make-pathname :directory (append (pathname-directory (truename *top-srcdir*))
+                                                         '("submodules" "sycamore" "src"))))
