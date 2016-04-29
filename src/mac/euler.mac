@@ -39,7 +39,8 @@
  */
 
 /* generate*/
-load("./amino.mac")$
+file_search_maxima ;
+load("amino.mac")$
 load(f90)$
 
 X : [ 1, 0, 0 ]$

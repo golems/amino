@@ -121,3 +121,9 @@ amino*.tar.gz
 /test_clp
 /test_lpsolve
 /share/robray-mode.elc
+/aa_ls_se3.f90
+/aa_tf_euler.f90
+/euler.c
+/euler.f
+/submodules/install-sh
+/submodules/missing

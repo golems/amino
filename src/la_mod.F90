@@ -250,7 +250,7 @@ module amino_la
 
 contains
 
-#include "mac/aa_ls_se3.f90"
+#include "aa_ls_se3.f90"
 
 !! Preprocessor type generics hack
 #define AA_TYPE_DOUBLE

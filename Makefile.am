@@ -1,15 +1,30 @@
-SUBDIRS = . lisp
+SUBDIRS = \
+	submodules/sycamore \
+	. \
+	lisp
 
 ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac
+
 EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
              src/la_impl.c                       \
              src/la_mod.F90 src/la_implf.F90     \
              src/mem_mod.F90 src/mem_impl.F90    \
              src/tff.F90                         \
              src/mac/tf.mac                      \
-             src/mac/aa_tf_euler.f90             \
-             src/mac/ls.mac src/mac/aa_ls_se3.f90
+             aa_tf_euler.f90                      \
+             src/mac/ls.mac \
+             aa_ls_se3.f90 \
+             src/mac/euler77.mac \
+             share/aarxc \
+             share/check-clpkg.sh \
+             share/load-ql.lisp \
+             share/make-aarx.lisp \
+             share/make-aarx.sh \
+             share/robray-mode.el \
+             src/tf/quat_ord.c \
+             src/tf/quat_duqu.c \
+             src/tf/quat_qutr.c
 
 dist_pkgdata_DATA = src/mac/amino.mac
 
@@ -58,21 +73,38 @@ pkginclude_HEADERS = 	                \
 	include/amino/heap.h            \
 	include/amino/mangle.h          \
 	include/amino/def.F90           \
+	include/amino/getset.h          \
 	include/amino/undef.F90
 
 rxincludedir = $(pkgincludedir)/rx
 
 rxinclude_HEADERS = 	                \
+	include/amino/rx/rxerr.h        \
 	include/amino/rx/rxtype.h       \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/scene_gl.h     \
 	include/amino/rx/scene_kin.h    \
 	include/amino/rx/scene_dyn.h    \
+	include/amino/rx/mp_seq.h       \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
+	include/amino/rx/scene_planning.h \
+	include/amino/rx/scene_plugin.h \
 	include/amino/rx/scene_sdl.h    \
 	include/amino/rx/scene_win.h
+
+noinst_HEADERS = \
+	include/amino_internal.h \
+	include/amino/rx/rxtype_internal.h \
+	include/amino/rx/scene_collision_internal.h \
+	include/amino/rx/scene_fcl.h \
+	include/amino/rx/scene_geom_internal.h \
+	include/amino/rx/scene_gl_internal.h \
+	include/amino/rx/scenegraph_internal.h \
+	include/amino/rx/scene_kin_internal.h \
+	src/rx/sg_convenience.h \
+	src/opt/opt_internal.h
 
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
@@ -120,31 +152,33 @@ src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
 	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b gen.mac
 	@echo [maxima end]
 
-BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/aa_ls_se3.f90 src/mac/euler.f
+BUILT_SOURCES = aa_tf_euler.f90 aa_ls_se3.f90 euler.f
 
-src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
+MAXIMA_PATH = file_search_maxima : cons(\"$(top_srcdir)/src/mac/\", file_search_maxima)\$$
+
+aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler.mac
+	$(MAXIMA) --very-quiet -r "$(MAXIMA_PATH) load(\"euler.mac\")\$$"
 	@echo [maxima end]
 
 
-src/mac/euler.f: src/mac/amino.mac src/mac/euler77.mac
+euler.f: src/mac/amino.mac src/mac/euler77.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler77.mac
+	$(MAXIMA) --very-quiet -r "$(MAXIMA_PATH) load(\"euler77.mac\")\$$"
 	@echo [maxima end]
 
-src/mac/aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
+aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b ls.mac
+	$(MAXIMA) --very-quiet -r "$(MAXIMA_PATH) load(\"ls.mac\")\$$"
 	@echo [maxima end]
 
-src/mac/mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
+mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
 	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b tf.mac
+	$(MAXIMA) --very-quiet -r "$(MAXIMA_PATH) load(\"tf.mac\")\$$"
 	@echo [maxima end]
 
 distclean-local:
-	-rm -rf doxygen-doc
+	-rm -rf doxygen-doc euler.c euler.f
 
 #vecbench_SOURCES = src/test/vecbench.c
 #vecbench_LDADD = libamino.la -lblas -llapack
@@ -185,13 +219,16 @@ else
 
 # No fortran compiler
 
-BUILT_SOURCES += src/mac/euler.c
-src/mac/euler.c: src/mac/euler.f
-	cd src/mac && $(F2C) euler.f
+BUILT_SOURCES += euler.c
 
-libamino_la_SOURCES += src/mac/euler_f2c.c
+libamino_la_SOURCES += euler.c
 
 
+endif
+
+if HAVE_F2C
+euler.c: euler.f
+	$(F2C) euler.f
 endif
 
 ## EMACS ##
@@ -422,8 +459,8 @@ lapack_doc.c: doc/lapack_doc.c include/amino/lapack.h include/amino/lapack_impl.
 la_doc.c: doc/la_doc.c include/amino/la.h include/amino/la_impl.h
 	$(CPP) $(AM_CPPFLAGS) -CC $< -o $@
 
-la_mod.f90: src/la_mod.F90 src/la_implf.F90 src/mac/aa_ls_se3.f90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
-	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
+la_mod.f90: src/la_mod.F90 src/la_implf.F90 aa_ls_se3.f90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
+	$(CPP) $(AM_CPPFLAGS) -I. -x c  $< -o $@
 
 mem_mod.f90: src/mem_mod.F90 src/mem_impl.F90 include/amino/def.h include/amino/undef.h include/amino/def.F90 include/amino/undef.F90 include/amino/mangle.h
 	$(CPP) $(AM_CPPFLAGS) -x c  $< -o $@
@@ -452,6 +489,7 @@ clean-local:
 		debian/DEBIAN/*             \
 		texput.log                  \
 		$(EXTRA_DX)                 \
-		*.mod
+		*.mod                       \
+		doc/javadoc org *.jar org_golems_amino_Lib.h doc/.javadoc.stamp
 
 include aminclude.am

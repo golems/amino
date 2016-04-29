@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
-AC_INIT([amino], [0.20140818], [ntd@gatech.edu])
+AC_INIT([amino], [0.20160428], [ntd@rice.edu])
 
 AM_INIT_AUTOMAKE([subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -20,6 +20,7 @@ AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
 AM_PATH_LISPDIR
+AC_PROG_MKDIR_P
 
 # Enable C++ 11
 m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
@@ -66,6 +67,9 @@ AC_ARG_WITH([fortran],
 
 AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
 
+AC_CHECK_PROGS([F2C], [f2c])
+AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
+
 AS_IF([test "x$with_fortran" = xyes],
 [
 AC_LANG([Fortran])
@@ -91,7 +95,6 @@ APPEND_FCFLAG([-Wintrinsic-shadow])
 
 ],
 [
-AC_CHECK_PROGS([F2C], [f2c])
 AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
 ]
@@ -480,5 +483,5 @@ AS_IF([test "x$FC" = "x"],
       [AC_MSG_ERROR([No Fortran compiler detected])])
 
 
-AC_CONFIG_FILES([Makefile lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
+AC_CONFIG_FILES([Makefile lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc submodules/sycamore/Makefile])
 AC_OUTPUT
