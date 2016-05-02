@@ -143,3 +143,18 @@ Common Errors
     `export LD_LIBRARY_PATH="/usr/local/lib/:$LD_LIBRARY_PATH"`
 
     `export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"`
+
+Performance
+-----------
+
+* How do I make it faster?
+
+  - Numerical code often benefits from newer CPU instructions.  Try
+    compiling amino with `-march=native` either via
+    `CFLAGS="-O2 -march=native ./configure` or adding the equivalent
+    to your Autoconf site defaults file (config.site).
+
+  - An optimized BLAS library will also help some operations.
+    OpenBLAS is among the fastest (http://www.openblas.net/).  If
+    installed, configure amino to use it with
+    `./configure --with-blas=openblas`.
