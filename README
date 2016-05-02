@@ -60,6 +60,14 @@ SE(3)
 Scene Graphs
 ------------
 
+* What's a scene graph?
+
+  - A scene graph is a tree of bodies connected by Euclidean
+    transforms.  Similar kinematic tree structures are pervasive in
+    robotics.
+    + https://en.wikipedia.org/wiki/Rigid_transformation
+    + https://en.wikipedia.org/wiki/Kinematic_chain
+
 * How can I load a URDF file?
 
   - Use the scene graph compiler, `aarxc`, to generate code from the
