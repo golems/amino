@@ -127,3 +127,14 @@ amino*.tar.gz
 /euler.f
 /submodules/install-sh
 /submodules/missing
+/debian/amino-utils/
+/debian/libamino-collision-dev/
+/debian/libamino-collision0/
+/debian/libamino-gl-dev/
+/debian/libamino-gl0/
+/debian/libamino-opt-clp-dev/
+/debian/libamino-opt-clp0/
+/debian/libamino-opt-glpk-dev/
+/debian/libamino-opt-glpk0/
+/debian/libamino-planning-dev/
+/debian/libamino-planning0/

@@ -26,3 +26,118 @@ Description: Robotics utility library
  includes mathematical and linear algebra routines, memory management,
  and time-handling.  Design goals are easy integration, efficiency,
  and simplicity.
+
+Package: libamino-gl0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Pre-Depends: multiarch-support
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-gl-dev
+Section: libdevel
+Architecture: any
+Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-collision0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Pre-Depends: multiarch-support
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-collision-dev
+Section: libdevel
+Architecture: any
+Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-planning0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Pre-Depends: multiarch-support
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-planning-dev
+Section: libdevel
+Architecture: any
+Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-opt-clp0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Pre-Depends: multiarch-support
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-opt-clp-dev
+Section: libdevel
+Architecture: any
+Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-opt-glpk0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Pre-Depends: multiarch-support
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: libamino-opt-glpk-dev
+Section: libdevel
+Architecture: any
+Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
+
+Package: amino-utils
+Section: libdevel
+Architecture: any
+Depends: libamino0 (= ${binary:Version}), ${misc:Depends}
+Description: Robotics utility library
+ Amino is package of basic utilities for robotics software.  It
+ includes mathematical and linear algebra routines, memory management,
+ and time-handling.  Design goals are easy integration, efficiency,
+ and simplicity.
