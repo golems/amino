@@ -37,9 +37,16 @@ AC_CHECK_LIB([dl],[dlopen])
 
 AC_CHECK_HEADERS([stdatomic.h])
 
-AC_SEARCH_LIBS([dgemm_],[openblas blas])
-AC_SEARCH_LIBS([dgesvd_],[lapack])
 
+# Check for BLAS
+AC_ARG_WITH([blas],
+            [AS_HELP_STRING([--with-blas=BLAS],
+                            [Specify the BLAS implementation to use, e.g., `--with-blas=openblas'])],
+            [],
+            [with_blas=blas])
+
+AC_SEARCH_LIBS([dgemm_],[$with_blas], [], [AC_MSG_ERROR([BLAS is required])])
+AC_SEARCH_LIBS([dgesvd_],[lapack], [], [AC_MSG_ERROR([LAPACK is required])])
 
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
          [AC_DEFUN([APPEND_CFLAG],
