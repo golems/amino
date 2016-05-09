@@ -244,9 +244,11 @@
 
 (defun scene-graph-genc (scene-graph &key
                                        (static-mesh t)
-                                       (name "scenegraph"))
+                                       function-name)
   (let ((argument-name "sg")
-        (function-name (rope-string (rope "aa_rx_dl_sg__" name)))
+        (function-name (if (and function-name (not (zerop (rope-length function-name))))
+                           function-name
+                           "aa_rx_dl_sg__scenegraph"))
         (stmts))
     (labels ((item (x) (push x stmts)))
       ;; Lazily create object
@@ -297,7 +299,7 @@
 
 (defun scene-graph-compile (scene-graph source-file
                             &key
-                              (name "scenegraph")
+                              scene-function
                               shared-object
                               (reload t)
                               (static-mesh t)
@@ -311,7 +313,7 @@
                             :if-does-not-exist :create
                             :direction :output)
       (let ((source-rope (scene-graph-genc scene-graph
-                                           :name name
+                                           :function-name scene-function
                                            :static-mesh static-mesh)))
         (output (rope (cgen-include-system "amino.h")
                       (cgen-include-system "amino/rx.h")
