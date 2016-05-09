@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 {
     /* Initialize scene graph */
     aa_rx_cl_init(); /* initialize the collision library */
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph(NULL); /* load compiled URDF for robot scenegraph */
+    struct aa_rx_sg *scenegraph = baxter_demo_load_baxter(NULL); /* load compiled URDF for robot scenegraph */
     aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
     aa_rx_sg_cl_init(scenegraph); /* initialize scene graph collision objects */
 

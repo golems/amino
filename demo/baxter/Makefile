@@ -20,7 +20,7 @@ PROGS := baxter-simple \
 	baxter-ik \
 	baxter-plugin
 
-OTHER_DEPS := scene.o baxter-demo.c
+OTHER_DEPS := baxter-model.o baxter-demo.c
 ALL: $(PROGS)
 
 
@@ -48,11 +48,11 @@ baxter-ompl-workspace: baxter-ompl-workspace.c $(OTHER_DEPS) baxter-demo.h
 baxter-ompl-sequence: baxter-ompl-sequence.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-ompl-sequence.c $(CFLAGS_OMPL) $(LDFLAGS_OMPL) -o baxter-ompl-sequence
 
-scene.o: scene.c
-	$(CC) -c scene.c $(CFLAGS_ALL) -fPIC
+baxter-model.o: baxter-model.c
+	$(CC) -c baxter-model.c $(CFLAGS_ALL) -fPIC
 
-scene.c: scene.robray
-	aarxc 'package://baxter_description/urdf/baxter.urdf' -o scene.c
+baxter-model.c:
+	aarxc 'package://baxter_description/urdf/baxter.urdf' -o baxter-model.c -f "baxter_demo_load_baxter"
 
 baxter.so: scene.o
 	gcc -shared -o baxter.so scene.o
@@ -61,4 +61,4 @@ clean:
 	rm -f $(PROGS)
 
 realclean: clean
-	rm -f scene.c *.o
+	rm -f baxter-model.c scene.c *.o
