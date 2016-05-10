@@ -57,24 +57,6 @@
 #include "amino/getset.h"
 
 
-static pthread_mutex_t gl_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void aa_gl_lock()
-{
-    if( pthread_mutex_lock( &gl_mutex ) ) {
-        perror("Mutex Lock");
-        abort();
-    }
-}
-
-void aa_gl_unlock()
-{
-    if( pthread_mutex_unlock( &gl_mutex ) ) {
-        perror("Mutex Unlock");
-        abort();
-    }
-}
-
 #define CHECK_GL_STATUS(TYPE,handle,pname) {                            \
         GLint status;                                                   \
         glGet ## TYPE ## iv(handle, pname, &status);                    \
@@ -251,17 +233,28 @@ static GLint aa_gl_id_specular;
 static GLint aa_gl_id_uv;
 static GLint aa_gl_id_texture;
 
-static int aa_gl_initialized = 0;
-AA_API void aa_gl_init()
-{
-    aa_gl_lock();
+static pthread_once_t gl_once = PTHREAD_ONCE_INIT;
+static pthread_mutex_t gl_mutex;
+static pthread_mutexattr_t gl_mattr;
 
-    if( aa_gl_initialized ) {
-        aa_gl_unlock();
-        return;
+static void gl_init_once(void)
+{
+    /* Initialize Mutex */
+    if( pthread_mutexattr_init(&gl_mattr) ) {
+        perror("pthread_mutexattr_init");
+        abort();
+    }
+    if( pthread_mutexattr_settype(&gl_mattr, PTHREAD_MUTEX_RECURSIVE) ) {
+        perror("pthread_mutexattr_settype");
+        abort();
     }
 
-    aa_gl_initialized = 1;
+    if( pthread_mutex_init( &gl_mutex, &gl_mattr) ) {
+        perror("pthread_mutex_init");
+        abort();
+    }
+
+    aa_gl_lock();
 
     GLuint vertexShader = aa_gl_create_shader(GL_VERTEX_SHADER, aa_gl_vertex_shader);
     GLuint fragmentShader = aa_gl_create_shader(GL_FRAGMENT_SHADER, aa_gl_fragment_shader);
@@ -296,6 +289,14 @@ AA_API void aa_gl_init()
     aa_gl_buffers_destroy_fun = aa_gl_buffers_destroy;
 
     aa_gl_unlock();
+}
+
+AA_API void aa_gl_init()
+{
+    if( pthread_once( &gl_once, gl_init_once ) ) {
+        perror("pthread_once");
+        abort();
+    }
 }
 
 
@@ -525,6 +526,7 @@ static void bind_mesh (
     }
 
 
+    aa_gl_lock();
 
     glGenBuffers(1, &bufs->values);
     glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
@@ -572,6 +574,8 @@ static void bind_mesh (
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         bufs->has_normals = 1;
     }
+
+    aa_gl_unlock();
 }
 
 
@@ -1210,10 +1214,9 @@ AA_API void
 aa_rx_sg_gl_init( struct aa_rx_sg *sg )
 {
     if( ! aa_rx_sg_is_clean_gl(sg) ) {
-        aa_gl_lock();
+        /* Take a fine-grained lock for each geometry object */
         aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
         aa_rx_sg_clean_gl(sg);
-        aa_gl_unlock();
     }
 }
 
@@ -1244,4 +1247,20 @@ aa_gl_globals_mask( struct aa_gl_globals *globals, size_t i, int value ) {
     }
 
     aa_bits_set(globals->frame_mask, i, value);
+}
+
+void aa_gl_lock()
+{
+    if( pthread_mutex_lock( &gl_mutex ) ) {
+        perror("AminoGL Mutex Lock");
+        abort();
+    }
+}
+
+void aa_gl_unlock()
+{
+    if( pthread_mutex_unlock( &gl_mutex ) ) {
+        perror("AminoGL Mutex Unlock");
+        abort();
+    }
 }

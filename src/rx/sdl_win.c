@@ -75,6 +75,7 @@ struct aa_rx_win {
     SDL_GLContext gl_cx;
 
     pthread_t thread;
+
     pthread_mutex_t mutex;
     pthread_mutexattr_t mattr;
 
@@ -156,8 +157,12 @@ aa_rx_win_destroy( struct aa_rx_win *  win)
     pthread_mutex_destroy( &win->mutex );
     pthread_mutexattr_destroy( &win->mattr );
 
+    aa_gl_lock();
+
     SDL_GL_DeleteContext(win->gl_cx);
     SDL_DestroyWindow(win->window);
+
+    aa_gl_unlock();
 
     free(win);
 }
@@ -265,7 +270,6 @@ aa_rx_win_set_config( struct aa_rx_win * win,
     } else {
         fprintf(stderr, "Invalid context to set config\n");
     }
-
 
     aa_rx_win_unlock(win);
 }
@@ -536,13 +540,11 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
 {
 
 
-    aa_rx_win_lock(win);
-
+    aa_gl_lock(win);
     SDL_GL_MakeCurrent(win->window, win->gl_cx);
+    aa_gl_unlock(win);
 
     win->running = 1;
-
-    aa_rx_win_unlock(win);
 
     int stop = 0;
     int stop_on_quit = 0;
@@ -606,10 +608,11 @@ AA_API void
 aa_rx_win_sg_gl_init( struct aa_rx_win * win,
                       struct aa_rx_sg *sg )
 {
-    aa_rx_win_lock(win);
+    aa_gl_lock(win);
     SDL_GL_MakeCurrent(win->window, win->gl_cx);
+    aa_gl_unlock(win);
+
     aa_rx_sg_gl_init(sg);
-    aa_rx_win_unlock(win);
 }
 
 
@@ -648,6 +651,8 @@ aa_rx_win_lock( struct aa_rx_win * win )
         perror("Mutex Lock");
         abort();
     }
+    /* (void) win; */
+    /* aa_gl_lock(); */
 }
 
 AA_API void
@@ -657,4 +662,6 @@ aa_rx_win_unlock( struct aa_rx_win * win )
         perror("Mutex Unlock");
         abort();
     }
+    /* (void) win; */
+    /* aa_gl_unlock(); */
 }

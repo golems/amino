@@ -45,6 +45,8 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
+#include <pthread.h>
+
 #ifdef HAVE_SPNAV_H
 #include <spnav.h>
 #endif /*HAVE_SPNAV_H*/
@@ -182,13 +184,10 @@ static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
 
 #endif /*HAVE_SPNAV_H*/
 
+pthread_once_t sdl_once = PTHREAD_ONCE_INIT;
 
-static int aa_sdl_initialized = 0;
-AA_API void aa_sdl_init( void )
+static void sdl_init_once( void )
 {
-    if( aa_sdl_initialized ) return;
-    aa_sdl_initialized = 1;
-
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
         abort();
@@ -211,6 +210,15 @@ AA_API void aa_sdl_init( void )
 #ifdef HAVE_SPNAV_H
     aa_spnav_init();
 #endif
+}
+
+
+AA_API void aa_sdl_init( void )
+{
+    if( pthread_once(&sdl_once, sdl_init_once ) ) {
+        perror("pthread_once");
+        abort();
+    }
 }
 
 
@@ -434,7 +442,9 @@ AA_API void aa_sdl_display_loop(
             timeout = (int) aa_tm_timespec2msec(ts_timeout);
 
             SDL_Event e;
+            aa_gl_lock();
             int r = SDL_WaitEventTimeout( &e, timeout < 0 ? 0 : timeout );
+            aa_gl_unlock();
             if( r ) {
                 aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
             }
