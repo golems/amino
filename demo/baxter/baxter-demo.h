@@ -62,6 +62,12 @@
 static const int SCREEN_WIDTH = 1000;
 static const int SCREEN_HEIGHT = 1000;
 
+static inline struct aa_rx_sg *
+baxter_demo_load_baxter( struct aa_rx_sg *sg)
+{
+    return aa_rx_dl_sg__baxter(sg);
+}
+
 
 struct aa_rx_win *
 baxter_demo_setup_window( struct aa_rx_sg *sg );

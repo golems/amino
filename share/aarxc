@@ -31,7 +31,7 @@
 #  OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OUTPUT_FILE=aarxc.out.c
-FUNCTION_NAME=""
+SCENE_NAME=""
 
 while test "$1" != x-- -a "x$#" != x0; do
     case "$1" in
@@ -43,7 +43,7 @@ Generate C code from scene graph files files
 Options:
   -h|-?|--help,                  display this help and exit
   -o OUTPUT-FILE                 write generated code to OUTPUT_FILE
-  -f FUNCTION_NAME               name of the generated scene graph function
+  -n SCENE_NAME                  name of the scene graph
 
 Examples:
   aarxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
@@ -56,9 +56,9 @@ EOF
             shift
             OUTPUT_FILE="$1";
             ;;
-        -f)
+        -n)
             shift
-            FUNCTION_NAME="$1";
+            SCENE_NAME="$1";
             ;;
         -*)
             echo "error: unknown option: $1"
@@ -87,5 +87,5 @@ aarx.core --dynamic-space-size 2GB --script <<EOF
 (robray::catch-all
   (robray::scene-graph-compile (robray::load-scene-file "$INPUT_FILE")
                                "$OUTPUT_FILE"
-                               :scene-function "$FUNCTION_NAME"))
+                               :scene-name "$SCENE_NAME"))
 EOF

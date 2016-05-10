@@ -33,7 +33,7 @@ baxter-wksp: baxter-wksp.c $(OTHER_DEPS) baxter-demo.h
 baxter-simple: baxter-simple.c $(OTHER_DEPS) baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-simple.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o baxter-simple
 
-baxter-plugin: baxter-plugin.c $(OTHER_DEPS) baxter-demo.h
+baxter-plugin: baxter-plugin.c baxter-demo.c baxter-demo.h
 	$(CC) $(OTHER_DEPS) baxter-plugin.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o baxter-plugin -ldl
 
 baxter-collision: baxter-collision.c $(OTHER_DEPS) baxter-demo.h
@@ -52,10 +52,17 @@ baxter-model.o: baxter-model.c
 	$(CC) -c baxter-model.c $(CFLAGS_ALL) -fPIC
 
 baxter-model.c:
-	aarxc 'package://baxter_description/urdf/baxter.urdf' -o baxter-model.c -f "baxter_demo_load_baxter"
+	aarxc 'package://baxter_description/urdf/baxter.urdf' -o baxter-model.c -n "baxter"
 
-baxter.so: scene.o
-	gcc -shared -o baxter.so scene.o
+
+scene.o: scene.c
+	$(CC) -c scene.c $(CFLAGS_ALL) -fPIC
+
+scene.c: scene.robray
+	aarxc scene.robray -o scene.c -n "simple"
+
+baxter.so: baxter-model.o
+	gcc -shared -o baxter.so baxter-model.o
 
 clean:
 	rm -f $(PROGS)
