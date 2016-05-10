@@ -52,17 +52,25 @@
 static void *
 rx_dlopen( const char *filename, const char *sym, void **handle )
 {
+    char *err;
+    dlerror();
     *handle = dlopen(filename, RTLD_LOCAL | RTLD_LAZY);
-    if( NULL == *handle ) {
-        fprintf(stderr, "ERROR: plugin '%s' not found\n", filename );
+    if( (err = dlerror()) ) {
+        fprintf(stderr, "ERROR: %s\n", err );
         return NULL;
     }
 
+    dlerror();
     void *result = dlsym(*handle, sym);
-    if( NULL == result ) {
-        dlclose(handle);
-        fprintf(stderr, "ERROR: symbol '%s' not found in plugin '%s'\n",
-                sym, filename);
+    if( (err = dlerror()) ) {
+        fprintf(stderr, "ERROR: %s\n", err );
+
+        /* dlcose() throws error:
+         *  `Inconsistency detected by ld.so: dl-close.c: 762: _dl_close: Assertion `map->l_init_called' failed!'
+         * Better to leak than crash.
+         */
+
+        /* dlclose(handle); */
         return NULL;
     }
     return result;
