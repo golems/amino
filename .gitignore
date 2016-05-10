@@ -123,3 +123,6 @@ amino*.tar.gz
 /share/robray-mode.elc
 /demo/baxter/baxter-model.c
 /demo/baxter/baxter-model.c.h
+/demo/simple-rx/sync
+/demo/baxter/scene.c.h
+/demo/simple-rx/scene.c.h
