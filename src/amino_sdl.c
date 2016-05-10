@@ -418,7 +418,9 @@ AA_API void aa_sdl_display_loop(
         display(context, &params);
         params.first = 0;
         if( params.update ) {
+            aa_gl_lock();
             SDL_GL_SwapWindow(window);
+            aa_gl_unlock();
             params.update = 0;
         }
         params.time_last = params.time_now;

@@ -52,12 +52,35 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_sdl.h"
 
+#include <pthread.h>
+
 #include "scene.c.h"
 
 
 
 static const int SCREEN_WIDTH = 1000;
 static const int SCREEN_HEIGHT = 1000;
+
+static void* fun( void *arg )
+{
+    fprintf(stderr, "+ worker thread starting\n");
+    struct aa_rx_win * win = (struct aa_rx_win * ) arg;
+
+    struct aa_rx_sg *sg0 = aa_rx_dl_sg__scenegraph (NULL);
+
+    for( size_t i = 0; i < 102400; i ++ ) {
+        struct aa_rx_sg *sg1 = aa_rx_dl_sg__scenegraph(NULL);
+        aa_rx_sg_init(sg1); /* initialize scene graph internal structures */
+        aa_rx_win_sg_gl_init(win, sg1); /* Initialize scene graph GL-rendering objects */
+
+        aa_rx_win_set_sg(win, sg1);
+
+        aa_rx_sg_destroy(sg0);
+
+        sg0 = sg1;
+    }
+    fprintf(stderr, "- worker thread finished\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -75,16 +98,15 @@ int main(int argc, char *argv[])
     // start display
     aa_rx_win_start(win);
 
+    int n_thread = 10;
+    pthread_t thread[n_thread];
+    for( size_t i = 0; i < n_thread; i ++ ) {
+        pthread_create( thread + i, NULL, fun, win );
+    }
+    for( size_t i = 0; i < n_thread; i ++ ) {
+        pthread_join(thread[i], NULL );
+    }
 
-    struct aa_rx_sg *sg1 = aa_rx_dl_sg__scenegraph(NULL);
-    aa_rx_sg_init(sg1); /* initialize scene graph internal structures */
-    aa_rx_win_sg_gl_init(win, sg1); /* Initialize scene graph GL-rendering objects */
-
-    aa_rx_win_lock(win);
-    aa_rx_win_set_sg(win, sg1);
-    aa_rx_win_unlock(win);
-
-    aa_rx_sg_destroy(sg0);
 
     // Cleanup
     aa_rx_win_join(win);

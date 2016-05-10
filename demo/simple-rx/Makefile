@@ -1,4 +1,4 @@
-CC := gcc --std=gnu99
+CC := gcc --std=gnu99 -g
 
 ## Use pkg-config to determine the approprate compilation flags
 PKG_CONFIG_MODULES := amino amino_gl sdl2 glew
@@ -12,7 +12,7 @@ simple-rx: scene.o simple-rx.c
 
 
 sync: scene.o sync.c
-	$(CC) scene.o sync.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o sync
+	$(CC) scene.o sync.c $(CFLAGS_ALL) $(LDFLAGS_ALL) -o sync -lpthread
 
 scene.o: scene.c
 	$(CC) -c scene.c $(CFLAGS_ALL)

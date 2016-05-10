@@ -87,6 +87,7 @@
 
 (cffi:defcfun aa-rx-win-set-display-plan :void
   (win rx-win-t)
+  (sg rx-sg-t)
   (n-plan amino-ffi:size-t)
   (plan :pointer))
 
@@ -136,14 +137,16 @@
 
 
 (defun win-set-scene-graph (scene-graph &optional (window (win-create)))
-  (let ((win window)
-        (m-sg (mutable-scene-graph scene-graph)))
+  (let* ((win window)
+         (m-sg (mutable-scene-graph scene-graph))
+         (q (make-vec (aa-rx-sg-config-count m-sg))))
     (with-win-lock win
       (aa-rx-win-sg-gl-init win m-sg)
       (aa-rx-win-set-sg win m-sg)
-      (setf (rx-win-display-object window) m-sg
-            (rx-win-mutable-scene-graph win) m-sg
-            (rx-win-config-vector win) (make-vec (aa-rx-sg-config-count m-sg)))))
+      ;; Preserve the window display object.  The active display
+      ;; function may be using it.
+      (setf (rx-win-mutable-scene-graph win) m-sg
+            (rx-win-config-vector win) q)))
   (values))
 
 (defun win-set-config (configs)
@@ -215,10 +218,9 @@
     (when (zerop (length path))
       (error "Cannot view empty plan"))
     (with-win-paused window
-      (win-set-scene-graph m-sg)
       (with-foreign-simple-vector (pointer length) path :input
         (declare (ignore length))
-        (aa-rx-win-set-display-plan window n-path pointer)))))
+        (aa-rx-win-set-display-plan window m-sg n-path pointer)))))
 
 (defun win-display-mp-seq (mp-seq)
   (let ((window (win-create)))

@@ -80,4 +80,11 @@ typedef int (*aa_sdl_display_fun)(
     void *context,
     struct aa_sdl_display_params *params);
 
+
+typedef int (*aa_sdl_win_display_fun)(
+    struct aa_rx_win *win,
+    void *context,
+    struct aa_sdl_display_params *params);
+
+
 #endif /*AMINO_RX_RXTYPE_H*/

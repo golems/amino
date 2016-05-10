@@ -60,22 +60,15 @@
 
 #include <pthread.h>
 
-static int default_display( void *cx_, struct aa_sdl_display_params *params );
+
+static int default_display( struct aa_rx_win *win,
+                            void *cx_, struct aa_sdl_display_params *params );
+
 
 struct aa_rx_win {
     struct aa_gl_globals *gl_globals;
-    const struct aa_rx_sg *sg;
-    size_t n_config;
-    double *q;
 
-    double *plan_q;
-    double *plan_q_data;
-    size_t plan_n_points;
-    struct timespec plan_t0;
-
-    struct aa_rx_mp_seq *mp_seq;
-
-    aa_sdl_display_fun display;
+    aa_sdl_win_display_fun display;
     void *display_cx;
 
     SDL_Window* window;
@@ -83,7 +76,6 @@ struct aa_rx_win {
 
     pthread_t thread;
     pthread_mutex_t mutex;
-
     pthread_mutexattr_t mattr;
 
     unsigned stop : 1;
@@ -134,7 +126,7 @@ aa_rx_win_create(
     aa_gl_globals_set_aspect( win->gl_globals, (double)width / (double)height );
 
     win->display = default_display;
-    win->display_cx = win;
+    win->display_cx = NULL;
 
     win->stop_on_quit = 1;
 
@@ -159,8 +151,7 @@ aa_rx_win_destroy( struct aa_rx_win *  win)
 {
     aa_gl_globals_destroy( win->gl_globals );
 
-    aa_checked_free( win->q );
-    aa_checked_free( win->plan_q_data );
+    /* TODO: free display_cx */
 
     pthread_mutex_destroy( &win->mutex );
     pthread_mutexattr_destroy( &win->mattr );
@@ -178,27 +169,13 @@ aa_rx_win_gl_globals( struct aa_rx_win * win)
 }
 
 
-AA_API void
-aa_rx_win_set_sg( struct aa_rx_win * win,
-                  const struct aa_rx_sg *sg )
-{
-    aa_rx_win_lock(win);
-
-    aa_checked_free( win->q );
-    win->sg = sg;
-    win->n_config = aa_rx_sg_config_count(sg);
-    win->q = AA_NEW0_AR( double, win->n_config );
-    win->updated = 1;
-
-    aa_gl_globals_unmask_all( win->gl_globals );
-
-    aa_rx_win_unlock(win);
-}
 
 AA_API const struct aa_rx_sg *
 aa_rx_win_get_sg( struct aa_rx_win * win )
 {
-    return win->sg;
+    (void)win;
+    abort();
+    //return win->sg;
 }
 
 AA_API void
@@ -207,8 +184,6 @@ aa_rx_win_display_sg_tf( struct aa_rx_win *win, struct aa_sdl_display_params *pa
                    size_t n_tf, const double *tf_abs, size_t ld_tf )
 {
     aa_sdl_display_params_set_update(params);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     const struct aa_gl_globals *globals = win->gl_globals;
     aa_rx_sg_render( scenegraph, globals, n_tf, tf_abs, ld_tf );
 }
@@ -234,20 +209,48 @@ AA_API void aa_rx_win_display_sg_config(
 }
 
 
-static int default_display( void *cx_, struct aa_sdl_display_params *params )
+
+struct default_display_cx {
+    const struct aa_rx_sg *sg;
+    size_t n_config;
+    double *q;
+    struct aa_rx_win *win;
+};
+
+static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
     /* We hold the mutex now */
-    struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
+    struct default_display_cx *cx = (struct default_display_cx*) cx_;
     int updated = aa_sdl_display_params_get_update(params);
 
-    if( (updated || cx->updated) && cx->sg ) {
-        aa_rx_win_display_sg_config( cx, params,
+    if( (updated || win->updated) && cx && cx->sg ) {
+        aa_rx_win_display_sg_config( win, params,
                                      cx->sg, aa_rx_sg_frame_count(cx->sg), cx->q );
     }
 
     return updated;
 }
 
+AA_API void
+aa_rx_win_set_sg( struct aa_rx_win * win,
+                  const struct aa_rx_sg *sg )
+{
+    aa_rx_win_lock(win);
+
+    struct default_display_cx *cx = AA_NEW(struct default_display_cx);
+    cx->sg = sg;
+    cx->n_config = aa_rx_sg_config_count(sg);
+    /* TODO: fill q with something reasonable */
+    cx->q = AA_NEW0_AR( double, cx->n_config );
+
+    win->display_cx = cx;
+    win->display = default_display;
+
+    win->updated = 1;
+    aa_gl_globals_unmask_all( win->gl_globals );
+
+    aa_rx_win_unlock(win);
+}
 
 AA_API void
 aa_rx_win_set_config( struct aa_rx_win * win,
@@ -255,11 +258,14 @@ aa_rx_win_set_config( struct aa_rx_win * win,
                       const double *q )
 {
     aa_rx_win_lock(win);
+    if( win->display == default_display ) {
+        struct default_display_cx *cx = (struct default_display_cx *) win->display_cx;
+        AA_MEM_CPY( cx->q, q, AA_MIN(n, cx->n_config) );
+        win->updated = 1;
+    } else {
+        fprintf(stderr, "Invalid context to set config\n");
+    }
 
-    AA_MEM_CPY( win->q, q, AA_MIN(n, win->n_config) );
-    win->updated = 1;
-
-    win->display = default_display;
 
     aa_rx_win_unlock(win);
 }
@@ -267,27 +273,40 @@ aa_rx_win_set_config( struct aa_rx_win * win,
 
 static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {
-    struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
+    struct aa_rx_win *win = (struct aa_rx_win*) cx_;
     int r = 0;
-    aa_rx_win_lock(cx);
-    if( !cx->paused ) {
-        r = cx->display(cx->display_cx, params );
+    aa_rx_win_lock(win);
+    if( !win->paused ) {
+        r = win->display(win, win->display_cx, params );
     }
-    aa_rx_win_unlock(cx);
+    aa_rx_win_unlock(win);
     return r;
 }
 
 
 AA_API void
 aa_rx_win_set_display( struct aa_rx_win * win,
-                       aa_sdl_display_fun display,
+                       aa_sdl_win_display_fun display,
                        void *context )
 {
+    /* TODO: need a context destructor */
     win->display = display;
     win->display_cx = context;
 }
 
-static int plan_display_1( struct aa_rx_win *cx, struct aa_sdl_display_params *params,
+struct mp_seq_display_cx {
+
+    double *plan_q;
+    double *plan_q_data;
+    size_t plan_n_points;
+    struct timespec plan_t0;
+
+    struct aa_rx_mp_seq *mp_seq;
+};
+
+static int plan_display_1( struct aa_rx_win *win,
+                           struct mp_seq_display_cx *cx,
+                           struct aa_sdl_display_params *params,
                            const struct aa_rx_sg *scenegraph,
                            size_t n_points, const double *path,
                            double dt, size_t offset )
@@ -328,7 +347,7 @@ static int plan_display_1( struct aa_rx_win *cx, struct aa_sdl_display_params *p
     //double qs[ g_space->config_count_set() ];
     //g_space->state_get( q, qs );
 
-    aa_rx_win_display_sg_config( cx, params,
+    aa_rx_win_display_sg_config( win, params,
                                  scenegraph, m, q );
 
     return 0;
@@ -366,9 +385,10 @@ static int plan_display_1( struct aa_rx_win *cx, struct aa_sdl_display_params *p
 /*                           cx->plan_n_points, cx->plan_q, dt, 0 ); */
 /* } */
 
-static int mp_seq_display( void *cx_, struct aa_sdl_display_params *params )
+
+static int mp_seq_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
-    struct aa_rx_win *cx = (struct aa_rx_win*) cx_;
+    struct mp_seq_display_cx *cx = (struct mp_seq_display_cx *)cx_;
 
     if( aa_sdl_display_params_is_first(params) ) {
         memcpy( &cx->plan_t0,
@@ -417,7 +437,7 @@ static int mp_seq_display( void *cx_, struct aa_sdl_display_params *params )
     }
 
 
-    return plan_display_1(cx, params, sg,
+    return plan_display_1(win, cx, params, sg,
                           n_path, q_all_path, dt, offset );
 }
 
@@ -487,12 +507,14 @@ static int mp_seq_display( void *cx_, struct aa_sdl_display_params *params )
 AA_API void
 aa_rx_win_set_display_seq( struct aa_rx_win * win, struct aa_rx_mp_seq *mp_seq)
 {
-    win->mp_seq = mp_seq;
-    aa_rx_win_set_display( win, mp_seq_display, win );
+    struct mp_seq_display_cx *cx = AA_NEW0(struct mp_seq_display_cx);
+    cx->mp_seq = mp_seq;
+    aa_rx_win_set_display( win, mp_seq_display, cx );
 }
 
 AA_API void
 aa_rx_win_set_display_plan( struct aa_rx_win * win,
+                            struct aa_rx_sg *sg,
                             size_t n_plan_elements,
                             const double *plan )
 {
@@ -502,8 +524,10 @@ aa_rx_win_set_display_plan( struct aa_rx_win * win,
     /* win->plan_n_points = n_plan_elements / aa_rx_sg_config_count(win->sg) ; */
     /* aa_rx_win_set_display( win, plan_display, win ); */
 
+
+    /* TODO: check if we leak this object */
     struct aa_rx_mp_seq *mp_seq = aa_rx_mp_seq_create();
-    aa_rx_mp_seq_append_all(mp_seq, win->sg, n_plan_elements, plan );
+    aa_rx_mp_seq_append_all(mp_seq, sg, n_plan_elements, plan );
     aa_rx_win_set_display_seq( win, mp_seq );
 }
 

@@ -43,6 +43,8 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
+#include <pthread.h>
+
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxtype_internal.h"
 #include "amino/rx/scenegraph.h"
@@ -54,6 +56,24 @@
 
 #include "amino/getset.h"
 
+
+static pthread_mutex_t gl_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void aa_gl_lock()
+{
+    if( pthread_mutex_lock( &gl_mutex ) ) {
+        perror("Mutex Lock");
+        abort();
+    }
+}
+
+void aa_gl_unlock()
+{
+    if( pthread_mutex_unlock( &gl_mutex ) ) {
+        perror("Mutex Unlock");
+        abort();
+    }
+}
 
 #define CHECK_GL_STATUS(TYPE,handle,pname) {                            \
         GLint status;                                                   \
@@ -234,7 +254,12 @@ static GLint aa_gl_id_texture;
 static int aa_gl_initialized = 0;
 AA_API void aa_gl_init()
 {
-    if( aa_gl_initialized ) return;
+    aa_gl_lock();
+
+    if( aa_gl_initialized ) {
+        aa_gl_unlock();
+        return;
+    }
 
     aa_gl_initialized = 1;
 
@@ -269,6 +294,8 @@ AA_API void aa_gl_init()
 
     /* Register cleanup function */
     aa_gl_buffers_destroy_fun = aa_gl_buffers_destroy;
+
+    aa_gl_unlock();
 }
 
 
@@ -383,10 +410,15 @@ AA_API void aa_gl_draw_tf (
 
 AA_API void
 aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
-    if( bufs->has_indices ) glDeleteProgram(bufs->indices);
-    if( bufs->has_colors ) glDeleteProgram(bufs->colors);
-    if( bufs->has_values ) glDeleteProgram(bufs->values);
+    aa_gl_lock();
+    if( bufs->has_indices ) glDeleteBuffers(1, &bufs->indices);
+    /* if( bufs->has_colors ) glDeleteBuffers(1, &bufs->colors); */
+    if( bufs->has_values ) glDeleteBuffers(1, &bufs->values);
+    if( bufs->has_normals ) glDeleteBuffers(1, &bufs->normals);
+    if( bufs->has_uv ) glDeleteBuffers(1, &bufs->uv);
+    if( bufs->has_tex2d ) glDeleteTextures(1, &bufs->tex2d);
     free(bufs);
+    aa_gl_unlock();
 }
 
 /* static void quad_tr( unsigned *indices, */
@@ -1118,6 +1150,11 @@ aa_rx_sg_render(
 {
     aa_rx_sg_ensure_clean_gl( sg );
 
+    aa_gl_lock();
+
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     assert( n_TF == aa_rx_sg_frame_count(sg) );
 
     glUseProgram(aa_gl_id_program);
@@ -1159,6 +1196,8 @@ aa_rx_sg_render(
     aa_rx_sg_map_geom( sg, &render_helper, &cx );
 
     glUseProgram(0);
+
+    aa_gl_unlock();
 }
 
 void gl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
@@ -1171,8 +1210,10 @@ AA_API void
 aa_rx_sg_gl_init( struct aa_rx_sg *sg )
 {
     if( ! aa_rx_sg_is_clean_gl(sg) ) {
+        aa_gl_lock();
         aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
         aa_rx_sg_clean_gl(sg);
+        aa_gl_unlock();
     }
 }
 

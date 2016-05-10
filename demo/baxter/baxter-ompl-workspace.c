@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     aa_gl_globals_set_show_visual(globals, 1);
     aa_gl_globals_set_show_collision(globals, 0);
 
-    aa_rx_win_set_display_plan(win, g_n_path, g_path );
+    aa_rx_win_set_display_plan(win, scenegraph, g_n_path, g_path );
 
     /* Run display loop */
     aa_rx_win_display_loop(win);

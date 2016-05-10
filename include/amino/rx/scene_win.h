@@ -117,12 +117,13 @@ aa_rx_win_set_config( struct aa_rx_win * win,
 
 AA_API void
 aa_rx_win_set_display( struct aa_rx_win * win,
-                       aa_sdl_display_fun display,
+                       aa_sdl_win_display_fun display,
                        void *context );
 
 
 AA_API void
 aa_rx_win_set_display_plan( struct aa_rx_win * win,
+                            struct aa_rx_sg *sg,
                             size_t n_plan_elements,
                             const double *plan );
 
