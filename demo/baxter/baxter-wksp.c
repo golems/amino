@@ -48,7 +48,7 @@ struct display_cx {
     double *q;
 };
 
-int display( void *cx_, struct aa_sdl_display_params *params )
+int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;

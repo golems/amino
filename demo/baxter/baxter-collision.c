@@ -48,7 +48,7 @@ struct display_cx {
     //struct timespec last;
 };
 
-int display( void *cx_, struct aa_sdl_display_params *params )
+int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
@@ -85,6 +85,7 @@ int display( void *cx_, struct aa_sdl_display_params *params )
 
     return 0;
 }
+
 
 int main(int argc, char *argv[])
 {
