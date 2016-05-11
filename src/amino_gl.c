@@ -83,12 +83,14 @@ void
 aa_gl_tfmat2glmat( const double T[AA_RESTRICT 12],
                    GLfloat M[AA_RESTRICT 16] )
 {
+    /* Fill Transform */
     for( size_t j = 0; j < 4; j++ ) {
         for( size_t i = 0; i < 3; i++ ) {
             M[j*4 + i] = (GLfloat)T[j*3 + i];
         }
     }
 
+    /* Set Augmented Row */
     for( size_t j = 0; j < 3; j++ ) {
         M[j*4 + 3] = 0;
     }
@@ -323,16 +325,18 @@ AA_API void aa_gl_draw_tf (
     check_error("uniform mat model");
 
     // positions
-    glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
-    check_error("glBindBuffer");
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
+        check_error("glBindBuffer");
 
-    glEnableVertexAttribArray((GLuint)aa_gl_id_position);
-    check_error("glEnableVert");
+        glEnableVertexAttribArray((GLuint)aa_gl_id_position);
+        check_error("glEnableVert");
 
-    glVertexAttribPointer((GLuint)aa_gl_id_position, buffers->values_size, GL_FLOAT, GL_FALSE, 0, 0);
-    check_error("glVertAttribPointer position");
+        glVertexAttribPointer((GLuint)aa_gl_id_position, buffers->values_size, GL_FLOAT, GL_FALSE, 0, 0);
+        check_error("glVertAttribPointer position");
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 
     // colors
     /* glBindBuffer(GL_ARRAY_BUFFER, buffers->colors); */
@@ -345,7 +349,7 @@ AA_API void aa_gl_draw_tf (
     /* check_error("glVerteAttribPointer"); */
 
     // normals
-    if( 0 <= aa_gl_id_normal && buffers->normals_size ) {
+    if( buffers->has_normals ) {
         glBindBuffer(GL_ARRAY_BUFFER, buffers->normals);
         check_error("glBindBuffer normal");
 
@@ -354,6 +358,8 @@ AA_API void aa_gl_draw_tf (
 
         glVertexAttribPointer((GLuint)aa_gl_id_normal, buffers->normals_size, GL_FLOAT, GL_FALSE, 0, 0);
         check_error("glVerteAttribPointer normal");
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
 
@@ -371,6 +377,8 @@ AA_API void aa_gl_draw_tf (
 
         glVertexAttribPointer((GLuint)aa_gl_id_uv, 2, GL_FLOAT, GL_FALSE, 0, 0);
         check_error("glVerteAttribPointer uv");
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     // Light position
     //glUniform3f(aa_gl_id_light_position,
@@ -387,21 +395,27 @@ AA_API void aa_gl_draw_tf (
             GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
             );
+        //check_error("glDrawElements");
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
+        //fprintf(stderr,"Draw simple: %u\n", buffers->count);
         glDrawArrays(buffers->mode, 0, buffers->count);
+        //check_error("glDrawArrays");
     }
-    check_error("glDraw");
 
 
     glDisableVertexAttribArray((GLuint)aa_gl_id_position);
     /* glDisableVertexAttribArray((GLuint)aa_gl_id_color); */
 
-    if( 0 <= aa_gl_id_normal ) {
+    if( buffers->has_normals ) {
         glDisableVertexAttribArray((GLuint)aa_gl_id_normal);
     }
     if( buffers->has_uv ) {
         glDisableVertexAttribArray((GLuint)aa_gl_id_uv);
+    }
+
+    if( buffers->has_tex2d ) {
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -522,7 +536,8 @@ static void bind_mesh (
         bufs->indices_size = (GLint)size;
         bufs->count = (GLsizei)(size*mesh->n_indices);
     } else {
-        bufs->count = (GLsizei)(size*mesh->n_vertices);
+        /* Count is the number of vertices */
+        bufs->count = (GLsizei)(mesh->n_vertices);
     }
 
 
@@ -530,7 +545,7 @@ static void bind_mesh (
 
     glGenBuffers(1, &bufs->values);
     glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->values_size*sizeof(float)*n_vert),
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->values_size*sizeof(GLfloat)*n_vert),
                  mesh->vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_values = 1;
@@ -552,6 +567,7 @@ static void bind_mesh (
                      0, GL_RGBA, GL_UNSIGNED_BYTE, mesh->rgba);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE_2D, 0);
         bufs->has_tex2d = 1;
     }
 
@@ -786,9 +802,9 @@ AA_API void aa_geom_gl_buffers_init_box (
     /* aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 ); */
 
     struct aa_rx_mesh *mesh = aa_rx_mesh_create();
-    aa_rx_mesh_set_vertices( mesh, 6*4, values, 0 );
+    aa_rx_mesh_set_vertices( mesh, n, values, 0 );
+    aa_rx_mesh_set_normals( mesh, n, normals, 0 );
     aa_rx_mesh_set_texture(mesh, &geom->base.opt);
-    aa_rx_mesh_set_normals( mesh, 6*4, normals, 0 );
     quad_mesh( &geom->base, mesh );
     aa_rx_mesh_destroy(mesh);
 
