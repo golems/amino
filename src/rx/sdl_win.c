@@ -55,6 +55,7 @@
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl.h"
+#include "amino/rx/scene_sdl_internal.h"
 #include "amino/rx/scene_win.h"
 #include "amino/rx/mp_seq.h"
 
@@ -157,12 +158,14 @@ aa_rx_win_destroy( struct aa_rx_win *  win)
     pthread_mutex_destroy( &win->mutex );
     pthread_mutexattr_destroy( &win->mattr );
 
+    aa_sdl_lock();
     aa_gl_lock();
 
     SDL_GL_DeleteContext(win->gl_cx);
     SDL_DestroyWindow(win->window);
 
     aa_gl_unlock();
+    aa_sdl_unlock();
 
     free(win);
 }
@@ -540,9 +543,11 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
 {
 
 
+    aa_sdl_lock();
     aa_gl_lock(win);
     SDL_GL_MakeCurrent(win->window, win->gl_cx);
     aa_gl_unlock(win);
+    aa_sdl_unlock();
 
     win->running = 1;
 
@@ -608,11 +613,16 @@ AA_API void
 aa_rx_win_sg_gl_init( struct aa_rx_win * win,
                       struct aa_rx_sg *sg )
 {
-    aa_gl_lock(win);
-    SDL_GL_MakeCurrent(win->window, win->gl_cx);
-    aa_gl_unlock(win);
+    (void) win;
+    (void) sg;
+    /* aa_tick("sg gl init lock: "); */
+    /* aa_gl_lock(win); */
+    /* aa_tock(); */
+    /* SDL_GL_MakeCurrent(win->window, win->gl_cx); */
+    /* aa_gl_unlock(win); */
 
-    aa_rx_sg_gl_init(sg);
+    /* aa_rx_sg_gl_init(sg); */
+
 }
 
 

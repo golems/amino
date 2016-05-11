@@ -56,6 +56,7 @@
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl.h"
+#include "amino/rx/scene_sdl_internal.h"
 
 
 struct aa_sdl_display_params {
@@ -395,14 +396,16 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
 
 }
 
-void aa_sdl_scroll( struct aa_gl_globals * globals,
-                    int *update, int *quit )
-{
-    SDL_Event e;
-    while( SDL_PollEvent( &e ) != 0 ) {
-        aa_sdl_scroll_event( globals, update, quit, &e );
-    }
-}
+/* void aa_sdl_scroll( struct aa_gl_globals * globals, */
+/*                     int *update, int *quit ) */
+/* { */
+/*     SDL_Event e; */
+/*     aa_sdl_lock(); */
+/*     while( SDL_PollEvent( &e ) != 0 ) { */
+/*         aa_sdl_scroll_event( globals, update, quit, &e ); */
+/*     } */
+/*     aa_sdl_unlock(); */
+/* } */
 
 AA_API void aa_sdl_display_loop(
     SDL_Window* window,
@@ -426,9 +429,12 @@ AA_API void aa_sdl_display_loop(
         display(context, &params);
         params.first = 0;
         if( params.update ) {
+            /* Take the SDL lock first, because it is slow */
+            aa_sdl_lock();
             aa_gl_lock();
             SDL_GL_SwapWindow(window);
             aa_gl_unlock();
+            aa_sdl_unlock();
             params.update = 0;
         }
         params.time_last = params.time_now;
@@ -440,14 +446,14 @@ AA_API void aa_sdl_display_loop(
             clock_gettime( CLOCK_MONOTONIC, &params.time_now );
             struct timespec ts_timeout = aa_tm_sub(next, params.time_now);
             timeout = (int) aa_tm_timespec2msec(ts_timeout);
-
+            //printf("timeout: %d\n", timeout );
             SDL_Event e;
-            aa_gl_lock();
+            aa_sdl_lock();
             int r = SDL_WaitEventTimeout( &e, timeout < 0 ? 0 : timeout );
-            aa_gl_unlock();
             if( r ) {
                 aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
             }
+            aa_sdl_unlock();
 
         }
 
@@ -474,6 +480,8 @@ AA_API void aa_sdl_gl_window(
 {
     aa_sdl_init();
 
+    aa_sdl_lock();
+
     *pwindow = SDL_CreateWindow( title,
                                  x_pos, y_pos,
                                  width, height,
@@ -490,7 +498,29 @@ AA_API void aa_sdl_gl_window(
         abort();
     }
 
+    aa_sdl_unlock();
+
     aa_gl_init();
     //printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
+}
+
+
+static pthread_mutex_t sdl_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void aa_sdl_lock()
+{
+    if( pthread_mutex_lock( &sdl_mutex ) ) {
+        perror("AminoSDL Mutex Lock");
+        abort();
+    }
+
+}
+
+void aa_sdl_unlock()
+{
+    if( pthread_mutex_unlock( &sdl_mutex ) ) {
+        perror("AminoSDL Mutex Unlock");
+        abort();
+    }
 }

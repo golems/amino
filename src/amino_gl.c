@@ -1152,9 +1152,11 @@ aa_rx_sg_render(
     const struct aa_gl_globals *globals,
     size_t n_TF, const double *TF_abs, size_t ld_tf)
 {
-    aa_rx_sg_ensure_clean_gl( sg );
+    /* aa_rx_sg_ensure_clean_gl( sg ); */
 
     aa_gl_lock();
+
+    aa_rx_sg_gl_init((struct aa_rx_sg*)sg);
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
