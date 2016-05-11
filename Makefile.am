@@ -274,6 +274,11 @@ endif # GL
 noinst_LTLIBRARIES += libtestutil.la
 libtestutil_la_SOURCES = src/test/testutil.c
 
+
+noinst_PROGRAMS += memregion
+memregion_SOURCES = src/test/memregion.c
+memregion_LDADD = libamino.la libtestutil.la
+
 TESTS = aa_test
 noinst_PROGRAMS += aa_test
 aa_test_SOURCES = src/test/aa_test.c

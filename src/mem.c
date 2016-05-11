@@ -282,6 +282,7 @@ void aa_mem_region_local_init(size_t size) {
 void aa_mem_region_local_destroy(void) {
     if( aa_mem_region_local ) {
         aa_mem_region_destroy( aa_mem_region_local );
+        free( aa_mem_region_local );
     }
     aa_mem_region_local = NULL;
 }
