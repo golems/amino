@@ -159,7 +159,9 @@
 
 (defun scene-geometry-grid (options &key dimension delta width)
   (%rx-scene-geometry (aa-rx-geom-grid (alist-rx-geom-opt options)
-                                       dimension delta width)
+                                       (ensure-vec dimension)
+                                       (ensure-vec delta)
+                                       width)
                    options))
 
 (defun scene-geometry-text (options text &key (thickness 1))

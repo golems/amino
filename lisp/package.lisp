@@ -106,6 +106,7 @@
    :fnvec-flatten
    :make-matrix
    :matref
+   :ensure-vec
    ;; Sparse
    :make-crs-matrix
    ;; TF Types
