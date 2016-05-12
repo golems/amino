@@ -264,11 +264,23 @@
 (defstruct (scene-frame-fixed (:include scene-frame))
   "A frame with a fixed transformation")
 
+(define-condition oedipus-frame-error (error)
+    ((name :initarg :name)))
+
+(defun check-frame-parent (parent name)
+  (when (zerop (rope-compare-fast parent name))
+    (error 'oedipus-frame-error :name (rope-string name))))
+
+(defmethod print-object ((object oedipus-frame-error) stream)
+  (format stream "Frame `~A' cannot be its own parent."
+          (slot-value object 'name)))
+
 (defun scene-frame-fixed (parent name &key
                                         geometry
                                         inertial
                                         (tf (identity-tf)))
   "Create a new fixed frame."
+  (check-frame-parent parent name)
   (make-scene-frame-fixed :name name
                           :parent parent
                           :tf tf
@@ -368,6 +380,7 @@
                                            limits)
   "Create a new revolute frame."
   (assert axis)
+  (check-frame-parent parent name)
   (make-scene-frame-revolute :name name
                              :configuration-name configuration-name
                              :configuration-offset (coerce configuration-offset 'double-float)
@@ -387,6 +400,7 @@
                                             (tf (identity-tf)))
   "Create a new prismatic frame."
   (assert axis)
+  (check-frame-parent parent name)
   (make-scene-frame-prismatic :name name
                               :configuration-name configuration-name
                               :configuration-offset (coerce configuration-offset 'double-float)
