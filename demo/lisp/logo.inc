@@ -10,7 +10,7 @@
 
 
 global_settings { ambient_light rgb<.2, .2, .2> }
-light_source{<10,20,-15>
+light_source{<-5,12,-5>
   // Sun
   color White
   parallel

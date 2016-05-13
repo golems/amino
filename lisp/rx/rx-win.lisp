@@ -149,6 +149,9 @@
             (rx-win-config-vector win) q)))
   (values))
 
+(defun win-scene-graph (&optional (window *window*))
+  (mutable-scene-graph-scene-graph (rx-win-mutable-scene-graph window)))
+
 (defun win-set-config (configs)
   (let* ((win (win-create))
          (sg (rx-win-mutable-scene-graph win))

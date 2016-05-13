@@ -72,6 +72,7 @@
     (:alpha . 1d0)
     (:visual . t)
     (:collision . t)
+    (:scale . 1)
     (:type . nil)))
 
 (defun draw-option (options key)
@@ -79,6 +80,7 @@
 
 (defun draw-options-default (&key
                                (options *draw-options*)
+                               (scale (draw-option options :scale))
                                (no-shadow (draw-option options :no-shadow))
                                (specular (draw-option options :specular))
                                (color (draw-option options :color))
@@ -88,6 +90,7 @@
                                (collision (draw-option options :collision)))
   (list* (cons :no-shadow no-shadow)
          (cons :color color)
+         (cons :scale scale)
          (cons :specular specular)
          (cons :alpha alpha)
          (cons :visual visual)
@@ -100,9 +103,6 @@
 
 (defun merge-draw-options (new-options &optional (base-options *draw-options*))
   (append new-options base-options))
-
-
-
 
 (defstruct scene-geometry
   shape
