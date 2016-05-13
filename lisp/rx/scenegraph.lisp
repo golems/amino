@@ -226,7 +226,7 @@
   (effort nil :type (or null joint-limit)))
 
 (defstruct (scene-config (:include scene-object))
-  (limits nil :type (or nil joint-limits)))
+  (limits nil :type (or null joint-limits)))
 
 ;;;;;;;;;;;;;;
 ;;; FRAMES ;;;
@@ -379,11 +379,13 @@
                                            (configuration-name name)
                                            (configuration-offset 0d0)
                                            (tf (identity-tf))
+                                           geometry
                                            limits)
   "Create a new revolute frame."
   (assert axis)
   (check-frame-parent parent name)
   (make-scene-frame-revolute :name name
+                             :geometry (ensure-list geometry)
                              :configuration-name configuration-name
                              :configuration-offset (coerce configuration-offset 'double-float)
                              :parent parent
