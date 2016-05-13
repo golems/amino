@@ -874,12 +874,14 @@ AA_API void aa_geom_gl_buffers_init_box (
 }
 
 
-AA_API void aa_geom_gl_buffers_init_cylinder (
-    struct aa_rx_geom_cylinder *geom
+
+static void init_cone_cylinder (
+    struct aa_rx_geom *geom,
+    double height, double start_radius, double end_radius
     )
 {
-    double r = geom->shape.radius;
-    GLfloat h[2] = {0, (GLfloat)geom->shape.height};
+    double r[2] = {start_radius, end_radius};
+    GLfloat h[2] = {0, (GLfloat)height};
 
     unsigned p = 36;
 
@@ -899,10 +901,10 @@ AA_API void aa_geom_gl_buffers_init_cylinder (
             double theta = i * (2*M_PI/p);
             double s = sin(theta);
             double c = cos(theta);
-            double x = c*r;
-            double y = s*r;
 
             for( unsigned j = 0; j < 2; j ++ ) {
+                double x = c*r[j];
+                double y = s*r[j];
                 values[a]    = (GLfloat)x;
                 normals[a++] = (GLfloat)c;
                 values[a]    = (GLfloat)y;
@@ -977,11 +979,10 @@ AA_API void aa_geom_gl_buffers_init_cylinder (
     aa_rx_mesh_set_vertices( mesh, a/3, values, 0 );
     aa_rx_mesh_set_normals( mesh, an/3, normals, 0 );
     aa_rx_mesh_set_indices( mesh, b/3, indices, 0 );
-    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
-    tri_mesh( &geom->base, mesh );
+    aa_rx_mesh_set_texture(mesh, &geom->opt);
+    tri_mesh( geom, mesh );
     aa_rx_mesh_destroy(mesh);
 }
-
 
 
 AA_API void aa_geom_gl_buffers_init (
@@ -1002,8 +1003,21 @@ AA_API void aa_geom_gl_buffers_init (
         aa_geom_gl_buffers_init_mesh((struct aa_rx_geom_mesh*)geom);
         break;
     case AA_RX_CYLINDER:
-        aa_geom_gl_buffers_init_cylinder((struct aa_rx_geom_cylinder*)geom);
+    {
+        struct aa_rx_geom_cylinder *cylinder = (struct aa_rx_geom_cylinder *)geom;
+        init_cone_cylinder( &cylinder->base, cylinder->shape.height,
+                            cylinder->shape.radius,
+                            cylinder->shape.radius );
         break;
+    }
+    case AA_RX_CONE:
+    {
+        struct aa_rx_geom_cone *cone = (struct aa_rx_geom_cone *)geom;
+        init_cone_cylinder( &cone->base, cone->shape.height,
+                            cone->shape.start_radius,
+                            cone->shape.end_radius );
+        break;
+    }
     default:
         break;
         //abort();
