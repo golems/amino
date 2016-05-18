@@ -396,7 +396,7 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
     return data.result;
 }
 
-AA_API void aa_rx_cl_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q)
+AA_API void aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q)
 {
     size_t n_f = aa_rx_sg_frame_count(scene_graph);
     if (n_q != aa_rx_sg_config_count(scene_graph)){

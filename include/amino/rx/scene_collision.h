@@ -79,10 +79,6 @@ aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph );
 AA_API struct aa_rx_cl *
 aa_rx_cl_create( const struct aa_rx_sg *scene_graph );
 
-
-AA_API void
-aa_rx_cl_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q);
-
 AA_API void
 aa_rx_cl_destroy( struct aa_rx_cl *cl );
 
@@ -107,5 +103,8 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
                 size_t n_tf,
                 const double *TF, size_t ldTF,
                 struct aa_rx_cl_set *cl_set );
+
+AA_API void
+aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q);
 
 #endif /*AMINO_RX_SCENE_COLLISION_H*/
