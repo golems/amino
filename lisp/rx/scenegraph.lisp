@@ -72,6 +72,7 @@
     (:alpha . 1d0)
     (:visual . t)
     (:collision . t)
+    (:scale . 1)
     (:type . nil)))
 
 (defun draw-option (options key)
@@ -79,6 +80,7 @@
 
 (defun draw-options-default (&key
                                (options *draw-options*)
+                               (scale (draw-option options :scale))
                                (no-shadow (draw-option options :no-shadow))
                                (specular (draw-option options :specular))
                                (color (draw-option options :color))
@@ -88,6 +90,7 @@
                                (collision (draw-option options :collision)))
   (list* (cons :no-shadow no-shadow)
          (cons :color color)
+         (cons :scale scale)
          (cons :specular specular)
          (cons :alpha alpha)
          (cons :visual visual)
@@ -100,9 +103,6 @@
 
 (defun merge-draw-options (new-options &optional (base-options *draw-options*))
   (append new-options base-options))
-
-
-
 
 (defstruct scene-geometry
   shape
@@ -159,7 +159,9 @@
 
 (defun scene-geometry-grid (options &key dimension delta width)
   (%rx-scene-geometry (aa-rx-geom-grid (alist-rx-geom-opt options)
-                                       dimension delta width)
+                                       (ensure-vec dimension)
+                                       (ensure-vec delta)
+                                       width)
                    options))
 
 (defun scene-geometry-text (options text &key (thickness 1))
@@ -224,7 +226,7 @@
   (effort nil :type (or null joint-limit)))
 
 (defstruct (scene-config (:include scene-object))
-  (limits nil :type (or nil joint-limits)))
+  (limits nil :type (or null joint-limits)))
 
 ;;;;;;;;;;;;;;
 ;;; FRAMES ;;;
@@ -264,11 +266,23 @@
 (defstruct (scene-frame-fixed (:include scene-frame))
   "A frame with a fixed transformation")
 
+(define-condition oedipus-frame-error (error)
+    ((name :initarg :name)))
+
+(defun check-frame-parent (parent name)
+  (when (zerop (rope-compare-fast parent name))
+    (error 'oedipus-frame-error :name (rope-string name))))
+
+(defmethod print-object ((object oedipus-frame-error) stream)
+  (format stream "Frame `~A' cannot be its own parent."
+          (slot-value object 'name)))
+
 (defun scene-frame-fixed (parent name &key
                                         geometry
                                         inertial
                                         (tf (identity-tf)))
   "Create a new fixed frame."
+  (check-frame-parent parent name)
   (make-scene-frame-fixed :name name
                           :parent parent
                           :tf tf
@@ -365,10 +379,13 @@
                                            (configuration-name name)
                                            (configuration-offset 0d0)
                                            (tf (identity-tf))
+                                           geometry
                                            limits)
   "Create a new revolute frame."
   (assert axis)
+  (check-frame-parent parent name)
   (make-scene-frame-revolute :name name
+                             :geometry (ensure-list geometry)
                              :configuration-name configuration-name
                              :configuration-offset (coerce configuration-offset 'double-float)
                              :parent parent
@@ -387,6 +404,7 @@
                                             (tf (identity-tf)))
   "Create a new prismatic frame."
   (assert axis)
+  (check-frame-parent parent name)
   (make-scene-frame-prismatic :name name
                               :configuration-name configuration-name
                               :configuration-offset (coerce configuration-offset 'double-float)

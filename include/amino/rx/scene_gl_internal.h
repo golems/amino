@@ -86,8 +86,8 @@ struct aa_gl_buffers {
     GLuint values;
     GLint  values_size;
 
-    GLuint colors;
-    GLint  colors_size;
+    /* GLuint colors; */
+    /* GLint  colors_size; */
 
     GLuint indices;
     GLint  indices_size;
@@ -103,7 +103,7 @@ struct aa_gl_buffers {
     GLfloat specular[3];
 
     unsigned has_indices : 1;
-    unsigned has_colors : 1;
+    /* unsigned has_colors : 1; */
     unsigned has_values : 1;
     unsigned has_normals : 1;
     unsigned has_tex2d : 1;
@@ -120,5 +120,9 @@ struct aa_gl_buffers {
 AA_API void aa_gl_draw_tf (
     const double *world_E_model,
     const struct aa_gl_buffers *buffers);
+
+
+void aa_gl_lock();
+void aa_gl_unlock();
 
 #endif /*AMINO_RX_SCENE_GL_INTERNAL_H*/

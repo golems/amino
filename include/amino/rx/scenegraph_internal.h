@@ -220,6 +220,15 @@ aa_rx_sg_clean_gl( struct aa_rx_sg *scene_graph );
 AA_API void
 aa_rx_sg_clean_collision( struct aa_rx_sg *scene_graph );
 
+AA_API int
+aa_rx_sg_is_clean( struct aa_rx_sg *scene_graph );
+
+AA_API int
+aa_rx_sg_is_clean_gl( struct aa_rx_sg *scene_graph );
+
+AA_API int
+aa_rx_sg_is_clean_collision( struct aa_rx_sg *scene_graph );
+
 AA_API void
 aa_rx_sg_ensure_clean_gl( const struct aa_rx_sg *scene_graph );
 

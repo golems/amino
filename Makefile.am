@@ -81,6 +81,7 @@ lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
+	src/refcount.c                 \
 	src/la.c                       \
 	src/la2.c                      \
 	src/opt/opt.c                  \
@@ -193,7 +194,8 @@ libamino_la_SOURCES += src/mac/euler_f2c.c
 
 endif
 
-
+## EMACS ##
+lisp_LISP = share/robray-mode.el
 
 ## JAVA ##
 JSOURCES =                                        \
@@ -271,6 +273,11 @@ endif # GL
 ## TESTS ##
 noinst_LTLIBRARIES += libtestutil.la
 libtestutil_la_SOURCES = src/test/testutil.c
+
+
+noinst_PROGRAMS += memregion
+memregion_SOURCES = src/test/memregion.c
+memregion_LDADD = libamino.la libtestutil.la
 
 TESTS = aa_test
 noinst_PROGRAMS += aa_test

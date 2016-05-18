@@ -48,7 +48,7 @@ struct display_cx {
     double *q;
 };
 
-int display( void *cx_, struct aa_sdl_display_params *params )
+int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     (void)argc; (void)argv;
 
     // Initialize scene graph
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph(NULL);
+    struct aa_rx_sg *scenegraph = baxter_demo_load_baxter(NULL);
     aa_rx_sg_init(scenegraph);
 
     // setup window

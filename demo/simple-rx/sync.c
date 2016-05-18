@@ -35,11 +35,6 @@
  *
  */
 
-#ifndef BAXTER_DEMO_H
-#define BAXTER_DEMO_H
-
-#define GL_GLEXT_PROTOTYPES
-
 #include <error.h>
 #include <stdio.h>
 #include <math.h>
@@ -57,25 +52,66 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_sdl.h"
 
-#include "baxter-model.c.h"
+#include <pthread.h>
+
+#include "scene.c.h"
+
+
 
 static const int SCREEN_WIDTH = 1000;
 static const int SCREEN_HEIGHT = 1000;
 
-static inline struct aa_rx_sg *
-baxter_demo_load_baxter( struct aa_rx_sg *sg)
+static void* fun( void *arg )
 {
-    return aa_rx_dl_sg__baxter(sg);
-}
+    fprintf(stderr, "+ worker thread starting\n");
+    struct aa_rx_win * win = (struct aa_rx_win * ) arg;
 
+    struct aa_rx_sg *sg0 = aa_rx_dl_sg__scenegraph (NULL);
 
-struct aa_rx_win *
-baxter_demo_setup_window( struct aa_rx_sg *sg );
+    for( size_t i = 0; i < 102400; i ++ ) {
+        struct aa_rx_sg *sg1 = aa_rx_dl_sg__scenegraph(NULL);
+        aa_rx_sg_init(sg1); /* initialize scene graph internal structures */
+        aa_rx_win_sg_gl_init(win, sg1); /* Initialize scene graph GL-rendering objects */
 
-static void baxter_demo_check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
+        aa_rx_win_set_sg(win, sg1);
+
+        aa_rx_sg_destroy(sg0);
+
+        sg0 = sg1;
     }
+    fprintf(stderr, "- worker thread finished\n");
 }
 
-#endif /*BAXTER_DEMO_H*/
+int main(int argc, char *argv[])
+{
+    (void)argc; (void)argv;
+
+    struct aa_rx_win * win =
+        aa_rx_win_default_create ( "Sync Test", SCREEN_WIDTH, SCREEN_HEIGHT );
+
+    struct aa_rx_sg *sg0 = aa_rx_dl_sg__scenegraph (NULL);
+
+    aa_rx_sg_init(sg0); /* initialize scene graph internal structures */
+    aa_rx_win_sg_gl_init(win, sg0); /* Initialize scene graph GL-rendering objects */
+    aa_rx_win_set_sg(win, sg0); /* Set the scenegraph for the window */
+
+    // start display
+    aa_rx_win_start(win);
+
+    int n_thread = 10;
+    pthread_t thread[n_thread];
+    for( size_t i = 0; i < n_thread; i ++ ) {
+        pthread_create( thread + i, NULL, fun, win );
+    }
+    for( size_t i = 0; i < n_thread; i ++ ) {
+        pthread_join(thread[i], NULL );
+    }
+
+
+    // Cleanup
+    aa_rx_win_join(win);
+    aa_rx_win_destroy(win);
+    SDL_Quit();
+
+    return 0;
+}

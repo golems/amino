@@ -160,3 +160,37 @@
 ;;             (scene-graph scene-graph frame)))
 ;;         scene-graph
 ;;         (ensure-list items)))
+
+(defun draw-e-paper (parent name &key
+                                   tf
+                                   (options (draw-options-default))
+                                   (delta .1)
+                                   (major-width (* .05 delta))
+                                   (minor-width (* .05 delta .5))
+                                   (offset 1e-3)
+                                   (x 1)
+                                   (y 1)
+                                   (paper-color (vec .91 .96 .88))
+                                   (grid-color (vec 0 .5 0)))
+  (let ((grid-major (rope name "-grid-major"))
+        (grid-minor (rope name "-grid-minor"))
+        (grid-options (merge-draw-options (draw-options :color grid-color)
+                                          options)))
+    (scene-graph
+     (scene-frame-fixed parent name
+                        :geometry (scene-geometry-box (merge-draw-options (draw-options :color paper-color)
+                                                                          options)
+                                                      (vec3* x y offset))
+                        :tf (tf tf))
+     (scene-frame-fixed name grid-major
+                        :geometry (scene-geometry-grid grid-options
+                                                       :dimension (vec (/ x 2) (/ y 2))
+                                                       :delta (vec (* 5 delta) (* 5 delta))
+                                                       :width major-width)
+                        :tf (tf* nil (vec3* 0 0 1e-3)))
+     (scene-frame-fixed grid-major grid-minor
+                        :geometry (scene-geometry-grid grid-options
+                                                       :dimension (vec (/ x 2) (/ y 2))
+                                                       :delta (vec delta delta)
+                                                       :width minor-width)
+                        :tf (tf* nil nil)))))

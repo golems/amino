@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2015, Rice University
+ * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -35,47 +35,14 @@
  *
  */
 
-#ifndef BAXTER_DEMO_H
-#define BAXTER_DEMO_H
-
-#define GL_GLEXT_PROTOTYPES
-
-#include <error.h>
-#include <stdio.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <SDL.h>
-
-
 
 #include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_win.h"
-#include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_sdl.h"
 
-#include "baxter-model.c.h"
 
-static const int SCREEN_WIDTH = 1000;
-static const int SCREEN_HEIGHT = 1000;
-
-static inline struct aa_rx_sg *
-baxter_demo_load_baxter( struct aa_rx_sg *sg)
+int main( int argc, char **argv )
 {
-    return aa_rx_dl_sg__baxter(sg);
+    (void) argc; (void) argv;
+    aa_mem_region_local_init(1024);
+    aa_mem_region_local_destroy();
+    return 0;
 }
-
-
-struct aa_rx_win *
-baxter_demo_setup_window( struct aa_rx_sg *sg );
-
-static void baxter_demo_check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
-    }
-}
-
-#endif /*BAXTER_DEMO_H*/

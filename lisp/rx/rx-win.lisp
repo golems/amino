@@ -50,6 +50,13 @@
   (window rx-win-t)
   (sg rx-sg-t))
 
+
+(cffi:defcfun aa-rx-win-lock :void
+  (window rx-win-t))
+
+(cffi:defcfun aa-rx-win-unlock :void
+  (window rx-win-t))
+
 (cffi:defcfun aa-rx-win-set-config :void
   (window rx-win-t)
   (n size-t)
@@ -80,6 +87,7 @@
 
 (cffi:defcfun aa-rx-win-set-display-plan :void
   (win rx-win-t)
+  (sg rx-sg-t)
   (n-plan amino-ffi:size-t)
   (plan :pointer))
 
@@ -99,6 +107,13 @@
 ;;;;;;;;;;;;;;;;;;;
 
 (defvar *window* nil)
+
+(defmacro with-win-lock (win &body body)
+  (with-gensyms (v-win)
+    `(let ((,v-win ,win))
+       (aa-rx-win-lock ,v-win)
+       (unwind-protect (progn ,@body)
+         (aa-rx-win-unlock ,v-win)))))
 
 (defun win-create (&key
                         (title "AminoGL")
@@ -122,14 +137,20 @@
 
 
 (defun win-set-scene-graph (scene-graph &optional (window (win-create)))
-  (let ((win window)
-        (m-sg (mutable-scene-graph scene-graph)))
-    (setf (rx-win-display-object window) m-sg)
-    (aa-rx-win-sg-gl-init win m-sg)
-    (setf (rx-win-mutable-scene-graph win) m-sg
-          (rx-win-config-vector win) (make-vec (aa-rx-sg-config-count m-sg)))
-    (aa-rx-win-set-sg win m-sg))
+  (let* ((win window)
+         (m-sg (mutable-scene-graph scene-graph))
+         (q (make-vec (aa-rx-sg-config-count m-sg))))
+    (with-win-lock win
+      (aa-rx-win-sg-gl-init win m-sg)
+      (aa-rx-win-set-sg win m-sg)
+      ;; Preserve the window display object.  The active display
+      ;; function may be using it.
+      (setf (rx-win-mutable-scene-graph win) m-sg
+            (rx-win-config-vector win) q)))
   (values))
+
+(defun win-scene-graph (&optional (window *window*))
+  (mutable-scene-graph-scene-graph (rx-win-mutable-scene-graph window)))
 
 (defun win-set-config (configs)
   (let* ((win (win-create))
@@ -200,10 +221,9 @@
     (when (zerop (length path))
       (error "Cannot view empty plan"))
     (with-win-paused window
-      (win-set-scene-graph m-sg)
       (with-foreign-simple-vector (pointer length) path :input
         (declare (ignore length))
-        (aa-rx-win-set-display-plan window n-path pointer)))))
+        (aa-rx-win-set-display-plan window m-sg n-path pointer)))))
 
 (defun win-display-mp-seq (mp-seq)
   (let ((window (win-create)))

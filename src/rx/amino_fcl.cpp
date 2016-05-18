@@ -198,12 +198,16 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 
 void aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph )
 {
-
-    if( NULL == aa_rx_cl_geom_destroy_fun ) {
-        fprintf(stderr, "ERROR: collision module not initialized, call aa_rx_cl_init()\n");
-        abort();
-        exit(EXIT_FAILURE);
+    if( ! aa_rx_sg_is_clean_collision(scene_graph) ) {
+        if( NULL == aa_rx_cl_geom_destroy_fun ) {
+            fprintf(stderr, "ERROR: collision module not initialized, call aa_rx_cl_init()\n");
+            abort();
+            exit(EXIT_FAILURE);
+        }
+        aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
+        aa_rx_sg_clean_collision(scene_graph);
     }
+    
     aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
     amino::SceneGraph *sg = scene_graph->sg;
     sg->allowed_indices1.clear();

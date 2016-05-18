@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2015, Rice University
+ * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -28,54 +28,17 @@
  *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
  *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *   AND ON ANY HEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-#ifndef BAXTER_DEMO_H
-#define BAXTER_DEMO_H
+#ifndef AMINO_RX_SCENE_SDL_INTERNAL_H
+#define AMINO_RX_SCENE_SDL_INTERNAL_H
 
-#define GL_GLEXT_PROTOTYPES
+void aa_sdl_lock();
+void aa_sdl_unlock();
 
-#include <error.h>
-#include <stdio.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <SDL.h>
-
-
-
-#include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_win.h"
-#include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_sdl.h"
-
-#include "baxter-model.c.h"
-
-static const int SCREEN_WIDTH = 1000;
-static const int SCREEN_HEIGHT = 1000;
-
-static inline struct aa_rx_sg *
-baxter_demo_load_baxter( struct aa_rx_sg *sg)
-{
-    return aa_rx_dl_sg__baxter(sg);
-}
-
-
-struct aa_rx_win *
-baxter_demo_setup_window( struct aa_rx_sg *sg );
-
-static void baxter_demo_check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
-    }
-}
-
-#endif /*BAXTER_DEMO_H*/
+#endif /*AMINO_RX_SCENE_SDL_INTERNAL_H*/

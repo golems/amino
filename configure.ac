@@ -19,6 +19,7 @@ AC_PROG_FC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
+AM_PATH_LISPDIR
 
 # Enable C++ 11
 m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
@@ -32,6 +33,8 @@ AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
 AC_SEARCH_LIBS([clock_gettime],[rt])
 AC_CHECK_LIB([m],[sqrt])
 AC_CHECK_LIB([dl],[dlopen])
+
+AC_CHECK_HEADERS([stdatomic.h])
 
 AC_SEARCH_LIBS([dgemm_],[openblas blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])

@@ -72,7 +72,7 @@
           (scene-frame-joint
            (let* ((axis (scene-frame-joint-axis frame))
                   (offset (scene-frame-joint-configuration-offset frame))
-                  (config-name (scene-frame-joint-configuration-name frame))
+                  (config-name (rope-string (scene-frame-joint-configuration-name frame)))
                   (limits (scene-graph-config-limits scene-graph config-name)))
              ;; add the frame
              (etypecase frame

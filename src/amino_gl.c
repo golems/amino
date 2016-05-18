@@ -43,6 +43,8 @@
 #include <GL/glu.h>
 #include <SDL.h>
 
+#include <pthread.h>
+
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxtype_internal.h"
 #include "amino/rx/scenegraph.h"
@@ -81,12 +83,14 @@ void
 aa_gl_tfmat2glmat( const double T[AA_RESTRICT 12],
                    GLfloat M[AA_RESTRICT 16] )
 {
+    /* Fill Transform */
     for( size_t j = 0; j < 4; j++ ) {
         for( size_t i = 0; i < 3; i++ ) {
             M[j*4 + i] = (GLfloat)T[j*3 + i];
         }
     }
 
+    /* Set Augmented Row */
     for( size_t j = 0; j < 3; j++ ) {
         M[j*4 + 3] = 0;
     }
@@ -231,12 +235,28 @@ static GLint aa_gl_id_specular;
 static GLint aa_gl_id_uv;
 static GLint aa_gl_id_texture;
 
-static int aa_gl_initialized = 0;
-AA_API void aa_gl_init()
-{
-    if( aa_gl_initialized ) return;
+static pthread_once_t gl_once = PTHREAD_ONCE_INIT;
+static pthread_mutex_t gl_mutex;
+static pthread_mutexattr_t gl_mattr;
 
-    aa_gl_initialized = 1;
+static void gl_init_once(void)
+{
+    /* Initialize Mutex */
+    if( pthread_mutexattr_init(&gl_mattr) ) {
+        perror("pthread_mutexattr_init");
+        abort();
+    }
+    if( pthread_mutexattr_settype(&gl_mattr, PTHREAD_MUTEX_RECURSIVE) ) {
+        perror("pthread_mutexattr_settype");
+        abort();
+    }
+
+    if( pthread_mutex_init( &gl_mutex, &gl_mattr) ) {
+        perror("pthread_mutex_init");
+        abort();
+    }
+
+    aa_gl_lock();
 
     GLuint vertexShader = aa_gl_create_shader(GL_VERTEX_SHADER, aa_gl_vertex_shader);
     GLuint fragmentShader = aa_gl_create_shader(GL_FRAGMENT_SHADER, aa_gl_fragment_shader);
@@ -269,6 +289,16 @@ AA_API void aa_gl_init()
 
     /* Register cleanup function */
     aa_gl_buffers_destroy_fun = aa_gl_buffers_destroy;
+
+    aa_gl_unlock();
+}
+
+AA_API void aa_gl_init()
+{
+    if( pthread_once( &gl_once, gl_init_once ) ) {
+        perror("pthread_once");
+        abort();
+    }
 }
 
 
@@ -295,16 +325,18 @@ AA_API void aa_gl_draw_tf (
     check_error("uniform mat model");
 
     // positions
-    glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
-    check_error("glBindBuffer");
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
+        check_error("glBindBuffer");
 
-    glEnableVertexAttribArray((GLuint)aa_gl_id_position);
-    check_error("glEnableVert");
+        glEnableVertexAttribArray((GLuint)aa_gl_id_position);
+        check_error("glEnableVert");
 
-    glVertexAttribPointer((GLuint)aa_gl_id_position, buffers->values_size, GL_FLOAT, GL_FALSE, 0, 0);
-    check_error("glVertAttribPointer position");
+        glVertexAttribPointer((GLuint)aa_gl_id_position, buffers->values_size, GL_FLOAT, GL_FALSE, 0, 0);
+        check_error("glVertAttribPointer position");
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 
     // colors
     /* glBindBuffer(GL_ARRAY_BUFFER, buffers->colors); */
@@ -317,7 +349,7 @@ AA_API void aa_gl_draw_tf (
     /* check_error("glVerteAttribPointer"); */
 
     // normals
-    if( 0 <= aa_gl_id_normal && buffers->normals_size ) {
+    if( buffers->has_normals ) {
         glBindBuffer(GL_ARRAY_BUFFER, buffers->normals);
         check_error("glBindBuffer normal");
 
@@ -326,6 +358,8 @@ AA_API void aa_gl_draw_tf (
 
         glVertexAttribPointer((GLuint)aa_gl_id_normal, buffers->normals_size, GL_FLOAT, GL_FALSE, 0, 0);
         check_error("glVerteAttribPointer normal");
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
 
@@ -343,6 +377,8 @@ AA_API void aa_gl_draw_tf (
 
         glVertexAttribPointer((GLuint)aa_gl_id_uv, 2, GL_FLOAT, GL_FALSE, 0, 0);
         check_error("glVerteAttribPointer uv");
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     // Light position
     //glUniform3f(aa_gl_id_light_position,
@@ -359,21 +395,27 @@ AA_API void aa_gl_draw_tf (
             GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
             );
+        //check_error("glDrawElements");
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
+        //fprintf(stderr,"Draw simple: %u\n", buffers->count);
         glDrawArrays(buffers->mode, 0, buffers->count);
+        //check_error("glDrawArrays");
     }
-    check_error("glDraw");
 
 
     glDisableVertexAttribArray((GLuint)aa_gl_id_position);
     /* glDisableVertexAttribArray((GLuint)aa_gl_id_color); */
 
-    if( 0 <= aa_gl_id_normal ) {
+    if( buffers->has_normals ) {
         glDisableVertexAttribArray((GLuint)aa_gl_id_normal);
     }
     if( buffers->has_uv ) {
         glDisableVertexAttribArray((GLuint)aa_gl_id_uv);
+    }
+
+    if( buffers->has_tex2d ) {
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -383,10 +425,15 @@ AA_API void aa_gl_draw_tf (
 
 AA_API void
 aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
-    if( bufs->has_indices ) glDeleteProgram(bufs->indices);
-    if( bufs->has_colors ) glDeleteProgram(bufs->colors);
-    if( bufs->has_values ) glDeleteProgram(bufs->values);
+    aa_gl_lock();
+    if( bufs->has_indices ) glDeleteBuffers(1, &bufs->indices);
+    /* if( bufs->has_colors ) glDeleteBuffers(1, &bufs->colors); */
+    if( bufs->has_values ) glDeleteBuffers(1, &bufs->values);
+    if( bufs->has_normals ) glDeleteBuffers(1, &bufs->normals);
+    if( bufs->has_uv ) glDeleteBuffers(1, &bufs->uv);
+    if( bufs->has_tex2d ) glDeleteTextures(1, &bufs->tex2d);
     free(bufs);
+    aa_gl_unlock();
 }
 
 /* static void quad_tr( unsigned *indices, */
@@ -489,14 +536,16 @@ static void bind_mesh (
         bufs->indices_size = (GLint)size;
         bufs->count = (GLsizei)(size*mesh->n_indices);
     } else {
-        bufs->count = (GLsizei)(size*mesh->n_vertices);
+        /* Count is the number of vertices */
+        bufs->count = (GLsizei)(mesh->n_vertices);
     }
 
 
+    aa_gl_lock();
 
     glGenBuffers(1, &bufs->values);
     glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->values_size*sizeof(float)*n_vert),
+    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)((size_t)bufs->values_size*sizeof(GLfloat)*n_vert),
                  mesh->vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     bufs->has_values = 1;
@@ -518,6 +567,7 @@ static void bind_mesh (
                      0, GL_RGBA, GL_UNSIGNED_BYTE, mesh->rgba);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE_2D, 0);
         bufs->has_tex2d = 1;
     }
 
@@ -540,6 +590,8 @@ static void bind_mesh (
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         bufs->has_normals = 1;
     }
+
+    aa_gl_unlock();
 }
 
 
@@ -750,9 +802,9 @@ AA_API void aa_geom_gl_buffers_init_box (
     /* aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 ); */
 
     struct aa_rx_mesh *mesh = aa_rx_mesh_create();
-    aa_rx_mesh_set_vertices( mesh, 6*4, values, 0 );
+    aa_rx_mesh_set_vertices( mesh, n, values, 0 );
+    aa_rx_mesh_set_normals( mesh, n, normals, 0 );
     aa_rx_mesh_set_texture(mesh, &geom->base.opt);
-    aa_rx_mesh_set_normals( mesh, 6*4, normals, 0 );
     quad_mesh( &geom->base, mesh );
     aa_rx_mesh_destroy(mesh);
 
@@ -822,12 +874,14 @@ AA_API void aa_geom_gl_buffers_init_box (
 }
 
 
-AA_API void aa_geom_gl_buffers_init_cylinder (
-    struct aa_rx_geom_cylinder *geom
+
+static void init_cone_cylinder (
+    struct aa_rx_geom *geom,
+    double height, double start_radius, double end_radius
     )
 {
-    double r = geom->shape.radius;
-    GLfloat h[2] = {0, (GLfloat)geom->shape.height};
+    double r[2] = {start_radius, end_radius};
+    GLfloat h[2] = {0, (GLfloat)height};
 
     unsigned p = 36;
 
@@ -847,10 +901,10 @@ AA_API void aa_geom_gl_buffers_init_cylinder (
             double theta = i * (2*M_PI/p);
             double s = sin(theta);
             double c = cos(theta);
-            double x = c*r;
-            double y = s*r;
 
             for( unsigned j = 0; j < 2; j ++ ) {
+                double x = c*r[j];
+                double y = s*r[j];
                 values[a]    = (GLfloat)x;
                 normals[a++] = (GLfloat)c;
                 values[a]    = (GLfloat)y;
@@ -925,11 +979,10 @@ AA_API void aa_geom_gl_buffers_init_cylinder (
     aa_rx_mesh_set_vertices( mesh, a/3, values, 0 );
     aa_rx_mesh_set_normals( mesh, an/3, normals, 0 );
     aa_rx_mesh_set_indices( mesh, b/3, indices, 0 );
-    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
-    tri_mesh( &geom->base, mesh );
+    aa_rx_mesh_set_texture(mesh, &geom->opt);
+    tri_mesh( geom, mesh );
     aa_rx_mesh_destroy(mesh);
 }
-
 
 
 AA_API void aa_geom_gl_buffers_init (
@@ -950,8 +1003,21 @@ AA_API void aa_geom_gl_buffers_init (
         aa_geom_gl_buffers_init_mesh((struct aa_rx_geom_mesh*)geom);
         break;
     case AA_RX_CYLINDER:
-        aa_geom_gl_buffers_init_cylinder((struct aa_rx_geom_cylinder*)geom);
+    {
+        struct aa_rx_geom_cylinder *cylinder = (struct aa_rx_geom_cylinder *)geom;
+        init_cone_cylinder( &cylinder->base, cylinder->shape.height,
+                            cylinder->shape.radius,
+                            cylinder->shape.radius );
         break;
+    }
+    case AA_RX_CONE:
+    {
+        struct aa_rx_geom_cone *cone = (struct aa_rx_geom_cone *)geom;
+        init_cone_cylinder( &cone->base, cone->shape.height,
+                            cone->shape.start_radius,
+                            cone->shape.end_radius );
+        break;
+    }
     default:
         break;
         //abort();
@@ -1006,7 +1072,7 @@ aa_gl_globals_create()
 
     G->show_visual = 1;
 
-    G->fps = 60;
+    G->fps = 30;
 
     return G;
 }
@@ -1116,7 +1182,14 @@ aa_rx_sg_render(
     const struct aa_gl_globals *globals,
     size_t n_TF, const double *TF_abs, size_t ld_tf)
 {
-    aa_rx_sg_ensure_clean_gl( sg );
+    /* aa_rx_sg_ensure_clean_gl( sg ); */
+
+    aa_gl_lock();
+
+    aa_rx_sg_gl_init((struct aa_rx_sg*)sg);
+
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     assert( n_TF == aa_rx_sg_frame_count(sg) );
 
@@ -1159,6 +1232,8 @@ aa_rx_sg_render(
     aa_rx_sg_map_geom( sg, &render_helper, &cx );
 
     glUseProgram(0);
+
+    aa_gl_unlock();
 }
 
 void gl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
@@ -1170,8 +1245,11 @@ void gl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom 
 AA_API void
 aa_rx_sg_gl_init( struct aa_rx_sg *sg )
 {
-    aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
-    aa_rx_sg_clean_gl(sg);
+    if( ! aa_rx_sg_is_clean_gl(sg) ) {
+        /* Take a fine-grained lock for each geometry object */
+        aa_rx_sg_map_geom( sg, &gl_init_helper, NULL );
+        aa_rx_sg_clean_gl(sg);
+    }
 }
 
 AA_API void
@@ -1201,4 +1279,20 @@ aa_gl_globals_mask( struct aa_gl_globals *globals, size_t i, int value ) {
     }
 
     aa_bits_set(globals->frame_mask, i, value);
+}
+
+void aa_gl_lock()
+{
+    if( pthread_mutex_lock( &gl_mutex ) ) {
+        perror("AminoGL Mutex Lock");
+        abort();
+    }
+}
+
+void aa_gl_unlock()
+{
+    if( pthread_mutex_unlock( &gl_mutex ) ) {
+        perror("AminoGL Mutex Unlock");
+        abort();
+    }
 }

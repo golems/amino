@@ -388,3 +388,25 @@ aa_rx_sg_clean_collision( struct aa_rx_sg *scene_graph )
     amino::SceneGraph *sg = scene_graph->sg;
     sg->dirty_collision = 0;
 }
+
+AA_API int
+aa_rx_sg_is_clean_gl( struct aa_rx_sg *scene_graph )
+{
+    amino::SceneGraph *sg = scene_graph->sg;
+    return sg->dirty_gl ? 0 : 1;
+}
+
+
+AA_API int
+aa_rx_sg_is_clean_collision( struct aa_rx_sg *scene_graph )
+{
+    amino::SceneGraph *sg = scene_graph->sg;
+    return sg->dirty_collision ? 0 : 1;
+}
+
+AA_API int
+aa_rx_sg_is_clean( struct aa_rx_sg *scene_graph )
+{
+    amino::SceneGraph *sg = scene_graph->sg;
+    return sg->dirty_indices ? 0 : 1;
+}

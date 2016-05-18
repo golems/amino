@@ -1,7 +1,7 @@
-/* -*- mode: C; c-basic-offset: 4; -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2015, Rice University
+ * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -28,54 +28,61 @@
  *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
  *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *   AND ON ANY HEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-#ifndef BAXTER_DEMO_H
-#define BAXTER_DEMO_H
-
-#define GL_GLEXT_PROTOTYPES
-
-#include <error.h>
-#include <stdio.h>
-#include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <SDL.h>
-
-
+#include "config.h"
 
 #include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_win.h"
-#include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_sdl.h"
+#include "amino/mem.h"
 
-#include "baxter-model.c.h"
+/* If possible, use spiffy C11 atomics */
 
-static const int SCREEN_WIDTH = 1000;
-static const int SCREEN_HEIGHT = 1000;
+#ifdef HAVE_STDATOMIC_H
 
-static inline struct aa_rx_sg *
-baxter_demo_load_baxter( struct aa_rx_sg *sg)
+#include <stdatomic.h>
+
+unsigned aa_mem_ref_inc( unsigned *count )
 {
-    return aa_rx_dl_sg__baxter(sg);
+    return atomic_fetch_add(count, 1);
 }
 
-
-struct aa_rx_win *
-baxter_demo_setup_window( struct aa_rx_sg *sg );
-
-static void baxter_demo_check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
-    }
+unsigned aa_mem_ref_dec( unsigned *count )
+{
+    return atomic_fetch_sub(count, 1);
 }
 
-#endif /*BAXTER_DEMO_H*/
+#else /* HAVE_STDATOMIC_H */
+
+/* Otherwise, we don't be have nice atomics.  "Do the right thing" and
+ * use a mutex. */
+
+#include <pthread.h>
+
+/* Yeah, every refcount in the universe will go through this mutex.
+ * If you don't like it, get proper C11 suport already. */
+static pthread_mutex_t refcount_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+unsigned aa_mem_ref_inc( unsigned *count )
+{
+    pthread_mutex_lock( &refcount_mutex );
+    unsigned old = *count;
+    (*count)++;
+    pthread_mutex_unlock( &refcount_mutex );
+    return old;
+}
+
+unsigned aa_mem_ref_dec( unsigned *count )
+{
+    pthread_mutex_lock( &refcount_mutex );
+    unsigned old = *count;
+    (*count)--;
+    pthread_mutex_unlock( &refcount_mutex );
+    return old;
+}
+
+#endif /* HAVE_STDATOMIC_H */

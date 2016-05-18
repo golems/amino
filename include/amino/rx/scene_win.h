@@ -117,12 +117,14 @@ aa_rx_win_set_config( struct aa_rx_win * win,
 
 AA_API void
 aa_rx_win_set_display( struct aa_rx_win * win,
-                       aa_sdl_display_fun display,
-                       void *context );
+                       aa_sdl_win_display_fun display,
+                       void *context,
+                       void (*destructor)(void*) );
 
 
 AA_API void
 aa_rx_win_set_display_plan( struct aa_rx_win * win,
+                            struct aa_rx_sg *sg,
                             size_t n_plan_elements,
                             const double *plan );
 
@@ -177,6 +179,13 @@ aa_rx_win_join( struct aa_rx_win * win );
 
 AA_API void
 aa_rx_win_pause( struct aa_rx_win * win, int paused );
+
+
+AA_API void
+aa_rx_win_lock( struct aa_rx_win * win );
+
+AA_API void
+aa_rx_win_unlock( struct aa_rx_win * win );
 
 /**
  * Initialize scenegraph GL values for the given window.
