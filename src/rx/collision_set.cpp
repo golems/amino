@@ -59,10 +59,6 @@ aa_rx_cl_set_create( const struct aa_rx_sg *sg )
     set->n = aa_rx_sg_frame_count(sg);
     set->v = new std::vector<bool>(set->n*set->n);
 
-    for (size_t i=0; i<sg->sg->allowed_indices1.size(); i++){
-      aa_rx_cl_set_set(set, sg->sg->allowed_indices1[i], sg->sg->allowed_indices2[i], 1);
-    }
-
     return set;
 }
 
@@ -114,4 +110,25 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id j )
 {
     return (*cl_set->v)[ cl_set_i(cl_set,i,j) ];
+}
+
+AA_API void
+aa_rx_sg_cl_set_copy(struct aa_rx_cl_set * set, const struct aa_rx_sg* sg){
+    for (size_t i=0; i<sg->sg->allowed_indices1.size(); i++){
+	aa_rx_cl_set_set(set, sg->sg->allowed_indices1[i], sg->sg->allowed_indices2[i], 1);
+    }
+}
+
+AA_API void
+aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from){
+    size_t n_f = into->n;
+    assert(n_f == from->n);
+
+    for (size_t i = 0; i<n_f; i++){
+        for (size_t j=0; j<i; j++){
+            if (aa_rx_cl_set_get(from, i, j)) {
+                aa_rx_cl_set_set(into, i, j, 1);
+            }
+        }
+    }
 }

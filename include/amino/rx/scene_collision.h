@@ -70,6 +70,8 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
                   aa_rx_frame_id j );
 
+AA_API void
+aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from);
 
 struct aa_rx_cl;
 
@@ -105,6 +107,12 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
                 struct aa_rx_cl_set *cl_set );
 
 AA_API void
-aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q);
+aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const double* q);
+
+AA_API void
+aa_rx_sg_cl_set_copy(struct aa_rx_cl_set * cl_set, const struct aa_rx_sg* sg);
+
+AA_API struct aa_rx_cl_set*
+aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q);
 
 #endif /*AMINO_RX_SCENE_COLLISION_H*/
