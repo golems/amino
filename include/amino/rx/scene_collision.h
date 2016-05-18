@@ -110,7 +110,7 @@ AA_API void
 aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const double* q);
 
 AA_API void
-aa_rx_sg_cl_set_copy(struct aa_rx_cl_set * cl_set, const struct aa_rx_sg* sg);
+aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * cl_set);
 
 AA_API struct aa_rx_cl_set*
 aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q);

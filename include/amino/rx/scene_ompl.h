@@ -88,7 +88,7 @@ public:
         // allow_config(q);
 
 	// Load allowable configs from scenegraph
-	aa_rx_sg_cl_set_copy(allowed, scene_graph);
+	aa_rx_sg_cl_set_copy(scene_graph, allowed);
     }
 
     virtual ~sgStateSpace() {

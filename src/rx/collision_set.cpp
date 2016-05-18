@@ -113,7 +113,7 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
 }
 
 AA_API void
-aa_rx_sg_cl_set_copy(struct aa_rx_cl_set * set, const struct aa_rx_sg* sg){
+aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * set){
     for (size_t i=0; i<sg->sg->allowed_indices1.size(); i++){
 	aa_rx_cl_set_set(set, sg->sg->allowed_indices1[i], sg->sg->allowed_indices2[i], 1);
     }
