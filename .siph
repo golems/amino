@@ -5,7 +5,7 @@ SIPH_PKG_BRANCH="master"
 SIPH_PKG_DEPS_DEB="gfortran \
          maxima libblas-dev liblapack-dev \
          libglew-dev libsdl2-dev \
-         libfcl-dev libompl-dev \
+         libfcl-dev \
          sbcl \
          default-jdk \
          povray libav-tools \
