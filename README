@@ -109,6 +109,11 @@ Scene Graphs
 Common Errors
 -------------
 
+* `./configure` fails with when checking for cffi-grovel.
+
+    - Older versions of SBCL (around 1.2.4) have issues with current
+      versions of CFFI.  Please try installing a recent SBCL (>1.3.4).
+
 * I get error messages about missing .obj files or Blender being
   unable to convert a .dae to Wavefront OBJ.
 
