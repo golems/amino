@@ -138,12 +138,16 @@ Common Errors
 
   - This means that SBCL is unable to load the planning library or one
     of its dependecies, such as OMPL.  Typically, this means your
-    linker is not configured properly.  The easiest fix is to set the
-    LD_LIBRARY_PATH variable.  First, find the location of libompl.so,
-    e.g., by calling `locate libompl.so`.  Then, add the directory to
-    your LD_LIBRARY_PATH variable.  Most commonly, this will mean
-    adding one of the following lines to your shell startup files
-    (e.g., .bashrc):
+    linker is not configured properly.
+
+    Sometimes, you just need to run `ldconfig` or `sudo ldconfig` to
+    update the linker cache.
+
+    If this doesn't work, you can set the LD_LIBRARY_PATH variable.
+    First, find the location of libompl.so, e.g., by calling `locate
+    libompl.so`.  Then, add the directory to your LD_LIBRARY_PATH
+    variable.  Most commonly, this will mean adding one of the
+    following lines to your shell startup files (e.g., .bashrc):
 
     `export LD_LIBRARY_PATH="/usr/local/lib/:$LD_LIBRARY_PATH"`
 
