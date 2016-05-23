@@ -12,4 +12,4 @@ SIPH_PKG_DEPS_DEB="gfortran \
          coinor-libclp-dev libglpk-dev liblpsolve55-dev"
 
 
-SIPH_PKG_DEPS_SIPH="ompl https://github.com/ndantam/sycamore.git"
+SIPH_PKG_DEPS_SIPH="ompl sbcl https://github.com/ndantam/sycamore.git"
