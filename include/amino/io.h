@@ -103,7 +103,7 @@ ssize_t aa_io_d_print( FILE *fout, size_t n,
  * @param m rows in A
  * @param n cols in A
  */
-ssize_t aa_io_d_gemp( FILE *fout, enum CBLAS_ORDER file_order, size_t m, size_t n,
+ssize_t aa_io_d_gemp( FILE *fout, CBLAS_ORDER file_order, size_t m, size_t n,
                       const double *A, size_t lda );
 
 #endif //AMINO_IO_H
