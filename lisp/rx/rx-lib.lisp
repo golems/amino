@@ -78,5 +78,5 @@
 (cffi:use-foreign-library libglu)
 (cffi:use-foreign-library libsdl)
 (cffi:use-foreign-library libamino-gl)
-(cffi:use-foreign-library libamino-planning)
 (cffi:use-foreign-library libamino-cl)
+(cffi:use-foreign-library libamino-planning)
