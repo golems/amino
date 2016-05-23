@@ -30,13 +30,15 @@ m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
 
 # Checks for libraries.
 AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
-AC_SEARCH_LIBS([clock_gettime],[rt])
-AC_CHECK_LIB([m],[sqrt])
-AC_CHECK_LIB([dl],[dlopen])
-
 AC_CHECK_HEADERS([stdatomic.h])
 
-AC_SEARCH_LIBS([dgemm_],[openblas blas])
+AC_SEARCH_LIBS([clock_gettime], [rt])
+AC_SEARCH_LIBS([sqrt], [m])
+AC_SEARCH_LIBS([dlopen], [dl])
+AC_SEARCH_LIBS([pthread_once], [pthread])
+
+
+AC_SEARCH_LIBS([dgemm_],[blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])
 
 
@@ -96,10 +98,6 @@ AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
 ]
 )
-
-
-# Check for thread local storage
-AX_TLS
 
 # Doxygen
 m4_ifdef([DX_INIT_DOXYGEN],

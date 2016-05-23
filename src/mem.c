@@ -47,6 +47,8 @@
 #include "amino.h"
 #include <stdarg.h>
 
+#include <pthread.h>
+
 
 
 
@@ -254,38 +256,61 @@ char* aa_mem_region_printf(aa_mem_region_t *reg, const char *fmt, ... ) {
 /* THREAD-LOCAL MEMORY REGION */
 /******************************/
 
-// Declare the thread-local variable
+static pthread_once_t local_region_once = PTHREAD_ONCE_INIT;
+static pthread_key_t local_region_key;
 
-#ifdef HAVE_THREADS_H
-// First, try the C11 standard
-static _Thread_local aa_mem_region_t *aa_mem_region_local = NULL;
-#elseif defined TLS
-// Next, try some Autoconf magic
-static TLS aa_mem_region_t *aa_mem_region_local = NULL;
-#else
-// Otherwise, pray this works...
-static __thread aa_mem_region_t *aa_mem_region_local = NULL;
-#endif
+void local_region_destroy(void *r)
+{
+    if( r ) {
+        aa_mem_region_t *reg = (aa_mem_region_t*)r;
+        aa_mem_region_destroy(reg);
+        free(reg);
+    }
+}
 
-aa_mem_region_t *aa_mem_region_local_get(void) {
-    if( NULL == aa_mem_region_local ) {
+static void local_region_make_key(void)
+{
+    pthread_key_create( &local_region_key, local_region_destroy );
+}
+
+static aa_mem_region_t *local_region_get(void)
+{
+    if( pthread_once( &local_region_once, local_region_make_key ) ) {
+        perror("pthread_once");
+        abort();
+    }
+    aa_mem_region_t *reg = (aa_mem_region_t*)pthread_getspecific(local_region_key);
+    return reg;
+}
+
+aa_mem_region_t *aa_mem_region_local_get(void)
+{
+    aa_mem_region_t *reg = local_region_get();
+    if( NULL == reg ) {
         aa_mem_region_local_init( 4096 * 64 );
+        reg = (aa_mem_region_t*)pthread_getspecific(local_region_key);
     }
-    return aa_mem_region_local;
+    return reg;
 }
 
-void aa_mem_region_local_init(size_t size) {
-    aa_mem_region_local = (aa_mem_region_t*)malloc(sizeof(aa_mem_region_t));
-    aa_mem_region_init( aa_mem_region_local, size );
+void aa_mem_region_local_init(size_t size)
+{
+    aa_mem_region_t *reg = local_region_get();
+    local_region_destroy(reg);
+
+    reg = (aa_mem_region_t*)malloc(sizeof(aa_mem_region_t));
+    aa_mem_region_init( reg, size );
+    pthread_setspecific(local_region_key, reg);
 }
 
-void aa_mem_region_local_destroy(void) {
-    if( aa_mem_region_local ) {
-        aa_mem_region_destroy( aa_mem_region_local );
-        free( aa_mem_region_local );
-    }
-    aa_mem_region_local = NULL;
+void aa_mem_region_local_destroy(void)
+{
+    aa_mem_region_t *reg = local_region_get();
+    local_region_destroy(reg);
+    pthread_setspecific(local_region_key, NULL);
 }
+
+
 
 void *aa_mem_region_local_alloc(size_t size) {
     return aa_mem_region_alloc( aa_mem_region_local_get(), size );
