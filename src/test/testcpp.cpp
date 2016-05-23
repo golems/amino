@@ -44,9 +44,7 @@
 #include <iostream>
 
 
-void allocator() {
-    aa_mem_region_t reg;
-    aa_mem_region_init( &reg, 1024 );
+void allocator( aa_mem_region_t &reg ) {
 
     /*--- List ---*/
     amino::RegionList<int>::allocator alloc(&reg);
@@ -94,15 +92,15 @@ void allocator() {
            (intptr_t)reg.head,
            (intptr_t)reg.head - (intptr_t)reg.node->d
         );
-
-
-    aa_mem_region_destroy( &reg );
-
-
 }
 
 int main( int argc, char **argv) {
     (void)argc; (void)argv;
-    allocator();
+
+    aa_mem_region_t reg;
+    aa_mem_region_init( &reg, 1024 );
+    allocator(reg);
+    aa_mem_region_destroy( &reg );
+
     return 0;
 }
