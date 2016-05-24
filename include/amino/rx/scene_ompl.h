@@ -112,9 +112,7 @@ public:
     }
 
     void allow_config( double *q ) {
-	aa_rx_cl_set *collision = aa_rx_sg_get_collision(scene_graph, q);
-	aa_rx_cl_set_merge(allowed, collision);
-	aa_rx_cl_set_destroy(collision);
+	aa_rx_sg_get_collision(scene_graph, q, allowed);
     }
 
     void extract_state( const double *q_all, double *q_set ) const {
