@@ -596,3 +596,10 @@ aa_rx_sg_allow_collision( aa_rx_sg *scene_graph,
     }
     scene_graph->sg->dirty_collision = 1;
 }
+
+AA_API void
+aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
+			       const char* frame0, const char* frame1, const int allowed ){
+    aa_rx_sg_allow_collision(scene_graph, aa_rx_sg_frame_id(scene_graph, frame0),
+			     aa_rx_sg_frame_id(scene_graph, frame1), allowed);
+}
