@@ -136,6 +136,9 @@
 #endif //__cplusplus
 
 #include <cblas.h>
+#include "amino/cblas_order.h"
+
+
 #include <time.h>
 
 // for C symbols

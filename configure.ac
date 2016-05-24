@@ -42,6 +42,28 @@ AC_SEARCH_LIBS([dgemm_],[blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])
 
 
+# Check for cblas_blas enum
+AC_MSG_CHECKING([CBLAS_LAYOUT])
+AC_TRY_COMPILE([#include <cblas.h>
+               ],
+               [CBLAS_LAYOUT test_var;],
+               [AC_MSG_RESULT([yes])
+                aa_cblas_order_type=CBLAS_LAYOUT],
+               [AC_MSG_RESULT([no])])
+
+AS_IF([test x="x$aa_cblas_order_type"],
+[
+AC_MSG_CHECKING([enum CBLAS_ORDER])
+AC_TRY_COMPILE([#include <cblas.h>
+               ],
+               [enum CBLAS_ORDER test_var;],
+               [AC_MSG_RESULT([yes])
+                aa_cblas_order_type="enum CBLAS_ORDER"],
+               [AC_MSG_RESULT([no])])
+])
+
+AC_SUBST([aa_cblas_order_type])
+
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
          [AC_DEFUN([APPEND_CFLAG],
                    [AX_CHECK_COMPILE_FLAG([$1], [CFLAGS="$1 $CFLAGS"])])
@@ -478,5 +500,5 @@ AS_IF([test "x$FC" = "x"],
       [AC_MSG_ERROR([No Fortran compiler detected])])
 
 
-AC_CONFIG_FILES([Makefile lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
 AC_OUTPUT

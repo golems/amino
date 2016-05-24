@@ -220,7 +220,7 @@ ssize_t aa_io_d_print( FILE *fout, size_t n,
 }
 
 /** General matrix write. */
-ssize_t aa_io_d_gemp( FILE *fout, CBLAS_ORDER file_order, size_t m, size_t n,
+ssize_t aa_io_d_gemp( FILE *fout, AA_CBLAS_ORDER file_order, size_t m, size_t n,
                       const double *A, size_t lda )
 {
     if( CblasColMajor == file_order ) {
