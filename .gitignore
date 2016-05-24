@@ -126,3 +126,4 @@ amino*.tar.gz
 /demo/simple-rx/sync
 /demo/baxter/scene.c.h
 /demo/simple-rx/scene.c.h
+/include/amino/cblas_order.h
