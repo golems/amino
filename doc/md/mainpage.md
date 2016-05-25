@@ -11,63 +11,48 @@ efficiency, and simplicity.
 Features
 ========
 
-Memory Allocation
------------------
+Extensive SE(3) Support
+-----------------------
+
+Amino provides operations for transformation matrices, quaternions,
+axis-angle representations, and some of the euler-angle
+conventions. \sa amino/tf.h
+
+* Menagerie of Representations:
+  - Rotation and Transformation Matrices
+  - Ordinary Quaternions
+  - Dual Quaternions
+  - Quaternion-Vector
+  - Axis-Angle / Rotation-Vector / Log-map
+  - Euler Angles
+* Derivatives and Exact Integration
+* Numerically stable log and exponential
+
+Region-based Memory Allocation
+------------------------------
 
 Amino provides two O(1), non-fragmenting allocators.  The region
 allocator performs variable-sized allocation and frees all objects
 with a single call.  The pooled allocator allocates and frees
 fixed-sized blocks. \sa amino/mem.h
 
+* Container for LIFO-ordered memory allocation
+* O(1) allocation and deallocation
+
 Linear Algebra
---------------
+---------------
 
 Amino provides some light-weight wrappers over BLAS and LAPACK plus
 a few other convenience routines.  Care is taken to avoid
 heap-allocation in all calls, making performance suitable for
 real-time operation.  \sa amino/math.h
 
-Euclidean Transforms
---------------------
+* Lightweight LAPACK wrapper:
+  Handles work-array creation for LAPACK using memory regions
+* Multiple Runge-Kutta integrators, including adaptive integrators
 
-Amino provides operations for transformation matrices, quaternions,
-axis-angle representations, and some of the euler-angle
-conventions. \sa amino/tf.h
-
-License
-=======
-
-Copyright (c) 2010-2014, Georgia Tech Research Corporation.
-
-Copyright (c) 2014-2016, Rice University.
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or
-without modification, are permitted provided that the following
-conditions are met:
-
-- Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
-
-- Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-
-- Neither the name of copyright holder the names of its contributors
-  may be used to endorse or promote products derived from this
-  software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-  CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
-  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-  USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-  AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
+Ray Tracing
+-----------
+* Import robot geometry from URDF and Collada
+* Generate POV-ray scene files for animation frames
+* Distribute POV-ray rendering over multiple machines
