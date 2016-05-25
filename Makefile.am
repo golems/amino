@@ -461,5 +461,7 @@ clean-local:
 		texput.log                  \
 		$(EXTRA_DX)                 \
 		*.mod
+sync-doc:
+	rsync -r doc/html/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 
 include aminclude.am
