@@ -127,3 +127,5 @@ amino*.tar.gz
 /demo/baxter/scene.c.h
 /demo/simple-rx/scene.c.h
 /include/amino/cblas_order.h
+/doc/html/
+/doc/doxygen_sqlite3.db

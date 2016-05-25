@@ -7,16 +7,13 @@ management, and time-handling.  Design goals are easy integration,
 efficiency, and simplicity.
 
 - **Source Code:** https://github.com/golems/amino
+- **License:** 3-clause BSD (permissive)
 
 Features
 ========
 
 Extensive SE(3) Support
 -----------------------
-
-Amino provides operations for transformation matrices, quaternions,
-axis-angle representations, and some of the euler-angle
-conventions. \sa amino/tf.h
 
 * Menagerie of Representations:
   - Rotation and Transformation Matrices
@@ -28,16 +25,22 @@ conventions. \sa amino/tf.h
 * Derivatives and Exact Integration
 * Numerically stable log and exponential
 
+\sa amino/tf.h
+
+Visualization
+-------------
+* Import robot geometry from URDF and mesh files
+* Real-time visualization via OpenGL and SDL
+* Offline raytracing via POV-ray
+* Distribute POV-ray rendering over multiple machines
+
 Region-based Memory Allocation
 ------------------------------
 
-Amino provides two O(1), non-fragmenting allocators.  The region
-allocator performs variable-sized allocation and frees all objects
-with a single call.  The pooled allocator allocates and frees
-fixed-sized blocks. \sa amino/mem.h
-
 * Container for LIFO-ordered memory allocation
 * O(1) allocation and deallocation
+
+ \sa amino/mem.h
 
 Linear Algebra
 ---------------
@@ -45,14 +48,10 @@ Linear Algebra
 Amino provides some light-weight wrappers over BLAS and LAPACK plus
 a few other convenience routines.  Care is taken to avoid
 heap-allocation in all calls, making performance suitable for
-real-time operation.  \sa amino/math.h
+real-time operation.
 
 * Lightweight LAPACK wrapper:
   Handles work-array creation for LAPACK using memory regions
 * Multiple Runge-Kutta integrators, including adaptive integrators
 
-Ray Tracing
------------
-* Import robot geometry from URDF and Collada
-* Generate POV-ray scene files for animation frames
-* Distribute POV-ray rendering over multiple machines
+\sa amino/math.h

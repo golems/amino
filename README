@@ -11,9 +11,9 @@ FEATURES
 * Extensive support for SE(3) representations and operations,
   including velocities and derivatives
 * Kinematic robot models as scene graphs / kinematic trees
-* O(1) Memory Region Allocator
-* Lightweight BLAS/LAPACK wrapper handling allocation
 * Visualization using OpenGL and POVRay
+* Lightweight BLAS/LAPACK wrapper handling allocation
+* O(1) Memory Region Allocator
 
 INSTALLATION
 ============
