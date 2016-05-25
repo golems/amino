@@ -25,6 +25,9 @@ pkgconfig_DATA = share/amino.pc \
 	share/amino_collision.pc \
 	share/amino_planning.pc
 
+nodist_pkginclude_HEADERS = \
+	include/amino/cblas_order.h
+
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
 	include/amino/rx.h              \
