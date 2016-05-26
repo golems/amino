@@ -42,62 +42,113 @@
  * @file scene_collision.h
  */
 
-/* Initialize collision handling */
+/**
+ * Initialize collision handling.
+ */
 AA_API void
 aa_rx_cl_init( );
 
+/**
+ * Opaque type for a set of collisions.
+ *
+ * This type represents a set of pairs of frames.
+ */
 struct aa_rx_cl_set;
 
+/**
+ * Create a collision set.
+ */
 AA_API struct aa_rx_cl_set*
 aa_rx_cl_set_create( const struct aa_rx_sg *sg );
 
+/**
+ * Destroy a collision set.
+ */
 AA_API void
 aa_rx_cl_set_destroy(struct aa_rx_cl_set *cl_set);
 
+/**
+ * Set the value of collision between frames i and j.
+ */
 AA_API void
 aa_rx_cl_set_set( struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
                   aa_rx_frame_id j,
                   int is_colliding );
 
+/**
+ * Fill dst with all true entries in src.
+ *
+ * False entries in src have no effect corresponding entries in dst.
+ */
 AA_API void
 aa_rx_cl_set_fill( struct aa_rx_cl_set *dst,
                    const struct aa_rx_cl_set *src );
 
-
+/**
+ * Return the value of collision between frames i and j.
+ */
 AA_API int
 aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
                   aa_rx_frame_id j );
 
-
+/**
+ * Opaque type for collision detection context.
+ */
 struct aa_rx_cl;
 
+/**
+ * Initialize the collision structures within scene_graph.
+ */
 AA_API void
 aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph );
 
+/**
+ * Create a new collision detection context for scene_graph.
+ */
 AA_API struct aa_rx_cl *
 aa_rx_cl_create( const struct aa_rx_sg *scene_graph );
 
+/**
+ * Destroy a collision detection context.
+ */
 AA_API void
 aa_rx_cl_destroy( struct aa_rx_cl *cl );
 
+/**
+ * Allow (ignore) collisions between frames i and j if allowed is true.
+ */
 AA_API void
 aa_rx_cl_allow( struct aa_rx_cl *cl,
-                aa_rx_frame_id id0,
-                aa_rx_frame_id id1,
+                aa_rx_frame_id i,
+                aa_rx_frame_id j,
                 int allowed );
 
+/**
+ * Allow collisions between all frame pairs in set.
+ */
 AA_API void
 aa_rx_cl_allow_set( struct aa_rx_cl *cl,
                     const struct aa_rx_cl_set *set );
 
+/**
+ * Allow (ignore) collisions between frames0 and frame1 if allowed is true.
+ */
 AA_API void
 aa_rx_cl_allow_name( struct aa_rx_cl *cl,
                      const char *frame0,
                      const char *frame1,
                      int allowed );
 
+/**
+ * Detect collisions.
+ *
+ * If cl_set is non-NULL, it will be filled in with all detected collisions.
+ * If cl_set is NULL, collision checking may short-circuit after the first collision is detected.
+ *
+ * @returns 0 if no collisions are detected and non-zero if any collisions are detected.
+ */
 AA_API int
 aa_rx_cl_check( struct aa_rx_cl *cl,
                 size_t n_tf,

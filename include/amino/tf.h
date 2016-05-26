@@ -145,6 +145,9 @@ typedef struct aa_tf_rotmat {
     };
 } aa_tf_rotmat_t;
 
+/**
+ * Axis-Angle rotation
+ */
 typedef struct aa_tf_axang {
     union {
         struct {
@@ -191,6 +194,9 @@ typedef struct aa_tf_quat {
     };
 } aa_tf_quat_t;
 
+/**
+ * Euler Angle in ZYX (yaw-pitch-roll) format.
+ */
 typedef struct aa_tf_eulerzyx {
     union {
         struct {

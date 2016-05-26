@@ -50,28 +50,54 @@
  */
 struct aa_rx_sg_sub;
 
+/**
+ * Destroy the scengraph subset.
+ *
+ * The original scenegraph will remain valid.
+ */
 AA_API void
 aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *sg );
 
+/**
+ * Return the number of configuration variables in the scenegraph subset.
+ */
 AA_API size_t
 aa_rx_sg_sub_config_count( const struct aa_rx_sg_sub *sg_sub );
 
 
+/**
+ * Return the number of configuration variables in the full scenegraph.
+ */
 AA_API size_t
 aa_rx_sg_sub_all_config_count( const struct aa_rx_sg_sub *sg_sub );
 
+/**
+ * Return the number of frames in the scenegraph subset.
+ */
 AA_API size_t
 aa_rx_sg_sub_frame_count( const struct aa_rx_sg_sub *sg_sub );
 
+/**
+ * Return the full scenegraph config id for the i'th configuration of the sub-scenegraph.
+ */
 AA_API aa_rx_config_id
 aa_rx_sg_sub_config( const struct aa_rx_sg_sub *sg_sub, size_t i );
 
+/**
+ * Return the full scenegraph frame id for the i'th frame of the sub-scenegraph.
+ */
 AA_API aa_rx_frame_id
 aa_rx_sg_sub_frame( const struct aa_rx_sg_sub *sg_sub, size_t i );
 
+/**
+ * Return the array of full scenegraph config ids contained in the sub-scenegraph.
+ */
 AA_API aa_rx_config_id*
 aa_rx_sg_sub_configs( const struct aa_rx_sg_sub *sg_sub );
 
+/**
+ * Return the array of full scenegraph frame ids contained in the sub-scenegraph.
+ */
 AA_API aa_rx_frame_id*
 aa_rx_sg_sub_frames( const struct aa_rx_sg_sub *sg_sub );
 
@@ -90,6 +116,9 @@ aa_rx_sg_sub_config_set(
     );
 
 
+/**
+ * Create a sub-scenegraph for the kinematic chain starting at root and ending a tip.
+ */
 AA_API struct aa_rx_sg_sub *
 aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
                        aa_rx_frame_id root, aa_rx_frame_id tip );
@@ -103,10 +132,17 @@ aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
                              size_t n, double *q );
 
 /*-- Jacobians --*/
+
+/**
+ * Determine the size of the Jacobian matrix for the sub-scenegraph.
+ */
 AA_API void
 aa_rx_sg_sub_jacobian_size( const struct aa_rx_sg_sub *ssg,
                             size_t *rows, size_t *cols );
 
+/**
+ * Compute the Jacobian matrix for the sub-scenegraph.
+ */
 AA_API void
 aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                        size_t n_tf, const double *TF_abs, size_t ld_TF,

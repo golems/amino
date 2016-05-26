@@ -74,26 +74,64 @@ aa_rx_geom_opt_set_no_shadow (
     struct aa_rx_geom_opt *opt,
     int no_shadow );
 
+/**
+ * Get no-shadow option
+ */
 AA_API int
 aa_rx_geom_opt_get_no_shadow ( struct aa_rx_geom_opt *opt );
+
+/**
+ * Get visual option.
+ */
 AA_API int
 aa_rx_geom_opt_get_visual ( struct aa_rx_geom_opt *opt );
+
+/**
+ * Get collision option.
+ */
 AA_API int
 aa_rx_geom_opt_get_collision ( struct aa_rx_geom_opt *opt );
 
+/**
+ * Get red color value.
+ */
 AA_API double
 aa_rx_geom_opt_get_color_red ( struct aa_rx_geom_opt *opt );
+
+/**
+ * Get blue color value.
+ */
 AA_API double
 aa_rx_geom_opt_get_color_blue ( struct aa_rx_geom_opt *opt );
+
+
+/**
+ * Get green color value.
+ */
 AA_API double
 aa_rx_geom_opt_get_color_green ( struct aa_rx_geom_opt *opt );
+
+/**
+ * Get alpha value.
+ */
 AA_API double
 aa_rx_geom_opt_get_alpha ( struct aa_rx_geom_opt *opt );
 
+/**
+ * Get red specular value.
+ */
 AA_API double
 aa_rx_geom_opt_get_specular_red ( struct aa_rx_geom_opt *opt );
+
+/**
+ * Get blue specular value.
+ */
 AA_API double
 aa_rx_geom_opt_get_specular_blue ( struct aa_rx_geom_opt *opt );
+
+/**
+ * Get green specular value.
+ */
 AA_API double
 aa_rx_geom_opt_get_specular_green ( struct aa_rx_geom_opt *opt );
 
@@ -115,6 +153,8 @@ aa_rx_geom_opt_set_alpha (
 
 /**
  * Set visual flag
+ *
+ * Does this geometry represent a visual object?
  */
 AA_API void
 aa_rx_geom_opt_set_visual (
@@ -123,6 +163,8 @@ aa_rx_geom_opt_set_visual (
 
 /**
  * Set collision flag
+ *
+ * Does this geometry represent a collision object?
  */
 AA_API void
 aa_rx_geom_opt_set_collision (
