@@ -466,7 +466,7 @@ sync-doc:
 
 doc: doxygen-doc
 	mkdir -p doc/html/doc
-	cp doc/logo.png doc/html/doc
+	cp doc/logo-medium.png doc/html/doc
 
 
 include aminclude.am
