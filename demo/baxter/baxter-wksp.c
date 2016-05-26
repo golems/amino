@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
                          ids, q1, cx.q );
 
 
-    aa_rx_win_set_display( win, display, &cx );
+    aa_rx_win_set_display( win, display, &cx, NULL );
     aa_rx_win_display_loop(win);
 
     // cleanup
