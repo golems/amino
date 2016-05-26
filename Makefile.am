@@ -464,4 +464,9 @@ clean-local:
 sync-doc:
 	rsync -r doc/html/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 
+doc: doxygen-doc
+	mkdir -p doc/html/doc
+	cp doc/logo.png doc/html/doc
+
+
 include aminclude.am
