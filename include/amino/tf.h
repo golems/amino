@@ -45,9 +45,17 @@
  *
  */
 
-/** \file tf.h */
 #ifndef AMINO_TF_H
 #define AMINO_TF_H
+
+/**
+ * @file tf.h
+ *
+ * Low-level operations for SE(3) orientations and transformations.
+ *
+ * \sa tf.hpp provides a higher-level object-oriented interface which
+ * may ease conversion between different representations.
+ */
 
 #include <float.h>
 
@@ -122,26 +130,33 @@ aa_tf_sinc( double theta )
 /// Index of vector z element
 #define AA_TF_Z 2
 
+/**
+ * Memory layout for a vector of length 3.
+ */
 typedef struct aa_tf_vec3 {
     union {
         struct {
-            double x;
-            double y;
-            double z;
+            double x;   ///< x component
+            double y;   ///< y component
+            double z;   ///< z component
         };
-        double data[3];
+        double data[3]; ///< data array
     };
 } aa_tf_vec3_t;
 
-/// A rotation matrix, column major
+/**
+ * Memory layout for a rotation matrix. column major
+ *
+ * The matrix is in column-major order.
+ */
 typedef struct aa_tf_rotmat {
     union {
         struct {
-            struct aa_tf_vec3 col0;
-            struct aa_tf_vec3 col1;
-            struct aa_tf_vec3 col2;
+            struct aa_tf_vec3 col0;  ///< column 0
+            struct aa_tf_vec3 col1;  ///< column 1
+            struct aa_tf_vec3 col2;  ///< column 2
         };
-        double data[9];
+        double data[9]; ///< data array
     };
 } aa_tf_rotmat_t;
 
@@ -174,93 +189,127 @@ typedef struct aa_tf_axang {
 /// Index of quaternion scalar part
 #define AA_TF_QUAT_W 3
 
-/// A quaternion, x,y,z,w order
+/**
+ * Memory layout for a quaternion, x,y,z,w order
+ */
 typedef struct aa_tf_quat {
     union {
         struct {
-            double x;
-            double y;
-            double z;
-            double w;
+            double x; ///< x component
+            double y; ///< y component
+            double z; ///< z component
+            double w; ///< w component
         };
         struct {
             union {
-                struct aa_tf_vec3 vec;
-                double v[3];
+                struct aa_tf_vec3 vec; ///< vector part
+                double v[3];           ///< vector part
             };
-            double scalar;
+            double scalar; ///< scalar part
         };
-        double data[4];
+        double data[4]; ///< data array
     };
 } aa_tf_quat_t;
 
 /**
- * Euler Angle in ZYX (yaw-pitch-roll) format.
+ * Memory layout for an Euler Angle in ZYX (yaw-pitch-roll) format.
  */
 typedef struct aa_tf_eulerzyx {
     union {
         struct {
-            double y;
-            double p;
-            double r;
+            double y; ///< yaw
+            double p; ///< pitch
+            double r; ///< roll
         };
-        double data[3];
+        double data[3]; ///< data array
     };
 } aa_tf_eulerzyx_t;
 
 
-/** A transformation matrix.
- *  The first 9 elements are a column major rotation matrix.
- *  The last 3 elements are the origin vector.
+/**
+ * Memory layout for a transformation matrix.
+ *
+ * It is a column-major matrix, but the bottom row is omitted because
+ * this row is the same for all SE(3) transformation matrices.
+ *
+ * The first 9 elements are a column major rotation matrix.
+ * The last 3 elements are the origin vector.
+ *
+ *
  */
 typedef struct aa_tf_tfmat {
     union {
         struct {
-            double R[9];
-            aa_tf_vec3_t v;
+            double R[9];      ///< the rotation matrix part
+            aa_tf_vec3_t v;   ///< the origin vector part
         };
-        double data[12];
+        double data[12]; ///< data array
     };
 } aa_tf_tfmat_t;
 
+/**
+ * Index of rotation matrix part of transformation matrix.
+ */
 #define AA_TF_TFMAT_R 0
+
+/**
+ * Index of origin part of transformation matrix.
+ */
 #define AA_TF_TFMAT_V 9
+
+/**
+ * Index of origin x component of transformation matrix.
+ */
 #define AA_TF_TFMAT_X 9
+
+/**
+ * Index of origin y component of transformation matrix.
+ */
 #define AA_TF_TFMAT_Y 10
+
+/**
+ * Index of origin z component of transformation matrix.
+ */
 #define AA_TF_TFMAT_Z 11
 
-/** Transformation as quaternion and vector */
+/**
+ * Memory layout for a Transformation as rotation quaternion and translation vector.
+ */
 typedef struct aa_tf_qv {
     union {
         struct {
             aa_tf_quat_t r;
             aa_tf_vec3_t v;
         };
-        double data[7];
+        double data[7]; ///< data array
     };
 } aa_tf_qv_t;
 
 
 
-/** Dual Quaternion */
+/**
+ * Memory layout for a dual quaternion .
+ */
 typedef struct aa_tf_duqu {
     union {
         struct {
             aa_tf_quat_t real;
             aa_tf_quat_t dual;
         };
-        double data[8];
+        double data[8]; ///< data array
     };
 } aa_tf_duqu_t;
 
-/** Spatial velocity */
+/**
+ * Memory layout for an SE(3) velocity
+ */
 struct aa_tf_dx {
     union {
         struct {
             double dv[3];      ///< translational velocity
             double omega[3];   ///< rotational velocity
         };
-        double data[6];
+        double data[6]; ///< data array
     };
 };
 
@@ -332,13 +381,44 @@ struct aa_tf_qv_dx {
 
 
 
+/**
+ * Static initializer for an identity transformation matrix.
+ */
 #define AA_TF_IDENT_INITIALIZER {1,0,0, 0,1,0, 0,0,1, 0,0,0}
+
+/**
+ * Static initializer for an identity rotation matrix.
+ */
 #define AA_TF_ROTMAT_IDENT_INITIALIZER {1,0,0, 0,1,0, 0,0,1}
+
+/**
+ * Static initializer for an identity quaternion.
+ */
 #define AA_TF_QUAT_IDENT_INITIALIZER {0,0,0,1}
+
+/**
+ * Static initializer for an identity dual quaternion.
+ */
 #define AA_TF_DUQU_IDENT_INITIALIZER {0,0,0,1, 0,0,0,0}
+
+/**
+ * Static initializer for an identity quaternion-translation.
+ */
 #define AA_TF_QUTR_IDENT_INITIALIZER {0,0,0,1, 0,0,0}
+
+/**
+ * Static initializer for an identity axis-angle.
+ */
 #define AA_TF_AXANG_IDENT_INITIALIZER {1,0,0,0}
+
+/**
+ * Static initializer for an identity rotation-vector.
+ */
 #define AA_TF_ROTVEC_IDENT_INITIALIZER {0,0,0}
+
+/**
+ * Static initializer for an identity vector-3.
+ */
 #define AA_TF_VEC_IDENT_INITIALIZER {0,0,0}
 
 /// Identity transform
@@ -352,18 +432,64 @@ struct aa_tf_qv_dx {
 /// Identity Rotation Vector
 #define AA_TF_ROTVEC_IDENT ( (double[3]) AA_TF_ROTVEC_IDENT_INITIALIZER )
 
+/**
+ * Identity transformation matrix array.
+ */
 static const double aa_tf_ident[12] = AA_TF_IDENT_INITIALIZER;
+
+/**
+ * Identity transformation matrix array.
+ */
 static const double aa_tf_tfmat_ident[12] = AA_TF_IDENT_INITIALIZER;
+
+/**
+ * Identity rotation matrix array.
+ */
 static const double aa_tf_rotmat_ident[9] = AA_TF_ROTMAT_IDENT_INITIALIZER;
+
+/**
+ * Identity quaternion array.
+ */
 static const double aa_tf_quat_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
+
+/**
+ * Identity dual quaternion array.
+ */
 static const double aa_tf_duqu_ident[8] = AA_TF_DUQU_IDENT_INITIALIZER;
+
+/**
+ * Identity quaternion-translation array.
+ */
 static const double aa_tf_qutr_ident[7] = AA_TF_QUTR_IDENT_INITIALIZER;
+
+/**
+ * Identity axis-angle array.
+ */
 static const double aa_tf_axang_ident[4] = AA_TF_AXANG_IDENT_INITIALIZER;
+
+/**
+ * Identity rotation vector array.
+ */
 static const double aa_tf_rotvec_ident[3] = AA_TF_ROTVEC_IDENT_INITIALIZER;
+
+/**
+ * Identity vector-3 array.
+ */
 static const double aa_tf_vec_ident[3] = AA_TF_ROTVEC_IDENT_INITIALIZER;
 
+/**
+ * An X axis.
+ */
 static const double aa_tf_vec_x[3] = {1, 0, 0};
+
+/**
+ * A Y axis.
+ */
 static const double aa_tf_vec_y[3] = {0, 1, 0};
+
+/**
+ * A Z axis.
+ */
 static const double aa_tf_vec_z[3] = {0, 0, 1};
 
 /**************/
@@ -623,6 +749,11 @@ aa_tf_rotmat_zx( const double z_axis[AA_RESTRICT 3],
 /* Vectors */
 /***********/
 
+/**
+ * Macro to compute a dot product of length 3 vectors.
+ *
+ * May evaluate its arguments multiple times.
+ */
 #define AA_TF_DOTX(a,b) \
     ((a)[0]*(b)[0] + (a)[1]*(b)[1] + (a)[2]*(b)[2])
 
@@ -657,6 +788,11 @@ aa_tf_vdot( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] );
 AA_API float
 aa_tf_vdotf( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3] );
 
+/**
+ * Macro to compute the cross product of length 3 vectors.
+ *
+ * May evaluate its arguments multiple times.
+ */
 #define AA_TF_CROSSX( a, b, c ) \
     (c)[0] =  (a)[1]*(b)[2] - (a)[2]*(b)[1]; \
     (c)[1] =  (a)[2]*(b)[0] - (a)[0]*(b)[2]; \
