@@ -72,7 +72,8 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_sdl.h    \
-	include/amino/rx/scene_win.h
+	include/amino/rx/scene_win.h    \
+	include/amino/rx/traj.h
 
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
@@ -89,17 +90,18 @@ libamino_la_SOURCES =                  \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
-	src/rx/errstr.c 	       \
-	src/rx/scenegraph.cpp 	       \
-	src/rx/sg_api.cpp 	       \
-	src/rx/sg_capi.c 	       \
-	src/rx/scene_geom.c 	       \
+	src/rx/errstr.c                \
+	src/rx/scenegraph.cpp          \
+	src/rx/sg_api.cpp              \
+	src/rx/sg_capi.c               \
+	src/rx/scene_geom.c            \
 	src/rx/geom_opt.c              \
 	src/rx/scene_kin.c             \
 	src/rx/ik_opt.c                \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/mp_seq.cpp              \
+	src/rx/traj.c                  \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \
