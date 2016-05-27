@@ -1,15 +1,25 @@
-FAQ
+FAQ {#FAQ}
 ===
 
-SE(3)
+Contents {#faqcontents}
+=======
+
+* [SE(3)](@ref se3)
+* [Common Errors](@ref errors)
+* [Performance](@ref performance)
+* [Comparison with Other Packages](@ref comparison)
+
+SE(3) {#se3}
 ====
 
 * Q: Why dual quaternions?
 
-  - A: Dual quaternions are more compact and easier, computationally, to
+  - A: Dual quaternions are more compact and computational easier to
     normalize and filter than matrices.
 
-Scene Graphs
+* [Contents](@ref faqcontents)
+
+Scene Graphs {#scenegraphs}
 ============
 
 * Q: How can I load a URDF file?
@@ -25,7 +35,9 @@ Scene Graphs
     with dlopen().  To reload the scene graph, recompile the scene
     graph and dlopen() the library again.
 
-Common Errors
+* [Contents](@ref faqcontents)
+
+Common Errors {#errors}
 =============
 
 * Q: `./configure` fails with when checking for cffi-grovel.
@@ -72,7 +84,9 @@ Common Errors
 
     `export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"`
 
-Performance
+* [Contents](@ref faqcontents)
+
+Performance {#performance}
 ===========
 
 * Q: How do I make it faster?
@@ -116,3 +130,59 @@ Performance
         slightly change the resulting image.
       * `-flto`: enable link-time optimization. This optimizes across
         multiple translation units.
+
+* [Contents](@ref faqcontents)
+
+Comparison with Other Packages    {#comparison}
+==============================
+
+* Q: How do the Scene Graphs in Amino compare to ROS URDF?
+
+  - A: URDF and Amino scene graphs contain similar information.  Amino
+    can parse URDF files and referenced meshes into scene graphs.
+
+  - A: Amino scene graphs use a streamlined parent-child
+    representation of kinematic topology which simplifies modifying
+    the kinematic structure, for example, if a robot picks up an
+    object or pushes a tray.
+
+* Q: How do the Scene Graphs in Amino compare to the Trees in OROCOS
+  KDL?
+
+  - A: Amino provides a more extensive set of kinematic operations
+    than KDL, e.g., logarithms, exponentials, derivatives, exact
+    integration.
+
+  - A: Amino scene graphs include support for geometry (i.e., meshes,
+    primitive shapes) attached to frames and provide visualization
+    (via OpenGL and POV-ray) and collision checking (via FCL).
+    Geometry is out of scope for KDL.
+
+  - A: Amino scene graphs use a streamlined parent-child
+    representation of kinematic topology which simplifies modifying
+    the kinematic structure, for example, if a robot picks up an
+    object or pushes a tray.
+
+  - A: Amino scene graphs use quaternions which have better
+    computational properties that the matrices used in KDL.
+
+
+* Q: How do the SE(3) functions in amino compare with the Eigen
+  Geometry module?
+
+  - A: Aside from the superficial differences in API style, Amino
+    provides support for velocities, derivatives, logarithms, and
+    exponentials while Eigen does not.  In fact, Eigen quaternions are
+    strictly unit quaternions, making it impossible to use them to
+    represent derivatives!
+
+  - A: The Eigen Geometry module is composed of C++ templates,
+    allowing easy operations of other types (such as single or long
+    double floats) but complicating interfacing with languages besides
+    C++.  Amino's SE(3) functions are written in C and operate on
+    double floats.  These functions are easily called from other
+    languages.
+
+
+
+* [Contents](@ref faqcontents)
