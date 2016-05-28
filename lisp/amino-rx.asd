@@ -76,6 +76,7 @@
                       :depends-on ("rx/scenefile/urdf" "rx/scenefile/curly"))
                (:file "rx/animate" :depends-on ("rx/scenegraph" "rx/povray"))
                (:file "rx/draw" :depends-on ("rx/scenegraph"))
+               (:file "rx/draw-extra" :depends-on ("rx/scenegraph"))
                (:file "rx/trajectory" :depends-on ("rx/scenegraph"))
                (:file "rx/config" :depends-on ("rx/util" "rx/scenefile/urdf" "rx/parameters"))
                (:file "rx/sg-gen" :depends-on ("rx/scenegraph" "rx/mesh"))))

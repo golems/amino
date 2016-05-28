@@ -73,7 +73,7 @@ public:
                         aa_rx_sg_config_name(scene_graph, cid));
                 /* This seems as good as anything */
                 min = -M_PI;
-                max = -M_PI;
+                max = M_PI;
             }
 
             vb.setLow(i,min);
