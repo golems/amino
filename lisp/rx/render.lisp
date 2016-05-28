@@ -90,6 +90,7 @@
                              output
                              (directory *robray-tmp-directory*)
                              include
+                             include-text
                              (default-configuration 0d0))
 "Generate the POV-ray scene for the given scene-graph."
   (let ((pov-things)
@@ -122,6 +123,7 @@
               (setf (tree-set-find mesh-set)
                     (scene-mesh-povray-file shape))))))
       (map-tree-set nil #'include mesh-set)
+      (when include-text (thing include-text))
       (map nil #'include (reverse (ensure-list include)))
       ;; version
       (thing (pov-version "3.7")))
