@@ -169,7 +169,11 @@
                    options))
 
 (defun scene-geometry-mesh (options mesh)
-  (%scene-geometry mesh options))
+  (%scene-geometry (etypecase mesh
+                     (scene-mesh mesh)
+                     ((or pathname string)
+                      (make-scene-mesh :source-file mesh)))
+                   options))
 
 (defun scene-geometry-isa (geometry type)
   (let ((tree (scene-geometry-type geometry)))
@@ -704,12 +708,11 @@
   "Return the include file for the mesh file"
   (pov-cache-file (rope mesh-file ".inc")))
 
-(defun scene-graph-resolve-mesh (scene-graph &key
-                                               reload
-                                               (mesh-up-axis "Z")
-                                               (mesh-forward-axis "Y")
-                                               (directory *robray-tmp-directory*))
-  ;(print 'resolve-mesh)
+(defun scene-graph-resolve-povray! (scene-graph &key
+                                                  reload
+                                                  (mesh-up-axis "Z")
+                                                  (mesh-forward-axis "Y")
+                                                  (directory *robray-tmp-directory*))
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
     (labels ((resolve-mesh (mesh)
@@ -730,25 +733,11 @@
                                 :reload reload
                                 :mesh-up-axis mesh-up-axis
                                 :mesh-forward-axis mesh-forward-axis)
-
-               ;; (let* ((inc-file (output-file (scene-mesh-inc mesh-file) directory))
-               ;;        (convert (or reload
-               ;;                     (not (probe-file inc-file))
-               ;;                     (>= (file-write-date mesh-file)
-               ;;                         (file-write-date inc-file))))
-               ;;        (geom-name (progn (ensure-directories-exist inc-file)
-               ;;                          (collada-povray mesh-file
-               ;;                                          (when convert inc-file)))))
-               ;;   (if convert
-               ;;       (format *standard-output* "~&    to  ~A..." inc-file)
-               ;;       (format *standard-output* "~&    cached"))
-
                  (dolist (mesh-node mesh-nodes)
                    (setf (scene-mesh-name mesh-node) geom-name
                          (scene-mesh-povray-file mesh-node) inc-file))))
              mesh-files)
     scene-graph))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Computing Transforms ;;;
