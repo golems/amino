@@ -108,7 +108,6 @@
       (thing (pov-camera camera-tf
                          :width (get-render-option options :width)
                          :height (get-render-option options :height)))
-      (print mesh-set)
       ;; push frame geometry
       (do-scene-graph-geometry ((frame geometry) scene-graph)
         ;(format t "~&converting frame: ~A" (scene-frame-name frame))
@@ -125,7 +124,6 @@
                 (unless pov-file
                   (error "No POVray mesh file for frame ~A" name))
                 (tree-set-insertf mesh-set pov-file))))))
-      (print mesh-set)
       ;; Include mesh files
       (map-tree-set nil #'include mesh-set)
       (when include-text (thing include-text))

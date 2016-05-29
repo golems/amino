@@ -39,6 +39,11 @@
 
 ;;; GEOMETRY DRAWING ;;;
 
+(defun octet-color (r g b)
+  (list (/ r 255)
+        (/ g 255)
+        (/ b 255)))
+
 (defun draw-tf-axis (axis &optional (translation (identity-vec3)))
   (tf* (quaternion-from-vectors (vec 0d0 0d0 1d0)
                                 axis)

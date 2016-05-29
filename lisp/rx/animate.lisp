@@ -174,12 +174,23 @@
 (defun last-frame-number (files)
   (frame-number (car (last (sort-frames files)))))
 
+(defun codec-avconv-arg (codec)
+  (ecase codec
+    (:x264 "libx264")
+    (:theora "libtheora")
+    (:vp8 "libvpx")))
+
+(defun codec-container (codec)
+  (ecase codec
+    (:x264 "mp4")
+    (:theora "ogv")
+    (:vp8 "webm")))
+
 (defun animate-encode (&key
                          (options *render-options*)
                          (directory *robray-tmp-directory*)
                          (pad 15)
-                         (output-file "robray.mp4")
-                         (video-codec "libx264"))
+                         (output-file "robray"))
   ;; pad
   (let* ((images (directory  (concatenate 'string directory "/frame-*.png")))
          (last-frame-number (frame-number (car (last (sort-frames images))))))
@@ -204,13 +215,14 @@
                              :search t :wait t :directory directory
                              :output *standard-output*)))
   ;; avconv -f image2 -r 30 -i frame-%d.png foo.mp4
-  (let ((args (list "-f" "image2"
-                    "-r" (write-to-string (get-render-option options :frames-per-second))
-                    "-i" "vframe-%d.png"
-                    "-codec:v" video-codec
-                    "-loglevel" "warning"
-                    "-y"
-                    output-file)))
+  (let* ((codec (draw-option options :codec))
+         (args (list "-f" "image2"
+                     "-r" (write-to-string (get-render-option options :frames-per-second))
+                     "-i" "vframe-%d.png"
+                     "-codec:v" (codec-avconv-arg codec)
+                     "-loglevel" "warning"
+                     "-y"
+                     (rope-string (rope output-file "." (codec-container codec))))))
     (format t "~&avconv ~{~A ~}" args)
     (sb-ext:run-program "avconv"
                         args
