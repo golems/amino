@@ -273,6 +273,7 @@
 
 (defun scene-graph-frame-animate (frame-configuration-function
                                   &key
+                                    (camera-tf (tf nil))
                                     (render-frames t)
                                     (encode-video t)
                                     (output-directory *robray-tmp-directory*)
@@ -281,7 +282,9 @@
                                     append
                                     (scene-graph *scene-graph*)
                                     (options *render-options*)
-                                    include)
+                                    include
+                                    include-text
+                                    )
   (ensure-directories-exist output-directory)
   (let ((frame-files (frame-files output-directory)))
     (if append
@@ -299,11 +302,14 @@
          ;(print frame-file)
          ;(print configuration)
          (render-scene-graph scene-graph
+                             :camera-tf camera-tf
                              :options options
                              :configuration-map configuration
                              :output frame-file
                              :directory output-directory
-                             :include include)))
+                             :include include
+                             :include-text include-text
+                             )))
   ;; Convert Frames
   (when render-frames
     (net-render :directory output-directory
@@ -325,11 +331,13 @@
                                    ;(time-end 1d0)
                                    (scene-graph *scene-graph*)
                                    (options *render-options*)
-                                   include)
+                                   include
+                                   (camera-tf (tf nil))
+                                   include-text)
   (let ((frame-period (/ 1 (coerce (get-render-option options :frames-per-second) 'double-float))))
     (scene-graph-frame-animate (lambda (frame)
                                  (let ((time (+ time-start (* frame frame-period))))
-                                   (format t "~&f: ~D, t: ~F" frame time)
+                                   ;;(format t "~&f: ~D, t: ~F" frame time)
                                    (funcall configuration-function time)))
                                :append append
                                :scene-graph scene-graph
@@ -338,7 +346,10 @@
                                :output-directory output-directory
                                :frame-start 0
                                :options options
-                               :include include)))
+                               :include include
+                               :include-text include-text
+                               :camera-tf camera-tf
+                               )))
 
 (defun net-process-host (compute-available semaphore)
   (loop do
