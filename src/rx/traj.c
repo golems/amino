@@ -6,14 +6,16 @@
 #include <amino.h>
 #include <amino/rx/rxtype.h>
 #include <amino/rx/scenegraph.h>
-#include <amino/rx/traj.h>
 
-void
-aa_rx_traj_init(aa_rx_traj_t *traj, struct aa_rx_sg *scenegraph,
+#include <amino/rx/traj.h>
+#include <amino/rx/traj_internal.h>
+
+AA_API void
+aa_rx_traj_init(struct aa_rx_traj *traj, struct aa_rx_sg *scenegraph,
                 aa_mem_region_t *reg,
-                int (*generate)(aa_rx_traj_t *traj, void *cx))
+                int (*generate)(struct aa_rx_traj *traj, void *cx))
 {
-    *traj = (aa_rx_traj_t) {0};
+    *traj = (struct aa_rx_traj) {0};
     traj->scenegraph = scenegraph;
     traj->n_q = aa_rx_sg_config_count(scenegraph);
 
@@ -24,17 +26,20 @@ aa_rx_traj_init(aa_rx_traj_t *traj, struct aa_rx_sg *scenegraph,
     traj->segments = aa_mem_rlist_alloc(reg);
 }
 
-int
-aa_rx_traj_generate(aa_rx_traj_t *traj, void *cx)
+AA_API int
+aa_rx_traj_generate(struct aa_rx_traj *traj, void *cx)
 {
     return traj->generate(traj, cx);
 }
 
 int
-aa_rx_traj_value_it(aa_rx_traj_t *traj, void *v, double t) {
+aa_rx_traj_value_it(struct aa_rx_traj *traj, void *v, double t) {
+    // Iterate through segment list until no more segments remain
     do {
-        aa_rx_trajseg_t *seg = (aa_rx_trajseg_t *) traj->last_seg->data;
+        struct aa_rx_trajseg *seg =
+            (struct aa_rx_trajseg *) traj->last_seg->data;
 
+        // Evaluate segment at time t. Returns 1 if t is contained.
         if (seg->value(traj, seg, v, t))
             return 1;
 
@@ -44,8 +49,8 @@ aa_rx_traj_value_it(aa_rx_traj_t *traj, void *v, double t) {
     return 0;
 }
 
-int
-aa_rx_traj_value(aa_rx_traj_t *traj, void *v, double t)
+AA_API int
+aa_rx_traj_value(struct aa_rx_traj *traj, void *v, double t)
 {
     if (!traj->last_seg)
         traj->last_seg = traj->segments->head;
@@ -60,8 +65,8 @@ aa_rx_traj_value(aa_rx_traj_t *traj, void *v, double t)
     return r;
 }
 
-void
-aa_rx_trajpt_add(aa_rx_traj_t *traj, aa_rx_trajpt_t *pt)
+AA_API void
+aa_rx_trajpt_add(struct aa_rx_traj *traj, struct aa_rx_trajpt *pt)
 {
     if (traj->tail_pt) {
         traj->tail_pt->next = pt;
@@ -76,7 +81,7 @@ aa_rx_trajpt_add(aa_rx_traj_t *traj, aa_rx_trajpt_t *pt)
 }
 
 void
-aa_rx_trajseg_add(aa_rx_traj_t *traj, aa_rx_trajseg_t *seg)
+aa_rx_trajseg_add(struct aa_rx_traj *traj, struct aa_rx_trajseg *seg)
 {
     if (traj->tail_seg) {
         traj->tail_seg->next = seg;
@@ -103,14 +108,14 @@ aa_rx_pb_trajseg_limit(double *a, double *b, double *m, size_t n_q)
 }
 
 int
-aa_rx_pb_trajseg_value(aa_rx_traj_t *traj, aa_rx_trajseg_t *seg,
+aa_rx_pb_trajseg_value(struct aa_rx_traj *traj, struct aa_rx_trajseg *seg,
                        void *v, double t)
 {
-    aa_rx_pb_trajval_t *value = (aa_rx_pb_trajval_t *) v;
+    struct aa_rx_pb_trajval *value = (struct aa_rx_pb_trajval *) v;
 
-    aa_rx_pb_trajseg_t *c = (aa_rx_pb_trajseg_t *) seg;
-    aa_rx_pb_trajseg_t *p = (aa_rx_pb_trajseg_t *) seg->prev;
-    aa_rx_pb_trajseg_t *n = (aa_rx_pb_trajseg_t *) seg->next;
+    struct aa_rx_pb_trajseg *c = (struct aa_rx_pb_trajseg *) seg;
+    struct aa_rx_pb_trajseg *p = (struct aa_rx_pb_trajseg *) seg->prev;
+    struct aa_rx_pb_trajseg *n = (struct aa_rx_pb_trajseg *) seg->next;
 
     double dt = t - c->t_s;
     if ((c->t_s - c->b / 2) <= t && t <= (c->t_s + c->b / 2)) {
@@ -133,11 +138,12 @@ aa_rx_pb_trajseg_value(aa_rx_traj_t *traj, aa_rx_trajseg_t *seg,
     return 1;
 }
 
-aa_rx_pb_trajseg_t *
-aa_rx_pb_trajseg_create(aa_rx_traj_t *traj)
+struct aa_rx_pb_trajseg *
+aa_rx_pb_trajseg_create(struct aa_rx_traj *traj)
 {
-    aa_rx_pb_trajseg_t *seg = AA_MEM_REGION_NEW(traj->reg, aa_rx_pb_trajseg_t);
-    *seg = (aa_rx_pb_trajseg_t) {
+    struct aa_rx_pb_trajseg *seg = AA_MEM_REGION_NEW(traj->reg,
+                                                     struct aa_rx_pb_trajseg);
+    *seg = (struct aa_rx_pb_trajseg) {
         .value = aa_rx_pb_trajseg_value,
         .prev = NULL,
         .next = NULL,
@@ -154,16 +160,17 @@ aa_rx_pb_trajseg_create(aa_rx_traj_t *traj)
 }
 
 void
-aa_rx_pb_trajseg_generate(aa_rx_pb_trajseg_t *seg, double *amax, size_t n_q)
+aa_rx_pb_trajseg_generate(struct aa_rx_pb_trajseg *seg,
+                          double *amax, size_t n_q)
 {
-    aa_rx_pb_trajpt_t *c = (aa_rx_pb_trajpt_t *) seg->pt;
-    aa_rx_pb_trajpt_t *n = (aa_rx_pb_trajpt_t *) c->next;
+    struct aa_rx_pb_trajpt *c = (struct aa_rx_pb_trajpt *) seg->pt;
+    struct aa_rx_pb_trajpt *n = (struct aa_rx_pb_trajpt *) c->next;
     
     if (n) 
         for (size_t i = 0; i < n_q; i++)
             seg->dq[i] = (n->q[i] - c->q[i]) / seg->dt;
 
-    aa_rx_pb_trajseg_t *p = (aa_rx_pb_trajseg_t *) seg->prev;
+    struct aa_rx_pb_trajseg *p = (struct aa_rx_pb_trajseg *) seg->prev;
     seg->b = aa_rx_pb_trajseg_limit(seg->dq, (p) ? p->dq : NULL, amax, n_q);
 
     for (size_t i = 0; i < n_q; i++)
@@ -181,8 +188,8 @@ aa_rx_pb_trajseg_generate(aa_rx_pb_trajseg_t *seg, double *amax, size_t n_q)
         seg->t_f += seg->b / 2;
 }
 
-int
-aa_rx_pb_traj_generate(aa_rx_traj_t *traj, void *cx)
+AA_API int
+aa_rx_pb_traj_generate(struct aa_rx_traj *traj, void *cx)
 {
     double *amax = (double *) cx;
     double *vmin = AA_MEM_REGION_NEW_N(traj->reg, double, traj->n_q);
@@ -191,15 +198,15 @@ aa_rx_pb_traj_generate(aa_rx_traj_t *traj, void *cx)
         aa_rx_sg_get_limit_vel(traj->scenegraph, (aa_rx_config_id) i,
                                &vmin[i], &vmax[i]);
 
-    aa_rx_pb_trajpt_t *c_pt;
-    aa_rx_pb_trajseg_t *c_seg;
-    for (c_pt = (aa_rx_pb_trajpt_t *) traj->points->head->data;
-         c_pt != NULL; c_pt = (aa_rx_pb_trajpt_t *) c_pt->next) {
+    struct aa_rx_pb_trajpt *c_pt;
+    struct aa_rx_pb_trajseg *c_seg;
+    for (c_pt = (struct aa_rx_pb_trajpt *) traj->points->head->data;
+         c_pt != NULL; c_pt = (struct aa_rx_pb_trajpt *) c_pt->next) {
         c_seg = aa_rx_pb_trajseg_create(traj);
         c_seg->pt = c_pt;
-        aa_rx_trajseg_add(traj, (aa_rx_trajseg_t *) c_seg);
+        aa_rx_trajseg_add(traj, (struct aa_rx_trajseg *) c_seg);
 
-        aa_rx_pb_trajpt_t *next = (aa_rx_pb_trajpt_t *) c_pt->next;
+        struct aa_rx_pb_trajpt *next = (struct aa_rx_pb_trajpt *) c_pt->next;
         c_seg->dt = (next) ?
             aa_rx_pb_trajseg_limit(next->q, c_pt->q, vmax, traj->n_q) : DBL_MAX;
 
@@ -209,10 +216,10 @@ aa_rx_pb_traj_generate(aa_rx_traj_t *traj, void *cx)
     for (;;) {
         bool flag = false;
         double f[traj->n_q], *fp = f;
-        aa_rx_pb_trajseg_t *p_seg = NULL, *n_seg = NULL;
-        for (c_seg = (aa_rx_pb_trajseg_t *) traj->segments->head->data;
+        struct aa_rx_pb_trajseg *p_seg = NULL, *n_seg = NULL;
+        for (c_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
              c_seg != NULL; c_seg = n_seg, p_seg = c_seg, fp++) {
-            n_seg = (aa_rx_pb_trajseg_t *) c_seg->next;
+            n_seg = (struct aa_rx_pb_trajseg *) c_seg->next;
 
             bool p_overlap =
                 (p_seg) ? (p_seg->dt < c_seg->b \
@@ -230,14 +237,14 @@ aa_rx_pb_traj_generate(aa_rx_traj_t *traj, void *cx)
         }
 
         if (!flag) {
-            c_seg = (aa_rx_pb_trajseg_t *) traj->segments->head->data;
+            c_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
             traj->t_o = -c_seg->b / 2;
 
             break;
         }
 
         size_t i = 0;
-        for (c_seg = (aa_rx_pb_trajseg_t *) traj->segments->head->data;
+        for (c_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
              c_seg != NULL; i++) {
             c_seg->dt /= (i < traj->n_q - 1) ? fmin(f[i + 1], f[i]) : f[i];
             aa_rx_pb_trajseg_generate(c_seg, amax, traj->n_q);
