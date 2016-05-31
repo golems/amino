@@ -11,13 +11,12 @@
 #include <amino/rx/traj_internal.h>
 
 AA_API void
-aa_rx_traj_init(struct aa_rx_traj *traj, struct aa_rx_sg *scenegraph,
+aa_rx_traj_init(struct aa_rx_traj *traj, size_t n_q,
                 aa_mem_region_t *reg,
                 int (*generate)(struct aa_rx_traj *traj, void *cx))
 {
     *traj = (struct aa_rx_traj) {0};
-    traj->scenegraph = scenegraph;
-    traj->n_q = aa_rx_sg_config_count(scenegraph);
+    traj->n_q = n_q;
 
     traj->reg = reg;
     traj->generate = generate;
@@ -191,12 +190,7 @@ aa_rx_pb_trajseg_generate(struct aa_rx_pb_trajseg *seg,
 AA_API int
 aa_rx_pb_traj_generate(struct aa_rx_traj *traj, void *cx)
 {
-    double *amax = (double *) cx;
-    double *vmin = AA_MEM_REGION_NEW_N(traj->reg, double, traj->n_q);
-    double *vmax = AA_MEM_REGION_NEW_N(traj->reg, double, traj->n_q);
-    for (size_t i = 0; i < traj->n_q; i++)
-        aa_rx_sg_get_limit_vel(traj->scenegraph, (aa_rx_config_id) i,
-                               &vmin[i], &vmax[i]);
+    struct aa_rx_pb_limits *limits = (struct aa_rx_pb_limits *) cx;
 
     struct aa_rx_pb_trajpt *c_pt;
     struct aa_rx_pb_trajseg *c_seg;
@@ -207,10 +201,11 @@ aa_rx_pb_traj_generate(struct aa_rx_traj *traj, void *cx)
         aa_rx_trajseg_add(traj, (struct aa_rx_trajseg *) c_seg);
 
         struct aa_rx_pb_trajpt *next = (struct aa_rx_pb_trajpt *) c_pt->next;
-        c_seg->dt = (next) ?
-            aa_rx_pb_trajseg_limit(next->q, c_pt->q, vmax, traj->n_q) : DBL_MAX;
+        c_seg->dt = (next)
+            ? aa_rx_pb_trajseg_limit(next->q, c_pt->q, limits->dqmax, traj->n_q) 
+            : DBL_MAX;
 
-        aa_rx_pb_trajseg_generate(c_seg, amax, traj->n_q);
+        aa_rx_pb_trajseg_generate(c_seg, limits->ddqmax, traj->n_q);
     }
 
     for (;;) {
@@ -247,7 +242,7 @@ aa_rx_pb_traj_generate(struct aa_rx_traj *traj, void *cx)
         for (c_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
              c_seg != NULL; i++) {
             c_seg->dt /= (i < traj->n_q - 1) ? fmin(f[i + 1], f[i]) : f[i];
-            aa_rx_pb_trajseg_generate(c_seg, amax, traj->n_q);
+            aa_rx_pb_trajseg_generate(c_seg, limits->ddqmax, traj->n_q);
         }
     }
 

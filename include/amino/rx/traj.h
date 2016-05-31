@@ -5,15 +5,29 @@
  * @file traj.h
  */
 
+// Forward declarations
+struct aa_rx_trajpt;
+struct aa_rx_trajseg;
+struct aa_rx_traj;
+
 /**
- * Structure parameters for an struct aa_rx_trajpt
+ * Structure parameters for a struct aa_rx_trajpt
+ * 
+ * i          - Index of point in trajectory. Filled by aa_rx_trajpt_add().
+ * prev, next - Linked list of adjacent points. Filled by aa_rx_trajpt_add().
  */
 #define AA_RX_TRAJPT_FD                         \
     size_t i;                                   \
-    struct aa_rx_trajpt *prev, *next; 
+    struct aa_rx_trajpt *prev, *next;
 
 /**
- * Structure parameters for an struct aa_rx_trajseg
+ * Structure parameters for a struct aa_rx_trajseg
+ * 
+ * value      - Function pointer to evaluation function.
+ *              Called by aa_rx_traj_value()
+ * i          - Index of point in trajectory. Filled by aa_rx_trajpt_add()
+ * t_s, t_f   - Start and end times of trajectory 
+ * prev, next - Linked list of adjacent points. Filled by aa_rx_trajpt_add()
  */
 #define AA_RX_TRAJSEG_FD                                    \
     int (*value)(struct aa_rx_traj *traj,                   \
@@ -23,15 +37,20 @@
     double t_s, t_f;                                        \
     struct aa_rx_trajseg *prev, *next;                           
 
-
-struct aa_rx_trajpt;
-struct aa_rx_trajseg;
-struct aa_rx_traj;
-
+/**
+ * Base struct for a trajectory point. Generic functions cast points down to
+ * this type. Any trajectory point should begin its fields with AA_RX_TRAJPT_FD,
+ * to have similar memory layout.
+ */
 struct aa_rx_trajpt {
     AA_RX_TRAJPT_FD;
 };
 
+/**
+ * Base struct for a trajectory segment. Generic functions cast segments down to
+ * this type. Any trajectory segment should begin its fields with
+ * AA_RX_TRAJSEG_FD, to have similar memory layout.
+ */
 struct aa_rx_trajseg {
     AA_RX_TRAJSEG_FD;
 };
@@ -42,10 +61,9 @@ struct aa_rx_trajseg {
  * the function pointer generate to create the trajectory.
  */
 struct aa_rx_traj {
-    struct aa_rx_sg *scenegraph;
-    size_t n_q;
+    size_t n_q;                     ///< Number of configurations
 
-    aa_mem_region_t *reg;           ///< Memory region to use.
+    aa_mem_region_t *reg;           ///< Memory region to use
 
     aa_mem_rlist_t *points;         ///< List of discrete points
     struct aa_rx_trajpt *tail_pt;   ///< Last point in points
@@ -71,7 +89,7 @@ struct aa_rx_traj {
  * @pre aa_rx_sg_init() has been called after all frames were added to the
  *      scenegraph.
  */
-AA_API void aa_rx_traj_init(struct aa_rx_traj *traj, struct aa_rx_sg *scenegraph,
+AA_API void aa_rx_traj_init(struct aa_rx_traj *traj, size_t n_q,
                             aa_mem_region_t *reg,
                             int (*generate)(struct aa_rx_traj *traj, void *cx));
 
@@ -127,15 +145,18 @@ struct aa_rx_pb_trajpt {
     double *q;
 };
 
+struct aa_rx_pb_limits {
+    double *dqmax;
+    double *ddqmax;
+};
+
 /**
  * Trajectory generation function for a parabolic blend trajectory.
  * Requires points added to be of type aa_rx_pb_trajpt_t. When evaluated, value
  * must be of type aa_rx_pb_trajval_t.
  *
  * @param traj Trajectory to fill in. 
- * @param cx   Context. Used as acceleration limits. Should be of type double[]
- *             and of size equal to the number of configurations used in
- *             aa_rx_pb_trajpt_t.
+ * @param cx   Context. Should be of type struct aa_rx_pb_limits. 
  *
  * @return 0 on success, non-zero on failure.
  */
