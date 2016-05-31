@@ -135,19 +135,30 @@ AA_API void aa_rx_trajpt_add(struct aa_rx_traj *traj, struct aa_rx_trajpt *pt);
  * Parabolic Blend Trajectory
  */
 
+/**
+ * Value returned when a parabolic blend trajectory is evaluated with
+ * aa_rx_traj_value().
+ */
 struct aa_rx_pb_trajval {
-    double *q;
-    double *dq;
+    double *q;  ///< Position vector
+    double *dq; ///< Velocity vector
 };
 
+/**
+ * Trajectory point used to build a parabolic blend trajectory.
+ */
 struct aa_rx_pb_trajpt {
     AA_RX_TRAJPT_FD;
-    double *q;
+    double *q;       ///< Position vector 
 };
 
+/**
+ * Additional context needed for the parabolic blend trajectory generation.
+ * Contains joint limits.
+ */
 struct aa_rx_pb_limits {
-    double *dqmax;
-    double *ddqmax;
+    double *dqmax;  ///< Velocity limit
+    double *ddqmax; ///< Acceleration limit
 };
 
 /**

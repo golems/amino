@@ -51,11 +51,15 @@ aa_rx_traj_value_it(struct aa_rx_traj *traj, void *v, double t) {
 AA_API int
 aa_rx_traj_value(struct aa_rx_traj *traj, void *v, double t)
 {
+    // Initialize iterator
     if (!traj->last_seg)
         traj->last_seg = traj->segments->head;
 
+    // Add time offset
     t += traj->t_o;
     int r = aa_rx_traj_value_it(traj, v, t);
+
+    // Linear scan if nothing found 
     if (r == 0) {
         traj->last_seg = traj->segments->head;
         r = aa_rx_traj_value_it(traj, v, t);
@@ -67,12 +71,14 @@ aa_rx_traj_value(struct aa_rx_traj *traj, void *v, double t)
 AA_API void
 aa_rx_trajpt_add(struct aa_rx_traj *traj, struct aa_rx_trajpt *pt)
 {
+    // Set point index
     if (traj->tail_pt) {
         traj->tail_pt->next = pt;
         pt->i = traj->tail_pt->i + 1;
     } else
         pt->i = 0;
 
+    // Link in to list
     pt->prev = traj->tail_pt;
     traj->tail_pt = pt;
 
@@ -82,12 +88,14 @@ aa_rx_trajpt_add(struct aa_rx_traj *traj, struct aa_rx_trajpt *pt)
 void
 aa_rx_trajseg_add(struct aa_rx_traj *traj, struct aa_rx_trajseg *seg)
 {
+    // Set segment index
     if (traj->tail_seg) {
         traj->tail_seg->next = seg;
         seg->i = traj->tail_seg->i + 1;
     } else
         seg->i = 0;
 
+    // Link in to list
     seg->prev = traj->tail_seg;
     traj->tail_seg = seg;
 
@@ -117,20 +125,27 @@ aa_rx_pb_trajseg_value(struct aa_rx_traj *traj, struct aa_rx_trajseg *seg,
     struct aa_rx_pb_trajseg *n = (struct aa_rx_pb_trajseg *) seg->next;
 
     double dt = t - c->t_s;
+
     if ((c->t_s - c->b / 2) <= t && t <= (c->t_s + c->b / 2)) {
+        // Blend segment
         for (size_t i = 0; i < traj->n_q; i++) {
-            double p_dq = (p) ? p->dq[i] : 0;
-            value->q[i] = c->pt->q[i] + p_dq * dt + \
+            double prev_dq = (p) ? p->dq[i] : 0;
+
+            value->q[i] = c->pt->q[i] + prev_dq * dt + \
                 c->ddq[i] * pow((dt + c->b / 2), 2) / 2;
-            value->dq[i] = p_dq + c->ddq[i] * (dt + c->b / 2);
+
+            value->dq[i] = prev_dq + c->ddq[i] * (dt + c->b / 2);
         }
     } else if (n && (c->t_s + c->b / 2) <= t \
                && t <= (c->t_s + c->dt - n->b / 2)) {
+        // Linear segment
         for (size_t i = 0; i < traj->n_q; i++) {
             value->q[i] = c->pt->q[i] + c->dq[i] * dt;
+
             value->dq[i] = c->dq[i];
         }
     } else {
+        // Who knows what happened man
         return 0;
     }
 
@@ -140,8 +155,9 @@ aa_rx_pb_trajseg_value(struct aa_rx_traj *traj, struct aa_rx_trajseg *seg,
 struct aa_rx_pb_trajseg *
 aa_rx_pb_trajseg_create(struct aa_rx_traj *traj)
 {
-    struct aa_rx_pb_trajseg *seg = AA_MEM_REGION_NEW(traj->reg,
-                                                     struct aa_rx_pb_trajseg);
+    struct aa_rx_pb_trajseg *seg =
+        AA_MEM_REGION_NEW(traj->reg, struct aa_rx_pb_trajseg);
+
     *seg = (struct aa_rx_pb_trajseg) {
         .value = aa_rx_pb_trajseg_value,
         .prev = NULL,
@@ -159,22 +175,24 @@ aa_rx_pb_trajseg_create(struct aa_rx_traj *traj)
 }
 
 void
-aa_rx_pb_trajseg_generate(struct aa_rx_pb_trajseg *seg,
-                          double *amax, size_t n_q)
+aa_rx_pb_trajseg_update(struct aa_rx_pb_trajseg *seg, double *ddqmax, size_t n_q)
 {
     struct aa_rx_pb_trajpt *c = (struct aa_rx_pb_trajpt *) seg->pt;
     struct aa_rx_pb_trajpt *n = (struct aa_rx_pb_trajpt *) c->next;
-    
+
+    // If this isn't the last segment update forward velocities
     if (n) 
         for (size_t i = 0; i < n_q; i++)
             seg->dq[i] = (n->q[i] - c->q[i]) / seg->dt;
 
+    // Calculate acceleration based on new velocities
     struct aa_rx_pb_trajseg *p = (struct aa_rx_pb_trajseg *) seg->prev;
-    seg->b = aa_rx_pb_trajseg_limit(seg->dq, (p) ? p->dq : NULL, amax, n_q);
+    seg->b = aa_rx_pb_trajseg_limit(seg->dq, (p) ? p->dq : NULL, ddqmax, n_q);
 
     for (size_t i = 0; i < n_q; i++)
         seg->ddq[i] = (seg->dq[i] - ((p) ? p->dq[i] : 0)) / seg->b;
 
+    // Update start and end times. Assume later segments will also be updated.
     if (!p) {
         seg->t_s = 0;
         seg->t_f = seg->dt;
@@ -192,57 +210,66 @@ aa_rx_pb_traj_generate(struct aa_rx_traj *traj, void *cx)
 {
     struct aa_rx_pb_limits *limits = (struct aa_rx_pb_limits *) cx;
 
-    struct aa_rx_pb_trajpt *c_pt;
-    struct aa_rx_pb_trajseg *c_seg;
-    for (c_pt = (struct aa_rx_pb_trajpt *) traj->points->head->data;
-         c_pt != NULL; c_pt = (struct aa_rx_pb_trajpt *) c_pt->next) {
-        c_seg = aa_rx_pb_trajseg_create(traj);
-        c_seg->pt = c_pt;
-        aa_rx_trajseg_add(traj, (struct aa_rx_trajseg *) c_seg);
+    // Initialize segments
+    struct aa_rx_pb_trajpt *curr_pt;
+    struct aa_rx_pb_trajseg *curr_seg;
+    for (curr_pt = (struct aa_rx_pb_trajpt *) traj->points->head->data;
+         curr_pt != NULL; curr_pt = (struct aa_rx_pb_trajpt *) curr_pt->next) {
+        curr_seg = aa_rx_pb_trajseg_create(traj);
+        curr_seg->pt = curr_pt;
+        aa_rx_trajseg_add(traj, (struct aa_rx_trajseg *) curr_seg);
 
-        struct aa_rx_pb_trajpt *next = (struct aa_rx_pb_trajpt *) c_pt->next;
-        c_seg->dt = (next)
-            ? aa_rx_pb_trajseg_limit(next->q, c_pt->q, limits->dqmax, traj->n_q) 
+        struct aa_rx_pb_trajpt *next = (struct aa_rx_pb_trajpt *) curr_pt->next;
+        curr_seg->dt = (next)
+            ? aa_rx_pb_trajseg_limit(next->q, curr_pt->q,
+                                     limits->dqmax, traj->n_q)
             : DBL_MAX;
 
-        aa_rx_pb_trajseg_generate(c_seg, limits->ddqmax, traj->n_q);
+        aa_rx_pb_trajseg_update(curr_seg, limits->ddqmax, traj->n_q);
     }
 
     for (;;) {
         bool flag = false;
         double f[traj->n_q], *fp = f;
-        struct aa_rx_pb_trajseg *p_seg = NULL, *n_seg = NULL;
-        for (c_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
-             c_seg != NULL; c_seg = n_seg, p_seg = c_seg, fp++) {
-            n_seg = (struct aa_rx_pb_trajseg *) c_seg->next;
+        struct aa_rx_pb_trajseg *prev_seg = NULL, *next_seg = NULL;
+        for (curr_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
+             curr_seg != NULL; curr_seg = next_seg, prev_seg = curr_seg, fp++) {
+            next_seg = (struct aa_rx_pb_trajseg *) curr_seg->next;
 
-            bool p_overlap =
-                (p_seg) ? (p_seg->dt < c_seg->b \
-                           && (2 * p_seg->dt - p_seg->b) < c_seg->b) : false;
-            bool n_overlap =
-                (n_seg) ? (c_seg->dt < c_seg->b \
-                           && (2 * c_seg->dt - n_seg->b) < c_seg->b) : false;
+            // Check for blend region overlap in next and previous segment
+            bool prev_overlap = (prev_seg)
+                ? (prev_seg->dt < curr_seg->b                     
+                   && (2 * prev_seg->dt - prev_seg->b) < curr_seg->b)
+                : false;
 
-            if (p_overlap || n_overlap) {
-                *fp = sqrt(fmin((p_seg) ? p_seg->dt : DBL_MAX, c_seg->dt) / \
-                           c_seg->b);
+            bool next_overlap = (next_seg)
+                ? (curr_seg->dt < curr_seg->b                          
+                   && (2 * curr_seg->dt - next_seg->b) < curr_seg->b)
+                : false;
+
+            // Calculate reduction constant if overlapping
+            if (prev_overlap || next_overlap) {
+                double prev_dt = (prev_seg) ? prev_seg->dt : DBL_MAX; 
+                *fp = sqrt(fmin(prev_dt, curr_seg->dt) / curr_seg->b);
                 flag = true;
             } else
                 *fp = 1;
         }
 
+        // If done, set time offset and exit
         if (!flag) {
-            c_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
-            traj->t_o = -c_seg->b / 2;
+            curr_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
+            traj->t_o = -curr_seg->b / 2;
 
             break;
         }
 
+        // If overlap, update all segments
         size_t i = 0;
-        for (c_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
-             c_seg != NULL; i++) {
-            c_seg->dt /= (i < traj->n_q - 1) ? fmin(f[i + 1], f[i]) : f[i];
-            aa_rx_pb_trajseg_generate(c_seg, limits->ddqmax, traj->n_q);
+        for (curr_seg = (struct aa_rx_pb_trajseg *) traj->segments->head->data;
+             curr_seg != NULL; i++) {
+            curr_seg->dt /= (i < traj->n_q - 1) ? fmin(f[i + 1], f[i]) : f[i];
+            aa_rx_pb_trajseg_update(curr_seg, limits->ddqmax, traj->n_q);
         }
     }
 
