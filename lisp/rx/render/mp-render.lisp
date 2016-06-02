@@ -40,15 +40,21 @@
 (defun render-motion-plan (motion-plan
                           &key
                             (delta-t .25d0)
+                            config-velocity
                             (camera-tf (tf nil))
                             include
                             include-text
                             (options robray::*render-options*))
   (let* ((n (motion-plan-length motion-plan))
-         (path-maps (loop for i below n
-                       collect (motion-plan-refmap motion-plan i)))
-         (keyframes (keyframe-set (loop for config in path-maps
-                                     for time = 0d0 then (+ time delta-t)
+         (keyframes (keyframe-set (loop
+                                     for i below n
+                                     for config = (motion-plan-refmap motion-plan i)
+                                     for array = (motion-plan-refarray motion-plan i)
+                                     for time = 0d0 then (if config-velocity
+                                                             (+ time (/ (vec-dist array last-array)
+                                                                        config-velocity))
+                                                             (+ time delta-t))
+                                     for last-array = array
                                      collect (joint-keyframe time config))))
          (sg (motion-plan-scene-graph motion-plan)))
     (scene-graph-time-animate (keyframe-configuration-function keyframes)

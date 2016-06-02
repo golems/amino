@@ -73,6 +73,13 @@
 
 (defgeneric vec3 (x))
 
+(defmethod g- ((a vec3) (b vec3))
+  (with-vec3 (a-x a-y a-z) a
+    (with-vec3 (b-x b-y b-z) b
+      (vec3* (- a-x b-x)
+             (- a-y b-y)
+             (- a-z b-z)))))
+
 ;;; TF Interface
 (defun make-tf (&key
                   (quaternion (quaternion* 0d0 0d0 0d0 1d0))

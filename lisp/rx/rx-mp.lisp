@@ -273,6 +273,17 @@
   (motion-plan-refmap motion-plan
                       (1- (motion-plan-length motion-plan))))
 
+(defun motion-plan-refarray (motion-plan i)
+  (let* ((m-sg (motion-plan-mutable-scene-graph motion-plan))
+         (n-all (mutable-scene-graph-config-count m-sg))
+         (path (motion-plan-path motion-plan))
+         (array (make-vec n-all)))
+    (loop for j below n-all
+       for k from (* i n-all)
+       do (setf (aref array j)
+                (aref path k)))
+    array))
+
 (defun motion-plan-endpoint-array (motion-plan)
   (let* ((ssg (motion-plan-sub-scene-graph motion-plan))
          (n-sub (sub-scene-graph-config-count ssg))

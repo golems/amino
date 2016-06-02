@@ -107,11 +107,16 @@
    :make-matrix
    :matref
    :ensure-vec
+   ;; vec ops
+   :vec-ssd
+   :vec-dist
+   :vec-norm
    ;; Sparse
    :make-crs-matrix
    ;; TF Types
    :+tf-ident+
    :vec3 :vec3* :with-vec3
+   :vec3-normalize
    :axis-angle :axis-angle*
    :quaternion :quaternion* :quaternion-x :quaternion-y :quaternion-z :quaternion-w
    :rotation-matrix

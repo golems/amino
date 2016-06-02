@@ -71,3 +71,45 @@
                          b ld-b
                          x ld-x)))))
     x))
+
+
+(defcfun  aa-la-ssd :double
+  (n size-t)
+  (a :pointer)
+  (b :pointer))
+
+(defun vec-ssd (a b)
+  (let ((r 0d0))
+    (with-foreign-simple-vector (a length-a) a :input
+      (with-foreign-simple-vector (b length-b) b :input
+        (assert (= length-a length-b))
+        (setq r (aa-la-ssd length-a a b))))
+    r))
+
+(defun vec-dist (a b)
+  (sqrt (vec-ssd a b)))
+
+(defcfun  aa-la-norm :double
+  (n size-t)
+  (a :pointer))
+
+(defun vec-norm (a)
+  (let ((r 0d0))
+    (with-foreign-simple-vector (a length-a) a :input
+      (setq r (aa-la-norm length-a a)))
+    r))
+
+(defcfun  aa-la-normalize :double
+  (n size-t)
+  (a :pointer))
+
+(defun vec-normalize (a &optional result)
+  (let ((r 0d0)
+        (result (if result
+                    (
+                    (vec-copy a))))
+    (with-foreign-simple-vector (a length-a) a :input
+      (with-foreign-simple-vector (b length-b) b :output
+        (assert (= length-a length-result))
+        (setq r (aa-la-normalize
+    r))

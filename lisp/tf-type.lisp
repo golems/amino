@@ -140,6 +140,15 @@
              (,z (vecref ,value +z+)))
          ,@body))))
 
+(defun vec3-normalize (v)
+  (with-vec3 (x y z) v
+    (let ((norm (sqrt (+ (* x x)
+                         (* y y)
+                         (* z z)))))
+      (vec3* (/ x norm)
+             (/ y norm)
+             (/ z norm)))))
+
 ;;; Axis-Angle
 (def-specialized-array axis-angle 4 axis-angle-t)
 
