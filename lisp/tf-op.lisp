@@ -44,7 +44,6 @@
 (defgeneric rotation (x))
 (defgeneric translation (x))
 
-(defgeneric normalize (x))
 
 (defmethod normalize ((x quaternion-translation))
   (make-quaternion-translation :quaternion (tf-qnormalize (quaternion-translation-quaternion x))
@@ -428,7 +427,6 @@
            (map 'list #'identity (real-array-data (quaternion-translation-translation x))))))
 
 ;; Inverse
-(defgeneric inverse (x))
 
 (defmethod inverse ((x quaternion-translation))
   (let ((qc (make-quaternion))

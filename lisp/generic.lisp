@@ -40,6 +40,32 @@
 
 (in-package :amino)
 
+
+(defgeneric normalize (x))
+(defmethod normalize ((x number))
+  1)
+
+
+(defgeneric inverse (x))
+(defmethod inverse ((x number))
+  (/ 1 x))
+
+
+(defgeneric copy (obj))
+(defmethod copy ((x number))
+  x)
+
+(defmethod copy ((x cons))
+  (copy-list x))
+
+(defmethod copy ((x simple-array))
+  (etypecase x
+    ((simple-array double-float (*))
+     (replace (make-array (length x) :element-type 'double-float)
+              x))
+    (t (replace (make-array (length x) :element-type (array-element-type x))
+                x))))
+
 (defgeneric vec-array (obj &optional array start))
 
 (defmethod vec-array ((obj array) &optional (array (make-vec (length obj))) (start 0))
@@ -50,65 +76,81 @@
 (defmethod vec-array ((obj real-array) &optional (array (make-vec (length (real-array-data obj)))) (start 0))
   (replace array (real-array-data obj) :start1 start))
 
-(defmacro def-generic-binop (name binop)
+
+
+(defmethod normalize ((x array))
+  (etypecase x
+    ((simple-array double-float (*))
+     (vec-normalize x))))
+
+(defmethod normalize ((x list))
+  (vec-normalize x
+                 (make-list (length x))))
+
+
+(defmacro def-generic-binop (name binop op &key element-wise)
   `(progn
+     ;; generic
      (defgeneric ,binop (a b))
+     ;; dispatch
      (defun ,name (first &rest rest)
-       (reduce #',binop rest :initial-value first))))
+       (declare (dynamic-extent rest))
+       (reduce #',binop rest :initial-value first))
+     ;; number method
+     (defmethod ,binop ((a number) (b number))
+       (,op a b))
+     ;; cons methods
+     (defmethod ,binop ((a number) (b cons))
+       (loop for x in b collect (,op a x)))
+     (defmethod ,binop ((a cons) (b number))
+       (loop for x in a collect (,op x b)))
+     ;; array methods
+     (defmethod ,binop ((a number) (b simple-array))
+       (let ((n (length b)))
+         (etypecase b
+           ((simple-array double-float (*))
+            (let ((c (make-array n :element-type 'double-float)))
+              (dotimes (i n)
+                (setf (aref c i)
+                      (,op a (aref b i))))
+              c)))))
+     (defmethod ,binop ((a simple-array) (b number))
+       (let ((n (length a)))
+         (etypecase a
+           ((simple-array double-float (*))
+            (let ((c (make-array n :element-type 'double-float)))
+              (dotimes (i n)
+                (setf (aref c i)
+                      (,op (aref a i)
+                           b)))
+              c)))))
+     ;; element-wise methods
+     ,@(when element-wise
+             `((defmethod ,binop ((a cons) (b cons))
+                 (loop
+                    for x in a
+                    for y in b
+                    collect (,op x y)))
+               (defmethod ,binop ((a simple-array) (b simple-array))
+                 (let ((la (length a))
+                       (lb (length b)))
+                   (check-matrix-dimensions la lb)
+                   (etypecase a
+                     ((simple-array double-float (*))
+                      (let ((c (make-array la :element-type 'double-float)))
+                        (dotimes (i la)
+                          (setf (aref c i)
+                                (,op (aref a i) (aref b i))))
+                        c)))))
+               )
+             )))
 
-(def-generic-binop g* generic*)
-(def-generic-binop g/ generic/)
-(def-generic-binop g+ generic+)
-(def-generic-binop g- generic-)
-
-;; Scalar
-(defmethod generic* ((a number) (b number))
-  (* a b))
-
-(defmethod generic- ((a number) (b number))
-  (- a b))
-
-(defmethod generic+ ((a number) (b number))
-  (+ a b))
-
-(defmethod generic/ ((a number) (b number))
-  (/ a b))
-
+(def-generic-binop g* generic* *)
+(def-generic-binop g/ generic/ /)
+(def-generic-binop g+ generic+ + :element-wise t)
+(def-generic-binop g- generic- - :element-wise t)
 
 ;; scalar-vector
-(defmethod generic* ((a number) (b cons))
-  (loop for x in b
-     collect (* a x)))
-
-(defmethod generic* ((a cons) (b number))
-  (g* b a))
-
-(defun dscal-copy (alpha x)
-  (dscal (coerce alpha 'double-float)
-         (vec-copy x)))
-
-(defmethod generic* ((a number) (b simple-array))
-  (etypecase b
-    ((simple-array double-float (*))
-       (dscal-copy a b))))
-
-(defmethod generic* ((a simple-array) (b number))
-  (g* b a))
-
-;; Vector-Vector
-(defmethod generic- ((a simple-array) (b simple-array))
-  (etypecase a
-    ((simple-array double-float (*))
-     (etypecase b
-       ((simple-array double-float (*))
-        (%simple-array-double-float-op- a b (make-array (length a) :element-type 'double-float)))))))
-
-(defmethod generic+ ((a simple-array) (b simple-array))
-  (etypecase a
-    ((simple-array double-float (*))
-     (etypecase b
-       ((simple-array double-float (*))
-        (%simple-array-double-float-op+ a b (make-array (length a) :element-type 'double-float)))))))
 
 (defgeneric matrix->list (matrix))
 
