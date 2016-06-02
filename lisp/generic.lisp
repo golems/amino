@@ -42,17 +42,17 @@
 
 
 (defgeneric normalize (x))
-(defmethod normalize ((x number))
+(defmethod normalize ((x real))
   1)
 
 
 (defgeneric inverse (x))
-(defmethod inverse ((x number))
+(defmethod inverse ((x real))
   (/ 1 x))
 
 
 (defgeneric copy (obj))
-(defmethod copy ((x number))
+(defmethod copy ((x real))
   x)
 
 (defmethod copy ((x cons))

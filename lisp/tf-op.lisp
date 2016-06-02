@@ -149,8 +149,11 @@
 (defmethod quaternion ((x (eql nil)))
   (quaternion* 0d0 0d0 0d0 1d0))
 
-(defmethod quaternion ((x number))
+(defmethod quaternion ((x real))
   (quaternion* 0d0 0d0 0d0 x))
+
+(defmethod quaternion ((x complex))
+  (quaternion* (imagpart x) 0d0 0d0 (realpart x)))
 
 (defmethod quaternion ((x axis-angle))
   (tf-axang2quat x))

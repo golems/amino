@@ -4,15 +4,15 @@
 ;; LEVEL 1 ;;
 ;;;;;;;;;;;;;
 
-(defmethod generic* ((a number) (b simple-array))
+(defmethod generic* ((a real) (b simple-array))
   (ecase (array-element-type b)
     (double-float (dscal (coerce a 'double-float) (vec-copy b)))))
 
-(defmethod generic* ((a number) (b simple-array))
+(defmethod generic* ((a real) (b simple-array))
   (ecase (array-element-type b)
     (double-float (dscal (coerce a 'double-float) (vec-copy b)))))
 
-(defmethod generic* ((a simple-array) (b number))
+(defmethod generic* ((a simple-array) (b real))
   (g* b a))
 
 ;;;;;;;;;;;;;
