@@ -89,27 +89,13 @@
 (defun vec-dist (a b)
   (sqrt (vec-ssd a b)))
 
-(defcfun  aa-la-norm :double
-  (n size-t)
-  (a :pointer))
+(defun vec-norm (x)
+  (dnrm2 x))
 
-(defun vec-norm (a)
-  (let ((r 0d0))
-    (with-foreign-simple-vector (a length-a) a :input
-      (setq r (aa-la-norm length-a a)))
-    r))
-
-(defcfun  aa-la-normalize :double
-  (n size-t)
-  (a :pointer))
-
-(defun vec-normalize (a &optional result)
-  (let ((r 0d0)
-        (result (if result
-                    (
-                    (vec-copy a))))
-    (with-foreign-simple-vector (a length-a) a :input
-      (with-foreign-simple-vector (b length-b) b :output
-        (assert (= length-a length-result))
-        (setq r (aa-la-normalize
-    r))
+(defun vec-normalize (x &optional y)
+  (let ((y (dcopy x y)))
+    (with-foreign-vector (y inc-y len-y) y :inout
+      (blas-dscal len-y
+                  (/ 1d0 (blas-dnrm2 len-y y inc-y))
+                  y inc-y))
+    y))

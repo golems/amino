@@ -85,8 +85,10 @@
   (x :vector))
 
 (defun dnrm2 (x)
-  (with-foreign-vector (x inc-x n) x :input
-    (blas-dnrm2 n x inc-x)))
+  (let ((r 0d0))
+    (with-foreign-vector (x inc-x n) x :input
+      (setq r (blas-dnrm2 n x inc-x)))
+    r))
 
 ;;; asum
 (def-blas-cfun ("dasum_" blas-dasum) :double
