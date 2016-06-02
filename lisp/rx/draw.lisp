@@ -115,10 +115,42 @@
                                    :translation  (g+ (g* axis (- length end-arrow-length))
                                                      translation)))))))
 
+
+(defun draw-arrow-points (scene-graph tail tip name &key
+                                                      options
+                                                      width
+                                                      end-arrow
+                                                      start-arrow
+                                                      (end-arrow-start-width (* 2 width))
+                                                      (end-arrow-end-width 0d0)
+                                                      (end-arrow-length width)
+                                                      (start-arrow-start-width (* 2 width))
+                                                      (start-arrow-end-width 0d0)
+                                                      (start-arrow-length width)
+                                                      configuration-map)
+  (let* ((v (tf-translation (scene-graph-tf-relative scene-graph tail tip
+                                                     :configuration-map configuration-map))))
+    (item-arrow-axis tail name
+                     :options options
+                     :axis (vec3-normalize v)
+                     :length (vec-norm v)
+                     :width width
+                     :end-arrow end-arrow
+                     :start-arrow start-arrow
+                     :end-arrow-start-width end-arrow-start-width
+                     :end-arrow-end-width end-arrow-end-width
+                     :end-arrow-length end-arrow-length
+                     :start-arrow-start-width start-arrow-start-width
+                     :start-arrow-end-width start-arrow-end-width
+                     :start-arrow-length start-arrow-length)))
+
+
+
+
 (defun item-frame-marker (parent name
                           &key
                             length
-                            width
+                            (width (/ length 10))
                             (arrow-width (* 2 width))
                             (arrow-length (* 1 arrow-width))
                             options)
