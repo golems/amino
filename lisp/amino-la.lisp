@@ -72,18 +72,19 @@
                          x ld-x)))))
     x))
 
-
-(defcfun  aa-la-ssd :double
+(def-la-cfun ("aa_la_d_ssd" aa-la-d-ssd :pointer-type :pointer) :double
   (n size-t)
-  (a :pointer)
-  (b :pointer))
+  (x :vector)
+  (y :vector))
 
 (defun vec-ssd (a b)
   (let ((r 0d0))
-    (with-foreign-simple-vector (a length-a) a :input
-      (with-foreign-simple-vector (b length-b) b :input
+    (with-foreign-vector (a inc-a length-a) a :input
+      (with-foreign-vector (b inc-b length-b) b :input
         (assert (= length-a length-b))
-        (setq r (aa-la-ssd length-a a b))))
+        (setq r (aa-la-d-ssd length-a
+                             a inc-a
+                             b inc-b))))
     r))
 
 (defun vec-dist (a b)
