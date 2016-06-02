@@ -739,6 +739,25 @@
              mesh-files)
     scene-graph))
 
+(defun scene-graph-remove-geometry (scene-graph frames)
+  (let* ((frames (etypecase frames
+                  (list (apply #'tree-set #'frame-name-compare frames))
+                  (tree-set frames)))
+         (new-sg (copy-scene-graph scene-graph))
+         (new-frames (fold-scene-graph-frames
+                      (lambda (set frame)
+                        (tree-set-insert set
+                                         (if (tree-set-member-p frames (scene-frame-name frame))
+                                             (let ((frame (copy-scene-frame frame)))
+                                               (setf (scene-frame-geometry frame) nil)
+                                               frame)
+                                             frame)))
+                      (tree-set #'scene-object-compare) new-sg)))
+
+
+    (setf (scene-graph-frames new-sg) new-frames)
+    new-sg))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Computing Transforms ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
