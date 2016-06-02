@@ -51,12 +51,13 @@
                ;; FFI
                (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
                (:file "ffi" :depends-on ("grovel" "basic-type"))
-               ;; LA
-               (:file "basic-ops" :depends-on ("basic-type"))
-               (:file "foreign" :depends-on ("basic-ops" "ffi"))
+               (:file "foreign" :depends-on ("package"))
                (:file "blas" :depends-on ("foreign"))
                (:file "libc" :depends-on ("foreign"))
+               ;; Foreign LA
                (:file "amino-la" :depends-on ("foreign"))
+               ;; LA
+               (:file "basic-ops" :depends-on ("basic-type"))
                (:file "op" :depends-on ("package"))
                (:file "generic" :depends-on ("op" "tf-type"))
                (:file "blas-generic" :depends-on ("generic" "blas"))

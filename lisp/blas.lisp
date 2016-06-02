@@ -97,6 +97,21 @@
   (with-foreign-vector (x inc-x n) x :input
     (blas-dasum n x inc-x)))
 
+;;; copy
+(def-blas-cfun ("dcopy_" blas-dcopy) :void
+  (n blas-size-t)
+  (x :vector)
+  (y :vector))
+
+(defun dcopy (x &optional y)
+  (let ((y (or y
+               (make-vec (vec-length x)))))
+    (with-foreign-vector (x incx len-x) x :input
+      (with-foreign-vector (y incy len-y) y :output
+        (check-matrix-dimensions len-x len-y)
+        (blas-dcopy len-x x incx y incy)))
+    y))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 2 BLAS ;;;
 ;;;;;;;;;;;;;;;;;;;;
