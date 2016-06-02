@@ -129,3 +129,4 @@ amino*.tar.gz
 /include/amino/cblas_order.h
 /doc/html/
 /doc/doxygen_sqlite3.db
+/memregion
