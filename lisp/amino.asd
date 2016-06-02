@@ -52,7 +52,7 @@
                (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
                (:file "ffi" :depends-on ("grovel" "basic-type"))
                (:file "foreign" :depends-on ("package"))
-               (:file "blas" :depends-on ("foreign"))
+               (:file "blas" :depends-on ("foreign" "ffi"))
                (:file "libc" :depends-on ("foreign"))
                ;; Foreign LA
                (:file "amino-la" :depends-on ("foreign"))
