@@ -73,7 +73,7 @@
 
 (defgeneric vec3 (x))
 
-(defmethod g- ((a vec3) (b vec3))
+(defmethod generic- ((a vec3) (b vec3))
   (with-vec3 (a-x a-y a-z) a
     (with-vec3 (b-x b-y b-z) b
       (vec3* (- a-x b-x)
@@ -362,34 +362,26 @@
 
 ;;; Multiplies
 
-(defmethod g* ((a number) (b vec3))
-  (make-vec3 :data (dscal-copy a (vec3-data b))))
 
-(defmethod g* ((a vec3) (b number))
-  (g* b a))
-
-(defmethod g* ((a quaternion) (b quaternion))
+(defmethod generic* ((a quaternion) (b quaternion))
   (tf-qmul a b))
 
-(defmethod g* ((a number) (b quaternion))
-  (make-quaternion :data (dscal-copy a b)))
-
-(defmethod g* ((a quaternion) (b axis-angle))
+(defmethod generic* ((a quaternion) (b axis-angle))
   (tf-qmul a (quaternion b)))
 
-(defmethod g* ((a quaternion) (b principal-angle))
+(defmethod generic* ((a quaternion) (b principal-angle))
   (tf-qmul a (quaternion b)))
 
-(defmethod g* ((a quaternion) (b euler-angle))
+(defmethod generic* ((a quaternion) (b euler-angle))
   (tf-qmul a (quaternion b)))
 
-(defmethod g* ((a dual-quaternion) (b dual-quaternion))
+(defmethod generic* ((a dual-quaternion) (b dual-quaternion))
   (tf-duqu-mul a b))
 
-(defmethod g* ((a quaternion-translation) (b quaternion-translation))
+(defmethod generic* ((a quaternion-translation) (b quaternion-translation))
   (tf-qutr-mul a b))
 
-(defmethod g* ((a dual-quaternion) (b quaternion-translation))
+(defmethod generic* ((a dual-quaternion) (b quaternion-translation))
   (tf-duqu-mul a (dual-quaternion b)))
 
 ;; Transformations
@@ -449,7 +441,7 @@
 
 ;;; Tagged TFs
 
-(defmethod g* ((a tf-tag) (b tf-tag))
+(defmethod generic* ((a tf-tag) (b tf-tag))
   (assert (eql (tf-tag-child a)
                (tf-tag-parent b)))
   (tf-tag (tf-tag-parent a)

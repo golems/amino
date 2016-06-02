@@ -112,7 +112,14 @@
                                           :type  (simple-array double-float (,length))))))
        (defun ,deep-copy-thing (thing &optional (result (,make-thing)))
          (replace (,thing-data result)
-                  (,thing-data thing)))
+                  (,thing-data thing))
+         result)
+       (defmethod generic* ((a number) (b ,thing))
+         (let ((c (,deep-copy-thing b)))
+           (dscal a (,thing-data c))
+           c))
+       (defmethod generic* ((a ,thing) (b number))
+         (generic* b a))
        (define-foreign-type ,cffi-type ()
          ()
          (:simple-parser ,cffi-type)
@@ -120,6 +127,8 @@
        (defmethod expand-to-foreign-dyn (value var body (type ,cffi-type))
          (list* 'with-foreign-fixed-vector var value ,length :input
                 body)))))
+
+
 
 ;;; Point 2
 (def-specialized-array vec2 2 vector-2-t)

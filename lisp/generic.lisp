@@ -50,54 +50,60 @@
 (defmethod vec-array ((obj real-array) &optional (array (make-vec (length (real-array-data obj)))) (start 0))
   (replace array (real-array-data obj) :start1 start))
 
-(defgeneric g* (a b))
-(defgeneric g- (a b))
-(defgeneric g+ (a b))
-(defgeneric g/ (a b))
+(defmacro def-generic-binop (name binop)
+  `(progn
+     (defgeneric ,binop (a b))
+     (defun ,name (first &rest rest)
+       (reduce #',binop rest :initial-value first))))
+
+(def-generic-binop g* generic*)
+(def-generic-binop g/ generic/)
+(def-generic-binop g+ generic+)
+(def-generic-binop g- generic-)
 
 ;; Scalar
-(defmethod g* ((a number) (b number))
+(defmethod generic* ((a number) (b number))
   (* a b))
 
-(defmethod g- ((a number) (b number))
+(defmethod generic- ((a number) (b number))
   (- a b))
 
-(defmethod g+ ((a number) (b number))
+(defmethod generic+ ((a number) (b number))
   (+ a b))
 
-(defmethod g/ ((a number) (b number))
+(defmethod generic/ ((a number) (b number))
   (/ a b))
 
 
 ;; scalar-vector
-(defmethod g* ((a number) (b cons))
+(defmethod generic* ((a number) (b cons))
   (loop for x in b
      collect (* a x)))
 
-(defmethod g* ((a cons) (b number))
+(defmethod generic* ((a cons) (b number))
   (g* b a))
 
 (defun dscal-copy (alpha x)
   (dscal (coerce alpha 'double-float)
          (vec-copy x)))
 
-(defmethod g* ((a number) (b simple-array))
+(defmethod generic* ((a number) (b simple-array))
   (etypecase b
     ((simple-array double-float (*))
        (dscal-copy a b))))
 
-(defmethod g* ((a simple-array) (b number))
+(defmethod generic* ((a simple-array) (b number))
   (g* b a))
 
 ;; Vector-Vector
-(defmethod g- ((a simple-array) (b simple-array))
+(defmethod generic- ((a simple-array) (b simple-array))
   (etypecase a
     ((simple-array double-float (*))
      (etypecase b
        ((simple-array double-float (*))
         (%simple-array-double-float-op- a b (make-array (length a) :element-type 'double-float)))))))
 
-(defmethod g+ ((a simple-array) (b simple-array))
+(defmethod generic+ ((a simple-array) (b simple-array))
   (etypecase a
     ((simple-array double-float (*))
      (etypecase b
@@ -128,7 +134,7 @@
                       (aref b i)))))
     c))
 
-(defmethod g+ ((a vec3) (b vec3))
+(defmethod generic+ ((a vec3) (b vec3))
   (make-vec3 :data
              (g+ (vec3-data a)
                  (vec3-data b))))
