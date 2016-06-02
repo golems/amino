@@ -188,7 +188,7 @@ Note that destructor must operate on the raw pointer type.
          ,@body
          ;; Maybe copy out
          ,@(ecase intent
-                  (:input '((values)))
+                  (:input nil)
                   ((:output :inout)
                    `((fill-list-from-pointer ,value ,pointer)
                      ,value)))))))
@@ -222,10 +222,12 @@ INTENT: One of (or :input :output :inout). When value
                     (,rows (%matrix-rows ,value))
                     (,columns (%matrix-cols ,value)))
                 (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
-                (cond ((= 1 ,columns)
+                (cond ((= 1 ,columns) ; row vector
                        (,array-offset-fun ,@maybe-value ,data ,offset 1 ,rows))
-                      ((= 1 ,rows)
+                      ((= 1 ,rows)    ; column vector
                        (,array-offset-fun ,@maybe-value ,data ,offset ,stride ,columns))
+                      ((= ,stride ,rows) ; non-blocked matrix
+                       (,array-offset-fun ,@maybe-value ,data ,offset 1 (* ,rows ,columns)))
                       (t (matrix-storage-error "Matrix ~A is not a vector" ',vector)))))
              ((simple-array double-float (*))
               (,array-fun ,@maybe-value ,value))

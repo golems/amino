@@ -85,10 +85,8 @@
   (x :vector))
 
 (defun dnrm2 (x)
-  (let ((r 0d0))
-    (with-foreign-vector (x inc-x n) x :input
-      (setq r (blas-dnrm2 n x inc-x)))
-    r))
+  (with-foreign-vector (x inc-x n) x :input
+    (blas-dnrm2 n x inc-x)))
 
 ;;; asum
 (def-blas-cfun ("dasum_" blas-dasum) :double
@@ -111,8 +109,7 @@
     (with-foreign-vector (x incx len-x) x :input
       (with-foreign-vector (y incy len-y) y :output
         (check-matrix-dimensions len-x len-y)
-        (blas-dcopy len-x x incx y incy)))
-    y))
+        (blas-dcopy len-x x incx y incy)))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 2 BLAS ;;;
