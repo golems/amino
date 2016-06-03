@@ -204,6 +204,12 @@
 (defun z-angle (value)
   (%z-angle (coerce value 'double-float)))
 
+(defun degrees (value)
+  (* value (/ pi 180d0)))
+
+(defun pi-rad (value)
+  (* value pi))
+
 (defstruct (euler-angle (:include real-array
                                   (data (make-vec 3) :type  (simple-array double-float (3))))))
 

@@ -404,6 +404,9 @@
 (defmethod generic* ((a quaternion) (b principal-angle))
   (tf-qmul a (quaternion b)))
 
+(defmethod generic* ((a principal-angle) (b principal-angle))
+  (tf-qmul (quaternion a) (quaternion b)))
+
 (defmethod generic* ((a quaternion) (b euler-angle))
   (tf-qmul a (quaternion b)))
 
