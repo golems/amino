@@ -326,11 +326,41 @@
 
 (defmethod quaternion-translation ((x (eql nil)))
   (make-quaternion-translation :quaternion (quaternion nil)
-                               :translation (make-vec3 :data (vec 0d0 0d0 0d0))))
+                               :translation (identity-vec3)))
 
 (defmethod quaternion-translation ((x dual-quaternion))
   (tf-duqu2qutr x))
 
+(defmethod quaternion-translation ((x vec3))
+  (make-quaternion-translation :quaternion (identity-quaternion)
+                               :translation x))
+
+(defmethod quaternion-translation ((x quaternion))
+  (make-quaternion-translation :quaternion x
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x x-angle))
+  (make-quaternion-translation :quaternion (tf-xangle2quat (principal-angle-value x))
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x y-angle))
+  (make-quaternion-translation :quaternion (tf-yangle2quat (principal-angle-value x))
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x z-angle))
+  (make-quaternion-translation :quaternion (tf-yangle2quat (principal-angle-value x))
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x axis-angle))
+  (make-quaternion-translation :quaternion (tf-axang2quat x)
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x euler-zyx))
+  (let ((data (euler-angle-data x)))
+    (make-quaternion-translation :quaternion (tf-eulerzyx2quat (aref data 0)
+                                                               (aref data 1)
+                                                               (aref data 2))
+                                 :translation (identity-vec3))))
 
 (defmethod quaternion-translation-2 ((r quaternion) (x vec3))
   (make-quaternion-translation :quaternion r
