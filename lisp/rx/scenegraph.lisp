@@ -680,16 +680,27 @@
   (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
 (defun prefix-scene-graph (prefix scene-graph &key
+                                                root
+                                                tf
                                                 (prefix-parents t))
   (let ((frames))
+    (push (scene-frame-fixed root prefix
+                             :tf (tf tf))
+          frames)
     (do-scene-graph-frames (frame (scene-graph scene-graph) (scene-graph frames))
       (let ((frame (copy-structure frame))
             (parent (scene-frame-parent frame)))
+        ;; prefix name
         (setf (scene-frame-name frame)
               (rope prefix (scene-frame-name frame)))
-        (when (and parent prefix-parents)
-          (setf (scene-frame-parent frame)
-                (rope prefix parent)))
+        ;; prefix parent
+        (if parent
+            (when prefix-parents
+              (setf (scene-frame-parent frame)
+                    (rope prefix parent)))
+            (setf (scene-frame-parent frame)
+                  prefix))
+        ;; prefix config
         (when (scene-frame-joint-p frame)
           (setf (scene-frame-joint-configuration-name frame)
                 (rope prefix (scene-frame-joint-configuration-name frame))))
