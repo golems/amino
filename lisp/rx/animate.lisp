@@ -324,6 +324,7 @@
                              )))
   ;; Convert Frames
   (when render-frames
+    (load-config)
     (net-render :directory output-directory
                 :options options)
     ;; Encode Video
