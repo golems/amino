@@ -565,8 +565,17 @@
   (aa-tf-quat2eulerzyx q e)
   e)
 
-(defun tf-rotation (tf)
-  (matrix-block tf 0 0 3 3))
+;;; Look
+(defcfun aa-tf-qv-mzlook :void
+  (eye vector-3-t)
+  (target vector-3-t)
+  (up vector-3-t)
+  (q quaternion-t)
+  (v vector-3-t))
 
-(defun tf-translation (tf)
-  (matrix-block tf 0 3 3 1))
+(defun tf-mzlook (&key eye target up
+                    (tf (make-quaternion-translation)))
+  (aa-tf-qv-mzlook eye target up
+                   (quaternion-translation-quaternion tf)
+                   (quaternion-translation-translation tf))
+  tf)

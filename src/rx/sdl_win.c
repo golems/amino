@@ -681,9 +681,19 @@ aa_rx_win_pause( struct aa_rx_win * win, int paused )
 }
 
 AA_API void
-aa_rx_win_get_tf_cam( const struct aa_rx_win * win, double *E )
+aa_rx_win_get_tf_cam( struct aa_rx_win * win, double *E )
 {
+    aa_rx_win_lock(win);
     AA_MEM_CPY(E, win->gl_globals->world_E_cam, 7 );
+    aa_rx_win_unlock(win);
+}
+
+AA_API void
+aa_rx_win_set_tf_cam( struct aa_rx_win * win, const double *E )
+{
+    aa_rx_win_lock(win);
+    aa_gl_globals_set_camera(win->gl_globals, E);
+    aa_rx_win_unlock(win);
 }
 
 AA_API void
