@@ -39,7 +39,7 @@
 (defpackage :amino-baxter
   (:use :cl :amino :robray :sycamore-util :sycamore)
   (:export
-   :draw-baxter)
+   :draw-baxter))
 
 (in-package :amino-baxter)
 
