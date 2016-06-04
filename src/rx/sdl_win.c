@@ -562,7 +562,12 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
 
     aa_sdl_lock();
     aa_gl_lock(win);
-    SDL_GL_MakeCurrent(win->window, win->gl_cx);
+    if( SDL_GL_MakeCurrent(win->window, win->gl_cx) ) {
+        fprintf(stderr, "SDL_GL_MakeCurrent() failed: %s\n",
+                SDL_GetError());
+        abort();
+        exit(EXIT_FAILURE);
+    }
     aa_gl_unlock(win);
     aa_sdl_unlock();
 
@@ -599,6 +604,15 @@ static void* win_thread_fun( void *arg )
 AA_API void
 aa_rx_win_start( struct aa_rx_win * win )
 {
+    /* We must release the current GL context in this thread so that
+     * the other thread can use it.
+     */
+    if( SDL_GL_MakeCurrent(win->window, 0) ) {
+        fprintf(stderr, "SDL_GL_MakeCurrent() failed to release: %s\n",
+                SDL_GetError());
+        abort();
+        exit(EXIT_FAILURE);
+    }
     pthread_create( &win->thread, NULL, win_thread_fun, win );
 }
 
