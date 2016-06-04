@@ -571,7 +571,9 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
     aa_gl_unlock(win);
     aa_sdl_unlock();
 
+    aa_rx_win_lock(win);
     win->running = 1;
+    aa_rx_win_unlock(win);
 
     int stop = 0;
     int stop_on_quit = 0;
