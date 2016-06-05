@@ -52,6 +52,7 @@
 
 #include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/sbl/SBL.h>
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
 
@@ -230,7 +231,9 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
-    ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
+    //ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
+    ompl::base::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
+
     planner->setProblemDefinition(pdef);
     try {
         planner->solve(timeout);
