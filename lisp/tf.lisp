@@ -184,6 +184,21 @@
   (aa-tf-rotmat-zx z-axis x-axis rotmat)
   rotmat)
 
+(defun rotation-matrix-x-axis (r)
+  (vec3* (matref r 0 0)
+         (matref r 1 0)
+         (matref r 2 0)))
+
+(defun rotation-matrix-y-axis (r)
+  (vec3* (matref r 0 1)
+         (matref r 1 1)
+         (matref r 2 1)))
+
+(defun rotation-matrix-z-axis (r)
+  (vec3* (matref r 0 2)
+         (matref r 1 2)
+         (matref r 2 2)))
+
 ;;; Quaternions
 (defmacro def-q2 ((c-fun lisp-fun) doc-string)
   `(progn (defcfun ,c-fun :void
