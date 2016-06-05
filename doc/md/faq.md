@@ -4,10 +4,26 @@ FAQ {#FAQ}
 Contents {#faqcontents}
 =======
 
+* [General](@ref general)
 * [SE(3)](@ref se3)
 * [Common Errors](@ref errors)
 * [Performance](@ref performance)
 * [Comparison with Other Packages](@ref comparison)
+
+
+General {#general}
+====
+
+* Q: What is Amino?
+
+  - A: Amino is a lightweight library for robot modeling, control, and
+    visualization.
+
+* Q: What platforms are supported?
+
+  - A: Amino is developed on Debian and Ubuntu Linux.  It should run
+    on other Linux distributions and POSIX-y systems with minimal
+    effort.  Currently, non-POSIX platforms are not targeted.
 
 SE(3) {#se3}
 ====
@@ -136,6 +152,17 @@ Performance {#performance}
 Comparison with Other Packages    {#comparison}
 ==============================
 
+* Q: How does Amino relate to MoveIt!?
+
+  - A: MoveIt uses separate data structures for the robot the
+    environment.  Amino uses a single data structure (the scene graph)
+    for both the robot and environment.  Using a single data structure
+    greatly simplifies interactions with multiple objects, e.g.,
+    carrying a tray of objects or pushing a loaded cart.
+
+  - A: MoveIt! is closely coupled with ROS.  Amino can load ROS URDF
+    files and is also able to operate stand-alone.
+
 * Q: How do the Scene Graphs in Amino compare to ROS URDF?
 
   - A: URDF and Amino scene graphs contain similar information.  Amino
@@ -166,7 +193,6 @@ Comparison with Other Packages    {#comparison}
   - A: Amino scene graphs use quaternions which have better
     computational properties that the matrices used in KDL.
 
-
 * Q: How do the SE(3) functions in amino compare with the Eigen
   Geometry module?
 
@@ -177,12 +203,10 @@ Comparison with Other Packages    {#comparison}
     represent derivatives!
 
   - A: The Eigen Geometry module is composed of C++ templates,
-    allowing easy operations of other types (such as single or long
+    allowing easy operations on other types (such as single or long
     double floats) but complicating interfacing with languages besides
     C++.  Amino's SE(3) functions are written in C and operate on
     double floats.  These functions are easily called from other
     languages.
-
-
 
 * [Contents](@ref faqcontents)
