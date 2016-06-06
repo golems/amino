@@ -72,13 +72,15 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_sdl.h    \
-	include/amino/rx/scene_win.h    \
-	include/amino/rx/traj.h
+	include/amino/rx/scene_win.h
+
+ctincludedir = $(pkgincludedir)/ct
+
+ctinclude_HEADERS = 	                \
+	include/amino/ct/traj.h
 
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
-
-
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
@@ -101,7 +103,7 @@ libamino_la_SOURCES =                  \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/mp_seq.cpp              \
-	src/rx/traj.c                  \
+	src/ct/traj.c                  \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \
