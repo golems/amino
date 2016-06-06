@@ -232,6 +232,15 @@
 (def-q3 (aa-tf-qcmul tf-qcmul) "Multiply conjugate of first arg with second arg")
 (def-q3 (aa-tf-qmulc tf-qmulc) "Multiply first arg with conjugate of second arg")
 
+(defcfun aa-tf-qpow :void
+  (q quaternion-t)
+  (a :double)
+  (r quaternion-t))
+
+(defun tf-qpow (q power)
+  (let ((r (make-quaternion)))
+    (aa-tf-qpow q (coerce power 'double-float) r)
+    r))
 
 (defcfun aa-tf-qrot :void
   (q quaternion-t)
