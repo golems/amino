@@ -96,7 +96,7 @@ aa_ct_traj_value(struct aa_ct_traj *traj, void *v, double t)
     t += traj->t_o;
     int r = aa_ct_traj_value_it(traj, v, t);
 
-    // Linear scan if nothing found 
+    // Linear scan if nothing found
     if (r == 0) {
         traj->last_seg = traj->segments->head;
         r = aa_ct_traj_value_it(traj, v, t);
@@ -239,7 +239,7 @@ aa_ct_pb_trajseg_update(struct aa_ct_pb_trajseg *seg, double *ddqmax, size_t n_q
     }
 
     if (!n)
-        seg->t_f += seg->b / 2;
+        seg->t_f = seg->t_s + seg->b;
 }
 
 AA_API int
@@ -267,30 +267,32 @@ aa_ct_pb_traj_generate(struct aa_ct_traj *traj, void *cx)
 
     for (;;) {
         bool flag = false;
-        double f[traj->n_q], *fp = f;
+
+        size_t i = 0;
+        double f[traj->n_q];
         struct aa_ct_pb_trajseg *prev_seg = NULL, *next_seg = NULL;
         for (curr_seg = (struct aa_ct_pb_trajseg *) traj->segments->head->data;
-             curr_seg != NULL; curr_seg = next_seg, prev_seg = curr_seg, fp++) {
+             curr_seg != NULL; curr_seg = next_seg, prev_seg = curr_seg, i++) {
             next_seg = (struct aa_ct_pb_trajseg *) curr_seg->next;
 
             // Check for blend region overlap in next and previous segment
             bool prev_overlap = (prev_seg)
-                ? (prev_seg->dt < curr_seg->b                     
+                ? (prev_seg->dt < curr_seg->b
                    && (2 * prev_seg->dt - prev_seg->b) < curr_seg->b)
                 : false;
 
             bool next_overlap = (next_seg)
-                ? (curr_seg->dt < curr_seg->b                          
+                ? (curr_seg->dt < curr_seg->b
                    && (2 * curr_seg->dt - next_seg->b) < curr_seg->b)
                 : false;
 
             // Calculate reduction constant if overlapping
             if (prev_overlap || next_overlap) {
                 double prev_dt = (prev_seg) ? prev_seg->dt : DBL_MAX; 
-                *fp = sqrt(fmin(prev_dt, curr_seg->dt) / curr_seg->b);
+                f[i] = sqrt(fmin(prev_dt, curr_seg->dt) / curr_seg->b);
                 flag = true;
             } else
-                *fp = 1;
+                f[i] = 1;
         }
 
         // If done, set time offset and exit
@@ -302,10 +304,13 @@ aa_ct_pb_traj_generate(struct aa_ct_traj *traj, void *cx)
         }
 
         // If overlap, update all segments
-        size_t i = 0;
+        i = 0;
         for (curr_seg = (struct aa_ct_pb_trajseg *) traj->segments->head->data;
-             curr_seg != NULL; i++) {
-            curr_seg->dt /= (i < traj->n_q - 1) ? fmin(f[i + 1], f[i]) : f[i];
+             curr_seg != NULL;
+             curr_seg = (struct aa_ct_pb_trajseg *) curr_seg->next, i++) {
+
+            double fn = (curr_seg->next) ? f[i + 1] : 1;
+            curr_seg->dt /= fmin(fn, f[i]);
             aa_ct_pb_trajseg_update(curr_seg, limits->ddqmax, traj->n_q);
         }
     }

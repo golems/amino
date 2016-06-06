@@ -303,6 +303,12 @@ noinst_PROGRAMS += sg_test
 sg_test_SOURCES = src/test/sg_test.c
 sg_test_LDADD = libamino.la libtestutil.la
 
+TESTS += ct_traj
+noinst_PROGRAMS += ct_traj
+ct_traj_SOURCES = src/test/ct_traj.c
+ct_traj_LDADD = libamino.la libtestutil.la
+
+
 if USE_FORTRAN
 TESTS += la_test
 noinst_PROGRAMS += la_test
