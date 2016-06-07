@@ -1432,6 +1432,10 @@ aa_tf_qutr_mzlook( const double eye[AA_RESTRICT 3],
 AA_API void aa_tf_duqu_add( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
                             double d3[AA_RESTRICT 8] );
 
+/** Dual quaternion subtraction */
+AA_API void aa_tf_duqu_sub( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
+                            double d3[AA_RESTRICT 8] );
+
 /** Dual quaternion scalar multiplication */
 AA_API void aa_tf_duqu_smul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
                              double d3[AA_RESTRICT 8] );
