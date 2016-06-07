@@ -35,51 +35,27 @@
  *
  */
 
-#include "amino.h"
-#include "amino/test.h"
-
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scenegraph_internal.h"
-
-#include "amino/ct/traj.h"
+#ifndef AMINO_CT_STATE_H
+#define AMINO_CT_STATE_H
 
 /**
- * Test making a parabolic blend trajectory
+ * @file state.h
  */
-int
-main(void)
-{
-    size_t n_q = 4;
 
-    struct aa_mem_region reg;
-    aa_mem_region_init(&reg, 512);
+/**
+ * State description of a robot
+ */
+struct aa_ct_state {
+    size_t n_q;     //< Number of configuration variables
+    size_t n_tf;    //< Number of frames
 
-    struct aa_ct_pt_list *pt_list = aa_ct_pt_list_init(&reg);
+    double *q;      //< Position
+    double *dq;     //< Velocity
+    double *ddq;    //< Acceleration
+    double *eff;    //< Efforts
 
-    for (size_t i = 0; i < 4; i++) {
-        struct aa_ct_pt *pt = AA_MEM_REGION_NEW(&reg, struct aa_ct_pt);
-        pt->state.n_q = n_q;
-        pt->state.q = AA_MEM_REGION_NEW_N(&reg, double, n_q);
+    double *TF_abs; //< Absolute frame transforms
+    double *TF_rel; //< Relative frame transforms
+};
 
-        for (size_t j = 0; j < n_q; j++)
-            pt->state.q[j] = (double) rand() / RAND_MAX;
-
-        aa_ct_pt_list_add(pt_list, pt);
-    }
-
-    struct aa_ct_state limits;
-    limits.n_q = n_q;
-    limits.dq = AA_MEM_REGION_NEW_N(&reg, double, n_q); 
-    limits.ddq = AA_MEM_REGION_NEW_N(&reg, double, n_q);
-
-    for (size_t j = 0; j < n_q; j++) {
-        limits.dq[j] = 1;
-        limits.ddq[j] = 1;
-    }
-
-    struct aa_ct_seg_list *seg_list =
-        aa_ct_tj_pb_generate(&reg, pt_list, &limits);
-
-    aa_ct_seg_list_plot(seg_list, n_q, 0.01);
-}
+#endif /*AMINO_CT_STATE_H*/

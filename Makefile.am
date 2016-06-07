@@ -103,7 +103,7 @@ libamino_la_SOURCES =                  \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/mp_seq.cpp              \
-	src/ct/traj.c                  \
+	src/ct/traj.cpp                \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \
