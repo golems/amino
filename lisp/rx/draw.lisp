@@ -153,6 +153,9 @@
                             (width (/ length 10))
                             (arrow-width (* 2 width))
                             (arrow-length (* 1 arrow-width))
+                            (x-color '(1 0 0))
+                            (y-color '(0 1 0))
+                            (z-color '(0 0 1))
                             options)
   (flet ((helper (subname axis color)
            (item-arrow-axis parent (draw-subframe name subname)
@@ -165,9 +168,9 @@
                             :end-arrow-start-width arrow-width
                             :end-arrow-length arrow-length)))
 
-  (append (helper "x" (vec3* 1 0 0) '(1 0 0) )
-          (helper "y" (vec3* 0 1 0) '(0 1 0) )
-          (helper "z" (vec3* 0 0 1) '(0 0 1) ))))
+  (append (helper "x" (vec3* 1 0 0) x-color )
+          (helper "y" (vec3* 0 1 0) y-color )
+          (helper "z" (vec3* 0 0 1) z-color ))))
 
 
 ;; (defun draw-geometry (scene-graph parent name
