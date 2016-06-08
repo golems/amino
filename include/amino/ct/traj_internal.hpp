@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2016, Rice University
+ * Copyright (c) 2016 Rice University
  * All rights reserved.
  *
  * Author(s): Zachary K. Kingston <zak@rice.edu>
@@ -35,52 +35,55 @@
  *
  */
 
-#include "amino.h"
-#include "amino/test.h"
-
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scenegraph_internal.h"
-
-#include "amino/ct/state.h"
-#include "amino/ct/traj.h"
+#ifndef AMINO_CT_TRAJ_INTERNAL_HPP
+#define AMINO_CT_TRAJ_INTERNAL_HPP
 
 /**
- * Test making a parabolic blend trajectory
+ * @file traj_internal.h
  */
-int
-main(void)
-{
-    size_t n_q = 4;
 
-    struct aa_mem_region reg;
-    aa_mem_region_init(&reg, 512);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    struct aa_ct_pt_list *pt_list = aa_ct_pt_list_create(&reg);
+/**
+ * Add a reference to a segment to a segment list. The reference will be kept in
+ * the list.
+ *
+ * @param list List to add segment to
+ * @param seg  Segment to add to list
+ */
+void aa_ct_seg_list_add(struct aa_ct_seg_list *list, struct aa_ct_seg *seg);
 
-    for (size_t i = 0; i < 4; i++) {
-        struct aa_ct_pt *pt = AA_MEM_REGION_NEW(&reg, struct aa_ct_pt);
-        pt->state.n_q = n_q;
-        pt->state.q = AA_MEM_REGION_NEW_N(&reg, double, n_q);
-
-        for (size_t j = 0; j < n_q; j++)
-            pt->state.q[j] = (double) rand() / RAND_MAX;
-
-        aa_ct_pt_list_add(pt_list, pt);
-    }
-
-    struct aa_ct_state limits;
-    limits.n_q = n_q;
-    limits.dq = AA_MEM_REGION_NEW_N(&reg, double, n_q); 
-    limits.ddq = AA_MEM_REGION_NEW_N(&reg, double, n_q);
-
-    for (size_t j = 0; j < n_q; j++) {
-        limits.dq[j] = 1;
-        limits.ddq[j] = 1;
-    }
-
-    struct aa_ct_seg_list *seg_list =
-        aa_ct_tj_pb_generate(&reg, pt_list, &limits);
-
-    aa_ct_seg_list_plot(seg_list, n_q, 0.01);
+#ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+
+struct aa_ct_pt_list {
+    amino::RegionList<struct aa_ct_pt *>::allocator *alloc; ///< Allocator
+    amino::RegionList<struct aa_ct_pt *>::type *list;      ///< List
+
+    aa_ct_pt_list(struct aa_mem_region *reg) {
+        alloc = new(reg) amino::RegionList<struct aa_ct_pt *>::allocator(reg);
+        list = new(reg) amino::RegionList<struct aa_ct_pt *>::type(*alloc);
+    }
+};
+
+struct aa_ct_seg_list {
+    amino::RegionList<struct aa_ct_seg *>::allocator *alloc; ///< Allocator
+    amino::RegionList<struct aa_ct_seg *>::type *list;       ///< List
+    amino::RegionList<struct aa_ct_seg *>::iterator it;      ///< Iterator
+    int it_on;                                               ///< Iterator init?
+
+    aa_ct_seg_list(struct aa_mem_region *reg) {
+        alloc = new(reg) amino::RegionList<struct aa_ct_seg *>::allocator(reg);
+        list = new(reg) amino::RegionList<struct aa_ct_seg *>::type(*alloc);
+        it_on = 0;
+    }
+};
+
+#endif
+
+#endif

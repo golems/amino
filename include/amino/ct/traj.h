@@ -42,16 +42,6 @@
  * @file traj.h
  */
 
-#include <stdbool.h>
-
-#ifdef __cplusplus
-#include <amino.hpp>
-#else
-#include <amino.h>
-#endif
-
-#include <amino/ct/state.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,7 +84,7 @@ struct aa_ct_seg_list;
  *
  * @return A freshly allocated struct aa_ct_pt_list.
  */
-struct aa_ct_pt_list *aa_ct_pt_list_init(struct aa_mem_region *reg);
+struct aa_ct_pt_list *aa_ct_pt_list_create(struct aa_mem_region *reg);
 
 /**
  * Add a reference to a waypoint to a point list. The reference will be kept in
@@ -104,43 +94,6 @@ struct aa_ct_pt_list *aa_ct_pt_list_init(struct aa_mem_region *reg);
  * @param pt   Point to add to list
  */
 void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_pt *pt);
-
-/**
- * Returns the first element of a point list.
- *
- * @param list List to retrieve first point from.
- *
- * @return First point in the list.
- */
-struct aa_ct_pt *aa_ct_pt_list_start(struct aa_ct_pt_list *list);
-
-
-/**
- * Initialize and construct a segment list from a memory region.
- *
- * @param reg Memory region to allocate from
- *
- * @return A freshly allocated struct aa_ct_seg_list.
- */
-struct aa_ct_seg_list *aa_ct_seg_list_init(struct aa_mem_region *reg);
-
-/**
- * Add a reference to a segment to a segment list. The reference will be kept in
- * the list.
- *
- * @param list List to add segment to
- * @param seg  Segment to add to list
- */
-void aa_ct_seg_list_add(struct aa_ct_seg_list *list, struct aa_ct_seg *seg);
-
-/**
- * Returns the first element of a segment list.
- *
- * @param list List to retrieve first segment from.
- *
- * @return First segment in the list.
- */
-struct aa_ct_seg *aa_ct_seg_list_start(struct aa_ct_seg_list *list);
 
 /**
  * Evaluates a segment list at a given time. Fills in the provided state struct
@@ -180,26 +133,6 @@ struct aa_ct_seg_list *aa_ct_tj_pb_generate(struct aa_mem_region *reg,
 
 #ifdef __cplusplus
 }
-#endif
-
-#ifdef __cplusplus
-
-using namespace amino;
-
-struct aa_ct_pt_list {
-    struct aa_mem_region *reg;                      ///< Memory region
-    RegionList<struct aa_ct_pt *>::allocator alloc; ///< Allocator
-    RegionList<struct aa_ct_pt *>::type *list;      ///< List
-};
-
-struct aa_ct_seg_list {
-    struct aa_mem_region *reg;                       ///< Memory region
-    RegionList<struct aa_ct_seg *>::allocator alloc; ///< Allocator
-    RegionList<struct aa_ct_seg *>::type *list;      ///< List
-    RegionList<struct aa_ct_seg *>::iterator it;     ///< Iterator
-    bool it_on;                                      ///< Iterator allocated?
-};
-
 #endif
 
 #endif

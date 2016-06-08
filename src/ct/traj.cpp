@@ -37,8 +37,9 @@
 
 #include <amino.hpp>
 
-#include <amino/ct/traj.h>
 #include <amino/ct/state.h>
+#include <amino/ct/traj.h>
+#include <amino/ct/traj_internal.hpp>
 
 using namespace amino;
 
@@ -64,16 +65,9 @@ aa_ct_list_add(T *list, U *el)
  * Point lists
  */
 AA_API struct aa_ct_pt_list *
-aa_ct_pt_list_init(struct aa_mem_region *reg) {
-    struct aa_ct_pt_list *list = AA_MEM_REGION_NEW(reg, struct aa_ct_pt_list);
-    list->reg = reg;
-    list->alloc = RegionList<struct aa_ct_pt *>::allocator(reg);
-
-    list->list = AA_MEM_REGION_NEW(reg, RegionList<struct aa_ct_pt *>::type);
-    list->list = new(list->list)
-        RegionList<struct aa_ct_pt *>::type(list->alloc);
-
-    return list;
+aa_ct_pt_list_create(struct aa_mem_region *reg)
+{
+    return new(reg) struct aa_ct_pt_list(reg);
 }
 
 AA_API void
@@ -82,60 +76,27 @@ aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_pt *pt)
     aa_ct_list_add(list, pt);
 }
 
-AA_API struct aa_ct_pt *
-aa_ct_pt_list_start(struct aa_ct_pt_list *list)
-{
-    return list->list->front();
-}
-
 
 /**
  * Segment lists
  */
-AA_API struct aa_ct_seg_list *
-aa_ct_seg_list_init(struct aa_mem_region *reg) {
-    struct aa_ct_seg_list *list = AA_MEM_REGION_NEW(reg, struct aa_ct_seg_list);
-    list->reg = reg;
-    list->alloc = RegionList<struct aa_ct_seg *>::allocator(reg);
-
-    list->list = AA_MEM_REGION_NEW(reg, RegionList<struct aa_ct_seg *>::type);
-    list->list = new(list->list)
-        RegionList<struct aa_ct_seg *>::type(list->alloc);
-
-    list->it_on = false;
-
-    return list;
-}
-
 AA_API void
 aa_ct_seg_list_add(struct aa_ct_seg_list *list, struct aa_ct_seg *seg)
 {
     aa_ct_list_add(list, seg);
 }
 
-AA_API struct aa_ct_seg *
-aa_ct_seg_list_start(struct aa_ct_seg_list *list)
-{
-    return list->list->front();
-}
-
 AA_API int
 aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
                     double t)
 {
-    if (!list)
-        return 0;
-
     if (!list->it_on) {
         list->it = list->list->begin();
-        list->it_on = true;
+        list->it_on = 1;
     }
 
     do {
         struct aa_ct_seg *seg = *list->it;
-
-        if (!seg)
-            return 0;
 
         int r;
         if ((r = seg->eval(seg, state, t)))
@@ -144,7 +105,7 @@ aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
         list->it++;
     } while (list->it != list->list->end());
 
-    list->it_on = false;
+    list->it_on = 0;
     return 0;
 }
 
@@ -369,10 +330,10 @@ aa_ct_tj_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
                      struct aa_ct_state *limits)
 {
     struct aa_ct_pt *c_pt;
-    struct aa_ct_seg_list *seg_list = aa_ct_seg_list_init(reg);
+    struct aa_ct_seg_list *seg_list = new(reg) struct aa_ct_seg_list(reg);
 
     // Populate segment list with one segment per point
-    c_pt = aa_ct_pt_list_start(pt_list);
+    c_pt = pt_list->list->front();
     for (; c_pt != NULL; c_pt = c_pt->next)
         aa_ct_seg_list_add(seg_list, aa_ct_tj_pb_new(reg, c_pt, limits));
 
