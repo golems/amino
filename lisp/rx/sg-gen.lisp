@@ -287,8 +287,9 @@
     (cgen-declare-fun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name))))
 
 (defun scene-graph-so (source-file shared-object)
-  (uiop/run-program:run-program
-   (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
+  (let ((args  (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
+    (print (rope-string (rope-split " " args)))
+    (uiop/run-program:run-program args)))
 
 
 (defun genc-mesh-link (mesh)

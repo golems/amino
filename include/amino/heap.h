@@ -45,7 +45,29 @@
  */
 
 
-typedef int (*aa_compar_fun)(const void *, const void *);
+/**
+ * A comparison function.
+ *
+ * The function should return an integer less than, equal to, or
+ * greater than zero if a is found, respectively, to be less than, to
+ * match, or be greater than b.
+ *
+ */
+typedef int (*aa_compar_fun)(const void *a, const void *b);
+
+/**
+ * The "heapify" operation.
+ *
+ * Manipulates the tree rooted at index i so that it becomes a heap.
+ */
 void aa_aheap_heapify(uint8_t *base, size_t nmemb, size_t size,  size_t i, aa_compar_fun compar );
+
+/**
+ * Perform heapsort.
+ */
 void aa_aheap_sort(void *base, size_t nmemb, size_t size,  aa_compar_fun compar );
+
+/**
+ * Build a heap from an array.
+ */
 void aa_aheap_build(uint8_t *base, size_t nmemb, size_t size,  aa_compar_fun compar );

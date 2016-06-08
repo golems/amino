@@ -440,6 +440,9 @@ AA_API void aa_sdl_display_loop(
         params.time_last = params.time_now;
         next = aa_tm_add(params.time_now, delta);
 
+        // Cleanup as necessary
+        aa_gl_buffers_cleanup();
+
         // wait for SDL events
         int timeout = 1;
         while( !params.quit && timeout > 0 ) {

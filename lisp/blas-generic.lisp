@@ -4,20 +4,20 @@
 ;; LEVEL 1 ;;
 ;;;;;;;;;;;;;
 
-(defmethod g* ((a number) (b simple-array))
+(defmethod generic* ((a real) (b simple-array))
   (ecase (array-element-type b)
     (double-float (dscal (coerce a 'double-float) (vec-copy b)))))
 
-(defmethod g* ((a number) (b simple-array))
+(defmethod generic* ((a real) (b simple-array))
   (ecase (array-element-type b)
     (double-float (dscal (coerce a 'double-float) (vec-copy b)))))
 
-(defmethod g* ((a simple-array) (b number))
+(defmethod generic* ((a simple-array) (b real))
   (g* b a))
 
 ;;;;;;;;;;;;;
 ;; LEVEL 2 ;;
 ;;;;;;;;;;;;;
-(defmethod g* ((a matrix) (b array))
+(defmethod generic* ((a matrix) (b array))
   (let ((y (make-vec (matrix-rows a))))
     (dgemv 1d0 a b 0d0 y)))

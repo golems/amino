@@ -562,11 +562,18 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
 
     aa_sdl_lock();
     aa_gl_lock(win);
-    SDL_GL_MakeCurrent(win->window, win->gl_cx);
+    if( SDL_GL_MakeCurrent(win->window, win->gl_cx) ) {
+        fprintf(stderr, "SDL_GL_MakeCurrent() failed: %s\n",
+                SDL_GetError());
+        abort();
+        exit(EXIT_FAILURE);
+    }
     aa_gl_unlock(win);
     aa_sdl_unlock();
 
+    aa_rx_win_lock(win);
     win->running = 1;
+    aa_rx_win_unlock(win);
 
     int stop = 0;
     int stop_on_quit = 0;
@@ -599,6 +606,15 @@ static void* win_thread_fun( void *arg )
 AA_API void
 aa_rx_win_start( struct aa_rx_win * win )
 {
+    /* We must release the current GL context in this thread so that
+     * the other thread can use it.
+     */
+    if( SDL_GL_MakeCurrent(win->window, 0) ) {
+        fprintf(stderr, "SDL_GL_MakeCurrent() failed to release: %s\n",
+                SDL_GetError());
+        abort();
+        exit(EXIT_FAILURE);
+    }
     pthread_create( &win->thread, NULL, win_thread_fun, win );
 }
 
@@ -667,9 +683,19 @@ aa_rx_win_pause( struct aa_rx_win * win, int paused )
 }
 
 AA_API void
-aa_rx_win_get_tf_cam( const struct aa_rx_win * win, double *E )
+aa_rx_win_get_tf_cam( struct aa_rx_win * win, double *E )
 {
+    aa_rx_win_lock(win);
     AA_MEM_CPY(E, win->gl_globals->world_E_cam, 7 );
+    aa_rx_win_unlock(win);
+}
+
+AA_API void
+aa_rx_win_set_tf_cam( struct aa_rx_win * win, const double *E )
+{
+    aa_rx_win_lock(win);
+    aa_gl_globals_set_camera(win->gl_globals, E);
+    aa_rx_win_unlock(win);
 }
 
 AA_API void

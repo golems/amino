@@ -148,7 +148,8 @@ AA_API struct aa_gl_globals *
 aa_gl_globals_create();
 
 /**
- * Destroy a aa_gl_globals struct
+ * Destroy a aa_gl_globals struct.
+ *
  */
 AA_API void
 aa_gl_globals_destroy( struct aa_gl_globals *globals );
@@ -263,5 +264,34 @@ struct aa_sg_gl_buffers;
 AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom
     );
+
+
+struct aa_gl_buffers;
+
+/**
+ * Destroy OpenGL buffers.
+ *
+ * This function should only be called from the thread that owns the
+ * GL context for buffers.
+ */
+AA_API void
+aa_gl_buffers_destroy( struct aa_gl_buffers *buffers );
+
+/**
+ * Schedule destruction of OpenGL buffers.
+ *
+ * This function can be called from any thread.
+ */
+AA_API void
+aa_gl_buffers_schedule_destroy( struct aa_gl_buffers *buffers );
+
+/**
+ * Destroy previously schedule OpenGL buffers.
+ *
+ * This function should only be called from the thread that owns the
+ * GL context for buffers, i.e., the rendering thread..
+ */
+AA_API void
+aa_gl_buffers_cleanup( void );
 
 #endif /*AMINO_RX_SCENE_GL_H*/

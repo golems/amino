@@ -102,6 +102,11 @@
   (win rx-win-t)
   (e :pointer))
 
+
+(cffi:defcfun aa-rx-win-set-tf-cam :void
+  (win rx-win-t)
+  (e :pointer))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -244,6 +249,14 @@
     (declare (dynamic-extent vec))
     (cffi:with-pointer-to-vector-data (vec vec)
       (aa-rx-win-get-tf-cam window vec))
+    (tf vec)))
+
+(defun (setf win-tf-camera) (value &optional (win *window*))
+  (let ((vec (make-vec 7)))
+    (declare (dynamic-extent vec))
+    (tf-array (tf value) vec)
+    (cffi:with-pointer-to-vector-data (vec vec)
+      (aa-rx-win-set-tf-cam win vec))
     (tf vec)))
 
 (defun win-config-map (&optional (window *window*))

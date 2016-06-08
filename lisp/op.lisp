@@ -74,3 +74,8 @@
     (replace c a)
     (daxpy 1d0 b c))
   c)
+
+;; (defun vec-ssd (a b)
+;;   (let ((c 0))
+;;     (dotimes (i (min (length a) (length b)))
+;;       (let ((x (- (aref a i))

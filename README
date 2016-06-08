@@ -1,5 +1,4 @@
-OVERVIEW
-=========
+![Amino Logo](doc/logo-medium.png)
 
 Amino is library of basic utilities for robotics software.  It covers
 mathematical and linear algebra routines, memory management,
@@ -8,34 +7,12 @@ time-handling, and various utilities.
 FEATURES
 ========
 
-Extensive SE(3) Support
------------------------
-* Menagerie of Representations:
-  - Rotation and Transformation Matrices
-  - Ordinary Quaternions
-  - Dual Quaternions
-  - Quaternion-Vector
-  - Axis-Angle / Rotation-Vector / Log-map
-  - Euler Angles
-* Derivatives and Exact Integration
-* Numerically stable log and exponential
-
-Region-based Memory Allocation
-------------------------------
-* Container for LIFO-ordered memory allocation
-* O(1) allocation and deallocation
-
-Linear Algebra
----------------
-* Lightweight LAPACK wrapper:
-  Handles work-array creation for LAPACK using memory regions
-* Multiple Runge-Kutta integrators, including adaptive integrators
-
-Ray Tracing
------------
-* Import robot geometry from URDF and Collada
-* Generate POV-ray scene files for animation frames
-* Distribute POV-ray rendering over multiple machines
+* Extensive support for SE(3) representations and operations,
+  including velocities and derivatives
+* Kinematic robot models as scene graphs / kinematic trees
+* Visualization using OpenGL and POVRay
+* Lightweight BLAS/LAPACK wrapper handling allocation
+* O(1) Memory Region Allocator
 
 INSTALLATION
 ============
@@ -45,110 +22,8 @@ INSTALLATION
 See the INSTALL file and `./configure --help` for details and
 dependencies.
 
-RAY TRACING PERFORMANCE
-=======================
+DOCUMENTATION
+=============
 
-Ray tracing is computationally expensive.  Here are a few notes to
-help performance.
-
-Distribute
------------
-Ray tracing is embarassingly parallel, both across multiple frames and
-across pixels within a frame.  The easiest way to render faster is to
-throw more cores at the problem.
-
-Parsing
--------
-While POV-Ray can use multiple threads to render a frame, parsing the
-input file uses only a single core.  If large meshes are used, this
-can take a noticeable amount of time, and must be repeated for each
-frame.  Consequently, rather than using multiple threads per frame, it
-may often be better to render multiple frames in parallel so that
-parsing is parallelized across the different frames.
-
-POV-Ray Compilation
--------------------
-Ray tracing is floating-point heavy.  A few compilation flags make a
-small but noticable (~10%) improvement in performance.
-
-* -march=native: optimize for the current CPU.  This may take
-   advantage of FPU instructions available on newer CPUs, e.g., AVX.
-* -ffast-math: optimize floating-point computation in ways that my
-   violate IEEE semantics.  Note that this could flag may slightly
-   change the resulting image.
-* -flto: enable link-time optimization.  This optimizes across
-   multiple translation units.
-
-FAQ
-===
-
-SE(3)
------
-
-* Why dual quaternions?
-
-  - Dual quaternions are more compact and easier, computationally, to
-    normalize and filter than matrices.
-
-Scene Graphs
-------------
-
-* How can I load a URDF file?
-
-  - Use the scene graph compiler, `aarxc`, to generate code from the
-    URDF file.  Note that URDF support has additional dependencies;
-    see `./INSTALL` for details.
-
-* How can I reload a modified scene graph file without restarting my
-  program?
-
-  - Compile the scene graph to a shared library and load the library
-    with dlopen().  To reload the scene graph, recompile the scene
-    graph and dlopen() the library again.
-
-Common Errors
--------------
-
-* `./configure` fails with when checking for cffi-grovel.
-
-    - Older versions of SBCL (around 1.2.4) have issues with current
-      versions of CFFI.  Please try installing a recent SBCL (>1.3.4).
-
-* I get error messages about missing .obj files or Blender being
-  unable to convert a .dae to Wavefront OBJ.
-
-  - We use Blender to convert various mesh formats to Wavefront OBJ,
-    then import the OBJ file.  The Blender binaries in the Debian and
-    Ubuntu repositories (as of Jessie and Trusty) are not built with
-    COLLADA (.dae) support.  You can download the prebuilt binaries
-    from http://www.blender.org/ which do support COLLADA.
-
-* When I try to compile a URDF file, I receive the error "aarx.core:
-  not found".
-
-  - URDF support in amino is only built if the necessary dependencies
-    are installed.  Please ensure that you have SBCL, Quicklisp, and
-    Sycamore installed and rebuild amino if necessary.  See
-    `./INSTALL` for details.
-
-* When building aarx.core, I get an enormous stack trace, starting
-  with:
-  'Unable to load any of the alternatives:
-     ("libamino_planning.so" (:DEFAULT "libamino_planning"))'.
-
-  - This means that SBCL is unable to load the planning library or one
-    of its dependecies, such as OMPL.  Typically, this means your
-    linker is not configured properly.
-
-    Sometimes, you just need to run `ldconfig` or `sudo ldconfig` to
-    update the linker cache.
-
-    If this doesn't work, you can set the LD_LIBRARY_PATH variable.
-    First, find the location of libompl.so, e.g., by calling `locate
-    libompl.so`.  Then, add the directory to your LD_LIBRARY_PATH
-    variable.  Most commonly, this will mean adding one of the
-    following lines to your shell startup files (e.g., .bashrc):
-
-    `export LD_LIBRARY_PATH="/usr/local/lib/:$LD_LIBRARY_PATH"`
-
-    `export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"`
+* Manual: http://code.golems.org/pkg/amino/ and `./doc/html/`
+* Examples `./demos/`

@@ -452,29 +452,54 @@ static void duqu() {
     rand_tf( E, H.data, T.data );
     aa_vrand( 3, p0 );
 
-    // mull
     {
         double A[8], B[8];
-        double A_L[8*8], B_R[8*8];
-        double C[8], Cl[8], Cr[8];
         aa_vrand(8,A);
         aa_vrand(8,B);
-        aa_tf_duqu_mul(A,B,C);
+        // mul
+        {
+            double A_L[8*8], B_R[8*8];
+            double C[8], Cl[8], Cr[8];
+            aa_tf_duqu_mul(A,B,C);
 
-        aa_tf_duqu_matrix_l(A, A_L, 8);
-        cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
-                     1.0, A_L, 8,
-                     B, 1,
-                     0, Cl, 1 );
+            aa_tf_duqu_matrix_l(A, A_L, 8);
+            cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
+                         1.0, A_L, 8,
+                         B, 1,
+                         0, Cl, 1 );
 
-        aveq( "duqu-mul-L", 8, C, Cl, 1e-6 );
+            aveq( "duqu-mul-L", 8, C, Cl, 1e-6 );
 
-        aa_tf_duqu_matrix_r(B, B_R, 8);
-        cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
-                     1.0, B_R, 8,
-                     A, 1,
-                     0, Cr, 1 );
-        aveq( "duqu-mul-R", 8, C, Cr, 1e-6 );
+            aa_tf_duqu_matrix_r(B, B_R, 8);
+            cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
+                         1.0, B_R, 8,
+                         A, 1,
+                         0, Cr, 1 );
+            aveq( "duqu-mul-R", 8, C, Cr, 1e-6 );
+        }
+        // add / sub
+        {
+            double Ca[8], Cs[8], mB[8];
+
+            for( size_t i = 0; i < 8; i ++ ) mB[i] = -B[i];
+            aa_tf_duqu_add(A,B,Ca);
+            aa_tf_duqu_sub(A,mB,Cs);
+            aveq( "duqu-add-sub", 8, Ca, Cs, 1e-6 );
+
+            double Cra[4], Crs[4];
+            double Cda[4], Cds[4];
+            aa_tf_duqu_sub(A,B,Cs);
+            aa_tf_qadd(A+AA_TF_DUQU_REAL, B+AA_TF_DUQU_REAL,Cra);
+            aa_tf_qadd(A+AA_TF_DUQU_DUAL, B+AA_TF_DUQU_DUAL,Cda);
+            aa_tf_qsub(A+AA_TF_DUQU_REAL, B+AA_TF_DUQU_REAL,Crs);
+            aa_tf_qsub(A+AA_TF_DUQU_DUAL, B+AA_TF_DUQU_DUAL,Cds);
+
+            aveq( "duqu-qadd-real", 4, Cra, Ca+AA_TF_DUQU_REAL, 1e-6);
+            aveq( "duqu-qadd-dual", 4, Cda, Ca+AA_TF_DUQU_DUAL, 1e-6);
+
+            aveq( "duqu-qsub-real", 4, Crs, Cs+AA_TF_DUQU_REAL, 1e-6);
+            aveq( "duqu-qsub-dual", 4, Cds, Cs+AA_TF_DUQU_DUAL, 1e-6);
+        }
     }
 
     //double q[4], v[3], p0[3];

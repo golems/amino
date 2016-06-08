@@ -184,6 +184,21 @@
   (aa-tf-rotmat-zx z-axis x-axis rotmat)
   rotmat)
 
+(defun rotation-matrix-x-axis (r)
+  (vec3* (matref r 0 0)
+         (matref r 1 0)
+         (matref r 2 0)))
+
+(defun rotation-matrix-y-axis (r)
+  (vec3* (matref r 0 1)
+         (matref r 1 1)
+         (matref r 2 1)))
+
+(defun rotation-matrix-z-axis (r)
+  (vec3* (matref r 0 2)
+         (matref r 1 2)
+         (matref r 2 2)))
+
 ;;; Quaternions
 (defmacro def-q2 ((c-fun lisp-fun) doc-string)
   `(progn (defcfun ,c-fun :void
@@ -217,6 +232,15 @@
 (def-q3 (aa-tf-qcmul tf-qcmul) "Multiply conjugate of first arg with second arg")
 (def-q3 (aa-tf-qmulc tf-qmulc) "Multiply first arg with conjugate of second arg")
 
+(defcfun aa-tf-qpow :void
+  (q quaternion-t)
+  (a :double)
+  (r quaternion-t))
+
+(defun tf-qpow (q power)
+  (let ((r (make-quaternion)))
+    (aa-tf-qpow q (coerce power 'double-float) r)
+    r))
 
 (defcfun aa-tf-qrot :void
   (q quaternion-t)
@@ -565,8 +589,17 @@
   (aa-tf-quat2eulerzyx q e)
   e)
 
-(defun tf-rotation (tf)
-  (matrix-block tf 0 0 3 3))
+;;; Look
+(defcfun aa-tf-qv-mzlook :void
+  (eye vector-3-t)
+  (target vector-3-t)
+  (up vector-3-t)
+  (q quaternion-t)
+  (v vector-3-t))
 
-(defun tf-translation (tf)
-  (matrix-block tf 0 3 3 1))
+(defun tf-mzlook (&key eye target up
+                    (tf (make-quaternion-translation)))
+  (aa-tf-qv-mzlook eye target up
+                   (quaternion-translation-quaternion tf)
+                   (quaternion-translation-translation tf))
+  tf)

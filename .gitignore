@@ -116,4 +116,6 @@ amino*.tar.gz
 /demo/simple-rx/scene.c.h
 /include/amino/cblas_order.h
 /ct_traj
+/doc/html/
+/doc/doxygen_sqlite3.db
 /memregion

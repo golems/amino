@@ -782,6 +782,9 @@ typedef void aa_sys_fun( const void *cx,
                          double t, const double *AA_RESTRICT x,
                          double *AA_RESTRICT y );
 
+/**
+ * The known integration methods.
+ */
 enum aa_ode_integrator {
     /** Runge-Kutta 1 integration */
     AA_ODE_RK1,
@@ -799,12 +802,22 @@ enum aa_ode_integrator {
     AA_ODE_RK23_BS
 };
 
+/**
+ * Alias for Runge-Kutta-1 integration
+ */
 #define AA_ODE_EULER AA_ODE_RK1
+
+/**
+ * Alias for Runge-Kutta-2 integration
+ */
 #define AA_ODE_HEUN AA_ODE_RK2
 
 
 typedef int aa_ode_check( void *cx, double t, double * AA_RESTRICT x, double *AA_RESTRICT y );
 
+/**
+ * Options for the differential equation solver.
+ */
 struct aa_ode_sol_opts {
     /** Decrease step size if error is greater than tol_shrink. */
     double adapt_tol_dec;

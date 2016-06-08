@@ -1,6 +1,6 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2015, Rice University
+;;;; Copyright (c) 2016, Rice University
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -35,48 +35,40 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(in-package :robray)
+
+(defpackage :amino-baxter
+  (:use :cl :amino :robray :sycamore-util :sycamore)
+  (:export
+   :draw-baxter))
+
+(in-package :amino-baxter)
+
+(defparameter *baxter-allowed-collision*
+  '(("right_w0_fixed" . "right_wrist-collision")))
+
+(defparameter *baxter-config-names*
+  '("right_s0" "right_s1"
+    "right_e0" "right_e1"
+    "right_w0" "right_w1" "right_w2"))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;
-;;; Foreign Library ;;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-(cffi:define-foreign-library libgl
-  (:unix (:or "libGL.so"
-              (:default "libGL")))
-  (t (:default "libGL")))
-
-(cffi:define-foreign-library libglu
-  (:unix (:or "libGLU.so"
-              (:default "libGLU")))
-  (t (:default "libGLU")))
-
-(cffi:define-foreign-library libsdl
-  (:unix (:or "libSDL2.so"
-              (:default "libSDL2")))
-  (t (:default "libSDL2")))
-
-(cffi:define-foreign-library libamino-gl
-  (:unix (:or "libamino_gl.so"
-              (:default "libamino_gl")))
-  (t (:default "libamino_gl")))
-
-(cffi:define-foreign-library libamino-planning
-  (:unix (:or "libamino_planning.so"
-              (:default "libamino_planning")))
-  (t (:default "libamino_planning")))
-
-(cffi:define-foreign-library libamino-cl
-  (:unix (:or "libamino_cl.so"
-              (:default "libamino_cl")))
-  (t (:default "libamino_cl")))
-
-
-;; TODO: put in separate packages so reloads don't clobber static vars
-;(cffi:use-foreign-library libgl)
-(cffi:use-foreign-library libglu)
-(cffi:use-foreign-library libsdl)
-(cffi:use-foreign-library libamino-gl)
-(cffi:use-foreign-library libamino-cl)
-(cffi:use-foreign-library libamino-planning)
+(defun draw-baxter (parent name &key
+                                  (urdf "package://baxter_description/urdf/baxter.urdf")
+                                  (ros-package-path "/opt/ros/indigo/share"))
+  (declare (ignore name parent))
+  ;; set package path
+  (when ros-package-path
+    #+sbcl
+    (sb-posix:setenv "ROS_PACKAGE_PATH" ros-package-path 1))
+  (labels ((right-joint-config (values)
+             (robray::configuration-map-pairs '("right_s0" "right_s1"
+                                                "right_e0" "right_e1"
+                                                "right_w0" "right_w1" "right_w2")
+                                                values)))
+    (let ((base (load-scene-file urdf)))
+      (fold #'robray::scene-graph-allow-configuration
+            (scene-graph-allow-collisions base *baxter-allowed-collision*)
+            (list nil
+                  (right-joint-config '(0.375973 -1.44985 0.555649
+                                        2.54396 -0.133194 0.498291 0.260089))))
+      )))

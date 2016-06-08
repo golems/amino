@@ -25,6 +25,9 @@ pkgconfig_DATA = share/amino.pc \
 	share/amino_collision.pc \
 	share/amino_planning.pc
 
+nodist_pkginclude_HEADERS = \
+	include/amino/cblas_order.h
+
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
 	include/amino/rx.h              \
@@ -469,5 +472,12 @@ clean-local:
 		texput.log                  \
 		$(EXTRA_DX)                 \
 		*.mod
+sync-doc:
+	rsync -r doc/html/ code.golems.org:/srv/www/code.golems.org/pkg/amino
+
+doc: doxygen-doc
+	mkdir -p doc/html/doc
+	cp doc/logo-medium.png doc/html/doc
+
 
 include aminclude.am

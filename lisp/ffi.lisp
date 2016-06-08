@@ -160,6 +160,39 @@ Note that destructor must operate on the raw pointer type.
 ;;; FOREIGN ARRAYS ;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
+(defun fill-pointer-from-list (pointer list)
+  "Fill memory at pointer with double-float values in list"
+  (loop
+     for i from 0
+     for x in list
+     do (setf (mem-aref pointer :double i)
+              (coerce x 'double-float))))
+
+(defun fill-list-from-pointer (list pointer)
+  "Fill list with double-float values at pointer"
+  (loop for i from 0
+     for cons on list
+     do (rplaca cons (mem-aref pointer :double i))))
+
+(defmacro with-foreign-list ((pointer length) list intent &body body)
+  (with-gensyms (value)
+    `(let* ((,value ,list)
+            (,length (length ,value)))
+       (with-foreign-object (,pointer :double ,length)
+         ;; Maybe copy in
+         ,@(ecase intent
+                  ((:input :inout)
+                   `((fill-pointer-from-list ,pointer ,list)))
+                  (:output nil))
+         ;; Body
+         ,@body
+         ;; Maybe copy out
+         ,@(ecase intent
+                  (:input nil)
+                  ((:output :inout)
+                   `((fill-list-from-pointer ,value ,pointer)
+                     ,value)))))))
+
 (defmacro with-foreign-vector ((pointer increment length) vector intent &body body)
   "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY.
 
@@ -189,15 +222,20 @@ INTENT: One of (or :input :output :inout). When value
                     (,rows (%matrix-rows ,value))
                     (,columns (%matrix-cols ,value)))
                 (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
-                (cond ((= 1 ,columns)
+                (cond ((= 1 ,columns) ; row vector
                        (,array-offset-fun ,@maybe-value ,data ,offset 1 ,rows))
-                      ((= 1 ,rows)
+                      ((= 1 ,rows)    ; column vector
                        (,array-offset-fun ,@maybe-value ,data ,offset ,stride ,columns))
+                      ((= ,stride ,rows) ; non-blocked matrix
+                       (,array-offset-fun ,@maybe-value ,data ,offset 1 (* ,rows ,columns)))
                       (t (matrix-storage-error "Matrix ~A is not a vector" ',vector)))))
              ((simple-array double-float (*))
               (,array-fun ,@maybe-value ,value))
              (real-array
-              (,array-fun ,@maybe-value (real-array-data ,value)))))))))
+              (,array-fun ,@maybe-value (real-array-data ,value)))
+             (list
+              (with-foreign-list (,pointer ,length) ,value ,intent
+                (,ptr-fun ,@maybe-value ,pointer 1 ,length)))))))))
 
 (defmacro with-foreign-simple-vector ((pointer length) vector intent &body body)
   "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY.

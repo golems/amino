@@ -112,7 +112,20 @@
                                           :type  (simple-array double-float (,length))))))
        (defun ,deep-copy-thing (thing &optional (result (,make-thing)))
          (replace (,thing-data result)
-                  (,thing-data thing)))
+                  (,thing-data thing))
+         result)
+       (defmethod generic* ((a real) (b ,thing))
+         (let ((c (,deep-copy-thing b)))
+           (dscal (coerce a 'double-float)
+                  (,thing-data c))
+           c))
+       (defmethod generic* ((a ,thing) (b real))
+         (generic* b a))
+       (defmethod generic/ ((a ,thing) (b real))
+         (let ((c (,deep-copy-thing a)))
+           (dscal (/ 1d0 (coerce b 'double-float))
+                  (,thing-data c))
+           c))
        (define-foreign-type ,cffi-type ()
          ()
          (:simple-parser ,cffi-type)
@@ -120,6 +133,8 @@
        (defmethod expand-to-foreign-dyn (value var body (type ,cffi-type))
          (list* 'with-foreign-fixed-vector var value ,length :input
                 body)))))
+
+
 
 ;;; Point 2
 (def-specialized-array vec2 2 vector-2-t)
@@ -139,6 +154,9 @@
              (,y (vecref ,value +y+))
              (,z (vecref ,value +z+)))
          ,@body))))
+
+(defun vec3-normalize (v)
+  (vec-normalize v (make-vec3)))
 
 ;;; Axis-Angle
 (def-specialized-array axis-angle 4 axis-angle-t)
@@ -185,6 +203,12 @@
   (%y-angle (coerce value 'double-float)))
 (defun z-angle (value)
   (%z-angle (coerce value 'double-float)))
+
+(defun degrees (value)
+  (* value (/ pi 180d0)))
+
+(defun pi-rad (value)
+  (* value pi))
 
 (defstruct (euler-angle (:include real-array
                                   (data (make-vec 3) :type  (simple-array double-float (3))))))

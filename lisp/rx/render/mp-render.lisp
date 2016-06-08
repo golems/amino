@@ -37,46 +37,31 @@
 
 (in-package :robray)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;
-;;; Foreign Library ;;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-(cffi:define-foreign-library libgl
-  (:unix (:or "libGL.so"
-              (:default "libGL")))
-  (t (:default "libGL")))
-
-(cffi:define-foreign-library libglu
-  (:unix (:or "libGLU.so"
-              (:default "libGLU")))
-  (t (:default "libGLU")))
-
-(cffi:define-foreign-library libsdl
-  (:unix (:or "libSDL2.so"
-              (:default "libSDL2")))
-  (t (:default "libSDL2")))
-
-(cffi:define-foreign-library libamino-gl
-  (:unix (:or "libamino_gl.so"
-              (:default "libamino_gl")))
-  (t (:default "libamino_gl")))
-
-(cffi:define-foreign-library libamino-planning
-  (:unix (:or "libamino_planning.so"
-              (:default "libamino_planning")))
-  (t (:default "libamino_planning")))
-
-(cffi:define-foreign-library libamino-cl
-  (:unix (:or "libamino_cl.so"
-              (:default "libamino_cl")))
-  (t (:default "libamino_cl")))
-
-
-;; TODO: put in separate packages so reloads don't clobber static vars
-;(cffi:use-foreign-library libgl)
-(cffi:use-foreign-library libglu)
-(cffi:use-foreign-library libsdl)
-(cffi:use-foreign-library libamino-gl)
-(cffi:use-foreign-library libamino-cl)
-(cffi:use-foreign-library libamino-planning)
+(defun render-motion-plan (motion-plan
+                          &key
+                            (delta-t .25d0)
+                            config-velocity
+                            (camera-tf (tf nil))
+                            include
+                            include-text
+                            (options robray::*render-options*))
+  (let* ((n (motion-plan-length motion-plan))
+         (keyframes (keyframe-set (loop
+                                     for i below n
+                                     for config = (motion-plan-refmap motion-plan i)
+                                     for array = (motion-plan-refarray motion-plan i)
+                                     for time = 0d0 then (if config-velocity
+                                                             (+ time (/ (vec-dist array last-array)
+                                                                        config-velocity))
+                                                             (+ time delta-t))
+                                     for last-array = array
+                                     collect (joint-keyframe time config))))
+         (sg (motion-plan-scene-graph motion-plan)))
+    (scene-graph-time-animate (keyframe-configuration-function keyframes)
+                              :camera-tf camera-tf
+                              :options options
+                              :encode-video t
+                              :render-frames t
+                              :include include
+                              :include-text include-text
+                              :scene-graph sg)))

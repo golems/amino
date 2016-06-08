@@ -58,6 +58,7 @@
   `((:width . ,(/ 1920 2))
     (:height . ,(/ 1080 2))
     (:quality . 1.0)
+    (:codec . :x264)
     (:frames-per-second . 15)
     (:use-collision . nil)
     (:encode-video . t)
@@ -73,6 +74,7 @@
 (defun render-options-default (&key
                                  (options *render-options*)
                                  (width (get-render-option options :width))
+                                 (codec (get-render-option options :codec))
                                  (height (get-render-option options :height))
                                  (quality (get-render-option options :quality))
                                  (frames-per-second (get-render-option options :frames-per-second))
@@ -83,6 +85,7 @@
   (list (cons :width width)
         (cons :height height)
         (cons :quality quality)
+        (cons :codec codec)
         (cons :frames-per-second frames-per-second)
         (cons :use-collision use-collision)
         (cons :encode-video encode-video)

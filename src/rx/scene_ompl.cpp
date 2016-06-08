@@ -52,6 +52,7 @@
 
 #include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/sbl/SBL.h>
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
 
@@ -67,6 +68,7 @@ aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg )
 AA_API void
 aa_rx_mp_destroy( struct aa_rx_mp *mp )
 {
+    aa_checked_free(mp->config_start);
     delete mp;
 }
 
@@ -99,6 +101,10 @@ aa_rx_mp_set_start( struct aa_rx_mp *mp,
 
     /* Setup Space */
     si->setup();
+
+    /* Copy full start */
+    aa_checked_free(mp->config_start);
+    mp->config_start = AA_MEM_DUP(double, q_all, n_all);
 }
 
 AA_API void
@@ -225,7 +231,9 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
-    ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
+    //ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
+    ompl::base::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
+
     planner->setProblemDefinition(pdef);
     try {
         planner->solve(timeout);
@@ -248,12 +256,9 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
         double *ptr = *p_path_all;
         for( auto itr = states.begin(); itr != states.end(); itr++, ptr += ss->config_count_all() )
         {
-            //AA_MEM_CPY( ptr, q0, ss->config_count_all() );
-            // TODO: Copy initial all-config state
-            AA_MEM_ZERO( ptr, ss->config_count_all() );
+            AA_MEM_CPY( ptr, mp->config_start, ss->config_count_all() );
             amino::sgSpaceInformation::StateType *state = amino::sgSpaceInformation::state_as(*itr);
             ss->insert_state( state, ptr );
-            //aa_dump_vec( stdout, ptr, ss->config_count_all() );
         }
         return AA_RX_OK;
     } else {

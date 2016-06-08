@@ -174,12 +174,23 @@
 (defun last-frame-number (files)
   (frame-number (car (last (sort-frames files)))))
 
+(defun codec-avconv-arg (codec)
+  (ecase codec
+    (:x264 "libx264")
+    (:theora "libtheora")
+    (:vp8 "libvpx")))
+
+(defun codec-container (codec)
+  (ecase codec
+    (:x264 "mp4")
+    (:theora "ogv")
+    (:vp8 "webm")))
+
 (defun animate-encode (&key
                          (options *render-options*)
                          (directory *robray-tmp-directory*)
                          (pad 15)
-                         (output-file "robray.mp4")
-                         (video-codec "libx264"))
+                         (output-file "robray"))
   ;; pad
   (let* ((images (directory  (concatenate 'string directory "/frame-*.png")))
          (last-frame-number (frame-number (car (last (sort-frames images))))))
@@ -204,13 +215,14 @@
                              :search t :wait t :directory directory
                              :output *standard-output*)))
   ;; avconv -f image2 -r 30 -i frame-%d.png foo.mp4
-  (let ((args (list "-f" "image2"
-                    "-r" (write-to-string (get-render-option options :frames-per-second))
-                    "-i" "vframe-%d.png"
-                    "-codec:v" video-codec
-                    "-loglevel" "warning"
-                    "-y"
-                    output-file)))
+  (let* ((codec (draw-option options :codec))
+         (args (list "-f" "image2"
+                     "-r" (write-to-string (get-render-option options :frames-per-second))
+                     "-i" "vframe-%d.png"
+                     "-codec:v" (codec-avconv-arg codec)
+                     "-loglevel" "warning"
+                     "-y"
+                     (rope-string (rope output-file "." (codec-container codec))))))
     (format t "~&avconv ~{~A ~}" args)
     (sb-ext:run-program "avconv"
                         args
@@ -273,6 +285,7 @@
 
 (defun scene-graph-frame-animate (frame-configuration-function
                                   &key
+                                    (camera-tf (tf nil))
                                     (render-frames t)
                                     (encode-video t)
                                     (output-directory *robray-tmp-directory*)
@@ -281,7 +294,9 @@
                                     append
                                     (scene-graph *scene-graph*)
                                     (options *render-options*)
-                                    include)
+                                    include
+                                    include-text
+                                    )
   (ensure-directories-exist output-directory)
   (let ((frame-files (frame-files output-directory)))
     (if append
@@ -299,13 +314,17 @@
          ;(print frame-file)
          ;(print configuration)
          (render-scene-graph scene-graph
+                             :camera-tf camera-tf
                              :options options
                              :configuration-map configuration
                              :output frame-file
                              :directory output-directory
-                             :include include)))
+                             :include include
+                             :include-text include-text
+                             )))
   ;; Convert Frames
   (when render-frames
+    (load-config)
     (net-render :directory output-directory
                 :options options)
     ;; Encode Video
@@ -325,11 +344,13 @@
                                    ;(time-end 1d0)
                                    (scene-graph *scene-graph*)
                                    (options *render-options*)
-                                   include)
+                                   include
+                                   (camera-tf (tf nil))
+                                   include-text)
   (let ((frame-period (/ 1 (coerce (get-render-option options :frames-per-second) 'double-float))))
     (scene-graph-frame-animate (lambda (frame)
                                  (let ((time (+ time-start (* frame frame-period))))
-                                   (format t "~&f: ~D, t: ~F" frame time)
+                                   ;;(format t "~&f: ~D, t: ~F" frame time)
                                    (funcall configuration-function time)))
                                :append append
                                :scene-graph scene-graph
@@ -338,7 +359,10 @@
                                :output-directory output-directory
                                :frame-start 0
                                :options options
-                               :include include)))
+                               :include include
+                               :include-text include-text
+                               :camera-tf camera-tf
+                               )))
 
 (defun net-process-host (compute-available semaphore)
   (loop do
