@@ -60,18 +60,6 @@ struct aa_ct_pt {
 struct aa_ct_pt_list;
 
 /**
- * Trajectory segment.
- */
-struct aa_ct_seg;
-struct aa_ct_seg {
-    int type; ///< Type label for disambiguation
-    int (*eval)(struct aa_ct_seg *seg,
-                struct aa_ct_state *state, double t); ///< Evaluate function
-    struct aa_ct_seg *prev, *next; ///< Links to next and previous segments
-    void *cx; ///< Segment context
-};
-
-/**
  * Trajectory segment list.
  */
 struct aa_ct_seg_list;

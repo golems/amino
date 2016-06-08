@@ -47,6 +47,19 @@ extern "C" {
 #endif
 
 /**
+ * Trajectory segment.
+ */
+struct aa_ct_seg;
+struct aa_ct_seg {
+    int type; ///< Type label for disambiguation
+    int (*eval)(struct aa_ct_seg *seg,
+                struct aa_ct_state *state, double t); ///< Evaluate function
+    struct aa_ct_seg *prev, *next; ///< Links to next and previous segments
+    void *cx; ///< Segment context
+};
+
+
+/**
  * Add a reference to a segment to a segment list. The reference will be kept in
  * the list.
  *
