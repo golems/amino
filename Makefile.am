@@ -75,7 +75,8 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_sdl.h    \
-	include/amino/rx/scene_win.h
+	include/amino/rx/scene_win.h    \
+	include/amino/rx/scene_plugin.h
 
 ctincludedir = $(pkgincludedir)/ct
 
