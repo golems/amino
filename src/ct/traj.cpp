@@ -54,11 +54,11 @@ static inline void
 aa_ct_list_add(T *list, U *el)
 {
     el->next = NULL;
-    if (list->list->size())
-        list->list->back()->next = el;
+    if (list->list.size())
+        list->list.back()->next = el;
 
-    el->prev = list->list->back();
-    list->list->push_back(el);
+    el->prev = list->list.back();
+    list->list.push_back(el);
 }
 
 /**
@@ -71,11 +71,19 @@ aa_ct_pt_list_create(struct aa_mem_region *reg)
 }
 
 AA_API void
-aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_pt *pt)
+aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state)
 {
+    struct aa_ct_pt *pt = new(&list->reg) struct aa_ct_pt;
+    aa_ct_state_clone(&list->reg, &pt->state, state);
+
     aa_ct_list_add(list, pt);
 }
 
+AA_API void
+aa_ct_pt_list_destroy(struct aa_ct_pt_list *list)
+{
+    list->~aa_ct_pt_list();
+};
 
 /**
  * Segment lists
@@ -91,7 +99,7 @@ aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
                     double t)
 {
     if (!list->it_on) {
-        list->it = list->list->begin();
+        list->it = list->list.begin();
         list->it_on = 1;
     }
 
@@ -103,11 +111,17 @@ aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
             return r;
 
         list->it++;
-    } while (list->it != list->list->end());
+    } while (list->it != list->list.end());
 
     list->it_on = 0;
     return 0;
 }
+
+AA_API void
+aa_ct_seg_list_destroy(struct aa_ct_seg_list *list)
+{
+    list->~aa_ct_seg_list();
+};
 
 /**
  * Pipe a file to gnuplot to display.
@@ -269,11 +283,11 @@ aa_ct_tj_pb_new(struct aa_mem_region *reg, struct aa_ct_pt *pt,
                 struct aa_ct_state *limits)
 {
     size_t n_q = pt->state.n_q;
-    struct aa_ct_seg *seg = AA_MEM_REGION_NEW(reg, struct aa_ct_seg);
+    struct aa_ct_seg *seg = new(reg) struct aa_ct_seg();
     seg->eval = aa_ct_tj_pb_eval;
 
-    struct aa_ct_seg_pb_cx *cx =
-        AA_MEM_REGION_NEW(reg, struct aa_ct_seg_pb_cx);
+    struct aa_ct_seg_pb_cx *cx = new(reg) struct aa_ct_seg_pb_cx();
+    bzero(cx, sizeof(struct aa_ct_seg_pb_cx));
 
     cx->n_q = n_q;
     cx->q = AA_MEM_REGION_NEW_N(reg, double, n_q);
@@ -286,11 +300,9 @@ aa_ct_tj_pb_new(struct aa_mem_region *reg, struct aa_ct_pt *pt,
     cx->dt = DBL_MAX;
     if (pt->next)
         cx->dt = aa_ct_tj_pb_limit(pt->next->state.q, cx->q, limits->dq, n_q);
-
     cx->b = 0;
 
     seg->cx = (void *) cx;
-
     return seg;
 }
 
@@ -329,16 +341,15 @@ AA_API struct aa_ct_seg_list *
 aa_ct_tj_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
                      struct aa_ct_state *limits)
 {
-    struct aa_ct_pt *c_pt;
-    struct aa_ct_seg_list *seg_list = new(reg) struct aa_ct_seg_list(reg);
+    struct aa_ct_seg_list *list = new(reg) struct aa_ct_seg_list(reg);
 
     // Populate segment list with one segment per point
-    c_pt = pt_list->list->front();
+    struct aa_ct_pt *c_pt = pt_list->list.front();
     for (; c_pt != NULL; c_pt = c_pt->next)
-        aa_ct_seg_list_add(seg_list, aa_ct_tj_pb_new(reg, c_pt, limits));
+        aa_ct_seg_list_add(list, aa_ct_tj_pb_new(&list->reg, c_pt, limits));
 
     bool flag;
-    size_t n = pt_list->list->size();
+    size_t n = pt_list->list.size();
 
     // Iterate and update segments until no overlap
     do {
@@ -346,7 +357,7 @@ aa_ct_tj_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
         double f[n];
         flag = false;
 
-        struct aa_ct_seg *c_seg = seg_list->list->front();
+        struct aa_ct_seg *c_seg = list->list.front();
         for (; c_seg != NULL; c_seg = c_seg->next, i++) {
             // Update each segment
             aa_ct_tj_pb_update(c_seg, limits);
@@ -354,15 +365,20 @@ aa_ct_tj_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
             struct aa_ct_seg_pb_cx *c_cx, *p_cx, *n_cx;
             aa_ct_tj_pb_nbrs(c_seg, &p_cx, &c_cx, &n_cx);
 
+            bool overlap = false;
+
             // Check for backwards overlap
-            bool p_f = p_cx \
-                && (p_cx->dt < c_cx->b && (2 * p_cx->dt - p_cx->b) < c_cx->b);
+            if (p_cx)
+                overlap |= p_cx->dt < c_cx->b \
+                    && (2 * p_cx->dt - p_cx->b) < c_cx->b;
+
             // Check for forwards overlap
-            bool n_f = n_cx \
-                && (c_cx->dt < c_cx->b && (2 * c_cx->dt - n_cx->b) < c_cx->b);
+            if (n_cx)
+                overlap |= c_cx->dt < c_cx->b \
+                    && (2 * c_cx->dt - n_cx->b) < c_cx->b;
 
             // Calculate scaling constant if overlap
-            if (p_f || n_f) {
+            if (overlap) {
                 double p_dt = (p_cx) ? p_cx->dt : DBL_MAX;
                 f[i] = sqrt(fmin(p_dt, c_cx->dt) / c_cx->b);
                 flag = true;
@@ -371,14 +387,14 @@ aa_ct_tj_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
         }
 
         i = 0;
-        c_seg = seg_list->list->front();
+        c_seg = list->list.front();
         for (; c_seg != NULL; c_seg = c_seg->next, i++)
             // Scale each region's time based on calculated constant
             ((struct aa_ct_seg_pb_cx *) c_seg->cx)->dt /= \
                 (i < n - 1) ? fmin(f[i + 1], f[i]) : 1;
     } while (flag);
 
-    return seg_list;
+    return list;
 }
 
 

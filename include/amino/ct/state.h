@@ -42,6 +42,10 @@
  * @file state.h
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * State description of a robot
  */
@@ -57,5 +61,12 @@ struct aa_ct_state {
     double *TF_abs; //< Absolute frame transforms
     double *TF_rel; //< Relative frame transforms
 };
+
+void aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
+                       struct aa_ct_state *src);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*AMINO_CT_STATE_H*/

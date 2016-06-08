@@ -78,10 +78,17 @@ struct aa_ct_pt_list *aa_ct_pt_list_create(struct aa_mem_region *reg);
  * Add a reference to a waypoint to a point list. The reference will be kept in
  * the list.
  *
- * @param list List to add point to
- * @param pt   Point to add to list
+ * @param list  List to add point to
+ * @param state State to add to list
  */
-void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_pt *pt);
+void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state);
+
+/**
+ * Destroys an allocated point list.
+ *
+ * @param list List to destroy
+ */
+void aa_ct_pt_list_destroy(struct aa_ct_pt_list *list);
 
 /**
  * Evaluates a segment list at a given time. Fills in the provided state struct
@@ -104,6 +111,13 @@ int aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
  * @param dt   Timestep to plot
  */
 void aa_ct_seg_list_plot(struct aa_ct_seg_list *list, size_t n_q, double dt);
+
+/**
+ * Destroys an allocated segment list.
+ *
+ * @param list List to destroy
+ */
+void aa_ct_seg_list_destroy(struct aa_ct_seg_list *list);
 
 
 /**

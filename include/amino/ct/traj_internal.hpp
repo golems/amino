@@ -75,25 +75,35 @@ void aa_ct_seg_list_add(struct aa_ct_seg_list *list, struct aa_ct_seg *seg);
 #ifdef __cplusplus
 
 struct aa_ct_pt_list {
-    amino::RegionList<struct aa_ct_pt *>::allocator *alloc; ///< Allocator
-    amino::RegionList<struct aa_ct_pt *>::type *list;      ///< List
+    struct aa_mem_region reg;
+    amino::RegionList<struct aa_ct_pt *>::allocator alloc; ///< Allocator
+    amino::RegionList<struct aa_ct_pt *>::type list;       ///< List
 
-    aa_ct_pt_list(struct aa_mem_region *reg) {
-        alloc = new(reg) amino::RegionList<struct aa_ct_pt *>::allocator(reg);
-        list = new(reg) amino::RegionList<struct aa_ct_pt *>::type(*alloc);
+    aa_ct_pt_list(struct aa_mem_region *_reg) : alloc(_reg), list(alloc) {
+        aa_mem_region_init(&reg, 512);
+    };
+
+    ~aa_ct_pt_list(void) {
+        list.~list();
+        aa_mem_region_destroy(&reg);
     }
 };
 
 struct aa_ct_seg_list {
-    amino::RegionList<struct aa_ct_seg *>::allocator *alloc; ///< Allocator
-    amino::RegionList<struct aa_ct_seg *>::type *list;       ///< List
+    struct aa_mem_region reg;
+    amino::RegionList<struct aa_ct_seg *>::allocator alloc;  ///< Allocator
+    amino::RegionList<struct aa_ct_seg *>::type list;        ///< List
     amino::RegionList<struct aa_ct_seg *>::iterator it;      ///< Iterator
     int it_on;                                               ///< Iterator init?
 
-    aa_ct_seg_list(struct aa_mem_region *reg) {
-        alloc = new(reg) amino::RegionList<struct aa_ct_seg *>::allocator(reg);
-        list = new(reg) amino::RegionList<struct aa_ct_seg *>::type(*alloc);
+    aa_ct_seg_list(struct aa_mem_region *_reg) : alloc(_reg), list(alloc) {
+        aa_mem_region_init(&reg, 512);
         it_on = 0;
+    }
+
+    ~aa_ct_seg_list(void) {
+        list.~list();
+        aa_mem_region_destroy(&reg);
     }
 };
 

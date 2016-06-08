@@ -104,6 +104,7 @@ libamino_la_SOURCES =                  \
 	src/rx/plugin.c                \
 	src/rx/mp_seq.cpp              \
 	src/ct/traj.cpp                \
+	src/ct/state.c                 \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \

@@ -59,20 +59,22 @@ main(void)
     struct aa_ct_pt_list *pt_list = aa_ct_pt_list_create(&reg);
 
     for (size_t i = 0; i < 4; i++) {
-        struct aa_ct_pt *pt = AA_MEM_REGION_NEW(&reg, struct aa_ct_pt);
-        pt->state.n_q = n_q;
-        pt->state.q = AA_MEM_REGION_NEW_N(&reg, double, n_q);
+        struct aa_ct_state state = {0};
+        double q[n_q];
+        state.n_q = n_q;
+        state.q = q;
 
         for (size_t j = 0; j < n_q; j++)
-            pt->state.q[j] = (double) rand() / RAND_MAX;
+            state.q[j] = (double) rand() / RAND_MAX;
 
-        aa_ct_pt_list_add(pt_list, pt);
+        aa_ct_pt_list_add(pt_list, &state);
     }
 
+    double dqlim[n_q], ddqlim[n_q];
     struct aa_ct_state limits;
     limits.n_q = n_q;
-    limits.dq = AA_MEM_REGION_NEW_N(&reg, double, n_q); 
-    limits.ddq = AA_MEM_REGION_NEW_N(&reg, double, n_q);
+    limits.dq = dqlim;
+    limits.ddq = ddqlim;
 
     for (size_t j = 0; j < n_q; j++) {
         limits.dq[j] = 1;
@@ -83,4 +85,8 @@ main(void)
         aa_ct_tj_pb_generate(&reg, pt_list, &limits);
 
     aa_ct_seg_list_plot(seg_list, n_q, 0.01);
+
+    aa_ct_seg_list_destroy(seg_list);
+    aa_ct_pt_list_destroy(pt_list);
+    aa_mem_region_destroy(&reg);
 }
