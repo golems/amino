@@ -77,10 +77,13 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_sdl.h    \
 	include/amino/rx/scene_win.h
 
+ctincludedir = $(pkgincludedir)/ct
+
+ctinclude_HEADERS = 	                \
+	include/amino/ct/traj.h
+
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
-
-
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
@@ -92,17 +95,19 @@ libamino_la_SOURCES =                  \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
-	src/rx/errstr.c 	       \
-	src/rx/scenegraph.cpp 	       \
-	src/rx/sg_api.cpp 	       \
-	src/rx/sg_capi.c 	       \
-	src/rx/scene_geom.c 	       \
+	src/rx/errstr.c                \
+	src/rx/scenegraph.cpp          \
+	src/rx/sg_api.cpp              \
+	src/rx/sg_capi.c               \
+	src/rx/scene_geom.c            \
 	src/rx/geom_opt.c              \
 	src/rx/scene_kin.c             \
 	src/rx/ik_opt.c                \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/mp_seq.cpp              \
+	src/ct/traj.cpp                \
+	src/ct/state.c                 \
 	src/math.c                     \
 	src/plot.c                     \
 	src/debug.c                    \
@@ -301,6 +306,12 @@ TESTS += sg_test
 noinst_PROGRAMS += sg_test
 sg_test_SOURCES = src/test/sg_test.c
 sg_test_LDADD = libamino.la libtestutil.la
+
+TESTS += ct_traj
+noinst_PROGRAMS += ct_traj
+ct_traj_SOURCES = src/test/ct_traj.c
+ct_traj_LDADD = libamino.la libtestutil.la
+
 
 if USE_FORTRAN
 TESTS += la_test
