@@ -161,8 +161,7 @@
                                                                   cylinder-radius))
                  (error "bad shapes in link ~A" (path-1 node '("@name"))))
                (cond (mesh-file
-                      (scene-geometry-mesh options
-                                           (make-scene-mesh :source-file (urdf-resolve-file mesh-file))))
+                      (scene-geometry-mesh options (urdf-resolve-file mesh-file)))
                      (sphere-radius
                       (scene-geometry-sphere options (parse-float sphere-radius)))
                      (box-size
@@ -275,7 +274,7 @@
                 urdf-joints))
          ;; Create Scene Frames
          (scene-graph (scene-graph (urdf-create-frames urdf-joints link-parent-map))))
-    (scene-graph-resolve-mesh (urdf-bind-links dom scene-graph link-parent-map)
-                              :mesh-up-axis mesh-up-axis
-                              :mesh-forward-axis mesh-forward-axis
-                              :reload reload-meshes)))
+    (scene-graph-resolve-povray! (urdf-bind-links dom scene-graph link-parent-map)
+                                 :mesh-up-axis mesh-up-axis
+                                 :mesh-forward-axis mesh-forward-axis
+                                 :reload reload-meshes)))

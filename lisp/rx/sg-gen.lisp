@@ -242,11 +242,16 @@
        (cgen-call-stmt "aa_rx_mesh_destroy" (scene-genc-mesh-var mesh))))
 
 
+(defun scene-graph-scene-function-name (scene-name)
+  (if (and scene-name (not (zerop (rope-length scene-name))))
+      (rope "aa_rx_dl_sg__" scene-name)
+      (scene-graph-scene-function-name "scenegraph")))
+
 (defun scene-graph-genc (scene-graph &key
                                        (static-mesh t)
-                                       (name "scenegraph"))
+                                       scene-name)
   (let ((argument-name "sg")
-        (function-name (rope-string (rope "aa_rx_dl_sg__" name)))
+        (function-name (scene-graph-scene-function-name scene-name))
         (stmts))
     (labels ((item (x) (push x stmts)))
       ;; Lazily create object
@@ -273,9 +278,18 @@
                 (cgen-defun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name)
                             (flatten (reverse stmts))))))))
 
+(defun scene-graph-gen-header (scene-graph &key
+                                             scene-name
+                                             static-mesh)
+  (declare (ignore static-mesh scene-graph))
+  (let ((function-name (scene-graph-scene-function-name scene-name))
+        (argument-name "sg"))
+    (cgen-declare-fun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name))))
+
 (defun scene-graph-so (source-file shared-object)
-  (uiop/run-program:run-program
-   (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
+  (let ((args  (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
+    (print (rope-string (rope-split " " args)))
+    (uiop/run-program:run-program args)))
 
 
 (defun genc-mesh-link (mesh)
@@ -297,26 +311,31 @@
 
 (defun scene-graph-compile (scene-graph source-file
                             &key
-                              (name "scenegraph")
+                              (header-file (rope source-file ".h"))
+                              scene-name
                               shared-object
                               (reload t)
                               (static-mesh t)
                               (link-meshes nil))
+
+  ;; Header
+  (when header-file
+    (output-rope (rope (scene-graph-gen-header scene-graph
+                                               :scene-name scene-name
+                                               :static-mesh static-mesh))
+                 header-file
+                 :if-exists :supersede))
   ;; source file
   (when (or reload
             (not (probe-file source-file)))
     (create-parent-directories source-file)
-    (with-open-file (stream source-file
-                            :if-exists :supersede
-                            :if-does-not-exist :create
-                            :direction :output)
-      (let ((source-rope (scene-graph-genc scene-graph
-                                           :name name
-                                           :static-mesh static-mesh)))
-        (output (rope (cgen-include-system "amino.h")
-                      (cgen-include-system "amino/rx.h")
-                      source-rope)
-                stream))))
+    (output-rope (rope (cgen-include-system "amino.h")
+                       (cgen-include-system "amino/rx.h")
+                       (scene-graph-genc scene-graph
+                                         :scene-name scene-name
+                                         :static-mesh static-mesh))
+                 source-file
+                 :if-exists :supersede))
   ;; shared object
   (when (and shared-object
              (or reload

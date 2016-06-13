@@ -372,6 +372,8 @@ AA_API int aa_circbuf_write( aa_circbuf_t *cb, int fd, size_t n );
 /* Linked List */
 /***************/
 
+/** A "cons" cell
+ */
 typedef struct aa_mem_cons {
     void *data;
     struct aa_mem_cons *next;
@@ -432,7 +434,7 @@ AA_API void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
 /* Arrays */
 /**********/
 
-/* Copy n_elem elements from src to dst.
+/** Copy n_elem elements from src to dst.
  *
  * May evaluate arguments multiple times.
  */
@@ -441,7 +443,9 @@ AA_API void *aa_mem_rlist_pop( struct aa_mem_rlist *list );
         /* _Static_assert(sizeof(*dst) == sizeof(*src));*/      \
         memcpy( (dst), (src), sizeof((dst)[0])*(n_elem) );      \
     }
-
+/**
+ * Copy n octets from src into freshly-allocated heap memory.
+ */
 static inline void *aa_mem_dup( const void *src, size_t size )
 {
     void *dst = malloc(size);
@@ -449,6 +453,9 @@ static inline void *aa_mem_dup( const void *src, size_t size )
     return dst;
 }
 
+/**
+ * Copy count elements from of type (type) from src into heap memory.
+ */
 #define AA_MEM_DUP( type, src, count )                  \
     (type*)aa_mem_dup( (src), sizeof(type)*(count) );
 
@@ -470,7 +477,7 @@ static inline void *aa_mem_dup( const void *src, size_t size )
 
 
 
-/* Set n_elem elements at dst to val.
+/** Set n_elem elements at dst to val.
  *
  * May evaluate arguments multiple times.
  */
@@ -482,7 +489,7 @@ static inline void *aa_mem_dup( const void *src, size_t size )
             (dst)[aa_$_set_i] = (val);                                  \
     }
 
-/* Set n_elem elements at dst to zero.
+/** Set n_elem elements at dst to zero.
  *
  * May evaluate arguments multiple times.
  */
@@ -555,6 +562,9 @@ aa_bits_size( size_t n_bits )
     j = (i) / AA_BITS_BITS;                   \
     k = (i) - (j)*AA_BITS_BITS;
 
+/**
+ * Return the value of the i'th bit in bitset b.
+ */
 static inline int
 aa_bits_get( aa_bits *b, size_t i )
 {
@@ -565,6 +575,11 @@ aa_bits_get( aa_bits *b, size_t i )
 }
 
 
+/**
+ * Return the value of the i'th bit in bitset b of size n.
+ *
+ * Bits beyond the size of the bitset are assumed to be zero.
+ */
 static inline int
 aa_bits_getn( aa_bits *b, size_t n, size_t i )
 {
@@ -572,6 +587,9 @@ aa_bits_getn( aa_bits *b, size_t n, size_t i )
     else return aa_bits_get( b, i );
 }
 
+/**
+ * Set the value of the i'th bit in bitset b to val.
+ */
 static inline void
 aa_bits_set( aa_bits *b, size_t i, int val )
 {
@@ -584,7 +602,9 @@ aa_bits_set( aa_bits *b, size_t i, int val )
     }
 }
 
-
+/**
+ * Compute the bitwise AND of a and b, storing the result in a.
+ */
 static inline void
 aa_bits_and( aa_bits *a, const aa_bits *b, size_t n_bits )
 {
@@ -594,6 +614,9 @@ aa_bits_and( aa_bits *a, const aa_bits *b, size_t n_bits )
     }
 }
 
+/**
+ * Compute the bitwise OR of a and b, storing the result in a.
+ */
 static inline void
 aa_bits_or( aa_bits *a, const aa_bits *b, size_t n_bits )
 {
@@ -603,6 +626,9 @@ aa_bits_or( aa_bits *a, const aa_bits *b, size_t n_bits )
     }
 }
 
+/**
+ * Compute the bitwise XOR of a and b, storing the result in a.
+ */
 static inline void
 aa_bits_xor( aa_bits *a, const aa_bits *b, size_t n_bits )
 {
@@ -680,5 +706,20 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
     };
 
 
+/***********************************/
+/* Synchronized Reference Counting */
+/***********************************/
+
+/**
+ * Atomically increment the reference count and return the previous count.
+ */
+AA_API unsigned
+aa_mem_ref_inc( unsigned *count );
+
+/**
+ * Atomically decrement the reference count and return the previous count.
+ */
+AA_API unsigned
+aa_mem_ref_dec( unsigned *count );
 
 #endif //AA_MEM_H

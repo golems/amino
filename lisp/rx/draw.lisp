@@ -39,6 +39,11 @@
 
 ;;; GEOMETRY DRAWING ;;;
 
+(defun octet-color (r g b)
+  (list (/ r 255)
+        (/ g 255)
+        (/ b 255)))
+
 (defun draw-tf-axis (axis &optional (translation (identity-vec3)))
   (tf* (quaternion-from-vectors (vec 0d0 0d0 1d0)
                                 axis)
@@ -110,12 +115,47 @@
                                    :translation  (g+ (g* axis (- length end-arrow-length))
                                                      translation)))))))
 
+
+(defun draw-arrow-points (scene-graph tail tip name &key
+                                                      options
+                                                      width
+                                                      end-arrow
+                                                      start-arrow
+                                                      (end-arrow-start-width (* 2 width))
+                                                      (end-arrow-end-width 0d0)
+                                                      (end-arrow-length width)
+                                                      (start-arrow-start-width (* 2 width))
+                                                      (start-arrow-end-width 0d0)
+                                                      (start-arrow-length width)
+                                                      configuration-map)
+  (let* ((v (tf-translation (scene-graph-tf-relative scene-graph tail tip
+                                                     :configuration-map configuration-map))))
+    (item-arrow-axis tail name
+                     :options options
+                     :axis (vec3-normalize v)
+                     :length (vec-norm v)
+                     :width width
+                     :end-arrow end-arrow
+                     :start-arrow start-arrow
+                     :end-arrow-start-width end-arrow-start-width
+                     :end-arrow-end-width end-arrow-end-width
+                     :end-arrow-length end-arrow-length
+                     :start-arrow-start-width start-arrow-start-width
+                     :start-arrow-end-width start-arrow-end-width
+                     :start-arrow-length start-arrow-length)))
+
+
+
+
 (defun item-frame-marker (parent name
                           &key
                             length
-                            width
+                            (width (/ length 10))
                             (arrow-width (* 2 width))
                             (arrow-length (* 1 arrow-width))
+                            (x-color '(1 0 0))
+                            (y-color '(0 1 0))
+                            (z-color '(0 0 1))
                             options)
   (flet ((helper (subname axis color)
            (item-arrow-axis parent (draw-subframe name subname)
@@ -128,9 +168,9 @@
                             :end-arrow-start-width arrow-width
                             :end-arrow-length arrow-length)))
 
-  (append (helper "x" (vec3* 1 0 0) '(1 0 0) )
-          (helper "y" (vec3* 0 1 0) '(0 1 0) )
-          (helper "z" (vec3* 0 0 1) '(0 0 1) ))))
+  (append (helper "x" (vec3* 1 0 0) x-color )
+          (helper "y" (vec3* 0 1 0) y-color )
+          (helper "z" (vec3* 0 0 1) z-color ))))
 
 
 ;; (defun draw-geometry (scene-graph parent name

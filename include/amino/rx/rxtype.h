@@ -38,11 +38,16 @@
 #ifndef AMINO_RX_RXTYPE_H
 #define AMINO_RX_RXTYPE_H
 
+/**
+ * @file rxtype.h
+ */
+
 /* Opaque types shared between different RX modules
  */
 
 /**
- *  Opaque type for a scene_graph.
+ * @struct aa_rx_sg
+ * Opaque type for a scene_graph.
  *
  * A scene graph is a set of frames in SE(3).
  *
@@ -50,6 +55,7 @@
 struct aa_rx_sg;
 
 /**
+ * @struct aa_rx_geom
  * Container for scene geometry
  */
 struct aa_rx_geom;
@@ -61,11 +67,13 @@ struct aa_rx_cl_geom;
 
 
 /**
+ * @struct aa_rx_win
  * Opaque type for a window
  */
 struct aa_rx_win;
 
 /**
+ * @struct aa_sdl_display_params
  * Parameters for SDL display function.
  */
 struct aa_sdl_display_params;
@@ -79,5 +87,12 @@ struct aa_sdl_display_params;
 typedef int (*aa_sdl_display_fun)(
     void *context,
     struct aa_sdl_display_params *params);
+
+
+typedef int (*aa_sdl_win_display_fun)(
+    struct aa_rx_win *win,
+    void *context,
+    struct aa_sdl_display_params *params);
+
 
 #endif /*AMINO_RX_RXTYPE_H*/

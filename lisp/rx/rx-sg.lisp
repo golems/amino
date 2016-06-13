@@ -72,7 +72,7 @@
           (scene-frame-joint
            (let* ((axis (scene-frame-joint-axis frame))
                   (offset (scene-frame-joint-configuration-offset frame))
-                  (config-name (scene-frame-joint-configuration-name frame))
+                  (config-name (rope-string (scene-frame-joint-configuration-name frame)))
                   (limits (scene-graph-config-limits scene-graph config-name)))
              ;; add the frame
              (etypecase frame
@@ -147,8 +147,9 @@
 
 (defun config-vector-helper (map configs vector)
   (labels ((helper (config-name config-value)
-             (setf (aref vector (gethash (rope-string config-name) map))
-                   (coerce config-value 'double-float))))
+             (when-let ((i (gethash (rope-string config-name) map)))
+               (setf (aref vector i)
+                     (coerce config-value 'double-float)))))
     (etypecase configs
       (tree-map
        (do-tree-map ((config-name config-value) configs)

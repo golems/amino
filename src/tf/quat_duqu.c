@@ -78,6 +78,26 @@ aa_tf_duqu_mul( const double _a[AA_RESTRICT 8], const double _b[AA_RESTRICT 8],
     aa_tf_qmul_a(A->dual.data, B->real.data, C->dual.data);
 }
 
+AA_API void aa_tf_duqu_add( const double a[AA_RESTRICT 8], const double b[AA_RESTRICT 8],
+                            double c[AA_RESTRICT 8] )
+{
+    const struct aa_tf_duqu *A = (struct aa_tf_duqu *)a;
+    const struct aa_tf_duqu *B = (struct aa_tf_duqu *)b;
+    struct aa_tf_duqu *C = (struct aa_tf_duqu *)c;
+    aa_tf_qadd(A->real.data, B->real.data, C->real.data);
+    aa_tf_qadd(A->dual.data, B->dual.data, C->dual.data);
+}
+
+AA_API void aa_tf_duqu_sub( const double a[AA_RESTRICT 8], const double b[AA_RESTRICT 8],
+                            double c[AA_RESTRICT 8] )
+{
+    const struct aa_tf_duqu *A = (struct aa_tf_duqu *)a;
+    const struct aa_tf_duqu *B = (struct aa_tf_duqu *)b;
+    struct aa_tf_duqu *C = (struct aa_tf_duqu *)c;
+    aa_tf_qsub(A->real.data, B->real.data, C->real.data);
+    aa_tf_qsub(A->dual.data, B->dual.data, C->dual.data);
+}
+
 
 AA_API void
 aa_tf_duqu_conj( const double _s[AA_RESTRICT 8], double _c[AA_RESTRICT 8] )

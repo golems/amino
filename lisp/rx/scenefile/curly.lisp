@@ -517,9 +517,9 @@
                  (push (cons parent geometry) geoms))))
       (dolist (c curly)
         (add-thing c)))
-    (scene-graph-resolve-mesh
-     (fold (lambda (sg g)
-             (scene-graph-add-geometry sg (car g) (cdr g)))
-           (scene-graph frames)
-           geoms)
-     :reload reload-meshes)))
+    (scene-graph-resolve! (fold (lambda (sg g)
+                                  (scene-graph-add-geometry sg (car g) (cdr g)))
+                                (scene-graph frames)
+                                geoms)
+                          :reload reload-meshes
+                          :filename pathname)))

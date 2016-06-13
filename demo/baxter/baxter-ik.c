@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     (void)argc; (void)argv;
 
     // Initialize scene graph
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph(NULL);
+    struct aa_rx_sg *scenegraph = baxter_demo_load_baxter(NULL);
     aa_rx_sg_init(scenegraph);
 
     /*--- setup window ---*/

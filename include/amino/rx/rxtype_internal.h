@@ -46,8 +46,6 @@
  */
 struct aa_gl_buffers;
 
-AA_API void
-aa_gl_buffers_destroy( struct aa_gl_buffers *bufs );
 
 /* Cleanup function set in GL module */
 AA_EXTERN void

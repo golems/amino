@@ -403,7 +403,7 @@ DEF_SET_LIMIT(eff)
     {                                                                   \
         amino::SceneGraph *sg = scenegraph->sg;                         \
         struct aa_rx_config_limits *l = sg->limits[config_id];          \
-        if( l->has_##value ) {                                          \
+        if( l && l->has_##value ) {                                     \
             *min = l->value##_min;                                      \
             *max = l->value##_max;                                      \
             return 0;                                                   \

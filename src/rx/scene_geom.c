@@ -134,11 +134,10 @@ aa_rx_geom_mesh (
     struct aa_rx_geom_opt *opt,
     struct aa_rx_mesh *mesh )
 {
-
+    aa_mem_ref_inc( &mesh->refcount );
     ALLOC_GEOM( struct aa_rx_geom_mesh, g,
                 AA_RX_MESH, opt );
     g->shape = mesh;
-    mesh->refcount++;
     return &g->base;
 }
 
@@ -154,15 +153,25 @@ aa_rx_geom_attach (
 struct aa_rx_geom *
 aa_rx_geom_copy( struct aa_rx_geom *src )
 {
-    src->refcount++;
+    unsigned oldcount = aa_mem_ref_inc(&src->refcount);
+    if( 0 == oldcount ) {
+        fprintf(stderr, "Error, copied geom with 0 refcount\n");
+        abort();
+    }
     return src;
 }
 
 void
 aa_rx_geom_destroy( struct aa_rx_geom *geom )
 {
-    geom->refcount--;
-    if( 0 == geom->refcount ) {
+    unsigned oldcount = aa_mem_ref_dec(&geom->refcount);
+
+    if( 0 == oldcount) {
+        fprintf(stderr, "Error, destroying geom with 0 refcount\n");
+        abort();
+    }
+
+    if( 1 == oldcount ) {
         /* Free Mesh */
         if( AA_RX_MESH == geom->type ) {
             struct aa_rx_geom_mesh *mesh_geom = (struct aa_rx_geom_mesh *)geom;
@@ -220,8 +229,8 @@ struct aa_rx_mesh* aa_rx_mesh_create()
 
 void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
 {
-    mesh->refcount--;
-    if( 0 == mesh->refcount ) {
+    unsigned oldcount = aa_mem_ref_dec(&mesh->refcount);
+    if( 1 == oldcount ) {
         if( mesh->destructor ) {
             mesh->destructor( mesh->destructor_context );
         }

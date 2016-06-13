@@ -48,7 +48,7 @@ struct display_cx {
     //struct timespec last;
 };
 
-int display( void *cx_, struct aa_sdl_display_params *params )
+int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
@@ -86,6 +86,7 @@ int display( void *cx_, struct aa_sdl_display_params *params )
     return 0;
 }
 
+
 int main(int argc, char *argv[])
 {
     (void)argc; (void)argv;
@@ -94,7 +95,7 @@ int main(int argc, char *argv[])
     aa_rx_cl_init();
 
     // Initialize scene graph
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph(NULL);
+    struct aa_rx_sg *scenegraph = baxter_demo_load_baxter(NULL);
     aa_rx_sg_init(scenegraph);
     aa_rx_sg_cl_init(scenegraph);
 
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
         aa_rx_cl_set_destroy( allowed );
     }
 
-    aa_rx_win_set_display( win, display, &cx );
+    aa_rx_win_set_display( win, display, &cx, NULL );
     aa_rx_win_display_loop(win);
 
 

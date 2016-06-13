@@ -57,11 +57,16 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_sdl.h"
 
+#include "baxter-model.c.h"
+
 static const int SCREEN_WIDTH = 1000;
 static const int SCREEN_HEIGHT = 1000;
 
-
-struct aa_rx_sg *aa_rx_dl_sg__scenegraph(struct aa_rx_sg *sg);
+static inline struct aa_rx_sg *
+baxter_demo_load_baxter( struct aa_rx_sg *sg)
+{
+    return aa_rx_dl_sg__baxter(sg);
+}
 
 
 struct aa_rx_win *

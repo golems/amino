@@ -249,6 +249,7 @@
                do (setf (gethash material material-index-hash) i)
                collect texture)))
       (make-mesh-data  :name (name-mangle (or name (file-basename obj-file)))
+                       :file obj-file
                        :vertex-vectors (array-cat 'double-float vertices)
                        :normal-vectors (array-cat 'double-float normals)
                        :uv-vectors (array-cat 'double-float uv)

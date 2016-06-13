@@ -44,7 +44,6 @@
 (defgeneric rotation (x))
 (defgeneric translation (x))
 
-(defgeneric normalize (x))
 
 (defmethod normalize ((x quaternion-translation))
   (make-quaternion-translation :quaternion (tf-qnormalize (quaternion-translation-quaternion x))
@@ -72,6 +71,13 @@
 (defgeneric transformation-matrix-2 (r x))
 
 (defgeneric vec3 (x))
+
+(defmethod generic- ((a vec3) (b vec3))
+  (with-vec3 (a-x a-y a-z) a
+    (with-vec3 (b-x b-y b-z) b
+      (vec3* (- a-x b-x)
+             (- a-y b-y)
+             (- a-z b-z)))))
 
 ;;; TF Interface
 (defun make-tf (&key
@@ -143,8 +149,11 @@
 (defmethod quaternion ((x (eql nil)))
   (quaternion* 0d0 0d0 0d0 1d0))
 
-(defmethod quaternion ((x number))
+(defmethod quaternion ((x real))
   (quaternion* 0d0 0d0 0d0 x))
+
+(defmethod quaternion ((x complex))
+  (quaternion* (imagpart x) 0d0 0d0 (realpart x)))
 
 (defmethod quaternion ((x axis-angle))
   (tf-axang2quat x))
@@ -317,11 +326,41 @@
 
 (defmethod quaternion-translation ((x (eql nil)))
   (make-quaternion-translation :quaternion (quaternion nil)
-                               :translation (make-vec3 :data (vec 0d0 0d0 0d0))))
+                               :translation (identity-vec3)))
 
 (defmethod quaternion-translation ((x dual-quaternion))
   (tf-duqu2qutr x))
 
+(defmethod quaternion-translation ((x vec3))
+  (make-quaternion-translation :quaternion (identity-quaternion)
+                               :translation x))
+
+(defmethod quaternion-translation ((x quaternion))
+  (make-quaternion-translation :quaternion x
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x x-angle))
+  (make-quaternion-translation :quaternion (tf-xangle2quat (principal-angle-value x))
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x y-angle))
+  (make-quaternion-translation :quaternion (tf-yangle2quat (principal-angle-value x))
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x z-angle))
+  (make-quaternion-translation :quaternion (tf-yangle2quat (principal-angle-value x))
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x axis-angle))
+  (make-quaternion-translation :quaternion (tf-axang2quat x)
+                               :translation (identity-vec3)))
+
+(defmethod quaternion-translation ((x euler-zyx))
+  (let ((data (euler-angle-data x)))
+    (make-quaternion-translation :quaternion (tf-eulerzyx2quat (aref data 0)
+                                                               (aref data 1)
+                                                               (aref data 2))
+                                 :translation (identity-vec3))))
 
 (defmethod quaternion-translation-2 ((r quaternion) (x vec3))
   (make-quaternion-translation :quaternion r
@@ -355,34 +394,29 @@
 
 ;;; Multiplies
 
-(defmethod g* ((a number) (b vec3))
-  (make-vec3 :data (dscal-copy a (vec3-data b))))
 
-(defmethod g* ((a vec3) (b number))
-  (g* b a))
-
-(defmethod g* ((a quaternion) (b quaternion))
+(defmethod generic* ((a quaternion) (b quaternion))
   (tf-qmul a b))
 
-(defmethod g* ((a number) (b quaternion))
-  (make-quaternion :data (dscal-copy a b)))
-
-(defmethod g* ((a quaternion) (b axis-angle))
+(defmethod generic* ((a quaternion) (b axis-angle))
   (tf-qmul a (quaternion b)))
 
-(defmethod g* ((a quaternion) (b principal-angle))
+(defmethod generic* ((a quaternion) (b principal-angle))
   (tf-qmul a (quaternion b)))
 
-(defmethod g* ((a quaternion) (b euler-angle))
+(defmethod generic* ((a principal-angle) (b principal-angle))
+  (tf-qmul (quaternion a) (quaternion b)))
+
+(defmethod generic* ((a quaternion) (b euler-angle))
   (tf-qmul a (quaternion b)))
 
-(defmethod g* ((a dual-quaternion) (b dual-quaternion))
+(defmethod generic* ((a dual-quaternion) (b dual-quaternion))
   (tf-duqu-mul a b))
 
-(defmethod g* ((a quaternion-translation) (b quaternion-translation))
+(defmethod generic* ((a quaternion-translation) (b quaternion-translation))
   (tf-qutr-mul a b))
 
-(defmethod g* ((a dual-quaternion) (b quaternion-translation))
+(defmethod generic* ((a dual-quaternion) (b quaternion-translation))
   (tf-duqu-mul a (dual-quaternion b)))
 
 ;; Transformations
@@ -429,7 +463,6 @@
            (map 'list #'identity (real-array-data (quaternion-translation-translation x))))))
 
 ;; Inverse
-(defgeneric inverse (x))
 
 (defmethod inverse ((x quaternion-translation))
   (let ((qc (make-quaternion))
@@ -442,7 +475,7 @@
 
 ;;; Tagged TFs
 
-(defmethod g* ((a tf-tag) (b tf-tag))
+(defmethod generic* ((a tf-tag) (b tf-tag))
   (assert (eql (tf-tag-child a)
                (tf-tag-parent b)))
   (tf-tag (tf-tag-parent a)

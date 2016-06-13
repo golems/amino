@@ -71,3 +71,32 @@
                          b ld-b
                          x ld-x)))))
     x))
+
+(def-la-cfun ("aa_la_d_ssd" aa-la-d-ssd :pointer-type :pointer) :double
+  (n size-t)
+  (x :vector)
+  (y :vector))
+
+(defun vec-ssd (a b)
+  (let ((r 0d0))
+    (with-foreign-vector (a inc-a length-a) a :input
+      (with-foreign-vector (b inc-b length-b) b :input
+        (assert (= length-a length-b))
+        (setq r (aa-la-d-ssd length-a
+                             a inc-a
+                             b inc-b))))
+    r))
+
+(defun vec-dist (a b)
+  (sqrt (vec-ssd a b)))
+
+(defun vec-norm (x)
+  (dnrm2 x))
+
+(defun vec-normalize (x &optional y)
+  (let ((y (dcopy x y)))
+    (with-foreign-vector (y inc-y len-y) y :inout
+      (blas-dscal len-y
+                  (/ 1d0 (blas-dnrm2 len-y y inc-y))
+                  y inc-y))
+    y))
