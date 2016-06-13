@@ -54,7 +54,6 @@
 #include <ompl/geometric/planners/sbl/SBL.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
-#include <ompl/geometric/planners/prm/PRM.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
 
@@ -222,7 +221,7 @@ path_cleanup( struct aa_rx_mp *mp, ompl::geometric::PathGeometric &path )
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
-               enum aa_rx_mp_type mp_type,
+               struct aa_rx_planner* p,
                double timeout,
                size_t *n_path,
                double **p_path_all )
@@ -235,19 +234,10 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
     ompl::base::PlannerPtr planner(NULL);
-    switch (mp_type){
-        case RRTCONNECT:
-            planner = ompl::base::PlannerPtr(new ompl::geometric::RRTConnect(si));
-            break;
-        case SBL:
-            planner = ompl::base::PlannerPtr(new ompl::geometric::SBL(si));
-            break;
-        case KPIECE:
-            planner = ompl::base::PlannerPtr(new ompl::geometric::LBKPIECE1(si));
-            break;
-        case PRM:
-            planner = ompl::base::PlannerPtr(new ompl::geometric::PRM(si));
-            break;
+    if (p==NULL){
+	planner = ompl::base::PlannerPtr(new ompl::geometric::RRTConnect(si));;
+    } else {
+	planner = p->p;
     }
     planner->setProblemDefinition(pdef);
     try {
@@ -292,4 +282,21 @@ AA_API struct aa_rx_cl_set*
 aa_rx_mp_get_allowed( const struct aa_rx_mp* mp)
 {
     return mp->space_information->getTypedStateSpace()->allowed;
+}
+
+AA_API struct aa_rx_planner* aa_rx_mp_make_rrtconnect(const struct aa_rx_mp* mp){
+    struct aa_rx_planner* planner = new aa_rx_planner();
+    planner->p = ompl::base::PlannerPtr(new ompl::geometric::RRTConnect( mp->space_information));
+    return planner;
+}
+AA_API struct aa_rx_planner*  aa_rx_mp_make_sbl(const struct aa_rx_mp* mp){
+    struct aa_rx_planner* planner = new aa_rx_planner();
+    planner->p = ompl::base::PlannerPtr(new ompl::geometric::SBL( mp->space_information));
+    return planner;
+}
+
+AA_API struct aa_rx_planner*  aa_rx_mp_make_kpiece(const struct aa_rx_mp* mp){
+    struct aa_rx_planner* planner = new aa_rx_planner();
+    planner->p = ompl::base::PlannerPtr(new ompl::geometric::LBKPIECE1( mp->space_information));
+    return planner;
 }

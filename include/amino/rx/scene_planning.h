@@ -49,12 +49,10 @@
  */
 struct aa_rx_mp;
 
-enum aa_rx_mp_type {
-  RRTCONNECT,
-  SBL,
-  KPIECE,
-  PRM
-};
+/**
+ * Opague structure for a motion planner
+ */
+struct aa_rx_planner;
 
 /**
  * Create a new motion plannet context for the given sub-scenegraph.
@@ -147,11 +145,18 @@ aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
-               enum aa_rx_mp_type mp_type,
+               struct aa_rx_planner* p,
                double timeout,
                size_t *n_path,
                double **p_path_all );
 
 AA_API struct aa_rx_cl_set* aa_rx_mp_get_allowed( const struct aa_rx_mp* mp);
+
+AA_API struct aa_rx_planner* aa_rx_mp_make_rrtconnect(const struct aa_rx_mp* mp);
+
+AA_API struct aa_rx_planner*  aa_rx_mp_make_sbl(const struct aa_rx_mp* mp);
+
+AA_API struct aa_rx_planner*  aa_rx_mp_make_kpiece(const struct aa_rx_mp* mp);
+
 
 #endif /*AMINO_RX_SCENE_PLANNING_H*/

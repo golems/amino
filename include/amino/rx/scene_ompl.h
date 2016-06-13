@@ -47,6 +47,7 @@
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/TypedSpaceInformation.h>
 #include <ompl/base/TypedStateValidityChecker.h>
+#include <ompl/base/Planner.h>
 
 namespace amino {
 
@@ -221,6 +222,9 @@ struct aa_rx_mp {
     unsigned simplify : 1;
 };
 
+struct aa_rx_planner {
+    ompl::base::PlannerPtr p;
+};
 
 
 #endif /*AMINO_RX_SCENE_OMPL_H*/
