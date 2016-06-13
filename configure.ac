@@ -30,15 +30,39 @@ m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
 
 # Checks for libraries.
 AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
-AC_SEARCH_LIBS([clock_gettime],[rt])
-AC_CHECK_LIB([m],[sqrt])
-AC_CHECK_LIB([dl],[dlopen])
-
 AC_CHECK_HEADERS([stdatomic.h])
 
-AC_SEARCH_LIBS([dgemm_],[openblas blas])
+AC_SEARCH_LIBS([clock_gettime], [rt])
+AC_SEARCH_LIBS([sqrt], [m])
+AC_SEARCH_LIBS([dlopen], [dl])
+AC_SEARCH_LIBS([pthread_once], [pthread])
+
+
+AC_SEARCH_LIBS([dgemm_],[blas])
 AC_SEARCH_LIBS([dgesvd_],[lapack])
 
+
+# Check for cblas_blas enum
+AC_MSG_CHECKING([CBLAS_LAYOUT])
+AC_TRY_COMPILE([#include <cblas.h>
+               ],
+               [CBLAS_LAYOUT test_var;],
+               [AC_MSG_RESULT([yes])
+                aa_cblas_order_type=CBLAS_LAYOUT],
+               [AC_MSG_RESULT([no])])
+
+AS_IF([test x="x$aa_cblas_order_type"],
+[
+AC_MSG_CHECKING([enum CBLAS_ORDER])
+AC_TRY_COMPILE([#include <cblas.h>
+               ],
+               [enum CBLAS_ORDER test_var;],
+               [AC_MSG_RESULT([yes])
+                aa_cblas_order_type="enum CBLAS_ORDER"],
+               [AC_MSG_RESULT([no])])
+])
+
+AC_SUBST([aa_cblas_order_type])
 
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
          [AC_DEFUN([APPEND_CFLAG],
@@ -96,10 +120,6 @@ AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
 ]
 )
-
-
-# Check for thread local storage
-AX_TLS
 
 # Doxygen
 m4_ifdef([DX_INIT_DOXYGEN],
@@ -480,5 +500,5 @@ AS_IF([test "x$FC" = "x"],
       [AC_MSG_ERROR([No Fortran compiler detected])])
 
 
-AC_CONFIG_FILES([Makefile lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
 AC_OUTPUT

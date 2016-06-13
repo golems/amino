@@ -90,6 +90,7 @@
                              output
                              (directory *robray-tmp-directory*)
                              include
+                             include-text
                              (default-configuration 0d0))
 "Generate the POV-ray scene for the given scene-graph."
   (let ((pov-things)
@@ -119,9 +120,13 @@
                                      (pov-transform* (pov-matrix (gethash name tf-abs)))))
             (thing (pov-line-comment (format nil "FRAME: ~A" name)))
             (when (scene-mesh-p shape)
-              (setf (tree-set-find mesh-set)
-                    (scene-mesh-povray-file shape))))))
+              (let ((pov-file (scene-mesh-povray-file shape)))
+                (unless pov-file
+                  (error "No POVray mesh file for frame ~A" name))
+                (tree-set-insertf mesh-set pov-file))))))
+      ;; Include mesh files
       (map-tree-set nil #'include mesh-set)
+      (when include-text (thing include-text))
       (map nil #'include (reverse (ensure-list include)))
       ;; version
       (thing (pov-version "3.7")))

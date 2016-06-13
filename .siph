@@ -1,0 +1,15 @@
+SIPH_PKG_NAME="amino"
+SIPH_PKG_REPO="https://github.com/golems/amino.git"
+SIPH_PKG_BRANCH="master"
+
+SIPH_PKG_DEPS_DEB="gfortran \
+         maxima libblas-dev liblapack-dev \
+         libglew-dev libsdl2-dev \
+         libfcl-dev \
+         sbcl \
+         default-jdk \
+         povray libav-tools \
+         coinor-libclp-dev libglpk-dev liblpsolve55-dev"
+
+
+SIPH_PKG_DEPS_SIPH="ompl sbcl https://github.com/ndantam/sycamore.git"

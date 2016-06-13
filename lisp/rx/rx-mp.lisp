@@ -258,22 +258,31 @@
 ;;   (win-set-display-plan (motion-plan-path motion-plan))
 ;;   (win-unpause))
 
+(defun motion-plan-refmap (motion-plan i)
+  (let* ((m-sg (motion-plan-mutable-scene-graph motion-plan))
+         (n-all (mutable-scene-graph-config-count m-sg))
+         (path (motion-plan-path motion-plan))
+         (map (make-configuration-map)))
+    (loop for j below n-all
+       for k from (* i n-all)
+       for name = (mutable-scene-graph-config-name m-sg j)
+       do (tree-map-insertf map name (aref path k)))
+    map))
 
 (defun motion-plan-endpoint-map (motion-plan)
-  (let* ((ssg (motion-plan-sub-scene-graph motion-plan))
-         (n-sub (sub-scene-graph-config-count ssg))
-         (n-all (sub-scene-graph-all-config-count ssg))
+  (motion-plan-refmap motion-plan
+                      (1- (motion-plan-length motion-plan))))
+
+(defun motion-plan-refarray (motion-plan i)
+  (let* ((m-sg (motion-plan-mutable-scene-graph motion-plan))
+         (n-all (mutable-scene-graph-config-count m-sg))
          (path (motion-plan-path motion-plan))
-         (i-0 (- (length path) n-all))
-         (map (make-configuration-map)))
-    (loop for i-sub below n-sub
-       for i-all = (aa-rx-sg-sub-config ssg i-sub)
-       for name = (sub-scene-graph-config-name ssg i-sub)
-       for i-array = (+ i-0 i-all)
-         do
-         (tree-map-insertf map name
-                           (aref path i-array)))
-    map))
+         (array (make-vec n-all)))
+    (loop for j below n-all
+       for k from (* i n-all)
+       do (setf (aref array j)
+                (aref path k)))
+    array))
 
 (defun motion-plan-endpoint-array (motion-plan)
   (let* ((ssg (motion-plan-sub-scene-graph motion-plan))

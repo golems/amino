@@ -207,7 +207,7 @@ void aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph )
         aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
         aa_rx_sg_clean_collision(scene_graph);
     }
-    
+
     aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
     amino::SceneGraph *sg = scene_graph->sg;
     sg->allowed_indices1.clear();

@@ -73,7 +73,7 @@ public:
                         aa_rx_sg_config_name(scene_graph, cid));
                 /* This seems as good as anything */
                 min = -M_PI;
-                max = -M_PI;
+                max = M_PI;
             }
 
             vb.setLow(i,min);
@@ -203,6 +203,7 @@ public:
 
 struct aa_rx_mp {
     aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
+        config_start(NULL),
         space_information(
             new amino::sgSpaceInformation(
                 amino::sgSpaceInformation::SpacePtr(
@@ -214,6 +215,8 @@ struct aa_rx_mp {
 
     amino::sgSpaceInformation::Ptr space_information;
     ompl::base::ProblemDefinitionPtr problem_definition;
+
+    double *config_start;
 
     unsigned simplify : 1;
 };

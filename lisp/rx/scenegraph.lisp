@@ -169,7 +169,11 @@
                    options))
 
 (defun scene-geometry-mesh (options mesh)
-  (%scene-geometry mesh options))
+  (%scene-geometry (etypecase mesh
+                     (scene-mesh mesh)
+                     ((or pathname string)
+                      (make-scene-mesh :source-file mesh)))
+                   options))
 
 (defun scene-geometry-isa (geometry type)
   (let ((tree (scene-geometry-type geometry)))
@@ -676,16 +680,27 @@
   (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
 (defun prefix-scene-graph (prefix scene-graph &key
+                                                root
+                                                tf
                                                 (prefix-parents t))
   (let ((frames))
+    (push (scene-frame-fixed root prefix
+                             :tf (tf tf))
+          frames)
     (do-scene-graph-frames (frame (scene-graph scene-graph) (scene-graph frames))
       (let ((frame (copy-structure frame))
             (parent (scene-frame-parent frame)))
+        ;; prefix name
         (setf (scene-frame-name frame)
               (rope prefix (scene-frame-name frame)))
-        (when (and parent prefix-parents)
-          (setf (scene-frame-parent frame)
-                (rope prefix parent)))
+        ;; prefix parent
+        (if parent
+            (when prefix-parents
+              (setf (scene-frame-parent frame)
+                    (rope prefix parent)))
+            (setf (scene-frame-parent frame)
+                  prefix))
+        ;; prefix config
         (when (scene-frame-joint-p frame)
           (setf (scene-frame-joint-configuration-name frame)
                 (rope prefix (scene-frame-joint-configuration-name frame))))
@@ -704,12 +719,11 @@
   "Return the include file for the mesh file"
   (pov-cache-file (rope mesh-file ".inc")))
 
-(defun scene-graph-resolve-mesh (scene-graph &key
-                                               reload
-                                               (mesh-up-axis "Z")
-                                               (mesh-forward-axis "Y")
-                                               (directory *robray-tmp-directory*))
-  ;(print 'resolve-mesh)
+(defun scene-graph-resolve-povray! (scene-graph &key
+                                                  reload
+                                                  (mesh-up-axis "Z")
+                                                  (mesh-forward-axis "Y")
+                                                  (directory *robray-tmp-directory*))
   (let ((mesh-files  ;; filename => (list mesh-nodes)
          (make-hash-table :test #'equal)))
     (labels ((resolve-mesh (mesh)
@@ -730,25 +744,30 @@
                                 :reload reload
                                 :mesh-up-axis mesh-up-axis
                                 :mesh-forward-axis mesh-forward-axis)
-
-               ;; (let* ((inc-file (output-file (scene-mesh-inc mesh-file) directory))
-               ;;        (convert (or reload
-               ;;                     (not (probe-file inc-file))
-               ;;                     (>= (file-write-date mesh-file)
-               ;;                         (file-write-date inc-file))))
-               ;;        (geom-name (progn (ensure-directories-exist inc-file)
-               ;;                          (collada-povray mesh-file
-               ;;                                          (when convert inc-file)))))
-               ;;   (if convert
-               ;;       (format *standard-output* "~&    to  ~A..." inc-file)
-               ;;       (format *standard-output* "~&    cached"))
-
                  (dolist (mesh-node mesh-nodes)
                    (setf (scene-mesh-name mesh-node) geom-name
                          (scene-mesh-povray-file mesh-node) inc-file))))
              mesh-files)
     scene-graph))
 
+(defun scene-graph-remove-geometry (scene-graph frames)
+  (let* ((frames (etypecase frames
+                  (list (apply #'tree-set #'frame-name-compare frames))
+                  (tree-set frames)))
+         (new-sg (copy-scene-graph scene-graph))
+         (new-frames (fold-scene-graph-frames
+                      (lambda (set frame)
+                        (tree-set-insert set
+                                         (if (tree-set-member-p frames (scene-frame-name frame))
+                                             (let ((frame (copy-scene-frame frame)))
+                                               (setf (scene-frame-geometry frame) nil)
+                                               frame)
+                                             frame)))
+                      (tree-set #'scene-object-compare) new-sg)))
+
+
+    (setf (scene-graph-frames new-sg) new-frames)
+    new-sg))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Computing Transforms ;;;

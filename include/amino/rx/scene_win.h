@@ -70,6 +70,13 @@ aa_rx_win_destroy( struct aa_rx_win *  win);
 
 /**
  * Return a pointer to the window's GL globals struct.
+ *
+ * Note that the window's rendering thread may asynchronously access
+ * the GL globals.  If you need to modify any parameters, synchronize
+ * access by locking the window.
+ *
+ * \sa aa_rx_win_lock
+ * \sa aa_rx_win_unlock
  */
 AA_API struct aa_gl_globals *
 aa_rx_win_gl_globals( struct aa_rx_win * win);
@@ -115,6 +122,19 @@ aa_rx_win_set_config( struct aa_rx_win * win,
                       const double *q );
 
 
+/**
+ * Set the window's display function
+ *
+ * @param win The window
+ *
+ * @param display The display function
+ *
+ * @param context The context argument for the display function
+ *
+ * @param destructor A cleanup function that is called on context when
+ *                   either another display function is set for the
+ *                   window or the window is destroyed.
+ */
 AA_API void
 aa_rx_win_set_display( struct aa_rx_win * win,
                        aa_sdl_win_display_fun display,
@@ -145,7 +165,7 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * window );
 
 
 /**
- * Asynchronous display using new thread
+ * Start a thread to asynchronously render the window.
  */
 AA_API void
 aa_rx_win_start( struct aa_rx_win * win );
@@ -165,9 +185,18 @@ aa_rx_win_start( struct aa_rx_win * win );
 //AA_API void
 //aa_rx_win_default_start( struct aa_rx_win * win );
 
+/**
+ * Instruct the rendering thread to stop.
+ *
+ * The rendering thread will gracefully terminate, possibly after it
+ * finishes displaying another frame.
+ */
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
 
+/**
+ * Instruct the rendering thread to stop when the user closes the window.
+ */
 AA_API void
 aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value );
 
@@ -177,13 +206,24 @@ aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value );
 AA_API void
 aa_rx_win_join( struct aa_rx_win * win );
 
+/**
+ * Pause rendering.
+ */
 AA_API void
 aa_rx_win_pause( struct aa_rx_win * win, int paused );
 
-
+/**
+ * Lock the window.
+ *
+ * The rendering thread also takes this lock before calling the
+ * display function.
+ */
 AA_API void
 aa_rx_win_lock( struct aa_rx_win * win );
 
+/**
+ * Unlock the window
+ */
 AA_API void
 aa_rx_win_unlock( struct aa_rx_win * win );
 
@@ -197,19 +237,17 @@ aa_rx_win_sg_gl_init( struct aa_rx_win * win,
                       struct aa_rx_sg *sg );
 
 
+/**
+ * Return the current camera pose.
+ */
 AA_API void
-aa_rx_win_get_tf_cam( const struct aa_rx_win * win, double *E );
+aa_rx_win_get_tf_cam( struct aa_rx_win * win, double *E );
 
-/* /\** */
-/*  * Render scenegraph to the window. */
-/*  * */
-/*  * This function is threadsafe. */
-/*  *\/ */
-/* AA_API void */
-/* aa_rx_win_sg_render( */
-/*     struct aa_rx_win *window, */
-/*     const struct aa_rx_sg *scenegraph, */
-/*     const struct aa_gl_globals *globals, */
-/*     size_t n_TF, double *TF_abs, size_t ld_TF ); */
+/**
+ * Set the camera pose.
+ */
+AA_API void
+aa_rx_win_set_tf_cam( struct aa_rx_win * win, const double *E );
+
 
 #endif /*AMINO_RX_SCENE_WIN_H*/

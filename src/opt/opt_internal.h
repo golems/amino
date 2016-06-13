@@ -46,16 +46,28 @@ aa_opt_is_eq( double l, double u)
     return aa_feq(l,u,0);
 }
 
+#ifdef __cplusplus
+static inline int
+aa_isinf( double l ) {
+    return std::isinf(l);
+}
+#else
+static inline int
+aa_isinf( double l ) {
+    return isinf(l);
+}
+#endif
+
 static inline int
 aa_opt_is_lbound( double l )
 {
-    return -DBL_MAX < l && !isinf(l);
+    return -DBL_MAX < l && !aa_isinf(l);
 }
 
 static inline int
 aa_opt_is_ubound( double u )
 {
-    return DBL_MAX > u && !isinf(u);
+    return DBL_MAX > u && !aa_isinf(u);
 }
 
 static inline int

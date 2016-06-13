@@ -239,6 +239,9 @@ static pthread_once_t gl_once = PTHREAD_ONCE_INIT;
 static pthread_mutex_t gl_mutex;
 static pthread_mutexattr_t gl_mattr;
 
+
+static struct aa_gl_buffers *dead_buffers = NULL;
+
 static void gl_init_once(void)
 {
     /* Initialize Mutex */
@@ -288,7 +291,7 @@ static void gl_init_once(void)
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
 
     /* Register cleanup function */
-    aa_gl_buffers_destroy_fun = aa_gl_buffers_destroy;
+    aa_gl_buffers_destroy_fun = aa_gl_buffers_schedule_destroy;
 
     aa_gl_unlock();
 }
@@ -422,10 +425,9 @@ AA_API void aa_gl_draw_tf (
 
 }
 
-
 AA_API void
 aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
-    aa_gl_lock();
+    //aa_gl_lock();
     if( bufs->has_indices ) glDeleteBuffers(1, &bufs->indices);
     /* if( bufs->has_colors ) glDeleteBuffers(1, &bufs->colors); */
     if( bufs->has_values ) glDeleteBuffers(1, &bufs->values);
@@ -433,8 +435,30 @@ aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
     if( bufs->has_uv ) glDeleteBuffers(1, &bufs->uv);
     if( bufs->has_tex2d ) glDeleteTextures(1, &bufs->tex2d);
     free(bufs);
+    //aa_gl_unlock();
+}
+
+AA_API void
+aa_gl_buffers_schedule_destroy( struct aa_gl_buffers *buffers )
+{
+    aa_gl_lock();
+    buffers->next = dead_buffers;
+    dead_buffers = buffers;
     aa_gl_unlock();
 }
+
+AA_API void
+aa_gl_buffers_cleanup( )
+{
+    aa_gl_lock();
+    while( dead_buffers ) {
+        struct aa_gl_buffers *x = dead_buffers;
+        dead_buffers = dead_buffers->next;
+        aa_gl_buffers_destroy( x );
+    }
+    aa_gl_unlock();
+}
+
 
 /* static void quad_tr( unsigned *indices, */
 /*                      unsigned pp, */

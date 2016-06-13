@@ -66,7 +66,8 @@ operator new ( size_t n, aa_mem_region_t *reg )
 
 namespace amino {
 
-/** Allocate out of an aa_mem_region_t
+/**
+ * An STL allocator that allocates out of a memory region.
  */
 template<class T>
 class RegionAllocator {

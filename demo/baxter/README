@@ -1,0 +1,7 @@
+Amino Baxter Demo
+=================
+
+The demo programs in this directory use the vendor-provided URDF model
+of the baxter robot.  Before building these demos, please install the
+URDF and set the ROS_PKG_PATH environment variable before running make, e.g.
+with `ROS_PACKAGE_PATH=/opt/ros/indigo/share/ make`.
