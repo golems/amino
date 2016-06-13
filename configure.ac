@@ -29,7 +29,14 @@ m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
 
 
 # Checks for libraries.
-AC_CHECK_HEADERS([cblas.h], [true], [exit 1])
+
+AC_SEARCH_LIBS([dgemm_],[blas],[true],
+                 [AC_MSG_ERROR([BLAS is required.])])
+AC_SEARCH_LIBS([dgesvd_],[lapack],[true],
+                 [AC_MSG_ERROR([LAPACK is required.])])
+AC_CHECK_HEADERS([cblas.h], [true],
+                 [AC_MSG_ERROR([CBLAS is required.])])
+
 AC_CHECK_HEADERS([stdatomic.h])
 
 AC_SEARCH_LIBS([clock_gettime], [rt])
@@ -37,9 +44,6 @@ AC_SEARCH_LIBS([sqrt], [m])
 AC_SEARCH_LIBS([dlopen], [dl])
 AC_SEARCH_LIBS([pthread_once], [pthread])
 
-
-AC_SEARCH_LIBS([dgemm_],[blas])
-AC_SEARCH_LIBS([dgesvd_],[lapack])
 
 
 # Check for cblas_blas enum
