@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
     aa_tock();
 
     // plan
-    int r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
+    int r = aa_rx_mp_plan( mp, aa_rx_mp_make_rrtconnect(mp), 5, &g_n_path, &g_path );
     if(r)  check_mp_error(r);
 
     //aa_rx_mp_destroy(mp);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
     double *end = g_path + n_q * (g_n_path-1);
     aa_rx_mp_set_start( mp, n_q, end );
     aa_rx_mp_set_goal( mp, 7, q0 );
-    r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
+    r = aa_rx_mp_plan( mp, aa_rx_mp_make_rrtconnect(mp), 5, &g_n_path, &g_path );
 
 
     if( r ) {
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
     aa_rx_mp_set_goal( mp, 7, q1 );
 
     // plan
-    r = aa_rx_mp_plan( mp, 5, &g_n_path, &g_path );
+    r = aa_rx_mp_plan( mp, aa_rx_mp_make_rrtconnect(mp), 5, &g_n_path, &g_path );
     if(r)  check_mp_error(r);
 
     //aa_rx_mp_destroy(mp);
