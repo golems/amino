@@ -35,6 +35,7 @@
  *
  */
 
+#include "config.h"
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
@@ -65,7 +66,7 @@ aa_rx_cl_init( )
 }
 
 struct aa_rx_cl_geom {
-    std::shared_ptr<fcl::CollisionGeometry> ptr;
+    AA_FCL_SHARED_PTR<fcl::CollisionGeometry> ptr;
     aa_rx_cl_geom( fcl::CollisionGeometry *ptr_) :
         ptr(ptr_) { }
 
@@ -409,9 +410,9 @@ aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q, stru
     double TF_abs[7*n_f];
 
     aa_rx_sg_tf(scene_graph, n_q, q,
-		n_f,
-		TF_rel, 7,
-		TF_abs, 7 );
+                n_f,
+                TF_rel, 7,
+                TF_abs, 7 );
 
     struct aa_rx_cl *cl = aa_rx_cl_create(scene_graph);
     struct aa_rx_cl_set* allowed = aa_rx_cl_set_create(scene_graph);
