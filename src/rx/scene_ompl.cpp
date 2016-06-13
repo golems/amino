@@ -221,7 +221,7 @@ path_cleanup( struct aa_rx_mp *mp, ompl::geometric::PathGeometric &path )
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
-               struct aa_rx_planner* p,
+               struct aa_rx_mp_planner* p,
                double timeout,
                size_t *n_path,
                double **p_path_all )
@@ -235,9 +235,9 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
 
     ompl::base::PlannerPtr planner(NULL);
     if (p==NULL){
-	planner = ompl::base::PlannerPtr(new ompl::geometric::RRTConnect(si));;
+        planner = ompl::base::PlannerPtr(new ompl::geometric::RRTConnect(si));;
     } else {
-	planner = p->p;
+        planner = p->p;
     }
     planner->setProblemDefinition(pdef);
     try {
@@ -284,19 +284,25 @@ aa_rx_mp_get_allowed( const struct aa_rx_mp* mp)
     return mp->space_information->getTypedStateSpace()->allowed;
 }
 
-AA_API struct aa_rx_planner* aa_rx_mp_make_rrtconnect(const struct aa_rx_mp* mp){
-    struct aa_rx_planner* planner = new aa_rx_planner();
-    planner->p = ompl::base::PlannerPtr(new ompl::geometric::RRTConnect( mp->space_information));
-    return planner;
-}
-AA_API struct aa_rx_planner*  aa_rx_mp_make_sbl(const struct aa_rx_mp* mp){
-    struct aa_rx_planner* planner = new aa_rx_planner();
-    planner->p = ompl::base::PlannerPtr(new ompl::geometric::SBL( mp->space_information));
-    return planner;
+AA_API struct aa_rx_mp_planner*
+aa_rx_mp_rrtconnect_create(const struct aa_rx_mp* mp)
+{
+    return new aa_rx_mp_planner(new ompl::geometric::RRTConnect(mp->space_information));
 }
 
-AA_API struct aa_rx_planner*  aa_rx_mp_make_kpiece(const struct aa_rx_mp* mp){
-    struct aa_rx_planner* planner = new aa_rx_planner();
-    planner->p = ompl::base::PlannerPtr(new ompl::geometric::LBKPIECE1( mp->space_information));
-    return planner;
+AA_API struct aa_rx_mp_planner*
+aa_rx_mp_sbl_create(const struct aa_rx_mp* mp)
+{
+    return new aa_rx_mp_planner(new ompl::geometric::SBL(mp->space_information));
+}
+
+AA_API struct aa_rx_mp_planner*
+aa_rx_mp_kpiece_create(const struct aa_rx_mp* mp)
+{
+    return new aa_rx_mp_planner(new ompl::geometric::LBKPIECE1(mp->space_information));
+}
+
+AA_API void  aa_rx_mp_planner_destroy(struct aa_rx_mp_planner* planner)
+{
+    delete planner;
 }

@@ -105,7 +105,8 @@ int main(int argc, char *argv[])
     aa_rx_mp_set_simplify(mp,1);
 
     /* Execute Planner */
-    int r = aa_rx_mp_plan( mp, aa_rx_mp_make_rrtconnect(mp), 5, &g_n_path, &g_path );
+    struct aa_rx_mp_planner *planner = aa_rx_mp_rrtconnect_create(mp);
+    int r = aa_rx_mp_plan( mp, planner, 5, &g_n_path, &g_path );
     if(r)  check_mp_error(r);
 
     /* Setup Window */
@@ -122,6 +123,7 @@ int main(int argc, char *argv[])
     // Cleanup
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
+    aa_rx_mp_planner_destroy(planner);
     aa_rx_mp_destroy(mp);
     aa_rx_sg_sub_destroy(ssg);
     aa_mem_region_local_destroy();

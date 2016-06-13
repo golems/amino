@@ -138,8 +138,12 @@ int main(int argc, char *argv[])
     aa_tock();
 
     // plan
-    int r = aa_rx_mp_plan( mp, aa_rx_mp_make_rrtconnect(mp), 5, &g_n_path, &g_path );
-    if(r)  check_mp_error(r);
+    {
+        struct aa_rx_mp_planner *planner = aa_rx_mp_rrtconnect_create(mp);
+        int r = aa_rx_mp_plan( mp, planner, 5, &g_n_path, &g_path );
+        if(r)  check_mp_error(r);
+        aa_rx_mp_planner_destroy(planner);
+    }
 
     //aa_rx_mp_destroy(mp);
     //aa_rx_sg_sub_destroy(ssg);
@@ -155,14 +159,18 @@ int main(int argc, char *argv[])
     double *end = g_path + n_q * (g_n_path-1);
     aa_rx_mp_set_start( mp, n_q, end );
     aa_rx_mp_set_goal( mp, 7, q0 );
-    r = aa_rx_mp_plan( mp, aa_rx_mp_make_rrtconnect(mp), 5, &g_n_path, &g_path );
 
+    {
+        struct aa_rx_mp_planner *planner = aa_rx_mp_rrtconnect_create(mp);
+        int r = aa_rx_mp_plan( mp, planner, 5, &g_n_path, &g_path );
+        aa_rx_mp_planner_destroy(planner);
 
-    if( r ) {
-        char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
-        fprintf(stderr, "Oops, planning failed: `%s' (0x%x)\n", e, r);
-        aa_mem_region_local_pop(e);
-        exit(EXIT_FAILURE);
+        if( r ) {
+            char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
+            fprintf(stderr, "Oops, planning failed: `%s' (0x%x)\n", e, r);
+            aa_mem_region_local_pop(e);
+            exit(EXIT_FAILURE);
+        }
     }
     aa_rx_mp_seq_append_all(mp_seq, scenegraph, g_n_path, g_path );
 
@@ -174,8 +182,12 @@ int main(int argc, char *argv[])
     aa_rx_mp_set_goal( mp, 7, q1 );
 
     // plan
-    r = aa_rx_mp_plan( mp, aa_rx_mp_make_rrtconnect(mp), 5, &g_n_path, &g_path );
-    if(r)  check_mp_error(r);
+    {
+        struct aa_rx_mp_planner *planner = aa_rx_mp_rrtconnect_create(mp);
+        int r = aa_rx_mp_plan( mp, planner, 5, &g_n_path, &g_path );
+        if(r)  check_mp_error(r);
+        aa_rx_mp_planner_destroy(planner);
+    }
 
     //aa_rx_mp_destroy(mp);
     //aa_rx_sg_sub_destroy(ssg);

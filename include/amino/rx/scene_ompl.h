@@ -88,8 +88,8 @@ public:
         // AA_MEM_ZERO(q, n_q); // TODO: give good config
         // allow_config(q);
 
-	// Load allowable configs from scenegraph
-	aa_rx_sg_cl_set_copy(scene_graph, allowed);
+        // Load allowable configs from scenegraph
+        aa_rx_sg_cl_set_copy(scene_graph, allowed);
     }
 
     virtual ~sgStateSpace() {
@@ -113,7 +113,7 @@ public:
     }
 
     void allow_config( double *q ) {
-	aa_rx_sg_get_collision(scene_graph, q, allowed);
+        aa_rx_sg_get_collision(scene_graph, q, allowed);
     }
 
     void extract_state( const double *q_all, double *q_set ) const {
@@ -222,8 +222,11 @@ struct aa_rx_mp {
     unsigned simplify : 1;
 };
 
-struct aa_rx_planner {
+struct aa_rx_mp_planner {
     ompl::base::PlannerPtr p;
+    aa_rx_mp_planner ( ompl::base::Planner *ptr) :
+        p(ptr)
+        {}
 };
 
 
