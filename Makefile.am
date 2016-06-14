@@ -17,7 +17,7 @@ include_HEADERS = include/amino.h include/amino.hpp
 noinst_PROGRAMS =
 
 bin_PROGRAMS =
-bin_SCRIPTS = share/aarxc
+bin_SCRIPTS = share/aarxc share/aarxpy
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = share/amino.pc \
