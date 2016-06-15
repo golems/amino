@@ -214,20 +214,18 @@ struct aa_rx_mp {
         { }
     ~aa_rx_mp();
 
+    void set_planner( ompl::base::Planner *p ) {
+        this->planner.reset(p);
+    }
+
     amino::sgSpaceInformation::Ptr space_information;
     ompl::base::ProblemDefinitionPtr problem_definition;
+
+    ompl::base::PlannerPtr planner;
 
     double *config_start;
 
     unsigned simplify : 1;
 };
-
-struct aa_rx_mp_planner {
-    ompl::base::PlannerPtr p;
-    aa_rx_mp_planner ( ompl::base::Planner *ptr) :
-        p(ptr)
-        {}
-};
-
 
 #endif /*AMINO_RX_SCENE_OMPL_H*/

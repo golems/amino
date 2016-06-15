@@ -145,24 +145,59 @@ aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
 
 AA_API int
 aa_rx_mp_plan( struct aa_rx_mp *mp,
-               struct aa_rx_mp_planner* p,
                double timeout,
                size_t *n_path,
                double **p_path_all );
 
 AA_API struct aa_rx_cl_set* aa_rx_mp_get_allowed( const struct aa_rx_mp* mp);
 
-AA_API struct aa_rx_mp_planner*
-aa_rx_mp_rrtconnect_create(const struct aa_rx_mp* mp);
+/**
+ * Opaque structure for RRT-Connect planner attributes
+ */
+struct aa_rx_mp_rrtconnect_attr;
 
-AA_API struct aa_rx_mp_planner*
-aa_rx_mp_sbl_create(const struct aa_rx_mp* mp);
+/**
+ * Use the RRT-Connect motion planning algorithm
+ *
+ * @param mp   The motion planning context
+ * @param attr Attributes for the planning algorithm (NULL uses defaults)
+ */
+AA_API void
+aa_rx_mp_set_rrtconnect( struct aa_rx_mp* mp,
+                         const struct aa_rx_mp_rrtconnect_attr *attr );
 
-AA_API struct aa_rx_mp_planner*
-aa_rx_mp_kpiece_create(const struct aa_rx_mp* mp);
+/**
+ * Opaque structure for SBL planner attributes
+ */
+struct aa_rx_mp_sbl_attr;
+
+/**
+ * Use the SBL motion planning algorithm
+ *
+ * @param mp   The motion planning context
+ * @param attr Attributes for the planning algorithm (NULL uses defaults)
+ */
+AA_API void
+aa_rx_mp_set_sbl( struct aa_rx_mp* mp,
+                  const struct aa_rx_mp_sbl_attr *attr );
 
 
-AA_API void  aa_rx_mp_planner_destroy(struct aa_rx_mp_planner* planner);
+/**
+ * Opaque structure for KPIECE planner attributes
+ */
+struct aa_rx_mp_kpiece_attr;
+
+/**
+ * Use the KPIECE motion planning algorithm
+ *
+ * @param mp   The motion planning context
+ * @param attr Attributes for the planning algorithm (NULL uses defaults)
+ */
+AA_API void
+aa_rx_mp_set_kpiece( struct aa_rx_mp* mp,
+                     const struct aa_rx_mp_kpiece_attr *attr );
+
+
 
 
 #endif /*AMINO_RX_SCENE_PLANNING_H*/
