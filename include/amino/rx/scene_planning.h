@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_PLANNING_H
 #define AMINO_RX_SCENE_PLANNING_H
 
+#include "scene_kin.h"
+
 /**
  * @file scene_planning.h
  */
@@ -151,32 +153,46 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
 
 AA_API struct aa_rx_cl_set* aa_rx_mp_get_allowed( const struct aa_rx_mp* mp);
 
-/**
- * Opaque structure for RRT-Connect planner attributes
- */
-struct aa_rx_mp_rrtconnect_attr;
+
+/*---- RRT -----*/
 
 /**
- * Create an RRT-Connect attribute struct
+ * Opaque structure for RRT planner attributes
  */
-AA_API struct aa_rx_mp_rrtconnect_attr*
-aa_rx_mp_rrtconnect_attr_create(void);
+struct aa_rx_mp_rrt_attr;
 
 /**
- * Destroy an RRT-Connect attribute struct
+ * Create an RRT attribute struct
+ */
+AA_API struct aa_rx_mp_rrt_attr*
+aa_rx_mp_rrt_attr_create(void);
+
+/**
+ * Destroy an RRT attribute struct
  */
 AA_API void
-aa_rx_mp_rrtconnect_attr_destroy(struct aa_rx_mp_rrtconnect_attr*);
+aa_rx_mp_rrt_attr_destroy(struct aa_rx_mp_rrt_attr*);
+
 
 /**
- * Use the RRT-Connect motion planning algorithm
+ * Whether the RRT should be bidirectional
+ */
+AA_API void
+aa_rx_mp_rrt_attr_set_bidirectional( struct aa_rx_mp_rrt_attr* attrs,
+                                     int is_bidirectional );
+
+/**
+ * Use the RRT motion planning algorithm
  *
  * @param mp   The motion planning context
  * @param attr Attributes for the planning algorithm (NULL uses defaults)
  */
 AA_API void
-aa_rx_mp_set_rrtconnect( struct aa_rx_mp* mp,
-                         const struct aa_rx_mp_rrtconnect_attr *attr );
+aa_rx_mp_set_rrt( struct aa_rx_mp* mp,
+                  const struct aa_rx_mp_rrt_attr *attr );
+
+
+/*---- SBL -----*/
 
 /**
  * Opaque structure for SBL planner attributes
@@ -205,6 +221,8 @@ AA_API void
 aa_rx_mp_set_sbl( struct aa_rx_mp* mp,
                   const struct aa_rx_mp_sbl_attr *attr );
 
+
+/*---- KPIECE -----*/
 
 /**
  * Opaque structure for KPIECE planner attributes

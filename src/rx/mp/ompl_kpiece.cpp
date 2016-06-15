@@ -1,7 +1,7 @@
-/* -*- mode: C; c-basic-offset: 4; -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2016, Rice University
+ * Copyright (c) 2015, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -40,48 +40,19 @@
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scenegraph_internal.h"
-#include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_geom_internal.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
-#include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
-#include "amino/rx/scene_planning_internal.h"
 
-/*------- RRT-Connect ----------*/
+#include "amino/rx/scene_ompl.h"
 
-AA_API struct aa_rx_mp_rrtconnect_attr*
-aa_rx_mp_rrtconnect_attr_create(void)
+#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
+
+
+struct aa_rx_mp_kpiece_attr
 {
-    return AA_NEW(struct aa_rx_mp_rrtconnect_attr);
-}
 
-
-AA_API void
-aa_rx_mp_rrtconnect_attr_destroy(struct aa_rx_mp_rrtconnect_attr* a)
-{
-    free(a);
-}
-
-
-/*------- SBL ----------*/
-
-AA_API struct aa_rx_mp_sbl_attr*
-aa_rx_mp_sbl_attr_create(void)
-{
-    return AA_NEW(struct aa_rx_mp_sbl_attr);
-}
-
-
-AA_API void
-aa_rx_mp_sbl_attr_destroy(struct aa_rx_mp_sbl_attr* a)
-{
-    free(a);
-}
-
-
-/*------- KPIECE ----------*/
+};
 
 AA_API struct aa_rx_mp_kpiece_attr*
 aa_rx_mp_kpiece_attr_create(void)
@@ -94,4 +65,15 @@ AA_API void
 aa_rx_mp_kpiece_attr_destroy(struct aa_rx_mp_kpiece_attr* a)
 {
     free(a);
+}
+
+
+
+AA_API void
+aa_rx_mp_set_kpiece( struct aa_rx_mp* mp,
+                     const struct aa_rx_mp_kpiece_attr *attr )
+{
+    (void)attr;
+    auto p = new ompl::geometric::LBKPIECE1(mp->space_information);
+    mp->set_planner(p);
 }

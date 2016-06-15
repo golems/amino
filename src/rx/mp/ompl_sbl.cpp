@@ -1,7 +1,7 @@
-/* -*- mode: C; c-basic-offset: 4; -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2016, Rice University
+ * Copyright (c) 2015, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -35,18 +35,39 @@
  *
  */
 
-struct aa_rx_mp_rrtconnect_attr
-{
 
-};
+#include "amino.h"
 
+#include "amino/rx/scene_ompl.h"
+
+#include <ompl/base/Planner.h>
+#include <ompl/geometric/planners/sbl/SBL.h>
 
 struct aa_rx_mp_sbl_attr
 {
 
 };
 
-struct aa_rx_mp_kpiece_attr
+AA_API struct aa_rx_mp_sbl_attr*
+aa_rx_mp_sbl_attr_create(void)
 {
+    return AA_NEW(struct aa_rx_mp_sbl_attr);
+}
 
-};
+
+AA_API void
+aa_rx_mp_sbl_attr_destroy(struct aa_rx_mp_sbl_attr* a)
+{
+    free(a);
+}
+
+
+
+AA_API void
+aa_rx_mp_set_sbl( struct aa_rx_mp* mp,
+                  const struct aa_rx_mp_sbl_attr *attr )
+{
+    (void)attr;
+    auto p = new ompl::geometric::SBL(mp->space_information);
+    mp->set_planner(p);
+}

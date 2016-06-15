@@ -38,6 +38,12 @@
 #ifndef AMINO_RX_SCENE_OMPL_H
 #define AMINO_RX_SCENE_OMPL_H
 
+#include "rxerr.h"
+#include "rxtype.h"
+#include "scenegraph.h"
+#include "scene_kin_internal.h"
+#include "scene_collision.h"
+#include "scene_planning.h"
 
 #include <ompl/base/StateValidityChecker.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>

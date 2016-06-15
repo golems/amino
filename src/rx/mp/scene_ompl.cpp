@@ -280,33 +280,3 @@ aa_rx_mp_get_allowed( const struct aa_rx_mp* mp)
 {
     return mp->space_information->getTypedStateSpace()->allowed;
 }
-
-
-AA_API void
-aa_rx_mp_set_rrtconnect( struct aa_rx_mp* mp,
-                         const struct aa_rx_mp_rrtconnect_attr *attr )
-{
-    (void)attr;
-    auto p = new ompl::geometric::RRTConnect(mp->space_information);
-    mp->set_planner(p);
-
-}
-
-AA_API void
-aa_rx_mp_set_sbl( struct aa_rx_mp* mp,
-                  const struct aa_rx_mp_sbl_attr *attr )
-{
-    (void)attr;
-    auto p = new ompl::geometric::SBL(mp->space_information);
-    mp->set_planner(p);
-}
-
-
-AA_API void
-aa_rx_mp_set_kpiece( struct aa_rx_mp* mp,
-                     const struct aa_rx_mp_kpiece_attr *attr )
-{
-    (void)attr;
-    auto p = new ompl::geometric::LBKPIECE1(mp->space_information);
-    mp->set_planner(p);
-}
