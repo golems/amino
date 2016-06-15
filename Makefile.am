@@ -377,7 +377,7 @@ if HAVE_OMPL
 
 lib_LTLIBRARIES += libamino_planning.la
 libamino_planning_la_SOURCES = \
-	src/rx/scene_ompl.cpp
+	src/rx/scene_ompl.cpp src/rx/planattr.c
 libamino_planning_la_CFLAGS = $(OMPL_CFLAGS)
 libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS)
 libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)

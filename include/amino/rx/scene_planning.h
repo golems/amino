@@ -157,6 +157,18 @@ AA_API struct aa_rx_cl_set* aa_rx_mp_get_allowed( const struct aa_rx_mp* mp);
 struct aa_rx_mp_rrtconnect_attr;
 
 /**
+ * Create an RRT-Connect attribute struct
+ */
+AA_API struct aa_rx_mp_rrtconnect_attr*
+aa_rx_mp_rrtconnect_attr_create(void);
+
+/**
+ * Destroy an RRT-Connect attribute struct
+ */
+AA_API void
+aa_rx_mp_rrtconnect_attr_destroy(struct aa_rx_mp_rrtconnect_attr*);
+
+/**
  * Use the RRT-Connect motion planning algorithm
  *
  * @param mp   The motion planning context
@@ -170,6 +182,18 @@ aa_rx_mp_set_rrtconnect( struct aa_rx_mp* mp,
  * Opaque structure for SBL planner attributes
  */
 struct aa_rx_mp_sbl_attr;
+
+/**
+ * Create an SBL attribute struct
+ */
+AA_API struct aa_rx_mp_sbl_attr*
+aa_rx_mp_sbl_attr_create(void);
+
+/**
+ * Destroy an SBL attribute struct
+ */
+AA_API void
+aa_rx_mp_sbl_attr_destroy(struct aa_rx_mp_sbl_attr*);
 
 /**
  * Use the SBL motion planning algorithm
@@ -186,6 +210,18 @@ aa_rx_mp_set_sbl( struct aa_rx_mp* mp,
  * Opaque structure for KPIECE planner attributes
  */
 struct aa_rx_mp_kpiece_attr;
+
+/**
+ * Create an KPIECE attribute struct
+ */
+AA_API struct aa_rx_mp_kpiece_attr*
+aa_rx_mp_kpiece_attr_create(void);
+
+/**
+ * Destroy an KPIECE attribute struct
+ */
+AA_API void
+aa_rx_mp_kpiece_attr_destroy(struct aa_rx_mp_kpiece_attr*);
 
 /**
  * Use the KPIECE motion planning algorithm
