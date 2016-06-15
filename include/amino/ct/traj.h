@@ -91,6 +91,14 @@ void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state);
 void aa_ct_pt_list_destroy(struct aa_ct_pt_list *list);
 
 /**
+ * Print out a list of points to a file.
+ *
+ * @param stream File to print to
+ * @param list   Point list to print
+ */
+void aa_ct_pt_list_dump(FILE *stream, struct aa_ct_pt_list *list);
+
+/**
  * Evaluates a segment list at a given time. Fills in the provided state struct
  * With the reference state at that time.
  *
@@ -129,10 +137,22 @@ void aa_ct_seg_list_destroy(struct aa_ct_seg_list *list);
  *
  * @return An allocated segment list describing a parabolic blend trajectory.
  */
-struct aa_ct_seg_list *aa_ct_tj_pb_generate(struct aa_mem_region *reg,
-                                            struct aa_ct_pt_list *list,
-                                            struct aa_ct_state *limits);
+struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
+                                             struct aa_ct_pt_list *list,
+                                             struct aa_ct_state *limits);
 
+/**
+ * Generate a parabolic blend trajectory from a point list.
+ *
+ * @param reg Region to allocate from
+ * @param list Point list to build segment list from
+ * @param limits State structure with dq and ddq kinematic limits
+ *
+ * @return An allocated segment list describing a parabolic blend trajectory.
+ */
+struct aa_ct_seg_list *aa_ct_tjX_pb_generate(struct aa_mem_region *reg,
+                                             struct aa_ct_pt_list *list,
+                                             struct aa_ct_state *limits);
 #ifdef __cplusplus
 }
 #endif

@@ -50,20 +50,52 @@ extern "C" {
  * State description of a robot
  */
 struct aa_ct_state {
-    size_t n_q;     //< Number of configuration variables
-    size_t n_tf;    //< Number of frames
+    size_t n_q;     ///< Number of configuration variables
+    size_t n_tf;    ///< Number of frames
 
-    double *q;      //< Position
-    double *dq;     //< Velocity
-    double *ddq;    //< Acceleration
-    double *eff;    //< Efforts
+    // Joint space
+    double *q;      ///< Position
+    double *dq;     ///< Velocity
+    double *ddq;    ///< Acceleration
+    double *eff;    ///< Efforts
 
-    double *TF_abs; //< Absolute frame transforms
-    double *TF_rel; //< Relative frame transforms
+    // Work space
+    double *X;      ///< Position (Quaterion-Vector)
+    double *dX;     ///< Velocity (Velocity / Rotation Vector)
+    double *ddX;    ///< Acceleration (Acceleration / Rotation Vector)
+
+    // Frames
+    double *TF_abs; ///< Absolute frame transforms
+    double *TF_rel; ///< Relative frame transforms
 };
 
+/**
+ * Creates and allocates a copy of a state.
+ *
+ * @param reg  Region to allocate new arrays from
+ * @param dest Destination state
+ * @param src  Source state
+ */
 void aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
                        struct aa_ct_state *src);
+
+/**
+ * Prints out the jointspace components of a state.
+ *
+ * @param stream File to print to
+ * @param state  State to print
+ */
+void aa_ct_state_dump(FILE *stream, struct aa_ct_state *state);
+
+/**
+ * Compares two states to verify if they are the same, within AA_EPSILON bounds.
+ *
+ * @param s1 First state
+ * @param s2 Second state
+ *
+ * @return 1 if the same, 0 otherwise.
+ */
+int aa_ct_state_eq(struct aa_ct_state *s1, struct aa_ct_state *s2);
 
 #ifdef __cplusplus
 }

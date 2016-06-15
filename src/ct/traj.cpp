@@ -73,6 +73,13 @@ aa_ct_pt_list_create(struct aa_mem_region *reg)
 AA_API void
 aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state)
 {
+    if (list->list.size()) {
+        struct aa_ct_pt *p_pt = list->list.back();
+
+        if (aa_ct_state_eq(&p_pt->state, state))
+            return;
+    }
+
     struct aa_ct_pt *pt = new(&list->reg) struct aa_ct_pt;
     aa_ct_state_clone(&list->reg, &pt->state, state);
 
@@ -84,6 +91,18 @@ aa_ct_pt_list_destroy(struct aa_ct_pt_list *list)
 {
     list->~aa_ct_pt_list();
 };
+
+AA_API void
+aa_ct_pt_list_dump(FILE *stream, struct aa_ct_pt_list *list)
+{
+    size_t i = 0;
+    struct aa_ct_pt *c_pt = list->list.front();
+    for (; c_pt != NULL; c_pt = c_pt->next) {
+        fprintf(stream, "PT %lu: \n", i++);
+        aa_ct_state_dump(stream, &c_pt->state);
+        fputc('\n', stream);
+    }
+}
 
 /**
  * Segment lists
@@ -150,13 +169,11 @@ aa_ct_seg_list_plot(struct aa_ct_seg_list *list, size_t n_q, double dt)
     FILE *qtemp = fopen(qfile, "w");
     FILE *dqtemp = fopen(dqfile, "w");
 
-    struct aa_mem_region reg;
-    aa_mem_region_init(&reg, 512);
-
     struct aa_ct_state state;
+    double q[n_q], dq[n_q];
     state.n_q = n_q;
-    state.q = AA_MEM_REGION_NEW_N(&reg, double, n_q); 
-    state.dq = AA_MEM_REGION_NEW_N(&reg, double, n_q);
+    state.q = q;
+    state.dq = dq;
 
     for (double t = 0; aa_ct_seg_list_eval(list, &state, t); t += dt) {
         aa_ct_seg_list_eval(list, &state, t);
@@ -173,8 +190,6 @@ aa_ct_seg_list_plot(struct aa_ct_seg_list *list, size_t n_q, double dt)
 
     aa_ct_gnuplot_file(qfile, n_q);
     aa_ct_gnuplot_file(dqfile, n_q);
-
-    aa_mem_region_destroy(&reg);
 }
 
 
@@ -338,8 +353,8 @@ aa_ct_tj_pb_update(struct aa_ct_seg *seg, struct aa_ct_state *limits)
 }
 
 AA_API struct aa_ct_seg_list *
-aa_ct_tj_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
-                     struct aa_ct_state *limits)
+aa_ct_tjq_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
+                      struct aa_ct_state *limits)
 {
     struct aa_ct_seg_list *list = new(reg) struct aa_ct_seg_list(reg);
 
@@ -398,3 +413,75 @@ aa_ct_tj_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
 }
 
 
+int
+aa_ct_tjX_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
+{
+    double *tq = state->q;
+    double *tdq = state->dq;
+
+    double X[6], dX[6];
+    state->q = X;
+    state->dq = dX;
+
+    int r = aa_ct_tj_pb_eval(seg, state, t);
+
+    if (r) {
+        aa_tf_rotvec2quat(&state->q[3], state->X);
+        state->X[4] = state->q[0];
+        state->X[5] = state->q[1];
+        state->X[6] = state->q[2];
+    }
+
+    state->q = tq;
+    state->dq = tdq;
+
+    return r;
+}
+
+// TODO: This is a hack, replace with a real function later.
+AA_API struct aa_ct_seg_list *
+aa_ct_tjX_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
+                      struct aa_ct_state *limits)
+{
+    struct aa_ct_pt_list *Xpt_list = aa_ct_pt_list_create(reg);
+
+    struct aa_ct_pt *c_pt = pt_list->list.front();
+    struct aa_ct_pt *p_pt = NULL;
+    for (; c_pt != NULL; c_pt = c_pt->next) {
+        struct aa_ct_state state;
+        bzero(&state, sizeof(struct aa_ct_state));
+
+        double q[6];
+        state.n_q = 6;
+
+        for (size_t i = 0; i < 6; i++) {
+            double *X = c_pt->state.X;
+            memcpy(q, &X[4], sizeof(double) * 3);
+
+            if (p_pt)
+                aa_tf_quat2rotvec_near(X, p_pt->state.q + 3, &q[3]);
+            else
+                aa_tf_quat2rotvec(X, &q[3]);
+        }
+
+        state.q = q;
+        aa_ct_pt_list_add(Xpt_list, &state);
+
+        p_pt = Xpt_list->list.back();
+    }
+
+    struct aa_ct_state Xlimits;
+    Xlimits.n_q = 6;
+    Xlimits.dq = limits->dX;
+    Xlimits.ddq = limits->ddX;
+
+    struct aa_ct_seg_list *Xseg_list =
+        aa_ct_tjq_pb_generate(reg, Xpt_list, &Xlimits);
+
+    struct aa_ct_seg *c_seg = Xseg_list->list.front();
+    for (; c_seg != NULL; c_seg = c_seg->next) {
+        c_seg->eval = aa_ct_tjX_pb_eval;
+    }
+
+    return Xseg_list;
+}
