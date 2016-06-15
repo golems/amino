@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_KIN_H
 #define AMINO_RX_SCENE_KIN_H
 
+#include "scenegraph.h"
+
 /**
  * @file scene_kin.h
  */

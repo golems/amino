@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_PLANNING_H
 #define AMINO_RX_SCENE_PLANNING_H
 
+#include "scene_kin.h"
+
 /**
  * @file scene_planning.h
  */
@@ -48,6 +50,11 @@
  * Opaque structure for a motion planning context
  */
 struct aa_rx_mp;
+
+/**
+ * Opague structure for a motion planner
+ */
+struct aa_rx_mp_planner;
 
 /**
  * Create a new motion plannet context for the given sub-scenegraph.
@@ -143,5 +150,108 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
                double timeout,
                size_t *n_path,
                double **p_path_all );
+
+AA_API struct aa_rx_cl_set* aa_rx_mp_get_allowed( const struct aa_rx_mp* mp);
+
+
+/*---- RRT -----*/
+
+/**
+ * Opaque structure for RRT planner attributes
+ */
+struct aa_rx_mp_rrt_attr;
+
+/**
+ * Create an RRT attribute struct
+ */
+AA_API struct aa_rx_mp_rrt_attr*
+aa_rx_mp_rrt_attr_create(void);
+
+/**
+ * Destroy an RRT attribute struct
+ */
+AA_API void
+aa_rx_mp_rrt_attr_destroy(struct aa_rx_mp_rrt_attr*);
+
+
+/**
+ * Whether the RRT should be bidirectional
+ */
+AA_API void
+aa_rx_mp_rrt_attr_set_bidirectional( struct aa_rx_mp_rrt_attr* attrs,
+                                     int is_bidirectional );
+
+/**
+ * Use the RRT motion planning algorithm
+ *
+ * @param mp   The motion planning context
+ * @param attr Attributes for the planning algorithm (NULL uses defaults)
+ */
+AA_API void
+aa_rx_mp_set_rrt( struct aa_rx_mp* mp,
+                  const struct aa_rx_mp_rrt_attr *attr );
+
+
+/*---- SBL -----*/
+
+/**
+ * Opaque structure for SBL planner attributes
+ */
+struct aa_rx_mp_sbl_attr;
+
+/**
+ * Create an SBL attribute struct
+ */
+AA_API struct aa_rx_mp_sbl_attr*
+aa_rx_mp_sbl_attr_create(void);
+
+/**
+ * Destroy an SBL attribute struct
+ */
+AA_API void
+aa_rx_mp_sbl_attr_destroy(struct aa_rx_mp_sbl_attr*);
+
+/**
+ * Use the SBL motion planning algorithm
+ *
+ * @param mp   The motion planning context
+ * @param attr Attributes for the planning algorithm (NULL uses defaults)
+ */
+AA_API void
+aa_rx_mp_set_sbl( struct aa_rx_mp* mp,
+                  const struct aa_rx_mp_sbl_attr *attr );
+
+
+/*---- KPIECE -----*/
+
+/**
+ * Opaque structure for KPIECE planner attributes
+ */
+struct aa_rx_mp_kpiece_attr;
+
+/**
+ * Create an KPIECE attribute struct
+ */
+AA_API struct aa_rx_mp_kpiece_attr*
+aa_rx_mp_kpiece_attr_create(void);
+
+/**
+ * Destroy an KPIECE attribute struct
+ */
+AA_API void
+aa_rx_mp_kpiece_attr_destroy(struct aa_rx_mp_kpiece_attr*);
+
+/**
+ * Use the KPIECE motion planning algorithm
+ *
+ * @param mp   The motion planning context
+ * @param attr Attributes for the planning algorithm (NULL uses defaults)
+ */
+AA_API void
+aa_rx_mp_set_kpiece( struct aa_rx_mp* mp,
+                     const struct aa_rx_mp_kpiece_attr *attr );
+
+
+
 
 #endif /*AMINO_RX_SCENE_PLANNING_H*/

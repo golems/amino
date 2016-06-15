@@ -93,6 +93,9 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
                   aa_rx_frame_id j );
 
+AA_API void
+aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from);
+
 /**
  * Opaque type for collision detection context.
  */
@@ -109,6 +112,9 @@ aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph );
  */
 AA_API struct aa_rx_cl *
 aa_rx_cl_create( const struct aa_rx_sg *scene_graph );
+
+AA_API void
+aa_rx_cl_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q);
 
 /**
  * Destroy a collision detection context.
@@ -154,5 +160,14 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
                 size_t n_tf,
                 const double *TF, size_t ldTF,
                 struct aa_rx_cl_set *cl_set );
+
+AA_API void
+aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const double* q);
+
+AA_API void
+aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * cl_set);
+
+AA_API void
+aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q, struct aa_rx_cl_set* cl_set);
 
 #endif /*AMINO_RX_SCENE_COLLISION_H*/
