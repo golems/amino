@@ -107,7 +107,9 @@
 (defun create-parent-directories (pathname)
   (let ((parents (file-dirname pathname)))
     (when parents
-      (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))))))
+      (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))
+                                    :output *standard-output*
+                                    :error-output *error-output*))))
 
 (defun file-rope (&rest elements)
   (rope-map #'identity elements :separator '/))
@@ -390,3 +392,17 @@
          #+sbcl
          (sb-ext:exit :code -1)
          (break)))))
+
+(defun capture-program-output (args &key
+                                      directory)
+  (let* ((status)
+         (output (with-output-to-string (s)
+                   (multiple-value-bind (output error-output %status)
+                       (uiop:run-program args
+                                         :directory directory
+                                         :ignore-error-status t
+                                         :output s
+                                         :error-output s)
+                     (declare (ignore output error-output))
+                     (setq status %status)))))
+    (values output status)))

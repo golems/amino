@@ -281,31 +281,27 @@
                             (mesh-up-axis "Z")
                             (mesh-forward-axis "Y"))
   "Convert something to a wavefront OBJ file."
-  (if (mesh-regen-p reload source-file output-file)
-      ;; load
-      (let* ((args (list "blender" "-b" "-P"
-                         (find-script "meshconv")
-                         "--"
-                         source-file
-                         "-o" output-file
-                         (format nil "--up=~A" mesh-up-axis)
-                         (format nil "--forward=~A" mesh-forward-axis))))
-        (format t "~&~{~A~^ ~}" args)
-        (ensure-directories-exist output-file)
-        ;; check blender return value
-        (multiple-value-bind (output error-output status)
-            (uiop:run-program args)
-          (declare (ignore output error-output))
-          (assert (zerop status) () "mesh conversion failed"))
-        ;; check that file was generated
-        (unless (probe-file output-file)
-          (error "Blender could not convert `~A' to Wavefront OBJ.  Does your Blender have support for ~A files?"
-                 source-file (file-type source-file))))
-      ;; cache
-      (progn
-        ;(format t "~&obj cached ~A" output-file)
-        ))
-  (values))
+  (when (mesh-regen-p reload source-file output-file)
+    ;; load
+    (let* ((args (list "blender" "-b" "-P"
+                       (find-script "meshconv")
+                       "--"
+                       source-file
+                       "-o" output-file
+                       (format nil "--up=~A" mesh-up-axis)
+                       (format nil "--forward=~A" mesh-forward-axis))))
+      (format t "~&~{~A~^ ~}~%" args)
+      (ensure-directories-exist output-file)
+      ;; check blender return value
+      (multiple-value-bind (output status)
+          (capture-program-output args)
+        (unless (and (zerop status)
+                     (probe-file output-file))
+          (error "Blender could not convert `~A' to Wavefront OBJ.~%Does your Blender have support for ~A files?~%OUTPUT:~%~A"
+                 source-file (file-type source-file)
+                 output)))))
+  (values)
+)
 
 (defun mesh-obj-tmp (source-file directory)
   (pov-cache-file (rope source-file ".obj")
@@ -344,28 +340,6 @@
          (handle-dae mesh-file))
         (otherwise (error "Unknown file type: ~A" file-type))))))
 
-(defun wavefront-povray (obj-file output-file
-                         &key
-                           reload
-                           (handedness :right)
-                           (directory *robray-tmp-directory*))
-  (let ((output-file (output-file output-file directory)))
-    (if (or reload
-            (not (probe-file output-file))
-            (< (file-write-date output-file)
-               (file-write-date obj-file)))
-        ;; Convert
-        (let* ((mesh-data (wavefront-obj-load obj-file))
-               (name (mesh-data-name mesh-data)))
-          (format t "~&povenc ~A" obj-file)
-          (output (pov-declare (mesh-data-name mesh-data)
-                               (pov-mesh2 :mesh-data mesh-data :handedness handedness))
-                  output-file)
-          name)
-        ;; Cached, extract name only
-        (progn
-          ;(format t "~&pov cached ~A" obj-file)
-          (wavefront-obj-name obj-file)))))
 
 
 (defun mesh-povray (mesh-file
@@ -420,3 +394,26 @@
  ;;                                  :mesh-up-axis mesh-up-axis
  ;;                                  :mesh-forward-axis mesh-forward-axis)
  ;;               (handle-obj obj-file output-file ))))
+
+;; (defun wavefront-povray (obj-file output-file
+;;                          &key
+;;                            reload
+;;                            (handedness :right)
+;;                            (directory *robray-tmp-directory*))
+;;   (let ((output-file (output-file output-file directory)))
+;;     (if (or reload
+;;             (not (probe-file output-file))
+;;             (< (file-write-date output-file)
+;;                (file-write-date obj-file)))
+;;         ;; Convert
+;;         (let* ((mesh-data (wavefront-obj-load obj-file))
+;;                (name (mesh-data-name mesh-data)))
+;;           (format t "~&povenc ~A" obj-file)
+;;           (output (pov-declare (mesh-data-name mesh-data)
+;;                                (pov-mesh2 :mesh-data mesh-data :handedness handedness))
+;;                   output-file)
+;;           name)
+;;         ;; Cached, extract name only
+;;         (progn
+;;           ;(format t "~&pov cached ~A" obj-file)
+;;           (wavefront-obj-name obj-file)))))

@@ -636,11 +636,8 @@ RATIO: Floating point quality value in the range [0,1]"
     (let ((args (cons "povray" (pov-args file
                                          :output output
                                          :options options))))
-      (format t "~&Running: ~{~A~^ ~}" args)
-      (multiple-value-bind (output error-output status)
-          (uiop/run-program:run-program args
-                                        :directory directory)
-        (declare (ignore output error-output))
-        (if (zerop status)
-            (format t "~&done")
-            (format t "~&Povray rendering failed~%"))))))
+      (princ (rope-string (rope-split " " args)))
+      (multiple-value-bind (output status)
+          (capture-program-output args :directory directory)
+        (unless (zerop status)
+          (error "Povray rendering failed.~%~%~A" output))))))

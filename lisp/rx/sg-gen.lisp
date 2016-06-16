@@ -288,8 +288,8 @@
 
 (defun scene-graph-so (source-file shared-object)
   (let ((args  (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
-    (print (rope-string (rope-split " " args)))
-    (uiop/run-program:run-program args)))
+    (princ (rope-string (rope-split " " args)))
+    (uiop/run-program:run-program args :output *standard-output* :error-output *error-output*)))
 
 
 (defun genc-mesh-link (mesh)
@@ -307,7 +307,10 @@
        (progn
          (create-parent-directories name)
          (uiop/run-program:run-program
-          (list "ln" "-vsf" shared-object name)))))
+          (list "ln" "-vsf" shared-object name)
+          :output *standard-output*
+          :error-output *error-output*
+          ))))
 
 (defun scene-graph-compile (scene-graph source-file
                             &key
