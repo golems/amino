@@ -1,4 +1,4 @@
-SUBDIRS = . lisp
+SUBDIRS = . lisp demo
 
 ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac

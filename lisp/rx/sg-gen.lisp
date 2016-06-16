@@ -288,7 +288,7 @@
 
 (defun scene-graph-so (source-file shared-object)
   (let ((args  (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
-    (princ (rope-string (rope-split " " args)))
+    (format t "~&~S~%" (rope-string (rope-split " " args)))
     (uiop/run-program:run-program args :output *standard-output* :error-output *error-output*)))
 
 

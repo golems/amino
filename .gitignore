@@ -2,7 +2,6 @@
 .deps
 /build/aa_test
 /build/aa_testpp
-/Makefile.in
 /aclocal.m4
 amino*.tar.gz
 /autoscan.log
@@ -22,7 +21,8 @@ amino*.tar.gz
 /libtool
 /depcomp
 /autom4te.cache
-/.libs
+/Makefile.in
+.libs
 *.la
 *.lo
 *.o
@@ -119,3 +119,6 @@ amino*.tar.gz
 /doc/html/
 /doc/doxygen_sqlite3.db
 /memregion
+/demo/simple-rx/.libs/
+/demo/Makefile
+/demo/Makefile.in

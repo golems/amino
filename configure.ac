@@ -481,6 +481,13 @@ AC_SUBST([COMMON_LISP])
 AM_CONDITIONAL([HAVE_COMMON_LISP],[test "x$COMMON_LISP" != "x"])
 
 
+AS_IF([test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes],
+      [BUILD_DEMOS=yes],
+      [BUILD_DEMOS=no])
+
+AM_CONDITIONAL([BUILD_DEMOS], [test "x$BUILD_DEMOS" = "xyes"])
+
+
 #############
 ## SUMMARY ##
 #############
@@ -510,6 +517,7 @@ AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
 AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
+AC_MSG_NOTICE([Build Demos:       $BUILD_DEMOS])
 
 
 AS_IF([test "x$CC" = "x"],
@@ -520,5 +528,5 @@ AS_IF([test "x$FC" = "x"],
       [AC_MSG_ERROR([No Fortran compiler detected])])
 
 
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile])
 AC_OUTPUT
