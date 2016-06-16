@@ -35,45 +35,59 @@
  *
  */
 
+#include <stdint.h>
 #include <string.h>
 
 #include <amino.h>
 #include <amino/ct/state.h>
+
 
 AA_API void
 aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
                   struct aa_ct_state *src)
 {
     dest->n_q = src->n_q;
+    for (size_t i = 0; i < 4; i++) {
+        if (AA_CT_ST_ON(src->active, (1 << i))) {
+            dest->qs[i] = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
+            AA_MEM_CPY(dest->qs[i], src->qs[i], src->n_q);
+        }
+    }
+
     dest->n_tf = src->n_tf;
-
-    if (src->q) {
-        dest->q = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->q, src->q, src->n_q);
+    for (size_t i = 4; i < 6; i++) {
+        if (AA_CT_ST_ON(src->active, (1 << i))) {
+            dest->tfs[i] = AA_MEM_REGION_NEW_N(reg, double, 7 * src->n_tf);
+            AA_MEM_CPY(dest->tfs[i], src->tfs[i], 7 * src->n_tf);
+        }
     }
 
-    if (src->dq) {
-        dest->dq = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->dq, src->dq, src->n_q);
-    }
+    dest->active = src->active;
+}
 
-    if (src->ddq) {
-        dest->ddq = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->ddq, src->ddq, src->n_q);
-    }
+AA_API struct aa_ct_state *
+aa_ct_state_create(struct aa_mem_region *reg, size_t n_q, size_t n_tf,
+                   uint32_t active)
+{
+    struct aa_ct_state *st = AA_MEM_REGION_NEW(reg, struct aa_ct_state);
 
-    if (src->eff) {
-        dest->eff = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->eff, src->eff, src->n_q);
-    }
+    st->n_q = n_q;
+    if (n_q)
+        for (size_t i = 0; i < 4; i++) {
+            if (AA_CT_ST_ON(active, (1 << i))) {
+                st->qs[i] = AA_MEM_REGION_NEW_N(reg, double, n_q);
+                bzero(st->qs[i], sizeof(double) * n_q);
+            }
+        }
 
-    if (src->TF_abs) {
-        dest->TF_abs = AA_MEM_REGION_NEW_N(reg, double, src->n_tf);
-        AA_MEM_CPY(dest->TF_abs, src->TF_abs, src->n_tf);
-    }
+    st->n_tf = n_tf;
+    if (n_tf)
+        for (size_t i = 4; i < 6; i++) {
+            if (AA_CT_ST_ON(active, (1 << i))) {
+                st->tfs[i] = AA_MEM_REGION_NEW_N(reg, double, 7 * n_tf);
+                bzero(st->tfs[i], sizeof(double) * 7 * n_tf);
+            }
+        }
 
-    if (src->TF_rel) {
-        dest->TF_rel = AA_MEM_REGION_NEW_N(reg, double, src->n_tf);
-        AA_MEM_CPY(dest->TF_rel, src->TF_rel, src->n_tf);
-    }
+    return st;
 }

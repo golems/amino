@@ -81,7 +81,10 @@ rxinclude_HEADERS = 	                \
 ctincludedir = $(pkgincludedir)/ct
 
 ctinclude_HEADERS = 	                \
+	include/amino/ct/state.h            \
+	include/amino/ct/ctrl.h             \
 	include/amino/ct/traj.h
+
 
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la

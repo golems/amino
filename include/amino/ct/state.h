@@ -42,6 +42,18 @@
  * @file state.h
  */
 
+#define AA_CT_ST_Q     (1 << 0)
+#define AA_CT_ST_DQ    (1 << 1)
+#define AA_CT_ST_DDQ   (1 << 2)
+#define AA_CT_ST_EFF   (1 << 3)
+#define AA_CT_ST_TFABS (1 << 4)
+#define AA_CT_ST_TFREL (1 << 5)
+
+#define AA_CT_ST_QS    AA_CT_ST_Q
+#define AA_CT_ST_TFS   AA_CT_ST_TFABS
+
+#define AA_CT_ST_ON(active, f) (active & (uint32_t) f)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,21 +62,34 @@ extern "C" {
  * State description of a robot
  */
 struct aa_ct_state {
-    size_t n_q;     //< Number of configuration variables
-    size_t n_tf;    //< Number of frames
+    size_t n_q;             ///< Number of configuration variables
+    union {
+        struct {
+            double *q;      ///< Position
+            double *dq;     ///< Velocity
+            double *ddq;    ///< Acceleration
+            double *eff;    ///< Efforts
+        };
+        double *qs[4];      ///< Jointspace vectors
+    };
 
-    double *q;      //< Position
-    double *dq;     //< Velocity
-    double *ddq;    //< Acceleration
-    double *eff;    //< Efforts
+    size_t n_tf;            ///< Number of frames
+    union {
+        struct {
+            double *TF_abs; ///< Absolute frame transforms
+            double *TF_rel; ///< Relative frame transforms
+        };
+        double *tfs[2];     /// Frame transforms
+    };
 
-    double *TF_abs; //< Absolute frame transforms
-    double *TF_rel; //< Relative frame transforms
+    uint32_t active;        ///< Active fields
 };
 
 void aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
                        struct aa_ct_state *src);
 
+struct aa_ct_state *aa_ct_state_create(struct aa_mem_region *reg, size_t n_q,
+                                       size_t n_tf, uint32_t active);
 #ifdef __cplusplus
 }
 #endif
