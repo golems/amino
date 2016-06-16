@@ -48,9 +48,9 @@
 #define AA_CT_ST_EFF   (1 << 3)
 #define AA_CT_ST_TFABS (1 << 4)
 #define AA_CT_ST_TFREL (1 << 5)
-
-#define AA_CT_ST_QS    AA_CT_ST_Q
-#define AA_CT_ST_TFS   AA_CT_ST_TFABS
+#define AA_CT_ST_X     (1 << 6)
+#define AA_CT_ST_DX    (1 << 7)
+#define AA_CT_ST_DDX   (1 << 8)
 
 #define AA_CT_ST_ON(active, f) (active & (uint32_t) f)
 
@@ -62,7 +62,10 @@ extern "C" {
  * State description of a robot
  */
 struct aa_ct_state {
+    uint32_t active;        ///< Active fields
     size_t n_q;             ///< Number of configuration variables
+    size_t n_tf;            ///< Number of frames
+
     union {
         struct {
             double *q;      ///< Position
@@ -73,7 +76,6 @@ struct aa_ct_state {
         double *qs[4];      ///< Jointspace vectors
     };
 
-    size_t n_tf;            ///< Number of frames
     union {
         struct {
             double *TF_abs; ///< Absolute frame transforms
@@ -88,10 +90,8 @@ struct aa_ct_state {
             double *dX;     ///< Velocity
             double *ddX;    ///< Acceleration
         };
-        double *Xs[3];      ///< Jointspace vectors
+        double *Xs[3];      ///< Cartesian vectors
     };
-
-    uint32_t active;        ///< Active fields
 };
 
 /**

@@ -41,28 +41,43 @@
 #include <amino.h>
 #include <amino/ct/state.h>
 
+// Names of fields in order
+static const char * const aa_ct_st_name[] = \
+{ "Q",
+  "dQ",
+  "ddQ",
+  "Eff",
+  "TFabs",
+  "TFrel",
+  "X",
+  "dX",
+  "ddX" };
 
 AA_API void
 aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
                   struct aa_ct_state *src)
 {
+    dest->active = src->active;
     dest->n_q = src->n_q;
-    for (size_t i = 0; i < 4; i++) {
-        if (AA_CT_ST_ON(src->active, (1 << i))) {
+    dest->n_tf = src->n_tf;
+
+    for (size_t i = 0; i < 4; i++)
+        if (AA_CT_ST_ON(src->active, (1 << (i + 0)))) {
             dest->qs[i] = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
             AA_MEM_CPY(dest->qs[i], src->qs[i], src->n_q);
         }
-    }
 
-    dest->n_tf = src->n_tf;
-    for (size_t i = 4; i < 6; i++) {
-        if (AA_CT_ST_ON(src->active, (1 << i))) {
+    for (size_t i = 0; i < 2; i++)
+        if (AA_CT_ST_ON(src->active, (1 << (i + 4)))) {
             dest->tfs[i] = AA_MEM_REGION_NEW_N(reg, double, 7 * src->n_tf);
             AA_MEM_CPY(dest->tfs[i], src->tfs[i], 7 * src->n_tf);
         }
-    }
 
-    dest->active = src->active;
+    for (size_t i = 0; i < 3; i++) 
+        if (AA_CT_ST_ON(src->active, (1 << (i + 6)))) {
+            dest->Xs[i] = AA_MEM_REGION_NEW_N(reg, double, 7);
+            AA_MEM_CPY(dest->Xs[i], src->Xs[i], 7);
+        }
 }
 
 AA_API struct aa_ct_state *
@@ -70,110 +85,82 @@ aa_ct_state_create(struct aa_mem_region *reg, size_t n_q, size_t n_tf,
                    uint32_t active)
 {
     struct aa_ct_state *st = AA_MEM_REGION_NEW(reg, struct aa_ct_state);
-
+    st->active = active;
     st->n_q = n_q;
-    if (n_q)
-        for (size_t i = 0; i < 4; i++) {
-            if (AA_CT_ST_ON(active, (1 << i))) {
-                st->qs[i] = AA_MEM_REGION_NEW_N(reg, double, n_q);
-                bzero(st->qs[i], sizeof(double) * n_q);
-            }
+    st->n_tf = n_tf;
+
+    for (size_t i = 0; i < 4; i++)
+        if (AA_CT_ST_ON(active, (1 << (i + 0)))) {
+            st->qs[i] = AA_MEM_REGION_NEW_N(reg, double, n_q);
+            bzero(st->qs[i], sizeof(double) * n_q);
         }
 
-    st->n_tf = n_tf;
-    if (n_tf)
-        for (size_t i = 4; i < 6; i++) {
-            if (AA_CT_ST_ON(active, (1 << i))) {
-                st->tfs[i] = AA_MEM_REGION_NEW_N(reg, double, 7 * n_tf);
-                bzero(st->tfs[i], sizeof(double) * 7 * n_tf);
-            }
+    for (size_t i = 0; i < 2; i++)
+        if (AA_CT_ST_ON(active, (1 << (i + 4)))) {
+            st->tfs[i] = AA_MEM_REGION_NEW_N(reg, double, 7 * n_tf);
+            bzero(st->tfs[i], sizeof(double) * 7 * n_tf);
+        }
+
+    for (size_t i = 0; i < 3; i++)
+        if (AA_CT_ST_ON(active, (1 << (i + 6)))) {
+            st->Xs[i] = AA_MEM_REGION_NEW_N(reg, double, 7);
+            bzero(st->Xs[i], sizeof(double) * 7);
         }
 
     return st;
 }
 
-// TODO: Finish this
 AA_API void
-aa_ct_state_dump(FILE *stream, struct aa_ct_state *state)
+aa_ct_state_dump(FILE *stream, struct aa_ct_state *st)
 {
-    if (state->q) {
-        fputs("q:   ", stream);
-        aa_dump_vec(stream, state->q, state->n_q);
+    for (size_t i = 0; i < 4; i++)
+        if (AA_CT_ST_ON(st->active, (1 << (i + 0)))) {
+            fprintf(stream, "%5s: ", aa_ct_st_name[i]);
+            aa_dump_vec(stream, st->qs[i], st->n_q);
+        }
+
+    for (size_t i = 0; i < 2; i++)
+        if (AA_CT_ST_ON(st->active, (1 << (i + 4)))) {
+            fprintf(stream, "%5s: ", aa_ct_st_name[i]);
+            aa_dump_vec(stream, st->tfs[i], st->n_tf * 7);
+        }
+
+    if (AA_CT_ST_ON(st->active, (1 << 6))) {
+        fprintf(stream, "%5s: ", aa_ct_st_name[6]);
+        aa_dump_vec(stream, st->X, 7);
     }
 
-    if (state->dq) {
-        fputs("dq:  ", stream);
-        aa_dump_vec(stream, state->dq, state->n_q);
-    }
-
-    if (state->ddq) {
-        fputs("ddq: ", stream);
-        aa_dump_vec(stream, state->ddq, state->n_q);
-    }
-
-    if (state->eff) {
-        fputs("eff: ", stream);
-        aa_dump_vec(stream, state->ddq, state->n_q);
-    }
-
-    if (state->X) {
-        fputs("X:   ", stream);
-        aa_dump_vec(stream, state->X, 7);
-    }
-
-    if (state->dX) {
-        fputs("dX:  ", stream);
-        aa_dump_vec(stream, state->dX, 6);
-    }
-
-    if (state->ddX) {
-        fputs("ddX: ", stream);
-        aa_dump_vec(stream, state->ddX, 6);
-    }
+    for (size_t i = 1; i < 3; i++) 
+        if (AA_CT_ST_ON(st->active, (1 << (i + 6)))) {
+            fprintf(stream, "%5s: ", aa_ct_st_name[i]);
+            aa_dump_vec(stream, st->Xs[i], 6);
+        }
 }
 
-// TODO: Finish this
 AA_API int
 aa_ct_state_eq(struct aa_ct_state *s1, struct aa_ct_state *s2)
 {
-    if (s1->n_q != s2->n_q || s1->n_tf != s2->n_tf)
+    if (s1->n_q != s2->n_q || s1->n_tf != s2->n_tf || s1->active != s2->active)
         return 0;
 
-    if ((s1->q && !s2->q) || (!s1->q && s2->q))
-        return 0;
-    else if (s1->q && s2->q)
-        if (!aa_veq(s1->n_q, s1->q, s2->q, AA_EPSILON))
-            return 0;
+    for (size_t i = 0; i < 4; i++)
+        if (AA_CT_ST_ON(s1->active, (1 << (i + 0))))
+            if (!aa_veq(s1->n_q, s1->qs[i], s2->qs[i], AA_EPSILON))
+                return 0;
 
-    if ((s1->dq && !s2->dq) || (!s1->dq && s2->dq))
-        return 0;
-    else if (s1->dq && s2->dq)
-        if (!aa_veq(s1->n_q, s1->dq, s2->dq, AA_EPSILON))
-            return 0;
+    for (size_t i = 0; i < 2; i++)
+        if (AA_CT_ST_ON(s1->active, (1 << (i + 4))))
+            if (!aa_veq(s1->n_tf * 7, s1->tfs[i], s2->tfs[i], AA_EPSILON))
+                return 0;
 
-    if ((s1->ddq && !s2->ddq) || (!s1->ddq && s2->ddq))
-        return 0;
-    else if (s1->ddq && s2->ddq)
-        if (!aa_veq(s1->n_q, s1->ddq, s2->ddq, AA_EPSILON))
-            return 0;
-
-    if ((s1->X && !s2->X) || (!s1->X && s2->X))
-        return 0;
-    else if (s1->X && s2->X)
+    if (AA_CT_ST_ON(s1->active, (1 << 6)))
         if (!aa_veq(7, s1->X, s2->X, AA_EPSILON))
             return 0;
 
-    if ((s1->dX && !s2->dX) || (!s1->dX && s2->dX))
-        return 0;
-    else if (s1->dX && s2->dX)
-        if (!aa_veq(6, s1->dX, s2->dX, AA_EPSILON))
-            return 0;
-
-    if ((s1->ddX && !s2->ddX) || (!s1->ddX && s2->ddX))
-        return 0;
-    else if (s1->ddX && s2->ddX)
-        if (!aa_veq(6, s1->ddX, s2->ddX, AA_EPSILON))
-            return 0;
+    for (size_t i = 1; i < 3; i++) 
+        if (AA_CT_ST_ON(s1->active, (1 << (i + 6))))
+            if (!aa_veq(6, s1->Xs[i], s2->Xs[i], AA_EPSILON))
+                return 0;
 
     return 1;
 }

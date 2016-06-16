@@ -49,50 +49,31 @@ void
 test_tjX(void)
 {
     struct aa_mem_region reg;
-    aa_mem_region_init(&reg, 512);
+    aa_mem_region_init(&reg, 1024);
 
     struct aa_ct_pt_list *pt_list = aa_ct_pt_list_create(&reg);
 
-    struct aa_ct_state pt1 = {0}, pt2 = {0}, pt3 = {0};
-    double x1[7] = {0}, x2[7] = {0}, x3[7] = {0};
-    pt1.X = x1;
-    pt2.X = x2;
-    pt3.X = x3;
+    struct aa_ct_state *pt1 = aa_ct_state_create(&reg, 0, 0, AA_CT_ST_X);
+    /* struct aa_ct_state *pt2 = aa_ct_state_create(&reg, 0, 0, AA_CT_ST_X); */
+    /* struct aa_ct_state *pt3 = aa_ct_state_create(&reg, 0, 0, AA_CT_ST_X); */
 
-    x1[0] = 1;
-    x2[1] = 1;
-    x3[0] = 1;
+    pt1->X[0] = 1; pt1->X[4] = 0;
+    /* pt2->X[1] = 1; pt2->X[4] = 1; */
+    /* pt3->X[0] = 1; pt3->X[4] = 0; */
 
-    x1[4] = 0;
-    x2[4] = 1;
-    x3[4] = 0;
+    aa_ct_pt_list_add(pt_list, pt1);
+    /* aa_ct_pt_list_add(pt_list, pt2); */
+    /* aa_ct_pt_list_add(pt_list, pt3); */
 
-    aa_ct_pt_list_add(pt_list, &pt1);
-    aa_ct_pt_list_add(pt_list, &pt2);
-    aa_ct_pt_list_add(pt_list, &pt3);
-
-    double dXlim[6], ddXlim[6];
-    struct aa_ct_state limits;
-    limits.dX = dXlim;
-    limits.ddX = ddXlim;
-
+    struct aa_ct_state *lts = aa_ct_state_create(&reg, 0, 0,
+                                                 AA_CT_ST_DX | AA_CT_ST_DDX);
     for (size_t j = 0; j < 6; j++) {
-        limits.dX[j] = 1;
-        limits.ddX[j] = 1;
+        lts->dX[j] = 1;
+        lts->ddX[j] = 1;
     }
 
     struct aa_ct_seg_list *seg_list =
-        aa_ct_tjX_pb_generate(&reg, pt_list, &limits);
-
-    struct aa_ct_state state;
-    double X[7], dX[6];
-    state.X = X;
-    state.dX = dX;
-
-    for (double t = 0; aa_ct_seg_list_eval(seg_list, &state, t); t += 0.1) {
-        aa_ct_seg_list_eval(seg_list, &state, t);
-        // aa_dump_vec(stdout, state.X, 7);
-    }
+        aa_ct_tjX_pb_generate(&reg, pt_list, lts);
 
     aa_ct_seg_list_destroy(seg_list);
     aa_ct_pt_list_destroy(pt_list);
@@ -102,38 +83,30 @@ test_tjX(void)
 void
 test_tjq(void)
 {
-    size_t n_q = 4;
-
     struct aa_mem_region reg;
-    aa_mem_region_init(&reg, 512);
+    aa_mem_region_init(&reg, 1024);
 
     struct aa_ct_pt_list *pt_list = aa_ct_pt_list_create(&reg);
 
+    size_t n_q = 4;
+    struct aa_ct_state *st = aa_ct_state_create(&reg, n_q, 0, AA_CT_ST_Q);
     for (size_t i = 0; i < 4; i++) {
-        struct aa_ct_state state = {0};
-        double q[n_q];
-        state.n_q = n_q;
-        state.q = q;
-
         for (size_t j = 0; j < n_q; j++)
-            state.q[j] = (double) rand() / RAND_MAX;
+            st->q[j] = (double) rand() / RAND_MAX;
 
-        aa_ct_pt_list_add(pt_list, &state);
+        aa_ct_pt_list_add(pt_list, st);
     }
 
-    double dqlim[n_q], ddqlim[n_q];
-    struct aa_ct_state limits;
-    limits.n_q = n_q;
-    limits.dq = dqlim;
-    limits.ddq = ddqlim;
+    struct aa_ct_state *lts = aa_ct_state_create(&reg, n_q, 0,
+                                                 AA_CT_ST_DQ | AA_CT_ST_DDQ);
 
     for (size_t j = 0; j < n_q; j++) {
-        limits.dq[j] = 1;
-        limits.ddq[j] = 1;
+        lts->dq[j] = 1;
+        lts->ddq[j] = 1;
     }
 
     struct aa_ct_seg_list *seg_list =
-        aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
+        aa_ct_tjq_pb_generate(&reg, pt_list, lts);
 
     aa_ct_seg_list_destroy(seg_list);
     aa_ct_pt_list_destroy(pt_list);
@@ -146,6 +119,6 @@ test_tjq(void)
 int
 main(void)
 {
-    test_tjX();
     test_tjq();
+    test_tjX();
 }

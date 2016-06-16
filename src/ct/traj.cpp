@@ -280,7 +280,7 @@ aa_ct_tj_pb_limit(double *a, double *b, double *m, size_t n_q)
         double v = fabs(((a) ? a[i] : 0) - ((b) ? b[i] : 0)) / ((m) ? m[i] : 1);
         mv = (mv < v) ? v : mv;
     }
-    
+
     return mv;
 }
 
