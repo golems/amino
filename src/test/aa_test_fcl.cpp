@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <fcl/collision.h>
 #include <fcl/shape/geometric_shapes.h>
 #include "amino.h"
@@ -13,7 +15,7 @@ int main( int argc, char **argv)
     double Eb[7] = AA_TF_QUTR_IDENT_INITIALIZER;
     double Ec[7] = {0,0,0,1, 2,0,0};
 
-    boost::shared_ptr<fcl::CollisionGeometry> a( new fcl::Box(1,1,1) );
+    AA_FCL_SHARED_PTR<fcl::CollisionGeometry> a( new fcl::Box(1,1,1) );
 
     fcl::CollisionObject* obj_a = new fcl::CollisionObject(a, amino::fcl::qutr2fcltf(Ea));
     fcl::CollisionObject* obj_b = new fcl::CollisionObject(a, amino::fcl::qutr2fcltf(Eb));

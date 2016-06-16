@@ -53,6 +53,7 @@
 #include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/sbl/SBL.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
 
@@ -231,8 +232,9 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
-    //ompl::base::PlannerPtr planner(new ompl::geometric::SBL(si));
-    ompl::base::PlannerPtr planner(new ompl::geometric::RRTConnect(si));
+    ompl::base::PlannerPtr planner = (NULL == mp->planner.get()) ?
+        ompl::base::PlannerPtr(new ompl::geometric::RRTConnect(si)) :
+        mp->planner;
 
     planner->setProblemDefinition(pdef);
     try {
@@ -271,4 +273,10 @@ aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
                        int simplify )
 {
     mp->simplify = simplify ? 1 : 0;
+}
+
+AA_API struct aa_rx_cl_set*
+aa_rx_mp_get_allowed( const struct aa_rx_mp* mp)
+{
+    return mp->space_information->getTypedStateSpace()->allowed;
 }

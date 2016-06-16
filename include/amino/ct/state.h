@@ -82,14 +82,48 @@ struct aa_ct_state {
         double *tfs[2];     /// Frame transforms
     };
 
+    union {
+        struct {
+            double *X;      ///< Position
+            double *dX;     ///< Velocity
+            double *ddX;    ///< Acceleration
+        };
+        double *Xs[3];      ///< Jointspace vectors
+    };
+
     uint32_t active;        ///< Active fields
 };
 
+/**
+ * Creates and allocates a copy of a state.
+ *
+ * @param reg  Region to allocate new arrays from
+ * @param dest Destination state
+ * @param src  Source state
+ */
 void aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
                        struct aa_ct_state *src);
 
 struct aa_ct_state *aa_ct_state_create(struct aa_mem_region *reg, size_t n_q,
                                        size_t n_tf, uint32_t active);
+/**
+ * Prints out the jointspace components of a state.
+ *
+ * @param stream File to print to
+ * @param state  State to print
+ */
+void aa_ct_state_dump(FILE *stream, struct aa_ct_state *state);
+
+/**
+ * Compares two states to verify if they are the same, within AA_EPSILON bounds.
+ *
+ * @param s1 First state
+ * @param s2 Second state
+ *
+ * @return 1 if the same, 0 otherwise.
+ */
+int aa_ct_state_eq(struct aa_ct_state *s1, struct aa_ct_state *s2);
+
 #ifdef __cplusplus
 }
 #endif

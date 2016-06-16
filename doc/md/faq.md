@@ -117,6 +117,15 @@ Performance {#performance}
     (http://www.openblas.net/). If installed, configure amino to use
     it with ./configure --with-blas=openblas.
 
+
+* Q: Why is the scene graph (aarxc) compiler slow?
+
+  - A: The scene graph compiler prepossesses meshes to reduce load
+    time.  Mesh data is arranged in the compiled scene graph according
+    to its in-memory layout, eliminating the need to parse or copy
+    meshes at load time.  However, the processing itself is somewhat
+    expensive.
+
 * Q: Ray Tracing is SLOOOWWW!
 
   - A: Ray tracing is computationally expensive. Here are a few notes

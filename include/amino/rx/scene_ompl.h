@@ -38,6 +38,12 @@
 #ifndef AMINO_RX_SCENE_OMPL_H
 #define AMINO_RX_SCENE_OMPL_H
 
+#include "rxerr.h"
+#include "rxtype.h"
+#include "scenegraph.h"
+#include "scene_kin_internal.h"
+#include "scene_collision.h"
+#include "scene_planning.h"
 
 #include <ompl/base/StateValidityChecker.h>
 #include <ompl/base/spaces/RealVectorStateSpace.h>
@@ -47,6 +53,7 @@
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/TypedSpaceInformation.h>
 #include <ompl/base/TypedStateValidityChecker.h>
+#include <ompl/base/Planner.h>
 
 namespace amino {
 
@@ -86,6 +93,9 @@ public:
         // double q[n_q];
         // AA_MEM_ZERO(q, n_q); // TODO: give good config
         // allow_config(q);
+
+        // Load allowable configs from scenegraph
+        aa_rx_sg_cl_set_copy(scene_graph, allowed);
     }
 
     virtual ~sgStateSpace() {
@@ -109,19 +119,7 @@ public:
     }
 
     void allow_config( double *q ) {
-        size_t n_f = frame_count();
-        size_t n_q = config_count_all();
-        double *TF_rel = AA_MEM_REGION_NEW_N(&reg, double, 7*n_f);
-        double *TF_abs = AA_MEM_REGION_NEW_N(&reg, double, 7*n_f);
-        aa_rx_sg_tf(scene_graph, n_q, q,
-                    n_f,
-                    TF_rel, 7,
-                    TF_abs, 7 );
-
-        struct aa_rx_cl *cl = aa_rx_cl_create(scene_graph);
-        aa_rx_cl_check(cl, n_f, TF_abs, 7, allowed);
-        aa_rx_cl_destroy(cl);
-        aa_mem_region_pop(&reg, TF_rel);
+        aa_rx_sg_get_collision(scene_graph, q, allowed);
     }
 
     void extract_state( const double *q_all, double *q_set ) const {
@@ -222,14 +220,18 @@ struct aa_rx_mp {
         { }
     ~aa_rx_mp();
 
+    void set_planner( ompl::base::Planner *p ) {
+        this->planner.reset(p);
+    }
+
     amino::sgSpaceInformation::Ptr space_information;
     ompl::base::ProblemDefinitionPtr problem_definition;
+
+    ompl::base::PlannerPtr planner;
 
     double *config_start;
 
     unsigned simplify : 1;
 };
-
-
 
 #endif /*AMINO_RX_SCENE_OMPL_H*/

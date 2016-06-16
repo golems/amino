@@ -38,6 +38,7 @@
 #ifndef AMINO_RX_SCENE_KIN_INTERNAL_H
 #define AMINO_RX_SCENE_KIN_INTERNAL_H
 
+#include "scene_kin.h"
 
 struct aa_rx_sg_sub
 {

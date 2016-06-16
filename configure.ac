@@ -310,6 +310,22 @@ AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])
 AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
 
+
+# FCL pointer type
+AS_IF([test "x$HAVE_FCL" = xyes],
+      [AC_MSG_CHECKING([FCL shared_ptr type])
+       AC_LANG([C++])
+       AC_TRY_COMPILE([#include <fcl/collision.h>
+                       #include <fcl/shape/geometric_shapes.h>
+                      ],
+                      [std::shared_ptr<fcl::CollisionGeometry> a( new fcl::Box(1,1,1) );
+                       fcl::CollisionObject* obj = new fcl::CollisionObject(a, fcl::Transform3f());],
+               [AA_FCL_SHARED_PTR="std::shared_ptr"],
+               [AA_FCL_SHARED_PTR="boost::shared_ptr"])
+       AC_MSG_RESULT(["$AA_FCL_SHARED_PTR"])
+       AC_DEFINE_UNQUOTED([AA_FCL_SHARED_PTR],[$AA_FCL_SHARED_PTR],[Type for FCL shared pointers.])])
+
+
 ## OMPL ##
 AC_ARG_WITH([ompl],
             [AS_HELP_STRING([--without-ompl], [Disable support for the Open Motion Planning Library (OMPL)])],
