@@ -15,20 +15,24 @@ Optional
 These dependecies are optional and may be used to enable additional
 features in Amino:
 
-* Visualization:
-  - OpenGL: https://www.opengl.org/
-  - SDL2: https://www.libsdl.org/
-* Motion Planning:
-  - FCL: https://github.com/flexible-collision-library/fcl
-  - OMPL: http://ompl.kavrakilab.org/
-* Robot Models
-  - SBCL: http://www.sbcl.org/
+* Robot Models (URDF, Collada, Wavefront, etc.):
+  - Blender: http://www.blender.org (see 'Note 1' on versions below)
+  - SBCL: http://www.sbcl.org/ (see 'Note 2' on versions below)
   - Quicklisp: https://www.quicklisp.org
   - Sycamore: https://github.com/ndantam/sycamore
-  - Blender: http://www.blender.org
+* GUI / Visualization:
+  - OpenGL: https://www.opengl.org/
+  - SDL2: https://www.libsdl.org/
+  - plus everything under Robot Models, if you want to visualize
+    meshes, URDF, etc.
 * Raytracing (everything under Robot Models, plus):
   - POV-ray: http://www.povray.org/
   - avconv: https://libav.org/
+* Motion Planning:
+  - FCL: https://github.com/flexible-collision-library/fcl
+  - OMPL: http://ompl.kavrakilab.org/
+  - plus everything under Robot Models, if you want to handle
+    meshes, URDF, etc.
 * Java Bindings
   - Java SDK
 * Optimization, any or all of the following:
@@ -48,9 +52,17 @@ To install these on Debian or Ubuntu GNU/Linux, you can do:
          blender povray libav-tools \
          coinor-libclp-dev libglpk-dev liblpsolve55-dev
 
-(Note that some versions of blender in Ubuntu and Debian do not
-support the Collada format for 3D meshes, so you may need to install
-blender manually in this case.)
+
+Note 1: Some versions of Blender in Ubuntu and Debian do not support
+        the Collada format for 3D meshes, so you may need to install
+        Blender manually in this case
+        (see https://www.blender.org/download/).
+
+Note 2: The versions SBCL in some distributions (e.g., SBCL 1.2.4 in
+        Debian Jessie) do not work with new versions of CFFI.  In
+        these cases, you will need to install SBCL manually
+        (see http://www.sbcl.org/platform-table.html).
+
 
 Then, install the following manually, if desired for ray tracing and
 robot model compilation:
