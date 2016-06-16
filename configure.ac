@@ -125,6 +125,14 @@ AC_CHECK_HEADERS([f2c.h])
 ]
 )
 
+
+AS_IF([test "x$with_fortran" = xyes],
+      [AS_IF([test "x$FC" = "x"],
+             [AC_MSG_ERROR([No Fortran compiler detected])])],
+      [AS_IF([test "x$F2C" = "x"],
+             [AC_MSG_ERROR([No F2C cdetected])])])
+
+
 # Doxygen
 m4_ifdef([DX_INIT_DOXYGEN],
          [DX_HTML_FEATURE(ON)
@@ -524,8 +532,7 @@ AS_IF([test "x$CC" = "x"],
       [AC_MSG_ERROR([No C compiler detected])])
 AS_IF([test "x$CXX" = "x"],
       [AC_MSG_ERROR([No C++ compiler detected])])
-AS_IF([test "x$FC" = "x"],
-      [AC_MSG_ERROR([No Fortran compiler detected])])
+
 
 
 AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile])
