@@ -1,4 +1,7 @@
+AM_CPPFLAGS = -I$(top_srcdir)/include
+
 if BUILD_DEMOS
+
 
 BUILT_SOURCES =
 
