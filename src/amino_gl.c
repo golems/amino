@@ -1213,7 +1213,10 @@ aa_rx_sg_render(
     aa_rx_sg_gl_init((struct aa_rx_sg*)sg);
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    check_error("glClearColor");
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    check_error("glClear");
 
     assert( n_TF == aa_rx_sg_frame_count(sg) );
 

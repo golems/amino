@@ -57,24 +57,13 @@ const int SCREEN_HEIGHT = 1000;
 struct aa_rx_sg *aa_rx_dl_sg__scenegraph(struct aa_rx_sg *sg);
 struct aa_rx_sg *scenegraph;
 
-void check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
-    }
-}
-
 int display( void *context, struct aa_sdl_display_params *params)
 {
+    (void)params;
     const struct aa_gl_globals *globals = (const struct aa_gl_globals *) context;
 
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    check_error("glClearColor");
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    check_error("glClear");
-
-    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
+    size_t n = aa_rx_sg_frame_count(scenegraph);
+    size_t m = aa_rx_sg_config_count(scenegraph);
     double q[m];
     AA_MEM_ZERO(q,m);
     double TF_rel[7*n];
