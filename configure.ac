@@ -534,6 +534,8 @@ AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
 AC_MSG_NOTICE([Build Demos:       $BUILD_DEMOS])
 AC_MSG_NOTICE([Build Baxter Demo: $enable_demo_baxter])
 
+AS_IF([test "x$enable_demo_baxter" = "xyes" -a "x$ROS_PACKAGE_PATH" = x],
+      [AC_MSG_WARN([Baxter demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])
 
 AS_IF([test "x$CC" = "x"],
       [AC_MSG_ERROR([No C compiler detected])])
