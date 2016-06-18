@@ -495,6 +495,12 @@ AS_IF([test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes
 
 AM_CONDITIONAL([BUILD_DEMOS], [test "x$BUILD_DEMOS" = "xyes"])
 
+AC_ARG_ENABLE([demo-baxter],
+              [AS_HELP_STRING([--enable-demo-baxter], [Build the baxter demo])],
+              [],
+              [enable_demo_baxter=no])
+
+AM_CONDITIONAL([BUILD_DEMO_BAXTER], [test "x$enable_demo_baxter" = "xyes"])
 
 #############
 ## SUMMARY ##
@@ -526,6 +532,7 @@ AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
 AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
 AC_MSG_NOTICE([Build Demos:       $BUILD_DEMOS])
+AC_MSG_NOTICE([Build Baxter Demo: $enable_demo_baxter])
 
 
 AS_IF([test "x$CC" = "x"],

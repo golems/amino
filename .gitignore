@@ -128,3 +128,4 @@ amino*.tar.gz
 /demo/urdf/baxter/baxter-wksp
 /demo/urdf/baxter/baxter.so
 /demo/urdf/baxter/scene.c
+/demo/simple-rx/scene.c.h
