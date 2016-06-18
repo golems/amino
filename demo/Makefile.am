@@ -4,6 +4,7 @@ if BUILD_DEMOS
 
 
 BUILT_SOURCES =
+noinst_PROGRAMS =
 
 ## Compilation and Linking flags
 #
@@ -24,11 +25,18 @@ simple-rx/scene.c: simple-rx/scene.robray
 	mkdir -p simple-rx
 		$(AARXC) $(srcdir)/simple-rx/scene.robray -o simple-rx/scene.c
 
-noinst_PROGRAMS = simple-rx/simple-rx
+noinst_PROGRAMS += simple-rx/simple-scenefile
 
-simple_rx_simple_rx_SOURCES = simple-rx/scene.c simple-rx/simple-rx.c
-simple_rx_simple_rx_CFLAGS = $(DEMO_CFLAGS)
-simple_rx_simple_rx_LDADD = $(DEMO_LIBS)
+simple_rx_simple_scenefile_SOURCES = simple-rx/scene.c simple-rx/simple-scenefile.c
+simple_rx_simple_scenefile_CFLAGS = $(DEMO_CFLAGS)
+simple_rx_simple_scenefile_LDADD = $(DEMO_LIBS)
+
+
+noinst_PROGRAMS = simple-rx/simple-procedural
+
+simple_rx_simple_procedural_SOURCES = simple-rx/scene.c simple-rx/simple-procedural.c
+simple_rx_simple_procedural_CFLAGS = $(DEMO_CFLAGS)
+simple_rx_simple_procedural_LDADD = $(DEMO_LIBS)
 
 clean-local:
 	-rm -f simple-rx/scene.c simple-rx/scene.c.h

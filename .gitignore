@@ -85,7 +85,6 @@ amino*.tar.gz
 /sg_test
 /sg_test.log
 /share/*.pc
-/demo/simple-rx/simple-rx
 /demo/simple-rx/scene.c
 /fcl_test
 /cl_test
@@ -122,3 +121,5 @@ amino*.tar.gz
 /demo/simple-rx/.libs/
 /demo/Makefile
 /demo/Makefile.in
+/demo/simple-rx/simple-scenefile
+/demo/simple-rx/simple-procedural
