@@ -2,17 +2,22 @@
 
 (defparameter *ur-source-directory*
   (format-pathname "~A/~A"
-                   (namestring (asdf:system-source-directory :robray))
-                   "demo/ur/"))
+                   (namestring (asdf:system-source-directory :amino))
+                   "../demo/urdf/ur/"))
+
 ;;;;;;;;;;;;;;;;
 ;; Load robot ;;
 ;;;;;;;;;;;;;;;;
 (defparameter *scene-graph*
   (scene-graph
    ;; robot
-   (load-scene-file (urdf-resolve-file  "package://ur_description/urdf/ur10_robot.urdf")
-                    :reload-meshes nil)))
+   (load-scene-file (rope *ur-source-directory* "/ur10_robot.urdf"))))
 
+;;;;;;;;;;;;
+;; Window ;;
+;;;;;;;;;;;;
+
+(win-set-scene-graph *scene-graph*)
 
 ;;;;;;;;;;;;
 ;; RENDER ;;

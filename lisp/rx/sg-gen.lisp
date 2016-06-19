@@ -288,7 +288,7 @@
 
 (defun scene-graph-so (source-file shared-object)
   (let ((args  (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
-    (format t "~&~S~%" (rope-string (rope-split " " args)))
+    (format t "~&~A~%" (rope-string (rope-split " " args)))
     (uiop/run-program:run-program args :output *standard-output* :error-output *error-output*)))
 
 
@@ -362,6 +362,6 @@
 (defun load-rx-mesh (mesh)
   (let ((rx-mesh
          (aa-rx-dl-mesh (genc-mesh-link mesh)
-                        (scene-mesh-name mesh))))
+                        (rope-string (scene-mesh-name mesh)))))
     (assert (= 1 (aa-rx-mesh-refcount (rx-mesh-pointer rx-mesh))))
     rx-mesh))

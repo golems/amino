@@ -495,12 +495,23 @@ AS_IF([test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes
 
 AM_CONDITIONAL([BUILD_DEMOS], [test "x$BUILD_DEMOS" = "xyes"])
 
+######################
+## URDF Robot Demos ##
+######################
+
 AC_ARG_ENABLE([demo-baxter],
               [AS_HELP_STRING([--enable-demo-baxter], [Build the baxter demo])],
               [],
               [enable_demo_baxter=no])
 
 AM_CONDITIONAL([BUILD_DEMO_BAXTER], [test "x$enable_demo_baxter" = "xyes"])
+
+AC_ARG_ENABLE([demo-ur10],
+              [AS_HELP_STRING([--enable-demo-ur10], [Build the UR10 demo])],
+              [],
+              [enable_demo_ur10=no])
+
+AM_CONDITIONAL([BUILD_DEMO_UR10], [test "x$enable_demo_ur10" = "xyes"])
 
 #############
 ## SUMMARY ##
@@ -533,9 +544,11 @@ AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
 AC_MSG_NOTICE([Build Demos:       $BUILD_DEMOS])
 AC_MSG_NOTICE([Build Baxter Demo: $enable_demo_baxter])
+AC_MSG_NOTICE([Build UR10 Demo:   $enable_demo_ur10])
 
-AS_IF([test "x$enable_demo_baxter" = "xyes" -a "x$ROS_PACKAGE_PATH" = x],
-      [AC_MSG_WARN([Baxter demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])
+AS_IF([test '(' "x$enable_demo_baxter" = "xyes" -o "x$enable_demo_ur10" = xyes ')' -a "x$ROS_PACKAGE_PATH" = x],
+      [AC_MSG_WARN([URDF demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])
+
 
 AS_IF([test "x$CC" = "x"],
       [AC_MSG_ERROR([No C compiler detected])])

@@ -7,6 +7,8 @@ BUILT_SOURCES =
 noinst_PROGRAMS =
 noinst_LTLIBRARIES =
 
+BUILT_SCENES =
+
 ## Compilation and Linking flags
 #
 # the GL_LIBS, GL_CFLAGS, SDL_LIBS, etc. are determined by pkg-config
@@ -28,6 +30,8 @@ simple-rx/scene.c: simple-rx/scene.robray
 	mkdir -p simple-rx
 		$(AARXC) $(srcdir)/simple-rx/scene.robray -o simple-rx/scene.c
 
+BUILT_SCENES += urdf/simple-rx/scene.c urdf/simple-rx/scene.c.h
+
 noinst_PROGRAMS += simple-rx/simple-scenefile
 
 simple_rx_simple_scenefile_SOURCES = simple-rx/scene.c simple-rx/simple-scenefile.c
@@ -41,9 +45,6 @@ simple_rx_simple_procedural_SOURCES = simple-rx/scene.c simple-rx/simple-procedu
 simple_rx_simple_procedural_CFLAGS = $(DEMO_CFLAGS)
 simple_rx_simple_procedural_LDADD = $(DEMO_LIBS)
 
-clean-local:
-	-rm -f simple-rx/scene.c simple-rx/scene.c.h
-
 
 ############
 ## Baxter ##
@@ -54,6 +55,9 @@ if BUILD_DEMO_BAXTER
 urdf/baxter/baxter-model.c:
 	$(AARXC) 'package://baxter_description/urdf/baxter.urdf' \
 		-o urdf/baxter/baxter-model.c -n "baxter"
+
+
+BUILT_SCENES += urdf/baxter/baxter-model.c urdf/baxter/baxter-model.c.h
 
 noinst_LTLIBRARIES += urdf/baxter/libbaxter.la
 urdf_baxter_libbaxter_la_SOURCES = urdf/baxter/baxter-model.c
@@ -101,5 +105,40 @@ urdf_baxter_baxter_ompl_sequence_LDADD = $(PLANNING_LIBS) $(DEMO_LIBS) urdf/baxt
 #urdf_baxter_baxter_plugin_LDADD = $(DEMO_LIBS) urdf/baxter/libbaxter.la
 
 endif # BUILD_DEMO_BAXTER
+
+
+if BUILD_DEMO_UR10
+
+urdf/ur/ur10_robot.urdf:
+	rosrun xacro xacro.py 	package://ur_description/urdf/ur10_robot.urdf.xacro \
+		-o urdf/ur/ur10_robot.urdf
+
+
+urdf/ur/ur10-model.c: urdf/ur/ur10_robot.urdf
+	$(AARXC) urdf/ur/ur10_robot.urdf -o urdf/ur/ur10-model.c -n "ur"
+
+BUILT_SCENES += urdf/ur/ur10-model.c urdf/ur/ur10-model.c
+
+noinst_LTLIBRARIES += urdf/ur/libur10.la
+urdf_ur_libur10_la_SOURCES = urdf/ur/ur10-model.c
+# TODO: fix code generation to emit single floats when appropriate
+urdf_ur_libur10_la_CFLAGS = -Wno-float-conversion
+
+
+noinst_PROGRAMS += urdf/ur/ur-view
+urdf_ur_ur_view_SOURCES = urdf/ur/ur-view.c
+urdf_ur_ur_view_CFLAGS = $(DEMO_CFLAGS)
+urdf_ur_ur_view_LDADD = $(DEMO_LIBS) urdf/ur/libur10.la
+
+endif # BUILD_DEMO_UR10
+
+
+
+
+## Extra ##
+
+clean-local:
+	-rm -f $(BUILT_SCENES)
+
 
 endif # BUILD_DEMOS

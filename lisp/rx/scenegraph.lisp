@@ -744,9 +744,10 @@
                                 :reload reload
                                 :mesh-up-axis mesh-up-axis
                                 :mesh-forward-axis mesh-forward-axis)
-                 (dolist (mesh-node mesh-nodes)
-                   (setf (scene-mesh-name mesh-node) geom-name
-                         (scene-mesh-povray-file mesh-node) inc-file))))
+                 (let ((mesh-name (rope (pathname-name mesh-file) "__" geom-name)))
+                   (dolist (mesh-node mesh-nodes)
+                     (setf (scene-mesh-name mesh-node) mesh-name
+                           (scene-mesh-povray-file mesh-node) inc-file)))))
              mesh-files)
     scene-graph))
 
