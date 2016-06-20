@@ -387,7 +387,7 @@
   (with-gensyms (e)
     `(handler-case
          (progn ,@body)
-       (condition (,e)
+       (error (,e)
          (format *error-output* "~&ERROR: ~A~%" ,e)
          #+sbcl
          (sb-ext:exit :code -1)
