@@ -322,10 +322,7 @@
                     (mesh-up-axis "Z")
                     (mesh-forward-axis "Y"))
   (labels ((handle-obj (obj-file)
-             ;(mesh-deindex-normals (wavefront-obj-load obj-file)))
              (wavefront-obj-load obj-file))
-           (handle-dae (dae-file)
-             (convert dae-file))
            (convert (source-file)
              (let ((obj-file (mesh-obj-tmp source-file directory)))
                (wavefront-convert source-file obj-file
@@ -333,19 +330,11 @@
                                   :mesh-up-axis mesh-up-axis
                                   :mesh-forward-axis mesh-forward-axis)
                (handle-obj obj-file))))
-    (let* ((file-type (string-downcase (file-type mesh-file)))
-           (file-basename (file-basename mesh-file))
-           (file-dirname (file-dirname mesh-file)))
+    (let ((file-type (string-downcase (file-type mesh-file))))
       (string-case file-type
         ("obj" (handle-obj mesh-file))
-        ("stl"
-         (let ((dae1 (format-pathname "~A/~A.dae" file-dirname file-basename))
-               (dae2 (format-pathname "~A/~A.DAE" file-dirname file-basename)))
-           (cond ((probe-file dae1) (handle-dae dae1))
-                 ((probe-file dae2) (handle-dae dae2))
-                 (t (convert mesh-file)))))
-        ("dae"
-         (handle-dae mesh-file))
+        ("stl" (convert mesh-file))
+        ("dae" (convert mesh-file))
         (otherwise (error "Unknown file type: ~A" file-type))))))
 
 

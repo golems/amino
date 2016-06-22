@@ -78,6 +78,9 @@ int main(int argc, char *argv[])
     // Set window
     aa_rx_win_set_sg(win, scenegraph); /* Set the scenegraph for the window */
     aa_rx_win_set_config(win, m, q);
+    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
+    aa_gl_globals_set_show_visual(globals, 0);
+    aa_gl_globals_set_show_collision(globals, 1);
 
     // start display
     aa_rx_win_start(win);
