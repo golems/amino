@@ -499,19 +499,25 @@ AM_CONDITIONAL([BUILD_DEMOS], [test "x$BUILD_DEMOS" = "xyes"])
 ## URDF Robot Demos ##
 ######################
 
-AC_ARG_ENABLE([demo-baxter],
-              [AS_HELP_STRING([--enable-demo-baxter], [Build the baxter demo])],
-              [],
-              [enable_demo_baxter=no])
+ENABLED_DEMOS=""
 
-AM_CONDITIONAL([BUILD_DEMO_BAXTER], [test "x$enable_demo_baxter" = "xyes"])
+AC_DEFUN([DEF_DEMO],
+[
+AC_ARG_ENABLE([demo-$1],
+              [AS_HELP_STRING([--enable-demo-$1], [Build the $1 demo])],
+              [ENABLED_DEMOS="$1 $ENABLE_DEMOS"],
+              [enable_demo_$1=no])
 
-AC_ARG_ENABLE([demo-ur10],
-              [AS_HELP_STRING([--enable-demo-ur10], [Build the UR10 demo])],
-              [],
-              [enable_demo_ur10=no])
+AM_CONDITIONAL([BUILD_DEMO_$2], [test "x$enable_demo_$1" = "xyes"])
 
-AM_CONDITIONAL([BUILD_DEMO_UR10], [test "x$enable_demo_ur10" = "xyes"])
+])
+
+DEF_DEMO([baxter],[BAXTER])
+DEF_DEMO([ur10],[UR10])
+DEF_DEMO([schunk],[SCHUNK])
+DEF_DEMO([mico],[MICO])
+DEF_DEMO([jaco],[JACO])
+
 
 #############
 ## SUMMARY ##
@@ -542,9 +548,7 @@ AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
 AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
-AC_MSG_NOTICE([Build Demos:       $BUILD_DEMOS])
-AC_MSG_NOTICE([Build Baxter Demo: $enable_demo_baxter])
-AC_MSG_NOTICE([Build UR10 Demo:   $enable_demo_ur10])
+AC_MSG_NOTICE([Enabled Demos:     $ENABLED_DEMOS])
 
 AS_IF([test '(' "x$enable_demo_baxter" = "xyes" -o "x$enable_demo_ur10" = xyes ')' -a "x$ROS_PACKAGE_PATH" = x],
       [AC_MSG_WARN([URDF demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])

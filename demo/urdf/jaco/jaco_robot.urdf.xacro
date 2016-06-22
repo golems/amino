@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="lwa4d" >
+
+  <xacro:include filename="$(find jaco_description)/urdf/jaco_arm.urdf.xacro"/>
+
+  <xacro:jaco_arm parent="world" rpy="0 0 0" xyz="0 0 0">
+    <link name="world" />
+    <joint name="world_joint" type="fixed">
+      <parent link="world" />
+      <child link = "base_link" />
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+    </joint>
+
+  </xacro:jaco_arm>
+
+</robot>

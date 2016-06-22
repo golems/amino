@@ -133,3 +133,9 @@ amino*.tar.gz
 /demo/urdf/ur/ur10-model.c
 /demo/urdf/ur/ur10-model.c.h
 /demo/urdf/ur/ur10_robot.urdf
+/demo/urdf/schunk/lwa4d.urdf
+/demo/urdf/mico/mico_robot.urdf
+/demo/urdf/jaco/jaco_robot.urdf
+/demo/urdf/jaco/jaco-view
+/demo/urdf/jaco/jaco-model.c.h
+/demo/urdf/jaco/jaco-model.c

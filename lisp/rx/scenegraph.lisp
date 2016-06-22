@@ -50,6 +50,8 @@
 (defstruct scene-mesh
   "A scene object defined by a mesh."
   name
+  (scale 1d0)
+  data
   source-file
   povray-file)
 
@@ -168,11 +170,11 @@
   (%scene-geometry (scene-text text :thickness thickness)
                    options))
 
-(defun scene-geometry-mesh (options mesh)
+(defun scene-geometry-mesh (options mesh &key (scale 1d0))
   (%scene-geometry (etypecase mesh
                      (scene-mesh mesh)
                      ((or pathname string)
-                      (make-scene-mesh :source-file mesh)))
+                      (make-scene-mesh :source-file mesh :scale scale)))
                    options))
 
 (defun scene-geometry-isa (geometry type)
@@ -737,14 +739,17 @@
       (do-scene-graph-geometry ((frame geometry) scene-graph)
         (declare (ignore frame))
         (test-shape (scene-geometry-shape geometry))))
+    ;; Load meshes
     (maphash (lambda (mesh-file mesh-nodes)
                ;(format *standard-output* "~&Converting ~A..." mesh-file)
                (multiple-value-bind (geom-name inc-file)
-                   (mesh-povray mesh-file :directory directory
+                   (mesh-povray mesh-file
+                                :scale (scene-mesh-scale (car mesh-nodes))
+                                :directory directory
                                 :reload reload
                                 :mesh-up-axis mesh-up-axis
                                 :mesh-forward-axis mesh-forward-axis)
-                 (let ((mesh-name (rope (pathname-name mesh-file) "__" geom-name)))
+                 (let ((mesh-name geom-name))
                    (dolist (mesh-node mesh-nodes)
                      (setf (scene-mesh-name mesh-node) mesh-name
                            (scene-mesh-povray-file mesh-node) inc-file)))))

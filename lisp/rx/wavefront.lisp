@@ -179,7 +179,8 @@
 
 
 (defun wavefront-obj-name (obj-file)
-  (let ((name))
+  (let ((name)
+        (warned))
     (with-open-file (stream obj-file :direction :input)
       (loop for line = (read-line stream nil nil)
          for lineno from 0
@@ -187,7 +188,9 @@
          when (eq #\o (aref line 0))
          do
            (if name
-               (progn (warn "Duplicate mesh name `~A:~D'" obj-file lineno)
+               (progn (unless warned
+                        (warn "Duplicate mesh name `~A:~D'" obj-file lineno)
+                        (setq warned t))
                       (setq name (file-basename obj-file)))
                (ppcre:register-groups-bind (command data)
                    (+wavefront-command-scanner+ line)
@@ -196,7 +199,7 @@
                  (setq name data)))))
     (or name (file-basename obj-file))))
 
-(defun wavefront-obj-load (obj-file)
+(defun wavefront-obj-load (obj-file &key (scale 1d0))
   (let ((name)
         (vertices        ;(vector (vec x y z)...)
          (make-array 10 :adjustable t :fill-pointer 0))
@@ -209,7 +212,8 @@
         (materials)
         (current-material))
     (with-open-file (stream obj-file :direction :input)
-      (loop for line = (read-line stream nil nil)
+      (loop with warned = nil
+         for line = (read-line stream nil nil)
          for lineno from 0
          while line
          do
@@ -221,8 +225,10 @@
                (string-case command
                  ("o"  (if (null name)
                            (setq name data)
-                           (progn (warn "`~A': Multiple objects not implemented"
-                                        obj-file)
+                           (progn (unless warned
+                                    (warn "`~A': Multiple objects not implemented"
+                                          obj-file)
+                                    (setq warned t))
                                   (setq name (file-basename obj-file)))))
                  ("v"
                   (vector-push-extend (parse-float-sequence data) vertices))
@@ -251,7 +257,8 @@
                collect texture)))
       (make-mesh-data  :name (name-mangle (or name (file-basename obj-file)))
                        :file obj-file
-                       :vertex-vectors (array-cat 'double-float vertices)
+                       :vertex-vectors (amino::dscal (coerce scale 'double-float)
+                                                     (array-cat 'double-float vertices))
                        :normal-vectors (array-cat 'double-float normals)
                        :uv-vectors (array-cat 'double-float uv)
                        :texture-properties texture-properties
@@ -311,12 +318,13 @@
 (defun load-mesh (mesh-file
                   &key
                     reload
+                    (scale 1d0)
                     (directory *robray-tmp-directory*)
                     (mesh-up-axis "Z")
                     (mesh-forward-axis "Y"))
   (labels ((handle-obj (obj-file)
              ;(mesh-deindex-normals (wavefront-obj-load obj-file)))
-             (wavefront-obj-load obj-file))
+             (wavefront-obj-load obj-file :scale scale))
            (handle-dae (dae-file)
              (convert dae-file))
            (convert (source-file)
@@ -346,6 +354,7 @@
 (defun mesh-povray (mesh-file
                     &key
                       reload
+                      (scale 1d0)
                       (mesh-up-axis "Z")
                       (mesh-forward-axis "Y")
                       (handedness :right)
@@ -366,6 +375,7 @@
             (not (probe-file obj-file)))
         ;; Regenerate
         (let* ((mesh-data (load-mesh mesh-file
+                                     :scale scale
                                      :reload  reload
                                      :directory directory
                                      :mesh-up-axis mesh-up-axis

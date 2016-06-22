@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="lwa4d" >
+
+  <xacro:include filename="$(find
+                           schunk_description)/urdf/lwa4d/lwa4d.urdf.xacro"
+                 />
+
+  <xacro:property name="M_PI" value="3.14159" />
+
+  <xacro:schunk_lwa4d use_factory_settings="true" parent="world"
+                      name="robot" has_podest="true">
+    <link name="world" />
+    <joint name="world_joint" type="fixed">
+      <parent link="world" />
+      <child link = "base_link" />
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+    </joint>
+
+  </xacro:schunk_lwa4d>
+
+</robot>

@@ -110,7 +110,8 @@ endif # BUILD_DEMO_BAXTER
 if BUILD_DEMO_UR10
 
 urdf/ur/ur10_robot.urdf:
-	rosrun xacro xacro.py 	package://ur_description/urdf/ur10_robot.urdf.xacro \
+	rosrun xacro xacro.py \
+		`rospack find ur_description`/urdf/ur10_robot.urdf.xacro \
 		-o urdf/ur/ur10_robot.urdf
 
 
@@ -133,6 +134,48 @@ urdf_ur_ur_view_LDADD = $(DEMO_LIBS) urdf/ur/libur10.la
 endif # BUILD_DEMO_UR10
 
 
+if BUILD_DEMO_SCHUNK
+
+urdf/schunk/lwa4d.urdf:
+	rosrun xacro xacro.py urdf/schunk/lwa4d_robot.urdf.xacro \
+		-o urdf/schunk/lwa4d.urdf
+
+
+endif # BUILD_DEMO_SCHUNK
+
+if BUILD_DEMO_MICO
+
+urdf/mico/mico_robot.urdf:
+	rosrun xacro xacro.py urdf/mico/mico_robot.urdf.xacro \
+		-o urdf/mico/mico_robot.urdf
+
+
+endif # BUILD_DEMO_MICO
+
+if BUILD_DEMO_JACO
+
+urdf/jaco/jaco_robot.urdf:
+	rosrun xacro xacro.py urdf/jaco/jaco_robot.urdf.xacro \
+		-o urdf/jaco/jaco_robot.urdf
+
+
+urdf/jaco/jaco-model.c: urdf/jaco/jaco_robot.urdf
+	$(AARXC) urdf/jaco/jaco_robot.urdf \
+		-o urdf/jaco/jaco-model.c -n "jaco"
+
+BUILT_SCENES += urdf/jaco/jaco-model.c urdf/jaco/jaco-model.c
+
+noinst_LTLIBRARIES += urdf/jaco/libjaco.la
+urdf_jaco_libjaco_la_SOURCES = urdf/jaco/jaco-model.c
+# TODO: fix code generation to emit single floats when appropriate
+urdf_jaco_libjaco_la_CFLAGS = -Wno-float-conversion
+
+noinst_PROGRAMS += urdf/jaco/jaco-view
+urdf_jaco_jaco_view_SOURCES = urdf/jaco/jaco-view.c
+urdf_jaco_jaco_view_CFLAGS = $(DEMO_CFLAGS)
+urdf_jaco_jaco_view_LDADD = $(DEMO_LIBS) urdf/jaco/libjaco.la
+
+endif # BUILD_DEMO_JACO
 
 
 ## Extra ##
