@@ -114,7 +114,7 @@
                      (if (draw-option options :no-shadow) 1 0))
      (let ((scale (draw-option options :scale)))
        (unless (= 1 scale)
-         (cgen-call-stmt "aa_rx_geom_opt_set_scale" copt scale)))
+         (cgen-call-stmt "aa_rx_geom_opt_set_scale" copt (cgen-single-float scale))))
      (etypecase shape
        (scene-mesh
         (cgen-assign-stmt cgeom (cgen-call "aa_rx_geom_mesh" copt (scene-genc-mesh-var shape))))
@@ -188,7 +188,8 @@
       ;; output
       (list
        (cgen-declare-array "static const unsigned char" "rgba" rgba)
-       (cgen-declare-array "static const float" "uv" uv)
+       (cgen-declare-array "static const float" "uv"
+                           (scene-genc-single-float-sequence uv))
 
        (cgen-call-stmt "aa_rx_mesh_set_rgba" var n 1
                        "rgba" 0)
@@ -198,12 +199,16 @@
 (defun scene-genc-mesh-function-name (mesh)
   (rope "aa_rx_dl_mesh__" (scene-mesh-name mesh)))
 
+(defun scene-genc-single-float-sequence (sequence)
+  (map 'vector (lambda (f)
+                 (format nil "~Ff" f))
+       sequence))
+
 (defun scene-genc-mesh-functions (scene-graph static)
   ;; declare
   (loop for mesh in (scene-graph-meshes scene-graph)
      for var = (scene-genc-mesh-var mesh)
-     for mesh-data = (load-mesh (scene-mesh-source-file mesh)
-                                :scale (scene-mesh-scale mesh))
+     for mesh-data = (load-mesh (scene-mesh-source-file mesh))
      for normed-data = (mesh-deindex-normals mesh-data)
      collect
        (cgen-defun (rope (when static "static ") "struct aa_rx_mesh *")
@@ -212,13 +217,16 @@
                    (list (cgen-declare "struct aa_rx_mesh *" var (cgen-call "aa_rx_mesh_create"))
                          ;; vertices
                          (cgen-declare-array "static const float" "vertices"
-                                             (mesh-data-vertex-vectors normed-data))
+                                             (scene-genc-single-float-sequence
+                                              (mesh-data-vertex-vectors normed-data)))
                          ;; normals
                          (cgen-declare-array "static const float" "normals"
-                                             (mesh-data-normal-vectors normed-data))
+                                             (scene-genc-single-float-sequence
+                                             (mesh-data-normal-vectors normed-data)))
                          ;; indices
                          (cgen-declare-array "static const unsigned" "indices"
-                                             (mesh-data-vertex-indices normed-data))
+                                             (scene-genc-single-float-sequence
+                                              (mesh-data-vertex-indices normed-data)))
                          ;; fill
                          (cgen-call-stmt "aa_rx_mesh_set_vertices" var (mesh-data-vertex-vectors-count normed-data)
                                          "vertices" 0)

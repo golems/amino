@@ -199,7 +199,8 @@
                  (setq name data)))))
     (or name (file-basename obj-file))))
 
-(defun wavefront-obj-load (obj-file &key (scale 1d0))
+(defun wavefront-obj-load (obj-file)
+  (format t "~&  LOAD ~A~%" obj-file)
   (let ((name)
         (vertices        ;(vector (vec x y z)...)
          (make-array 10 :adjustable t :fill-pointer 0))
@@ -257,8 +258,7 @@
                collect texture)))
       (make-mesh-data  :name (name-mangle (or name (file-basename obj-file)))
                        :file obj-file
-                       :vertex-vectors (amino::dscal (coerce scale 'double-float)
-                                                     (array-cat 'double-float vertices))
+                       :vertex-vectors (array-cat 'double-float vertices)
                        :normal-vectors (array-cat 'double-float normals)
                        :uv-vectors (array-cat 'double-float uv)
                        :texture-properties texture-properties
@@ -298,7 +298,7 @@
                        "-o" output-file
                        (format nil "--up=~A" mesh-up-axis)
                        (format nil "--forward=~A" mesh-forward-axis))))
-      (format t "~&~{~A~^ ~}~%" args)
+      (format t "~&  ~{~A~^ ~}~%" args)
       (ensure-directories-exist output-file)
       ;; check blender return value
       (multiple-value-bind (output status)
@@ -318,13 +318,12 @@
 (defun load-mesh (mesh-file
                   &key
                     reload
-                    (scale 1d0)
                     (directory *robray-tmp-directory*)
                     (mesh-up-axis "Z")
                     (mesh-forward-axis "Y"))
   (labels ((handle-obj (obj-file)
              ;(mesh-deindex-normals (wavefront-obj-load obj-file)))
-             (wavefront-obj-load obj-file :scale scale))
+             (wavefront-obj-load obj-file))
            (handle-dae (dae-file)
              (convert dae-file))
            (convert (source-file)
@@ -354,7 +353,6 @@
 (defun mesh-povray (mesh-file
                     &key
                       reload
-                      (scale 1d0)
                       (mesh-up-axis "Z")
                       (mesh-forward-axis "Y")
                       (handedness :right)
@@ -375,13 +373,12 @@
             (not (probe-file obj-file)))
         ;; Regenerate
         (let* ((mesh-data (load-mesh mesh-file
-                                     :scale scale
                                      :reload  reload
                                      :directory directory
                                      :mesh-up-axis mesh-up-axis
                                      :mesh-forward-axis mesh-forward-axis))
                (name (mesh-data-name mesh-data)))
-          (format t "~&povenc ~A~%" obj-file)
+          (format t "~&  POVENC ~A~%" obj-file)
           (output (pov-declare (mesh-data-name mesh-data)
                                (pov-mesh2 :mesh-data mesh-data :handedness handedness))
                   abs-output-file)

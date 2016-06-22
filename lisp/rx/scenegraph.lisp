@@ -50,7 +50,6 @@
 (defstruct scene-mesh
   "A scene object defined by a mesh."
   name
-  (scale 1d0)
   data
   source-file
   povray-file)
@@ -170,11 +169,11 @@
   (%scene-geometry (scene-text text :thickness thickness)
                    options))
 
-(defun scene-geometry-mesh (options mesh &key (scale 1d0))
+(defun scene-geometry-mesh (options mesh)
   (%scene-geometry (etypecase mesh
                      (scene-mesh mesh)
                      ((or pathname string)
-                      (make-scene-mesh :source-file mesh :scale scale)))
+                      (make-scene-mesh :source-file mesh)))
                    options))
 
 (defun scene-geometry-isa (geometry type)
@@ -744,7 +743,6 @@
                ;(format *standard-output* "~&Converting ~A..." mesh-file)
                (multiple-value-bind (geom-name inc-file)
                    (mesh-povray mesh-file
-                                :scale (scene-mesh-scale (car mesh-nodes))
                                 :directory directory
                                 :reload reload
                                 :mesh-up-axis mesh-up-axis

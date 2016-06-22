@@ -61,8 +61,6 @@ BUILT_SCENES += urdf/baxter/baxter-model.c urdf/baxter/baxter-model.c.h
 
 noinst_LTLIBRARIES += urdf/baxter/libbaxter.la
 urdf_baxter_libbaxter_la_SOURCES = urdf/baxter/baxter-model.c
-# TODO: fix code generation to emit single floats when appropriate
-urdf_baxter_libbaxter_la_CFLAGS = -Wno-float-conversion
 
 noinst_PROGRAMS += urdf/baxter/baxter-simple
 urdf_baxter_baxter_simple_SOURCES = urdf/baxter/baxter-simple.c urdf/baxter/baxter-demo.c
@@ -122,9 +120,6 @@ BUILT_SCENES += urdf/ur/ur10-model.c urdf/ur/ur10-model.c
 
 noinst_LTLIBRARIES += urdf/ur/libur10.la
 urdf_ur_libur10_la_SOURCES = urdf/ur/ur10-model.c
-# TODO: fix code generation to emit single floats when appropriate
-urdf_ur_libur10_la_CFLAGS = -Wno-float-conversion
-
 
 noinst_PROGRAMS += urdf/ur/ur-view
 urdf_ur_ur_view_SOURCES = urdf/ur/ur-view.c
@@ -167,8 +162,6 @@ BUILT_SCENES += urdf/jaco/jaco-model.c urdf/jaco/jaco-model.c
 
 noinst_LTLIBRARIES += urdf/jaco/libjaco.la
 urdf_jaco_libjaco_la_SOURCES = urdf/jaco/jaco-model.c
-# TODO: fix code generation to emit single floats when appropriate
-urdf_jaco_libjaco_la_CFLAGS = -Wno-float-conversion
 
 noinst_PROGRAMS += urdf/jaco/jaco-view
 urdf_jaco_jaco_view_SOURCES = urdf/jaco/jaco-view.c
