@@ -52,6 +52,7 @@ struct aa_rx_geom_opt* aa_rx_geom_opt_create()
     aa_rx_geom_opt_set_color3(a, .5, .5, .5);
     aa_rx_geom_opt_set_visual(a,1);
     aa_rx_geom_opt_set_collision(a,1);
+    aa_rx_geom_opt_set_scale(a,1.0);
 
     return a;
 }
@@ -130,4 +131,18 @@ AA_API double
 aa_rx_geom_opt_get_specular_green ( struct aa_rx_geom_opt *opt )
 {
     return opt->specular[2];
+}
+
+AA_API void
+aa_rx_geom_opt_set_scale (
+    struct aa_rx_geom_opt *opt,
+    double scale )
+{
+    opt->scale = scale;
+}
+
+AA_API double
+aa_rx_geom_opt_get_scale ( const struct aa_rx_geom_opt *opt )
+{
+    return opt->scale;
 }

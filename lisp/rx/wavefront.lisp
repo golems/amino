@@ -381,7 +381,7 @@
                                      :mesh-up-axis mesh-up-axis
                                      :mesh-forward-axis mesh-forward-axis))
                (name (mesh-data-name mesh-data)))
-          (format t "~&povenc ~A" obj-file)
+          (format t "~&povenc ~A~%" obj-file)
           (output (pov-declare (mesh-data-name mesh-data)
                                (pov-mesh2 :mesh-data mesh-data :handedness handedness))
                   abs-output-file)

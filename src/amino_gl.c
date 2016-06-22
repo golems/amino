@@ -314,15 +314,26 @@ static void check_error( const char *name ){
 
 AA_API void aa_gl_draw_tf (
     const double *world_E_model,
+    const struct aa_rx_geom_opt *opt,
     const struct aa_gl_buffers *buffers )
 {
     // Uniforms
     glUniform3fv(aa_gl_id_specular, 1, buffers->specular);
     check_error("unform specular");
 
-    // matrices
+    // model matrix
     GLfloat M_model[16];
+
+    // pose
     aa_gl_qutr2glmat( world_E_model, M_model);
+
+    // scaling
+    double scale = aa_rx_geom_opt_get_scale(opt);
+    for( size_t i = 0; i < 3; i ++ ) {
+        for( size_t j = 0; j < 3; j ++ ) {
+            AA_MATREF(M_model,4,i,j) *= (GLfloat)scale;
+        }
+    }
 
     glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
     check_error("uniform mat model");
@@ -1189,14 +1200,14 @@ struct sg_render_cx {
 void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
 {
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
-    const double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
     if( geom->gl_buffers &&
         ( !aa_gl_globals_is_masked(cx->globals, (size_t)frame_id) ) &&
         ((cx->globals->show_visual && geom->opt.visual) ||
          (cx->globals->show_collision && geom->opt.collision)) )
     {
         //printf("rendering %s\n", aa_rx_geom_shape_str(geom->type));
-        aa_gl_draw_tf( E, geom->gl_buffers);
+        const double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
+        aa_gl_draw_tf( E, &geom->opt, geom->gl_buffers);
     }
 }
 

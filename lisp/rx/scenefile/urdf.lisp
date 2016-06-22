@@ -165,8 +165,9 @@
                              (scale (or (parse-float-sequence scale-string)
                                         (list 1d0 1d0 1d0))))
                         ;; TODO: scale x,y,z separatly
-                        (scene-geometry-mesh options (urdf-resolve-file mesh-file)
-                                             :scale (car scale))))
+                        (scene-geometry-mesh (draw-options-default :options options
+                                                                   :scale (car scale))
+                                             (urdf-resolve-file mesh-file))))
                      (sphere-radius
                       (scene-geometry-sphere options (parse-float sphere-radius)))
                      (box-size

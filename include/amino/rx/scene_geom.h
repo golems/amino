@@ -179,6 +179,22 @@ aa_rx_geom_opt_set_specular3 (
     struct aa_rx_geom_opt *opt,
     double red, double green, double blue );
 
+
+/**
+ * Set mesh scaling
+ */
+AA_API void
+aa_rx_geom_opt_set_scale (
+    struct aa_rx_geom_opt *opt,
+    double scale );
+
+/**
+ * Get mesh scaling
+ */
+AA_API double
+aa_rx_geom_opt_get_scale (
+    const struct aa_rx_geom_opt *opt );
+
 /*----------*/
 /*- Shapes -*/
 /*----------*/

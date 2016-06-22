@@ -112,6 +112,9 @@
                      (if (draw-option options :collision) 1 0))
      (cgen-call-stmt "aa_rx_geom_opt_set_no_shadow" copt
                      (if (draw-option options :no-shadow) 1 0))
+     (let ((scale (draw-option options :scale)))
+       (unless (= 1 scale)
+         (cgen-call-stmt "aa_rx_geom_opt_set_scale" copt scale)))
      (etypecase shape
        (scene-mesh
         (cgen-assign-stmt cgeom (cgen-call "aa_rx_geom_mesh" copt (scene-genc-mesh-var shape))))
