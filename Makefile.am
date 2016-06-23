@@ -274,6 +274,12 @@ sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
 sdl_test_LDADD += libamino_gl.la $(GL_LIBS) $(GLEW_LIBS)
 
+bin_PROGRAMS += aarx-view
+
+aarx_view_SOURCES = src/rx/aarx-view.c
+aarx_view_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+aarx_view_LDADD = libamino_gl.la libamino.la $(SDL2_LIBS) $(GLEW_LIBS)
+
 endif # SDL2
 
 endif # GL
