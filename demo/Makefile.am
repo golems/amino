@@ -6,6 +6,7 @@ if BUILD_DEMOS
 BUILT_SOURCES =
 noinst_PROGRAMS =
 noinst_LTLIBRARIES =
+lib_LTLIBRARIES=
 
 BUILT_SCENES =
 
@@ -59,8 +60,8 @@ urdf/baxter/baxter-model.c:
 
 BUILT_SCENES += urdf/baxter/baxter-model.c urdf/baxter/baxter-model.c.h
 
-noinst_LTLIBRARIES += urdf/baxter/libbaxter.la
-urdf_baxter_libbaxter_la_SOURCES = urdf/baxter/baxter-model.c
+lib_LTLIBRARIES += urdf/baxter/libamino_baxter.la
+urdf_baxter_libamino_baxter_la_SOURCES = urdf/baxter/baxter-model.c
 
 noinst_PROGRAMS += urdf/baxter/baxter-simple
 urdf_baxter_baxter_simple_SOURCES = urdf/baxter/baxter-simple.c urdf/baxter/baxter-demo.c
@@ -114,17 +115,12 @@ urdf/ur/ur10_robot.urdf:
 
 
 urdf/ur/ur10-model.c: urdf/ur/ur10_robot.urdf
-	$(AARXC) urdf/ur/ur10_robot.urdf -o urdf/ur/ur10-model.c -n "ur"
+	$(AARXC) urdf/ur/ur10_robot.urdf -o urdf/ur/ur10-model.c -n "ur10"
 
 BUILT_SCENES += urdf/ur/ur10-model.c urdf/ur/ur10-model.c
 
-noinst_LTLIBRARIES += urdf/ur/libur10.la
-urdf_ur_libur10_la_SOURCES = urdf/ur/ur10-model.c
-
-noinst_PROGRAMS += urdf/ur/ur-view
-urdf_ur_ur_view_SOURCES = urdf/ur/ur-view.c
-urdf_ur_ur_view_CFLAGS = $(DEMO_CFLAGS)
-urdf_ur_ur_view_LDADD = $(DEMO_LIBS) urdf/ur/libur10.la
+lib_LTLIBRARIES += urdf/ur/libamino_ur.la
+urdf_ur_libamino_ur_la_SOURCES = urdf/ur/ur10-model.c
 
 endif # BUILD_DEMO_UR10
 
@@ -135,6 +131,13 @@ urdf/schunk/lwa4d.urdf:
 	rosrun xacro xacro.py urdf/schunk/lwa4d_robot.urdf.xacro \
 		-o urdf/schunk/lwa4d.urdf
 
+urdf/schunk/lwa4d-model.c: urdf/schunk/lwa4d.urdf
+	$(AARXC) urdf/schunk/lwa4d.urdf \
+		-o urdf/schunk/lwa4d-model.c -n "lwa4d"
+
+lib_LTLIBRARIES += urdf/schunk/libamino_schunk.la
+urdf_schunk_libamino_schunk_la_SOURCES = urdf/schunk/lwa4d-model.c
+urdf_schunk_libamino_schunk_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 endif # BUILD_DEMO_SCHUNK
 
@@ -144,6 +147,14 @@ urdf/mico/mico_robot.urdf:
 	rosrun xacro xacro.py urdf/mico/mico_robot.urdf.xacro \
 		-o urdf/mico/mico_robot.urdf
 
+urdf/mico/mico-model.c: urdf/mico/mico_robot.urdf
+	$(AARXC) urdf/mico/mico_robot.urdf \
+		-o urdf/mico/mico-model.c -n "mico"
+
+
+lib_LTLIBRARIES += urdf/mico/libamino_mico.la
+urdf_mico_libamino_mico_la_SOURCES = urdf/mico/mico-model.c
+urdf_mico_libamino_mico_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 endif # BUILD_DEMO_MICO
 
@@ -160,13 +171,9 @@ urdf/jaco/jaco-model.c: urdf/jaco/jaco_robot.urdf
 
 BUILT_SCENES += urdf/jaco/jaco-model.c urdf/jaco/jaco-model.c
 
-noinst_LTLIBRARIES += urdf/jaco/libjaco.la
-urdf_jaco_libjaco_la_SOURCES = urdf/jaco/jaco-model.c
-
-noinst_PROGRAMS += urdf/jaco/jaco-view
-urdf_jaco_jaco_view_SOURCES = urdf/jaco/jaco-view.c
-urdf_jaco_jaco_view_CFLAGS = $(DEMO_CFLAGS)
-urdf_jaco_jaco_view_LDADD = $(DEMO_LIBS) urdf/jaco/libjaco.la
+lib_LTLIBRARIES += urdf/jaco/libamino_jaco.la
+urdf_jaco_libamino_jaco_la_SOURCES = urdf/jaco/jaco-model.c
+urdf_jaco_libamino_jaco_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 endif # BUILD_DEMO_JACO
 

@@ -505,18 +505,33 @@ AC_DEFUN([DEF_DEMO],
 [
 AC_ARG_ENABLE([demo-$1],
               [AS_HELP_STRING([--enable-demo-$1], [Build the $1 demo])],
-              [ENABLED_DEMOS="$1 $ENABLE_DEMOS"],
-              [enable_demo_$1=no])
+              [],
+              [])
+
+AS_IF([test "x$enable_demo_$1" = "xyes"],
+      [ENABLED_DEMOS="$1 $ENABLED_DEMOS"])
 
 AM_CONDITIONAL([BUILD_DEMO_$2], [test "x$enable_demo_$1" = "xyes"])
 
 ])
+
+AC_ARG_ENABLE([demo-all],
+              [AS_HELP_STRING([--enable-demo-all], [Build the all the demos])],
+              [
+                enable_demo_baxter="$enable_demo_all"
+                enable_demo_ur10="$enable_demo_all"
+                enable_demo_schunk="$enable_demo_all"
+                enable_demo_mico="$enable_demo_all"
+                enable_demo_jaco="$enable_demo_all"
+              ])
 
 DEF_DEMO([baxter],[BAXTER])
 DEF_DEMO([ur10],[UR10])
 DEF_DEMO([schunk],[SCHUNK])
 DEF_DEMO([mico],[MICO])
 DEF_DEMO([jaco],[JACO])
+
+
 
 
 #############
@@ -561,5 +576,18 @@ AS_IF([test "x$CXX" = "x"],
 
 
 
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile])
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile
+                 demo/urdf/jaco/jaco-view
+                 demo/urdf/mico/mico-view
+                 demo/urdf/ur/ur10-view
+                 demo/urdf/schunk/lwa4d-view
+                 demo/urdf/baxter/baxter-view
+                 ],
+                [
+                  chmod +x demo/urdf/jaco/jaco-view
+                  chmod +x demo/urdf/mico/mico-view
+                  chmod +x demo/urdf/ur/ur10-view
+                  chmod +x demo/urdf/schunk/lwa4d-view
+                  chmod +x demo/urdf/baxter/baxter-view
+                ])
 AC_OUTPUT

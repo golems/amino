@@ -1,0 +1,5 @@
+#!/bin/sh
+
+@abs_top_builddir@/aarx-view \
+    @abs_top_builddir@/demo/urdf/jaco/.libs/libamino_jaco.so \
+    -n "jaco"

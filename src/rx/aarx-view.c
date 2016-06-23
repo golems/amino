@@ -67,15 +67,22 @@ int main(int argc, char *argv[])
 {
     const char *name="scenegraph";
     const char *plugin=NULL;
+    int visual = 1;
+    int collision = 0;
+
     /* Parse Options */
     {
         int c;
         opterr = 0;
 
-        while( (c = getopt( argc, argv, "n:?")) != -1 ) {
+        while( (c = getopt( argc, argv, "n:?c")) != -1 ) {
             switch(c) {
             case 'n':
                 name = optarg;
+                break;
+            case 'c':
+                visual = 0;
+                collision = 1;
                 break;
             case '?':
                 puts("Usage: aarx-view [OPTIONS] PLUGIN_NAME\n"
@@ -83,6 +90,8 @@ int main(int argc, char *argv[])
                      "\n"
                      "Options:\n"
                      "  -n NAME         scene graph name (default: scenegraph)\n"
+                     "  -c              view collision geometry\n"
+                     "\n"
                      "\n"
                      "Report bugs to " PACKAGE_BUGREPORT "\n" );
                 exit(EXIT_SUCCESS);
@@ -124,6 +133,10 @@ int main(int argc, char *argv[])
         aa_rx_win_default_create ( "Amino: AARX-View", SCREEN_WIDTH, SCREEN_HEIGHT );
     aa_rx_win_set_sg(win, scenegraph); /* Set the scenegraph for the window */
     aa_rx_win_set_config(win, m, q);
+
+    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
+    aa_gl_globals_set_show_visual(globals, visual);
+    aa_gl_globals_set_show_collision(globals, collision);
 
     /* start display */
     aa_rx_win_start(win);

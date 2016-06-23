@@ -139,3 +139,11 @@ amino*.tar.gz
 /demo/urdf/jaco/jaco-view
 /demo/urdf/jaco/jaco-model.c.h
 /demo/urdf/jaco/jaco-model.c
+/demo/urdf/baxter/baxter-view
+/demo/urdf/mico/mico-model.c
+/demo/urdf/mico/mico-model.c.h
+/demo/urdf/mico/mico-view
+/demo/urdf/schunk/lwa4d-model.c
+/demo/urdf/schunk/lwa4d-model.c.h
+/demo/urdf/schunk/lwa4d-view
+/demo/urdf/ur/ur10-view
