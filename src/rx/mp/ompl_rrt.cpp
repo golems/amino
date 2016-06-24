@@ -85,6 +85,12 @@ AA_API void
 aa_rx_mp_set_rrt( struct aa_rx_mp* mp,
                   const struct aa_rx_mp_rrt_attr *attr )
 {
+    struct aa_rx_mp_rrt_attr *default_attr = NULL;
+    if( NULL == attr ) {
+        default_attr = aa_rx_mp_rrt_attr_create();
+        attr = default_attr;
+    }
+
     if( attr->is_bidirectional ) {
         auto p = new ompl::geometric::RRTConnect(mp->space_information);
         mp->set_planner(p);
@@ -93,4 +99,7 @@ aa_rx_mp_set_rrt( struct aa_rx_mp* mp,
         mp->set_planner(p);
     }
 
+    if( default_attr ) {
+        aa_rx_mp_rrt_attr_destroy(default_attr);
+    }
 }

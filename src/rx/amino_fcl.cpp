@@ -80,7 +80,7 @@ aa_rx_cl_geom_destroy( struct aa_rx_cl_geom *cl_geom ) {
 
 
 static fcl::CollisionGeometry *
-cl_init_mesh( const struct aa_rx_mesh *mesh )
+cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
 {
 
     //printf("mesh\n");
@@ -100,7 +100,9 @@ cl_init_mesh( const struct aa_rx_mesh *mesh )
             unsigned x=j++;
             unsigned y=j++;
             unsigned z=j++;
-            vertices.push_back( fcl::Vec3f(v[x], v[y], v[z]) );
+            vertices.push_back( fcl::Vec3f( scale*v[x],
+                                            scale*v[y],
+                                            scale*v[z]) );
         }
     }
     //printf("filled verts\n");
@@ -148,6 +150,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     fcl::CollisionGeometry *ptr = NULL;
     enum aa_rx_geom_shape shape_type;
     void *shape_ = aa_rx_geom_shape(geom, &shape_type);
+    double scale = aa_rx_geom_opt_get_scale(&geom->opt);
 
     // printf("creating collision geometry for frame %s (%s)\n",
     //        aa_rx_sg_frame_name(sg, frame_id),
@@ -159,30 +162,32 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     }
     case AA_RX_MESH: {
         struct aa_rx_mesh *shape = (struct aa_rx_mesh *)  shape_;
-        ptr = cl_init_mesh(shape);
+        ptr = cl_init_mesh(scale,shape);
         break;
     }
     case AA_RX_BOX: {
         struct aa_rx_shape_box *shape = (struct aa_rx_shape_box *)  shape_;
-        ptr = new fcl::Box(shape->dimension[0],shape->dimension[1],shape->dimension[2]);
+        ptr = new fcl::Box(scale*shape->dimension[0],
+                           scale*shape->dimension[1],
+                           scale*shape->dimension[2]);
         break;
     }
     case AA_RX_SPHERE: {
         struct aa_rx_shape_sphere *shape = (struct aa_rx_shape_sphere *)  shape_;
-        ptr = new fcl::Sphere(shape->radius);
+        ptr = new fcl::Sphere(scale*shape->radius);
         break;
     }
     case AA_RX_CYLINDER: {
         struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
-        ptr = new fcl::Cylinder(shape->radius, shape->height);
+        ptr = new fcl::Cylinder(scale*shape->radius, scale*shape->height);
         break;
     }
     case AA_RX_CONE: {
-        struct aa_rx_shape_cone *shape = (struct aa_rx_shape_cone *)  shape_;
+        // struct aa_rx_shape_cone *shape = (struct aa_rx_shape_cone *)  shape_;
         break;
     }
     case AA_RX_GRID: {
-        struct aa_rx_shape_grid *shape = (struct aa_rx_shape_grid *)  shape_;
+        // struct aa_rx_shape_grid *shape = (struct aa_rx_shape_grid *)  shape_;
         break;
     }
     }

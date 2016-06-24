@@ -175,6 +175,11 @@ lib_LTLIBRARIES += urdf/jaco/libamino_jaco.la
 urdf_jaco_libamino_jaco_la_SOURCES = urdf/jaco/jaco-model.c
 urdf_jaco_libamino_jaco_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
+noinst_PROGRAMS += urdf/jaco/jaco-ompl
+urdf_jaco_jaco_ompl_SOURCES = urdf/jaco/jaco-ompl.c
+urdf_jaco_jaco_ompl_CFLAGS = $(DEMO_CFLAGS)
+urdf_jaco_jaco_ompl_LDADD = $(PLANNING_LIBS) $(DEMO_LIBS) urdf/jaco/libjaco.la
+
 endif # BUILD_DEMO_JACO
 
 
