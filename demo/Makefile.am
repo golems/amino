@@ -57,6 +57,7 @@ urdf/baxter/baxter-model.c:
 	$(AARXC) 'package://baxter_description/urdf/baxter.urdf' \
 		-o urdf/baxter/baxter-model.c -n "baxter"
 
+urdf/baxter/baxter-model.c.h: urdf/baxter/baxter-model.c
 
 BUILT_SCENES += urdf/baxter/baxter-model.c urdf/baxter/baxter-model.c.h
 
@@ -173,6 +174,9 @@ urdf/jaco/jaco_robot.urdf:
 urdf/jaco/jaco-model.c: urdf/jaco/jaco_robot.urdf
 	$(AARXC) urdf/jaco/jaco_robot.urdf \
 		-o urdf/jaco/jaco-model.c -n "jaco"
+
+
+urdf/jaco/jaco-model.c.h: urdf/jaco/jaco-model.c
 
 BUILT_SCENES += urdf/jaco/jaco-model.c urdf/jaco/jaco-model.c
 
