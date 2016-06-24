@@ -60,8 +60,13 @@ urdf/baxter/baxter-model.c:
 
 BUILT_SCENES += urdf/baxter/baxter-model.c urdf/baxter/baxter-model.c.h
 
+noinst_LTLIBRARIES += urdf/baxter/libbaxter.la
+urdf_baxter_libbaxter_la_SOURCES = urdf/baxter/baxter-model.c
+
 lib_LTLIBRARIES += urdf/baxter/libamino_baxter.la
-urdf_baxter_libamino_baxter_la_SOURCES = urdf/baxter/baxter-model.c
+urdf_baxter_libamino_baxter_la_SOURCES =
+urdf_baxter_libamino_baxter_la_LIBADD = urdf/baxter/libbaxter.la
+urdf_baxter_libamino_baxter_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 noinst_PROGRAMS += urdf/baxter/baxter-simple
 urdf_baxter_baxter_simple_SOURCES = urdf/baxter/baxter-simple.c urdf/baxter/baxter-demo.c
@@ -171,8 +176,12 @@ urdf/jaco/jaco-model.c: urdf/jaco/jaco_robot.urdf
 
 BUILT_SCENES += urdf/jaco/jaco-model.c urdf/jaco/jaco-model.c
 
+noinst_LTLIBRARIES += urdf/jaco/libjaco.la
+urdf_jaco_libjaco_la_SOURCES = urdf/jaco/jaco-model.c
+
 lib_LTLIBRARIES += urdf/jaco/libamino_jaco.la
-urdf_jaco_libamino_jaco_la_SOURCES = urdf/jaco/jaco-model.c
+urdf_jaco_libamino_jaco_la_SOURCES =
+urdf_jaco_libamino_jaco_la_LIBADD = urdf/jaco/libjaco.la
 urdf_jaco_libamino_jaco_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 noinst_PROGRAMS += urdf/jaco/jaco-ompl

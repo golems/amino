@@ -108,7 +108,8 @@ aarx.core --dynamic-space-size 2GB --script <<EOF
 (robray::catch-all
   (robray::scene-graph-compile (robray::load-scene-file "$INPUT_FILE"
                                                          ;;:compile nil
-                                                         :reload-meshes $RELOAD
+                                                         :bind-c-geom nil
+                                                         :reload $RELOAD
                                                          :mesh-up-axis "$MESH_UP_AXIS"
                                                          :mesh-forward-axis "$MESH_FORWARD_AXIS")
                                "$OUTPUT_FILE"

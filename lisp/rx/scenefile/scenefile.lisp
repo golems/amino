@@ -87,6 +87,7 @@
 (defun scene-graph-resolve! (scene-graph &key
                                            filename
                                            reload
+                                           (bind-c-geom t)
                                            (compile t)
                                            (mesh-up-axis "Z")
                                            (mesh-forward-axis "Y"))
@@ -95,16 +96,18 @@
                                  :reload reload
                                  :mesh-up-axis mesh-up-axis
                                  :mesh-forward-axis mesh-forward-axis)
-    (scene-graph-resolve-c! scene-graph
-                            :filename filename
-                            :reload reload
-                            :compile compile)
+    (when bind-c-geom
+      (scene-graph-resolve-c! scene-graph
+                              :filename filename
+                              :reload reload
+                              :compile compile))
     scene-graph))
 
 (defun load-scene-file (filename
                         &key
                           type
-                          reload-meshes
+                          reload
+                          (bind-c-geom t)
                           (compile t)
                           (mesh-up-axis "Z")
                           (mesh-forward-axis "Y"))
@@ -117,15 +120,16 @@
          (scene-graph
           (ecase type
             (:urdf (urdf-parse truename
-                               :reload-meshes reload-meshes
+                               :reload-meshes reload
                                :mesh-up-axis mesh-up-axis
                                :mesh-forward-axis mesh-forward-axis))
-            (:curly (load-curly-scene truename :reload-meshes reload-meshes))
+            (:curly (load-curly-scene truename :reload-meshes reload))
             ;; (:moveit (load-moveit-scene truename :reload-meshes reload-meshes))
             )))
     (scene-graph-resolve! scene-graph
                           :filename truename
-                          :reload reload-meshes
+                          :reload reload
+                          :bind-c-geom bind-c-geom
                           :compile compile
                           :mesh-up-axis mesh-up-axis
                           :mesh-forward-axis mesh-forward-axis)
