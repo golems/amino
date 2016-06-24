@@ -72,10 +72,5 @@ baxter_demo_load_baxter( struct aa_rx_sg *sg)
 struct aa_rx_win *
 baxter_demo_setup_window( struct aa_rx_sg *sg );
 
-static void baxter_demo_check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
-    }
-}
 
 #endif /*BAXTER_DEMO_H*/

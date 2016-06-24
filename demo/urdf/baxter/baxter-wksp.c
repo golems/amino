@@ -50,6 +50,7 @@ struct display_cx {
 
 int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
+    (void)win;
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
@@ -61,10 +62,9 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     double dt = aa_tm_timespec2sec( aa_tm_sub(*now, *last) );
 
 
-    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
-    aa_rx_frame_id n_c = aa_rx_sg_sub_config_count(cx->ssg);
-    aa_rx_frame_id n_f = aa_rx_sg_sub_frame_count(cx->ssg);
+    size_t n = aa_rx_sg_frame_count(scenegraph);
+    size_t m = aa_rx_sg_config_count(scenegraph);
+    size_t n_c = aa_rx_sg_sub_config_count(cx->ssg);
 
     double TF_rel[7*n];
     double TF_abs[7*n];
@@ -84,7 +84,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     /* Feed forward velocity only, so some drift */
     dx_r[AA_TF_DX_V+2] = .5*cos(t*2*M_PI);
 
-    double J[rows*cols], J_star[rows*cols];
+    double J[rows*cols];
     aa_rx_sg_sub_jacobian( cx->ssg, n, TF_abs, 7,
                            J, rows );
     // dx = J * dq
@@ -98,13 +98,10 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     /* aa_la_xlsnp( 6, cx->n_ch_config, J, J_star, */
     /*              dx_r, dq_r, dq_subset ); */
 
-    aa_rx_frame_id f_ee = aa_rx_sg_sub_frame(cx->ssg,n_f-1);
-    double *E_ee = &TF_abs[7 * f_ee];
-
     // check
     double dx_u[6];
     cblas_dgemv( CblasColMajor, CblasNoTrans,
-                 6, n_c,
+                 6, (int)n_c,
                  1.0, J, 6,
                  dq_subset, 1,
                  0.0, dx_u, 1 );

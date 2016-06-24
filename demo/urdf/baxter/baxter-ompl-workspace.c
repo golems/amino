@@ -55,6 +55,8 @@ static void check_mp_error( int r ) {
 
 int main(int argc, char *argv[])
 {
+    (void)argc; (void)argv;
+
     /* Initialize scene graph */
     aa_rx_cl_init(); /* initialize the collision library */
     struct aa_rx_sg *scenegraph = baxter_demo_load_baxter(NULL); /* load compiled URDF for robot scenegraph */

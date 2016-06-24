@@ -50,14 +50,15 @@ struct display_cx {
 
 int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
+    (void)win;
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
     const struct timespec *last = aa_sdl_display_params_get_time_last(params);
 
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
-    aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-    aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
+    size_t n = aa_rx_sg_frame_count(scenegraph);
+    size_t m = aa_rx_sg_config_count(scenegraph);
     double q[m];
     AA_MEM_ZERO(q,m);
 
@@ -112,9 +113,10 @@ int main(int argc, char *argv[])
     cx.i_q = aa_rx_sg_config_id(scenegraph, "left_s0");
     cx.cl = aa_rx_cl_create( scenegraph );
 
+    // Identify allowed collisions
     {
-        aa_rx_frame_id n = aa_rx_sg_frame_count(scenegraph);
-        aa_rx_frame_id m = aa_rx_sg_config_count(scenegraph);
+        size_t n = aa_rx_sg_frame_count(scenegraph);
+        size_t m = aa_rx_sg_config_count(scenegraph);
         double q[m];
         AA_MEM_ZERO(q,m);
         double TF_rel[7*n];
@@ -125,7 +127,7 @@ int main(int argc, char *argv[])
                     TF_abs, 7 );
 
         struct aa_rx_cl_set *allowed = aa_rx_cl_set_create( scenegraph );
-        int col = aa_rx_cl_check( cx.cl, n, TF_abs, 7, allowed );
+        aa_rx_cl_check( cx.cl, n, TF_abs, 7, allowed );
         aa_rx_cl_allow_set( cx.cl, allowed );
         aa_rx_cl_set_destroy( allowed );
     }
