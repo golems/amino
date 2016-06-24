@@ -149,3 +149,8 @@ amino*.tar.gz
 /demo/urdf/ur/ur10-view
 /aarx-view
 /demo/urdf/jaco/jaco-ompl
+/ylwrap
+/wavefront
+/src/parse/Makefile
+/src/parse/Makefile.in
+/src/parse/wavefront.c

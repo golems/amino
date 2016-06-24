@@ -17,6 +17,7 @@ AC_PROG_CC_C99
 AC_PROG_CXX
 AC_PROG_FC
 AM_PROG_CC_C_O
+AM_PROG_LEX
 AC_PROG_LIBTOOL
 AC_CHECK_PROGS([MAXIMA], [maxima])
 AM_PATH_LISPDIR
@@ -157,6 +158,8 @@ m4_ifdef([DX_INIT_DOXYGEN],
           AM_CONDITIONAL([DX_COND_latex], false)
           AM_CONDITIONAL([DX_COND_man],   false)
          ])
+
+AC_SUBST([BASE_CFLAGS],[$CFLAGS])
 
 # Enable maximum warnings
 AX_CFLAGS_WARN_ALL
@@ -576,7 +579,7 @@ AS_IF([test "x$CXX" = "x"],
 
 
 
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile])
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile src/parse/Makefile])
 
 AC_DEFUN([CONFIG_SCRIPT],
          [AC_CONFIG_FILES([$1],

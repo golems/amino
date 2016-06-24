@@ -1,4 +1,4 @@
-SUBDIRS = . lisp demo
+SUBDIRS = src/parse . lisp demo
 
 ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac
@@ -15,6 +15,8 @@ dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h include/amino.hpp
 noinst_PROGRAMS =
+
+noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
 bin_SCRIPTS = share/aarxc
@@ -84,6 +86,10 @@ ctinclude_HEADERS = 	                \
 	include/amino/ct/traj.h
 
 
+noinst_PROGRAMS += wavefront
+wavefront_SOURCES =
+wavefront_LDADD = src/parse/libamino_wavefront.la
+
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
 
 libamino_la_SOURCES =                  \
@@ -120,6 +126,7 @@ libamino_la_SOURCES =                  \
 	src/sigsys.c                   \
 	src/heap.c                     \
 	src/cv.c
+
 
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
@@ -159,7 +166,7 @@ distclean-local:
 #vecbench_LDADD = libamino.la -lblas -llapack
 
 # use some convenience libraries to force fortran module dependencies
-noinst_LTLIBRARIES =                   \
+noinst_LTLIBRARIES +=                  \
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la
