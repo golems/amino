@@ -576,18 +576,16 @@ AS_IF([test "x$CXX" = "x"],
 
 
 
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile
-                 demo/urdf/jaco/jaco-view
-                 demo/urdf/mico/mico-view
-                 demo/urdf/ur/ur10-view
-                 demo/urdf/schunk/lwa4d-view
-                 demo/urdf/baxter/baxter-view
-                 ],
-                [
-                  chmod +x demo/urdf/jaco/jaco-view
-                  chmod +x demo/urdf/mico/mico-view
-                  chmod +x demo/urdf/ur/ur10-view
-                  chmod +x demo/urdf/schunk/lwa4d-view
-                  chmod +x demo/urdf/baxter/baxter-view
-                ])
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile])
+
+AC_DEFUN([CONFIG_SCRIPT],
+         [AC_CONFIG_FILES([$1],
+                          [chmod +x $1])])
+
+CONFIG_SCRIPT([demo/urdf/jaco/jaco-view])
+CONFIG_SCRIPT([demo/urdf/mico/mico-view])
+CONFIG_SCRIPT([demo/urdf/ur/ur10-view])
+CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
+CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
+
 AC_OUTPUT
