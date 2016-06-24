@@ -199,6 +199,13 @@
                  (setq name data)))))
     (or name (file-basename obj-file))))
 
+(let ((scanner (ppcre:create-scanner "^(\\S+)\\s+(\\S+)\\s+(\\S+)\\s*$" )))
+  (defun parse-vec3 (string &key (start 0))
+    (multiple-value-bind (start end s e) (ppcre:scan scanner string :start start)
+      (declare (ignore start end))
+      (loop for i below 3
+         collect (parse-float (subseq string (aref s i) (aref e i)))))))
+
 (defun wavefront-obj-load (obj-file)
   (format t "~&  LOAD ~A~%" obj-file)
   (let ((name)
@@ -232,9 +239,10 @@
                                     (setq warned t))
                                   (setq name (file-basename obj-file)))))
                  ("v"
-                  (vector-push-extend (parse-float-sequence data) vertices))
+                  (vector-push-extend (parse-vec3 data)
+                                      vertices))
                  ("vn"
-                  (vector-push-extend (parse-float-sequence data) normals))
+                  (vector-push-extend (parse-vec3 data) normals))
                  ("f" (vector-push-extend (parse-wavefront-face line current-material lineno)
                                           faces))
                  ("mtllib"

@@ -345,16 +345,17 @@
 ;;                    collect (parse-float-sequence line)))))
 ;;     data))
 
-(defun strip-hash-comment (line)
-  (declare (type simple-string line))
-  (when line
-    (let* ((i (position #\# line))
-           (stripped (if i
-                         (subseq line 0 i)
-                         line)))
-      (if (ppcre:scan "^\\s*$" stripped)
-          nil
-          stripped))))
+(let ((scanner (ppcre:create-scanner "[^\\s]" )))
+  (defun strip-hash-comment (line)
+    (declare (type simple-string line))
+    (when line
+      (let* ((i (position #\# line))
+             (stripped (if i
+                           (subseq line 0 i)
+                           line)))
+        (if (ppcre:scan scanner stripped)
+            stripped
+            nil)))))
 
 (defparameter *config-load-time* (make-hash-table :test #'equal))
 
