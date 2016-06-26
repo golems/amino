@@ -87,7 +87,7 @@ ctinclude_HEADERS = 	                \
 
 
 noinst_PROGRAMS += wavefront
-wavefront_SOURCES =
+wavefront_SOURCES = src/test/wavefront.cpp
 wavefront_LDADD = src/parse/libamino_wavefront.la
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
