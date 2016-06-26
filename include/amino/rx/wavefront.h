@@ -60,11 +60,18 @@ aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, float f );
 AA_API void
 aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, float f );
 
-
 AA_API void
 aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
-                        struct aa_rx_wf_face *face );
+                        struct aa_rx_wf_obj_face *face );
 
+
+AA_API void
+aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
+                          const char *object );
+
+AA_API void
+aa_rx_wf_obj_push_material( struct aa_rx_wf_obj *obj,
+                            const char *mtl_file );
 
 AA_API void
 aa_rx_wf_parse(void);

@@ -99,7 +99,7 @@ START {MAYBE_BLANKS}
 %%
 
 {END} {
-    fprintf(stderr, "comment: %s\n", yytext);
+    /*fprintf(stderr, "comment: %s\n", yytext);*/
 }
 
 <EOL>{END} {
@@ -108,18 +108,19 @@ START {MAYBE_BLANKS}
 
     /* MTLLIB */
 
-{START}"mtllib"{BLANKS}+ {
+{START}"mtllib"{BLANKS} {
     BEGIN(MTLLIB);
+
 }
 
-<MTLLIB>.*{END} {
-    fprintf(stderr, "mtllib: %s\n", yytext);
-    BEGIN(INITIAL);
+<MTLLIB>[[:graph:]]+ {
+    aa_rx_wf_obj_push_material( yyextra->wf_obj, yytext );
+    BEGIN(EOL);
 }
 
     /* usemtl */
 
-{START}"usemtl"{BLANKS}+ {
+{START}"usemtl"{BLANKS} {
     BEGIN(USEMTL);
 }
 
@@ -134,28 +135,24 @@ START {MAYBE_BLANKS}
     BEGIN(OBJECT);
 }
 
-<OBJECT>.*{END} {
-    printf("object: %s\n",yytext);
-    BEGIN(INITIAL);
+<OBJECT>[[:graph:]]+ {
+    aa_rx_wf_obj_push_object( yyextra->wf_obj, yytext );
+    BEGIN(EOL);
 }
 
 
    /* VECTOR */
 
 {START}"v"{BLANKS} {
-    printf("got v: %s!\n",yytext);
     BEGIN(V0);
 }
 
 <V0>{NUMBER_BLANKS} {
-    fprintf(stderr, "foo\n");
-    fprintf(stderr, "%x\n",yyextra);
     aa_rx_wf_obj_push_vertex( yyextra->wf_obj, atof(yytext) );
     BEGIN(V1);
 }
 
 <V1>{NUMBER_BLANKS} {
-    fprintf(stderr, "bar\n");
     aa_rx_wf_obj_push_vertex( yyextra->wf_obj, atof(yytext) );
     BEGIN(V2);
 }
@@ -190,7 +187,7 @@ START {MAYBE_BLANKS}
     /* Smooth Shading */
 
 {START}"s"{BLANKS}.* {
-    fprintf(stderr, "ignoring smooth shading (line %d)\n", yylineno);
+    /* fprintf(stderr, "ignoring smooth shading (line %d)\n", yylineno); */
     BEGIN(EOL);
 }
 
@@ -198,7 +195,7 @@ START {MAYBE_BLANKS}
     /* vertex-1/texture-1/normal-1... */
 
 {START}"f"{BLANKS} {
-    fprintf(stderr, "f\n");
+    yyextra->face = (struct aa_rx_wf_obj_face*)malloc( sizeof(struct aa_rx_wf_obj_face) );
     BEGIN(FV0);
 }
 
@@ -272,6 +269,7 @@ START {MAYBE_BLANKS}
 <FN2>{INT}{END} {
     /* Normal 2 */
     fprintf(stderr, "f0n: %d\n",atoi(yytext));
+    yyextra->face = NULL;
     BEGIN(INITIAL);
 }
 
@@ -292,6 +290,7 @@ void aa_rx_wf_parse(void)
 
     struct wf_extra we;
     we.wf_obj = aa_rx_wf_obj_create();
+    we.face = NULL;
 
     aa_rx_wf_set_extra(&we, scanner);
 

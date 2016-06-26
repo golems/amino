@@ -38,13 +38,16 @@
 #include "amino.h"
 #include "wavefront_internal.h"
 #include <vector>
+#include <string>
 
 struct aa_rx_wf_obj {
     std::vector<float> vertex;
     std::vector<float> normal;
     std::vector<size_t> uv;
-    std::vector<aa_rx_wf_obj_face> face;
+    std::vector<aa_rx_wf_obj_face*> face;
 
+    std::vector<std::string> mtl_files;
+    std::vector<std::string> objects;
 
 };
 
@@ -74,4 +77,25 @@ AA_API void
 aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, float f )
 {
     obj->normal.push_back(f);
+}
+
+AA_API void
+aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
+                        struct aa_rx_wf_obj_face *face )
+{
+    obj->face.push_back(face);
+}
+
+AA_API void
+aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
+                          const char *object )
+{
+    obj->objects.push_back(object);
+}
+
+AA_API void
+aa_rx_wf_obj_push_material( struct aa_rx_wf_obj *obj,
+                            const char *mtl_file )
+{
+    obj->mtl_files.push_back(mtl_file);
 }
