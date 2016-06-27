@@ -46,4 +46,8 @@ struct wf_extra {
     struct aa_rx_wf_obj_face *face;
 };
 
+#define WF_FACE(thing) yyextra->face->thing
+#define SET_WF_FACE(thing) WF_FACE(thing) = atol(yytext)-1
+#define SKIP_WF_FACE(thing) WF_FACE(thing) = AA_RX_WF_OBJ_FACE_NONE
+
 #endif //AMINO_WAVEFRONT_H

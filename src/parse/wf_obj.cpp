@@ -99,3 +99,12 @@ aa_rx_wf_obj_push_material( struct aa_rx_wf_obj *obj,
 {
     obj->mtl_files.push_back(mtl_file);
 }
+
+AA_API void
+aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
+                           const char *material )
+{
+    /* TODO */
+    (void)obj;
+    (void)material;
+}

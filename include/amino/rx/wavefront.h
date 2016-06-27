@@ -45,6 +45,7 @@ struct aa_rx_wf_obj_face {
     ssize_t t[3];
 };
 
+#define AA_RX_WF_OBJ_FACE_NONE -1
 
 struct aa_rx_wf_obj;
 
@@ -74,6 +75,10 @@ aa_rx_wf_obj_push_material( struct aa_rx_wf_obj *obj,
                             const char *mtl_file );
 
 AA_API void
-aa_rx_wf_parse(void);
+aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
+                           const char *material );
+
+AA_API struct aa_rx_wf_obj *
+aa_rx_wf_parse(const char *filename);
 
 #endif //AMINO_RX_WAVEFRONT_H

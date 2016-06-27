@@ -38,6 +38,7 @@
 %option outfile="wavefront.c"
 %option reentrant
 %option yylineno
+%option batch
 
 %option extra-type="struct wf_extra*"
 
@@ -124,9 +125,9 @@ START {MAYBE_BLANKS}
     BEGIN(USEMTL);
 }
 
-<USEMTL>.*{END} {
-    fprintf(stderr, "usemtl: %s\n", yytext);
-    BEGIN(INITIAL);
+<USEMTL>[[:graph:]]+ {
+    aa_rx_wf_obj_use_material(yyextra->wf_obj, yytext);
+    BEGIN(EOL);
 }
 
     /* OBJECT */
@@ -192,7 +193,9 @@ START {MAYBE_BLANKS}
 }
 
     /* Face */
-    /* vertex-1/texture-1/normal-1... */
+    /* vertex-1/[texture-1]/normal-1... */
+    /* TODO: vertex-1 vertex-2 vertex-3 */
+    /* TODO: vertex-1/texture-1 vertex-2/texture-2 vertex-3/texture-3 */
 
 {START}"f"{BLANKS} {
     yyextra->face = (struct aa_rx_wf_obj_face*)malloc( sizeof(struct aa_rx_wf_obj_face) );
@@ -202,73 +205,74 @@ START {MAYBE_BLANKS}
 
 <FV0>{INT}"/" {
     /* Vertex 0 */
-    fprintf(stderr, "fv0: %d\n",atoi(yytext));
+    yyextra->face->v[0] = atol(yytext)-1;
+    SET_WF_FACE(v[0]);
     BEGIN(FT0);
 }
 
 <FT0>"/" {
     /* Skip Texture 0 */
-    fprintf(stderr, "skip FT0\n");
+    SKIP_WF_FACE(t[0]);
     BEGIN(FN0);
 }
 
 <FT0>{INT}"/" {
     /* Texture 0 */
-    fprintf(stderr, "f0t: %d\n",atoi(yytext));
+    SET_WF_FACE(t[0]);
     BEGIN(FN0);
 }
 
 <FN0>{INT}{BLANKS} {
     /* Normal 0 */
-    fprintf(stderr, "f0n: %d\n",atoi(yytext));
+    SET_WF_FACE(n[0]);
     BEGIN(FV1);
 }
 
 <FV1>{INT}"/" {
     /* Vertex 1 */
-    fprintf(stderr, "fv1: %d\n",atoi(yytext));
+    SET_WF_FACE(v[1]);
     BEGIN(FT1);
 }
 
 <FT1>"/" {
     /* Skip Texture 1 */
-    fprintf(stderr, "skip FT1\n");
+    SKIP_WF_FACE(t[1]);
     BEGIN(FN1);
 }
 
 <FT1>{INT}"/" {
     /* Texture 1 */
-    fprintf(stderr, "f1t: %d\n",atoi(yytext));
+    SET_WF_FACE(t[1]);
     BEGIN(FN1);
 }
 
 <FN1>{INT}{BLANKS} {
     /* Normal 1 */
-    fprintf(stderr, "f1n: %d\n",atoi(yytext));
+    SET_WF_FACE(n[1]);
     BEGIN(FV2);
 }
 
 <FV2>{INT}"/" {
     /* Vertex 2 */
-    fprintf(stderr, "fv0: %d\n",atoi(yytext));
+    SET_WF_FACE(v[2]);
     BEGIN(FT2);
 }
 
 <FT2>"/" {
     /* Skip Texture 2 */
-    fprintf(stderr, "skip FT2\n");
+    SKIP_WF_FACE(t[2]);
     BEGIN(FN2);
 }
 
 <FT2>{INT}"/" {
     /* Texture 2 */
-    fprintf(stderr, "f0t: %d\n",atoi(yytext));
+    SET_WF_FACE(t[2]);
     BEGIN(FN2);
 }
 
 <FN2>{INT}{END} {
     /* Normal 2 */
-    fprintf(stderr, "f0n: %d\n",atoi(yytext));
+    SET_WF_FACE(n[2]);
     yyextra->face = NULL;
     BEGIN(INITIAL);
 }
@@ -278,15 +282,24 @@ START {MAYBE_BLANKS}
 
 <*>. {
     fprintf(stderr, "Unrecognized character: %s (%d)\n", yytext, yylineno);
+    /* TODO: return something better */
     exit(EXIT_FAILURE);
 }
 
 %%
 
-void aa_rx_wf_parse(void)
+struct aa_rx_wf_obj *
+aa_rx_wf_parse(const char *filename)
 {
+    FILE *in = fopen(filename,"r");
+    if( NULL == in ) {
+        fprintf(stderr, "Could not open '%s'\n", filename);
+        return NULL;
+    }
+
     yyscan_t scanner;
     aa_rx_wf_lex_init(&scanner);
+    aa_rx_wf_set_in(in, scanner);
 
     struct wf_extra we;
     we.wf_obj = aa_rx_wf_obj_create();
@@ -297,6 +310,6 @@ void aa_rx_wf_parse(void)
     aa_rx_wf_lex(scanner);
 
     aa_rx_wf_lex_destroy(scanner);
-
     aa_rx_wf_obj_destroy(we.wf_obj);
+    fclose(in);
 }
