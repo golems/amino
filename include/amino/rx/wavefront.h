@@ -52,10 +52,10 @@ struct aa_rx_wf_obj;
  * A face (triangle) in a wavefront obj file
  */
 struct aa_rx_wf_obj_face {
-    ssize_t v[3];    ///< Vertex indices
-    ssize_t n[3];    ///< Normal indices
-    ssize_t t[3];    ///< Texture indices
-    size_t material; ///< Material index
+    int32_t v[3];    ///< Vertex indices
+    int32_t n[3];    ///< Normal indices
+    int32_t t[3];    ///< Texture indices
+    int32_t material; ///< Material index
 };
 
 /**
@@ -140,10 +140,30 @@ aa_rx_wf_obj_get_normals( const struct aa_rx_wf_obj *obj,
                           const double **normals, size_t *n );
 
 /**
- * Retrieve the faces
+ * Retrieve the vertex indices
  */
 AA_API void
-aa_rx_wf_obj_get_faces( const struct aa_rx_wf_obj *obj,
-                        struct aa_rx_wf_obj_face * const **faces, size_t *n );
+aa_rx_wf_obj_get_vertex_indices( const struct aa_rx_wf_obj *obj,
+                                 const int32_t **v, size_t *n );
+
+/**
+ * Retrieve the normal indices
+ */
+AA_API void
+aa_rx_wf_obj_get_normal_indices( const struct aa_rx_wf_obj *obj,
+                                 const int32_t **v, size_t *n );
+/**
+ * Retrieve the uv indices
+ */
+AA_API void
+aa_rx_wf_obj_get_uv_indices( const struct aa_rx_wf_obj *obj,
+                             const int32_t **v, size_t *n );
+
+/**
+ * Retrieve the texture indices
+ */
+AA_API void
+aa_rx_wf_obj_get_texture_indices( const struct aa_rx_wf_obj *obj,
+                                  const int32_t **v, size_t *n );
 
 #endif //AMINO_RX_WAVEFRONT_H

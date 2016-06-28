@@ -207,14 +207,13 @@ START {MAYBE_BLANKS}
     /* TODO: vertex-1/texture-1 vertex-2/texture-2 vertex-3/texture-3 */
 
 {START}"f"{BLANKS} {
-    yyextra->face = (struct aa_rx_wf_obj_face*)malloc( sizeof(struct aa_rx_wf_obj_face) );
     BEGIN(FV0);
 }
 
 
 <FV0>{INT}"/" {
     /* Vertex 0 */
-    yyextra->face->v[0] = atol(yytext)-1;
+    yyextra->face.v[0] = atol(yytext)-1;
     SET_WF_FACE(v[0]);
     BEGIN(FT0);
 }
@@ -282,8 +281,7 @@ START {MAYBE_BLANKS}
 <FN2>{INT}{END} {
     /* Normal 2 */
     SET_WF_FACE(n[2]);
-    aa_rx_wf_obj_push_face(yyextra->wf_obj, yyextra->face);
-    yyextra->face = NULL;
+    aa_rx_wf_obj_push_face(yyextra->wf_obj, &yyextra->face);
     BEGIN(INITIAL);
 }
 
@@ -312,7 +310,6 @@ aa_rx_wf_parse(const char *filename)
 
     struct wf_extra we;
     we.wf_obj = aa_rx_wf_obj_create();
-    we.face = NULL;
 
     aa_rx_wf_set_extra(&we, scanner);
 

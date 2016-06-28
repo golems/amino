@@ -45,15 +45,20 @@
 struct aa_rx_wf_obj {
     std::vector<double> vertex;
     std::vector<double> normal;
-    std::vector<size_t> uv;
-    std::vector<struct aa_rx_wf_obj_face*> face;
+
+    std::vector<int32_t> vertex_indices;
+    std::vector<int32_t> normal_indices;
+    std::vector<int32_t> uv_indices;
+    std::vector<int32_t> texture_indices;
+
+    //std::vector<struct aa_rx_wf_obj_face*> face;
 
     std::vector<std::string> mtl_files;
     std::vector<std::string> objects;
 
     std::vector<std::string> materials;
 
-    size_t current_material;
+    int32_t current_material;
 
 };
 
@@ -70,9 +75,6 @@ aa_rx_wf_obj_create()
 AA_API void
 aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
 {
-    for( struct aa_rx_wf_obj_face * &f : obj->face ) {
-        free(f);
-    }
     delete obj;
 }
 
@@ -92,8 +94,14 @@ AA_API void
 aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
                         struct aa_rx_wf_obj_face *face )
 {
-    face->material = obj->current_material;
-    obj->face.push_back(face);
+    for( int i = 0; i < 3; i ++ ) {
+        obj->vertex_indices.push_back(face->v[i]);
+        obj->normal_indices.push_back(face->v[i]);
+        obj->uv_indices.push_back(face->v[i]);
+    }
+
+    obj->texture_indices.push_back(obj->current_material);
+
 }
 
 AA_API void
@@ -116,10 +124,10 @@ aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
 {
     auto itr = std::find(obj->materials.begin(), obj->materials.end(), material);
     if( obj->materials.end() == itr ) {
-        obj->current_material = obj->materials.size();
+        obj->current_material = (int32_t)obj->materials.size();
         obj->materials.push_back(material);
     } else {
-        obj->current_material = itr - obj->materials.begin();
+        obj->current_material = (int32_t)(itr - obj->materials.begin());
     }
 }
 
@@ -156,9 +164,29 @@ aa_rx_wf_obj_get_normals( const struct aa_rx_wf_obj *obj,
 }
 
 AA_API void
-aa_rx_wf_obj_get_faces( const struct aa_rx_wf_obj *obj,
-                        struct aa_rx_wf_obj_face * const **faces , size_t *n )
+aa_rx_wf_obj_get_vertex_indices( const struct aa_rx_wf_obj *obj,
+                                 const int32_t **v, size_t *n )
 {
-    *faces = obj->face.data();
-    *n = obj->face.size();
+    *v = obj->vertex_indices.data();
+    *n = obj->vertex_indices.size();
+}
+
+AA_API void
+aa_rx_wf_obj_get_normal_indices( const struct aa_rx_wf_obj *obj,
+                                 const int32_t **v, size_t *n ) {
+    *v = obj->normal_indices.data();
+    *n = obj->normal_indices.size();
+}
+AA_API void
+aa_rx_wf_obj_get_uv_indices( const struct aa_rx_wf_obj *obj,
+                             const int32_t **v, size_t *n ) {
+    *v = obj->uv_indices.data();
+    *n = obj->uv_indices.size();
+}
+
+AA_API void
+aa_rx_wf_obj_get_texture_indices( const struct aa_rx_wf_obj *obj,
+                                  const int32_t **v, size_t *n ) {
+    *v = obj->texture_indices.data();
+    *n = obj->texture_indices.size();
 }
