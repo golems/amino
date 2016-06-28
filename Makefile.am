@@ -191,6 +191,7 @@ $(libamino_tf_la_OBJECTS): amino_la.mod
 
 libamino_la_LIBADD =                   \
 	-lgfortran                     \
+	src/parse/libamino_wavefront.la\
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la

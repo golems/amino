@@ -353,3 +353,13 @@ INTENT: One of (or :input :output :inout). When value
                        :by-reference t :size-type blas-size-t :pointer-type :pointer)
        ,result-type
      ,@args))
+
+;;;;;;;;;;;;;;;;;;
+;;; BLAS TYPES ;;;
+;;;;;;;;;;;;;;;;;;
+
+(defun foreign-vector-dup (foreign-pointer count foreign-type lisp-type)
+  (let ((v (make-array count :element-type lisp-type)))
+    (with-pointer-to-vector-data (lisp-ptr v)
+      (libc-memcpy lisp-ptr foreign-pointer (* count (foreign-type-size foreign-type))))
+    v))

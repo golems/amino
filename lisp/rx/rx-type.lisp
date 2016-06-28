@@ -111,3 +111,7 @@
 
 (amino-ffi::def-foreign-container rx-ik-jac-cx rx-ik-jac-cx-t
   :destructor aa-rx-ik-jac-cx-destroy)
+
+;; Wavefront
+(amino-ffi::def-foreign-container rx-wf-obj rx-wf-obj-t
+  :destructor aa-rx-wf-obj-destroy)

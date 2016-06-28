@@ -37,17 +37,23 @@
 
 #include "amino.h"
 #include "wavefront_internal.h"
+
 #include <vector>
 #include <string>
+#include <algorithm>
 
 struct aa_rx_wf_obj {
-    std::vector<float> vertex;
-    std::vector<float> normal;
+    std::vector<double> vertex;
+    std::vector<double> normal;
     std::vector<size_t> uv;
-    std::vector<aa_rx_wf_obj_face*> face;
+    std::vector<struct aa_rx_wf_obj_face*> face;
 
     std::vector<std::string> mtl_files;
     std::vector<std::string> objects;
+
+    std::vector<std::string> materials;
+
+    size_t current_material;
 
 };
 
@@ -68,13 +74,13 @@ aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
 }
 
 AA_API void
-aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, float f )
+aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, double f )
 {
     obj->vertex.push_back(f);
 }
 
 AA_API void
-aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, float f )
+aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, double f )
 {
     obj->normal.push_back(f);
 }
@@ -83,6 +89,7 @@ AA_API void
 aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
                         struct aa_rx_wf_obj_face *face )
 {
+    face->material = obj->current_material;
     obj->face.push_back(face);
 }
 
@@ -104,7 +111,51 @@ AA_API void
 aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
                            const char *material )
 {
-    /* TODO */
-    (void)obj;
-    (void)material;
+    auto itr = std::find(obj->materials.begin(), obj->materials.end(), material);
+    if( obj->materials.end() == itr ) {
+        obj->current_material = obj->materials.size();
+        obj->materials.push_back(material);
+    } else {
+        obj->current_material = itr - obj->materials.begin();
+    }
+}
+
+AA_API size_t
+aa_rx_wf_obj_material_count( struct aa_rx_wf_obj *obj )
+{
+    return obj->materials.size();
+}
+
+AA_API const char *
+aa_rx_wf_obj_get_material_name( struct aa_rx_wf_obj *obj, size_t i )
+{
+    if( i < obj->materials.size() ) {
+        return obj->materials[i].c_str();
+    } else {
+        return NULL;
+    }
+}
+
+AA_API void
+aa_rx_wf_obj_get_vertices( const struct aa_rx_wf_obj *obj,
+                           const double **vertices, size_t *n )
+{
+    *vertices = obj->vertex.data();
+    *n = obj->vertex.size();
+}
+
+AA_API void
+aa_rx_wf_obj_get_normals( const struct aa_rx_wf_obj *obj,
+                          const double **normals, size_t *n )
+{
+    *normals = obj->normal.data();
+    *n = obj->normal.size();
+}
+
+AA_API void
+aa_rx_wf_obj_get_faces( const struct aa_rx_wf_obj *obj,
+                        struct aa_rx_wf_obj_face * const **faces , size_t *n )
+{
+    *faces = obj->face.data();
+    *n = obj->face.size();
 }

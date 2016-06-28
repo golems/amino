@@ -33,12 +33,21 @@
  *
  */
 
+
+/*
+ * The is a parser for Wavefront OBJ files, written as a Flex Scanner.
+ *
+ *
+ */
+
 %option noyywrap
 %option prefix="aa_rx_wf_"
 %option outfile="wavefront.c"
 %option reentrant
 %option yylineno
 %option batch
+%option never-interactive
+%option read
 
 %option extra-type="struct wf_extra*"
 
@@ -282,8 +291,7 @@ START {MAYBE_BLANKS}
 
 <*>. {
     fprintf(stderr, "Unrecognized character: %s (%d)\n", yytext, yylineno);
-    /* TODO: return something better */
-    exit(EXIT_FAILURE);
+    return -1;
 }
 
 %%
@@ -307,9 +315,15 @@ aa_rx_wf_parse(const char *filename)
 
     aa_rx_wf_set_extra(&we, scanner);
 
-    aa_rx_wf_lex(scanner);
+    int r = aa_rx_wf_lex(scanner);
 
     aa_rx_wf_lex_destroy(scanner);
-    aa_rx_wf_obj_destroy(we.wf_obj);
     fclose(in);
+
+    if( r < 0 ) {
+        aa_rx_wf_obj_destroy(we.wf_obj);
+        return NULL;
+    } else {
+        return we.wf_obj;
+    }
 }

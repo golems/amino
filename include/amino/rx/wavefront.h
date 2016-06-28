@@ -39,46 +39,111 @@
 #ifndef AMINO_RX_WAVEFRONT_H
 #define AMINO_RX_WAVEFRONT_H
 
-struct aa_rx_wf_obj_face {
-    ssize_t v[3];
-    ssize_t n[3];
-    ssize_t t[3];
-};
-
-#define AA_RX_WF_OBJ_FACE_NONE -1
-
+/* forward declaration of opaque structure
+ */
 struct aa_rx_wf_obj;
 
+/**
+ * Indicates an entry in a wavefront face is not used
+ */
+#define AA_RX_WF_OBJ_FACE_NONE -1
+
+/**
+ * A face (triangle) in a wavefront obj file
+ */
+struct aa_rx_wf_obj_face {
+    ssize_t v[3];    ///< Vertex indices
+    ssize_t n[3];    ///< Normal indices
+    ssize_t t[3];    ///< Texture indices
+    size_t material; ///< Material index
+};
+
+/**
+ * Create an object for a wavefront obj file.
+ */
 AA_API struct aa_rx_wf_obj *
 aa_rx_wf_obj_create();
 
+/**
+ * Destroy the object for a wavefront obj file.
+ */
 AA_API void
 aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * );
 
+/**
+ * Add a new vertex element
+ */
 AA_API void
-aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, float f );
+aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, double f );
 
+/**
+ * Add a new normal element
+ */
 AA_API void
-aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, float f );
+aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, double f );
 
+/**
+ * Add a new face
+ */
 AA_API void
 aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
                         struct aa_rx_wf_obj_face *face );
 
-
+/**
+ * Add a new object name
+ */
 AA_API void
 aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
                           const char *object );
 
+/**
+ * Add a new mtl file
+ */
 AA_API void
 aa_rx_wf_obj_push_material( struct aa_rx_wf_obj *obj,
                             const char *mtl_file );
 
+/**
+ * Set the active material by name
+ */
 AA_API void
 aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
                            const char *material );
 
+/**
+ * Return the number of materials
+ */
+AA_API size_t
+aa_rx_wf_obj_material_count( struct aa_rx_wf_obj *obj );
+
+/**
+ * Return the name of the ith material
+ */
+AA_API const char *
+aa_rx_wf_obj_get_material_name( struct aa_rx_wf_obj *obj, size_t i );
+
 AA_API struct aa_rx_wf_obj *
 aa_rx_wf_parse(const char *filename);
+
+/**
+ * Retrieve the verticies
+ */
+AA_API void
+aa_rx_wf_obj_get_vertices( const struct aa_rx_wf_obj *obj,
+                           const double **verticies, size_t *n );
+
+/**
+ * Retrieve the normals
+ */
+AA_API void
+aa_rx_wf_obj_get_normals( const struct aa_rx_wf_obj *obj,
+                          const double **normals, size_t *n );
+
+/**
+ * Retrieve the faces
+ */
+AA_API void
+aa_rx_wf_obj_get_faces( const struct aa_rx_wf_obj *obj,
+                        struct aa_rx_wf_obj_face * const **faces, size_t *n );
 
 #endif //AMINO_RX_WAVEFRONT_H

@@ -39,6 +39,22 @@
 
 ;;(declaim (optimize (speed 3) (safety 0)))
 
+;;(cffi:defcfun aa-rx-wf-obj-create rx-wf-obj-t)
+
+(cffi:defcfun aa-rx-wf-parse rx-wf-obj-t
+  (filename :string))
+
+
+(cffi:defcfun aa-rx-wf-obj-get-vertices :void
+  (obj rx-wf-obj-t)
+  (ptr :pointer)
+  (n :pointer))
+
+(cffi:defcfun aa-rx-wf-obj-get-normals :void
+  (obj rx-wf-obj-t)
+  (ptr :pointer)
+  (n :pointer))
+
 (defstruct wavefront-obj-face
   vertex-index
   normal-index
@@ -344,6 +360,21 @@
         ("stl" (convert mesh-file))
         ("dae" (convert mesh-file))
         (otherwise (error "Unknown file type: ~A" file-type))))))
+
+(defun load-mesh2 (filename )
+  (let* ((obj (aa-rx-wf-parse (rope-string filename)))
+         (vertices (cffi:with-foreign-objects ((n 'size-t)
+                                               (f :pointer))
+                     (aa-rx-wf-obj-get-vertices obj f n)
+                     (amino-ffi::foreign-vector-dup (cffi:mem-ref f :pointer)
+                                                    (cffi:mem-ref n 'size-t)
+                                                    :double 'double-float)))
+         (normals (cffi:with-foreign-objects ((n 'size-t)
+                                               (f :pointer))
+                    (aa-rx-wf-obj-get-normals obj f n)
+                    (amino-ffi::foreign-vector-dup (cffi:mem-ref f :pointer)
+                                                   (cffi:mem-ref n 'size-t)
+                                                   :double 'double-float))))))
 
 
 
