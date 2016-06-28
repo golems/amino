@@ -16,7 +16,10 @@ These dependecies are optional and may be used to enable additional
 features in Amino:
 
 * Robot Models (URDF, Collada, Wavefront, etc.):
-  - Blender: http://www.blender.org (see 'Note 1' on versions below)
+  - Flex, The Fast Lexical Analyzer: http://flex.sourceforge.net/
+    (needed to parse Wavefront OBJ files)
+  - Blender: http://www.blender.org (used to convert mesh files, see
+    'Note 1' on versions below)
   - SBCL: http://www.sbcl.org/ (see 'Note 2' on versions below)
   - Quicklisp: https://www.quicklisp.org
   - Sycamore: https://github.com/ndantam/sycamore
@@ -49,7 +52,7 @@ To install these on Debian or Ubuntu GNU/Linux, you can do:
          libfcl-dev libompl-dev \
          sbcl \
          default-jdk
-         blender povray libav-tools \
+         blender flex povray libav-tools \
          coinor-libclp-dev libglpk-dev liblpsolve55-dev
 
 
