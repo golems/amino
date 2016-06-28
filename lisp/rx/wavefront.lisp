@@ -58,6 +58,20 @@
 (def-wf-obj-array aa-rx-wf-obj-get-texture-indices)
 
 
+(cffi:defcfun aa-rx-wf-obj-mtl-count size-t
+     (obj rx-wf-obj-t))
+
+(cffi:defcfun aa-rx-wf-obj-get-mtl :string
+  (obj rx-wf-obj-t)
+  (i size-t))
+
+(cffi:defcfun aa-rx-wf-obj-material-count size-t
+     (obj rx-wf-obj-t))
+
+(cffi:defcfun aa-rx-wf-obj-get-material-name :string
+  (obj rx-wf-obj-t)
+  (i size-t))
+
 (defstruct wavefront-obj-face
   vertex-index
   normal-index
@@ -304,21 +318,57 @@
                                                      collect (wavefront-obj-face-normal-index f)))))))
 (defun wavefront-obj-load2 (filename )
   ;(declare (optimize (speed 3) (safety 0)))
-  (let ((obj (aa-rx-wf-parse (rope-string filename))))
-    (flet ((get-array (accessor foreign-type lisp-type)
-             (cffi:with-foreign-objects ((n 'size-t)
-                                         (v :pointer))
-               (funcall accessor obj v n)
-               (amino-ffi::foreign-vector-dup (cffi:mem-ref v :pointer)
-                                              (cffi:mem-ref n 'size-t)
-                                              foreign-type lisp-type))))
+  (let* ((obj (aa-rx-wf-parse (rope-string filename)))
+         ;; Materials
+         (materials-alist (loop for i below (aa-rx-wf-obj-mtl-count obj)
+                             for mtl-file = (aa-rx-wf-obj-get-mtl obj i)
+                             append (wavefront-mtl-load mtl-file filename)))
+         (materials-array (make-array (aa-rx-wf-obj-mtl-count obj))))
+    (dotimes (i (length materials-array))
+      ;; TODO: error check
+      (setf (aref materials-array i)
+            (assoc (aa-rx-wf-obj-get-material-name obj i) materials-alist :test #'string=)))
+    (print materials-array)
+    ;; Extract data arrays
+    (labels ((get-array (accessor foreign-type lisp-type)
+               (cffi:with-foreign-objects ((n 'size-t)
+                                           (v :pointer))
+                 (funcall accessor obj v n)
+                 (amino-ffi::foreign-vector-dup (cffi:mem-ref v :pointer)
+                                                (cffi:mem-ref n 'size-t)
+                                                foreign-type lisp-type)))
+             (get-fix-array (accessor)
+               ;; TODO: We could elide a copy here by directly converting
+               ;; foreign memory to fixnums
+               (let* ((v32 (get-array accessor :int32 '(signed-byte 32)))
+                      (n (length v32))
+                      (vf (make-fnvec (length v32))))
+                 (dotimes (i n)
+                   (setf (aref vf i) (aref v32 i)))
+                 vf)))
       (let ((vertices (get-array #'aa-rx-wf-obj-get-vertices :double 'double-float))
             (normals (get-array #'aa-rx-wf-obj-get-normals :double 'double-float))
-            (vertex-indices  (get-array #'aa-rx-wf-obj-get-vertex-indices :int32 '(signed-byte 32)))
-            (normal-indices  (get-array #'aa-rx-wf-obj-get-normal-indices :int32 '(signed-byte 32)))
-            (uv-indices  (get-array #'aa-rx-wf-obj-get-uv-indices :int32 '(signed-byte 32)))
-            (texture-indices  (get-array #'aa-rx-wf-obj-get-texture-indices :int32 '(signed-byte 32))))
-        vertex-indices))))
+            (vertex-indices  (get-fix-array #'aa-rx-wf-obj-get-vertex-indices))
+            (normal-indices  (get-fix-array #'aa-rx-wf-obj-get-normal-indices))
+            (uv-indices  (get-fix-array #'aa-rx-wf-obj-get-uv-indices))
+            (texture-indices  (get-fix-array #'aa-rx-wf-obj-get-texture-indices)))
+        (values)
+       ;; vertex-indices
+        (let* (;(material-index-hash (make-hash-table :test #'equal))
+               (texture-properties
+                (loop for (material . texture) across materials-array
+                   collect texture)))
+          (make-mesh-data  :name (file-basename filename)
+                           :file filename
+                           :vertex-vectors vertices
+                           :normal-vectors normals
+                           ;; TODO: uv vectors
+                           ;; :uv-vectors (array-cat 'double-float uv)
+                           :texture-properties texture-properties
+                           :texture-indices texture-indices
+                           :uv-indices uv-indices
+                           :vertex-indices vertex-indices
+                           :normal-indices normal-indices))))))
 
 (defun mesh-regen-p (reload source-file output-file)
   (or reload

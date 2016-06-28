@@ -100,8 +100,20 @@ aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
  * Add a new mtl file
  */
 AA_API void
-aa_rx_wf_obj_push_material( struct aa_rx_wf_obj *obj,
-                            const char *mtl_file );
+aa_rx_wf_obj_push_mtl( struct aa_rx_wf_obj *obj,
+                       const char *mtl_file );
+
+/**
+ * Return the number of MTL files
+ */
+AA_API size_t
+aa_rx_wf_obj_mtl_count( struct aa_rx_wf_obj *obj );
+
+/**
+ * Return the ith MTL files
+ */
+AA_API const char *
+aa_rx_wf_obj_get_mtl( struct aa_rx_wf_obj *obj, size_t i );
 
 /**
  * Set the active material by name

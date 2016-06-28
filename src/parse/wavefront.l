@@ -124,7 +124,7 @@ START {MAYBE_BLANKS}
 }
 
 <MTLLIB>[[:graph:]]+ {
-    aa_rx_wf_obj_push_material( yyextra->wf_obj, yytext );
+    aa_rx_wf_obj_push_mtl( yyextra->wf_obj, yytext );
     BEGIN(EOL);
 }
 

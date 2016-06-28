@@ -96,8 +96,8 @@ aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
 {
     for( int i = 0; i < 3; i ++ ) {
         obj->vertex_indices.push_back(face->v[i]);
-        obj->normal_indices.push_back(face->v[i]);
-        obj->uv_indices.push_back(face->v[i]);
+        obj->normal_indices.push_back(face->n[i]);
+        obj->uv_indices.push_back(face->t[i]);
     }
 
     obj->texture_indices.push_back(obj->current_material);
@@ -112,10 +112,28 @@ aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
 }
 
 AA_API void
-aa_rx_wf_obj_push_material( struct aa_rx_wf_obj *obj,
-                            const char *mtl_file )
+aa_rx_wf_obj_push_mtl( struct aa_rx_wf_obj *obj,
+                       const char *mtl_file )
 {
     obj->mtl_files.push_back(mtl_file);
+}
+
+
+AA_API size_t
+aa_rx_wf_obj_mtl_count( struct aa_rx_wf_obj *obj )
+{
+    return obj->mtl_files.size();
+}
+
+
+AA_API const char *
+aa_rx_wf_obj_get_mtl( struct aa_rx_wf_obj *obj, size_t i )
+{
+    if( i <= obj->mtl_files.size() ) {
+        return obj->mtl_files[i].c_str();
+    } else {
+        return NULL;
+    }
 }
 
 AA_API void
@@ -136,6 +154,7 @@ aa_rx_wf_obj_material_count( struct aa_rx_wf_obj *obj )
 {
     return obj->materials.size();
 }
+
 
 AA_API const char *
 aa_rx_wf_obj_get_material_name( struct aa_rx_wf_obj *obj, size_t i )
