@@ -12,8 +12,10 @@ int main(int argc, char **argv) {
 
     const char *filename = argv[1];
     fprintf(stdout, "Input: %s\n", filename);
-    aa_rx_wf_parse(filename);
+    struct aa_rx_wf_obj *obj = aa_rx_wf_parse(filename);
     fprintf(stdout, "done\n");
+
+    aa_rx_wf_obj_destroy(obj);
 
     return 0;
 }

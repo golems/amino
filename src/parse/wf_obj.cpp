@@ -70,6 +70,9 @@ aa_rx_wf_obj_create()
 AA_API void
 aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
 {
+    for( struct aa_rx_wf_obj_face * &f : obj->face ) {
+        free(f);
+    }
     delete obj;
 }
 
