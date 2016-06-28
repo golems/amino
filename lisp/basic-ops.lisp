@@ -296,6 +296,7 @@ N: cols in the block."
               :element-type 'double-float
               :initial-element initial-element))
 
+(declaim (inline make-fnvec n))
 (defun make-fnvec (n)
   (make-array n :element-type 'fixnum))
 
