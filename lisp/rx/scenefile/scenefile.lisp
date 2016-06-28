@@ -87,6 +87,7 @@
 (defun scene-graph-resolve! (scene-graph &key
                                            filename
                                            reload
+                                           (emit-povray t)
                                            (bind-c-geom t)
                                            (compile t)
                                            (mesh-up-axis "Z")
@@ -94,6 +95,7 @@
   (let ((scene-graph (scene-graph scene-graph)))
     (scene-graph-resolve-povray! scene-graph
                                  :reload reload
+                                 :emit emit-povray
                                  :mesh-up-axis mesh-up-axis
                                  :mesh-forward-axis mesh-forward-axis)
     (when bind-c-geom
@@ -108,6 +110,7 @@
                           type
                           reload
                           (bind-c-geom t)
+                          (emit-povray t)
                           (compile t)
                           (mesh-up-axis "Z")
                           (mesh-forward-axis "Y"))
@@ -130,6 +133,7 @@
                           :filename truename
                           :reload reload
                           :bind-c-geom bind-c-geom
+                          :emit-povray emit-povray
                           :compile compile
                           :mesh-up-axis mesh-up-axis
                           :mesh-forward-axis mesh-forward-axis)

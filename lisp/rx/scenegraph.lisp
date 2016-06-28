@@ -722,6 +722,7 @@
 
 (defun scene-graph-resolve-povray! (scene-graph &key
                                                   reload
+                                                  (emit t)
                                                   (mesh-up-axis "Z")
                                                   (mesh-forward-axis "Y")
                                                   (directory *robray-tmp-directory*))
@@ -739,19 +740,20 @@
         (declare (ignore frame))
         (test-shape (scene-geometry-shape geometry))))
     ;; Load meshes
-    (maphash (lambda (mesh-file mesh-nodes)
-               ;(format *standard-output* "~&Converting ~A..." mesh-file)
-               (multiple-value-bind (geom-name inc-file)
-                   (mesh-povray mesh-file
-                                :directory directory
-                                :reload reload
-                                :mesh-up-axis mesh-up-axis
-                                :mesh-forward-axis mesh-forward-axis)
-                 (let ((mesh-name geom-name))
-                   (dolist (mesh-node mesh-nodes)
-                     (setf (scene-mesh-name mesh-node) mesh-name
-                           (scene-mesh-povray-file mesh-node) inc-file)))))
-             mesh-files)
+    (when emit
+      (maphash (lambda (mesh-file mesh-nodes)
+                                        ;(format *standard-output* "~&Converting ~A..." mesh-file)
+                 (multiple-value-bind (geom-name inc-file)
+                     (mesh-povray mesh-file
+                                  :directory directory
+                                  :reload reload
+                                  :mesh-up-axis mesh-up-axis
+                                  :mesh-forward-axis mesh-forward-axis)
+                   (let ((mesh-name geom-name))
+                     (dolist (mesh-node mesh-nodes)
+                       (setf (scene-mesh-name mesh-node) mesh-name
+                             (scene-mesh-povray-file mesh-node) inc-file)))))
+               mesh-files))
     scene-graph))
 
 (defun scene-graph-remove-geometry (scene-graph frames)

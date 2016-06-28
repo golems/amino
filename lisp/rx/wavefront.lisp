@@ -239,96 +239,22 @@
       (loop for i below 3
          collect (parse-float (subseq string (aref s i) (aref e i)))))))
 
-(defun wavefront-obj-load (obj-file)
-  (format t "~&  LOAD ~A~%" obj-file)
-  (let ((name)
-        (vertices        ;(vector (vec x y z)...)
-         (make-array 10 :adjustable t :fill-pointer 0))
-        (normals         ;(vector (vec x y z)...)
-         (make-array 10 :adjustable t :fill-pointer 0))
-        (faces  ;(vector (array x y z)...)
-         (make-array 10 :adjustable t :fill-pointer 0))
-        (uv
-         (make-array 10 :adjustable t :fill-pointer 0))
-        (materials)
-        (current-material))
-    (with-open-file (stream obj-file :direction :input)
-      (loop with warned = nil
-         for line = (read-line stream nil nil)
-         for lineno from 0
-         while line
-         do
-           (let ((line (strip-hash-comment line))
-                 (matched nil))
-             (ppcre:register-groups-bind (command data)
-                 (+wavefront-command-scanner+ line)
-               (setq matched t)
-               (string-case command
-                 ("o"  (if (null name)
-                           (setq name data)
-                           (progn (unless warned
-                                    (warn "`~A': Multiple objects not implemented"
-                                          obj-file)
-                                    (setq warned t))
-                                  (setq name (file-basename obj-file)))))
-                 ("v"
-                  (vector-push-extend (parse-vec3 data)
-                                      vertices))
-                 ("vn"
-                  (vector-push-extend (parse-vec3 data) normals))
-                 ("f" (vector-push-extend (parse-wavefront-face line current-material lineno)
-                                          faces))
-                 ("mtllib"
-                  (setq materials (append materials (wavefront-mtl-load data obj-file))))
-                 ("usemtl" (setq current-material data))
-                 ("vt"
-                  (vector-push-extend (parse-float-sequence data) uv))
-                 ("g"; TODO
-                  )
-                 ("s"; TODO
-                  )
-                 ("l"; TODO
-                  )
-                 (otherwise (error "Unrecognized command ~A on line ~D" command lineno))))
-             (assert (or (null line) matched) ()
-                     "Error on line ~D" lineno))))
-    (let* ((material-index-hash (make-hash-table :test #'equal))
-           (texture-properties
-            (loop for i from 0 for (material . texture) in materials
-               do (setf (gethash material material-index-hash) i)
-               collect texture)))
-      (make-mesh-data  :name (name-mangle (or name (file-basename obj-file)))
-                       :file obj-file
-                       :vertex-vectors (array-cat 'double-float vertices)
-                       :normal-vectors (array-cat 'double-float normals)
-                       :uv-vectors (array-cat 'double-float uv)
-                       :texture-properties texture-properties
-                       :texture-indices (map-into (make-array (length faces) :element-type 'fixnum)
-                                                  (lambda (f) (gethash (wavefront-obj-face-material f)
-                                                                       material-index-hash))
-                                                  faces)
-                       :uv-indices (array-cat 'fixnum
-                                              (loop for f across faces
-                                                 collect (wavefront-obj-face-uv-index f)))
-                       :vertex-indices (array-cat 'fixnum
-                                                  (loop for f across faces
-                                                     collect (wavefront-obj-face-vertex-index f)))
-                       :normal-indices (array-cat 'fixnum
-                                                  (loop for f across faces
-                                                     collect (wavefront-obj-face-normal-index f)))))))
-(defun wavefront-obj-load2 (filename )
-  ;(declare (optimize (speed 3) (safety 0)))
-  (let* ((obj (aa-rx-wf-parse (rope-string filename)))
+
+(defun wavefront-obj-load (filename )
+  (format *standard-output* "~&  OBJSCAN ~A..." filename)
+  (finish-output *standard-output*)
+  (let* ((time (get-internal-real-time))
+         (obj (aa-rx-wf-parse (rope-string filename)))
          ;; Materials
          (materials-alist (loop for i below (aa-rx-wf-obj-mtl-count obj)
                              for mtl-file = (aa-rx-wf-obj-get-mtl obj i)
                              append (wavefront-mtl-load mtl-file filename)))
-         (materials-array (make-array (aa-rx-wf-obj-mtl-count obj))))
+         (materials-array (make-array (aa-rx-wf-obj-material-count obj))))
     (dotimes (i (length materials-array))
       ;; TODO: error check
       (setf (aref materials-array i)
             (assoc (aa-rx-wf-obj-get-material-name obj i) materials-alist :test #'string=)))
-    (print materials-array)
+    ;;(print materials-array)
     ;; Extract data arrays
     (labels ((get-array (accessor foreign-type lisp-type)
                (cffi:with-foreign-objects ((n 'size-t)
@@ -358,17 +284,23 @@
                (texture-properties
                 (loop for (material . texture) across materials-array
                    collect texture)))
-          (make-mesh-data  :name (file-basename filename)
-                           :file filename
-                           :vertex-vectors vertices
-                           :normal-vectors normals
-                           ;; TODO: uv vectors
-                           ;; :uv-vectors (array-cat 'double-float uv)
-                           :texture-properties texture-properties
-                           :texture-indices texture-indices
-                           :uv-indices uv-indices
-                           :vertex-indices vertex-indices
-                           :normal-indices normal-indices))))))
+          (prog1 (make-mesh-data  :name (file-basename filename)
+                                  :file filename
+                                  :vertex-vectors vertices
+                                  :normal-vectors normals
+                                  ;; TODO: uv vectors
+                                  ;; :uv-vectors (array-cat 'double-float uv)
+                                  :texture-properties texture-properties
+                                  :texture-indices texture-indices
+                                  :uv-indices uv-indices
+                                  :vertex-indices vertex-indices
+                                  :normal-indices normal-indices)
+            (let* ((now (get-internal-real-time))
+                   (sec (/ (- now time)
+                           internal-time-units-per-second)))
+              (format *standard-output* "done (~Fms)~%"
+                      (* sec 1d3))
+              (finish-output *standard-output*))))))))
 
 (defun mesh-regen-p (reload source-file output-file)
   (or reload
@@ -429,7 +361,6 @@
         ("stl" (convert mesh-file))
         ("dae" (convert mesh-file))
         (otherwise (error "Unknown file type: ~A" file-type))))))
-
 
 
 (defun mesh-povray (mesh-file
@@ -507,3 +438,86 @@
 ;;         (progn
 ;;           ;(format t "~&pov cached ~A" obj-file)
 ;;           (wavefront-obj-name obj-file)))))
+
+
+
+;; Old CL-PPCRE based wavefront OBJ parser
+;; The Flex-based OBJ scanner is ~10 times faster
+;;
+;; (defun wavefront-obj-load (obj-file)
+;;   (format t "~&  LOAD ~A~%" obj-file)
+;;   (let ((name)
+;;         (vertices        ;(vector (vec x y z)...)
+;;          (make-array 10 :adjustable t :fill-pointer 0))
+;;         (normals         ;(vector (vec x y z)...)
+;;          (make-array 10 :adjustable t :fill-pointer 0))
+;;         (faces  ;(vector (array x y z)...)
+;;          (make-array 10 :adjustable t :fill-pointer 0))
+;;         (uv
+;;          (make-array 10 :adjustable t :fill-pointer 0))
+;;         (materials)
+;;         (current-material))
+;;     (with-open-file (stream obj-file :direction :input)
+;;       (loop with warned = nil
+;;          for line = (read-line stream nil nil)
+;;          for lineno from 0
+;;          while line
+;;          do
+;;            (let ((line (strip-hash-comment line))
+;;                  (matched nil))
+;;              (ppcre:register-groups-bind (command data)
+;;                  (+wavefront-command-scanner+ line)
+;;                (setq matched t)
+;;                (string-case command
+;;                  ("o"  (if (null name)
+;;                            (setq name data)
+;;                            (progn (unless warned
+;;                                     (warn "`~A': Multiple objects not implemented"
+;;                                           obj-file)
+;;                                     (setq warned t))
+;;                                   (setq name (file-basename obj-file)))))
+;;                  ("v"
+;;                   (vector-push-extend (parse-vec3 data)
+;;                                       vertices))
+;;                  ("vn"
+;;                   (vector-push-extend (parse-vec3 data) normals))
+;;                  ("f" (vector-push-extend (parse-wavefront-face line current-material lineno)
+;;                                           faces))
+;;                  ("mtllib"
+;;                   (setq materials (append materials (wavefront-mtl-load data obj-file))))
+;;                  ("usemtl" (setq current-material data))
+;;                  ("vt"
+;;                   (vector-push-extend (parse-float-sequence data) uv))
+;;                  ("g"; TODO
+;;                   )
+;;                  ("s"; TODO
+;;                   )
+;;                  ("l"; TODO
+;;                   )
+;;                  (otherwise (error "Unrecognized command ~A on line ~D" command lineno))))
+;;              (assert (or (null line) matched) ()
+;;                      "Error on line ~D" lineno))))
+;;     (let* ((material-index-hash (make-hash-table :test #'equal))
+;;            (texture-properties
+;;             (loop for i from 0 for (material . texture) in materials
+;;                do (setf (gethash material material-index-hash) i)
+;;                collect texture)))
+;;       (make-mesh-data  :name (name-mangle (or name (file-basename obj-file)))
+;;                        :file obj-file
+;;                        :vertex-vectors (array-cat 'double-float vertices)
+;;                        :normal-vectors (array-cat 'double-float normals)
+;;                        :uv-vectors (array-cat 'double-float uv)
+;;                        :texture-properties texture-properties
+;;                        :texture-indices (map-into (make-array (length faces) :element-type 'fixnum)
+;;                                                   (lambda (f) (gethash (wavefront-obj-face-material f)
+;;                                                                        material-index-hash))
+;;                                                   faces)
+;;                        :uv-indices (array-cat 'fixnum
+;;                                               (loop for f across faces
+;;                                                  collect (wavefront-obj-face-uv-index f)))
+;;                        :vertex-indices (array-cat 'fixnum
+;;                                                   (loop for f across faces
+;;                                                      collect (wavefront-obj-face-vertex-index f)))
+;;                        :normal-indices (array-cat 'fixnum
+;;                                                   (loop for f across faces
+;;                                                      collect (wavefront-obj-face-normal-index f)))))))

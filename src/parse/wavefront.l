@@ -285,6 +285,11 @@ START {MAYBE_BLANKS}
     BEGIN(INITIAL);
 }
 
+
+    /* Ignore this thing */
+"l"{BLANKS}.* {
+}
+
     /* Error */
     /* This rule needs to be last */
 
