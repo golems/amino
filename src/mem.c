@@ -437,3 +437,9 @@ void *aa_mem_rlist_pop( struct aa_mem_rlist *list ) {
     return node->data;
 
 }
+
+size_t aa_mem_ftoa( char *buf, size_t size, double f ) {
+    int i = snprintf(buf, size, "%f", f);
+    if( i < 0 ) return 0;
+    else return (size_t)i;
+}

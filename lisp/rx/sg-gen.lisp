@@ -201,8 +201,23 @@
 
 (defun scene-genc-single-float-sequence (sequence)
   (map 'vector (lambda (f)
-                 (format nil "~Ff" f))
+                 (rope (amino::float-to-string f) '|f|))
        sequence))
+
+(defun gen-literal-float-array (type name values)
+  (let ((*print-pretty* nil)
+        (n (length values)))
+    (cgen-stmt (rope type " " name
+                     "[" n "] = {"
+                     (format nil "~{~Ff~^,~}" (vec-list values))
+                     "}"))))
+
+(defun gen-literal-int-array (type name values)
+  (let ((*print-pretty* nil))
+    (cgen-stmt (rope type " " name
+                     "[" (length values) "] = {"
+                     (format nil "~{~D~^,~}" (vec-list values))
+                     "}"))))
 
 (defun scene-genc-mesh-functions (scene-graph static)
   ;; declare
@@ -216,17 +231,14 @@
                    nil
                    (list (cgen-declare "struct aa_rx_mesh *" var (cgen-call "aa_rx_mesh_create"))
                          ;; vertices
-                         (cgen-declare-array "static const float" "vertices"
-                                             (scene-genc-single-float-sequence
-                                              (mesh-data-vertex-vectors normed-data)))
+                         (gen-literal-float-array "static const float" "vertices"
+                                                   (mesh-data-vertex-vectors normed-data))
                          ;; normals
-                         (cgen-declare-array "static const float" "normals"
-                                             (scene-genc-single-float-sequence
-                                             (mesh-data-normal-vectors normed-data)))
+                         (gen-literal-float-array "static const float" "normals"
+                                                  (mesh-data-normal-vectors normed-data))
                          ;; indices
-                         (cgen-declare-array "static const unsigned" "indices"
-                                             (scene-genc-single-float-sequence
-                                              (mesh-data-vertex-indices normed-data)))
+                         (gen-literal-int-array "static const unsigned" "indices"
+                                                (mesh-data-vertex-indices normed-data))
                          ;; fill
                          (cgen-call-stmt "aa_rx_mesh_set_vertices" var (mesh-data-vertex-vectors-count normed-data)
                                          "vertices" 0)
@@ -344,13 +356,14 @@
   (when (or reload
             (not (probe-file source-file)))
     (create-parent-directories source-file)
-    (output-rope (rope (cgen-include-system "amino.h")
-                       (cgen-include-system "amino/rx.h")
-                       (scene-graph-genc scene-graph
-                                         :scene-name scene-name
-                                         :static-mesh static-mesh))
-                 source-file
-                 :if-exists :supersede))
+    (let ((*print-pretty* nil))
+      (output-rope (rope (cgen-include-system "amino.h")
+                         (cgen-include-system "amino/rx.h")
+                         (scene-graph-genc scene-graph
+                                           :scene-name scene-name
+                                           :static-mesh static-mesh))
+                   source-file
+                   :if-exists :supersede)))
   ;; shared object
   (when (and shared-object
              (or reload
