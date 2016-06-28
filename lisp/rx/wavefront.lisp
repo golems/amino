@@ -55,6 +55,17 @@
   (ptr :pointer)
   (n :pointer))
 
+(cffi:defcfun aa-rx-wf-obj-get-faces :void
+  (obj rx-wf-obj-t)
+  (ptr :pointer)
+  (n :pointer))
+
+(cffi:defcstruct aa-rx-wf-obj-face
+  (v amino-ffi::ssize-t :count 3)
+  (n amino-ffi::ssize-t :count 3)
+  (t amino-ffi::ssize-t :count 3)
+  (material size-t))
+
 (defstruct wavefront-obj-face
   vertex-index
   normal-index
@@ -299,7 +310,58 @@
                        :normal-indices (array-cat 'fixnum
                                                   (loop for f across faces
                                                      collect (wavefront-obj-face-normal-index f)))))))
-
+(defun wavefront-obj-load2 (filename )
+  (let* ((obj (aa-rx-wf-parse (rope-string filename)))
+         (vertices (cffi:with-foreign-objects ((n 'size-t)
+                                               (f :pointer))
+                     (aa-rx-wf-obj-get-vertices obj f n)
+                     (amino-ffi::foreign-vector-dup (cffi:mem-ref f :pointer)
+                                                    (cffi:mem-ref n 'size-t)
+                                                    :double 'double-float)))
+         (normals (cffi:with-foreign-objects ((n 'size-t)
+                                               (f :pointer))
+                    (aa-rx-wf-obj-get-normals obj f n)
+                    (amino-ffi::foreign-vector-dup (cffi:mem-ref f :pointer)
+                                                   (cffi:mem-ref n 'size-t)
+                                                   :double 'double-float))))
+    ;; Load faces
+    (multiple-value-bind (faces n) (cffi:with-foreign-objects ((n 'size-t)
+                                                               (p :pointer))
+                                     (aa-rx-wf-obj-get-faces obj p n)
+                                     (values (cffi:mem-ref p :pointer)
+                                             (cffi:mem-ref n 'size-t)))
+      (let ((texture-indices (make-fnvec n))
+            (uv-indices (make-fnvec (* 3 n)))
+            (vertex-indices (make-fnvec (* 3 n)))
+            (normal-indices (make-fnvec (* 3 n)))
+            ;; Find structure offsets.  Extracting slots via
+            ;; CFFI:MEM-REF is /much/ faster than using
+            ;; CFFI:FOREIGN-SLOT-POINTER and CFFI:MEM-AREF
+            (off-n (cffi:foreign-slot-offset '(:struct aa-rx-wf-obj-face) 'n))
+            (off-v (cffi:foreign-slot-offset '(:struct aa-rx-wf-obj-face) 'v))
+            (off-t (cffi:foreign-slot-offset '(:struct aa-rx-wf-obj-face) 't))
+            (sizeof-ssize-t (cffi:foreign-type-size 'amino-ffi::ssize-t)))
+        (declare (type (simple-array fixnum (*)) uv-indices vertex-indices normal-indices))
+        (do ((i 0 (1+ i))
+             (j 0))
+            ((= i n))
+          (declare (type fixnum i j))
+          (let ((face (cffi:mem-aref faces '(:pointer (:struct aa-rx-wf-obj-face))
+                                     i)))
+            (setf (aref texture-indices i)
+                  (cffi:foreign-slot-value face '(:struct aa-rx-wf-obj-face) 'material))
+            (do ((k 0 (1+ k))
+                 (off 0 (+ off sizeof-ssize-t)))
+                ((= k 3))
+              (declare (type fixnum k))
+              (setf (aref vertex-indices j) (cffi:mem-ref face 'amino-ffi::ssize-t
+                                                          (+ off-v off))
+                    (aref normal-indices j) (cffi:mem-ref face 'amino-ffi::ssize-t
+                                                          (+ off-n off))
+                    (aref uv-indices j) (cffi:mem-ref face 'amino-ffi::ssize-t
+                                                      (+ off-t off)))
+              (incf j))))
+        normal-indices))))
 
 (defun mesh-regen-p (reload source-file output-file)
   (or reload
@@ -360,21 +422,6 @@
         ("stl" (convert mesh-file))
         ("dae" (convert mesh-file))
         (otherwise (error "Unknown file type: ~A" file-type))))))
-
-(defun load-mesh2 (filename )
-  (let* ((obj (aa-rx-wf-parse (rope-string filename)))
-         (vertices (cffi:with-foreign-objects ((n 'size-t)
-                                               (f :pointer))
-                     (aa-rx-wf-obj-get-vertices obj f n)
-                     (amino-ffi::foreign-vector-dup (cffi:mem-ref f :pointer)
-                                                    (cffi:mem-ref n 'size-t)
-                                                    :double 'double-float)))
-         (normals (cffi:with-foreign-objects ((n 'size-t)
-                                               (f :pointer))
-                    (aa-rx-wf-obj-get-normals obj f n)
-                    (amino-ffi::foreign-vector-dup (cffi:mem-ref f :pointer)
-                                                   (cffi:mem-ref n 'size-t)
-                                                   :double 'double-float))))))
 
 
 

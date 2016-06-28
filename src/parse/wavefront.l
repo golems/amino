@@ -282,6 +282,7 @@ START {MAYBE_BLANKS}
 <FN2>{INT}{END} {
     /* Normal 2 */
     SET_WF_FACE(n[2]);
+    aa_rx_wf_obj_push_face(yyextra->wf_obj, yyextra->face);
     yyextra->face = NULL;
     BEGIN(INITIAL);
 }
