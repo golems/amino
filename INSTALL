@@ -51,7 +51,7 @@ To install these on Debian or Ubuntu GNU/Linux, you can do:
          libglew-dev libsdl2-dev \
          libfcl-dev libompl-dev \
          sbcl \
-         default-jdk
+         default-jdk \
          blender flex povray libav-tools \
          coinor-libclp-dev libglpk-dev liblpsolve55-dev
 
