@@ -29,7 +29,7 @@ AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_srcd
 simple-rx/scene.c: simple-rx/scene.robray
 	$(AARXC) $(srcdir)/simple-rx/scene.robray -o simple-rx/scene.c
 
-BUILT_SCENES += urdf/simple-rx/scene.c urdf/simple-rx/scene.c.h
+BUILT_SCENES += simple-rx/scene.c simple-rx/scene.c.h
 
 noinst_PROGRAMS += simple-rx/simple-scenefile
 

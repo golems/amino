@@ -337,8 +337,7 @@
        (apply #'vec (recurse e))))))
 
 
-(defun load-curly-scene (pathname &key
-                                    reload-meshes)
+(defun load-curly-scene (pathname)
   (let ((curly (curly-parse-file pathname))
         (file-directory (file-dirname pathname))
         (frames)
@@ -516,10 +515,9 @@
                  (setf (scene-geometry-type geometry) (property-classes properties))
                  (push (cons parent geometry) geoms))))
       (dolist (c curly)
-        (add-thing c)))
-    (scene-graph-resolve! (fold (lambda (sg g)
-                                  (scene-graph-add-geometry sg (car g) (cdr g)))
-                                (scene-graph frames)
-                                geoms)
-                          :reload reload-meshes
-                          :filename pathname)))
+        (add-thing c))
+      ;; Add Geometry
+      (fold (lambda (sg g)
+              (scene-graph-add-geometry sg (car g) (cdr g)))
+            (scene-graph frames)
+            geoms))))

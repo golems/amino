@@ -126,7 +126,7 @@
                                :reload-meshes reload
                                :mesh-up-axis mesh-up-axis
                                :mesh-forward-axis mesh-forward-axis))
-            (:curly (load-curly-scene truename :reload-meshes reload))
+            (:curly (load-curly-scene truename))
             ;; (:moveit (load-moveit-scene truename :reload-meshes reload-meshes))
             )))
     (scene-graph-resolve! scene-graph
