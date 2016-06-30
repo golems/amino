@@ -258,6 +258,25 @@ AC_LANG([C])
 ## OPTIONAL PACKAGES ##
 #######################
 
+## Blender ##
+
+AC_CHECK_PROGS([BLENDER], [blender])
+
+AS_IF([test "x$BLENDER" = "x"],
+  [
+      AC_MSG_WARN([Blender not found, only Wavefront OBJ meshes supported])
+  ],
+  [
+      AC_MSG_CHECKING([blender COLLADA support])
+      rm -rf colaldatest.obj
+      "$BLENDER" -b -P $srcdir/share/exec/meshconv -- $srcdir/colladatest.dae -o colladatest.obj > /dev/null 2>/dev/null
+      AS_IF([test -e colladatest.obj],
+            [AC_MSG_RESULT([yes])],
+            [AC_MSG_RESULT([no])
+             AC_MSG_WARN([Blender lacks COLLADA support, cannot load DAE meshes])])
+  ])
+
+
 ## OpenGL ##
 AC_ARG_WITH([opengl],
             [AS_HELP_STRING([--without-opengl], [Disable OpenGL support])],

@@ -154,3 +154,5 @@ amino*.tar.gz
 /src/parse/Makefile
 /src/parse/Makefile.in
 /src/parse/wavefront.c
+/colladatest.mtl
+/colladatest.obj
