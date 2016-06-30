@@ -1,7 +1,7 @@
 SUBDIRS = src/parse . lisp demo
 
 ACLOCAL_AMFLAGS = -I m4
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
 EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
              src/la_impl.c                       \
              src/la_mod.F90 src/la_implf.F90     \
