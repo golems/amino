@@ -263,17 +263,16 @@ AC_LANG([C])
 AC_CHECK_PROGS([BLENDER], [blender])
 
 AS_IF([test "x$BLENDER" = "x"],
-  [
-      AC_MSG_WARN([Blender not found, only Wavefront OBJ meshes supported])
-  ],
+  [],
   [
       AC_MSG_CHECKING([blender COLLADA support])
-      rm -rf colaldatest.obj
+      rm -rf colladatest.obj
       "$BLENDER" -b -P $srcdir/share/exec/meshconv -- $srcdir/colladatest.dae -o colladatest.obj > /dev/null 2>/dev/null
       AS_IF([test -e colladatest.obj],
-            [AC_MSG_RESULT([yes])],
-            [AC_MSG_RESULT([no])
-             AC_MSG_WARN([Blender lacks COLLADA support, cannot load DAE meshes])])
+            [AC_MSG_RESULT([yes])
+             HAVE_BLENDER_COLLADA=yes
+            ],
+            [AC_MSG_RESULT([no])])
   ])
 
 
@@ -556,20 +555,45 @@ DEF_DEMO([jaco],[JACO])
 
 
 
+AS_IF([test "x$CC" = "x"],
+      [AC_MSG_ERROR([No C compiler detected])])
+AS_IF([test "x$CXX" = "x"],
+      [AC_MSG_ERROR([No C++ compiler detected])])
+
+
+
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile src/parse/Makefile])
+
+AC_DEFUN([CONFIG_SCRIPT],
+         [AC_CONFIG_FILES([$1],
+                          [chmod +x $1])])
+
+CONFIG_SCRIPT([demo/urdf/jaco/jaco-view])
+CONFIG_SCRIPT([demo/urdf/mico/mico-view])
+CONFIG_SCRIPT([demo/urdf/ur/ur10-view])
+CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
+CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
+
+AC_OUTPUT
+
+
 #############
 ## SUMMARY ##
 #############
-AC_MSG_NOTICE([===============================])
-AC_MSG_NOTICE([= AMINO CONFIGURATION SUMMARY =])
-AC_MSG_NOTICE([===============================])
+
+AS_BOX([AMINO CONFIGURATION SUMMARY])
+
 AC_MSG_NOTICE([prefix:            $prefix])
 AC_MSG_NOTICE([C compiler:        $CC])
+AC_MSG_NOTICE([CFLAGS:            $CFLAGS])
 AC_MSG_NOTICE([C++ compiler:      $CXX])
+AC_MSG_NOTICE([CXX:               $CXXFLAGS])
 AC_MSG_NOTICE([Use Fortran        $with_fortran])
 AC_MSG_NOTICE([Use Common Lisp:   $with_common_lisp])
 AC_MSG_NOTICE([Common Lisp:       $COMMON_LISP])
 AS_IF([test "x$with_fortran" = xyes],[
 AC_MSG_NOTICE([Fortran compiler:  $FC])]
+AC_MSG_NOTICE([FCFLAGS:           $FCFLAGS])
 )
 AC_MSG_NOTICE([Use Java           $with_java])
 AS_IF([test "x$with_java" = xyes], [
@@ -591,23 +615,9 @@ AS_IF([test '(' "x$enable_demo_baxter" = "xyes" -o "x$enable_demo_ur10" = xyes '
       [AC_MSG_WARN([URDF demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])
 
 
-AS_IF([test "x$CC" = "x"],
-      [AC_MSG_ERROR([No C compiler detected])])
-AS_IF([test "x$CXX" = "x"],
-      [AC_MSG_ERROR([No C++ compiler detected])])
+AS_IF([test "x$BLENDER" = x],
+      [AC_MSG_WARN([Blender not found, only Wavefront OBJ meshes supported])],
+      [AS_IF([test "x$HAVE_BLENDER_COLLADA" != xyes],
+             [AC_MSG_WARN([Blender lacks COLLADA support, cannot load DAE meshes])])])
 
-
-
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile src/parse/Makefile])
-
-AC_DEFUN([CONFIG_SCRIPT],
-         [AC_CONFIG_FILES([$1],
-                          [chmod +x $1])])
-
-CONFIG_SCRIPT([demo/urdf/jaco/jaco-view])
-CONFIG_SCRIPT([demo/urdf/mico/mico-view])
-CONFIG_SCRIPT([demo/urdf/ur/ur10-view])
-CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
-CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
-
-AC_OUTPUT
+AS_BOX([END SUMMARY])
