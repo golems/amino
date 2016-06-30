@@ -1,10 +1,9 @@
 CC := gcc --std=gnu99
-CXX := g++ --std=gnu++11
 
 ## Use pkg-config to determine the approprate compilation flags
 PKG_CONFIG_MODULES := amino amino_gl sdl2 glew
-CFLAGS_ALL := $(CFLAGS) -g `pkg-config --cflags $(PKG_CONFIG_MODULES)`
-LDFLAGS_ALL := $(LDLAGS) -g `pkg-config --libs $(PKG_CONFIG_MODULES)`
+CFLAGS = $(CFLAGS) -g `pkg-config --cflags $(PKG_CONFIG_MODULES)`
+LDFLAGS = $(LDLAGS) -g `pkg-config --libs $(PKG_CONFIG_MODULES)`
 
 ALL: simple-scenefile simple-procedural
 
@@ -12,10 +11,10 @@ scene.c: scene.robray
 	aarxc scene.robray -o scene.c
 
 simple-scenefile: scene.c simple-scenefile.c
-	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) scene.c simple-scenefile.c -o simple-scenefile
+	$(CC) $(CFLAGS) $(LDFLAGS) scene.c simple-scenefile.c -o simple-scenefile
 
 simple-procedural: simple-procedural.c
-	$(CC) $(CFLAGS_ALL) $(LDFLAGS_ALL) simple-procedural.c -o simple-procedural
+	$(CC) $(CFLAGS) $(LDFLAGS) simple-procedural.c -o simple-procedural
 
 
 clean:

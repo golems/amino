@@ -69,6 +69,7 @@ rxincludedir = $(pkgincludedir)/rx
 
 rxinclude_HEADERS = 	                \
 	include/amino/rx/rxtype.h       \
+	include/amino/rx/rxerr.h        \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/scene_gl.h     \
@@ -76,6 +77,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
+	include/amino/rx/scene_planning.h \
 	include/amino/rx/scene_sdl.h    \
 	include/amino/rx/scene_win.h    \
 	include/amino/rx/scene_plugin.h
