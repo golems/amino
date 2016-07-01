@@ -71,7 +71,19 @@ Then, install the following manually, if desired for ray tracing and
 robot model compilation:
 
   * Quicklisp: https://www.quicklisp.org
+
+    wget https://beta.quicklisp.org/quicklisp.lisp
+    sbcl --load quicklisp.lisp \
+         --eval '(quicklisp-quickstart:install)'
+         --eval '(ql:add-to-init-file)'
+         --eval '(quit)'
+
+
   * Sycamore: https://github.com/ndantam/sycamore
+
+    git clone https://github.com/ndantam/sycamore.git
+    mkdir --parents ~/.local/share/common-lisp/source
+    ln -s $(pwd)/sycamore/src/sycamore.asd ~/.local/share/common-lisp/source
 
 Overview
 =========
