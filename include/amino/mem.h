@@ -685,24 +685,28 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
  *
  * @param value Value to append
  */
-#define AA_VECTOR_PUSH( max, fill, ptr, value )         \
-    if( (fill) >= (max) ) {                             \
-        (max) = 2*(fill+1);                             \
-        (ptr) = (__typeof__(ptr))realloc(sizeof(*ptr)*max); \
-    }                                                   \
-    ptr[(fill)++] = (value);
+#define AA_VECTOR_PUSH( max, size, ptr, value )                 \
+    if( (size) >= (max) ) {                                     \
+        (max) = 2*(size+1);                                     \
+        (ptr) = (__typeof__(ptr))realloc(ptr,sizeof(*ptr)*max); \
+    }                                                           \
+    ptr[(size)++] = (value);
 
-#define AA_VECTOR_DEF( element_type, vector_type )               \
-    typedef struct {                                             \
-        size_t max;                                              \
-        size_t fill;                                             \
-        element_type *ptr;                                       \
-    } vector_type;                                               \
-    static inline vector_type ## _init                           \
-    ( vector_type *vec, size_t max ) {                           \
-        vec->ptr = (element_type*)malloc(max*sizeof(*ptr));      \
-        vec->max = max;                                          \
-        vec->fill = 0;                                           \
+#define AA_VECTOR_DEF( element_type, vector_type )                      \
+    typedef struct {                                                    \
+        size_t max;                                                     \
+        size_t size;                                                    \
+        element_type *data;                                             \
+    } vector_type;                                                      \
+    static inline void vector_type ## _init                             \
+    ( vector_type *vec, size_t max ) {                                  \
+        vec->data = (element_type*)malloc(max*sizeof(*vec->data));      \
+        vec->max = max;                                                 \
+        vec->size = (size_t)0;                                          \
+    };                                                                  \
+    static inline void vector_type ## _push                             \
+    ( vector_type *vec, element_type value ) {                          \
+        AA_VECTOR_PUSH(vec->max, vec->size, vec->data, value);          \
     };
 
 

@@ -41,6 +41,17 @@
 
 #include "amino/rx/wavefront.h"
 
+
+/**
+ * A face (triangle) in a wavefront obj file
+ */
+struct aa_rx_wf_obj_face {
+    int32_t v[3];    ///< Vertex indices
+    int32_t n[3];    ///< Normal indices
+    int32_t t[3];    ///< Texture indices
+    int32_t material; ///< Material index
+};
+
 struct wf_extra {
     struct aa_rx_wf_obj *wf_obj;
     struct aa_rx_wf_obj_face face;
@@ -49,5 +60,60 @@ struct wf_extra {
 #define WF_FACE(thing) yyextra->face.thing
 #define SET_WF_FACE(thing) WF_FACE(thing) = atol(yytext)-1
 #define SKIP_WF_FACE(thing) WF_FACE(thing) = AA_RX_WF_OBJ_FACE_NONE
+
+/**
+ * Create an object for a wavefront obj file.
+ */
+AA_API struct aa_rx_wf_obj *
+aa_rx_wf_obj_create();
+
+/**
+ * Add a new object name
+ */
+AA_API void
+aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
+                          const char *object );
+
+/**
+ * Add a new mtl file
+ */
+AA_API void
+aa_rx_wf_obj_push_mtl( struct aa_rx_wf_obj *obj,
+                       const char *mtl_file );
+
+/**
+ * Add a new vertex element
+ */
+AA_API void
+aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, double f );
+
+/**
+ * Add a new normal element
+ */
+AA_API void
+aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, double f );
+
+/**
+ * Add a new face
+ */
+AA_API void
+aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
+                        struct aa_rx_wf_obj_face *face );
+
+
+/**
+ * Set the active material by name
+ */
+AA_API void
+aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
+                           const char *material );
+
+
+
+
+AA_API struct aa_rx_wf_mtl *
+aa_rx_wf_mtl_create();
+
+
 
 #endif //AMINO_WAVEFRONT_H

@@ -1,4 +1,4 @@
-/* -*- mode: C++; c-basic-offset: 4; -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2016, Rice University
@@ -38,35 +38,56 @@
 #include "amino.h"
 #include "wavefront_internal.h"
 
-#include <vector>
-#include <string>
-#include <algorithm>
+AA_VECTOR_DEF( double, dvec_type )
+AA_VECTOR_DEF( int32_t, ivec_type )
+AA_VECTOR_DEF( char *, svec_type )
 
 struct aa_rx_wf_obj {
-    std::vector<double> vertex;
-    std::vector<double> normal;
+    dvec_type vertex;
+    dvec_type normal;
 
-    std::vector<int32_t> vertex_indices;
-    std::vector<int32_t> normal_indices;
-    std::vector<int32_t> uv_indices;
-    std::vector<int32_t> texture_indices;
+    ivec_type vertex_indices;
+    ivec_type normal_indices;
+    ivec_type uv_indices;
+    ivec_type texture_indices;
 
-    //std::vector<struct aa_rx_wf_obj_face*> face;
 
-    std::vector<std::string> mtl_files;
-    std::vector<std::string> objects;
-
-    std::vector<std::string> materials;
+    // TODO: free strings
+    svec_type mtl_files;
+    svec_type objects;
+    svec_type materials;
 
     int32_t current_material;
 
 };
 
+static void svec_type_push_dup( svec_type *v, const char *s ) {
+    svec_type_push(v, strdup(s));
+}
+
+static void svec_type_destroy( svec_type *v ) {
+    for( size_t i = 0; i < v->size; i ++ ) {
+        free(v->data[i]);
+    }
+    free(v->data);
+}
 
 AA_API struct aa_rx_wf_obj *
 aa_rx_wf_obj_create()
 {
-    struct aa_rx_wf_obj * obj = new aa_rx_wf_obj;
+    struct aa_rx_wf_obj * obj = AA_NEW0(struct aa_rx_wf_obj);
+
+    dvec_type_init( &obj->vertex, 64 );
+    dvec_type_init( &obj->normal, 64 );
+
+    ivec_type_init( &obj->vertex_indices, 64 );
+    ivec_type_init( &obj->normal_indices, 64 );
+    ivec_type_init( &obj->uv_indices, 64 );
+    ivec_type_init( &obj->texture_indices, 64 );
+
+    svec_type_init( &obj->mtl_files, 4 );
+    svec_type_init( &obj->objects, 4 );
+    svec_type_init( &obj->materials, 4 );
 
     return obj;
 }
@@ -75,19 +96,30 @@ aa_rx_wf_obj_create()
 AA_API void
 aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
 {
-    delete obj;
+    free( obj->vertex.data );
+    free( obj->normal.data );
+    free( obj->vertex_indices.data );
+    free( obj->normal_indices.data );
+    free( obj->uv_indices.data );
+    free( obj->texture_indices.data );
+
+    svec_type_destroy( &obj->mtl_files );
+    svec_type_destroy( &obj->objects );
+    svec_type_destroy( &obj->materials );
+
+    free(obj);
 }
 
 AA_API void
 aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, double f )
 {
-    obj->vertex.push_back(f);
+    dvec_type_push( &obj->vertex, f );
 }
 
 AA_API void
 aa_rx_wf_obj_push_normal( struct aa_rx_wf_obj *obj, double f )
 {
-    obj->normal.push_back(f);
+    dvec_type_push( &obj->normal, f );
 }
 
 AA_API void
@@ -95,12 +127,12 @@ aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
                         struct aa_rx_wf_obj_face *face )
 {
     for( int i = 0; i < 3; i ++ ) {
-        obj->vertex_indices.push_back(face->v[i]);
-        obj->normal_indices.push_back(face->n[i]);
-        obj->uv_indices.push_back(face->t[i]);
+        ivec_type_push( &obj->vertex_indices, face->v[i]);
+        ivec_type_push( &obj->normal_indices, face->n[i]);
+        ivec_type_push( &obj->uv_indices, face->t[i]);
     }
 
-    obj->texture_indices.push_back(obj->current_material);
+    ivec_type_push( &obj->texture_indices, obj->current_material);
 
 }
 
@@ -108,29 +140,29 @@ AA_API void
 aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
                           const char *object )
 {
-    obj->objects.push_back(object);
+    svec_type_push_dup(&obj->objects, object );
 }
 
 AA_API void
 aa_rx_wf_obj_push_mtl( struct aa_rx_wf_obj *obj,
                        const char *mtl_file )
 {
-    obj->mtl_files.push_back(mtl_file);
+    svec_type_push_dup(&obj->mtl_files, mtl_file );
 }
 
 
 AA_API size_t
 aa_rx_wf_obj_mtl_count( struct aa_rx_wf_obj *obj )
 {
-    return obj->mtl_files.size();
+    return obj->mtl_files.size;
 }
 
 
 AA_API const char *
 aa_rx_wf_obj_get_mtl( struct aa_rx_wf_obj *obj, size_t i )
 {
-    if( i <= obj->mtl_files.size() ) {
-        return obj->mtl_files[i].c_str();
+    if( i <= obj->mtl_files.size ) {
+        return obj->mtl_files.data[i];
     } else {
         return NULL;
     }
@@ -140,27 +172,31 @@ AA_API void
 aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
                            const char *material )
 {
-    auto itr = std::find(obj->materials.begin(), obj->materials.end(), material);
-    if( obj->materials.end() == itr ) {
-        obj->current_material = (int32_t)obj->materials.size();
-        obj->materials.push_back(material);
-    } else {
-        obj->current_material = (int32_t)(itr - obj->materials.begin());
+    for( size_t i = 0; i < obj->materials.size; i ++ ) {
+        if( 0 == strcmp(material, obj->materials.data[i]) ) {
+            /* Found the material */
+            obj->current_material = (int32_t)i;
+            return;
+        }
     }
+
+    /* Material not found */
+    obj->current_material = (int32_t)obj->materials.size;
+    svec_type_push_dup( &obj->materials, material);
 }
 
 AA_API size_t
 aa_rx_wf_obj_material_count( struct aa_rx_wf_obj *obj )
 {
-    return obj->materials.size();
+    return obj->materials.size;
 }
 
 
 AA_API const char *
 aa_rx_wf_obj_get_material_name( struct aa_rx_wf_obj *obj, size_t i )
 {
-    if( i < obj->materials.size() ) {
-        return obj->materials[i].c_str();
+    if( i < obj->materials.size ) {
+        return obj->materials.data[i];
     } else {
         return NULL;
     }
@@ -170,42 +206,42 @@ AA_API void
 aa_rx_wf_obj_get_vertices( const struct aa_rx_wf_obj *obj,
                            const double **vertices, size_t *n )
 {
-    *vertices = obj->vertex.data();
-    *n = obj->vertex.size();
+    *vertices = obj->vertex.data;
+    *n = obj->vertex.size;
 }
 
 AA_API void
 aa_rx_wf_obj_get_normals( const struct aa_rx_wf_obj *obj,
                           const double **normals, size_t *n )
 {
-    *normals = obj->normal.data();
-    *n = obj->normal.size();
+    *normals = obj->normal.data;
+    *n = obj->normal.size;
 }
 
 AA_API void
 aa_rx_wf_obj_get_vertex_indices( const struct aa_rx_wf_obj *obj,
                                  const int32_t **v, size_t *n )
 {
-    *v = obj->vertex_indices.data();
-    *n = obj->vertex_indices.size();
+    *v = obj->vertex_indices.data;
+    *n = obj->vertex_indices.size;
 }
 
 AA_API void
 aa_rx_wf_obj_get_normal_indices( const struct aa_rx_wf_obj *obj,
                                  const int32_t **v, size_t *n ) {
-    *v = obj->normal_indices.data();
-    *n = obj->normal_indices.size();
+    *v = obj->normal_indices.data;
+    *n = obj->normal_indices.size;
 }
 AA_API void
 aa_rx_wf_obj_get_uv_indices( const struct aa_rx_wf_obj *obj,
                              const int32_t **v, size_t *n ) {
-    *v = obj->uv_indices.data();
-    *n = obj->uv_indices.size();
+    *v = obj->uv_indices.data;
+    *n = obj->uv_indices.size;
 }
 
 AA_API void
 aa_rx_wf_obj_get_texture_indices( const struct aa_rx_wf_obj *obj,
                                   const int32_t **v, size_t *n ) {
-    *v = obj->texture_indices.data();
-    *n = obj->texture_indices.size();
+    *v = obj->texture_indices.data;
+    *n = obj->texture_indices.size;
 }

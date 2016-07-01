@@ -537,7 +537,7 @@ AM_CONDITIONAL([BUILD_DEMO_$2], [test "x$enable_demo_$1" = "xyes"])
 ])
 
 AC_ARG_ENABLE([demo-all],
-              [AS_HELP_STRING([--enable-demo-all], [Build the all the demos])],
+              [AS_HELP_STRING([--enable-demo-all], [Build all the demos])],
               [
                 enable_demo_baxter="$enable_demo_all"
                 enable_demo_ur10="$enable_demo_all"
