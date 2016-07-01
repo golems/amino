@@ -57,6 +57,7 @@ struct wf_extra {
     struct aa_rx_wf_obj_face face;
 };
 
+
 #define WF_FACE(thing) yyextra->face.thing
 #define SET_WF_FACE(thing) WF_FACE(thing) = atol(yytext)-1
 #define SKIP_WF_FACE(thing) WF_FACE(thing) = AA_RX_WF_OBJ_FACE_NONE
@@ -111,8 +112,45 @@ aa_rx_wf_obj_use_material( struct aa_rx_wf_obj *obj,
 
 
 
+struct aa_rx_wf_material {
+    char *name;
+    double specular_weight; /* Ns */
+    double specular[3];     /* Ks */
+    double ambient[3];      /* Ka */
+    double emission[3];    /* Ke */
+    double diffuse[3];      /* Kd */
+    double alpha;           /* d */
+
+
+    unsigned has_specular_weight : 1;
+    unsigned has_specular : 1;
+    unsigned has_ambient : 1;
+    unsigned has_emission : 1;
+    unsigned has_diffuse : 1;
+    unsigned has_alpha : 1;
+};
+
+AA_VECTOR_DEF( struct aa_rx_wf_material *, mvec_type )
+
+struct aa_rx_wf_mtl {
+    struct aa_rx_wf_material *current;
+    mvec_type materials;
+};
+
+
+#define WF_MTL_CURRENT (yyextra->mtl->current)
+
+struct wf_mtl_extra {
+    struct aa_rx_wf_mtl *mtl;
+    double *v;
+};
+
+
 AA_API struct aa_rx_wf_mtl *
 aa_rx_wf_mtl_create();
+
+AA_API void
+aa_rx_wf_mtl_push( struct aa_rx_wf_mtl *mtl, const char *name );
 
 
 

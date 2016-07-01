@@ -88,8 +88,12 @@ ctinclude_HEADERS = 	                \
 	include/amino/ct/traj.h
 
 
+noinst_PROGRAMS += mtl_test
+mtl_test_SOURCES = src/test/mtl_test.c
+mtl_test_LDADD = src/parse/libamino_wavefront.la
+
 noinst_PROGRAMS += wavefront
-wavefront_SOURCES = src/test/wavefront.cpp
+wavefront_SOURCES = src/test/wavefront_test.c
 wavefront_LDADD = src/parse/libamino_wavefront.la
 
 lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la

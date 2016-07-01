@@ -131,13 +131,22 @@ aa_rx_wf_obj_get_texture_indices( const struct aa_rx_wf_obj *obj,
  */
 struct aa_rx_wf_mtl;
 
+/* forward declaration of opaque structure
+ */
+struct aa_rx_wf_material;
 
 AA_API struct aa_rx_wf_mtl *
-aa_rx_wf_mtl_parse(const char *mtl_name, const char *obj_filename );
+aa_rx_wf_mtl_parse(const char *mtl_name );
 
 
 AA_API void
 aa_rx_wf_mtl_destroy( struct aa_rx_wf_mtl * );
+
+AA_API size_t
+aa_rx_wf_mtl_material_count( struct aa_rx_wf_mtl * mtl);
+
+AA_API struct aa_rx_wf_material *
+aa_rx_wf_mtl_get_material( struct aa_rx_wf_mtl * mtl, size_t i);
 
 
 #endif //AMINO_RX_WAVEFRONT_H

@@ -156,3 +156,5 @@ amino*.tar.gz
 /src/parse/wavefront.c
 /colladatest.mtl
 /colladatest.obj
+/src/parse/mtl.c
+/mtl_test
