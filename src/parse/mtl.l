@@ -68,6 +68,7 @@
 %x NEWMTL
 
 %x NS
+%x NI
 
 %x KA
 %x KD
@@ -128,7 +129,18 @@ START {MAYBE_BLANKS}
     WF_MTL_CURRENT->has_specular_weight = 1;
     BEGIN(EOL);
 }
+    /* Index of Refraction */
+{START}"Ni"{BLANKS} {
+    BEGIN(NI);
+}
 
+<NI>{NUMBER}{MAYBE_BLANKS} {
+    WF_MTL_CURRENT->ior = atof(yytext);
+    WF_MTL_CURRENT->has_ior = 1;
+    BEGIN(EOL);
+}
+
+    /* Vector parser */
 <V0>{NUMBER}{BLANKS} {
     yyextra->v[0] = atof(yytext);
     BEGIN(V1);
@@ -220,7 +232,7 @@ START {MAYBE_BLANKS}
     /* This rule needs to be last */
 
 <*>. {
-    fprintf(stderr, "Unrecognized character: %s (line %d)\n", yytext, yylineno);
+    fprintf(stderr, "Unrecognized character: %s (%s:%d)\n", yytext, yyextra->mtl->filename, yylineno);
     return -1;
 }
 
@@ -241,6 +253,7 @@ aa_rx_wf_mtl_parse(const char *filename)
 
     struct wf_mtl_extra e;
     e.mtl = aa_rx_wf_mtl_create();
+    e.mtl->filename = strdup(filename);
     aa_rx_wf_set_extra(&e, scanner);
 
     int r = aa_rx_wf_mtl_lex(scanner);

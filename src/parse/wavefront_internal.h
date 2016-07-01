@@ -68,6 +68,9 @@ struct wf_extra {
 AA_API struct aa_rx_wf_obj *
 aa_rx_wf_obj_create();
 
+AA_API void
+aa_rx_wf_obj_set_filename( struct aa_rx_wf_obj *obj, const char *filename );
+
 /**
  * Add a new object name
  */
@@ -78,7 +81,7 @@ aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
 /**
  * Add a new mtl file
  */
-AA_API void
+AA_API int
 aa_rx_wf_obj_push_mtl( struct aa_rx_wf_obj *obj,
                        const char *mtl_file );
 
@@ -101,7 +104,6 @@ AA_API void
 aa_rx_wf_obj_push_face( struct aa_rx_wf_obj *obj,
                         struct aa_rx_wf_obj_face *face );
 
-
 /**
  * Set the active material by name
  */
@@ -117,10 +119,10 @@ struct aa_rx_wf_material {
     double specular_weight; /* Ns */
     double specular[3];     /* Ks */
     double ambient[3];      /* Ka */
-    double emission[3];    /* Ke */
+    double emission[3];     /* Ke */
     double diffuse[3];      /* Kd */
     double alpha;           /* d */
-
+    double ior;             /* Ni */
 
     unsigned has_specular_weight : 1;
     unsigned has_specular : 1;
@@ -128,12 +130,14 @@ struct aa_rx_wf_material {
     unsigned has_emission : 1;
     unsigned has_diffuse : 1;
     unsigned has_alpha : 1;
+    unsigned has_ior : 1;
 };
 
 AA_VECTOR_DEF( struct aa_rx_wf_material *, mvec_type )
 
 struct aa_rx_wf_mtl {
     struct aa_rx_wf_material *current;
+    char *filename;
     mvec_type materials;
 };
 

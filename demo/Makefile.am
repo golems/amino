@@ -71,6 +71,7 @@ lib_LTLIBRARIES += urdf/baxter/libamino_baxter.la
 urdf_baxter_libamino_baxter_la_SOURCES =
 urdf_baxter_libamino_baxter_la_LIBADD = urdf/baxter/libbaxter.la
 urdf_baxter_libamino_baxter_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
+urdf/baxter/baxter-demo.$(OBJEXT): urdf/baxter/baxter-model.c.h
 
 noinst_PROGRAMS += urdf/baxter/baxter-simple
 urdf_baxter_baxter_simple_SOURCES = urdf/baxter/baxter-simple.c

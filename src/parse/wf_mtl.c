@@ -38,6 +38,7 @@
 #include "amino.h"
 #include "wavefront_internal.h"
 
+#include "amino/getset.h"
 
 
 AA_API struct aa_rx_wf_mtl *
@@ -65,17 +66,19 @@ aa_rx_wf_mtl_destroy( struct aa_rx_wf_mtl * mtl) {
         free( mtl->materials.data[i]->name );
         free( mtl->materials.data[i] );
     }
+    free( mtl->materials.data );
+    aa_checked_free(mtl->filename);
     free(mtl);
 }
 
 AA_API size_t
-aa_rx_wf_mtl_material_count( struct aa_rx_wf_mtl * mtl)
+aa_rx_wf_mtl_material_count( const struct aa_rx_wf_mtl * mtl)
 {
     return mtl->materials.size;
 }
 
 AA_API struct aa_rx_wf_material *
-aa_rx_wf_mtl_get_material( struct aa_rx_wf_mtl * mtl, size_t i)
+aa_rx_wf_mtl_get_material( const struct aa_rx_wf_mtl * mtl, size_t i)
 {
     if( i < mtl->materials.size ) {
         return mtl->materials.data[i];
@@ -83,3 +86,24 @@ aa_rx_wf_mtl_get_material( struct aa_rx_wf_mtl * mtl, size_t i)
         return NULL;
     }
 }
+
+#define DEF_HAS(THING)                                                  \
+    AA_API int                                                          \
+    aa_rx_wf_material_has_ ## THING                                     \
+    ( const struct aa_rx_wf_material * material )                       \
+    {                                                                   \
+        return material->has_ ## THING;                                 \
+    }                                                                   \
+
+#define DEF_FIELD(TYPE,THING)                                   \
+    DEF_HAS(THING)                                              \
+    AA_DEF_GETTER( aa_rx_wf_material, TYPE, THING );
+
+AA_DEF_GETTER( aa_rx_wf_material, const char*, name );
+DEF_FIELD(const double *, specular)
+DEF_FIELD(const double *, ambient)
+DEF_FIELD(const double *, emission)
+DEF_FIELD(const double *, diffuse)
+DEF_FIELD(double, specular_weight)
+DEF_FIELD(double, alpha)
+DEF_FIELD(double, ior)

@@ -64,11 +64,16 @@ AA_API size_t
 aa_rx_wf_obj_mtl_count( struct aa_rx_wf_obj *obj );
 
 /**
- * Return the ith MTL files
+ * Return the ith MTL filename
  */
 AA_API const char *
-aa_rx_wf_obj_get_mtl( struct aa_rx_wf_obj *obj, size_t i );
+aa_rx_wf_obj_get_mtl_filename( struct aa_rx_wf_obj *obj, size_t i );
 
+/**
+ * Return the ith MTL struct
+ */
+AA_API const struct aa_rx_wf_mtl *
+aa_rx_wf_obj_get_mtl( struct aa_rx_wf_obj *obj, size_t i );
 
 /**
  * Return the number of materials
@@ -143,10 +148,51 @@ AA_API void
 aa_rx_wf_mtl_destroy( struct aa_rx_wf_mtl * );
 
 AA_API size_t
-aa_rx_wf_mtl_material_count( struct aa_rx_wf_mtl * mtl);
+aa_rx_wf_mtl_material_count( const struct aa_rx_wf_mtl * mtl);
 
 AA_API struct aa_rx_wf_material *
-aa_rx_wf_mtl_get_material( struct aa_rx_wf_mtl * mtl, size_t i);
+aa_rx_wf_mtl_get_material( const struct aa_rx_wf_mtl * mtl, size_t i);
 
+AA_API int
+aa_rx_wf_material_has_specular_weight( const struct aa_rx_wf_material * material );
+
+AA_API int
+aa_rx_wf_material_has_specular( const struct aa_rx_wf_material * material );
+
+AA_API int
+aa_rx_wf_material_has_ambient( const struct aa_rx_wf_material * material );
+
+AA_API int
+aa_rx_wf_material_has_emission( const struct aa_rx_wf_material * material );
+
+AA_API int
+aa_rx_wf_material_has_diffuse( const struct aa_rx_wf_material * material );
+
+AA_API int
+aa_rx_wf_material_has_alpha( const struct aa_rx_wf_material * material );
+
+AA_API int
+aa_rx_wf_material_has_ior( const struct aa_rx_wf_material * material );
+
+AA_API const char*
+aa_rx_wf_material_get_name( const struct aa_rx_wf_material * material );
+
+AA_API const double*
+aa_rx_wf_material_get_specular( const struct aa_rx_wf_material * material );
+
+AA_API const double*
+aa_rx_wf_material_get_ambient( const struct aa_rx_wf_material * material );
+
+AA_API const double*
+aa_rx_wf_material_get_emission( const struct aa_rx_wf_material * material );
+
+AA_API const double*
+aa_rx_wf_material_get_diffuse( const struct aa_rx_wf_material * material );
+
+AA_API double
+aa_rx_wf_material_get_alpha( const struct aa_rx_wf_material * material );
+
+AA_API double
+aa_rx_wf_material_get_ior( const struct aa_rx_wf_material * material );
 
 #endif //AMINO_RX_WAVEFRONT_H

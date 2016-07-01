@@ -124,7 +124,10 @@ START {MAYBE_BLANKS}
 }
 
 <MTLLIB>[[:graph:]]+ {
-    aa_rx_wf_obj_push_mtl( yyextra->wf_obj, yytext );
+    if( aa_rx_wf_obj_push_mtl( yyextra->wf_obj, yytext ) ) {
+        fprintf(stderr, "Failed to parse MTL '%s\n'", yytext);
+        return -1;
+    }
     BEGIN(EOL);
 }
 
@@ -315,6 +318,7 @@ aa_rx_wf_parse(const char *filename)
 
     struct wf_extra we;
     we.wf_obj = aa_rx_wf_obj_create();
+    aa_rx_wf_obj_set_filename(we.wf_obj, filename);
 
     aa_rx_wf_set_extra(&we, scanner);
 

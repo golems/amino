@@ -35,6 +35,8 @@
  *
  */
 
+#include <libgen.h>
+
 #include "amino.h"
 #include "wavefront_internal.h"
 
@@ -42,7 +44,13 @@ AA_VECTOR_DEF( double, dvec_type )
 AA_VECTOR_DEF( int32_t, ivec_type )
 AA_VECTOR_DEF( char *, svec_type )
 
+AA_VECTOR_DEF( struct aa_rx_wf_mtl*, mtlvec_type )
+
 struct aa_rx_wf_obj {
+    char *filename;
+    char *dirname;
+    char *dirname_data;
+
     dvec_type vertex;
     dvec_type normal;
 
@@ -52,10 +60,11 @@ struct aa_rx_wf_obj {
     ivec_type texture_indices;
 
 
-    // TODO: free strings
     svec_type mtl_files;
     svec_type objects;
     svec_type materials;
+
+    mtlvec_type mtl;
 
     int32_t current_material;
 
@@ -68,6 +77,13 @@ static void svec_type_push_dup( svec_type *v, const char *s ) {
 static void svec_type_destroy( svec_type *v ) {
     for( size_t i = 0; i < v->size; i ++ ) {
         free(v->data[i]);
+    }
+    free(v->data);
+}
+
+static void mtlvec_type_destroy( mtlvec_type *v ) {
+    for( size_t i = 0; i < v->size; i ++ ) {
+        aa_rx_wf_mtl_destroy(v->data[i]);
     }
     free(v->data);
 }
@@ -85,9 +101,11 @@ aa_rx_wf_obj_create()
     ivec_type_init( &obj->uv_indices, 64 );
     ivec_type_init( &obj->texture_indices, 64 );
 
-    svec_type_init( &obj->mtl_files, 4 );
-    svec_type_init( &obj->objects, 4 );
-    svec_type_init( &obj->materials, 4 );
+    svec_type_init( &obj->mtl_files, 1 );
+    svec_type_init( &obj->objects, 1 );
+    svec_type_init( &obj->materials, 1 );
+
+    mtlvec_type_init( &obj->mtl, 1 );
 
     return obj;
 }
@@ -106,6 +124,11 @@ aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
     svec_type_destroy( &obj->mtl_files );
     svec_type_destroy( &obj->objects );
     svec_type_destroy( &obj->materials );
+
+    mtlvec_type_destroy( &obj->mtl );
+
+    aa_checked_free(obj->filename);
+    aa_checked_free(obj->dirname_data);
 
     free(obj);
 }
@@ -143,11 +166,25 @@ aa_rx_wf_obj_push_object( struct aa_rx_wf_obj *obj,
     svec_type_push_dup(&obj->objects, object );
 }
 
-AA_API void
+AA_API int
 aa_rx_wf_obj_push_mtl( struct aa_rx_wf_obj *obj,
                        const char *mtl_file )
 {
     svec_type_push_dup(&obj->mtl_files, mtl_file );
+
+    aa_mem_region_t *reg = aa_mem_region_local_get();
+    char *buf = aa_mem_region_printf(reg, "%s/%s", obj->dirname, mtl_file);
+    struct aa_rx_wf_mtl *mtl = aa_rx_wf_mtl_parse(buf);
+    aa_mem_region_pop(reg, buf);
+
+    if( mtl ) {
+        mtlvec_type_push( &obj->mtl, mtl );
+        return 0;
+    } else {
+        return -1;
+    }
+
+
 }
 
 
@@ -159,10 +196,20 @@ aa_rx_wf_obj_mtl_count( struct aa_rx_wf_obj *obj )
 
 
 AA_API const char *
-aa_rx_wf_obj_get_mtl( struct aa_rx_wf_obj *obj, size_t i )
+aa_rx_wf_obj_get_mtl_filename( struct aa_rx_wf_obj *obj, size_t i )
 {
     if( i <= obj->mtl_files.size ) {
         return obj->mtl_files.data[i];
+    } else {
+        return NULL;
+    }
+}
+
+AA_API const struct aa_rx_wf_mtl *
+aa_rx_wf_obj_get_mtl( struct aa_rx_wf_obj *obj, size_t i )
+{
+    if( i <= obj->mtl.size ) {
+        return obj->mtl.data[i];
     } else {
         return NULL;
     }
@@ -244,4 +291,14 @@ aa_rx_wf_obj_get_texture_indices( const struct aa_rx_wf_obj *obj,
                                   const int32_t **v, size_t *n ) {
     *v = obj->texture_indices.data;
     *n = obj->texture_indices.size;
+}
+
+AA_API void
+aa_rx_wf_obj_set_filename( struct aa_rx_wf_obj *obj, const char *filename )
+{
+    obj->filename = strdup(filename);
+    obj->dirname_data = strdup(filename);
+
+    obj->dirname = dirname( obj->dirname_data );
+
 }

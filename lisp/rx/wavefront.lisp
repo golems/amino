@@ -61,7 +61,7 @@
 (cffi:defcfun aa-rx-wf-obj-mtl-count size-t
      (obj rx-wf-obj-t))
 
-(cffi:defcfun aa-rx-wf-obj-get-mtl :string
+(cffi:defcfun aa-rx-wf-obj-get-mtl-filename :string
   (obj rx-wf-obj-t)
   (i size-t))
 
@@ -72,190 +72,122 @@
   (obj rx-wf-obj-t)
   (i size-t))
 
-(defstruct wavefront-obj-face
-  vertex-index
-  normal-index
-  texture-index
-  uv-index
-  smooth
-  group
-  material
-  )
+(cffi:defcfun aa-rx-wf-obj-get-mtl rx-wf-mtl-t
+  (obj rx-wf-obj-t)
+  (i size-t))
 
-(defparameter +wavefront-obj-scanner-v-vn+
-  (ppcre:create-scanner "^f\\s+(\\d+)//(\\d+)\\s+(\\d+)//(\\d+)\\s+(\\d+)//(\\d+)\\s*$"))
+(cffi:defcfun aa-rx-wf-mtl-material-count size-t
+  (mtl rx-wf-mtl-t))
 
-(defparameter +wavefront-obj-scanner-v-vt-vn+
-  (ppcre:create-scanner
-   "^f\\s+(\\d+)/(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)/(\\d+)\\s*$"))
+(cffi:defcfun aa-rx-wf-mtl-get-material rx-wf-material-t
+  (mtl rx-wf-mtl-t)
+  (i size-t))
+
+(cffi:defcfun aa-rx-wf-material-get-name :string
+  (material rx-wf-material-t))
 
 
+(cffi:defcfun aa-rx-wf-material-has-ambient :int
+  (material rx-wf-material-t))
+(cffi:defcfun aa-rx-wf-material-get-ambient :pointer
+  (material rx-wf-material-t))
 
-(defparameter +wavefront-obj-scanner-v-vt+
-  (ppcre:create-scanner
-   "^f\\s+(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)\\s*$"))
+(cffi:defcfun aa-rx-wf-material-has-diffuse :int
+  (material rx-wf-material-t))
+(cffi:defcfun aa-rx-wf-material-get-diffuse :pointer
+  (material rx-wf-material-t))
 
-(defparameter +wavefront-command-scanner+
-  (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)"))
+(cffi:defcfun aa-rx-wf-material-has-emission :int
+  (material rx-wf-material-t))
+(cffi:defcfun aa-rx-wf-material-get-emission :pointer
+  (material rx-wf-material-t))
 
-(defun parse-wavefront-face (line material lineno)
-  (declare (type simple-string line))
-  (labels ((subseq-list (reg-start reg-end items)
-             (declare (type simple-vector reg-start reg-end))
-             (loop for i in items
-                for s = (aref reg-start i)
-                for e = (aref reg-end i)
-                collect (1- (parse-integer line :start s :end e)))))
+(cffi:defcfun aa-rx-wf-material-has-specular :int
+  (material rx-wf-material-t))
+(cffi:defcfun aa-rx-wf-material-get-specular :pointer
+  (material rx-wf-material-t))
 
-    ;; V/Vt/Vn
-    (multiple-value-bind (start end reg-start reg-end)
-        (ppcre:scan +wavefront-obj-scanner-v-vt-vn+ line)
-      (declare (ignore end))
-      (when start
-        (return-from parse-wavefront-face
-          (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 3 6))
-                                   :uv-index     (subseq-list reg-start reg-end '(1 4 7))
-                                   :normal-index (subseq-list reg-start reg-end '(2 5 8))
-                                   :material material))))
+(cffi:defcfun aa-rx-wf-material-has-alpha :int
+  (material rx-wf-material-t))
+(cffi:defcfun aa-rx-wf-material-get-alpha :double
+  (material rx-wf-material-t))
 
-    ;; V//Vn
-    (multiple-value-bind (start end reg-start reg-end)
-        (ppcre:scan +wavefront-obj-scanner-v-vn+ line)
-      (declare (ignore end))
-      (when start
-        (return-from parse-wavefront-face
-          (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 2 4))
-                                   :normal-index (subseq-list reg-start reg-end '(1 3 5))
-                                   :material material))))
-
-    ;; V/Vt
-    (multiple-value-bind (start end reg-start reg-end)
-        (ppcre:scan +wavefront-obj-scanner-v-vt+ line)
-      (declare (ignore end))
-      (when start
-        (return-from parse-wavefront-face
-          (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 2 4))
-                                   :uv-index (subseq-list reg-start reg-end '(1 3 5))
-                                   :material material))))
-
-  (error "Bad or unimplimented face on line ~D: \"~A\"" lineno line)))
-
+(cffi:defcfun aa-rx-wf-material-has-ior :int
+  (material rx-wf-material-t))
+(cffi:defcfun aa-rx-wf-material-get-ior :double
+  (material rx-wf-material-t))
 
 ;; See: https://corona-renderer.com/wiki/standalone/mtl
 
-(defun wavefront-mtl-load (mtl-file obj-file)
-  (let ((mtl-file (file-resolve mtl-file (file-dirname obj-file)))
-        (material-alist)
-        (current-alist)
-        (current-mtl)
-        (current-specular)
-        (current-specular-weight))
-    (labels ((add-current ()
-               (when current-mtl
-                 (prop :specular ;(g* current-specular-weight current-specular))
-                       current-specular)
-                 (push (cons current-mtl current-alist)
-                       material-alist)))
-             (newmtl (name)
-               (add-current)
-               (setq current-mtl name
-                     current-alist nil
-                     current-specular '(0d0 0d0 0d0)
-                     current-specular-weight 1.0))
-             (prop (name value)
-               (assert current-mtl)
-               (push (cons name value) current-alist)))
-      (with-open-file (stream mtl-file :direction :input)
+(defun wavefront-material-extract (material)
+  (let ((name (aa-rx-wf-material-get-name material))
+        (props nil))
+    (labels ((prop (name value)
+               (push (cons name value) props))
+             (prop3 (name pointer)
+               (prop name (amino-ffi::foreign-vector-dup pointer 3 :double 'double-float))))
+      (when (aa-rx-wf-material-has-alpha material)
+        (prop :alpha (aa-rx-wf-material-get-alpha material)))
+      (when (aa-rx-wf-material-has-ior material)
+        (prop :index-of-refraction (aa-rx-wf-material-get-ior material)))
+      (when (aa-rx-wf-material-has-ambient material)
+        (prop3 :ambient (aa-rx-wf-material-get-ambient material)))
+      (when (aa-rx-wf-material-has-diffuse material)
+        (prop3 :diffuse (aa-rx-wf-material-get-diffuse material)))
+      (when (aa-rx-wf-material-has-emission material)
+        (prop3 :emission (aa-rx-wf-material-get-emission material)))
+      (when (aa-rx-wf-material-has-specular material)
+        (prop3 :specular (aa-rx-wf-material-get-specular material)))
+    (cons name props))))
+
+
+
+(let ((+wavefront-command-scanner+
+       (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)")))
+  (defun wavefront-obj-name (obj-file)
+    (let ((name)
+          (warned))
+      (with-open-file (stream obj-file :direction :input)
         (loop for line = (read-line stream nil nil)
            for lineno from 0
            while line
+           when (eq #\o (aref line 0))
            do
-             (let ((line (strip-hash-comment line))
-                   (matched nil))
-               (ppcre:register-groups-bind (command data)
-                   (+wavefront-command-scanner+ line)
-                 (setq matched t)
-                 (labels ((float-prop (name)
-                            (prop name (parse-float data)))
-                          (rgb-prop (name)
-                            (prop name (parse-float-sequence data))))
-                   (string-case command
-                     ("newmtl"
-                      (newmtl data))
-                     ("Ns"
-                      (setq current-specular-weight (parse-float data)))
-                     ("Ks"
-                      (setq current-specular (parse-float-sequence data)))
-                     ("Ka" (rgb-prop :ambient))
-                     ("Ke" (rgb-prop :emission))
-                     ;("Ka" (prop :ambient '(.1 .1 .1))
-                     ("Kd" (rgb-prop :diffuse))
-                     ("Ni" (float-prop :index-of-refraction))
-                     ("d" (prop :alpha  (parse-float data)))
-                     ("map_Kd"
-                      ;; TODO: local path names
-                      (let* ((source-file (file-resolve data (file-dirname mtl-file)))
-                             (dir (file-dirname source-file))
-                             (base (file-basename source-file))
-                             (ext (pov-image-map-type (string-downcase (file-type source-file))))
-                             (cache-file (pov-cache-file (format-pathname "~A/~A.~A" dir base ext))))
-                        (ensure-directories-exist cache-file)
-                        (uiop/stream:copy-file source-file cache-file)
-                        (prop :image-map cache-file)))
-                     ("illum" ;TODO
-                      )
-                     (otherwise (error "Unrecognized MTL command ~A" command)))))
-               (assert (or (null line) matched)))))
-      (add-current))
-    material-alist))
+             (if name
+                 (progn (unless warned
+                          (warn "Duplicate mesh name `~A:~D'" obj-file lineno)
+                          (setq warned t))
+                        (setq name (file-basename obj-file)))
+                 (ppcre:register-groups-bind (command data)
+                     (+wavefront-command-scanner+ line)
+                   (unless (string= command "o")
+                     (error "Invalid command on line ~D" lineno))
+                   (setq name data)))))
+      (or name (file-basename obj-file)))))
 
-
-
-(defun wavefront-obj-name (obj-file)
-  (let ((name)
-        (warned))
-    (with-open-file (stream obj-file :direction :input)
-      (loop for line = (read-line stream nil nil)
-         for lineno from 0
-         while line
-         when (eq #\o (aref line 0))
-         do
-           (if name
-               (progn (unless warned
-                        (warn "Duplicate mesh name `~A:~D'" obj-file lineno)
-                        (setq warned t))
-                      (setq name (file-basename obj-file)))
-               (ppcre:register-groups-bind (command data)
-                   (+wavefront-command-scanner+ line)
-                 (unless (string= command "o")
-                   (error "Invalid command on line ~D" lineno))
-                 (setq name data)))))
-    (or name (file-basename obj-file))))
-
-(let ((scanner (ppcre:create-scanner "^(\\S+)\\s+(\\S+)\\s+(\\S+)\\s*$" )))
-  (defun parse-vec3 (string &key (start 0))
-    (multiple-value-bind (start end s e) (ppcre:scan scanner string :start start)
-      (declare (ignore start end))
-      (loop for i below 3
-         collect (parse-float (subseq string (aref s i) (aref e i)))))))
-
+(defun wavefront-mtl-extract (obj)
+  (let ((result nil))
+    (loop for i-mtl below (aa-rx-wf-obj-mtl-count obj)
+       for mtl = (aa-rx-wf-obj-get-mtl obj i-mtl)
+       do (loop for i-material below (aa-rx-wf-mtl-material-count mtl)
+             for material = (aa-rx-wf-mtl-get-material mtl i-material)
+             for props = (wavefront-material-extract material)
+             do (push props result)))
+    result))
 
 (defun wavefront-obj-load (filename )
   (format *standard-output* "~&  OBJSCAN ~A..." filename)
   (finish-output *standard-output*)
   (let* ((time (get-internal-real-time))
          (obj (aa-rx-wf-parse (rope-string filename)))
-         ;; Materials
-         (materials-alist (loop for i below (aa-rx-wf-obj-mtl-count obj)
-                             for mtl-file = (aa-rx-wf-obj-get-mtl obj i)
-                             append (wavefront-mtl-load mtl-file filename)))
+         (materials-alist (wavefront-mtl-extract obj))
          (materials-array (make-array (aa-rx-wf-obj-material-count obj))))
+    ;; Fill materials array
     (dotimes (i (length materials-array))
       ;; TODO: error check
       (setf (aref materials-array i)
             (assoc (aa-rx-wf-obj-get-material-name obj i) materials-alist :test #'string=)))
-    ;;(print materials-array)
-    ;; Extract data arrays
+    ;; Extract mesh data arrays
     (labels ((get-array (accessor foreign-type lisp-type)
                (cffi:with-foreign-objects ((n 'size-t)
                                            (v :pointer))
@@ -272,35 +204,24 @@
                  (dotimes (i n)
                    (setf (aref vf i) (aref v32 i)))
                  vf)))
-      (let ((vertices (get-array #'aa-rx-wf-obj-get-vertices :double 'double-float))
-            (normals (get-array #'aa-rx-wf-obj-get-normals :double 'double-float))
-            (vertex-indices  (get-fix-array #'aa-rx-wf-obj-get-vertex-indices))
-            (normal-indices  (get-fix-array #'aa-rx-wf-obj-get-normal-indices))
-            (uv-indices  (get-fix-array #'aa-rx-wf-obj-get-uv-indices))
-            (texture-indices  (get-fix-array #'aa-rx-wf-obj-get-texture-indices)))
-        (values)
-       ;; vertex-indices
-        (let* (;(material-index-hash (make-hash-table :test #'equal))
-               (texture-properties
-                (loop for (material . texture) across materials-array
-                   collect texture)))
-          (prog1 (make-mesh-data  :name (file-basename filename)
-                                  :file filename
-                                  :vertex-vectors vertices
-                                  :normal-vectors normals
-                                  ;; TODO: uv vectors
-                                  ;; :uv-vectors (array-cat 'double-float uv)
-                                  :texture-properties texture-properties
-                                  :texture-indices texture-indices
-                                  :uv-indices uv-indices
-                                  :vertex-indices vertex-indices
-                                  :normal-indices normal-indices)
-            (let* ((now (get-internal-real-time))
-                   (sec (/ (- now time)
-                           internal-time-units-per-second)))
-              (format *standard-output* "done (~Fms)~%"
-                      (* sec 1d3))
-              (finish-output *standard-output*))))))))
+      (prog1 (make-mesh-data  :name (file-basename filename)
+                              :file filename
+                              :vertex-vectors (get-array #'aa-rx-wf-obj-get-vertices :double 'double-float)
+                              :normal-vectors (get-array #'aa-rx-wf-obj-get-normals :double 'double-float)
+                              ;; TODO: uv vectors
+                              ;; :uv-vectors (array-cat 'double-float uv)
+                              :texture-properties (loop for (material . texture) across materials-array
+                                                     collect texture)
+                              :texture-indices (get-fix-array #'aa-rx-wf-obj-get-texture-indices)
+                              :uv-indices (get-fix-array #'aa-rx-wf-obj-get-uv-indices)
+                              :vertex-indices (get-fix-array #'aa-rx-wf-obj-get-vertex-indices)
+                              :normal-indices (get-fix-array #'aa-rx-wf-obj-get-normal-indices))
+        (let* ((now (get-internal-real-time))
+               (sec (/ (- now time)
+                       internal-time-units-per-second)))
+          (format *standard-output* "done (~Fms)~%"
+                  (* sec 1d3))
+          (finish-output *standard-output*))))))
 
 (defun mesh-regen-p (reload source-file output-file)
   (or reload
@@ -333,8 +254,7 @@
           (error "Blender could not convert `~A' to Wavefront OBJ.~%Does your Blender have support for ~A files?~%OUTPUT:~%~A"
                  source-file (file-type source-file)
                  output)))))
-  (values)
-)
+  (values))
 
 (defun mesh-obj-tmp (source-file directory)
   (pov-cache-file (rope source-file ".obj")
@@ -400,6 +320,10 @@
         (values (name-mangle (wavefront-obj-name obj-file))
                 rel-output-file))))
 
+
+
+
+
  ;; (labels ((handle-obj (obj-file output-file)
  ;;             (let ((name (wavefront-povray obj-file output-file
  ;;                                           :reload reload
@@ -443,6 +367,146 @@
 
 ;; Old CL-PPCRE based wavefront OBJ parser
 ;; The Flex-based OBJ scanner is ~10 times faster
+;;
+;;
+;; (defun wavefront-mtl-load (mtl-file obj-file)
+;;   (let ((mtl-file (file-resolve mtl-file (file-dirname obj-file)))
+;;         (material-alist)
+;;         (current-alist)
+;;         (current-mtl)
+;;         (current-specular)
+;;         (current-specular-weight))
+;;     (labels ((add-current ()
+;;                (when current-mtl
+;;                  (prop :specular ;(g* current-specular-weight current-specular))
+;;                        current-specular)
+;;                  (push (cons current-mtl current-alist)
+;;                        material-alist)))
+;;              (newmtl (name)
+;;                (add-current)
+;;                (setq current-mtl name
+;;                      current-alist nil
+;;                      current-specular '(0d0 0d0 0d0)
+;;                      current-specular-weight 1.0))
+;;              (prop (name value)
+;;                (assert current-mtl)
+;;                (push (cons name value) current-alist)))
+;;       (with-open-file (stream mtl-file :direction :input)
+;;         (loop for line = (read-line stream nil nil)
+;;            for lineno from 0
+;;            while line
+;;            do
+;;              (let ((line (strip-hash-comment line))
+;;                    (matched nil))
+;;                (ppcre:register-groups-bind (command data)
+;;                    (+wavefront-command-scanner+ line)
+;;                  (setq matched t)
+;;                  (labels ((float-prop (name)
+;;                             (prop name (parse-float data)))
+;;                           (rgb-prop (name)
+;;                             (prop name (parse-float-sequence data))))
+;;                    (string-case command
+;;                      ("newmtl"
+;;                       (newmtl data))
+;;                      ("Ns"
+;;                       (setq current-specular-weight (parse-float data)))
+;;                      ("Ks"
+;;                       (setq current-specular (parse-float-sequence data)))
+;;                      ("Ka" (rgb-prop :ambient))
+;;                      ("Ke" (rgb-prop :emission))
+;;                      ;("Ka" (prop :ambient '(.1 .1 .1))
+;;                      ("Kd" (rgb-prop :diffuse))
+;;                      ("Ni" (float-prop :index-of-refraction))
+;;                      ("d" (prop :alpha  (parse-float data)))
+;;                      ("map_Kd"
+;;                       ;; TODO: local path names
+;;                       (let* ((source-file (file-resolve data (file-dirname mtl-file)))
+;;                              (dir (file-dirname source-file))
+;;                              (base (file-basename source-file))
+;;                              (ext (pov-image-map-type (string-downcase (file-type source-file))))
+;;                              (cache-file (pov-cache-file (format-pathname "~A/~A.~A" dir base ext))))
+;;                         (ensure-directories-exist cache-file)
+;;                         (uiop/stream:copy-file source-file cache-file)
+;;                         (prop :image-map cache-file)))
+;;                      ("illum" ;TODO
+;;                       )
+;;                      (otherwise (error "Unrecognized MTL command ~A" command)))))
+;;                (assert (or (null line) matched)))))
+;;       (add-current))
+;;     material-alist))
+;;
+;;
+;; (defstruct wavefront-obj-face
+;;   vertex-index
+;;   normal-index
+;;   texture-index
+;;   uv-index
+;;   smooth
+;;   group
+;;   material
+;;   )
+;;
+;;
+;; (let ((scanner (ppcre:create-scanner "^(\\S+)\\s+(\\S+)\\s+(\\S+)\\s*$" )))
+;;   (defun parse-vec3 (string &key (start 0))
+;;     (multiple-value-bind (start end s e) (ppcre:scan scanner string :start start)
+;;       (declare (ignore start end))
+;;       (loop for i below 3
+;;          collect (parse-float (subseq string (aref s i) (aref e i)))))))
+;;
+;; (defparameter +wavefront-obj-scanner-v-vn+
+;;   (ppcre:create-scanner "^f\\s+(\\d+)//(\\d+)\\s+(\\d+)//(\\d+)\\s+(\\d+)//(\\d+)\\s*$"))
+;;
+;; (defparameter +wavefront-obj-scanner-v-vt-vn+
+;;   (ppcre:create-scanner
+;;    "^f\\s+(\\d+)/(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)/(\\d+)\\s*$"))
+;;
+;; (defparameter +wavefront-obj-scanner-v-vt+
+;;   (ppcre:create-scanner
+;;    "^f\\s+(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)\\s+(\\d+)/(\\d+)\\s*$"))
+;;
+;; (defun parse-wavefront-face (line material lineno)
+;;   (declare (type simple-string line))
+;;   (labels ((subseq-list (reg-start reg-end items)
+;;              (declare (type simple-vector reg-start reg-end))
+;;              (loop for i in items
+;;                 for s = (aref reg-start i)
+;;                 for e = (aref reg-end i)
+;;                 collect (1- (parse-integer line :start s :end e)))))
+;;
+;;     ;; V/Vt/Vn
+;;     (multiple-value-bind (start end reg-start reg-end)
+;;         (ppcre:scan +wavefront-obj-scanner-v-vt-vn+ line)
+;;       (declare (ignore end))
+;;       (when start
+;;         (return-from parse-wavefront-face
+;;           (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 3 6))
+;;                                    :uv-index     (subseq-list reg-start reg-end '(1 4 7))
+;;                                    :normal-index (subseq-list reg-start reg-end '(2 5 8))
+;;                                    :material material))))
+;;
+;;     ;; V//Vn
+;;     (multiple-value-bind (start end reg-start reg-end)
+;;         (ppcre:scan +wavefront-obj-scanner-v-vn+ line)
+;;       (declare (ignore end))
+;;       (when start
+;;         (return-from parse-wavefront-face
+;;           (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 2 4))
+;;                                    :normal-index (subseq-list reg-start reg-end '(1 3 5))
+;;                                    :material material))))
+;;
+;;     ;; V/Vt
+;;     (multiple-value-bind (start end reg-start reg-end)
+;;         (ppcre:scan +wavefront-obj-scanner-v-vt+ line)
+;;       (declare (ignore end))
+;;       (when start
+;;         (return-from parse-wavefront-face
+;;           (make-wavefront-obj-face :vertex-index (subseq-list reg-start reg-end '(0 2 4))
+;;                                    :uv-index (subseq-list reg-start reg-end '(1 3 5))
+;;                                    :material material))))
+;;
+;;   (error "Bad or unimplimented face on line ~D: \"~A\"" lineno line)))
+;;
 ;;
 ;; (defun wavefront-obj-load (obj-file)
 ;;   (format t "~&  LOAD ~A~%" obj-file)
