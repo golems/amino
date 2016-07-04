@@ -43,6 +43,19 @@
  */
 
 
+
+/**
+ * Initialize SDL library and options.
+ *
+ * The following environement variables may be used to set the
+ * corresponding SDL attribute:
+ *
+ *   - SDL_GL_DOUBLEBUFFER
+ *   - SDL_GL_MULTISAMPLEBUFFERS
+ *   - SDL_GL_MULTISAMPLESAMPLES
+ *   - SDL_GL_DEPTH_SIZE
+ *
+ */
 AA_API void aa_sdl_init( void );
 
 AA_API void aa_sdl_scroll(

@@ -193,16 +193,23 @@ static void sdl_init_once( void )
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
         abort();
     }
+    char *e;
 
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    e = getenv("SDL_GL_DOUBLEBUFFER");
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, e ? atoi(e) : 1);
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
+    e = getenv("SDL_GL_DEPTH_SIZE");
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, e ? atoi(e) : 24);
+
+    e = getenv("SDL_GL_MULTISAMPLEBUFFERS");
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, e ? atoi(e) : 1);
+
+    e = getenv("SDL_GL_MULTISAMPLESAMPLES");
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, e ? atoi(e) : 4);
 
     SDL_GL_SetSwapInterval(1);
 
