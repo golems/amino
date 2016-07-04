@@ -187,33 +187,49 @@ static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
 
 pthread_once_t sdl_once = PTHREAD_ONCE_INIT;
 
+#define DEF_SDL_HINT(THING, DEFAULT)            \
+    {                                           \
+        char *e = getenv(#THING);               \
+        if( e ) {                               \
+            SDL_SetHint(THING,  e );            \
+        } else if (DEFAULT) {                   \
+            SDL_SetHint(THING,  DEFAULT );      \
+        }                                       \
+    }                                           \
+
+#define DEF_SDL_ATTR(THING, DEFAULT)                       \
+    {                                                      \
+        char *e = getenv(#THING);                          \
+        SDL_GL_SetAttribute(THING, e ? atoi(e) : DEFAULT); \
+    }
+
 static void sdl_init_once( void )
 {
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
         abort();
     }
-    char *e;
 
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    e = getenv("SDL_GL_DOUBLEBUFFER");
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, e ? atoi(e) : 1);
 
-    e = getenv("SDL_GL_DEPTH_SIZE");
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, e ? atoi(e) : 24);
-
-    e = getenv("SDL_GL_MULTISAMPLEBUFFERS");
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, e ? atoi(e) : 1);
-
-    e = getenv("SDL_GL_MULTISAMPLESAMPLES");
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, e ? atoi(e) : 4);
+    DEF_SDL_ATTR( SDL_GL_DOUBLEBUFFER,        1 );
+    DEF_SDL_ATTR( SDL_GL_DEPTH_SIZE,         24 );
+    DEF_SDL_ATTR( SDL_GL_MULTISAMPLEBUFFERS,  1 );
+    DEF_SDL_ATTR( SDL_GL_MULTISAMPLESAMPLES,  4 );
 
     SDL_GL_SetSwapInterval(1);
 
-    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+    DEF_SDL_HINT(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+    DEF_SDL_HINT(SDL_HINT_RENDER_DRIVER, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XRANDR, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XVIDMODE, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XINERAMA, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
+    DEF_SDL_HINT(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+
 
 #ifdef HAVE_SPNAV_H
     aa_spnav_init();

@@ -48,12 +48,22 @@
  * Initialize SDL library and options.
  *
  * The following environement variables may be used to set the
- * corresponding SDL attribute:
+ * corresponding SDL attributes:
  *
  *   - SDL_GL_DOUBLEBUFFER
  *   - SDL_GL_MULTISAMPLEBUFFERS
  *   - SDL_GL_MULTISAMPLESAMPLES
  *   - SDL_GL_DEPTH_SIZE
+ *
+ * The following environement variables may be used to set the
+ * corresponding SDL hints:
+ *   - SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS
+ *   - SDL_HINT_RENDER_DRIVER
+ *   - SDL_HINT_VIDEO_X11_XRANDR
+ *   - SDL_HINT_VIDEO_X11_XVIDMODE
+ *   - SDL_HINT_VIDEO_X11_XINERAMA
+ *   - SDL_HINT_VIDEO_ALLOW_SCREENSAVER
+ *   - SDL_HINT_RENDER_SCALE_QUALITY
  *
  */
 AA_API void aa_sdl_init( void );
