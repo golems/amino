@@ -492,14 +492,36 @@ AA_API void aa_sdl_gl_window(
 
     aa_sdl_lock();
 
+    /* Create window */
     *pwindow = SDL_CreateWindow( title,
                                  x_pos, y_pos,
                                  width, height,
                                  flags | SDL_WINDOW_OPENGL );
-    if( *pwindow == NULL ) {
-        printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
-        abort();
+
+    if( *pwindow ) goto FINISH;
+
+    /* Try disabling multi-sampling */
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+
+
+    *pwindow = SDL_CreateWindow( title,
+                                 x_pos, y_pos,
+                                 width, height,
+                                 flags | SDL_WINDOW_OPENGL );
+
+    if( *pwindow ) {
+        fprintf(stderr, "WARNING: OpenGL multisample anti-aliasing disabled.\n");
+        goto FINISH;
     }
+
+    /* Could not create window */
+    fprintf( stderr, "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+    abort();
+    exit(EXIT_FAILURE);
+
+
+FINISH:
 
     *p_glcontext = SDL_GL_CreateContext( *pwindow );
     if( p_glcontext == NULL )
