@@ -1,17 +1,17 @@
+#include "amino.h"
+#include "config.h"
+
+#ifdef USE_FORTRAN
+
+#define SUFFIX(THING) THING ## _
+
+#else
+
+#define SUFFIX(THING) THING ## __
 #include "euler.c"
 
-#ifdef __cplusplus
-#define AA_API extern "C"
-#define AA_EXTERN extern "C"
-#define AA_RESTRICT
-#else
-/// calling and name mangling convention for functions
-#define AA_API
-/// name mangling convention external symbols
-#define AA_EXTERN extern
-/// Defined restrict keyword based on language flavor
-#define AA_RESTRICT restrict
-#endif //__cplusplus
+#endif // USE_FORTRAN
+
 
 int aa_tf_qnormalize__( double q[4] )
 {
@@ -20,12 +20,23 @@ int aa_tf_qnormalize__( double q[4] )
 }
 
 #define AA_TF_DEC_EULER(letters)                                        \
+    AA_API int                                                          \
+    aa_tf_euler ## letters ## 2rotmat__                                 \
+    ( double *e1, double *e2, double *e3,                               \
+      double R[AA_RESTRICT 9] );                                        \
+                                                                        \
     AA_API void                                                         \
     aa_tf_euler ## letters ## 2rotmat( double e1, double e2, double e3, \
                                        double R[AA_RESTRICT 9] )        \
     {                                                                   \
         aa_tf_euler ## letters ## 2rotmat__( &e1, &e2, &e3, R );        \
     }                                                                   \
+                                                                        \
+    AA_API int                                                          \
+    aa_tf_euler ## letters ## 2quat__                                   \
+    ( double *e1, double *e2, double *e3,                               \
+      double q[AA_RESTRICT 4] );                                        \
+                                                                        \
     AA_API void                                                         \
     aa_tf_euler ## letters ## 2quat( double e1, double e2, double e3,   \
                                      double q[AA_RESTRICT 4] )          \

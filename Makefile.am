@@ -1,17 +1,20 @@
+# These subdirs enforce a hard ordering on the build
 SUBDIRS = src/parse . lisp demo
 
-ACLOCAL_AMFLAGS = -I m4
+AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
-EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
-             src/la_impl.c                       \
+ACLOCAL_AMFLAGS = -I m4
+
+BUILT_SOURCES =
+
+EXTRA_DIST = src/la_impl.c                       \
              src/la_mod.F90 src/la_implf.F90     \
              src/mem_mod.F90 src/mem_impl.F90    \
              src/tff.F90                         \
-             src/mac/tf.mac                      \
              src/mac/aa_tf_euler.f90             \
-             src/mac/euler77.mac                 \
              src/mac/euler.f                     \
-             src/mac/ls.mac src/mac/aa_ls_se3.f90 \
+             src/mac/euler.c                     \
+             src/mac/aa_ls_se3.f90               \
              share/check-clpkg.sh                \
              share/load-ql.lisp                  \
              share/make-aarx.sh                  \
@@ -137,6 +140,7 @@ libamino_la_SOURCES =                  \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
+	src/mac/euler_f2c.c            \
 	src/rx/errstr.c                \
 	src/rx/scenegraph.cpp          \
 	src/rx/sg_api.cpp              \
@@ -163,36 +167,37 @@ libamino_la_SOURCES =                  \
 	src/cv.c
 
 
+libamino_la_LIBADD = src/parse/libamino_wavefront.la
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
-src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
-	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b gen.mac
-	@echo [maxima end]
+EXTRA_DIST += src/mac/amino.mac src/mac/euler.mac src/mac/euler77.mac src/mac/ls.mac
 
-BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/aa_ls_se3.f90 src/mac/euler.f
+if HAVE_MAXIMA
 
-src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
-	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler.mac
-	@echo [maxima end]
+# EXTRA_DIST += src/mac/aa_tf_euler.f90
+# BUILT_SOURCES += src/mac/aa_tf_euler.f90
+# src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
+#	@echo [maxima start]
+#	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler.mac
+#	@echo [maxima end]
 
 
+EXTRA_DIST += src/mac/euler.f
+BUILT_SOURCES += src/mac/euler.f
 src/mac/euler.f: src/mac/amino.mac src/mac/euler77.mac
 	@echo [maxima start]
 	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler77.mac
 	@echo [maxima end]
 
+EXTRA_DIST += src/mac/aa_ls_se3.f90
+BUILT_SOURCES += src/mac/aa_ls_se3.f90
 src/mac/aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
 	@echo [maxima start]
 	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b ls.mac
 	@echo [maxima end]
 
-src/mac/mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
-	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b tf.mac
-	@echo [maxima end]
+endif
 
 distclean-local:
 	-rm -rf doxygen-doc
@@ -200,15 +205,25 @@ distclean-local:
 #vecbench_SOURCES = src/test/vecbench.c
 #vecbench_LDADD = libamino.la -lblas -llapack
 
+
+## FORTRAN ##
+
+if HAVE_F2C
+
+BUILT_SOURCES += src/mac/euler.c
+EXTRA_DIST += src/mac/euler.c
+src/mac/euler.c: src/mac/euler.f
+	cd src/mac && $(F2C) euler.f
+
+endif
+
+if USE_FORTRAN
+
 # use some convenience libraries to force fortran module dependencies
 noinst_LTLIBRARIES +=                  \
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la
-
-## FORTRAN ##
-
-if USE_FORTRAN
 
 # each convenience library depends on the fortran source for that module
 libamino_mem_la_SOURCES = mem_mod.f90
@@ -224,25 +239,19 @@ amino_tf.mod: $(libamino_tf_la_OBJECTS)
 $(libamino_la_la_OBJECTS): amino_mem.mod
 $(libamino_tf_la_OBJECTS): amino_la.mod
 
-libamino_la_LIBADD =                   \
+libamino_la_LIBADD +=                  \
 	-lgfortran                     \
-	src/parse/libamino_wavefront.la\
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la
 
 nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
 
+libamino_la_SOURCES += src/mac/euler.f
+
 else
 
-# No fortran compiler
-
-BUILT_SOURCES += src/mac/euler.c
-src/mac/euler.c: src/mac/euler.f
-	cd src/mac && $(F2C) euler.f
-
-libamino_la_SOURCES += src/mac/euler_f2c.c
-
+# do nothing, euler.c in included in src/mac/euler_f2c.c
 
 endif
 
@@ -371,9 +380,6 @@ la_test_LDADD = libamino.la libtestutil.la
 endif
 
 $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
-
-foo:
-	echo $(la_test_OBJECTS)
 
 TESTS += aa_fuzz
 noinst_PROGRAMS += aa_fuzz

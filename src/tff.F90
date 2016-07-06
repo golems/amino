@@ -934,14 +934,14 @@ module amino_tf
      end function aa_tf_qvnorm
   end interface aa_tf_qvnorm
 
-  interface aa_tf_qnormalize
-     pure subroutine aa_tf_qnormalize( q ) &
-          bind( C, name="aa_tf_qnormalize" )
-       use ISO_C_BINDING
-       real(C_DOUBLE), dimension(4), intent(inout) :: q
-       !q = q / aa_tf_qnorm(q)
-     end subroutine aa_tf_qnormalize
-  end interface aa_tf_qnormalize
+  ! interface aa_tf_qnormalize
+  !    pure subroutine aa_tf_qnormalize( q ) &
+  !         bind( C, name="aa_tf_qnormalize" )
+  !      use ISO_C_BINDING
+  !      real(C_DOUBLE), dimension(4), intent(inout) :: q
+  !      !q = q / aa_tf_qnorm(q)
+  !    end subroutine aa_tf_qnormalize
+  ! end interface aa_tf_qnormalize
 
   interface aa_tf_qminimize
      pure subroutine aa_tf_qminimize( q ) &
@@ -2993,7 +2993,7 @@ module amino_tf
   !   call aa_tf_duqu_stwist( d0, w, dt, d1 );
   ! end subroutine aa_tf_duqu_sdiff
 
-#include "aa_tf_euler.f90"
+! #include "aa_tf_euler.f90"
 
   subroutine aa_tf_qutr_wavg( n, w, EE, ldee,  a ) &
        bind( C, name="aa_tf_qutr_wavg" )

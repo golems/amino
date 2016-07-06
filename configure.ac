@@ -16,11 +16,28 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC_C99
 AC_PROG_CXX
 AC_PROG_FC
+AC_PROG_F77
 AM_PROG_CC_C_O
-AM_PROG_LEX
 AC_PROG_LIBTOOL
-AC_CHECK_PROGS([MAXIMA], [maxima])
 AM_PATH_LISPDIR
+
+# Check for Lex/Flex
+AC_ARG_WITH([lex],
+            AS_HELP_STRING([--without-lex], [Do not run lex/flex]),
+            [],
+            [with_lex=yes])
+AS_IF([test "x$with_lex" != xyes],
+      [AM_PROG_LEX])
+AM_CONDITIONAL([HAVE_LEX], [test "x$LEX" != x -a "x$with_lex" = xyes])
+
+# Check for Maxima
+AC_ARG_WITH([maxima],
+            AS_HELP_STRING([--without-maxima], [Do not run maxima]),
+            [],
+            [with_maxima=yes])
+AS_IF([test "x$with_maxima" = xyes],
+      [AC_CHECK_PROGS([MAXIMA], [maxima])])
+AM_CONDITIONAL([HAVE_MAXIMA], [test "x$MAXIMA" != x])
 
 # Enable C++ 11
 m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
@@ -88,6 +105,7 @@ m4_ifdef([AX_CHECK_COMPILER_FLAGS],
 
 
 # Fortran Checks
+# TODO: check that we have either the fortran compiler or f2c
 AC_ARG_WITH([fortran],
             AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
             [],
@@ -97,6 +115,7 @@ AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
 
 AS_IF([test "x$with_fortran" = xyes],
 [
+AC_DEFINE([USE_FORTRAN],[1],[Use the fortran compiler])
 AC_LANG([Fortran])
 
 AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
@@ -107,8 +126,8 @@ APPEND_FCFLAG([-ffree-line-length-none])
 APPEND_FCFLAG([-Wall])
 APPEND_FCFLAG([-pedantic])
 APPEND_FCFLAG([-Wextra])
-APPEND_FCFLAG([-Wconversion])
-APPEND_FCFLAG([-Wconversion-extra])
+dnl APPEND_FCFLAG([-Wconversion])
+dnl APPEND_FCFLAG([-Wconversion-extra])
 APPEND_FCFLAG([-Wshadow])
 APPEND_FCFLAG([-Wimplicit-interface])
 APPEND_FCFLAG([-Wimplicit-procedure])
@@ -118,13 +137,12 @@ APPEND_FCFLAG([-Wtabs])
 APPEND_FCFLAG([-Wunused-parameter])
 APPEND_FCFLAG([-Wintrinsic-shadow])
 
-],
-[
+])
+
 AC_CHECK_PROGS([F2C], [f2c])
+AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
 AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
-]
-)
 
 
 AS_IF([test "x$with_fortran" = xyes],
