@@ -297,7 +297,6 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
         }
         break;
     case SDL_QUIT:
-        printf("quitting\n");
         *quit = 1;
         break;
     case SDL_KEYDOWN: {
@@ -352,6 +351,17 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
             aa_gl_globals_home_camera( globals );
             update_tf = 1;
             break;
+        case SDLK_c: {
+            struct aa_mem_region *reg = aa_mem_region_local_get();
+            double *E = globals->world_E_cam;
+            char *buf = aa_mem_region_printf(reg, "%f %f %f %f %f %f %f",
+                                             E[0], E[1], E[2], E[3],
+                                             E[4], E[5], E[6]);
+
+            SDL_SetClipboardText(buf);
+            aa_mem_region_pop(reg,buf);
+            break;
+        }
         default:
             break;
         }
