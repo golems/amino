@@ -9,7 +9,32 @@ EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
              src/tff.F90                         \
              src/mac/tf.mac                      \
              src/mac/aa_tf_euler.f90             \
-             src/mac/ls.mac src/mac/aa_ls_se3.f90
+             src/mac/euler77.mac                 \
+             src/mac/euler.f                     \
+             src/mac/ls.mac src/mac/aa_ls_se3.f90 \
+             share/check-clpkg.sh                \
+             share/load-ql.lisp                  \
+             share/make-aarx.sh                  \
+             share/make-aarx.lisp                \
+             share/robray-mode.el
+
+noinst_HEADERS = \
+             src/parse/wavefront_internal.h \
+             src/opt/opt_internal.h \
+             src/tf/quat_ord.c \
+             src/tf/quat_duqu.c \
+             src/tf/quat_qutr.c \
+             src/rx/sg_convenience.h \
+             include/amino/ct/traj_internal.hpp \
+             include/amino_internal.h \
+             include/amino/rx/scene_kin_internal.h \
+             include/amino/rx/scenegraph_internal.h \
+             include/amino/rx/scene_geom_internal.h \
+             include/amino/rx/scene_collision_internal.h \
+             include/amino/rx/scene_gl_internal.h \
+             include/amino/rx/scene_sdl_internal.h \
+             include/amino/rx/rxtype_internal.h \
+             include/amino/rx/scene_fcl.h
 
 dist_pkgdata_DATA = src/mac/amino.mac
 
@@ -19,7 +44,7 @@ noinst_PROGRAMS =
 noinst_LTLIBRARIES =
 
 bin_PROGRAMS =
-bin_SCRIPTS = share/aarxc
+dist_bin_SCRIPTS = share/aarxc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = share/amino.pc \
@@ -62,6 +87,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/undef.h           \
 	include/amino/heap.h            \
 	include/amino/mangle.h          \
+	include/amino/getset.h          \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
@@ -80,12 +106,15 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_planning.h \
 	include/amino/rx/scene_sdl.h    \
 	include/amino/rx/scene_win.h    \
-	include/amino/rx/scene_plugin.h
+	include/amino/rx/scene_plugin.h \
+	include/amino/rx/mp_seq.h \
+	include/amino/rx/wavefront.h
 
 ctincludedir = $(pkgincludedir)/ct
 
-ctinclude_HEADERS = 	                \
-	include/amino/ct/traj.h
+ctinclude_HEADERS = \
+	include/amino/ct/traj.h \
+	include/amino/ct/state.h
 
 
 noinst_PROGRAMS += mtl_test
@@ -495,7 +524,12 @@ clean-local:
 		debian/DEBIAN/*             \
 		texput.log                  \
 		$(EXTRA_DX)                 \
-		*.mod
+		*.mod                       \
+                doc/javadoc                 \
+                doc/.javadoc.stamp          \
+                org.golems.amino.jar        \
+                org_golems_amino_Lib.h      \
+                org/golems/amino/Lib.class
 sync-doc:
 	rsync -r doc/html/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 

@@ -1,5 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
+EXTRA_DIST =
+
 if BUILD_DEMOS
 
 
@@ -26,8 +28,11 @@ AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_buil
 ## SIMPLE RX ##
 ###############
 
+EXTRA_DIST += simple-rx/scene.robray
+
 simple-rx/scene.c: simple-rx/scene.robray
 	$(AARXC) $(srcdir)/simple-rx/scene.robray -o simple-rx/scene.c
+
 
 BUILT_SCENES += simple-rx/scene.c simple-rx/scene.c.h
 
@@ -44,6 +49,11 @@ simple_rx_simple_procedural_SOURCES = simple-rx/scene.c simple-rx/simple-procedu
 simple_rx_simple_procedural_CFLAGS = $(DEMO_CFLAGS)
 simple_rx_simple_procedural_LDADD = $(DEMO_LIBS)
 
+noinst_PROGRAMS += simple-rx/sdlinfo
+
+simple_rx_sdlinfo_SOURCES = simple-rx/sdlinfo.c
+simple_rx_sdlinfo_CFLAGS = $(DEMO_CFLAGS)
+simple_rx_sdlinfo_LDADD = $(DEMO_LIBS)
 
 ############
 ## Baxter ##
@@ -60,7 +70,7 @@ urdf/baxter/baxter-model.c.h: urdf/baxter/baxter-model.c
 BUILT_SCENES += urdf/baxter/baxter-model.c urdf/baxter/baxter-model.c.h
 
 noinst_LTLIBRARIES += urdf/baxter/libbaxter.la
-urdf_baxter_libbaxter_la_SOURCES = urdf/baxter/baxter-model.c
+nodist_urdf_baxter_libbaxter_la_SOURCES = urdf/baxter/baxter-model.c
 
 noinst_LTLIBRARIES += urdf/baxter/libbaxter_demo.la
 urdf_baxter_libbaxter_demo_la_SOURCES = urdf/baxter/baxter-demo.c
@@ -137,7 +147,7 @@ urdf/ur/ur10-model.c: urdf/ur/ur10_robot.urdf
 BUILT_SCENES += urdf/ur/ur10-model.c urdf/ur/ur10-model.c
 
 lib_LTLIBRARIES += urdf/ur/libamino_ur.la
-urdf_ur_libamino_ur_la_SOURCES = urdf/ur/ur10-model.c
+nodist_urdf_ur_libamino_ur_la_SOURCES = urdf/ur/ur10-model.c
 
 endif # BUILD_DEMO_UR10
 
@@ -157,7 +167,7 @@ urdf/schunk/lwa4d-model.c.h: urdf/schunk/lwa4d-model.c
 BUILT_SCENES += urdf/schunk/lwa4d-model.c.h urdf/schunk/lwa4d-model.c
 
 lib_LTLIBRARIES += urdf/schunk/libamino_schunk.la
-urdf_schunk_libamino_schunk_la_SOURCES = urdf/schunk/lwa4d-model.c
+nodist_urdf_schunk_libamino_schunk_la_SOURCES = urdf/schunk/lwa4d-model.c
 urdf_schunk_libamino_schunk_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 endif # BUILD_DEMO_SCHUNK
@@ -176,7 +186,7 @@ BUILT_SCENES += urdf/mico/mico-model.c.h urdf/mico/mico-model.c
 
 
 lib_LTLIBRARIES += urdf/mico/libamino_mico.la
-urdf_mico_libamino_mico_la_SOURCES = urdf/mico/mico-model.c
+nodist_urdf_mico_libamino_mico_la_SOURCES = urdf/mico/mico-model.c
 urdf_mico_libamino_mico_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 endif # BUILD_DEMO_MICO
@@ -196,7 +206,7 @@ urdf/jaco/jaco-model.c.h: urdf/jaco/jaco-model.c
 BUILT_SCENES += urdf/jaco/jaco-model.c urdf/jaco/jaco-model.c
 
 noinst_LTLIBRARIES += urdf/jaco/libjaco.la
-urdf_jaco_libjaco_la_SOURCES = urdf/jaco/jaco-model.c
+nodist_urdf_jaco_libjaco_la_SOURCES = urdf/jaco/jaco-model.c
 
 lib_LTLIBRARIES += urdf/jaco/libamino_jaco.la
 urdf_jaco_libamino_jaco_la_SOURCES =
