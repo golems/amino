@@ -1,11 +1,17 @@
 # These subdirs enforce a hard ordering on the build
-SUBDIRS = . lisp demo
+SUBDIRS = . demo
+
+bin_PROGRAMS =
+noinst_PROGRAMS =
+noinst_LTLIBRARIES =
+BUILT_SOURCES =
+
 
 AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
 ACLOCAL_AMFLAGS = -I m4
 
-BUILT_SOURCES =
+include Makefile-lisp.am
 
 EXTRA_DIST = src/la_impl.c                       \
              src/la_mod.F90 src/la_implf.F90     \
@@ -42,11 +48,7 @@ noinst_HEADERS = \
 dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h include/amino.hpp
-noinst_PROGRAMS =
 
-noinst_LTLIBRARIES =
-
-bin_PROGRAMS =
 dist_bin_SCRIPTS = share/aarxc
 
 pkgconfigdir = $(libdir)/pkgconfig

@@ -1,5 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
+
 EXTRA_DIST =
 
 if BUILD_DEMOS
@@ -22,7 +23,7 @@ DEMO_CFLAGS =  $(SDL2_CFLAGS) $(GL_CFLAGS)
 PLANNING_LIBS = $(top_builddir)/libamino_planning.la $(top_builddir)/libamino_cl.la
 
 # call aarxc with paths set to look in the build and source trees
-AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_builddir)/lisp:$(PATH) $(top_srcdir)/share/aarxc
+AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_builddir):$(PATH) $(top_srcdir)/share/aarxc
 
 ###############
 ## SIMPLE RX ##
