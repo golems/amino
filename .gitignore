@@ -151,10 +151,8 @@ amino*.tar.gz
 /demo/urdf/jaco/jaco-ompl
 /ylwrap
 /wavefront
-/src/parse/Makefile
-/src/parse/Makefile.in
-/src/parse/wavefront.c
 /colladatest.mtl
 /colladatest.obj
-/src/parse/mtl.c
 /mtl_test
+/src/wavefront/mtl.c
+/src/wavefront/wavefront.c

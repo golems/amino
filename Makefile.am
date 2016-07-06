@@ -1,5 +1,5 @@
 # These subdirs enforce a hard ordering on the build
-SUBDIRS = src/parse . lisp demo
+SUBDIRS = . lisp demo
 
 AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
@@ -22,7 +22,7 @@ EXTRA_DIST = src/la_impl.c                       \
              share/robray-mode.el
 
 noinst_HEADERS = \
-             src/parse/wavefront_internal.h \
+             src/wavefront/wavefront_internal.h \
              src/opt/opt_internal.h \
              src/tf/quat_ord.c \
              src/tf/quat_duqu.c \
@@ -164,15 +164,23 @@ libamino_la_SOURCES =                  \
 	src/are.c                      \
 	src/sigsys.c                   \
 	src/heap.c                     \
-	src/cv.c
+	src/cv.c                       \
+	src/wavefront/wavefront.c      \
+	src/wavefront/mtl.c            \
+	src/wavefront/wf_obj.c         \
+	src/wavefront/wf_mtl.c
 
 
-libamino_la_LIBADD = src/parse/libamino_wavefront.la
+libamino_la_LIBADD =
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
 EXTRA_DIST += src/mac/amino.mac src/mac/euler.mac src/mac/euler77.mac src/mac/ls.mac
 
+
+############
+## MAXIMA ##
+############
 if HAVE_MAXIMA
 
 # EXTRA_DIST += src/mac/aa_tf_euler.f90
@@ -205,8 +213,9 @@ distclean-local:
 #vecbench_SOURCES = src/test/vecbench.c
 #vecbench_LDADD = libamino.la -lblas -llapack
 
-
+#############
 ## FORTRAN ##
+#############
 
 if HAVE_F2C
 
@@ -255,7 +264,21 @@ else
 
 endif
 
+###############
+## WAVEFRONT ##
+###############
+BUILT_SOURCES += src/wavefront/wavefront.c src/wavefront/mtl.c
+EXTRA_DIST += src/wavefront/wavefront.l src/wavefront/mtl.l
+
+src/wavefront/wavefront.c: src/wavefront/wavefront.l
+	$(LEX) -t $(top_srcdir)/src/wavefront/wavefront.l > src/wavefront/wavefront.c
+
+src/wavefront/mtl.c: src/wavefront/mtl.l
+	$(LEX) -t $(top_srcdir)/src/wavefront/mtl.l > src/wavefront/mtl.c
+
+###########
 ## EMACS ##
+###########
 lisp_LISP = share/robray-mode.el
 
 ## JAVA ##
