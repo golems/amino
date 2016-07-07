@@ -2,18 +2,13 @@
 #include "config.h"
 
 #ifdef USE_FORTRAN
-
 #define SUFFIX(THING) THING ## _
-
 #else
-
 #define SUFFIX(THING) THING ## __
-#include "euler.c"
-
 #endif // USE_FORTRAN
 
 
-int aa_tf_qnormalize__( double q[4] )
+int SUFFIX(aa_tf_qnormalize)( double q[4] )
 {
     aa_tf_qnormalize(q);
     return 0;
@@ -21,7 +16,7 @@ int aa_tf_qnormalize__( double q[4] )
 
 #define AA_TF_DEC_EULER(letters)                                        \
     AA_API int                                                          \
-    aa_tf_euler ## letters ## 2rotmat__                                 \
+    SUFFIX(aa_tf_euler ## letters ## 2rotmat)                           \
     ( double *e1, double *e2, double *e3,                               \
       double R[AA_RESTRICT 9] );                                        \
                                                                         \
@@ -29,11 +24,11 @@ int aa_tf_qnormalize__( double q[4] )
     aa_tf_euler ## letters ## 2rotmat( double e1, double e2, double e3, \
                                        double R[AA_RESTRICT 9] )        \
     {                                                                   \
-        aa_tf_euler ## letters ## 2rotmat__( &e1, &e2, &e3, R );        \
+        SUFFIX(aa_tf_euler ## letters ## 2rotmat)( &e1, &e2, &e3, R );  \
     }                                                                   \
                                                                         \
     AA_API int                                                          \
-    aa_tf_euler ## letters ## 2quat__                                   \
+    SUFFIX(aa_tf_euler ## letters ## 2quat)                             \
     ( double *e1, double *e2, double *e3,                               \
       double q[AA_RESTRICT 4] );                                        \
                                                                         \
@@ -41,7 +36,7 @@ int aa_tf_qnormalize__( double q[4] )
     aa_tf_euler ## letters ## 2quat( double e1, double e2, double e3,   \
                                      double q[AA_RESTRICT 4] )          \
     {                                                                   \
-        aa_tf_euler ## letters ## 2quat__( &e1, &e2, &e3, q );          \
+        SUFFIX(aa_tf_euler ## letters ## 2quat)( &e1, &e2, &e3, q );    \
     }
 
 AA_TF_DEC_EULER( xyz )

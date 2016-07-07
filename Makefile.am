@@ -22,7 +22,7 @@ EXTRA_DIST += \
 	src/mem_mod.F90 src/mem_impl.F90    \
 	src/tff.F90                         \
 	src/mac/euler.f                     \
-	src/mac/euler.c                     \
+	euler.c                             \
 	src/mac/aa_ls_se3.f90               \
 	share/check-clpkg.sh                \
 	share/load-quicklisp.lisp           \
@@ -239,10 +239,10 @@ endif
 
 if HAVE_F2C
 
-BUILT_SOURCES += src/mac/euler.c
-EXTRA_DIST += src/mac/euler.c
-src/mac/euler.c: src/mac/euler.f
-	cd src/mac && $(F2C) euler.f
+BUILT_SOURCES += euler.c
+EXTRA_DIST += euler.c
+euler.c: src/mac/euler.f
+	$(F2C) src/mac/euler.f
 
 endif
 
@@ -280,6 +280,7 @@ libamino_la_SOURCES += src/mac/euler.f
 
 else
 
+libamino_la_SOURCES += euler.c
 # do nothing, euler.c in included in src/mac/euler_f2c.c
 
 endif
