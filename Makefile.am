@@ -555,12 +555,6 @@ tf_mod.f90: src/tff.F90 # src/mac/aa_tf_euler.f90
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 
-
-doc/manual/scenegraph.html: doc/manual/scenegraph.org org-compile.el
-	emacs --batch --quick \
-	--load org-compile.el       \
-	--eval '(golems-org-emit "$<" "scenegraph.html")'
-
 clean-local:
 	-rm -rf debian/tmp                  \
 		$(CLEAN_LOCAL_FILES)        \
@@ -585,11 +579,12 @@ distclean-local:
 	-rm -rf doxygen-doc
 
 sync-doc:
-	rsync -r doc/html/ code.golems.org:/srv/www/code.golems.org/pkg/amino
+	rsync -r doc/manual/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 
 doc: doxygen-doc
-	mkdir -p doc/html/doc
-	cp doc/logo-medium.png doc/html/doc
+	$(MKDIR_P) doc/manual/doc
+	cp doc/logo-medium.png doc/manual/doc
 
+EXTRA_DIST += doc/manual
 
 include aminclude.am

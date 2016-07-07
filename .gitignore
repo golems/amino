@@ -92,7 +92,6 @@ amino*.tar.gz
 /demo/baxter/baxter-simple
 /demo/baxter/scene.c
 /demo/baxter/baxter-ompl
-/doc/manual/scenegraph.html
 /demo/baxter/baxter-wksp
 /demo/baxter/baxter-ik
 /demo.png
@@ -108,7 +107,7 @@ amino*.tar.gz
 /share/robray-mode.elc
 /include/amino/cblas_order.h
 /ct_traj
-/doc/html/
+/doc/manual
 /doc/doxygen_sqlite3.db
 /memregion
 /demo/simple-rx/.libs/
