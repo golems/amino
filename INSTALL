@@ -6,9 +6,10 @@ Required
 These dependecies are required to use Amino:
 
 * GCC, G++
-* GFortran or F2C
 * BLAS / LAPACK
-* Maxima (build-time dependency only)
+* GFortran or F2C (only to build from git)
+* Maxima (only to build from git)
+* Flex (only to build from git)
 
 Optional
 --------
@@ -78,67 +79,34 @@ robot model compilation:
          --eval '(ql:add-to-init-file)'
          --eval '(quit)'
 
+Build Overview
+==============
 
-  * Sycamore: https://github.com/ndantam/sycamore
+0. If you have obtained amino from the git repo, you need to
+   initialize the git submodules and autotools build scripts.
 
-    git clone https://github.com/ndantam/sycamore.git
-    mkdir --parents ~/.local/share/common-lisp/source
-    ln -s $(pwd)/sycamore/src/sycamore.asd ~/.local/share/common-lisp/source
+    git submodule init && git submodule update && autoreconf -i
 
-Overview
-=========
+   This whole step is not necessary when you have obtained a
+   distribution tarball which already contains the autoconf-generated
+   configure script.
 
-Generic Instructions
---------------------
-
-0) If you have obtained amino from the git repo, you need to
-initialize the autotools build scripts.
-
-    autoreconf -i
-
-This whole step is not necessary when you have obtained a distribution
-tarball which already contains the autoconf-generated configure script.
-
-1) Configure for your system.  To see optional features which may be
-enabled or disabled, run:
+1. Configure for your system.  To see optional features which may be
+   enabled or disabled, run:
 
     ./configure --help
 
-Then run configure (adding any flags you may need for your system):
+   Then run configure (adding any flags you may need for your system):
 
     ./configure
 
-2) Build:
+2. Build:
 
     ./make
 
-3) Install:
+3. Install:
 
     sudo ./make install
-
-
-Debian/Ubuntu Instructions
---------------------------
-
-Alternatively, if you want to build a debian package:
-
-0) Install debuild (if not already installed):
-
-sudo apt-get install devscripts
-
-1) If you've have obtained the packaged from Git, initialize autotools
-with:
-
-    autoreconf -i
-
-2) Build amino and the debian packages:
-
-    debuild -us -uc
-
-3) (Optionally) Install the debian packages:
-
-    sudo dpkg -i ../libamino*.deb
-
 
 
 GNU Autotools Standard Instructions

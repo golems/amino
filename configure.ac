@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
 
-AC_INIT([amino], [0.20140818], [ntd@gatech.edu])
+AC_INIT([amino], [1.0-beta0], [ntd@rice.edu])
 
 HEADER_VERSION=1.0
 includedir=${includedir}/amino-$HEADER_VERSION
@@ -587,6 +587,7 @@ AS_IF([test "x$CXX" = "x"],
 
 
 AC_CONFIG_FILES([ Makefile
+                  submodules/sycamore/Makefile
                   include/amino/cblas_order.h
                   share/amino.pc
                   share/amino-gl.pc

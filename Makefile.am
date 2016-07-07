@@ -6,6 +6,8 @@ lib_LTLIBRARIES =
 EXTRA_DIST =
 CLEAN_LOCAL_FILES =
 
+DIST_SUBDIRS = submodules/sycamore .
+
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
 ACLOCAL_AMFLAGS = -I m4
 
@@ -24,7 +26,7 @@ EXTRA_DIST += \
 	src/mac/euler.c                     \
 	src/mac/aa_ls_se3.f90               \
 	share/check-clpkg.sh                \
-	share/load-ql.lisp                  \
+	share/load-quicklisp.lisp           \
 	share/make-aarx.sh                  \
 	share/make-aarx.lisp                \
 	share/robray-mode.el
