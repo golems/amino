@@ -21,9 +21,18 @@ General {#general}
 
 * Q: What platforms are supported?
 
-  - A: Amino is developed on Debian and Ubuntu Linux.  It should run
-    on other Linux distributions and POSIX-y systems with minimal
-    effort.  Currently, non-POSIX platforms are not targeted.
+  - A: Amino is developed on Debian GNU/Linux (stable) and Ubuntu
+    (LTS).  It should run on other Linux distributions and POSIX-y
+    systems, but minor changes may potentially be required (patches
+    welcome!).  Currently, non-POSIX platforms are not targeted.
+
+* Q: Can I try amino in a virtual machine (VM)?
+
+  - A: Yes, as long as the VM supports OpenGL 3.0.  We have
+    successfully tested amino in VMs using VirtualBox and KVM running
+    an Ubuntu 16.04 guest on a Linux host.  An Ubuntu 14.04 guest in
+    VirtualBox on a MacOSX host did not provide sufficient OpenGL
+    support.
 
 SE(3) {#se3}
 ====
