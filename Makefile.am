@@ -1,31 +1,33 @@
-# These subdirs enforce a hard ordering on the build
-SUBDIRS = . demo
-
 bin_PROGRAMS =
 noinst_PROGRAMS =
 noinst_LTLIBRARIES =
 BUILT_SOURCES =
+lib_LTLIBRARIES =
+EXTRA_DIST =
+CLEAN_LOCAL_FILES =
 
-
-AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
 ACLOCAL_AMFLAGS = -I m4
 
-include Makefile-lisp.am
+AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
 
-EXTRA_DIST = src/la_impl.c                       \
-             src/la_mod.F90 src/la_implf.F90     \
-             src/mem_mod.F90 src/mem_impl.F90    \
-             src/tff.F90                         \
-             src/mac/aa_tf_euler.f90             \
-             src/mac/euler.f                     \
-             src/mac/euler.c                     \
-             src/mac/aa_ls_se3.f90               \
-             share/check-clpkg.sh                \
-             share/load-ql.lisp                  \
-             share/make-aarx.sh                  \
-             share/make-aarx.lisp                \
-             share/robray-mode.el
+include Makefile-lisp.am
+include Makefile-demo.am
+
+EXTRA_DIST += \
+	src/la_impl.c                       \
+	src/la_mod.F90 src/la_implf.F90     \
+	src/mem_mod.F90 src/mem_impl.F90    \
+	src/tff.F90                         \
+	src/mac/aa_tf_euler.f90             \
+	src/mac/euler.f                     \
+	src/mac/euler.c                     \
+	src/mac/aa_ls_se3.f90               \
+	share/check-clpkg.sh                \
+	share/load-ql.lisp                  \
+	share/make-aarx.sh                  \
+	share/make-aarx.lisp                \
+	share/robray-mode.el
 
 noinst_HEADERS = \
              src/wavefront/wavefront_internal.h \
@@ -130,7 +132,7 @@ noinst_PROGRAMS += obj_test
 obj_test_SOURCES = src/test/wavefront_test.c
 obj_test_LDADD = libamino.la
 
-lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
+lib_LTLIBRARIES += libamino.la libamino_xerbla_nop.la
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
@@ -209,8 +211,6 @@ src/mac/aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
 
 endif
 
-distclean-local:
-	-rm -rf doxygen-doc
 
 #vecbench_SOURCES = src/test/vecbench.c
 #vecbench_LDADD = libamino.la -lblas -llapack
@@ -545,6 +545,7 @@ doc/manual/scenegraph.html: doc/manual/scenegraph.org org-compile.el
 
 clean-local:
 	-rm -rf debian/tmp                  \
+		$(CLEAN_LOCAL_FILES)        \
 		debian/files                \
 		debian/libamino?            \
 		debian/libamino-dev         \
@@ -561,6 +562,10 @@ clean-local:
                 org.golems.amino.jar        \
                 org_golems_amino_Lib.h      \
                 org/golems/amino/Lib.class
+
+distclean-local:
+	-rm -rf doxygen-doc
+
 sync-doc:
 	rsync -r doc/html/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 

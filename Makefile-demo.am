@@ -1,0 +1,210 @@
+
+if BUILD_DEMOS
+
+
+BUILT_SCENES =
+
+## Compilation and Linking flags
+#
+# the GL_LIBS, GL_CFLAGS, SDL_LIBS, etc. are determined by pkg-config
+# during configuration
+
+DEMO_LIBS = libamino.la libamino_gl.la $(GL_LIBS) $(SDL2_LIBS) $(GLEW_LIBS)
+DEMO_CFLAGS =  $(SDL2_CFLAGS) $(GL_CFLAGS)
+
+PLANNING_LIBS = libamino_planning.la libamino_cl.la
+
+# call aarxc with paths set to look in the build and source trees
+AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_builddir):$(PATH) $(top_srcdir)/share/aarxc
+
+###############
+## SIMPLE RX ##
+###############
+
+EXTRA_DIST += demo/simple-rx/scene.robray
+
+demo/simple-rx/scene.c: $(top_srcdir)/demo/simple-rx/scene.robray aarx.core
+	$(AARXC) $(top_srcdir)/demo/simple-rx/scene.robray -o demo/simple-rx/scene.c
+
+
+BUILT_SCENES += demo/simple-rx/scene.c demo/simple-rx/scene.c.h
+
+noinst_PROGRAMS += demo/simple-rx/simple-scenefile
+
+demo_simple_rx_simple_scenefile_SOURCES = demo/simple-rx/simple-scenefile.c
+nodist_demo_simple_rx_simple_scenefile_SOURCES = demo/simple-rx/scene.c
+demo_simple_rx_simple_scenefile_CFLAGS = $(DEMO_CFLAGS)
+demo_simple_rx_simple_scenefile_LDADD = $(DEMO_LIBS)
+
+
+noinst_PROGRAMS += demo/simple-rx/simple-procedural
+
+demo_simple_rx_simple_procedural_SOURCES = demo/simple-rx/simple-procedural.c
+nodist_demo_simple_rx_simple_procedural_SOURCES = demo/simple-rx/scene.c
+demo_simple_rx_simple_procedural_CFLAGS = $(DEMO_CFLAGS)
+demo_simple_rx_simple_procedural_LDADD = $(DEMO_LIBS)
+
+############
+## Baxter ##
+############
+
+if BUILD_DEMO_BAXTER
+
+demo/urdf/baxter/baxter-model.c: aarx.core
+	$(AARXC) 'package://baxter_description/urdf/baxter.urdf' \
+		-o demo/urdf/baxter/baxter-model.c -n "baxter"
+
+demo/urdf/baxter/baxter-model.c.h: demo/urdf/baxter/baxter-model.c
+
+BUILT_SCENES += demo/urdf/baxter/baxter-model.c demo/urdf/baxter/baxter-model.c.h
+
+noinst_LTLIBRARIES += demo/urdf/baxter/libbaxter.la
+nodist_demo_urdf_baxter_libbaxter_la_SOURCES = demo/urdf/baxter/baxter-model.c
+
+noinst_LTLIBRARIES += demo/urdf/baxter/libbaxter_demo.la
+demo_urdf_baxter_libbaxter_demo_la_SOURCES = demo/urdf/baxter/baxter-demo.c
+demo_urdf_baxter_libbaxter_demo_la_CFLAGS = $(DEMO_CFLAGS)
+demo/urdf/baxter/libbaxter_demo.$(OBJEXT): demo/urdf/baxter/baxter-model.c.h
+
+lib_LTLIBRARIES += demo/urdf/baxter/libamino_baxter.la
+demo_urdf_baxter_libamino_baxter_la_SOURCES =
+demo_urdf_baxter_libamino_baxter_la_LIBADD = demo/urdf/baxter/libbaxter.la
+demo_urdf_baxter_libamino_baxter_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
+
+noinst_PROGRAMS += demo/urdf/baxter/baxter-simple
+demo_urdf_baxter_baxter_simple_SOURCES = demo/urdf/baxter/baxter-simple.c
+demo_urdf_baxter_baxter_simple_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_simple_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
+noinst_PROGRAMS += demo/urdf/baxter/baxter-ik
+demo_urdf_baxter_baxter_ik_SOURCES = demo/urdf/baxter/baxter-ik.c
+demo_urdf_baxter_baxter_ik_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_ik_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
+noinst_PROGRAMS += demo/urdf/baxter/baxter-wksp
+demo_urdf_baxter_baxter_wksp_SOURCES = demo/urdf/baxter/baxter-wksp.c
+demo_urdf_baxter_baxter_wksp_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_wksp_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
+noinst_PROGRAMS += demo/urdf/baxter/baxter-collision
+demo_urdf_baxter_baxter_collision_SOURCES = demo/urdf/baxter/baxter-collision.c
+demo_urdf_baxter_baxter_collision_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_collision_LDADD = demo/urdf/baxter/libbaxter_demo.la $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
+noinst_PROGRAMS += demo/urdf/baxter/baxter-ompl
+demo_urdf_baxter_baxter_ompl_SOURCES = demo/urdf/baxter/baxter-ompl.c
+demo_urdf_baxter_baxter_ompl_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_ompl_LDADD = demo/urdf/baxter/libbaxter_demo.la $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
+noinst_PROGRAMS += demo/urdf/baxter/baxter-ompl-workspace
+demo_urdf_baxter_baxter_ompl_workspace_SOURCES = demo/urdf/baxter/baxter-ompl-workspace.c
+demo_urdf_baxter_baxter_ompl_workspace_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_ompl_workspace_LDADD = demo/urdf/baxter/libbaxter_demo.la $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
+noinst_PROGRAMS += demo/urdf/baxter/baxter-ompl-sequence
+demo_urdf_baxter_baxter_ompl_sequence_SOURCES = demo/urdf/baxter/baxter-ompl-sequence.c
+demo_urdf_baxter_baxter_ompl_sequence_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_ompl_sequence_LDADD = demo/urdf/baxter/libbaxter_demo.la $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
+#noinst_PROGRAMS += urdf/baxter/baxter-plugin
+#urdf_baxter_baxter_plugin_SOURCES = urdf/baxter/baxter-plugin.c urdf/baxter/baxter-demo.c
+#urdf_baxter_baxter_plugin_CFLAGS = $(DEMO_CFLAGS)
+#urdf_baxter_baxter_plugin_LDADD = $(DEMO_LIBS) urdf/baxter/libbaxter.la
+
+endif # BUILD_DEMO_BAXTER
+
+
+if BUILD_DEMO_UR10
+
+demo/urdf/ur/ur10_robot.urdf:
+	rosrun xacro xacro.py \
+		`rospack find ur_description`/urdf/ur10_robot.urdf.xacro \
+		-o urdf/ur/ur10_robot.urdf
+
+
+demo/urdf/ur/ur10-model.c: demo/urdf/ur/ur10_robot.urdf aarx.core
+	$(AARXC) demo/urdf/ur/ur10_robot.urdf -o demo/urdf/ur/ur10-model.c -n "ur10"
+
+BUILT_SCENES += demo/urdf/ur/ur10-model.c demo/urdf/ur/ur10-model.c
+
+lib_LTLIBRARIES += demo/urdf/ur/libamino_ur.la
+nodist_demo_urdf_ur_libamino_ur_la_SOURCES = demo/urdf/ur/ur10-model.c
+
+endif # BUILD_DEMO_UR10
+
+
+if BUILD_DEMO_SCHUNK
+
+demo/urdf/schunk/lwa4d.urdf:
+	rosrun xacro xacro.py demo/urdf/schunk/lwa4d_robot.urdf.xacro \
+		-o demo/urdf/schunk/lwa4d.urdf
+
+demo/urdf/schunk/lwa4d-model.c: demo/urdf/schunk/lwa4d.urdf aarx.core
+	$(AARXC) demo/urdf/schunk/lwa4d.urdf \
+		-o demo/urdf/schunk/lwa4d-model.c -n "lwa4d"
+
+demo/urdf/schunk/lwa4d-model.c.h: demo/urdf/schunk/lwa4d-model.c
+
+BUILT_SCENES += demo/urdf/schunk/lwa4d-model.c.h demo/urdf/schunk/lwa4d-model.c
+
+lib_LTLIBRARIES += demo/urdf/schunk/libamino_schunk.la
+nodist_demo_urdf_schunk_libamino_schunk_la_SOURCES = demo/urdf/schunk/lwa4d-model.c
+demo_urdf_schunk_libamino_schunk_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
+
+endif # BUILD_DEMO_SCHUNK
+
+if BUILD_DEMO_MICO
+
+demo/urdf/mico/mico_robot.urdf:
+	rosrun xacro xacro.py demo/urdf/mico/mico_robot.urdf.xacro \
+		-o demo/urdf/mico/mico_robot.urdf
+
+demo/urdf/mico/mico-model.c: demo/urdf/mico/mico_robot.urdf aarx.core
+	$(AARXC) demo/urdf/mico/mico_robot.urdf \
+		-o demo/urdf/mico/mico-model.c -n "mico"
+
+BUILT_SCENES += demo/urdf/mico/mico-model.c.h demo/urdf/mico/mico-model.c
+
+
+lib_LTLIBRARIES += demo/urdf/mico/libamino_mico.la
+nodist_demo_urdf_mico_libamino_mico_la_SOURCES = demo/urdf/mico/mico-model.c
+demo_urdf_mico_libamino_mico_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
+
+endif # BUILD_DEMO_MICO
+
+if BUILD_DEMO_JACO
+
+demo/urdf/jaco/jaco_robot.urdf:
+	rosrun xacro xacro.py demo/urdf/jaco/jaco_robot.urdf.xacro \
+		-o demo/urdf/jaco/jaco_robot.urdf
+
+demo/urdf/jaco/jaco-model.c: demo/urdf/jaco/jaco_robot.urdf aarx.core
+	$(AARXC) demo/urdf/jaco/jaco_robot.urdf \
+		-o demo/urdf/jaco/jaco-model.c -n "jaco"
+
+demo/urdf/jaco/jaco-model.c.h: demo/urdf/jaco/jaco-model.c
+
+BUILT_SCENES += demo/urdf/jaco/jaco-model.c demo/urdf/jaco/jaco-model.c
+
+noinst_LTLIBRARIES += demo/urdf/jaco/libjaco.la
+nodist_demo_urdf_jaco_libjaco_la_SOURCES = demo/urdf/jaco/jaco-model.c
+
+lib_LTLIBRARIES += demo/urdf/jaco/libamino_jaco.la
+demo_urdf_jaco_libamino_jaco_la_SOURCES =
+demo_urdf_jaco_libamino_jaco_la_LIBADD = demo/urdf/jaco/libjaco.la
+demo_urdf_jaco_libamino_jaco_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
+
+noinst_PROGRAMS += demo/urdf/jaco/jaco-ompl
+demo_urdf_jaco_jaco_ompl_SOURCES = demo/urdf/jaco/jaco-ompl.c
+demo_urdf_jaco_jaco_ompl_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_jaco_jaco_ompl_LDADD = $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/jaco/libjaco.la
+demo/urdf/jaco/jaco-ompl.$(OBJEXT): demo/urdf/jaco/jaco-model.c.h
+
+endif # BUILD_DEMO_JACO
+
+
+## Extra ##
+
+CLEAN_LOCAL_FILES += $(BUILT_SCENES)
+
+endif # BUILD_DEMOS

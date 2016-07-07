@@ -580,7 +580,7 @@ AS_IF([test "x$CXX" = "x"],
 
 
 
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile])
+AC_CONFIG_FILES([Makefile include/amino/cblas_order.h share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
 
 AC_DEFUN([CONFIG_SCRIPT],
          [AC_CONFIG_FILES([$1],
