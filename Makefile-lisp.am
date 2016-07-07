@@ -52,7 +52,7 @@ aarx_core_SOURCES = \
 	lisp/rx/config.lisp \
 	lisp/rx/sg-gen.lisp
 
-aarx.core: $(top_srcdir)/share/make-aarx.lisp $(aarx_core_SOURCES) libamino.la libamino_gl.la libamino_cl.la libamino_planning.la libamino_xerbla_nop.la
+aarx.core: $(top_srcdir)/share/make-aarx.lisp $(aarx_core_SOURCES) libamino.la libamino-gl.la libamino-collision.la libamino-planning.la libamino-xerbla-nop.la
 	$(top_srcdir)/share/make-aarx.sh $(COMMON_LISP) $(top_srcdir)
 
 endif # HAVE_COMMON_LISP

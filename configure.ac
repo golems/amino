@@ -1,7 +1,13 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
+
 AC_INIT([amino], [0.20140818], [ntd@gatech.edu])
+
+HEADER_VERSION=1.0
+includedir=${includedir}/amino-$HEADER_VERSION
+AC_SUBST([includedir])
+AC_SUBST([HEADER_VERSION])
 
 AM_INIT_AUTOMAKE([subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -580,7 +586,12 @@ AS_IF([test "x$CXX" = "x"],
 
 
 
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
+AC_CONFIG_FILES([ Makefile
+                  include/amino/cblas_order.h
+                  share/amino.pc
+                  share/amino-gl.pc
+                  share/amino-collision.pc
+                  share/amino-planning.pc])
 
 AC_DEFUN([CONFIG_SCRIPT],
          [AC_CONFIG_FILES([$1],

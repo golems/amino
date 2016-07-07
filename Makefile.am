@@ -54,10 +54,27 @@ include_HEADERS = include/amino.h include/amino.hpp
 dist_bin_SCRIPTS = share/aarxc
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = share/amino.pc \
-	share/amino_gl.pc \
-	share/amino_collision.pc \
-	share/amino_planning.pc
+pkgconfig_DATA = \
+	share/amino.pc \
+	share/amino-gl.pc \
+	share/amino-collision.pc \
+	share/amino-planning.pc \
+	share/amino-gl-$(HEADER_VERSION).pc \
+	share/amino-collision-$(HEADER_VERSION).pc \
+	share/amino-planning-$(HEADER_VERSION).pc
+
+share/amino-gl-$(HEADER_VERSION).pc:
+	ln -s amino-gl.pc share/amino-gl-$(HEADER_VERSION).pc
+
+share/amino-collision-$(HEADER_VERSION).pc:
+	ln -s amino-collision.pc share/amino-collision-$(HEADER_VERSION).pc
+
+share/amino-planning-$(HEADER_VERSION).pc:
+	ln -s amino-planning.pc share/amino-planning-$(HEADER_VERSION).pc
+
+share/amino-$(HEADER_VERSION).pc:
+	ln -s amino.pc share/amino-$(HEADER_VERSION).pc
+
 
 nodist_pkginclude_HEADERS = \
 	include/amino/cblas_order.h
@@ -132,7 +149,7 @@ noinst_PROGRAMS += obj_test
 obj_test_SOURCES = src/test/wavefront_test.c
 obj_test_LDADD = libamino.la
 
-lib_LTLIBRARIES += libamino.la libamino_xerbla_nop.la
+lib_LTLIBRARIES += libamino.la libamino-xerbla-nop.la
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
@@ -329,7 +346,7 @@ endif
 
 ## OpenGL support
 if HAVE_GL
-lib_LTLIBRARIES += libamino_gl.la
+lib_LTLIBRARIES += libamino-gl.la
 libamino_gl_la_SOURCES = src/amino_gl.c src/rx/geodesic.cpp
 
 libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
@@ -349,13 +366,13 @@ sdl_test_SOURCES = src/rx/sdl_test.c
 sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
-sdl_test_LDADD += libamino_gl.la $(GL_LIBS) $(GLEW_LIBS)
+sdl_test_LDADD += libamino-gl.la $(GL_LIBS) $(GLEW_LIBS)
 
 bin_PROGRAMS += aarx-view
 
 aarx_view_SOURCES = src/rx/aarx-view.c
 aarx_view_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
-aarx_view_LDADD = libamino_gl.la libamino.la $(SDL2_LIBS) $(GLEW_LIBS)
+aarx_view_LDADD = libamino-gl.la libamino.la $(SDL2_LIBS) $(GLEW_LIBS)
 
 endif # SDL2
 
@@ -430,32 +447,32 @@ la_ctest_LDADD = libamino.la libtestutil.la
 if HAVE_FCL
 
 
-lib_LTLIBRARIES += libamino_cl.la
-libamino_cl_la_SOURCES = \
+lib_LTLIBRARIES += libamino-collision.la
+libamino_collision_la_SOURCES = \
 	src/rx/amino_fcl.cpp \
 	src/rx/collision_set.cpp
 
-libamino_cl_la_CFLAGS = $(FCL_CFLAGS)
-libamino_cl_la_CXXFLAGS = $(FCL_CFLAGS)
-libamino_cl_la_LIBADD = libamino.la $(FCL_LIBS)
+libamino_collision_la_CFLAGS = $(FCL_CFLAGS)
+libamino_collision_la_CXXFLAGS = $(FCL_CFLAGS)
+libamino_collision_la_LIBADD = libamino.la $(FCL_LIBS)
 
 
 TESTS += fcl_test
 noinst_PROGRAMS += fcl_test
 fcl_test_SOURCES = src/test/aa_test_fcl.cpp
 fcl_test_CFLAGS = $(FCL_CFLAGS)
-fcl_test_LDADD = libamino.la libamino_cl.la $(FCL_LIBS)
+fcl_test_LDADD = libamino.la libamino-collision.la $(FCL_LIBS)
 
 TESTS += cl_test
 noinst_PROGRAMS += cl_test
 cl_test_SOURCES = src/test/test_collision.c
-cl_test_LDADD = libamino.la libamino_cl.la
+cl_test_LDADD = libamino.la libamino-collision.la
 
 endif # HAVE_FCL
 
 if HAVE_OMPL
 
-lib_LTLIBRARIES += libamino_planning.la
+lib_LTLIBRARIES += libamino-planning.la
 libamino_planning_la_SOURCES = \
 	src/rx/mp/scene_ompl.cpp \
 	src/rx/mp/ompl_rrt.cpp \
@@ -463,7 +480,7 @@ libamino_planning_la_SOURCES = \
 	src/rx/mp/ompl_kpiece.cpp
 libamino_planning_la_CFLAGS = $(OMPL_CFLAGS)
 libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS)
-libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
+libamino_planning_la_LIBADD = libamino.la libamino-collision.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
@@ -474,37 +491,37 @@ test_lpsolve_LDADD =
 TESTS += test_lpsolve
 
 if HAVE_LPSOLVE
-lib_LTLIBRARIES += libamino_opt_lpsolve.la
+lib_LTLIBRARIES += libamino-opt-lpsolve.la
 libamino_opt_lpsolve_la_SOURCES = src/opt/opt_lpsolve.c
-test_lpsolve_LDADD += libamino_opt_lpsolve.la
+test_lpsolve_LDADD += libamino-opt-lpsolve.la
 endif
 
 
 if HAVE_GLPK
-lib_LTLIBRARIES += libamino_opt_glpk.la
+lib_LTLIBRARIES += libamino-opt-glpk.la
 libamino_opt_glpk_la_SOURCES = src/opt/opt_glpk.c
-test_lpsolve_LDADD += libamino_opt_glpk.la
+test_lpsolve_LDADD += libamino-opt-glpk.la
 endif
 
 if HAVE_CLP
 
-lib_LTLIBRARIES += libamino_opt_clp.la
+lib_LTLIBRARIES += libamino-opt-clp.la
 libamino_opt_clp_la_SOURCES = src/opt/opt_clp.cpp
 libamino_opt_clp_la_LIBADD = libamino.la -lClp
-test_lpsolve_LDADD += libamino_opt_clp.la
+test_lpsolve_LDADD += libamino-opt-clp.la
 endif
 
 test_lpsolve_LDADD += libamino.la libtestutil.la
 
 if HAVE_CGAL
 
-lib_LTLIBRARIES += libamino_opt_cgal.la
+lib_LTLIBRARIES += libamino-opt-cgal.la
 libamino_opt_cgal_la_SOURCES = src/opt/opt_cgal.cpp
 libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
 
 noinst_PROGRAMS += opt_test
 opt_test_SOURCES = src/test/opt_test.c
-opt_test_LDADD = libamino_opt_cgal.la libamino.la libtestutil.la
+opt_test_LDADD = libamino-opt-cgal.la libamino.la libtestutil.la
 
 endif
 

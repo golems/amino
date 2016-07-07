@@ -9,10 +9,10 @@ BUILT_SCENES =
 # the GL_LIBS, GL_CFLAGS, SDL_LIBS, etc. are determined by pkg-config
 # during configuration
 
-DEMO_LIBS = libamino.la libamino_gl.la $(GL_LIBS) $(SDL2_LIBS) $(GLEW_LIBS)
+DEMO_LIBS = libamino.la libamino-gl.la $(GL_LIBS) $(SDL2_LIBS) $(GLEW_LIBS)
 DEMO_CFLAGS =  $(SDL2_CFLAGS) $(GL_CFLAGS)
 
-PLANNING_LIBS = libamino_planning.la libamino_cl.la
+PLANNING_LIBS = libamino-planning.la libamino-collision.la
 
 # call aarxc with paths set to look in the build and source trees
 AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_builddir):$(PATH) $(top_srcdir)/share/aarxc
