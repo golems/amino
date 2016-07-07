@@ -17,6 +17,19 @@ FEATURES
 INSTALLATION
 ============
 
+Obtaining Amino
+---------------
+
+Via git:
+
+    git clone --recursive https://github.com/golems/amino.git
+    cd amino && autoreconf -i
+
+Via distribution Tarball: http://code.golems.org/src/amino/
+
+Building Amino
+--------------
+
     ./configure && make && make install
 
 See the INSTALL file and `./configure --help` for details and
