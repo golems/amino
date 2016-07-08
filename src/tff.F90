@@ -1775,6 +1775,17 @@ module amino_tf
       end subroutine aa_tf_qslerp_param
    end interface aa_tf_qslerp_param
 
+  interface aa_tf_qslerpchaindiff
+     pure subroutine aa_tf_qslerpchaindiff( u, du, q1, dq1, q2, dq2, q, dq ) &
+          bind( C, name="aa_tf_qslerpchaindiff" )
+       use ISO_C_BINDING
+       real(C_DOUBLE), dimension(4), intent(out) :: q, dq
+       real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, dq1, dq2
+       real(C_DOUBLE), value, intent(in) :: u, du
+     end subroutine aa_tf_qslerpchaindiff
+  end interface aa_tf_qslerpchaindiff
+
+
    interface aa_tf_qslerp
       pure subroutine aa_tf_qslerp( tau, q1, q2, r ) &
            bind( C, name="aa_tf_qslerp" )
@@ -2227,60 +2238,61 @@ module amino_tf
 
   !! Chain Rule Derivative of a SLERPed quaternion
   !! Assumes that q1 and q2 are unit quaternions
-  pure subroutine aa_tf_qslerpchaindiff( u, du, q1, dq1, q2, dq2, q, dq ) &
-       bind( C, name="aa_tf_qslerpchaindiff_f" )
-    real(C_DOUBLE), dimension(4), intent(out) :: q, dq
-    real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, dq1, dq2
-    real(C_DOUBLE), value, intent(in) :: u, du
-    ! locals
-    real(C_DOUBLE) :: theta, dtheta, dtheta_c, a, b, da, db, s, c, sa, sb, ca, cb, d1, d2
-    ! check interpolation bounds
-    if( 0.0 > u ) then
-       dq = 0d0
-       q = q1
-       return
-    elseif ( 1.0 < u ) then
-       dq = 0d0
-       q = q2
-       return
-    end if
-    ! get angle
-    call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
-    if( 0 == theta ) then
-       dq = 0d0
-       q = q1
-       return
-    end if
 
-    s = sin(theta) ! nonzero
-    c = cos(theta)
-    sa = sin((1-u)*theta)
-    ca = cos((1-u)*theta)
-    sb = sin(u*theta)
-    cb = cos(u*theta)
+  ! pure subroutine aa_tf_qslerpchaindiff( u, du, q1, dq1, q2, dq2, q, dq ) &
+  !      bind( C, name="aa_tf_qslerpchaindiff_f" )
+  !   real(C_DOUBLE), dimension(4), intent(out) :: q, dq
+  !   real(C_DOUBLE), dimension(4), intent(in) :: q1, q2, dq1, dq2
+  !   real(C_DOUBLE), value, intent(in) :: u, du
+  !   ! locals
+  !   real(C_DOUBLE) :: theta, dtheta, dtheta_c, a, b, da, db, s, c, sa, sb, ca, cb, d1, d2
+  !   ! check interpolation bounds
+  !   if( 0.0 > u ) then
+  !      dq = 0d0
+  !      q = q1
+  !      return
+  !   elseif ( 1.0 < u ) then
+  !      dq = 0d0
+  !      q = q2
+  !      return
+  !   end if
+  !   ! get angle
+  !   call aa_tf_qslerp_param( q1, q2, theta, d1, d2 )
+  !   if( 0.0 >= theta ) then
+  !      dq = 0d0
+  !      q = q1
+  !      return
+  !   end if
 
-    ! find parameters
-    ! TODO: what if cos(theta) == 0?
-    ! Try using the derivative of the atan2 formula for vector angle
-    ! instead.
-    dtheta_c = dot_product(q1, dq2) + dot_product(dq1, q2)
-    dtheta =  dtheta_c / c
+  !   s = sin(theta) ! nonzero
+  !   c = cos(theta)
+  !   sa = sin((1-u)*theta)
+  !   ca = cos((1-u)*theta)
+  !   sb = sin(u*theta)
+  !   cb = cos(u*theta)
 
-    ! TODO: Taylor series evaluation when sin(theta) -> 0
+  !   ! find parameters
+  !   ! TODO: what if cos(theta) == 0?
+  !   ! Try using the derivative of the atan2 formula for vector angle
+  !   ! instead.
+  !   dtheta_c = dot_product(q1, dq2) + dot_product(dq1, q2)
+  !   dtheta =  dtheta_c / c
 
-    a = sa / d1
-    b = sb / d2
+  !   ! TODO: Taylor series evaluation when sin(theta) -> 0
 
-    da = ( ca * (dtheta*(1-u) - du*theta) ) / d1
-    da = da - ( dtheta_c * sa ) / d1**2
+  !   a = sa / d1
+  !   b = sb / d2
 
-    db = ( (dtheta*u + theta*du) * cb ) / d2
-    db = db - ( dtheta_c * b ) / d1
+  !   da = ( ca * (dtheta*(1-u) - du*theta) ) / d1
+  !   da = da - ( dtheta_c * sa ) / d1**2
 
-    ! get the result
-    q = q1*a + q2*b
-    dq = (dq1*a + q1*da) + (dq2*b + q2*db)
-  end subroutine aa_tf_qslerpchaindiff
+  !   db = ( (dtheta*u + theta*du) * cb ) / d2
+  !   db = db - ( dtheta_c * b ) / d1
+
+  !   ! get the result
+  !   q = q1*a + q2*b
+  !   dq = (dq1*a + q1*da) + (dq2*b + q2*db)
+  ! end subroutine aa_tf_qslerpchaindiff
 
   !! Perform a triad of slerps and computer the derivative as well
   pure subroutine aa_tf_qslerp3diff( u12, du12, q1, q2, u34, du34, q3, q4, u, du, q, dq ) &
@@ -2446,7 +2458,7 @@ module amino_tf
     !! TODO: this is more or less the jacobian of the quaternion
     !! exponential.  We could be more general by just using that
     !! jacobian.
-    if( 0 == n ) then
+    if( 0 >= n ) then
        ! limit as v->0
        G(1,1) = 0.5d0
        G(2,1) = 0d0
@@ -2705,9 +2717,7 @@ module amino_tf
   pure function aa_tf_sinc( theta ) result(s)
     real(C_DOUBLE), value :: theta
     real(C_DOUBLE) :: s
-    if( 0d0 == theta ) then
-       s = 1d0
-    elseif ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
+    if ( abs(theta) < sqrt(sqrt(epsilon(theta))) ) then
        s = aa_tf_sinc_series(theta)
     else
        s = sin(theta)/theta

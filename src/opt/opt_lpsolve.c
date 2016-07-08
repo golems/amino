@@ -132,6 +132,7 @@ static int s_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
                                const double *Q_values, int *Q_cols, int *Q_row_ptr )
 {
     (void)cx;
+    (void)n;
     (void)Q_values;
     (void)Q_cols;
     (void)Q_row_ptr;
