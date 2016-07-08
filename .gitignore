@@ -76,7 +76,7 @@ amino*.tar.gz
 /doc/javadoc
 /amino-*
 /test_vec
-/src/mac/euler.c
+/euler.c
 /src/mac/euler.f
 /src/mac/aa_ls_se3.f90
 /la_ctest
