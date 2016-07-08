@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
 
-AC_INIT([amino], [1.0-beta0], [ntd@rice.edu])
+AC_INIT([amino], [1.0-beta2], [ntd@rice.edu])
 
 HEADER_VERSION=1.0
 includedir=${includedir}/amino-$HEADER_VERSION
@@ -391,7 +391,7 @@ AS_IF([test "x$with_ompl" = xyes], [
     AC_MSG_ERROR([OMPL support requires FCL, but FCL not found])
   ])
   PKG_CHECK_MODULES([OMPL],
-                    [ompl],
+                    [ompl >= 1.1.0],
                     [HAVE_OMPL=yes])
   # TODO: smartly check with we also need boost_system
   OMPL_LIBS="$OMPL_LIBS = -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization"
