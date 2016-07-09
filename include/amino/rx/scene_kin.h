@@ -42,6 +42,7 @@
 
 /**
  * @file scene_kin.h
+ * @brief Scenegraph kinematics
  */
 
 

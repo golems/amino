@@ -40,10 +40,18 @@
 
 /**
  * @file scene_win.h
+ * @brief SDL/OpenGL window management
  */
 
 /**
  * Create a new SDL / OpenGL window.
+ *
+ * @param title  The window title
+ * @param x_pos  Initial X position of the window
+ * @param y_pos  Initial Y position of the window
+ * @param width  Initial width of the window
+ * @param height Initial height of the window
+ * @param flags  Flags for SDL_CreateWindow()
  */
 AA_API struct aa_rx_win *
 aa_rx_win_create(
@@ -56,6 +64,10 @@ aa_rx_win_create(
 
 /**
  * Create a new SDL / OpenGL window with default parameters.
+ *
+ * @param title   The window title
+ * @param width   Initial width of the window
+ * @param height  Initial height of the window
  */
 AA_API struct aa_rx_win *
 aa_rx_win_default_create(
@@ -190,6 +202,8 @@ aa_rx_win_start( struct aa_rx_win * win );
  *
  * The rendering thread will gracefully terminate, possibly after it
  * finishes displaying another frame.
+ *
+ * \sa aa_rx_win_join()
  */
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
@@ -202,6 +216,8 @@ aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value );
 
 /**
  * Join the asynchronous display thread.
+ *
+ * \sa aa_rx_win_stop()
  */
 AA_API void
 aa_rx_win_join( struct aa_rx_win * win );
@@ -239,12 +255,18 @@ aa_rx_win_sg_gl_init( struct aa_rx_win * win,
 
 /**
  * Return the current camera pose.
+ *
+ * @param win The window
+ * @param E   The camera pose in quaternion-vector format
  */
 AA_API void
 aa_rx_win_get_tf_cam( struct aa_rx_win * win, double *E );
 
 /**
  * Set the camera pose.
+ *
+ * @param win The window
+ * @param E   The camera pose in quaternion-vector format
  */
 AA_API void
 aa_rx_win_set_tf_cam( struct aa_rx_win * win, const double *E );

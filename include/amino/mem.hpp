@@ -50,7 +50,8 @@
 #include <map>
 
 /**
- * \file amino/mem.hpp
+ * @file  mem.hpp
+ * @brief C++ Memory Management
  */
 
 
@@ -133,7 +134,9 @@ public :
 
 };
 
-/* Typedefs for STL lists using region allocator */
+/**
+ * Typedefs for STL lists using region allocator
+ */
 template<class T>
 struct RegionList
 {
@@ -143,7 +146,9 @@ struct RegionList
     typedef typename type::iterator iterator;
 };
 
-/* Typedefs for STL vector using region allocator */
+/**
+ * Typedefs for STL vector using region allocator
+ */
 template<class T>
 struct RegionVector
 {
@@ -154,7 +159,9 @@ struct RegionVector
 };
 
 
-/* Typedefs for STL map using region allocator */
+/**
+ * Typedefs for STL map using region allocator
+ */
 template<class K, class T, class C=std::less<K> >
 struct RegionMap
 {

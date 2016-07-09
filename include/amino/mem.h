@@ -43,15 +43,16 @@
 #ifndef AA_MEM_H
 #define AA_MEM_H
 
+/**
+ * @file  mem.h
+ * @brief Memory Management
+ */
 
 #ifndef AA_ALLOC_STACK_MAX
 /// maximum size of objects to stack allocate
 #define AA_ALLOC_STACK_MAX (4096-64)
 #endif //AA_ALLOC_STACK_MAX
 
-/**
- * \file amino/mem.h
- */
 
 enum aa_mem_refop {
     /* Make a private copy */
@@ -304,12 +305,30 @@ AA_API void aa_mem_region_local_pop( void *ptr );
  */
 AA_API void aa_mem_region_local_release( void );
 
+
+/**
+ * Allocate a new object of `type' from memory region `reg'.
+ */
 #define AA_MEM_REGION_NEW( reg, type ) ( (type*) aa_mem_region_alloc((reg), sizeof(type)) )
 
+/**
+ * Copy objects of `type' from memory region `reg'.
+ */
 #define AA_MEM_REGION_NEW_CPY( reg, src, type ) ( (type*) aa_mem_region_dup((reg), (src), sizeof(type)) )
+
+/**
+ * Allocate an array of `n' objects of `type' from memory region `reg'.
+ */
 #define AA_MEM_REGION_NEW_N( reg, type, n ) ( (type*) aa_mem_region_alloc((reg), (n)*sizeof(type)) )
 
+/**
+ * Allocate a new object of `type' the thread-local memory region.
+ */
 #define AA_MEM_REGION_LOCAL_NEW( type ) ( (type*) aa_mem_region_local_alloc( sizeof(type)) )
+
+/**
+ * Allocate a new array of `n' objects of `type' the thread-local memory region.
+ */
 #define AA_MEM_REGION_LOCAL_NEW_N( type, n ) ( (type*) aa_mem_region_local_alloc( (n)*sizeof(type)) )
 
 /*----------- Pooled Allocation ------------------*/
@@ -382,6 +401,8 @@ typedef struct aa_mem_cons {
 /** A linked list allocated out of a memory region
  *
  * "Region List" / "Real-Time List"
+ *
+ * @sa amino::RegionList
  */
 typedef struct aa_mem_rlist {
     struct aa_mem_region *reg;

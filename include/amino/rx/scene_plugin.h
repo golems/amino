@@ -38,6 +38,11 @@
 #ifndef AMINO_RX_SCENE_PLUGIN_H
 #define AMINO_RX_SCENE_PLUGIN_H
 
+/**
+ * @file scene_plugin.h
+ * @brief Load scenegraphs as plugins
+ */
+
 typedef struct aa_rx_sg *(*aa_rx_dl_sg_fun)(struct aa_rx_sg *sg);
 
 typedef struct aa_rx_mesh *(*aa_rx_dl_mesh_fun)(void);

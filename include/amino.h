@@ -42,7 +42,17 @@
 
 #ifndef AMINO_H
 #define AMINO_H
-/** \file amino.h */
+
+/**
+ * @file amino.h
+ * @brief Top-level include file
+ */
+
+
+/**
+ * @dir   amino
+ * @brief Amino include files
+ */
 
 // include everything we'll typically need
 #ifdef __cplusplus

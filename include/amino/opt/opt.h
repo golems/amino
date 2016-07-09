@@ -40,6 +40,16 @@
 #ifndef AMINO_OPT_H
 #define AMINO_OPT_H
 
+/**
+ * @file opt.h
+ * @brief General optimization routines
+ */
+
+/**
+ * @dir   opt
+ * @brief Optimization SUpport
+ */
+
 enum aa_opt_rel_type {
     AA_OPT_REL_EQ,
     AA_OPT_REL_LEQ,

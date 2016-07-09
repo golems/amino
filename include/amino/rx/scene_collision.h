@@ -40,6 +40,7 @@
 
 /**
  * @file scene_collision.h
+ * @brief Collision checking
  */
 
 /**
@@ -93,6 +94,11 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
                   aa_rx_frame_id j );
 
+/**
+ * Fill set `into' with all elements in set `from'.
+ *
+ * This is a union operation, with the result stored in `into'.
+ */
 AA_API void
 aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from);
 
@@ -112,9 +118,6 @@ aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph );
  */
 AA_API struct aa_rx_cl *
 aa_rx_cl_create( const struct aa_rx_sg *scene_graph );
-
-AA_API void
-aa_rx_cl_allow_config( struct aa_rx_sg* scene_graph, const size_t n_q, const double* q);
 
 /**
  * Destroy a collision detection context.

@@ -38,6 +38,11 @@
 #ifndef AMINO_RX_RXERR_H
 #define AMINO_RX_RXERR_H
 
+/**
+ * @file rxerr.h
+ * @brief Error codes and functions
+ */
+
 /** OK */
 #define AA_RX_OK 0
 

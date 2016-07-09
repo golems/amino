@@ -40,6 +40,7 @@
 
 /**
  * @file scenegraph.h
+ * @brief The scenegraph data structure
  */
 
 /**

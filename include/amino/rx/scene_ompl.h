@@ -55,11 +55,26 @@
 #include <ompl/base/TypedStateValidityChecker.h>
 #include <ompl/base/Planner.h>
 
+/**
+ * @file scene_ompl.h
+ * @brief OMPL-specific motion planning
+ */
+
+
 namespace amino {
 
-
+/**
+ * An OMPL state space for an amino scene graph.
+ *
+ * The OMPL state space variables correspond to the scene graph
+ * configuration space.
+ */
 class sgStateSpace : public ompl::base::RealVectorStateSpace {
 public:
+
+    /**
+     * Create a state space for the sub-scenegraph `sub_sg'.
+     */
     sgStateSpace( const struct aa_rx_sg_sub *sub_sg ) :
         scene_graph(sub_sg->scenegraph),
         sub_scene_graph(sub_sg),
@@ -98,30 +113,53 @@ public:
         aa_rx_sg_cl_set_copy(scene_graph, allowed);
     }
 
+    /**
+     * Destroy the state space.
+     */
     virtual ~sgStateSpace() {
         aa_mem_region_destroy(&reg);
         aa_rx_cl_set_destroy(allowed);
     }
 
+    /**
+     * Return the scene graph for the state space.
+     */
     const aa_rx_sg *get_scene_graph() const {
         return scene_graph;
     }
 
+    /**
+     * Return the number of configuration variables in the full scenegraph.
+     */
     size_t config_count_all() const {
         return aa_rx_sg_config_count(get_scene_graph());
     }
+
+    /**
+     * Return the number of configuration variables in the sub-scenegraph.
+     */
     size_t config_count_subset() const {
         return getDimension();
     }
 
+    /**
+     * Return the number of frames in the full scenegraph.
+     */
     size_t frame_count() const {
         return aa_rx_sg_frame_count(get_scene_graph());
     }
 
+    /**
+     * Mark configuration q as allowed.
+     */
     void allow_config( double *q ) {
         aa_rx_sg_get_collision(scene_graph, q, allowed);
     }
 
+    /**
+     * Retrieve the sub-scenegraph configuration `q_set' from the full
+     * scenegraph array `q_all'.
+     */
     void extract_state( const double *q_all, double *q_set ) const {
         aa_rx_sg_sub_config_get( sub_scene_graph,
                                  config_count_all(), q_all,

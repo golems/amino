@@ -40,6 +40,7 @@
 
 /**
  * @file scene_geom.h
+ * @brief Geometric objects (shapes and meshes)
  */
 
 /*-----------*/
@@ -404,11 +405,16 @@ aa_rx_geom_attach (
     const char *frame,
     struct aa_rx_geom *geom );
 
-
+/**
+ * Return the reference count value of `g'.
+ */
 AA_API unsigned
 aa_rx_geom_refcount ( const struct aa_rx_geom *g );
 
+/**
+ * Return the reference count value of `m'.
+ */
 AA_API unsigned
-aa_rx_mesh_refcount ( struct aa_rx_mesh *sg );
+aa_rx_mesh_refcount ( const struct aa_rx_mesh *sg );
 
 #endif /*AMINO_RX_SCENE_GEOM_H*/

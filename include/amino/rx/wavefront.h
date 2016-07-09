@@ -39,6 +39,11 @@
 #ifndef AMINO_RX_WAVEFRONT_H
 #define AMINO_RX_WAVEFRONT_H
 
+/**
+ * @file wavefront.h
+ * @brief Wavefront OBJ/MTL mesh parser
+ */
+
 /* forward declaration of opaque structure
  */
 struct aa_rx_wf_obj;
