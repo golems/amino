@@ -49,12 +49,6 @@ simple_rx_simple_procedural_SOURCES = simple-rx/scene.c simple-rx/simple-procedu
 simple_rx_simple_procedural_CFLAGS = $(DEMO_CFLAGS)
 simple_rx_simple_procedural_LDADD = $(DEMO_LIBS)
 
-noinst_PROGRAMS += simple-rx/sdlinfo
-
-simple_rx_sdlinfo_SOURCES = simple-rx/sdlinfo.c
-simple_rx_sdlinfo_CFLAGS = $(DEMO_CFLAGS)
-simple_rx_sdlinfo_LDADD = $(DEMO_LIBS)
-
 ############
 ## Baxter ##
 ############
