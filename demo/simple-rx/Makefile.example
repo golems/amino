@@ -7,11 +7,11 @@ DEMO_LDFLAGS = $(LDLAGS) -g `pkg-config --libs $(PKG_CONFIG_MODULES)`
 
 ALL: simple-scenefile simple-procedural
 
-scene.c: scene.robray
-	aarxc scene.robray -o scene.c
+scene/scene.c: scene/scene.robray
+	aarxc scene/scene.robray -o scene/scene.c
 
-simple-scenefile: scene.c simple-scenefile.c
-	$(CC) $(DEMO_CFLAGS) $(DEMO_LDFLAGS) scene.c simple-scenefile.c -o simple-scenefile
+simple-scenefile: scene/scene.c simple-scenefile.c
+	$(CC) $(DEMO_CFLAGS) $(DEMO_LDFLAGS) scene/scene.c simple-scenefile.c -o simple-scenefile
 
 simple-procedural: simple-procedural.c
 	$(CC) $(DEMO_CFLAGS) $(DEMO_LDFLAGS) simple-procedural.c -o simple-procedural

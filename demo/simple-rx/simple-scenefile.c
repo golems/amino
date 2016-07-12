@@ -35,7 +35,6 @@
  *
  */
 
-#include "config.h"
 
 #define GL_GLEXT_PROTOTYPES
 
@@ -87,8 +86,7 @@ int main(int argc, char *argv[])
                      "Options:\n"
                      "  -c              view collision geometry\n"
                      "\n"
-                     "\n"
-                     "Report bugs to " PACKAGE_BUGREPORT "\n" );
+                     "\n" );
                 exit(EXIT_SUCCESS);
                 break;
             }
