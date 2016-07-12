@@ -74,7 +74,7 @@
                              (lambda (string start end)
                                (declare (ignore string start))
                                (values (or token type) type end)))))))
-    (%make-lexer :token-scanner (ppcre:create-scanner big-regex)
+    (%make-lexer :token-scanner (ppcre:create-scanner big-regex :multi-line-mode t)
                  :token-regex big-regex
                  :skip-regex skip-regex
                  :skip-scanner (when skip-regex (ppcre:create-scanner skip-regex))

@@ -33,8 +33,9 @@ frame block_a {
 frame block_b {
     parent front_table;
     translation [-.25, 0, table_stack];
-    rpy [0, 0, pi];   // also rotate pi about Z,
-                      // "pi" is a float constant in the language
+    rpy [0, 0, pi];   /* also rotate pi about Z,
+                       * pi is a float constant in the language */
+
 
     geometry {
         shape box;

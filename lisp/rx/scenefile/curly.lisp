@@ -134,7 +134,13 @@
                   ;; line comment
                   (:regex "(#|(//)).*?(\\n|$)")
                   ;; block comment
-                  (:sequence "/*" (:regex "(.*?)") "*/"))))
+                  (:sequence "/*"
+                             (:greedy-repetition
+                              0 nil
+                              (:alternation (:regex "[^*]")
+                                            (:regex "\\*[^/]")))
+                             ;(:regex "(.|\\n)*")
+                             "*/"))))
 
 (defparameter +curly-lexer+ (make-lexer +curly-token-regex+
                                         +curly-comment-regex+))
