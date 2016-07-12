@@ -22,7 +22,12 @@ AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_buil
 ## SIMPLE RX ##
 ###############
 
-EXTRA_DIST += demo/simple-rx/scene.robray
+EXTRA_DIST += \
+	demo/simple-rx/scene/scene.robray \
+	demo/simple-rx/scene/table.robray \
+	demo/simple-rx/scene/table_class.robray \
+	demo/simple-rx/scene/table_include.robray \
+	demo/simple-rx/scene/table_include_class.robray
 
 BUILT_SCENES += demo/simple-rx/scene/scene.c demo/simple-rx/scene/scene.c.h
 demo/simple-rx/scene/scene.c: $(top_srcdir)/demo/simple-rx/scene/scene.robray $(AARXC_DEP)
@@ -55,7 +60,7 @@ demo_simple_rx_libamino_simple_demo_la_LDFLAGS = -avoid-version -module -shared 
 
 noinst_PROGRAMS += demo/simple-rx/simple-scenefile
 demo_simple_rx_simple_scenefile_SOURCES = demo/simple-rx/simple-scenefile.c
-demo_simple_rx_simple_scenefile_CFLAGS = $(DEMO_CFLAGS)
+demo_simple_rx_simple_scenefile_CFLAGS = $(DEMO_CFLAGS) -I./demo/simple-rx
 demo_simple_rx_simple_scenefile_LDADD = $(DEMO_LIBS) demo/simple-rx/libsimplerx.la
 demo/simple-rx/simple-scenefile.$(OBJEXT): demo/simple-rx/scene/scene.c.h
 demo/simple-rx/demo_simple_rx_simple_scenefile-simple-scenefile.$(OBJEXT): demo/simple-rx/scene/scene.c.h

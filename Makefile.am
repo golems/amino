@@ -28,7 +28,9 @@ EXTRA_DIST += \
 	share/load-quicklisp.lisp           \
 	share/make-aarx.sh                  \
 	share/make-aarx.lisp                \
-	share/robray-mode.el
+	share/robray-mode.el                \
+	share/exec/meshconv                 \
+	share/exec/povremote
 
 noinst_HEADERS = \
              src/wavefront/wavefront_internal.h \
