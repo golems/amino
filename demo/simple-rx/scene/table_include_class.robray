@@ -1,0 +1,13 @@
+// Define some sizes for objects
+def table_size 1e-2;  //  1 cm
+def block_size .1;    // 10cm
+
+// Define a stacking height
+def table_stack (block_size + table_size)/2 + 1e-3;
+
+class block {
+    shape box;
+    color [0, 1, 0];
+    alpha 0.5;
+    dimension [block_size, block_size, block_size];
+}

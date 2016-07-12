@@ -33,9 +33,20 @@ BUILT_SCENES += demo/simple-rx/scene/table.c demo/simple-rx/scene/table.c.h
 demo/simple-rx/scene/table.c: $(top_srcdir)/demo/simple-rx/scene/table.robray $(AARXC_DEP)
 	$(AARXC) $(top_srcdir)/demo/simple-rx/scene/table.robray -o demo/simple-rx/scene/table.c -n table
 
+BUILT_SCENES += demo/simple-rx/scene/table_class.c demo/simple-rx/scene/table_class.c.h
+demo/simple-rx/scene/table_class.c: $(top_srcdir)/demo/simple-rx/scene/table_class.robray $(AARXC_DEP)
+	$(AARXC) $(top_srcdir)/demo/simple-rx/scene/table_class.robray -o demo/simple-rx/scene/table_class.c -n table_class
+
+BUILT_SCENES += demo/simple-rx/scene/table_include.c demo/simple-rx/scene/table_include.c.h
+demo/simple-rx/scene/table_include.c: $(top_srcdir)/demo/simple-rx/scene/table_include.robray  $(top_srcdir)/demo/simple-rx/scene/table_include_class.robray  $(AARXC_DEP)
+	$(AARXC) $(top_srcdir)/demo/simple-rx/scene/table_include.robray -o demo/simple-rx/scene/table_include.c -n table_include
 
 noinst_LTLIBRARIES += demo/simple-rx/libsimplerx.la
-nodist_demo_simple_rx_libsimplerx_la_SOURCES = demo/simple-rx/scene/scene.c demo/simple-rx/scene/table.c
+nodist_demo_simple_rx_libsimplerx_la_SOURCES = \
+	demo/simple-rx/scene/scene.c \
+	demo/simple-rx/scene/table.c \
+	demo/simple-rx/scene/table_class.c \
+	demo/simple-rx/scene/table_include.c
 
 lib_LTLIBRARIES += demo/simple-rx/libamino-simple-demo.la
 demo_simple_rx_libamino_simple_demo_la_SOURCES =
