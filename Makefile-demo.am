@@ -15,6 +15,7 @@ DEMO_CFLAGS =  $(SDL2_CFLAGS) $(GL_CFLAGS)
 PLANNING_LIBS = libamino-planning.la libamino-collision.la
 
 # call aarxc with paths set to look in the build and source trees
+AARXC_DEP = aarx.core $(top_srcdir)/share/aarxc
 AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_builddir):$(PATH) $(top_srcdir)/share/aarxc
 
 ###############
@@ -23,26 +24,42 @@ AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_buil
 
 EXTRA_DIST += demo/simple-rx/scene.robray
 
-demo/simple-rx/scene.c: $(top_srcdir)/demo/simple-rx/scene.robray aarx.core
-	$(AARXC) $(top_srcdir)/demo/simple-rx/scene.robray -o demo/simple-rx/scene.c
+BUILT_SCENES += demo/simple-rx/scene/scene.c demo/simple-rx/scene/scene.c.h
+demo/simple-rx/scene/scene.c: $(top_srcdir)/demo/simple-rx/scene/scene.robray $(AARXC_DEP)
+	$(AARXC) $(top_srcdir)/demo/simple-rx/scene/scene.robray -o demo/simple-rx/scene/scene.c
+demo/simple-rx/scene/scene.c.h: demo/simple-rx/scene/scene.c
+
+BUILT_SCENES += demo/simple-rx/scene/table.c demo/simple-rx/scene/table.c.h
+demo/simple-rx/scene/table.c: $(top_srcdir)/demo/simple-rx/scene/table.robray $(AARXC_DEP)
+	$(AARXC) $(top_srcdir)/demo/simple-rx/scene/table.robray -o demo/simple-rx/scene/table.c -n table
 
 
-BUILT_SCENES += demo/simple-rx/scene.c demo/simple-rx/scene.c.h
+noinst_LTLIBRARIES += demo/simple-rx/libsimplerx.la
+nodist_demo_simple_rx_libsimplerx_la_SOURCES = demo/simple-rx/scene/scene.c demo/simple-rx/scene/table.c
+
+lib_LTLIBRARIES += demo/simple-rx/libamino-simple-demo.la
+demo_simple_rx_libamino_simple_demo_la_SOURCES =
+demo_simple_rx_libamino_simple_demo_la_LIBADD = demo/simple-rx/libsimplerx.la
+demo_simple_rx_libamino_simple_demo_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 noinst_PROGRAMS += demo/simple-rx/simple-scenefile
-
 demo_simple_rx_simple_scenefile_SOURCES = demo/simple-rx/simple-scenefile.c
-nodist_demo_simple_rx_simple_scenefile_SOURCES = demo/simple-rx/scene.c
 demo_simple_rx_simple_scenefile_CFLAGS = $(DEMO_CFLAGS)
-demo_simple_rx_simple_scenefile_LDADD = $(DEMO_LIBS)
+demo_simple_rx_simple_scenefile_LDADD = $(DEMO_LIBS) demo/simple-rx/libsimplerx.la
+demo/simple-rx/simple-scenefile.$(OBJEXT): demo/simple-rx/scene/scene.c.h
+demo/simple-rx/demo_simple_rx_simple_scenefile-simple-scenefile.$(OBJEXT): demo/simple-rx/scene/scene.c.h
 
 
 noinst_PROGRAMS += demo/simple-rx/simple-procedural
-
 demo_simple_rx_simple_procedural_SOURCES = demo/simple-rx/simple-procedural.c
-nodist_demo_simple_rx_simple_procedural_SOURCES = demo/simple-rx/scene.c
 demo_simple_rx_simple_procedural_CFLAGS = $(DEMO_CFLAGS)
 demo_simple_rx_simple_procedural_LDADD = $(DEMO_LIBS)
+
+
+# noinst_PROGRAMS += demo/simple-rx/simple-plugin
+# demo_simple_rx_simple_plugin_SOURCES = demo/simple-rx/simple-plugin.c
+# demo_simple_rx_simple_plugin_CFLAGS = $(DEMO_CFLAGS)
+# demo_simple_rx_simple_plugin_LDADD = $(DEMO_LIBS)
 
 ############
 ## Baxter ##

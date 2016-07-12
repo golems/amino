@@ -57,12 +57,12 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_sdl.h"
 
-#include "scene/scene.c.h"
-
 #include <dlfcn.h>
 
 static int SCREEN_WIDTH = 800;
 static int SCREEN_HEIGHT = 600;
+
+struct aa_rx_sg * NAME(struct aa_rx_sg *sg);
 
 int main(int argc, char *argv[])
 {
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     }
 
     /* Initialize scene graph */
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph( NULL);
+    struct aa_rx_sg *scenegraph = NAME( NULL);
 
     assert(scenegraph);
     aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */

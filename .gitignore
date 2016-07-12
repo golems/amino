@@ -85,7 +85,6 @@ amino*.tar.gz
 /sg_test
 /sg_test.log
 /share/*.pc
-/demo/simple-rx/scene.c
 /fcl_test
 /cl_test
 /demo/baxter/baxter-collision
@@ -127,7 +126,6 @@ amino*.tar.gz
 /demo/urdf/baxter/baxter-wksp
 /demo/urdf/baxter/baxter.so
 /demo/urdf/baxter/scene.c
-/demo/simple-rx/scene.c.h
 /demo/urdf/ur/ur-view
 /demo/urdf/ur/ur10-model.c
 /demo/urdf/ur/ur10-model.c.h
@@ -155,3 +153,6 @@ amino*.tar.gz
 /mtl_test
 /src/wavefront/mtl.c
 /src/wavefront/wavefront.c
+/demo/simple-rx/simple-plugin
+/demo/simple-rx/scene/*.c
+/demo/simple-rx/scene/*.c.h

@@ -55,9 +55,7 @@
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_win.h"
 #include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_sdl.h"
-
-#include "scene/scene.c.h"
+#include "amino/rx/scene_plugin.h"
 
 #include <dlfcn.h>
 
@@ -97,7 +95,7 @@ int main(int argc, char *argv[])
     }
 
     /* Initialize scene graph */
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph( NULL);
+    struct aa_rx_sg *scenegraph = aa_rx_dl_sg("libamino-simple-demo.so", "scenegraph", NULL);
 
     assert(scenegraph);
     aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */

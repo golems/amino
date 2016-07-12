@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2015, Rice University
+ * Copyright (c) 2015-2016, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -34,66 +34,70 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#include "config.h"
+
 #define GL_GLEXT_PROTOTYPES
 
 #include <error.h>
 #include <stdio.h>
 #include <math.h>
+#include <getopt.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <SDL.h>
+
+
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_sdl.h"
+#include "amino/rx/scene_win.h"
 #include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_sdl.h"
 
-const int SCREEN_WIDTH = 1000;
-const int SCREEN_HEIGHT = 1000;
+#include <dlfcn.h>
 
+static int SCREEN_WIDTH = 800;
+static int SCREEN_HEIGHT = 600;
 
-struct aa_rx_sg *scenegraph;
-
-int display( void *context, struct aa_sdl_display_params *params)
-{
-    (void)params;
-    const struct aa_gl_globals *globals = (const struct aa_gl_globals *) context;
-
-    size_t n = aa_rx_sg_frame_count(scenegraph);
-    size_t m = aa_rx_sg_config_count(scenegraph);
-    double q[m];
-    AA_MEM_ZERO(q,m);
-    double TF_rel[7*n];
-    double TF_abs[7*n];
-    aa_rx_sg_tf(scenegraph, m, q,
-                n,
-                TF_rel, 7,
-                TF_abs, 7 );
-    aa_rx_sg_render( scenegraph, globals,
-                     (size_t)n, TF_abs, 7 );
-    return 0;
-}
+struct aa_rx_sg * NAME(struct aa_rx_sg *sg);
 
 int main(int argc, char *argv[])
 {
-    (void)argc; (void)argv;
+    int visual = 1;
+    int collision = 0;
+    struct aa_rx_sg *scenegraph;
 
-    SDL_Window* window = NULL;
-    SDL_GLContext gContext = NULL;
+    /* Parse Options */
+    {
+        int c;
+        opterr = 0;
 
-    aa_sdl_gl_window( "SDL Test",
-                      SDL_WINDOWPOS_UNDEFINED,
-                      SDL_WINDOWPOS_UNDEFINED,
-                      SCREEN_WIDTH,
-                      SCREEN_HEIGHT,
-                      SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE,
-                      &window, &gContext);
+        while( (c = getopt( argc, argv, "?c")) != -1 ) {
+            switch(c) {
+            case 'c':
+                visual = 0;
+                collision = 1;
+                break;
+            case '?':
+                puts("Usage: COMMAND [OPTIONS] \n"
+                     "Viewer for Amino scene graphs"
+                     "\n"
+                     "Options:\n"
+                     "  -c              view collision geometry\n"
+                     "\n"
+                     "\n"
+                     "Report bugs to " PACKAGE_BUGREPORT "\n" );
+                exit(EXIT_SUCCESS);
+                break;
+            }
 
-    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+        }
+    }
 
-    // Initialize scene graph
+   // Initialize scene graph
     scenegraph = aa_rx_sg_create();
 
     // Add a Box
@@ -148,39 +152,37 @@ int main(int argc, char *argv[])
         aa_rx_geom_opt_destroy(opt);
     }
 
-    aa_rx_sg_init(scenegraph);
-    aa_rx_sg_gl_init(scenegraph);
 
-    // Initialize globals
-    struct aa_gl_globals *globals = aa_gl_globals_create();
-    // global camera
-    {
-        double world_E_camera_home[7] = AA_TF_QUTR_IDENT_INITIALIZER;
-        double eye[3] = {1,1,0.5};
-        double target[3] = {0,0,0};
-        double up[3] = {0,0,1};
-        aa_tf_qutr_mzlook( eye, target, up, world_E_camera_home );
-        aa_gl_globals_set_camera_home( globals, world_E_camera_home );
-        aa_gl_globals_home_camera( globals );
+    assert(scenegraph);
+    aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
 
+    /* Center configurations */
+    size_t m = aa_rx_sg_config_count(scenegraph);
+    double q[m];
+    for(size_t i = 0; i < m; i ++ ) {
+        double min=0,max=0;
+        aa_rx_sg_get_limit_pos(scenegraph,(aa_rx_config_id)i,&min,&max);
+        q[i] = (max + min)/2;
     }
 
-    // global lighting
-    {
-        double v_light[3] = {.5,1,5};
-        double ambient[3] = {.1,.1,.1};
-        aa_gl_globals_set_light_position( globals, v_light );
-        aa_gl_globals_set_ambient(globals, ambient);
-    }
+    /* setup window */
+    struct aa_rx_win * win =
+        aa_rx_win_default_create ( "Amino: AARX-View", SCREEN_WIDTH, SCREEN_HEIGHT );
+    aa_rx_win_set_sg(win, scenegraph); /* Set the scenegraph for the window */
+    aa_rx_win_set_config(win, m, q);
 
+    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
+    aa_gl_globals_set_show_visual(globals, visual);
+    aa_gl_globals_set_show_collision(globals, collision);
 
-    aa_sdl_display_loop( window, globals,
-                         display,
-                         globals );
+    /* start display */
+    aa_rx_win_start(win);
 
-    SDL_GL_DeleteContext(gContext);
-    SDL_DestroyWindow( window );
-
+    /* Cleanup */
+    aa_rx_win_join(win);
+    aa_rx_sg_destroy(scenegraph);
+    aa_rx_win_destroy(win);
     SDL_Quit();
+
     return 0;
 }
