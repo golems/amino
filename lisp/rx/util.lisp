@@ -407,3 +407,10 @@
                      (declare (ignore output error-output))
                      (setq status %status)))))
     (values output status)))
+
+
+(defun pkg-config (modules &key
+                             cflags)
+  (capture-program-output `("pkg-config"
+                            ,@(when cflags '("--cflags"))
+                            ,@(ensure-list modules))))

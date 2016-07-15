@@ -310,8 +310,18 @@
         (argument-name "sg"))
     (cgen-declare-fun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name))))
 
+
+(defparameter *scene-graph-compiler* "gcc" "Compiler for scene graphs")
+
+(defparameter *scene-graph-cflags* `("--std=gnu99" "-fPIC" "-shared")
+  "Compilation flags used for compiling mutable scene graphs")
+
 (defun scene-graph-so (source-file shared-object)
-  (let ((args  (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
+  (let* ((cflags (pkg-config "amino" :cflags t))
+         (args  `(,*scene-graph-compiler*
+                  ,@*scene-graph-cflags*
+                  ,@(split-spaces cflags)
+                  ,source-file "-o" ,shared-object)))
     (format t "~&~A~%" (rope-string (rope-split " " args)))
     (uiop/run-program:run-program args :output *standard-output* :error-output *error-output*)))
 
