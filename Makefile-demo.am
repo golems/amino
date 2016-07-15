@@ -97,7 +97,6 @@ nodist_demo_urdf_baxter_libbaxter_la_SOURCES = demo/urdf/baxter/baxter-model.c
 noinst_LTLIBRARIES += demo/urdf/baxter/libbaxter_demo.la
 demo_urdf_baxter_libbaxter_demo_la_SOURCES = demo/urdf/baxter/baxter-demo.c
 demo_urdf_baxter_libbaxter_demo_la_CFLAGS = $(DEMO_CFLAGS)
-demo/urdf/baxter/libbaxter_demo.$(OBJEXT): demo/urdf/baxter/baxter-model.c.h
 
 lib_LTLIBRARIES += demo/urdf/baxter/libamino_baxter.la
 demo_urdf_baxter_libamino_baxter_la_SOURCES =
@@ -138,11 +137,6 @@ noinst_PROGRAMS += demo/urdf/baxter/baxter-ompl-sequence
 demo_urdf_baxter_baxter_ompl_sequence_SOURCES = demo/urdf/baxter/baxter-ompl-sequence.c
 demo_urdf_baxter_baxter_ompl_sequence_CFLAGS = $(DEMO_CFLAGS)
 demo_urdf_baxter_baxter_ompl_sequence_LDADD = demo/urdf/baxter/libbaxter_demo.la $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
-
-#noinst_PROGRAMS += urdf/baxter/baxter-plugin
-#urdf_baxter_baxter_plugin_SOURCES = urdf/baxter/baxter-plugin.c urdf/baxter/baxter-demo.c
-#urdf_baxter_baxter_plugin_CFLAGS = $(DEMO_CFLAGS)
-#urdf_baxter_baxter_plugin_LDADD = $(DEMO_LIBS) urdf/baxter/libbaxter.la
 
 endif # BUILD_DEMO_BAXTER
 
