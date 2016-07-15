@@ -66,6 +66,7 @@
                (:file "rx/povray" :depends-on ("rx/util" "rx/parameters" "rx/robray-package" "rx/mesh"))
                ;;(:file "collada" :depends-on ("util" "povray" "mesh"))
                (:file "rx/scenegraph" :depends-on ("rx/util" "rx/povray" "rx/mesh" "rx/geom-bind"))
+               (:file "rx/sg-rope" :depends-on ("rx/scenegraph" "rx/util"))
                (:file "rx/render" :depends-on ("rx/povray" "rx/scenegraph"))
                (:file "rx/render/mp-render" :depends-on ("rx/render"))
                (:file "rx/scenefile/urdf" :depends-on ("rx/util" "rx/povray" "rx/scenegraph" "rx/wavefront"))

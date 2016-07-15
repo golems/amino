@@ -158,6 +158,10 @@
 (defun vec3-normalize (v)
   (vec-normalize v (make-vec3)))
 
+(defun vec3-identity-p (vec3)
+  (with-vec3 (x y z) vec3
+    (= x y z 0d0)))
+
 ;;; Axis-Angle
 (def-specialized-array axis-angle 4 axis-angle-t)
 
@@ -179,6 +183,20 @@
 
 (defun quaternion* (x y z w)
   (make-quaternion :data (vec x y z w)))
+
+(defmacro with-quaternion ((x y z w) quaternion &body body)
+  (with-gensyms (value)
+    `(let ((,value (quaternion ,quaternion)))
+       (let ((,x (vecref ,value +x+))
+             (,y (vecref ,value +y+))
+             (,z (vecref ,value +z+))
+             (,w (vecref ,value +w+)))
+         ,@body))))
+
+(defun quaternion-identity-p (quaternion)
+  (with-quaternion (x y z w) quaternion
+    (and (= x y z 0d0)
+         (= w 1d0))))
 
 ;; Rotation Vector
 (def-specialized-array rotation-vector 3 rotation-vector-t)
