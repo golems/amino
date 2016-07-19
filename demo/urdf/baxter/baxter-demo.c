@@ -51,7 +51,8 @@
 
 #include "baxter-demo.h"
 
-#include "baxter-model.c.h"
+/* from ./baxter-model.c.h */
+struct aa_rx_sg * aa_rx_dl_sg__baxter(struct aa_rx_sg *sg);
 
 struct aa_rx_win *
 baxter_demo_setup_window ( struct aa_rx_sg *sg  )

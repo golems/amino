@@ -128,19 +128,17 @@
 
 
 (defparameter +curly-comment-regex+
-  `(:greedy-repetition
-    0 nil
-    (:alternation :whitespace-char-class
-                  ;; line comment
-                  (:regex "(#|(//)).*?(\\n|$)")
-                  ;; block comment
-                  (:sequence "/*"
-                             (:greedy-repetition
-                              0 nil
-                              (:alternation (:regex "[^*]")
-                                            (:regex "\\*[^/]")))
-                             ;(:regex "(.|\\n)*")
-                             "*/"))))
+  `(:alternation :whitespace-char-class
+                 ;; line comment
+                 (:regex "(#|(//)).*?(\\n|$)")
+                 ;; block comment
+                 (:sequence "/*"
+                            (:greedy-repetition
+                             0 nil
+                             (:alternation (:regex "[^*]")
+                                           (:regex "\\*(?!/)")))
+                                        ;(:regex "(.|\\n)*")
+                            "*/")))
 
 (defparameter +curly-lexer+ (make-lexer +curly-token-regex+
                                         +curly-comment-regex+))
