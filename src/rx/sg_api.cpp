@@ -576,6 +576,9 @@ AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
     cx.sg_new = dest;
     aa_rx_sg_map_geom(orig, sg_copy_geom, &cx);
 
+    // set allowed collision
+    dest->sg->allowed = orig->sg->allowed;
+
     // initialize sg
     dest->sg->index();
 
