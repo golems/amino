@@ -265,6 +265,7 @@ int SceneGraph::index()
         std::set<std::string> config_set;
         config_map.clear();
         config_rmap.clear();
+        limits.clear();
         size_t i_frame=0;
         config_size = 0;
         for( auto itr = list.begin();
