@@ -295,6 +295,9 @@ static int win_display( void *cx_, struct aa_sdl_display_params *params )
     if( !win->paused ) {
         r = win->display(win, win->display_cx, params );
     }
+    if( win->stop ) {
+        aa_sdl_display_params_set_quit(params);
+    }
     aa_rx_win_unlock(win);
     return r;
 }
