@@ -50,6 +50,7 @@
 (defun scene-graph-resolve-c! (scene-graph &key
                                              filename
                                              reload
+                                             (bind-c-geom t)
                                              (compile t))
   (when compile
     (assert filename)
@@ -61,27 +62,28 @@
                            :static-mesh nil
                            :link-meshes t)))
   ;; Bind the C meshes
-  (let ((hash (make-hash-table :test #'equalp)))
-    ;; load C mesh
-    (loop for mesh in (scene-graph-meshes scene-graph)
-       do (setf (gethash mesh hash)
-                (load-rx-mesh mesh)))
-    ;; Bind
-    (do-scene-graph-geometry ((frame geometry) scene-graph)
-      (declare (ignore frame))
-      (let ((shape (scene-geometry-shape geometry)))
-        (when (and (scene-mesh-p shape)
-                   (null (scene-geometry-c-geom geometry)))
-          (setf (scene-geometry-c-geom geometry)
-                (aa-rx-geom-mesh (alist-rx-geom-opt (scene-geometry-options geometry))
-                                 (gethash shape hash))))))
-    ;; Release meshes
-    ;; Don't need to do this, the registered destructor will free the mesh
-    ;; (maphash (lambda (k rx-mesh)
-    ;;            (declare (ignore k))
-    ;;            (rx-mesh-destroy (rx-mesh-pointer rx-mesh)))
-    ;;          hash)
-    ))
+  (when bind-c-geom
+    (let ((hash (make-hash-table :test #'equalp)))
+      ;; load C mesh
+      (loop for mesh in (scene-graph-meshes scene-graph)
+         do (setf (gethash mesh hash)
+                  (load-rx-mesh mesh)))
+      ;; Bind
+      (do-scene-graph-geometry ((frame geometry) scene-graph)
+        (declare (ignore frame))
+        (let ((shape (scene-geometry-shape geometry)))
+          (when (and (scene-mesh-p shape)
+                     (null (scene-geometry-c-geom geometry)))
+            (setf (scene-geometry-c-geom geometry)
+                  (aa-rx-geom-mesh (alist-rx-geom-opt (scene-geometry-options geometry))
+                                   (gethash shape hash))))))
+      ;; Release meshes
+      ;; Don't need to do this, the registered destructor will free the mesh
+      ;; (maphash (lambda (k rx-mesh)
+      ;;            (declare (ignore k))
+      ;;            (rx-mesh-destroy (rx-mesh-pointer rx-mesh)))
+      ;;          hash)
+      )))
 
 
 (defun scene-graph-resolve! (scene-graph &key
@@ -98,11 +100,11 @@
                                  :emit emit-povray
                                  :mesh-up-axis mesh-up-axis
                                  :mesh-forward-axis mesh-forward-axis)
-    (when bind-c-geom
-      (scene-graph-resolve-c! scene-graph
-                              :filename filename
-                              :reload reload
-                              :compile compile))
+    (scene-graph-resolve-c! scene-graph
+                            :filename filename
+                            :reload reload
+                            :bind-c-geom bind-c-geom
+                            :compile compile)
     scene-graph))
 
 (defun load-scene-file (filename
@@ -138,3 +140,8 @@
                           :mesh-up-axis mesh-up-axis
                           :mesh-forward-axis mesh-forward-axis)
     scene-graph))
+
+(defun load-scene-files (filenames)
+  (apply #'scene-graph
+         (map 'list #'load-scene-file
+              (ensure-list filenames))))
