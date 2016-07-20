@@ -244,9 +244,6 @@ Grammar {#grammar}
                                | "-" <EXP>
                                | "(" <EXP> ")"
 
-    <ARRAY>                   => "[" <ARRAY_ELEMENTS> "]"
-    <ARRAY_ELEMENTS>          => <EXP> | <EXP> "," <ARRAY_ELEMENTS>
-
     <CLASS_STMT>              => "class" <ID> "{" <GEOMETRY_ATTRIBUTE_LIST> "}"
 
     <FRAME_STMT>              => "frame" <ID> "{" <FRAME_ATTRIBUTE_LIST> "}"
@@ -258,19 +255,22 @@ Grammar {#grammar}
     <GEOMETRY_ATTRIBUTE>      => <ID> <ATTRIBUTE_VALUE> ";"
     <ATTRIBUTE_VALUE>         => <EXP> | <ARRAY>
 
+    <ARRAY>                   => "[" <ARRAY_ELEMENTS> "]"
+    <ARRAY_ELEMENTS>          => <EXP> | <EXP> "," <ARRAY_ELEMENTS>
+
 
 Terminals {#terminals}
 ---------
 
-| Description           | Terminal Symbol | Regular Expression |
-|-----------------------|-----------------|--------------------|
-| Identifier            |            <ID> | [a-zA-Z][a-zA-Z0-9_] |
-| Integer               |           <INT> | -?[0-9]+ |
-| Floating Point Number |         <FLOAT> | -?[0-9]+((\\\.[0-9]*)?([eds]-?[0-9]+)? |
-| Binary Operator       |         <BINOP> | [\\+\\-\\*/] |
-| String                |        <STRING> | \\"[^\"]*\\" |
-| Line Comment          |  <LINE_COMMENT> |  (#\|//).*$ |
-| Block Comment         | <BLOCK_COMMENT> | /\\*.*\\*/ |
+| Description           | Terminal Symbol | Examples            | Regular Expression |
+|-----------------------|-----------------|---------------------|--------------------|
+| Identifier            |            <ID> | foo, foo_bar, bif42 | [a-zA-Z][a-zA-Z0-9_] |
+| Integer               |           <INT> | 1, 42               |-?[0-9]+ |
+| Floating Point Number |         <FLOAT> | 3.14159, 1e-2       | -?[0-9]+((\\\.[0-9]*)?([eds]-?[0-9]+)? |
+| Binary Operator       |         <BINOP> | +, -, \*, /         | [\\+\\-\\*/] |
+| String                |        <STRING> | "Hello World!"      | \\"[^\"]*\\" |
+| Line Comment          |  <LINE_COMMENT> |  // foo, # foo      | (#\|//).*$ |
+| Block Comment         | <BLOCK_COMMENT> | /* foo */           | /\\*.*\\*/ |
 
 
 Complete Example {#example}
