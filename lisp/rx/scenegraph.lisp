@@ -720,41 +720,7 @@
   "Return the include file for the mesh file"
   (pov-cache-file (rope mesh-file ".inc")))
 
-(defun scene-graph-resolve-povray! (scene-graph &key
-                                                  reload
-                                                  (emit t)
-                                                  (mesh-up-axis "Z")
-                                                  (mesh-forward-axis "Y")
-                                                  (directory *robray-tmp-directory*))
-  (let ((mesh-files  ;; filename => (list mesh-nodes)
-         (make-hash-table :test #'equal)))
-    (labels ((resolve-mesh (mesh)
-               (when-let ((source (and (not (scene-mesh-povray-file mesh))
-                                       (scene-mesh-source-file  mesh))))
-                 (push mesh (gethash source mesh-files))))
-             (test-shape (shape)
-               (when (and shape (scene-mesh-p shape))
-                 (resolve-mesh shape))))
-      ;; collect mesh files
-      (do-scene-graph-geometry ((frame geometry) scene-graph)
-        (declare (ignore frame))
-        (test-shape (scene-geometry-shape geometry))))
-    ;; Load meshes
-    (when emit
-      (maphash (lambda (mesh-file mesh-nodes)
-                                        ;(format *standard-output* "~&Converting ~A..." mesh-file)
-                 (multiple-value-bind (geom-name inc-file)
-                     (mesh-povray mesh-file
-                                  :directory directory
-                                  :reload reload
-                                  :mesh-up-axis mesh-up-axis
-                                  :mesh-forward-axis mesh-forward-axis)
-                   (let ((mesh-name geom-name))
-                     (dolist (mesh-node mesh-nodes)
-                       (setf (scene-mesh-name mesh-node) mesh-name
-                             (scene-mesh-povray-file mesh-node) inc-file)))))
-               mesh-files))
-    scene-graph))
+
 
 (defun scene-graph-remove-geometry (scene-graph frames)
   (let* ((frames (etypecase frames

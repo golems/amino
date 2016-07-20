@@ -41,6 +41,7 @@
 (defstruct mesh-data
   name
   file
+  original-file
   (vertex-vectors nil :type (or null (simple-array double-float (*))))
   (vertex-indices nil :type (or null (simple-array fixnum (*))))
   (normal-vectors nil :type (or null (simple-array double-float (*))))
