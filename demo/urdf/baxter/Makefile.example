@@ -28,3 +28,8 @@ clean: mostlyclean
 
 mostlyclean:
 	rm -f baxter-model.c baxter-model.o
+
+
+# Local Variables:
+# mode: makefile
+# End:
