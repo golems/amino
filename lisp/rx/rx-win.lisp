@@ -124,13 +124,14 @@
          (aa-rx-win-unlock ,v-win)))))
 
 (defun win-create (&key
-                        (title "AminoGL")
-                        (width 800)
-                        (height 600))
+                     (title "AminoGL")
+                     (width 800)
+                     (height 600)
+                     stop-on-quit)
   (unless *window*
     (setq *window*
           (aa-rx-win-default-create title width height))
-    (aa-rx-win-stop-on-quit *window* nil)
+    (aa-rx-win-stop-on-quit *window* stop-on-quit)
     (aa-rx-win-start *window*))
   *window*)
 
