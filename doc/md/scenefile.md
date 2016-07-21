@@ -272,6 +272,25 @@ Terminals {#scenefile_terminals}
 | Line Comment          |  <LINE_COMMENT> |  // foo, # foo      | (#\|//).*$ |
 | Block Comment         | <BLOCK_COMMENT> | /* foo */           | /\\*.*\\*/ |
 
+Editor Support {#scenefile_editor}
+--------------
+
+### Emacs
+
+Amino includes a simple emacs mode for editing scene files.  To enable
+it, add the following to your `.emacs` file:
+
+    (require 'robray-mode)
+
+### Vim
+
+Amino includes syntax highlighting for Vim.  To enable it, run the
+following commands (assuming amino was installed under /usr/local):
+
+    mkdir -p ~/.vim/syntax
+    ln -s /usr/local/share/amino/vim/syntax/robray.vim ~/.vim/syntax/
+    mkdir -p ~/.vim/ftdetect
+    ln -s /usr/local/share/amino/vim/ftdetect/robray.vim ~/.vim/ftdetect/
 
 Complete Example {#scenefile_example}
 ================
