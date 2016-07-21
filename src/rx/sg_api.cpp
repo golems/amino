@@ -577,7 +577,9 @@ AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
     aa_rx_sg_map_geom(orig, sg_copy_geom, &cx);
 
     // set allowed collision
-    dest->sg->allowed = orig->sg->allowed;
+    for (auto &pair : orig->sg->allowed){
+        aa_rx_sg_allow_collision_name(dest, pair.first, pair.second, 1);
+    }
 
     // initialize sg
     dest->sg->index();
@@ -587,22 +589,24 @@ AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
 }
 
 AA_API void
-aa_rx_sg_allow_collision( aa_rx_sg *scene_graph,
+aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph,
                         aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed )
 {
-    const char* name0 = aa_rx_sg_frame_name(scene_graph, id0<id1 ? id0 : id1);
-    const char* name1 = aa_rx_sg_frame_name(scene_graph, id0<id1 ? id1 : id0);
-    if (allowed){
-        scene_graph->sg->allowed.insert(std::pair<const char*, const char*>(name0, name1));
-    } else {
-        scene_graph->sg->allowed.erase(std::pair<const char*, const char*>(name0, name1));
-    }
-    scene_graph->sg->dirty_collision = 1;
+    aa_rx_sg_allow_collision_name(scene_graph, aa_rx_sg_frame_name(scene_graph, id0), aa_rx_sg_frame_name(scene_graph, id1), allowed);
 }
 
 AA_API void
 aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
 			       const char* frame0, const char* frame1, const int allowed ){
-    aa_rx_sg_allow_collision(scene_graph, aa_rx_sg_frame_id(scene_graph, frame0),
-			     aa_rx_sg_frame_id(scene_graph, frame1), allowed);
+    bool order = strcmp(frame0, frame1) <0;
+    if (allowed){
+        std::pair<const char*, const char*> p(scene_graph->sg->frame_map[order?frame0:frame1]->name.c_str(),
+                                              scene_graph->sg->frame_map[order?frame1:frame0]->name.c_str());
+        printf("Adding allowed collision between %s and %s\n", p.first, p.second);
+        scene_graph->sg->allowed.insert(p);
+    } else {
+        scene_graph->sg->allowed.erase(std::pair<const char*, const char*>(scene_graph->sg->frame_map[order?frame0:frame1]->name.c_str(),
+                                                                            scene_graph->sg->frame_map[order?frame1:frame0]->name.c_str()));
+    }
+    scene_graph->sg->dirty_collision = 1;
 }
