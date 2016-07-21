@@ -138,7 +138,7 @@ The frame statement defines a kinematic frame, i.e., a pose in SE(3).
         }
     }
 
-### Frame Attributes {#scenefile_frameattr}
+### Frame Attributes
 
 | Name        | Value Type | Description |
 |-------------|------------|-------------|
@@ -151,7 +151,7 @@ The frame statement defines a kinematic frame, i.e., a pose in SE(3).
 | offset      | Float      | Value added to configuration variable  prismatic/revolute frames |
 
 
-### Geometry Attributes {#scenefile_geometry}
+### Geometry Attributes
 
 | Name        | Value Type | Description |
 |-------------|------------|-------------|
@@ -314,7 +314,7 @@ File `class.robray`
 
 
 File `table.robray`
-==================
+-----------------
 
     include "class.robray"
 
