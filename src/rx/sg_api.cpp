@@ -592,21 +592,28 @@ AA_API void
 aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph,
                         aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed )
 {
-    aa_rx_sg_allow_collision_name(scene_graph, aa_rx_sg_frame_name(scene_graph, id0), aa_rx_sg_frame_name(scene_graph, id1), allowed);
+    aa_rx_sg_allow_collision_name(scene_graph,
+                                  aa_rx_sg_frame_name(scene_graph, id0),
+                                  aa_rx_sg_frame_name(scene_graph, id1), allowed);
 }
 
 AA_API void
 aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
 			       const char* frame0, const char* frame1, const int allowed ){
     bool order = strcmp(frame0, frame1) <0;
+    const char *string0, *string1;
+    if (strcmp(frame0, frame1)<0){
+        string0 = scene_graph->sg->frame_map[frame0]->name.c_str();
+        string1 = scene_graph->sg->frame_map[frame1]->name.c_str();
+    } else {
+        string0 = scene_graph->sg->frame_map[frame1]->name.c_str();
+        string1 = scene_graph->sg->frame_map[frame0]->name.c_str();
+    }
+    std::pair<const char*, const char*> p(string0, string1);
     if (allowed){
-        std::pair<const char*, const char*> p(scene_graph->sg->frame_map[order?frame0:frame1]->name.c_str(),
-                                              scene_graph->sg->frame_map[order?frame1:frame0]->name.c_str());
-        printf("Adding allowed collision between %s and %s\n", p.first, p.second);
         scene_graph->sg->allowed.insert(p);
     } else {
-        scene_graph->sg->allowed.erase(std::pair<const char*, const char*>(scene_graph->sg->frame_map[order?frame0:frame1]->name.c_str(),
-                                                                            scene_graph->sg->frame_map[order?frame1:frame0]->name.c_str()));
+        scene_graph->sg->allowed.erase(p);
     }
     scene_graph->sg->dirty_collision = 1;
 }
