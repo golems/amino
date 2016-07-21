@@ -56,9 +56,10 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_sdl.h"
 
-#include "scene/scene.c.h"
-
 #include <dlfcn.h>
+
+struct aa_rx_sg * aa_rx_dl_sg__scenegraph(struct aa_rx_sg *sg);
+
 
 static int SCREEN_WIDTH = 800;
 static int SCREEN_HEIGHT = 600;

@@ -16,9 +16,11 @@ simple-scenefile: scene/scene.c simple-scenefile.c
 simple-procedural: simple-procedural.c
 	$(CC) $(DEMO_CFLAGS) $(DEMO_LDFLAGS) simple-procedural.c -o simple-procedural
 
+libscene.so: scene/scene.c
+	$(CC) -shared -fPIC $(DEMO_CFLAGS) scene/scene.c -o libscene.so
 
 clean:
-	rm -rf scene.c simple-scenefile simple-procedural
+	rm -rf scene.c simple-scenefile simple-procedural libscene.so
 
 # Local Variables:
 # mode: makefile

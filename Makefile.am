@@ -304,6 +304,16 @@ src/wavefront/mtl.c: src/wavefront/mtl.l
 ###########
 lisp_LISP = share/robray-mode.el
 
+###########
+## VIM   ##
+###########
+vimdir         = $(pkgdatadir)/vim
+vimsyntaxdir   = $(vimdir)/syntax
+vimftdetectdir = $(vimdir)/ftdetect
+
+dist_vimsyntax_DATA = share/vim/syntax/robray.vim
+dist_vimftdetect_DATA = share/vim/ftdetect/robray.vim
+
 ## JAVA ##
 JSOURCES =                                        \
 	$(top_srcdir)/java/Lib.java
