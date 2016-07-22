@@ -262,16 +262,15 @@
         (otherwise (error "Unknown file type: ~A" file-type))))))
 
 
-(defun mesh-povray (mesh-file
+(defun mesh-povray (mesh-data
                     &key
                       reload
-                      (mesh-up-axis "Z")
-                      (mesh-forward-axis "Y")
+                      ;(mesh-up-axis "Z")
+                      ;(mesh-forward-axis "Y")
                       (handedness :right)
                       (directory *robray-tmp-directory*))
-  (unless (probe-file mesh-file)
-    (error "Mesh file not found"))
-  (let* ((file-type (string-downcase (file-type mesh-file)))
+  (let* ((mesh-file (mesh-data-original-file mesh-data))
+         (file-type (string-downcase (file-type mesh-file)))
          (file-basename (file-basename mesh-file))
          (file-dirname (file-dirname mesh-file))
          (src-obj-p (string= (string-downcase file-type) "obj"))
@@ -284,12 +283,7 @@
     (if (or (mesh-regen-p reload mesh-file abs-output-file)
             (not (probe-file obj-file)))
         ;; Regenerate
-        (let* ((mesh-data (load-mesh mesh-file
-                                     :reload  reload
-                                     :directory directory
-                                     :mesh-up-axis mesh-up-axis
-                                     :mesh-forward-axis mesh-forward-axis))
-               (name (mesh-data-name mesh-data)))
+        (let ((name (mesh-data-name mesh-data)))
           (format t "~&  POVENC ~A~%" obj-file)
           (output (pov-declare (mesh-data-name mesh-data)
                                (pov-mesh2 :mesh-data mesh-data :handedness handedness))

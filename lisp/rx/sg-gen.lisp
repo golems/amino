@@ -223,7 +223,7 @@
   ;; declare
   (loop for mesh in (scene-graph-meshes scene-graph)
      for var = (scene-genc-mesh-var mesh)
-     for mesh-data = (load-mesh (scene-mesh-source-file mesh))
+     for mesh-data = (scene-mesh-data mesh)
      for normed-data = (mesh-deindex-normals mesh-data)
      collect
        (cgen-defun (rope (when static "static ") "struct aa_rx_mesh *")
