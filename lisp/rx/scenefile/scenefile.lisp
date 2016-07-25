@@ -48,39 +48,22 @@
 
 (defun scene-graph-resolve-povray! (scene-graph &key
                                                   reload
-                                                  (emit t)
-                                                  (mesh-up-axis "Z")
-                                                  (mesh-forward-axis "Y")
                                                   (directory *robray-tmp-directory*))
-  (let ((mesh-files  ;; filename => (list mesh-nodes)
-         (make-hash-table :test #'equal)))
-    (labels ((resolve-mesh (mesh)
-               (when-let ((source (and (not (scene-mesh-povray-file mesh))
-                                       (scene-mesh-source-file  mesh))))
-                 (push mesh (gethash source mesh-files))))
-             (test-shape (shape)
-               (when (and shape (scene-mesh-p shape))
-                 (resolve-mesh shape))))
-      ;; collect mesh files
-      (do-scene-graph-geometry ((frame geometry) scene-graph)
-        (declare (ignore frame))
-        (test-shape (scene-geometry-shape geometry))))
-    ;; Load meshes
-    (when emit
-      (maphash (lambda (mesh-file mesh-nodes)
-                                        ;(format *standard-output* "~&Converting ~A..." mesh-file)
-                 (multiple-value-bind (geom-name inc-file)
-                     (mesh-povray mesh-file
-                                  :directory directory
-                                  :reload reload
-                                  :mesh-up-axis mesh-up-axis
-                                  :mesh-forward-axis mesh-forward-axis)
-                   (let ((mesh-name geom-name))
-                     (dolist (mesh-node mesh-nodes)
-                       (setf (scene-mesh-name mesh-node) mesh-name
-                             (scene-mesh-povray-file mesh-node) inc-file)))))
-               mesh-files))
-    scene-graph))
+  (do-scene-graph-geometry ((frame geometry) scene-graph)
+    (declare (ignore frame))
+    (let ((shape (scene-geometry-shape geometry)))
+      (when (and (scene-mesh-p shape)
+                 (not (scene-mesh-povray-file shape)))
+
+        (multiple-value-bind (geom-name inc-file)
+            (mesh-povray (scene-mesh-data shape)
+                         :reload reload
+                         :directory directory)
+          (declare (ignore geom-name))
+          (setf (scene-mesh-povray-file shape)
+                inc-file)))))
+  scene-graph)
+
 
 (defun scene-graph-resolve-c! (scene-graph &key
                                              filename
@@ -120,6 +103,29 @@
       ;;          hash)
       )))
 
+(defun scene-graph-resolve-mesh! (scene-graph &key
+                                                reload
+                                                (mesh-up-axis "Z")
+                                                (mesh-forward-axis "Y"))
+
+  (let ((mesh-hash (make-hash-table :test #'equal))) ;; source-file => scene-mesh
+    (do-scene-graph-geometry ((frame geometry) scene-graph)
+      (declare (ignore frame))
+      (let ((shape (scene-geometry-shape geometry)))
+        (when (scene-mesh-p shape)
+          (if-let ((scene-mesh  (gethash (scene-mesh-source-file shape) mesh-hash)))
+            ;; Rebind previously loaded mesh
+            (setf (scene-geometry-shape geometry) scene-mesh)
+            ;; Load and hash mesh
+            (let ((data (load-mesh (scene-mesh-source-file shape)
+                                   :reload reload
+                                   :mesh-up-axis mesh-up-axis
+                                   :mesh-forward-axis mesh-forward-axis)))
+              (setf (scene-mesh-data shape) data
+                    (scene-mesh-name shape) (mesh-data-name data)
+                    (gethash (scene-mesh-source-file shape) mesh-hash) shape)))))))
+  scene-graph)
+
 (defun scene-graph-resolve! (scene-graph &key
                                            filename
                                            reload
@@ -129,11 +135,16 @@
                                            (mesh-up-axis "Z")
                                            (mesh-forward-axis "Y"))
   (let ((scene-graph (scene-graph scene-graph)))
-    (scene-graph-resolve-povray! scene-graph
-                                 :reload reload
-                                 :emit emit-povray
-                                 :mesh-up-axis mesh-up-axis
-                                 :mesh-forward-axis mesh-forward-axis)
+    ;; Resolve Meshes
+    (scene-graph-resolve-mesh! scene-graph
+                               :reload reload
+                               :mesh-up-axis mesh-up-axis
+                               :mesh-forward-axis mesh-forward-axis)
+    ;; Povray
+    (when emit-povray
+      (scene-graph-resolve-povray! scene-graph
+                                   :reload reload))
+    ;; C
     (scene-graph-resolve-c! scene-graph
                             :filename filename
                             :reload reload
@@ -171,8 +182,7 @@
                           :emit-povray emit-povray
                           :compile compile
                           :mesh-up-axis mesh-up-axis
-                          :mesh-forward-axis mesh-forward-axis)
-    scene-graph))
+                          :mesh-forward-axis mesh-forward-axis)))
 
 (defun load-scene-files (filenames)
   (apply #'scene-graph

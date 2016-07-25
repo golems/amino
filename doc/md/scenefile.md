@@ -357,17 +357,17 @@ code, which you can compile and link either statically into your
 application or into a shared library.  Compiled scene graphs are fast
 to load because the operating system directly maps into memory (via
 [mmap](https://en.wikipedia.org/wiki/Mmap)) the included mesh data,
-eliminating the need for runtime parsing and processing.  Furthermore,
-memory mapping compiled scene graphs reduces overall memory use
-compared to runtime parsing when multiple applications use the same
-scene graph because files that are memory mapped from different
-applications share the same physical pages in memory.
+eliminating runtime parsing and processing.  Furthermore, when
+multiple processes operate on the same scene graph, using compiled
+scene graphs reduces overall memory use compared to runtime parsing
+because the memory mapped scene graphs in different processes share
+physical memory.
 
 
 Compiling Scene Files
 ---------------------
 
-The following command will covert the previous example scene file into
+The following command will convert the previous example scene file into
 the C file `table.c`:
 
     aarxc table.robray -n table -o table.c
@@ -394,7 +394,7 @@ link using GCC:
     PKG_CONFIG_MODULES="amino amino-gl sdl2 glew"
     CFLAGS="$CFLAGS `pkg-config --cflags $PKG_CONFIG_MODULES`"
     LDFLAGS="$LDLAGS `pkg-config --libs $PKG_CONFIG_MODULES`"
-    gcc $(CFLAGS) $(LDFLAGS) table.c MY_OTHER_SOURCE_FILES -o MY_PROGRAM
+    gcc $CFLAGS $LDFLAGS table.c MY_OTHER_SOURCE_FILES -o MY_PROGRAM
 
 (Of course, you would typically use a build automation tool such as
 Make, the Autotools, or CMake.)
@@ -420,7 +420,7 @@ shared library as follows:
 
     PKG_CONFIG_MODULES="amino amino-gl sdl2 glew"
     CFLAGS="$CFLAGS `pkg-config --cflags $PKG_CONFIG_MODULES`"
-    gcc -shared -fPIC $(CFLAGS) table.c -o libscene-table.so
+    gcc -shared -fPIC $CFLAGS table.c -o libscene-table.so
 
 The code to load the scene graph is identical to the static linking
 case.
