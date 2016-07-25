@@ -164,8 +164,7 @@
 
 (defun curly-parse-string (string &optional pathname)
   (let ((start 0)
-        (line 1)
-        (directory (file-dirname pathname)))
+        (line 1))
     (labels ((parse-error (found wanted)
                (error "Parse error ~A:~D, found ~A, wanted ~A"
                       (or pathname "line") line found wanted))
@@ -207,7 +206,8 @@
                (multiple-value-bind (type token) (next)
                  (case type
                    (:string
-                    (curly-parse-file (concatenate 'string directory "/" token)))
+                    (let ((include-file (merge-pathnames (pathname token) pathname)))
+                      (curly-parse-file include-file)))
                    (otherwise (parse-error type :string)))))
              (body ()
                ;(print 'body)
@@ -312,7 +312,7 @@
       (start))))
 
 (defun curly-parse-file (pathname)
-  (let ((pathname (rope-string pathname)))
+  (let ((pathname (rope-pathname pathname)))
     (curly-parse-string (read-file-into-string pathname)
                         pathname)))
 
