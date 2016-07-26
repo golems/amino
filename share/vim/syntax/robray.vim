@@ -32,7 +32,7 @@
 
 syn keyword robrayFrameAttribute parent translation quaternion rpy type axis offset
 syn keyword robrayGeomAttribute shape color alpha specular dimension radius height start_radius end_radius delta thickness isa scale
-syn keyword robrayKeyword frame class geometry
+syn keyword robrayKeyword frame class geometry allow_collision
 syn keyword robrayInclude include
 syn keyword robrayDef     def
 syn keyword robrayShape mesh grid box cone cylinder sphere

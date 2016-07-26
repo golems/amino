@@ -223,6 +223,22 @@ dimensions) which may be applied to multiple geometric objects.
         }
     }
 
+Allowed Collision Statement {#scenefile_allow_collision_stmt}
+---------------------------
+
+The allowed collision statement instructs the collision checker to
+ignore any potential collisions between two frames.
+
+### Allowed Collision Grammar
+
+    <ALLOWED_COLLISION_STMT>  => "allow_collision" <STRING> <STRING> ";"
+
+### Allowed Collision Example
+
+The following statement will ignore any collisions between geometry
+attached to frames "right_arm_forearm" and "right_arm_wrist".
+
+    allow_collision "right_arm_forearm" "right_arm_wrist";
 
 Scene File Syntax {#scenefile_syntax}
 =================
@@ -232,6 +248,7 @@ Grammar {#scenefile_grammar}
 
     <START>                   => <INCLUDE_STMT> | <DEF_STMT>
                                | <CLASS_STMT> | <FRAME_STMT>
+                               | <ALLOWED_COLLISION_STMT>
                                | <COMMENT>
 
     <COMMENT>                 => <LINE_COMMENT> | <BLOCK_COMMENT>
@@ -258,6 +275,7 @@ Grammar {#scenefile_grammar}
     <ARRAY>                   => "[" <ARRAY_ELEMENTS> "]"
     <ARRAY_ELEMENTS>          => <EXP> | <EXP> "," <ARRAY_ELEMENTS>
 
+    <ALLOWED_COLLISION_STMT>  => "allow_collision" <STRING> <STRING> ";"
 
 Terminals {#scenefile_terminals}
 ---------
