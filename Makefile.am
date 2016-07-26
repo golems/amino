@@ -598,6 +598,11 @@ doc: doxygen-doc
 	$(MKDIR_P) doc/manual/doc
 	cp doc/logo-medium.png doc/manual/doc
 
+if HAVE_HELP2MAN
+doc/aarxc.1: $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
+	$(HELP2MAN) -h -h --version-string="0.0" --no-info -n "manipulate ach channels" $(top_srcdir)/share/aarxc -o $@
+endif
+
 EXTRA_DIST += doc/manual
 
 include aminclude.am
