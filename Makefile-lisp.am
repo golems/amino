@@ -27,7 +27,6 @@ aarx_core_SOURCES = \
 	lisp/rx/rx-lib.lisp \
 	lisp/rx/rx-type.lisp \
 	lisp/rx/geom-bind.lisp \
-	lisp/rx/cl-init.lisp \
 	lisp/rx/sg-cfun.lisp \
 	lisp/rx/rx-sg.lisp \
 	lisp/rx/rx-gl.lisp \

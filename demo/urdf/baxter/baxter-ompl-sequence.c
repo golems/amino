@@ -65,7 +65,6 @@ int main(int argc, char *argv[])
     (void)argc; (void)argv;
 
     // Initialize scene graph
-    aa_rx_cl_init();
     struct aa_rx_sg *scenegraph = baxter_demo_load_baxter(NULL);
     aa_rx_sg_init(scenegraph);
     aa_rx_sg_cl_init(scenegraph);
