@@ -431,7 +431,7 @@ aa_mem_rlist_push_ptr( struct aa_mem_rlist *list, void *p );
 
 /** Enqueue a copy of data at p at the back of the list */
 AA_API void
-aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n );
+aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, const void *p, size_t n );
 
 /** Enqueue a the pointer p at the back of the list */
 AA_API void

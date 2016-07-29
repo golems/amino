@@ -420,7 +420,7 @@ void aa_mem_rlist_enqueue_cons( struct aa_mem_rlist *list, aa_mem_cons_t *node )
     list->tailp = &node->next;
 }
 
-void aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n ) {
+void aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, const void *p, size_t n ) {
     struct aa_mem_cons *node = aa_mem_cons_cpy(list->reg, p, n, NULL);
     aa_mem_rlist_enqueue_cons(list,node);
 }
