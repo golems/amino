@@ -233,6 +233,9 @@ AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size );
  */
 AA_API void *aa_mem_region_dup( aa_mem_region_t *region, const void *p, size_t size );
 
+/** Duplicate a string, allocating from the region.
+ */
+AA_API char *aa_mem_region_strdup( aa_mem_region_t *region, const char *str );
 
 /** Deallocates all allocated objects from the region.  If the region
  * contains multiple chunks, they are merged into one.
