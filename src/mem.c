@@ -438,6 +438,16 @@ void *aa_mem_rlist_pop( struct aa_mem_rlist *list ) {
 
 }
 
+AA_API void
+aa_mem_rlist_map( struct aa_mem_rlist *list,
+                  void (*function)(void *cx, void *element ),
+                  void *cx )
+{
+    for( struct aa_mem_cons *c = list->head; c; c = c->next ) {
+        function(cx,c->data);
+    }
+}
+
 size_t aa_mem_ftoa( char *buf, size_t size, double f ) {
     int i = snprintf(buf, size, "%f", f);
     if( i < 0 ) return 0;

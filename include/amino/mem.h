@@ -434,6 +434,12 @@ aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n );
 AA_API void
 aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p );
 
+/** Apply function to each element of list */
+AA_API void
+aa_mem_rlist_map( struct aa_mem_rlist *list,
+                  void (*function)(void *cx, void *element ),
+                  void *cx );
+
 /** Remove front element of the list and return its data pointer.
  *
  * Note, this does not release any memory from the list's underlying
