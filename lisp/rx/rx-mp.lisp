@@ -156,21 +156,42 @@
     (destructuring-bind (frame-0 . frame-1) pair
       (motion-planner-allow-collision motion-planner frame-0 frame-1))))
 
-(defstruct motion-plan
+(defstruct (motion-plan (:constructor %make-motion-plan))
   sub-scene-graph
+  mutable-scene-graph
+  scene-graph
   path)
+
+(defun make-motion-plan (&key
+                           sub-scene-graph
+                           mutable-scene-graph
+                           scene-graph
+                           path)
+  (%make-motion-plan :sub-scene-graph sub-scene-graph
+                     :mutable-scene-graph (cond (mutable-scene-graph
+                                                 mutable-scene-graph)
+                                                (sub-scene-graph
+                                                 (sub-scene-graph-mutable-scene-graph sub-scene-graph))
+                                                (scene-graph
+                                                 (mutable-scene-graph scene-graph)))
+                     :scene-graph (cond (scene-graph scene-graph)
+                                        (mutable-scene-graph
+                                         (mutable-scene-graph-scene-graph mutable-scene-graph))
+                                        (sub-scene-graph
+                                         (sub-scene-graph-scene-graph sub-scene-graph)))
+                     :path path))
 
 (defun motion-plan-valid-p (motion-plan)
   (when (motion-plan-p motion-plan)
     (not (zerop (length (motion-plan-path motion-plan))))))
 
-(defun motion-plan-mutable-scene-graph (motion-plan)
-  (sub-scene-graph-mutable-scene-graph
-   (motion-plan-sub-scene-graph motion-plan)))
+;; (defun motion-plan-mutable-scene-graph (motion-plan)
+;;   (sub-scene-graph-mutable-scene-graph
+;;    (motion-plan-sub-scene-graph motion-plan)))
 
-(defun motion-plan-scene-graph (motion-plan)
-  (mutable-scene-graph-scene-graph
-   (motion-plan-mutable-scene-graph motion-plan)))
+;; (defun motion-plan-scene-graph (motion-plan)
+;;   (mutable-scene-graph-scene-graph
+;;    (motion-plan-mutable-scene-graph motion-plan)))
 
 (defun motion-plan-length (motion-plan)
   (let* ((path (motion-plan-path motion-plan))
