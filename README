@@ -20,12 +20,13 @@ INSTALLATION
 Obtaining Amino
 ---------------
 
-Via git:
+* Via git:
 
-    git clone --recursive https://github.com/golems/amino.git
-    cd amino && autoreconf -i
+        git clone --recursive https://github.com/golems/amino.git
+        cd amino && autoreconf -i
 
-Via distribution Tarball: http://code.golems.org/src/amino/
+* Via [distribution tarball]
+      (http://code.golems.org/src/amino/)
 
 Building Amino
 --------------
@@ -38,5 +39,5 @@ dependencies.
 DOCUMENTATION
 =============
 
-* Manual: http://code.golems.org/pkg/amino/ and `./doc/manual/`
+* [Manual] (http://code.golems.org/pkg/amino/), and `./doc/manual/`
 * Examples `./demos/`
