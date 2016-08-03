@@ -419,7 +419,9 @@ Make, the Autotools, or CMake.)
 
 Then, load the scene graph with the following C code:
 
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__table(NULL);
+~~~~~~~~~~~~~~~~~~~{.c}
+struct aa_rx_sg *scenegraph = aa_rx_dl_sg__table(NULL);
+~~~~~~~~~~~~~~~~~~~
 
 
 See also:
@@ -458,9 +460,11 @@ contained function to load the scene graph.
 To load the previous table example after compiling the C code to
 shared object "libscene-table.so":
 
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg( "scene-table",
-                                               "table",
-                                               NULL );
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.c}
+struct aa_rx_sg *scenegraph = aa_rx_dl_sg( "scene-table",
+                                           "table",
+                                           NULL );
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 See also:
 [Building plugins with Autotools](https://autotools.io/libtool/plugins.html)
