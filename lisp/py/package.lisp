@@ -35,12 +35,28 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(defpackage |aminopy|
+(defpackage aminopy
   (:use :cl :alexandria :amino :sycamore :sycamore-util :robray)
-  (:export |tf|
-           |tf2|
-           |vec|
-           |xangle|
-           |yangle|
-           |zangle|
-           ))
+  (:nicknames |aminopy|)
+  (:export
+   ;;; Transforms
+   |tf|
+   |rotation|
+   |translation|
+   |tf2|
+   |vec|
+   |vec_x|
+   |vec_y|
+   |vec_z|
+   |xangle|
+   |yangle|
+   |zangle|
+   ;;; Scene Graphs
+   |scene_frame_tf|
+   |frame_fixed_tf|
+   |map_frames|
+   |find_frame|
+   |frame_name|
+   |frame_parent|
+   |frame_isa|
+   ))
