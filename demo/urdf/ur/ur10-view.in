@@ -1,0 +1,5 @@
+#!/bin/sh
+
+@abs_top_builddir@/aarx-view \
+    @abs_top_builddir@/demo/urdf/ur/.libs/libamino_ur.so \
+    -n "ur10"

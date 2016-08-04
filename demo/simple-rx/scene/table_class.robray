@@ -1,0 +1,43 @@
+// Define some sizes for objects
+def table_size 1e-2;  //  1 cm
+def block_size .1;    // 10cm
+
+// Define a stacking height
+def table_stack (block_size + table_size)/2 + 1e-3;
+
+class block {
+    shape box;
+    color [0, 1, 0];
+    alpha 0.5;
+    dimension [block_size, block_size, block_size];
+}
+
+/* A table at the world origin */
+frame front_table {
+    geometry {
+        dimension [.75, .75, table_size];
+        shape box;
+        color [.6, .3, .6];
+    }
+}
+
+// This block is placed on the table
+frame block_a {
+    parent front_table;
+    translation [.25, 0, table_stack];
+    quaternion [0, 0, 1, 0]; // rotate pi about Z
+    geometry {
+        isa block;
+    }
+}
+
+// This block is placed on the table
+frame block_b {
+    parent front_table;
+    translation [-.25, 0, table_stack];
+    rpy [0, 0, pi];   /* also rotate pi about Z,
+                       * pi is a float constant in the language */
+    geometry {
+        isa block;
+    }
+}

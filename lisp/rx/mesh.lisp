@@ -41,6 +41,7 @@
 (defstruct mesh-data
   name
   file
+  original-file
   (vertex-vectors nil :type (or null (simple-array double-float (*))))
   (vertex-indices nil :type (or null (simple-array fixnum (*))))
   (normal-vectors nil :type (or null (simple-array double-float (*))))
@@ -67,19 +68,6 @@
   (print-unreadable-object (object stream :type t :identity nil)
     (format stream "~A" (mesh-data-name object))))
 
-(defun mesh-vector-item (vector i)
-  (vec (aref vector (+ 0 (* 3 i)))
-       (aref vector (+ 1 (* 3 i)))
-       (aref vector (+ 2 (* 3 i)))))
-
-(defun mesh-vertex (mesh i)
-  (mesh-vector-item (mesh-data-vertex-vectors mesh)
-                    i))
-
-(defun mesh-normal (mesh i)
-  (mesh-vector-item (mesh-data-normal-vectors mesh)
-                    i))
-
 (defun mesh-deindex-normals (mesh)
 "Create one normal vector per vertex in the mesh.
 
@@ -87,42 +75,48 @@ The result is suitable for OpenGL."
   (let* ((v-indices (mesh-data-vertex-indices mesh))
          (n-indices (mesh-data-normal-indices mesh))
          (t-indices (mesh-data-texture-indices mesh))
-         (hash (make-hash-table :test #'equalp))
+         (v-len (length v-indices))
+         (mesh-vertices (mesh-data-vertex-vectors mesh))
+         (mesh-normals (mesh-data-normal-vectors mesh))
+         (hash (make-hash-table :test #'equal))
          (count 0)
-         (new-indices (make-array (length v-indices)
+         (new-indices (make-array v-len
                                   :element-type 'fixnum)))
-    (assert (= (length v-indices)
+    (declare (type fixnum count))
+    (assert (= v-len
                (length n-indices)))
     (loop ;; iterate over faces
-       for i below (length v-indices)
-       for vertex = (mesh-vertex mesh (aref v-indices i))
-       for normal = (mesh-normal mesh (aref n-indices i))
-       for texture = (when t-indices (aref t-indices (truncate (/ i 3))))
-       for v-n = (list vertex normal texture)
-       for new-index = (gethash v-n hash) ;; check if already hashed
+       for i from 0 below v-len
+       for v-i = (the fixnum (* 3 (aref v-indices i)))
+       for n-i = (the fixnum (* 3 (aref n-indices i)))
+       for v-n = (list (aref mesh-vertices (+ v-i 0))
+                       (aref mesh-vertices (+ v-i 1))
+                       (aref mesh-vertices (+ v-i 2))
+                       (aref mesh-normals (+ n-i 0))
+                       (aref mesh-normals (+ n-i 1))
+                       (aref mesh-normals (+ n-i 2))
+                       (when t-indices
+                         (aref t-indices (truncate (/ i 3)))))
        do
-         (if new-index
-             (setf (aref new-indices i)
-                   new-index)
-             (progn
-               (setf (gethash v-n hash) count
-                     (aref new-indices i) count)
-               (incf count))))
+         (if-let ((new-index (gethash v-n hash)))  ;; check if already hashed
+           (setf (aref new-indices i)
+                 new-index)
+           (progn
+             (setf (gethash v-n hash) count
+                   (aref new-indices i) count)
+             (incf count))))
+
     (assert (= count (hash-table-count hash)))
     (let ((new-vertices (make-vec (* 3 count)))
           (new-normals (make-vec (* 3 count)))
-          (new-textures (when t-indices (make-fnvec count))))
-      (maphash (lambda (k i)
-                 (destructuring-bind (vertex normal texture) k
-                   (dotimes (j 3)
-                     (let ((offset (+ j (* 3 i))))
-                       (setf (aref new-vertices offset) (aref vertex j))
-                       (setf (aref new-normals offset) (aref normal j))))
-                   (when new-textures
-                     ;(print 'a)
-                     (setf (aref new-textures i) texture)
-                    ; (print 'b)
-                     )))
+          (new-textures (make-fnvec (if t-indices count 0))))
+      (maphash (lambda (v-n i)
+                 (declare (type list v-n))
+                 (let ((k (* 3 i)))
+                   (replace new-vertices v-n :start1 k :start2 0 :end2 3)
+                   (replace new-normals v-n :start1 k :start2 3 :end2 6))
+                 (when t-indices
+                   (setf (aref new-textures i) (elt v-n 6))))
                hash)
       (make-mesh-data :name (mesh-data-name mesh)
                       :vertex-vectors new-vertices

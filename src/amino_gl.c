@@ -140,15 +140,16 @@ AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader)
 static const char aa_gl_vertex_shader[] =
     "#version 130\n"
     ""
-    "in vec4 position;"
+    "in vec3 position;"
     //"in vec4 color;"
     "in vec3 normal;"
     "in vec2 UV;"
     ""
-    "uniform mat4 matrix_model;"   // parent: world, child: model
+    "uniform mat4 matrix_model;"   // parent: world, child: model, includes scaling
+    "uniform mat3 matrix_rotate;"  // parent: world, child: rotation only, no scaling
     "uniform mat4 matrix_camera;"  // camera perspective * pose
     "uniform vec3 light_world;"    // position of light in world
-    "uniform vec3 camera_world;"    // position of camera in world
+    "uniform vec3 camera_world;"   // position of camera in world
     ""
     "smooth out vec4 vColor;"
     "out vec2 vUV;"
@@ -158,7 +159,7 @@ static const char aa_gl_vertex_shader[] =
     "out vec3 normal_world;"
     ""
     "void main() {"
-    "  vec4 position_world = matrix_model * position;"
+    "  vec4 position_world = matrix_model * vec4(position,1);"
     "  gl_Position = matrix_camera * position_world;"
 
     /* "  eye_camera = vec3(0,0,0) - position_camera.xyz;" // vector from vertex to camera origin */
@@ -168,7 +169,7 @@ static const char aa_gl_vertex_shader[] =
 
     "  eye_world = camera_world - position_world.xyz;"         // tail: vertex, tip: camera
     "  light_dir_world = light_world - position_world.xyz;" // tail: vertex, tip: light
-    "  normal_world = mat3(matrix_model) * normal;"
+    "  normal_world = matrix_rotate * normal;"
 
     //"  vColor = color;"
     "  vUV = UV;"
@@ -234,6 +235,7 @@ static GLint aa_gl_id_light_power;
 static GLint aa_gl_id_specular;
 static GLint aa_gl_id_uv;
 static GLint aa_gl_id_texture;
+static GLint aa_gl_id_rotate;
 
 static pthread_once_t gl_once = PTHREAD_ONCE_INIT;
 static pthread_mutex_t gl_mutex;
@@ -289,6 +291,7 @@ static void gl_init_once(void)
     aa_gl_id_camera_world = glGetUniformLocation(aa_gl_id_program, "camera_world");
     aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
     aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
+    aa_gl_id_rotate = glGetUniformLocation(aa_gl_id_program, "matrix_rotate");
 
     /* Register cleanup function */
     aa_gl_buffers_destroy_fun = aa_gl_buffers_schedule_destroy;
@@ -314,18 +317,33 @@ static void check_error( const char *name ){
 
 AA_API void aa_gl_draw_tf (
     const double *world_E_model,
+    const struct aa_rx_geom_opt *opt,
     const struct aa_gl_buffers *buffers )
 {
     // Uniforms
     glUniform3fv(aa_gl_id_specular, 1, buffers->specular);
     check_error("unform specular");
 
-    // matrices
+    // model matrix
     GLfloat M_model[16];
+    GLfloat M_rotate[9];
+
+    // pose
     aa_gl_qutr2glmat( world_E_model, M_model);
+
+    // scaling
+    double scale = aa_rx_geom_opt_get_scale(opt);
+    for( size_t i = 0; i < 3; i ++ ) {
+        for( size_t j = 0; j < 3; j ++ ) {
+            AA_MATREF(M_rotate,3,i,j) =  AA_MATREF(M_model,4,i,j);
+            AA_MATREF(M_model,4,i,j) *= (GLfloat)scale;
+        }
+    }
 
     glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
     check_error("uniform mat model");
+    glUniformMatrix3fv(aa_gl_id_rotate, 1, GL_FALSE, M_rotate);
+    check_error("uniform mat rotate");
 
     // positions
     {
@@ -1189,14 +1207,14 @@ struct sg_render_cx {
 void render_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_geom *geom )
 {
     struct sg_render_cx *cx = (struct sg_render_cx*)cx_;
-    const double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
     if( geom->gl_buffers &&
         ( !aa_gl_globals_is_masked(cx->globals, (size_t)frame_id) ) &&
         ((cx->globals->show_visual && geom->opt.visual) ||
          (cx->globals->show_collision && geom->opt.collision)) )
     {
         //printf("rendering %s\n", aa_rx_geom_shape_str(geom->type));
-        aa_gl_draw_tf( E, geom->gl_buffers);
+        const double *E = cx->TF + ((size_t)frame_id*cx->ld_tf);
+        aa_gl_draw_tf( E, &geom->opt, geom->gl_buffers);
     }
 }
 
@@ -1213,7 +1231,10 @@ aa_rx_sg_render(
     aa_rx_sg_gl_init((struct aa_rx_sg*)sg);
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    check_error("glClearColor");
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    check_error("glClear");
 
     assert( n_TF == aa_rx_sg_frame_count(sg) );
 

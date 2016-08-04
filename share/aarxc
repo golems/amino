@@ -32,6 +32,13 @@
 
 OUTPUT_FILE=aarxc.out.c
 SCENE_NAME=""
+MESH_UP_AXIS="Z"
+MESH_FORWARD_AXIS="Y"
+RELOAD="nil"
+
+if [ -n "$AARX_RELOAD" ]; then
+    RELOAD=t
+fi
 
 while test "$1" != x-- -a "x$#" != x0; do
     case "$1" in
@@ -44,6 +51,9 @@ Options:
   -h|-?|--help,                  display this help and exit
   -o OUTPUT-FILE                 write generated code to OUTPUT_FILE
   -n SCENE_NAME                  name of the scene graph
+  -U UP_AXIS                     up axis of mesh files
+  -F FORWARD_AXIS                forward axis of mesh files
+  -R                             reload files
 
 Examples:
   aarxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
@@ -59,6 +69,17 @@ EOF
         -n)
             shift
             SCENE_NAME="$1";
+            ;;
+        -U)
+            shift
+            MESH_UP_AXIS="$1";
+            ;;
+        -F)
+            shift
+            MESH_FORWARD_AXIS="$1";
+            ;;
+        -R)
+            RELOAD=t
             ;;
         -*)
             echo "error: unknown option: $1"
@@ -85,7 +106,13 @@ fi
 
 aarx.core --dynamic-space-size 2GB --script <<EOF
 (robray::catch-all
-  (robray::scene-graph-compile (robray::load-scene-file "$INPUT_FILE")
+  (robray::scene-graph-compile (robray::load-scene-file "$INPUT_FILE"
+                                                         :compile nil
+                                                         :emit-povray nil
+                                                         :bind-c-geom nil
+                                                         :reload $RELOAD
+                                                         :mesh-up-axis "$MESH_UP_AXIS"
+                                                         :mesh-forward-axis "$MESH_FORWARD_AXIS")
                                "$OUTPUT_FILE"
                                :scene-name "$SCENE_NAME"))
 EOF

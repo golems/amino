@@ -107,7 +107,9 @@
 (defun create-parent-directories (pathname)
   (let ((parents (file-dirname pathname)))
     (when parents
-      (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))))))
+      (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))
+                                    :output *standard-output*
+                                    :error-output *error-output*))))
 
 (defun file-rope (&rest elements)
   (rope-map #'identity elements :separator '/))
@@ -343,16 +345,17 @@
 ;;                    collect (parse-float-sequence line)))))
 ;;     data))
 
-(defun strip-hash-comment (line)
-  (declare (type simple-string line))
-  (when line
-    (let* ((i (position #\# line))
-           (stripped (if i
-                         (subseq line 0 i)
-                         line)))
-      (if (ppcre:scan "^\\s*$" stripped)
-          nil
-          stripped))))
+(let ((scanner (ppcre:create-scanner "[^\\s]" )))
+  (defun strip-hash-comment (line)
+    (declare (type simple-string line))
+    (when line
+      (let* ((i (position #\# line))
+             (stripped (if i
+                           (subseq line 0 i)
+                           line)))
+        (if (ppcre:scan scanner stripped)
+            stripped
+            nil)))))
 
 (defparameter *config-load-time* (make-hash-table :test #'equal))
 
@@ -385,8 +388,29 @@
   (with-gensyms (e)
     `(handler-case
          (progn ,@body)
-       (condition (,e)
+       (error (,e)
          (format *error-output* "~&ERROR: ~A~%" ,e)
          #+sbcl
          (sb-ext:exit :code -1)
          (break)))))
+
+(defun capture-program-output (args &key
+                                      directory)
+  (let* ((status)
+         (output (with-output-to-string (s)
+                   (multiple-value-bind (output error-output %status)
+                       (uiop:run-program args
+                                         :directory directory
+                                         :ignore-error-status t
+                                         :output s
+                                         :error-output s)
+                     (declare (ignore output error-output))
+                     (setq status %status)))))
+    (values output status)))
+
+
+(defun pkg-config (modules &key
+                             cflags)
+  (capture-program-output `("pkg-config"
+                            ,@(when cflags '("--cflags"))
+                            ,@(ensure-list modules))))

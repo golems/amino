@@ -40,6 +40,7 @@
 
 /**
  * @file scene_gl.h
+ * @brief OpenGL Support
  */
 
 /* DESIGN
@@ -236,15 +237,6 @@ aa_gl_globals_set_show_visual(
     struct aa_gl_globals *globals,
     int show_visual );
 
-AA_API void
-aa_gl_globals_unmask_all( struct aa_gl_globals *globals );
-
-AA_API int
-aa_gl_globals_is_masked( const struct aa_gl_globals *globals, size_t i );
-
-AA_API void
-aa_gl_globals_mask( struct aa_gl_globals *globals, size_t i, int value );
-
 /**
  * Set flag to enable render of collision geometry
  */
@@ -252,6 +244,28 @@ AA_API void
 aa_gl_globals_set_show_collision (
     struct aa_gl_globals *globals,
     int show_collision );
+
+/**
+ * Set the display mask value of all frames to false.
+ */
+AA_API void
+aa_gl_globals_unmask_all( struct aa_gl_globals *globals );
+
+/**
+ * Return the display mask value of the i'th frame.
+ *
+ */
+AA_API int
+aa_gl_globals_is_masked( const struct aa_gl_globals *globals, size_t i );
+
+/**
+ * Set the display mask value of the i'th frame to `value'.
+ *
+ * Frames with a true display mask are hidden.
+ */
+AA_API void
+aa_gl_globals_mask( struct aa_gl_globals *globals, size_t i, int value );
+
 
 /**
  * Opaque struct for opengl buffers
@@ -264,7 +278,6 @@ struct aa_sg_gl_buffers;
 AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom
     );
-
 
 struct aa_gl_buffers;
 

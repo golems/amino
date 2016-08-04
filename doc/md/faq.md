@@ -21,9 +21,18 @@ General {#general}
 
 * Q: What platforms are supported?
 
-  - A: Amino is developed on Debian and Ubuntu Linux.  It should run
-    on other Linux distributions and POSIX-y systems with minimal
-    effort.  Currently, non-POSIX platforms are not targeted.
+  - A: Amino is developed on Debian GNU/Linux (stable) and Ubuntu
+    (LTS).  It should run on other Linux distributions and POSIX-y
+    systems, but minor changes may potentially be required (patches
+    welcome!).  Currently, non-POSIX platforms are not targeted.
+
+* Q: Can I try amino in a virtual machine (VM)?
+
+  - A: Yes, as long as the VM supports OpenGL 3.0.  We have
+    successfully tested amino in VMs using VirtualBox and KVM running
+    an Ubuntu 16.04 guest on a Linux host.  An Ubuntu 14.04 guest in
+    VirtualBox on a MacOSX host did not provide sufficient OpenGL
+    support.
 
 SE(3) {#se3}
 ====
@@ -116,6 +125,15 @@ Performance {#performance}
     operations. OpenBLAS is among the fastest
     (http://www.openblas.net/). If installed, configure amino to use
     it with ./configure --with-blas=openblas.
+
+
+* Q: Why is the scene graph (aarxc) compiler slow?
+
+  - A: The scene graph compiler prepossesses meshes to reduce load
+    time.  Mesh data is arranged in the compiled scene graph according
+    to its in-memory layout, eliminating the need to parse or copy
+    meshes at load time.  However, the processing itself is somewhat
+    expensive.
 
 * Q: Ray Tracing is SLOOOWWW!
 

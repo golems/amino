@@ -6,8 +6,9 @@ includes mathematical and linear algebra routines, memory
 management, and time-handling.  Design goals are easy integration,
 efficiency, and simplicity.
 
-- **Source Code:** https://github.com/golems/amino
-- **License:** 3-clause BSD (permissive)
+- <a href="installation.html"><b>Installation</b></a>
+- [License](@ref copying): 3-clause BSD (permissive)
+- <a href="https://github.com/golems/amino"><b>Source Code</b></a>: `git clone https://github.com/golems/amino.git`
 
 \htmlonly
 <iframe src="carousel.html" style="float:right" width="640" height="480"></iframe>
@@ -17,9 +18,33 @@ efficiency, and simplicity.
 Features
 ========
 
+Visualization
+-------------
+* Import robot models from:
+  - [Scene Files] (@ref scenefile)
+  - any [Blender](https://www.blender.org/)-supported mesh
+  - [URDF] (http://wiki.ros.org/urdf)
+* Online 3D visualization using OpenGL and SDL
+* High-quality ray-traced output using [POV-ray] (http://www.povray.org/)
+  - Network distributed rendering
+  - Movie generation using [libav] (https://libav.org/)
+
+\sa @ref viewer
+\sa scenegraph.h
+\sa scene_win.h
+
+Motion Planning Interface
+-------------------------
+* Interface to the [Flexible Collision Library]
+  (https://github.com/flexible-collision-library/fcl) (FCL)
+* Interface to the [Open Motion Planning Library]
+  (http://ompl.kavrakilab.org/) (OMPL)
+
+\sa scene_collision.h
+\sa scene_planning.h
+
 Extensive SE(3) Support
 -----------------------
-
 * Menagerie of Representations:
   - Rotation and Transformation Matrices
   - Ordinary Quaternions
@@ -28,28 +53,22 @@ Extensive SE(3) Support
   - Axis-Angle / Rotation-Vector / Log-map
   - Euler Angles
 * Derivatives and Exact Integration
-* Numerically stable log and exponential
+* Numerically stable logarithm and exponential
 
-\sa amino/tf.h
+\sa tf.h
 
-Visualization
--------------
-* Import robot geometry from URDF and mesh files
-* Real-time visualization via OpenGL and SDL
-* Offline raytracing via POV-ray
-* Distribute POV-ray rendering over multiple machines
+
 
 Region-based Memory Allocation
 ------------------------------
-
 * Container for LIFO-ordered memory allocation
 * O(1) allocation and deallocation
 
- \sa amino/mem.h
+\sa mem.h
+
 
 Linear Algebra
----------------
-
+--------------
 Amino provides some light-weight wrappers over BLAS and LAPACK plus
 a few other convenience routines.  Care is taken to avoid
 heap-allocation in all calls, making performance suitable for
@@ -59,4 +78,4 @@ real-time operation.
   Handles work-array creation for LAPACK using memory regions
 * Multiple Runge-Kutta integrators, including adaptive integrators
 
-\sa amino/math.h
+\sa math.h

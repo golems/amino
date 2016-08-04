@@ -40,6 +40,7 @@
 
 /**
  * @file scenegraph.h
+ * @brief The scenegraph data structure
  */
 
 /**
@@ -453,5 +454,9 @@ AA_API void aa_rx_sg_reparent (
                                const double * q);
 
 AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig);
+
+AA_API void aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph, const aa_rx_frame_id id0, const aa_rx_frame_id id1, const int allowed );
+
+AA_API void aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph, const char* id0, const char* id1, const int allowed );
 
 #endif /*AMINO_SCENEGRAPH_H*/

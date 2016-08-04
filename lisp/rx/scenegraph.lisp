@@ -50,6 +50,7 @@
 (defstruct scene-mesh
   "A scene object defined by a mesh."
   name
+  data
   source-file
   povray-file)
 
@@ -451,6 +452,10 @@
   (allowed-collisions (make-collision-set) :type collision-set)
   (configs (make-tree-set #'scene-object-compare) :type tree-set))
 
+(defmethod print-object ((object scene-graph) stream)
+  (print-unreadable-object (object stream :type t :identity nil)
+    (write (scene-graph-frame-names object) :stream stream)))
+
 (defun %scene-graph-merge (scene-graph-1 scene-graph-2)
   "Combine two scene graphs."
   (labels ((merge-set (set-1 set-2 type-string)
@@ -719,36 +724,7 @@
   "Return the include file for the mesh file"
   (pov-cache-file (rope mesh-file ".inc")))
 
-(defun scene-graph-resolve-povray! (scene-graph &key
-                                                  reload
-                                                  (mesh-up-axis "Z")
-                                                  (mesh-forward-axis "Y")
-                                                  (directory *robray-tmp-directory*))
-  (let ((mesh-files  ;; filename => (list mesh-nodes)
-         (make-hash-table :test #'equal)))
-    (labels ((resolve-mesh (mesh)
-               (when-let ((source (and (not (scene-mesh-povray-file mesh))
-                                       (scene-mesh-source-file  mesh))))
-                 (push mesh (gethash source mesh-files))))
-             (test-shape (shape)
-               (when (and shape (scene-mesh-p shape))
-                 (resolve-mesh shape))))
-      ;; collect mesh files
-      (do-scene-graph-geometry ((frame geometry) scene-graph)
-        (declare (ignore frame))
-        (test-shape (scene-geometry-shape geometry))))
-    (maphash (lambda (mesh-file mesh-nodes)
-               ;(format *standard-output* "~&Converting ~A..." mesh-file)
-               (multiple-value-bind (geom-name inc-file)
-                   (mesh-povray mesh-file :directory directory
-                                :reload reload
-                                :mesh-up-axis mesh-up-axis
-                                :mesh-forward-axis mesh-forward-axis)
-                 (dolist (mesh-node mesh-nodes)
-                   (setf (scene-mesh-name mesh-node) geom-name
-                         (scene-mesh-povray-file mesh-node) inc-file))))
-             mesh-files)
-    scene-graph))
+
 
 (defun scene-graph-remove-geometry (scene-graph frames)
   (let* ((frames (etypecase frames
@@ -947,7 +923,11 @@
 
 
 
-
+(defun scene-graph-allowed-collisions-rope (scene-graph)
+  (rope (map-tree-set 'list (lambda (pair)
+                              (format nil "allow_collision \"~A\" \"~A\";~%"
+                                      (car pair) (cdr pair)))
+                      (scene-graph-allowed-collisions scene-graph))))
 
 (defun scene-graph-dot (scene-graph &key output)
   (output-dot output

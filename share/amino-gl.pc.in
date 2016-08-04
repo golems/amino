@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+libdir=@libdir@
+
+Name: amino_gl
+Description: Amino OpenGL Support
+URL: http://github.com/golems/amino
+Version: @PACKAGE_VERSION@
+Cflags: -I${includedir}
+Requires: amino = @PACKAGE_VERSION@
+Requires.private: gl sdl2
+Libs: -L${libdir} -lamino-gl

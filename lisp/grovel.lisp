@@ -40,6 +40,7 @@
 (progn
   (in-package :amino-ffi)
   (ctype size-t "size_t")
+  (ctype ssize-t "ssize_t")
   (include "time.h")
   (ctype time-t "time_t")
   (cstruct timespec "struct timespec"

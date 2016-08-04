@@ -1,0 +1,27 @@
+CC := gcc --std=gnu99
+
+## Use pkg-config to determine the approprate compilation flags
+PKG_CONFIG_MODULES := amino amino-gl sdl2 glew
+DEMO_CFLAGS = $(CFLAGS) -g `pkg-config --cflags $(PKG_CONFIG_MODULES)`
+DEMO_LDFLAGS = $(LDLAGS) -g `pkg-config --libs $(PKG_CONFIG_MODULES)`
+
+ALL: simple-scenefile simple-procedural
+
+scene/scene.c: scene/scene.robray
+	aarxc scene/scene.robray -o scene/scene.c
+
+simple-scenefile: scene/scene.c simple-scenefile.c
+	$(CC) $(DEMO_CFLAGS) $(DEMO_LDFLAGS) scene/scene.c simple-scenefile.c -o simple-scenefile
+
+simple-procedural: simple-procedural.c
+	$(CC) $(DEMO_CFLAGS) $(DEMO_LDFLAGS) simple-procedural.c -o simple-procedural
+
+libscene.so: scene/scene.c
+	$(CC) -shared -fPIC $(DEMO_CFLAGS) scene/scene.c -o libscene.so
+
+clean:
+	rm -rf scene.c simple-scenefile simple-procedural libscene.so
+
+# Local Variables:
+# mode: makefile
+# End:

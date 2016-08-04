@@ -81,6 +81,9 @@
 (cffi:defcfun aa-rx-win-stop :void
   (win rx-win-t))
 
+(cffi:defcfun aa-rx-win-join :void
+  (win rx-win-t))
+
 (cffi:defcfun aa-rx-win-pause :void
   (win rx-win-t)
   (paused :boolean))
@@ -121,15 +124,22 @@
          (aa-rx-win-unlock ,v-win)))))
 
 (defun win-create (&key
-                        (title "AminoGL")
-                        (width 800)
-                        (height 600))
+                     (title "AminoGL")
+                     (width 800)
+                     (height 600)
+                     stop-on-quit)
   (unless *window*
     (setq *window*
           (aa-rx-win-default-create title width height))
-    (aa-rx-win-stop-on-quit *window* nil)
+    (aa-rx-win-stop-on-quit *window* stop-on-quit)
     (aa-rx-win-start *window*))
   *window*)
+
+(defun win-stop (&optional (window *window*))
+  (aa-rx-win-stop window))
+
+(defun win-join (&optional (window *window*))
+  (aa-rx-win-join window))
 
 (cffi:defcfun aa-rx-win-destroy :void
   (obj :pointer))

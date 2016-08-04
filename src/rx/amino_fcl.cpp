@@ -35,6 +35,7 @@
  *
  */
 
+#include "config.h"
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
@@ -57,15 +58,26 @@
 #include "amino/rx/scene_fcl.h"
 
 
-/* Initialize collision handling */
-AA_API void
-aa_rx_cl_init( )
+static pthread_once_t cl_once = PTHREAD_ONCE_INIT;
+
+static void
+cl_init_once( void )
 {
     aa_rx_cl_geom_destroy_fun = aa_rx_cl_geom_destroy;
 }
 
+/* Initialize collision handling */
+AA_API void
+aa_rx_cl_init( )
+{
+    if( pthread_once( &cl_once, cl_init_once ) ) {
+        perror("pthread_once");
+        abort();
+    }
+}
+
 struct aa_rx_cl_geom {
-    boost::shared_ptr<fcl::CollisionGeometry> ptr;
+    AA_FCL_SHARED_PTR<fcl::CollisionGeometry> ptr;
     aa_rx_cl_geom( fcl::CollisionGeometry *ptr_) :
         ptr(ptr_) { }
 
@@ -79,7 +91,7 @@ aa_rx_cl_geom_destroy( struct aa_rx_cl_geom *cl_geom ) {
 
 
 static fcl::CollisionGeometry *
-cl_init_mesh( const struct aa_rx_mesh *mesh )
+cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
 {
 
     //printf("mesh\n");
@@ -99,7 +111,9 @@ cl_init_mesh( const struct aa_rx_mesh *mesh )
             unsigned x=j++;
             unsigned y=j++;
             unsigned z=j++;
-            vertices.push_back( fcl::Vec3f(v[x], v[y], v[z]) );
+            vertices.push_back( fcl::Vec3f( scale*v[x],
+                                            scale*v[y],
+                                            scale*v[z]) );
         }
     }
     //printf("filled verts\n");
@@ -147,6 +161,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     fcl::CollisionGeometry *ptr = NULL;
     enum aa_rx_geom_shape shape_type;
     void *shape_ = aa_rx_geom_shape(geom, &shape_type);
+    double scale = aa_rx_geom_opt_get_scale(&geom->opt);
 
     // printf("creating collision geometry for frame %s (%s)\n",
     //        aa_rx_sg_frame_name(sg, frame_id),
@@ -158,30 +173,32 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     }
     case AA_RX_MESH: {
         struct aa_rx_mesh *shape = (struct aa_rx_mesh *)  shape_;
-        ptr = cl_init_mesh(shape);
+        ptr = cl_init_mesh(scale,shape);
         break;
     }
     case AA_RX_BOX: {
         struct aa_rx_shape_box *shape = (struct aa_rx_shape_box *)  shape_;
-        ptr = new fcl::Box(shape->dimension[0],shape->dimension[1],shape->dimension[2]);
+        ptr = new fcl::Box(scale*shape->dimension[0],
+                           scale*shape->dimension[1],
+                           scale*shape->dimension[2]);
         break;
     }
     case AA_RX_SPHERE: {
         struct aa_rx_shape_sphere *shape = (struct aa_rx_shape_sphere *)  shape_;
-        ptr = new fcl::Sphere(shape->radius);
+        ptr = new fcl::Sphere(scale*shape->radius);
         break;
     }
     case AA_RX_CYLINDER: {
         struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
-        ptr = new fcl::Cylinder(shape->radius, shape->height);
+        ptr = new fcl::Cylinder(scale*shape->radius, scale*shape->height);
         break;
     }
     case AA_RX_CONE: {
-        struct aa_rx_shape_cone *shape = (struct aa_rx_shape_cone *)  shape_;
+        // struct aa_rx_shape_cone *shape = (struct aa_rx_shape_cone *)  shape_;
         break;
     }
     case AA_RX_GRID: {
-        struct aa_rx_shape_grid *shape = (struct aa_rx_shape_grid *)  shape_;
+        // struct aa_rx_shape_grid *shape = (struct aa_rx_shape_grid *)  shape_;
         break;
     }
     }
@@ -199,14 +216,22 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 void aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph )
 {
     if( ! aa_rx_sg_is_clean_collision(scene_graph) ) {
-        if( NULL == aa_rx_cl_geom_destroy_fun ) {
-            fprintf(stderr, "ERROR: collision module not initialized, call aa_rx_cl_init()\n");
-            abort();
-            exit(EXIT_FAILURE);
-        }
+        aa_rx_cl_init();
         aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
         aa_rx_sg_clean_collision(scene_graph);
     }
+
+    aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
+    amino::SceneGraph *sg = scene_graph->sg;
+    sg->allowed_indices1.clear();
+    sg->allowed_indices2.clear();
+
+    for (auto it = sg->allowed.begin(); it!= sg->allowed.end(); it++){
+        sg->allowed_indices1.push_back(aa_rx_sg_frame_id(scene_graph, it->first));
+        sg->allowed_indices2.push_back(aa_rx_sg_frame_id(scene_graph, it->second));
+    }
+
+    aa_rx_sg_clean_collision(scene_graph);
 }
 
 
@@ -386,4 +411,44 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
 
     cl->manager->collide( &data, cl_check_callback );
     return data.result;
+}
+
+AA_API void
+aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q, struct aa_rx_cl_set* cl_set){
+    size_t n_f = aa_rx_sg_frame_count(scene_graph);
+    size_t n_q = aa_rx_sg_config_count(scene_graph);
+
+    double TF_rel[7*n_f];
+    double TF_abs[7*n_f];
+
+    aa_rx_sg_tf(scene_graph, n_q, q,
+                n_f,
+                TF_rel, 7,
+                TF_abs, 7 );
+
+    struct aa_rx_cl *cl = aa_rx_cl_create(scene_graph);
+    struct aa_rx_cl_set* allowed = aa_rx_cl_set_create(scene_graph);
+
+    aa_rx_cl_check(cl, n_f, TF_abs, 7, cl_set);
+    aa_rx_cl_set_merge(cl_set, allowed);
+    aa_rx_cl_set_destroy(allowed);
+
+    aa_rx_cl_destroy(cl);
+}
+
+AA_API void aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const double* q)
+{
+    struct aa_rx_cl_set* allowed = aa_rx_cl_set_create(scene_graph);
+    aa_rx_sg_get_collision(scene_graph, q, allowed);
+
+    for (size_t i = 0; i<aa_rx_sg_frame_count(scene_graph); i++){
+        for (size_t j=0; j<i; j++){
+            if (aa_rx_cl_set_get(allowed, i, j)) {
+                aa_rx_sg_allow_collision(scene_graph, i, j, 1);
+            }
+        }
+    }
+
+    aa_rx_cl_set_destroy(allowed);
+
 }

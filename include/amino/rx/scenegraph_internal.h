@@ -68,6 +68,7 @@ struct aa_rx_inertial {
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 
 
@@ -177,6 +178,12 @@ struct SceneGraph  {
     /** Number of configuration variables */
     aa_rx_config_id config_size;
 
+    /** Set of allowable collision frames by name */
+    std::set<std::pair<const char*,const char*> > allowed;
+
+    /** List of allowable collisions by indices */
+    std::vector<size_t> allowed_indices1;
+    std::vector<size_t> allowed_indices2;
 
     void (*destructor)(void *);
     void *destructor_context;

@@ -111,3 +111,24 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
 {
     return (*cl_set->v)[ cl_set_i(cl_set,i,j) ];
 }
+
+AA_API void
+aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * set){
+    for (size_t i=0; i<sg->sg->allowed_indices1.size(); i++){
+	aa_rx_cl_set_set(set, sg->sg->allowed_indices1[i], sg->sg->allowed_indices2[i], 1);
+    }
+}
+
+AA_API void
+aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from){
+    size_t n_f = into->n;
+    assert(n_f == from->n);
+
+    for (size_t i = 0; i<n_f; i++){
+        for (size_t j=0; j<i; j++){
+            if (aa_rx_cl_set_get(from, i, j)) {
+                aa_rx_cl_set_set(into, i, j, 1);
+            }
+        }
+    }
+}

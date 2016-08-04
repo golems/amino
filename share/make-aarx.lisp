@@ -1,6 +1,6 @@
 (load (make-pathname :directory (append (pathname-directory (truename *top-srcdir*))
                                         '("share"))
-                     :name "load-ql"
+                     :name "load-quicklisp"
                      :type "lisp"))
 
 

@@ -63,10 +63,27 @@
   (source :pointer)
   (size size-t))
 
+
+
 (in-package :amino)
+
+(defcfun aa-mem-ftoa size-t
+  (buf :pointer)
+  (n size-t)
+  (f :double))
 
 (defun parse-float (string)
   (amino-ffi::libc-atof string))
+
+(defun float-to-string (float)
+  (with-foreign-object (buf :char 256)
+    (let* ((r (aa-mem-ftoa buf 256 float))
+           (s (make-string r)))
+      (dotimes (i r)
+        (setf (aref s i)
+              (code-char (mem-aref buf :char i))))
+      s)))
+
 
 ;; (defcfun "aa_la_d_angle" :double
 ;;   (x :pointer)

@@ -181,6 +181,9 @@
   (aref (mutable-scene-graph-config-name-array m-sg)
         i))
 
+(defun mutable-scene-graph-config-index (m-sg name)
+  (gethash name (mutable-scene-graph-config-index-map m-sg)))
+
 (defun mutable-scene-graph-frame-count (m-sg)
   (aa-rx-sg-frame-count m-sg))
 

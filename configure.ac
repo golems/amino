@@ -1,7 +1,13 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
-AC_INIT([amino], [0.20140818], [ntd@gatech.edu])
+
+AC_INIT([amino], [1.0-beta2], [ntd@rice.edu])
+
+HEADER_VERSION=1.0
+includedir=${includedir}/amino-$HEADER_VERSION
+AC_SUBST([includedir])
+AC_SUBST([HEADER_VERSION])
 
 AM_INIT_AUTOMAKE([subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -16,10 +22,28 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC_C99
 AC_PROG_CXX
 AC_PROG_FC
+AC_PROG_F77
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
-AC_CHECK_PROGS([MAXIMA], [maxima])
 AM_PATH_LISPDIR
+
+# Check for Lex/Flex
+AC_ARG_WITH([lex],
+            AS_HELP_STRING([--without-lex], [Do not run lex/flex]),
+            [],
+            [with_lex=yes])
+AS_IF([test "x$with_lex" != xyes],
+      [AM_PROG_LEX])
+AM_CONDITIONAL([HAVE_LEX], [test "x$LEX" != x -a "x$with_lex" = xyes])
+
+# Check for Maxima
+AC_ARG_WITH([maxima],
+            AS_HELP_STRING([--without-maxima], [Do not run maxima]),
+            [],
+            [with_maxima=yes])
+AS_IF([test "x$with_maxima" = xyes],
+      [AC_CHECK_PROGS([MAXIMA], [maxima])])
+AM_CONDITIONAL([HAVE_MAXIMA], [test "x$MAXIMA" != x])
 
 # Enable C++ 11
 m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
@@ -87,6 +111,7 @@ m4_ifdef([AX_CHECK_COMPILER_FLAGS],
 
 
 # Fortran Checks
+# TODO: check that we have either the fortran compiler or f2c
 AC_ARG_WITH([fortran],
             AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
             [],
@@ -96,6 +121,7 @@ AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
 
 AS_IF([test "x$with_fortran" = xyes],
 [
+AC_DEFINE([USE_FORTRAN],[1],[Use the fortran compiler])
 AC_LANG([Fortran])
 
 AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
@@ -106,8 +132,8 @@ APPEND_FCFLAG([-ffree-line-length-none])
 APPEND_FCFLAG([-Wall])
 APPEND_FCFLAG([-pedantic])
 APPEND_FCFLAG([-Wextra])
-APPEND_FCFLAG([-Wconversion])
-APPEND_FCFLAG([-Wconversion-extra])
+dnl APPEND_FCFLAG([-Wconversion])
+dnl APPEND_FCFLAG([-Wconversion-extra])
 APPEND_FCFLAG([-Wshadow])
 APPEND_FCFLAG([-Wimplicit-interface])
 APPEND_FCFLAG([-Wimplicit-procedure])
@@ -117,13 +143,20 @@ APPEND_FCFLAG([-Wtabs])
 APPEND_FCFLAG([-Wunused-parameter])
 APPEND_FCFLAG([-Wintrinsic-shadow])
 
-],
-[
+])
+
 AC_CHECK_PROGS([F2C], [f2c])
+AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
 AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
-]
-)
+
+
+AS_IF([test "x$with_fortran" = xyes],
+      [AS_IF([test "x$FC" = "x"],
+             [AC_MSG_ERROR([No Fortran compiler detected])])],
+      [AS_IF([test "x$F2C" = "x"],
+             [AC_MSG_ERROR([No F2C cdetected])])])
+
 
 # Doxygen
 m4_ifdef([DX_INIT_DOXYGEN],
@@ -149,6 +182,18 @@ m4_ifdef([DX_INIT_DOXYGEN],
           AM_CONDITIONAL([DX_COND_latex], false)
           AM_CONDITIONAL([DX_COND_man],   false)
          ])
+
+
+AC_ARG_ENABLE([man],
+              [AS_HELP_STRING([--disable-man], [Do not build man pages])],
+              [],
+              [enable_man="yes"])
+
+AS_IF([test "x$enable_man" = xyes -a "x$build" = "x$host"],
+      [AC_CHECK_PROGS([HELP2MAN], [help2man])])
+AM_CONDITIONAL([HAVE_HELP2MAN], [test x$HELP2MAN != x])
+
+AC_SUBST([BASE_CFLAGS],[$CFLAGS])
 
 # Enable maximum warnings
 AX_CFLAGS_WARN_ALL
@@ -247,6 +292,24 @@ AC_LANG([C])
 ## OPTIONAL PACKAGES ##
 #######################
 
+## Blender ##
+
+AC_CHECK_PROGS([BLENDER], [blender])
+
+AS_IF([test "x$BLENDER" = "x"],
+  [],
+  [
+      AC_MSG_CHECKING([blender COLLADA support])
+      rm -rf colladatest.obj
+      "$BLENDER" -b -P $srcdir/share/exec/meshconv -- $srcdir/colladatest.dae -o colladatest.obj > /dev/null 2>/dev/null
+      AS_IF([test -e colladatest.obj],
+            [AC_MSG_RESULT([yes])
+             HAVE_BLENDER_COLLADA=yes
+            ],
+            [AC_MSG_RESULT([no])])
+  ])
+
+
 ## OpenGL ##
 AC_ARG_WITH([opengl],
             [AS_HELP_STRING([--without-opengl], [Disable OpenGL support])],
@@ -310,6 +373,22 @@ AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])
 AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
 
+
+# FCL pointer type
+AS_IF([test "x$HAVE_FCL" = xyes],
+      [AC_MSG_CHECKING([FCL shared_ptr type])
+       AC_LANG([C++])
+       AC_TRY_COMPILE([#include <fcl/collision.h>
+                       #include <fcl/shape/geometric_shapes.h>
+                      ],
+                      [std::shared_ptr<fcl::CollisionGeometry> a( new fcl::Box(1,1,1) );
+                       fcl::CollisionObject* obj = new fcl::CollisionObject(a, fcl::Transform3f());],
+               [AA_FCL_SHARED_PTR="std::shared_ptr"],
+               [AA_FCL_SHARED_PTR="boost::shared_ptr"])
+       AC_MSG_RESULT(["$AA_FCL_SHARED_PTR"])
+       AC_DEFINE_UNQUOTED([AA_FCL_SHARED_PTR],[$AA_FCL_SHARED_PTR],[Type for FCL shared pointers.])])
+
+
 ## OMPL ##
 AC_ARG_WITH([ompl],
             [AS_HELP_STRING([--without-ompl], [Disable support for the Open Motion Planning Library (OMPL)])],
@@ -322,7 +401,7 @@ AS_IF([test "x$with_ompl" = xyes], [
     AC_MSG_ERROR([OMPL support requires FCL, but FCL not found])
   ])
   PKG_CHECK_MODULES([OMPL],
-                    [ompl],
+                    [ompl >= 1.1.0],
                     [HAVE_OMPL=yes])
   # TODO: smartly check with we also need boost_system
   OMPL_LIBS="$OMPL_LIBS = -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization"
@@ -465,20 +544,96 @@ AC_SUBST([COMMON_LISP])
 AM_CONDITIONAL([HAVE_COMMON_LISP],[test "x$COMMON_LISP" != "x"])
 
 
+AS_IF([test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes],
+      [BUILD_DEMOS=yes],
+      [BUILD_DEMOS=no])
+
+AM_CONDITIONAL([BUILD_DEMOS], [test "x$BUILD_DEMOS" = "xyes"])
+
+######################
+## URDF Robot Demos ##
+######################
+
+ENABLED_DEMOS=""
+
+AC_DEFUN([DEF_DEMO],
+[
+AC_ARG_ENABLE([demo-$1],
+              [AS_HELP_STRING([--enable-demo-$1], [Build the $1 demo])],
+              [],
+              [])
+
+AS_IF([test "x$enable_demo_$1" = "xyes"],
+      [ENABLED_DEMOS="$1 $ENABLED_DEMOS"])
+
+AM_CONDITIONAL([BUILD_DEMO_$2], [test "x$enable_demo_$1" = "xyes"])
+
+])
+
+AC_ARG_ENABLE([demo-all],
+              [AS_HELP_STRING([--enable-demo-all], [Build all the demos])],
+              [
+                enable_demo_baxter="$enable_demo_all"
+                enable_demo_ur10="$enable_demo_all"
+                enable_demo_schunk="$enable_demo_all"
+                enable_demo_mico="$enable_demo_all"
+                enable_demo_jaco="$enable_demo_all"
+              ])
+
+DEF_DEMO([baxter],[BAXTER])
+DEF_DEMO([ur10],[UR10])
+DEF_DEMO([schunk],[SCHUNK])
+DEF_DEMO([mico],[MICO])
+DEF_DEMO([jaco],[JACO])
+
+
+
+
+AS_IF([test "x$CC" = "x"],
+      [AC_MSG_ERROR([No C compiler detected])])
+AS_IF([test "x$CXX" = "x"],
+      [AC_MSG_ERROR([No C++ compiler detected])])
+
+
+
+AC_CONFIG_FILES([ Makefile
+                  submodules/sycamore/Makefile
+                  include/amino/cblas_order.h
+                  share/amino.pc
+                  share/amino-gl.pc
+                  share/amino-collision.pc
+                  share/amino-planning.pc])
+
+AC_DEFUN([CONFIG_SCRIPT],
+         [AC_CONFIG_FILES([$1],
+                          [chmod +x $1])])
+
+CONFIG_SCRIPT([demo/urdf/jaco/jaco-view])
+CONFIG_SCRIPT([demo/urdf/mico/mico-view])
+CONFIG_SCRIPT([demo/urdf/ur/ur10-view])
+CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
+CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
+
+AC_OUTPUT
+
+
 #############
 ## SUMMARY ##
 #############
-AC_MSG_NOTICE([===============================])
-AC_MSG_NOTICE([= AMINO CONFIGURATION SUMMARY =])
-AC_MSG_NOTICE([===============================])
+
+AS_BOX([AMINO CONFIGURATION SUMMARY])
+
 AC_MSG_NOTICE([prefix:            $prefix])
 AC_MSG_NOTICE([C compiler:        $CC])
+AC_MSG_NOTICE([CFLAGS:            $CFLAGS])
 AC_MSG_NOTICE([C++ compiler:      $CXX])
+AC_MSG_NOTICE([CXX:               $CXXFLAGS])
 AC_MSG_NOTICE([Use Fortran        $with_fortran])
 AC_MSG_NOTICE([Use Common Lisp:   $with_common_lisp])
 AC_MSG_NOTICE([Common Lisp:       $COMMON_LISP])
 AS_IF([test "x$with_fortran" = xyes],[
 AC_MSG_NOTICE([Fortran compiler:  $FC])]
+AC_MSG_NOTICE([FCFLAGS:           $FCFLAGS])
 )
 AC_MSG_NOTICE([Use Java           $with_java])
 AS_IF([test "x$with_java" = xyes], [
@@ -494,15 +649,15 @@ AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
 AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
+AC_MSG_NOTICE([Enabled Demos:     $ENABLED_DEMOS])
+
+AS_IF([test '(' "x$enable_demo_baxter" = "xyes" -o "x$enable_demo_ur10" = xyes ')' -a "x$ROS_PACKAGE_PATH" = x],
+      [AC_MSG_WARN([URDF demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])
 
 
-AS_IF([test "x$CC" = "x"],
-      [AC_MSG_ERROR([No C compiler detected])])
-AS_IF([test "x$CXX" = "x"],
-      [AC_MSG_ERROR([No C++ compiler detected])])
-AS_IF([test "x$FC" = "x"],
-      [AC_MSG_ERROR([No Fortran compiler detected])])
+AS_IF([test "x$BLENDER" = x],
+      [AC_MSG_WARN([Blender not found, only Wavefront OBJ meshes supported])],
+      [AS_IF([test "x$HAVE_BLENDER_COLLADA" != xyes],
+             [AC_MSG_WARN([Blender lacks COLLADA support, cannot load DAE meshes])])])
 
-
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc])
-AC_OUTPUT
+AS_BOX([END SUMMARY])

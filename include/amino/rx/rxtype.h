@@ -40,6 +40,7 @@
 
 /**
  * @file rxtype.h
+ * @brief Scenegraph-related type declarations
  */
 
 /* Opaque types shared between different RX modules
@@ -79,16 +80,24 @@ struct aa_rx_win;
 struct aa_sdl_display_params;
 
 /**
+ * Display handler function to call in SDL loop.
+ *
  * @param context A pointer to local context
  * @param updated Whether other parts of these scene are updated
- * @param now The present time
+ * @param params Parameters for the display function
  * @return Whether any update has occurred
  */
 typedef int (*aa_sdl_display_fun)(
     void *context,
     struct aa_sdl_display_params *params);
 
-
+/**
+ * Display handler function for amino windows to call in SDL loop
+ *
+ * @param win The window to display in
+ * @param context A pointer to the local context for this function
+ * @param params Parameters for the display function
+ */
 typedef int (*aa_sdl_win_display_fun)(
     struct aa_rx_win *win,
     void *context,

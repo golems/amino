@@ -114,11 +114,14 @@ struct aa_gl_buffers {
     struct aa_gl_buffers *next;
 };
 
+struct aa_rx_geom_opt;
+
 /**
  * Draw a transform frame frame
  */
 AA_API void aa_gl_draw_tf (
     const double *world_E_model,
+    const struct aa_rx_geom_opt *opt,
     const struct aa_gl_buffers *buffers);
 
 

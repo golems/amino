@@ -43,15 +43,16 @@
 #ifndef AA_MEM_H
 #define AA_MEM_H
 
+/**
+ * @file  mem.h
+ * @brief Memory Management
+ */
 
 #ifndef AA_ALLOC_STACK_MAX
 /// maximum size of objects to stack allocate
 #define AA_ALLOC_STACK_MAX (4096-64)
 #endif //AA_ALLOC_STACK_MAX
 
-/**
- * \file amino/mem.h
- */
 
 enum aa_mem_refop {
     /* Make a private copy */
@@ -232,6 +233,9 @@ AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size );
  */
 AA_API void *aa_mem_region_dup( aa_mem_region_t *region, const void *p, size_t size );
 
+/** Duplicate a string, allocating from the region.
+ */
+AA_API char *aa_mem_region_strdup( aa_mem_region_t *region, const char *str );
 
 /** Deallocates all allocated objects from the region.  If the region
  * contains multiple chunks, they are merged into one.
@@ -304,12 +308,30 @@ AA_API void aa_mem_region_local_pop( void *ptr );
  */
 AA_API void aa_mem_region_local_release( void );
 
+
+/**
+ * Allocate a new object of `type' from memory region `reg'.
+ */
 #define AA_MEM_REGION_NEW( reg, type ) ( (type*) aa_mem_region_alloc((reg), sizeof(type)) )
 
+/**
+ * Copy objects of `type' from memory region `reg'.
+ */
 #define AA_MEM_REGION_NEW_CPY( reg, src, type ) ( (type*) aa_mem_region_dup((reg), (src), sizeof(type)) )
+
+/**
+ * Allocate an array of `n' objects of `type' from memory region `reg'.
+ */
 #define AA_MEM_REGION_NEW_N( reg, type, n ) ( (type*) aa_mem_region_alloc((reg), (n)*sizeof(type)) )
 
+/**
+ * Allocate a new object of `type' the thread-local memory region.
+ */
 #define AA_MEM_REGION_LOCAL_NEW( type ) ( (type*) aa_mem_region_local_alloc( sizeof(type)) )
+
+/**
+ * Allocate a new array of `n' objects of `type' the thread-local memory region.
+ */
 #define AA_MEM_REGION_LOCAL_NEW_N( type, n ) ( (type*) aa_mem_region_local_alloc( (n)*sizeof(type)) )
 
 /*----------- Pooled Allocation ------------------*/
@@ -382,6 +404,8 @@ typedef struct aa_mem_cons {
 /** A linked list allocated out of a memory region
  *
  * "Region List" / "Real-Time List"
+ *
+ * @sa amino::RegionList
  */
 typedef struct aa_mem_rlist {
     struct aa_mem_region *reg;
@@ -407,11 +431,17 @@ aa_mem_rlist_push_ptr( struct aa_mem_rlist *list, void *p );
 
 /** Enqueue a copy of data at p at the back of the list */
 AA_API void
-aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n );
+aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, const void *p, size_t n );
 
 /** Enqueue a the pointer p at the back of the list */
 AA_API void
 aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p );
+
+/** Apply function to each element of list */
+AA_API void
+aa_mem_rlist_map( struct aa_mem_rlist *list,
+                  void (*function)(void *cx, void *element ),
+                  void *cx );
 
 /** Remove front element of the list and return its data pointer.
  *
@@ -685,24 +715,28 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
  *
  * @param value Value to append
  */
-#define AA_VECTOR_PUSH( max, fill, ptr, value )         \
-    if( (fill) >= (max) ) {                             \
-        (max) = 2*(fill+1);                             \
-        (ptr) = (typeof(ptr))realloc(sizeof(*ptr)*max); \
-    }                                                   \
-    ptr[(fill)++] = (value);
+#define AA_VECTOR_PUSH( max, size, ptr, value )                 \
+    if( (size) >= (max) ) {                                     \
+        (max) = 2*(size+1);                                     \
+        (ptr) = (__typeof__(ptr))realloc(ptr,sizeof(*ptr)*max); \
+    }                                                           \
+    ptr[(size)++] = (value);
 
-#define AA_VECTOR_DEF( element_type, vector_type )               \
-    typedef struct {                                             \
-        size_t max;                                              \
-        size_t fill;                                             \
-        element_type *ptr;                                       \
-    } vector_type;                                               \
-    static inline vector_type ## _init                           \
-    ( vector_type *vec, size_t max ) {                           \
-        vec->ptr = (element_type*)malloc(max*sizeof(*ptr));      \
-        vec->max = max;                                          \
-        vec->fill = 0;                                           \
+#define AA_VECTOR_DEF( element_type, vector_type )                      \
+    typedef struct {                                                    \
+        size_t max;                                                     \
+        size_t size;                                                    \
+        element_type *data;                                             \
+    } vector_type;                                                      \
+    static inline void vector_type ## _init                             \
+    ( vector_type *vec, size_t max ) {                                  \
+        vec->data = (element_type*)malloc(max*sizeof(*vec->data));      \
+        vec->max = max;                                                 \
+        vec->size = (size_t)0;                                          \
+    };                                                                  \
+    static inline void vector_type ## _push                             \
+    ( vector_type *vec, element_type value ) {                          \
+        AA_VECTOR_PUSH(vec->max, vec->size, vec->data, value);          \
     };
 
 

@@ -1,29 +1,84 @@
-SUBDIRS = . lisp
+bin_PROGRAMS =
+noinst_PROGRAMS =
+noinst_LTLIBRARIES =
+BUILT_SOURCES =
+lib_LTLIBRARIES =
+EXTRA_DIST =
+CLEAN_LOCAL_FILES =
 
+DIST_SUBDIRS = submodules/sycamore .
+
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
 ACLOCAL_AMFLAGS = -I m4
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src/mac
-EXTRA_DIST = src/mac/gen.mac src/mac/euler.mac   \
-             src/la_impl.c                       \
-             src/la_mod.F90 src/la_implf.F90     \
-             src/mem_mod.F90 src/mem_impl.F90    \
-             src/tff.F90                         \
-             src/mac/tf.mac                      \
-             src/mac/aa_tf_euler.f90             \
-             src/mac/ls.mac src/mac/aa_ls_se3.f90
+
+AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
+
+include Makefile-lisp.am
+include Makefile-demo.am
+
+EXTRA_DIST += \
+	src/la_impl.c                       \
+	src/la_mod.F90 src/la_implf.F90     \
+	src/mem_mod.F90 src/mem_impl.F90    \
+	src/tff.F90                         \
+	src/mac/euler.f                     \
+	euler.c                             \
+	src/mac/aa_ls_se3.f90               \
+	share/check-clpkg.sh                \
+	share/load-quicklisp.lisp           \
+	share/make-aarx.sh                  \
+	share/make-aarx.lisp                \
+	share/robray-mode.el                \
+	share/exec/meshconv                 \
+	share/exec/povremote
+
+noinst_HEADERS = \
+             src/wavefront/wavefront_internal.h \
+             src/opt/opt_internal.h \
+             src/tf/quat_ord.c \
+             src/tf/quat_duqu.c \
+             src/tf/quat_qutr.c \
+             src/rx/sg_convenience.h \
+             include/amino/ct/traj_internal.hpp \
+             include/amino_internal.h \
+             include/amino/rx/scene_kin_internal.h \
+             include/amino/rx/scenegraph_internal.h \
+             include/amino/rx/scene_geom_internal.h \
+             include/amino/rx/scene_collision_internal.h \
+             include/amino/rx/scene_gl_internal.h \
+             include/amino/rx/scene_sdl_internal.h \
+             include/amino/rx/rxtype_internal.h \
+             include/amino/rx/scene_fcl.h
 
 dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h include/amino.hpp
-noinst_PROGRAMS =
 
 bin_PROGRAMS =
-bin_SCRIPTS = share/aarxc share/aarxpy
+dist_bin_SCRIPTS = share/aarxc share/aarxpy
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = share/amino.pc \
-	share/amino_gl.pc \
-	share/amino_collision.pc \
-	share/amino_planning.pc
+pkgconfig_DATA = \
+	share/amino.pc \
+	share/amino-gl.pc \
+	share/amino-collision.pc \
+	share/amino-planning.pc \
+	share/amino-gl-$(HEADER_VERSION).pc \
+	share/amino-collision-$(HEADER_VERSION).pc \
+	share/amino-planning-$(HEADER_VERSION).pc
+
+share/amino-gl-$(HEADER_VERSION).pc:
+	ln -s amino-gl.pc share/amino-gl-$(HEADER_VERSION).pc
+
+share/amino-collision-$(HEADER_VERSION).pc:
+	ln -s amino-collision.pc share/amino-collision-$(HEADER_VERSION).pc
+
+share/amino-planning-$(HEADER_VERSION).pc:
+	ln -s amino-planning.pc share/amino-planning-$(HEADER_VERSION).pc
+
+share/amino-$(HEADER_VERSION).pc:
+	ln -s amino.pc share/amino-$(HEADER_VERSION).pc
+
 
 nodist_pkginclude_HEADERS = \
 	include/amino/cblas_order.h
@@ -60,6 +115,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/undef.h           \
 	include/amino/heap.h            \
 	include/amino/mangle.h          \
+	include/amino/getset.h          \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
@@ -67,6 +123,7 @@ rxincludedir = $(pkgincludedir)/rx
 
 rxinclude_HEADERS = 	                \
 	include/amino/rx/rxtype.h       \
+	include/amino/rx/rxerr.h        \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/scene_gl.h     \
@@ -74,17 +131,29 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/scene_ompl.h   \
 	include/amino/rx/scene_collision.h \
+	include/amino/rx/scene_planning.h \
 	include/amino/rx/scene_sdl.h    \
 	include/amino/rx/scene_win.h    \
-	include/amino/rx/scene_plugin.h
+	include/amino/rx/scene_plugin.h \
+	include/amino/rx/mp_seq.h \
+	include/amino/rx/wavefront.h
 
 ctincludedir = $(pkgincludedir)/ct
 
-ctinclude_HEADERS = 	                \
-	include/amino/ct/traj.h
+ctinclude_HEADERS = \
+	include/amino/ct/traj.h \
+	include/amino/ct/state.h
 
 
-lib_LTLIBRARIES = libamino.la libamino_xerbla_nop.la
+noinst_PROGRAMS += mtl_test
+mtl_test_SOURCES = src/test/mtl_test.c
+mtl_test_LDADD = libamino.la
+
+noinst_PROGRAMS += obj_test
+obj_test_SOURCES = src/test/wavefront_test.c
+obj_test_LDADD = libamino.la
+
+lib_LTLIBRARIES += libamino.la libamino-xerbla-nop.la
 
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
@@ -96,6 +165,7 @@ libamino_la_SOURCES =                  \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
 	src/tf/conv.c                  \
+	src/mac/euler_f2c.c            \
 	src/rx/errstr.c                \
 	src/rx/scenegraph.cpp          \
 	src/rx/sg_api.cpp              \
@@ -119,54 +189,73 @@ libamino_la_SOURCES =                  \
 	src/are.c                      \
 	src/sigsys.c                   \
 	src/heap.c                     \
-	src/cv.c
+	src/cv.c                       \
+	src/wavefront/wavefront.c      \
+	src/wavefront/mtl.c            \
+	src/wavefront/wf_obj.c         \
+	src/wavefront/wf_mtl.c
 
+
+libamino_la_LIBADD =
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
-src/mac/mac.f: src/mac/amino.mac src/mac/gen.mac
-	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b gen.mac
-	@echo [maxima end]
-
-BUILT_SOURCES = src/mac/aa_tf_euler.f90 src/mac/aa_ls_se3.f90 src/mac/euler.f
-
-src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
-	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler.mac
-	@echo [maxima end]
+EXTRA_DIST += src/mac/amino.mac src/mac/euler.mac src/mac/euler77.mac src/mac/ls.mac
 
 
+############
+## MAXIMA ##
+############
+if HAVE_MAXIMA
+
+# EXTRA_DIST += src/mac/aa_tf_euler.f90
+# BUILT_SOURCES += src/mac/aa_tf_euler.f90
+# src/mac/aa_tf_euler.f90: src/mac/amino.mac src/mac/euler.mac
+#	@echo [maxima start]
+#	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler.mac
+#	@echo [maxima end]
+
+
+EXTRA_DIST += src/mac/euler.f
+BUILT_SOURCES += src/mac/euler.f
 src/mac/euler.f: src/mac/amino.mac src/mac/euler77.mac
 	@echo [maxima start]
 	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b euler77.mac
 	@echo [maxima end]
 
+EXTRA_DIST += src/mac/aa_ls_se3.f90
+BUILT_SOURCES += src/mac/aa_ls_se3.f90
 src/mac/aa_ls_se3.f90: src/mac/amino.mac src/mac/ls.mac
 	@echo [maxima start]
 	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b ls.mac
 	@echo [maxima end]
 
-src/mac/mac_tf.f90: src/mac/amino.mac src/mac/tf.mac
-	@echo [maxima start]
-	cd $(top_srcdir)/src/mac && $(MAXIMA) --very-quiet -b tf.mac
-	@echo [maxima end]
+endif
 
-distclean-local:
-	-rm -rf doxygen-doc
 
 #vecbench_SOURCES = src/test/vecbench.c
 #vecbench_LDADD = libamino.la -lblas -llapack
 
+#############
+## FORTRAN ##
+#############
+
+if HAVE_F2C
+
+BUILT_SOURCES += euler.c
+EXTRA_DIST += euler.c
+euler.c: src/mac/euler.f
+	$(F2C) src/mac/euler.f
+
+endif
+
+if USE_FORTRAN
+
 # use some convenience libraries to force fortran module dependencies
-noinst_LTLIBRARIES =                   \
+noinst_LTLIBRARIES +=                  \
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la
-
-## FORTRAN ##
-
-if USE_FORTRAN
 
 # each convenience library depends on the fortran source for that module
 libamino_mem_la_SOURCES = mem_mod.f90
@@ -182,7 +271,7 @@ amino_tf.mod: $(libamino_tf_la_OBJECTS)
 $(libamino_la_la_OBJECTS): amino_mem.mod
 $(libamino_tf_la_OBJECTS): amino_la.mod
 
-libamino_la_LIBADD =                   \
+libamino_la_LIBADD +=                  \
 	-lgfortran                     \
 	libamino_mem.la                \
 	libamino_la.la                 \
@@ -190,21 +279,41 @@ libamino_la_LIBADD =                   \
 
 nodist_include_HEADERS = amino_la.mod amino_mem.mod amino_tf.mod
 
+libamino_la_SOURCES += src/mac/euler.f
+
 else
 
-# No fortran compiler
-
-BUILT_SOURCES += src/mac/euler.c
-src/mac/euler.c: src/mac/euler.f
-	cd src/mac && $(F2C) euler.f
-
-libamino_la_SOURCES += src/mac/euler_f2c.c
-
+libamino_la_SOURCES += euler.c
+# do nothing, euler.c in included in src/mac/euler_f2c.c
 
 endif
 
+###############
+## WAVEFRONT ##
+###############
+BUILT_SOURCES += src/wavefront/wavefront.c src/wavefront/mtl.c
+EXTRA_DIST += src/wavefront/wavefront.l src/wavefront/mtl.l
+
+src/wavefront/wavefront.c: src/wavefront/wavefront.l
+	$(LEX) -t $(top_srcdir)/src/wavefront/wavefront.l > src/wavefront/wavefront.c
+
+src/wavefront/mtl.c: src/wavefront/mtl.l
+	$(LEX) -t $(top_srcdir)/src/wavefront/mtl.l > src/wavefront/mtl.c
+
+###########
 ## EMACS ##
+###########
 lisp_LISP = share/robray-mode.el
+
+###########
+## VIM   ##
+###########
+vimdir         = $(pkgdatadir)/vim
+vimsyntaxdir   = $(vimdir)/syntax
+vimftdetectdir = $(vimdir)/ftdetect
+
+dist_vimsyntax_DATA = share/vim/syntax/robray.vim
+dist_vimftdetect_DATA = share/vim/ftdetect/robray.vim
 
 ## JAVA ##
 JSOURCES =                                        \
@@ -252,7 +361,7 @@ endif
 
 ## OpenGL support
 if HAVE_GL
-lib_LTLIBRARIES += libamino_gl.la
+lib_LTLIBRARIES += libamino-gl.la
 libamino_gl_la_SOURCES = src/amino_gl.c src/rx/geodesic.cpp
 
 libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
@@ -272,7 +381,13 @@ sdl_test_SOURCES = src/rx/sdl_test.c
 sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
-sdl_test_LDADD += libamino_gl.la $(GL_LIBS) $(GLEW_LIBS)
+sdl_test_LDADD += libamino-gl.la $(GL_LIBS) $(GLEW_LIBS)
+
+bin_PROGRAMS += aarx-view
+
+aarx_view_SOURCES = src/rx/aarx-view.c
+aarx_view_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+aarx_view_LDADD = libamino-gl.la libamino.la $(SDL2_LIBS) $(GLEW_LIBS)
 
 endif # SDL2
 
@@ -323,9 +438,6 @@ endif
 
 $(la_test_OBJECTS): amino_la.mod # manually specify fortran module dependency
 
-foo:
-	echo $(la_test_OBJECTS)
-
 TESTS += aa_fuzz
 noinst_PROGRAMS += aa_fuzz
 aa_fuzz_SOURCES = src/test/aa_fuzz.c
@@ -350,37 +462,40 @@ la_ctest_LDADD = libamino.la libtestutil.la
 if HAVE_FCL
 
 
-lib_LTLIBRARIES += libamino_cl.la
-libamino_cl_la_SOURCES = \
+lib_LTLIBRARIES += libamino-collision.la
+libamino_collision_la_SOURCES = \
 	src/rx/amino_fcl.cpp \
 	src/rx/collision_set.cpp
 
-libamino_cl_la_CFLAGS = $(FCL_CFLAGS)
-libamino_cl_la_CXXFLAGS = $(FCL_CFLAGS)
-libamino_cl_la_LIBADD = libamino.la $(FCL_LIBS)
+libamino_collision_la_CFLAGS = $(FCL_CFLAGS)
+libamino_collision_la_CXXFLAGS = $(FCL_CFLAGS)
+libamino_collision_la_LIBADD = libamino.la $(FCL_LIBS)
 
 
 TESTS += fcl_test
 noinst_PROGRAMS += fcl_test
 fcl_test_SOURCES = src/test/aa_test_fcl.cpp
 fcl_test_CFLAGS = $(FCL_CFLAGS)
-fcl_test_LDADD = libamino.la libamino_cl.la $(FCL_LIBS)
+fcl_test_LDADD = libamino.la libamino-collision.la $(FCL_LIBS)
 
 TESTS += cl_test
 noinst_PROGRAMS += cl_test
 cl_test_SOURCES = src/test/test_collision.c
-cl_test_LDADD = libamino.la libamino_cl.la
+cl_test_LDADD = libamino.la libamino-collision.la
 
 endif # HAVE_FCL
 
 if HAVE_OMPL
 
-lib_LTLIBRARIES += libamino_planning.la
+lib_LTLIBRARIES += libamino-planning.la
 libamino_planning_la_SOURCES = \
-	src/rx/scene_ompl.cpp
+	src/rx/mp/scene_ompl.cpp \
+	src/rx/mp/ompl_rrt.cpp \
+	src/rx/mp/ompl_sbl.cpp \
+	src/rx/mp/ompl_kpiece.cpp
 libamino_planning_la_CFLAGS = $(OMPL_CFLAGS)
 libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS)
-libamino_planning_la_LIBADD = libamino.la libamino_cl.la $(OMPL_LIBS)
+libamino_planning_la_LIBADD = libamino.la libamino-collision.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
@@ -391,37 +506,37 @@ test_lpsolve_LDADD =
 TESTS += test_lpsolve
 
 if HAVE_LPSOLVE
-lib_LTLIBRARIES += libamino_opt_lpsolve.la
+lib_LTLIBRARIES += libamino-opt-lpsolve.la
 libamino_opt_lpsolve_la_SOURCES = src/opt/opt_lpsolve.c
-test_lpsolve_LDADD += libamino_opt_lpsolve.la
+test_lpsolve_LDADD += libamino-opt-lpsolve.la
 endif
 
 
 if HAVE_GLPK
-lib_LTLIBRARIES += libamino_opt_glpk.la
+lib_LTLIBRARIES += libamino-opt-glpk.la
 libamino_opt_glpk_la_SOURCES = src/opt/opt_glpk.c
-test_lpsolve_LDADD += libamino_opt_glpk.la
+test_lpsolve_LDADD += libamino-opt-glpk.la
 endif
 
 if HAVE_CLP
 
-lib_LTLIBRARIES += libamino_opt_clp.la
+lib_LTLIBRARIES += libamino-opt-clp.la
 libamino_opt_clp_la_SOURCES = src/opt/opt_clp.cpp
 libamino_opt_clp_la_LIBADD = libamino.la -lClp
-test_lpsolve_LDADD += libamino_opt_clp.la
+test_lpsolve_LDADD += libamino-opt-clp.la
 endif
 
 test_lpsolve_LDADD += libamino.la libtestutil.la
 
 if HAVE_CGAL
 
-lib_LTLIBRARIES += libamino_opt_cgal.la
+lib_LTLIBRARIES += libamino-opt-cgal.la
 libamino_opt_cgal_la_SOURCES = src/opt/opt_cgal.cpp
 libamino_opt_cgal_la_LIBADD = libamino.la -lCGAL -lgmp
 
 noinst_PROGRAMS += opt_test
 opt_test_SOURCES = src/test/opt_test.c
-opt_test_LDADD = libamino_opt_cgal.la libamino.la libtestutil.la
+opt_test_LDADD = libamino-opt-cgal.la libamino.la libtestutil.la
 
 endif
 
@@ -454,14 +569,9 @@ tf_mod.f90: src/tff.F90 # src/mac/aa_tf_euler.f90
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 
-
-doc/manual/scenegraph.html: doc/manual/scenegraph.org org-compile.el
-	emacs --batch --quick \
-	--load org-compile.el       \
-	--eval '(golems-org-emit "$<" "scenegraph.html")'
-
 clean-local:
 	-rm -rf debian/tmp                  \
+		$(CLEAN_LOCAL_FILES)        \
 		debian/files                \
 		debian/libamino?            \
 		debian/libamino-dev         \
@@ -472,13 +582,28 @@ clean-local:
 		debian/DEBIAN/*             \
 		texput.log                  \
 		$(EXTRA_DX)                 \
-		*.mod
+		*.mod                       \
+                doc/javadoc                 \
+                doc/.javadoc.stamp          \
+                org.golems.amino.jar        \
+                org_golems_amino_Lib.h      \
+                org/golems/amino/Lib.class
+
+distclean-local:
+	-rm -rf doxygen-doc
+
 sync-doc:
-	rsync -r doc/html/ code.golems.org:/srv/www/code.golems.org/pkg/amino
+	rsync -r doc/manual/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 
 doc: doxygen-doc
-	mkdir -p doc/html/doc
-	cp doc/logo-medium.png doc/html/doc
+	$(MKDIR_P) doc/manual/doc
+	cp doc/logo-medium.png doc/manual/doc
 
+if HAVE_HELP2MAN
+doc/aarxc.1: $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
+	$(HELP2MAN) -h -h --version-string="0.0" --no-info -n "manipulate ach channels" $(top_srcdir)/share/aarxc -o $@
+endif
+
+EXTRA_DIST += doc/manual
 
 include aminclude.am

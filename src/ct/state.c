@@ -62,6 +62,21 @@ aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
         AA_MEM_CPY(dest->ddq, src->ddq, src->n_q);
     }
 
+    if (src->X) {
+        dest->X = AA_MEM_REGION_NEW_N(reg, double, 7);
+        AA_MEM_CPY(dest->X, src->X, 7);
+    }
+
+    if (src->dX) {
+        dest->dX = AA_MEM_REGION_NEW_N(reg, double, 6);
+        AA_MEM_CPY(dest->dX, src->dX, 6);
+    }
+
+    if (src->ddX) {
+        dest->ddX = AA_MEM_REGION_NEW_N(reg, double, 6);
+        AA_MEM_CPY(dest->ddX, src->ddX, 6);
+    }
+
     if (src->eff) {
         dest->eff = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
         AA_MEM_CPY(dest->eff, src->eff, src->n_q);
@@ -76,4 +91,90 @@ aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
         dest->TF_rel = AA_MEM_REGION_NEW_N(reg, double, src->n_tf);
         AA_MEM_CPY(dest->TF_rel, src->TF_rel, src->n_tf);
     }
+}
+
+// TODO: Finish this
+AA_API void
+aa_ct_state_dump(FILE *stream, struct aa_ct_state *state)
+{
+    if (state->q) {
+        fputs("q:   ", stream);
+        aa_dump_vec(stream, state->q, state->n_q);
+    }
+
+    if (state->dq) {
+        fputs("dq:  ", stream);
+        aa_dump_vec(stream, state->dq, state->n_q);
+    }
+
+    if (state->ddq) {
+        fputs("ddq: ", stream);
+        aa_dump_vec(stream, state->ddq, state->n_q);
+    }
+
+    if (state->eff) {
+        fputs("eff: ", stream);
+        aa_dump_vec(stream, state->ddq, state->n_q);
+    }
+
+    if (state->X) {
+        fputs("X:   ", stream);
+        aa_dump_vec(stream, state->X, 7);
+    }
+
+    if (state->dX) {
+        fputs("dX:  ", stream);
+        aa_dump_vec(stream, state->dX, 6);
+    }
+
+    if (state->ddX) {
+        fputs("ddX: ", stream);
+        aa_dump_vec(stream, state->ddX, 6);
+    }
+}
+
+// TODO: Finish this
+AA_API int
+aa_ct_state_eq(struct aa_ct_state *s1, struct aa_ct_state *s2)
+{
+    if (s1->n_q != s2->n_q || s1->n_tf != s2->n_tf)
+        return 0;
+
+    if ((s1->q && !s2->q) || (!s1->q && s2->q))
+        return 0;
+    else if (s1->q && s2->q)
+        if (!aa_veq(s1->n_q, s1->q, s2->q, AA_EPSILON))
+            return 0;
+
+    if ((s1->dq && !s2->dq) || (!s1->dq && s2->dq))
+        return 0;
+    else if (s1->dq && s2->dq)
+        if (!aa_veq(s1->n_q, s1->dq, s2->dq, AA_EPSILON))
+            return 0;
+
+    if ((s1->ddq && !s2->ddq) || (!s1->ddq && s2->ddq))
+        return 0;
+    else if (s1->ddq && s2->ddq)
+        if (!aa_veq(s1->n_q, s1->ddq, s2->ddq, AA_EPSILON))
+            return 0;
+
+    if ((s1->X && !s2->X) || (!s1->X && s2->X))
+        return 0;
+    else if (s1->X && s2->X)
+        if (!aa_veq(7, s1->X, s2->X, AA_EPSILON))
+            return 0;
+
+    if ((s1->dX && !s2->dX) || (!s1->dX && s2->dX))
+        return 0;
+    else if (s1->dX && s2->dX)
+        if (!aa_veq(6, s1->dX, s2->dX, AA_EPSILON))
+            return 0;
+
+    if ((s1->ddX && !s2->ddX) || (!s1->ddX && s2->ddX))
+        return 0;
+    else if (s1->ddX && s2->ddX)
+        if (!aa_veq(6, s1->ddX, s2->ddX, AA_EPSILON))
+            return 0;
+
+    return 1;
 }

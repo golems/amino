@@ -187,6 +187,22 @@ static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
 
 pthread_once_t sdl_once = PTHREAD_ONCE_INIT;
 
+#define DEF_SDL_HINT(THING, DEFAULT)            \
+    {                                           \
+        char *e = getenv(#THING);               \
+        if( e ) {                               \
+            SDL_SetHint(THING,  e );            \
+        } else if (DEFAULT) {                   \
+            SDL_SetHint(THING,  DEFAULT );      \
+        }                                       \
+    }                                           \
+
+#define DEF_SDL_ATTR(THING, DEFAULT)                       \
+    {                                                      \
+        char *e = getenv(#THING);                          \
+        SDL_GL_SetAttribute(THING, e ? atoi(e) : DEFAULT); \
+    }
+
 static void sdl_init_once( void )
 {
     if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -198,15 +214,22 @@ static void sdl_init_once( void )
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 2);
+    DEF_SDL_ATTR( SDL_GL_DOUBLEBUFFER,        1 );
+    DEF_SDL_ATTR( SDL_GL_DEPTH_SIZE,         24 );
+    DEF_SDL_ATTR( SDL_GL_MULTISAMPLEBUFFERS,  1 );
+    DEF_SDL_ATTR( SDL_GL_MULTISAMPLESAMPLES,  4 );
 
     SDL_GL_SetSwapInterval(1);
 
-    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+    DEF_SDL_HINT(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+    DEF_SDL_HINT(SDL_HINT_RENDER_DRIVER, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XRANDR, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XVIDMODE, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XINERAMA, NULL);
+    DEF_SDL_HINT(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
+    DEF_SDL_HINT(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+
 
 #ifdef HAVE_SPNAV_H
     aa_spnav_init();
@@ -274,7 +297,6 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
         }
         break;
     case SDL_QUIT:
-        printf("quitting\n");
         *quit = 1;
         break;
     case SDL_KEYDOWN: {
@@ -329,6 +351,17 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
             aa_gl_globals_home_camera( globals );
             update_tf = 1;
             break;
+        case SDLK_c: {
+            struct aa_mem_region *reg = aa_mem_region_local_get();
+            double *E = globals->world_E_cam;
+            char *buf = aa_mem_region_printf(reg, "%f %f %f %f %f %f %f",
+                                             E[0], E[1], E[2], E[3],
+                                             E[4], E[5], E[6]);
+
+            SDL_SetClipboardText(buf);
+            aa_mem_region_pop(reg,buf);
+            break;
+        }
         default:
             break;
         }
@@ -485,14 +518,36 @@ AA_API void aa_sdl_gl_window(
 
     aa_sdl_lock();
 
+    /* Create window */
     *pwindow = SDL_CreateWindow( title,
                                  x_pos, y_pos,
                                  width, height,
                                  flags | SDL_WINDOW_OPENGL );
-    if( *pwindow == NULL ) {
-        printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
-        abort();
+
+    if( *pwindow ) goto FINISH;
+
+    /* Try disabling multi-sampling */
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+
+
+    *pwindow = SDL_CreateWindow( title,
+                                 x_pos, y_pos,
+                                 width, height,
+                                 flags | SDL_WINDOW_OPENGL );
+
+    if( *pwindow ) {
+        fprintf(stderr, "WARNING: OpenGL multisample anti-aliasing disabled.\n");
+        goto FINISH;
     }
+
+    /* Could not create window */
+    fprintf( stderr, "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+    abort();
+    exit(EXIT_FAILURE);
+
+
+FINISH:
 
     *p_glcontext = SDL_GL_CreateContext( *pwindow );
     if( p_glcontext == NULL )

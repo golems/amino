@@ -40,6 +40,11 @@
 #ifndef AMINO_OPT_LP_H
 #define AMINO_OPT_LP_H
 
+/**
+ * @file lp.h
+ * @brief Linear optimization
+ */
+
 #include "opt.h"
 
 

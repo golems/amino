@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+libdir=@libdir@
+
+Name: amino_collision
+Description: Amino Collision Checking Support
+URL: http://github.com/golems/amino
+Version: @PACKAGE_VERSION@
+Cflags: -I${includedir}
+Requires: amino = @PACKAGE_VERSION@
+Requires.private: fcl
+Libs: -L${libdir} -lamino-collision

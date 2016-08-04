@@ -42,7 +42,17 @@
 
 #ifndef AMINO_H
 #define AMINO_H
-/** \file amino.h */
+
+/**
+ * @file amino.h
+ * @brief Top-level include file
+ */
+
+
+/**
+ * @dir   amino
+ * @brief Amino include files
+ */
 
 // include everything we'll typically need
 #ifdef __cplusplus
@@ -107,8 +117,8 @@
 /// SWAP a and b
 #define AA_SWAP(a,b) \
     {                                                              \
-        const typeof(a) aa_$_tmpa = (a);                           \
-        const typeof(b) aa_$_tmpb = (b);                           \
+        const __typeof__(a) aa_$_tmpa = (a);                           \
+        const __typeof__(b) aa_$_tmpb = (b);                           \
         (a) = aa_$_tmpb;                                           \
         (b) = aa_$_tmpa;                                           \
     }

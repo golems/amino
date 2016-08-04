@@ -1,0 +1,5 @@
+#!/bin/sh
+
+@abs_top_builddir@/aarx-view \
+    @abs_top_builddir@/demo/urdf/schunk/.libs/libamino_schunk.so \
+    -n "lwa4d"

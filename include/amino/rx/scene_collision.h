@@ -40,6 +40,7 @@
 
 /**
  * @file scene_collision.h
+ * @brief Collision checking
  */
 
 /**
@@ -92,6 +93,14 @@ AA_API int
 aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
                   aa_rx_frame_id i,
                   aa_rx_frame_id j );
+
+/**
+ * Fill set `into' with all elements in set `from'.
+ *
+ * This is a union operation, with the result stored in `into'.
+ */
+AA_API void
+aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from);
 
 /**
  * Opaque type for collision detection context.
@@ -154,5 +163,14 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
                 size_t n_tf,
                 const double *TF, size_t ldTF,
                 struct aa_rx_cl_set *cl_set );
+
+AA_API void
+aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const double* q);
+
+AA_API void
+aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * cl_set);
+
+AA_API void
+aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q, struct aa_rx_cl_set* cl_set);
 
 #endif /*AMINO_RX_SCENE_COLLISION_H*/

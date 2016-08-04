@@ -40,6 +40,11 @@
 #ifndef AMINO_OPT_QP_H
 #define AMINO_OPT_QP_H
 
+/**
+ * @file qp.h
+ * @brief Quadratic optimization
+ */
+
 #include "opt.h"
 
 typedef int aa_opt_qp_solver (

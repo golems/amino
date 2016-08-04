@@ -43,7 +43,11 @@
 #define AA_MATH_H
 
 /**
- * \file amino/math.h
+ * @file math.h
+ * @brief Numerical routines
+ *
+ * @sa amino/tf.h
+ * @sa amino/la.h
  */
 
 /***********/
@@ -57,14 +61,14 @@
 
 /// maximum of a and b
 #define AA_MAX(a,b) \
-    ({ const typeof(a) aa_$_max_a = (a); \
-       const typeof(b) aa_$_max_b = (b); \
+    ({ const __typeof__(a) aa_$_max_a = (a); \
+       const __typeof__(b) aa_$_max_b = (b); \
        (aa_$_max_a > aa_$_max_b) ? aa_$_max_a : aa_$_max_b; })
 
 /// minimum of a and b
 #define AA_MIN(a,b) \
-    ({ const typeof(a) aa_$_min_a = (a); \
-       const typeof(b) aa_$_min_b = (b); \
+    ({ const __typeof__(a) aa_$_min_a = (a); \
+       const __typeof__(b) aa_$_min_b = (b); \
        (aa_$_min_a < aa_$_min_b) ? aa_$_min_a : aa_$_min_b; })
 
 /// force value to be within +/- level
@@ -176,11 +180,14 @@ aa_horner3( double x, double a0, double a1, double a2 )
     return a0 + x * ( a1 + x*a2 );
 }
 
-
+/**
+ * Portable sincos.
+ *
+ * GCC will usually optimize to sincos()
+ */
 static inline void
 aa_sincos( double x, double *s, double *c )
 {
-    /* This is portable, and GCC will optimize to sincos() anyway*/
     *s = sin(x);
     *c = cos(x);
 }

@@ -8,7 +8,7 @@ SIPH_PKG_DEPS_DEB="gfortran \
          libfcl-dev \
          sbcl \
          default-jdk \
-         povray libav-tools \
+         povray flex libav-tools \
          coinor-libclp-dev libglpk-dev liblpsolve55-dev"
 
 

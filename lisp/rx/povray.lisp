@@ -80,9 +80,7 @@
         (rope-map function args :separator '|, |)))
 
 (defun %pov-integer-vector (x y z)
-  (pov-bracket (rope (pov-int x) '|, |
-                     (pov-int y) '|, |
-                     (pov-int z) )))
+  (format nil "<~D, ~D, ~D>" x y z))
 
 
 (defun pov-integer-vector (elements)
@@ -91,9 +89,7 @@
                        (vec-z elements)))
 
 (defun %pov-float-vector (x y z)
-  (pov-bracket (rope (pov-float x) '|, |
-                     (pov-float y) '|, |
-                     (pov-float z) )))
+  (format nil "<~F, ~F, ~F>" x y z))
 
 (defun pov-float-vector (elements)
   (with-vec3 (x y z) elements
@@ -636,11 +632,8 @@ RATIO: Floating point quality value in the range [0,1]"
     (let ((args (cons "povray" (pov-args file
                                          :output output
                                          :options options))))
-      (format t "~&Running: ~{~A~^ ~}" args)
-      (multiple-value-bind (output error-output status)
-          (uiop/run-program:run-program args
-                                        :directory directory)
-        (declare (ignore output error-output))
-        (if (zerop status)
-            (format t "~&done")
-            (format t "~&Povray rendering failed~%"))))))
+      (princ (rope-string (rope-split " " args)))
+      (multiple-value-bind (output status)
+          (capture-program-output args :directory directory)
+        (unless (zerop status)
+          (error "Povray rendering failed.~%~%~A" output))))))

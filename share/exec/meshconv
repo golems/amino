@@ -1,11 +1,10 @@
-#!/usr/bin/env blender -b -P
-
 import bpy
 import sys
 import os
 import argparse
 
-# Parse arguments
+## Parse arguments ##
+
 i_start = sys.argv.index("--")
 my_args = sys.argv[i_start+1:]
 parser = argparse.ArgumentParser()
@@ -15,27 +14,37 @@ parser.add_argument("-u","--up",action="store",default="Z")
 parser.add_argument("-f","--forward",action="store",default="Y")
 args = parser.parse_args(my_args)
 
-# Clear any default objects
-for ob in bpy.data.objects:
-    # print(ob)
-    ob.select = True
-    bpy.ops.object.delete()
+
+## Clear any default objects ##
+
+bpy.ops.object.mode_set(mode='OBJECT')
+bpy.ops.object.select_by_type(type='MESH')
+bpy.ops.object.delete(use_global=False)
+
+for item in bpy.data.meshes:
+    bpy.data.meshes.remove(item)
+# for ob in bpy.data.objects:
+#     ob.select = True
+#     bpy.ops.object.delete()
+
 
 basename, filetype = os.path.splitext(args.infile)
 filetype = filetype.lower()
 
-# Import File
+## Import File ##
+
 if (".dae" == filetype):
-    print("Loading Collada")
+    # print("Loading Collada")
     bpy.ops.wm.collada_import(filepath=args.infile)
 elif (".stl" == filetype ):
-    print("Loading STL")
+    # print("Loading STL")
     bpy.ops.import_mesh.stl(filepath=args.infile)
 else:
     raise Exception("Unknown file type: " + filetype)
 
 
-# Export File
+## Export File ##
+
 # right-handed coordinates, like god intended
 bpy.ops.export_scene.obj(filepath=args.o, axis_up=args.up, axis_forward=args.forward,
                          use_normals=True,use_triangles=True)

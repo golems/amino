@@ -112,6 +112,9 @@
                      (if (draw-option options :collision) 1 0))
      (cgen-call-stmt "aa_rx_geom_opt_set_no_shadow" copt
                      (if (draw-option options :no-shadow) 1 0))
+     (let ((scale (draw-option options :scale)))
+       (unless (= 1 scale)
+         (cgen-call-stmt "aa_rx_geom_opt_set_scale" copt (cgen-single-float scale))))
      (etypecase shape
        (scene-mesh
         (cgen-assign-stmt cgeom (cgen-call "aa_rx_geom_mesh" copt (scene-genc-mesh-var shape))))
@@ -185,7 +188,8 @@
       ;; output
       (list
        (cgen-declare-array "static const unsigned char" "rgba" rgba)
-       (cgen-declare-array "static const float" "uv" uv)
+       (cgen-declare-array "static const float" "uv"
+                           (scene-genc-single-float-sequence uv))
 
        (cgen-call-stmt "aa_rx_mesh_set_rgba" var n 1
                        "rgba" 0)
@@ -195,11 +199,31 @@
 (defun scene-genc-mesh-function-name (mesh)
   (rope "aa_rx_dl_mesh__" (scene-mesh-name mesh)))
 
+(defun scene-genc-single-float-sequence (sequence)
+  (map 'vector (lambda (f)
+                 (rope (amino::float-to-string f) '|f|))
+       sequence))
+
+(defun gen-literal-float-array (type name values)
+  (let ((*print-pretty* nil)
+        (n (length values)))
+    (cgen-stmt (rope type " " name
+                     "[" n "] = {"
+                     (format nil "~{~Ff~^,~}" (vec-list values))
+                     "}"))))
+
+(defun gen-literal-int-array (type name values)
+  (let ((*print-pretty* nil))
+    (cgen-stmt (rope type " " name
+                     "[" (length values) "] = {"
+                     (format nil "~{~D~^,~}" (vec-list values))
+                     "}"))))
+
 (defun scene-genc-mesh-functions (scene-graph static)
   ;; declare
   (loop for mesh in (scene-graph-meshes scene-graph)
      for var = (scene-genc-mesh-var mesh)
-     for mesh-data = (load-mesh (scene-mesh-source-file mesh))
+     for mesh-data = (scene-mesh-data mesh)
      for normed-data = (mesh-deindex-normals mesh-data)
      collect
        (cgen-defun (rope (when static "static ") "struct aa_rx_mesh *")
@@ -207,14 +231,14 @@
                    nil
                    (list (cgen-declare "struct aa_rx_mesh *" var (cgen-call "aa_rx_mesh_create"))
                          ;; vertices
-                         (cgen-declare-array "static const float" "vertices"
-                                             (mesh-data-vertex-vectors normed-data))
+                         (gen-literal-float-array "static const float" "vertices"
+                                                   (mesh-data-vertex-vectors normed-data))
                          ;; normals
-                         (cgen-declare-array "static const float" "normals"
-                                             (mesh-data-normal-vectors normed-data))
+                         (gen-literal-float-array "static const float" "normals"
+                                                  (mesh-data-normal-vectors normed-data))
                          ;; indices
-                         (cgen-declare-array "static const unsigned" "indices"
-                                             (mesh-data-vertex-indices normed-data))
+                         (gen-literal-int-array "static const unsigned" "indices"
+                                                (mesh-data-vertex-indices normed-data))
                          ;; fill
                          (cgen-call-stmt "aa_rx_mesh_set_vertices" var (mesh-data-vertex-vectors-count normed-data)
                                          "vertices" 0)
@@ -286,10 +310,20 @@
         (argument-name "sg"))
     (cgen-declare-fun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name))))
 
+
+(defparameter *scene-graph-compiler* "gcc" "Compiler for scene graphs")
+
+(defparameter *scene-graph-cflags* `("--std=gnu99" "-fPIC" "-shared")
+  "Compilation flags used for compiling mutable scene graphs")
+
 (defun scene-graph-so (source-file shared-object)
-  (let ((args  (list "gcc" "--std=gnu99" "-fPIC" "-shared" source-file "-o" shared-object)))
-    (print (rope-string (rope-split " " args)))
-    (uiop/run-program:run-program args)))
+  (let* ((cflags (pkg-config "amino" :cflags t))
+         (args  `(,*scene-graph-compiler*
+                  ,@*scene-graph-cflags*
+                  ,@(split-spaces cflags)
+                  ,source-file "-o" ,shared-object)))
+    (format t "~&~A~%" (rope-string (rope-split " " args)))
+    (uiop/run-program:run-program args :output *standard-output* :error-output *error-output*)))
 
 
 (defun genc-mesh-link (mesh)
@@ -307,7 +341,10 @@
        (progn
          (create-parent-directories name)
          (uiop/run-program:run-program
-          (list "ln" "-vsf" shared-object name)))))
+          (list "ln" "-vsf" shared-object name)
+          :output *standard-output*
+          :error-output *error-output*
+          ))))
 
 (defun scene-graph-compile (scene-graph source-file
                             &key
@@ -329,13 +366,14 @@
   (when (or reload
             (not (probe-file source-file)))
     (create-parent-directories source-file)
-    (output-rope (rope (cgen-include-system "amino.h")
-                       (cgen-include-system "amino/rx.h")
-                       (scene-graph-genc scene-graph
-                                         :scene-name scene-name
-                                         :static-mesh static-mesh))
-                 source-file
-                 :if-exists :supersede))
+    (let ((*print-pretty* nil))
+      (output-rope (rope (cgen-include-system "amino.h")
+                         (cgen-include-system "amino/rx.h")
+                         (scene-graph-genc scene-graph
+                                           :scene-name scene-name
+                                           :static-mesh static-mesh))
+                   source-file
+                   :if-exists :supersede)))
   ;; shared object
   (when (and shared-object
              (or reload
@@ -359,6 +397,6 @@
 (defun load-rx-mesh (mesh)
   (let ((rx-mesh
          (aa-rx-dl-mesh (genc-mesh-link mesh)
-                        (scene-mesh-name mesh))))
+                        (rope-string (scene-mesh-name mesh)))))
     (assert (= 1 (aa-rx-mesh-refcount (rx-mesh-pointer rx-mesh))))
     rx-mesh))
