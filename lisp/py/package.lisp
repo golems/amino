@@ -45,18 +45,26 @@
    |translation|
    |tf2|
    |vec|
-   |vec_x|
-   |vec_y|
-   |vec_z|
    |xangle|
    |yangle|
    |zangle|
+
    ;;; Scene Graphs
    |scene_frame_tf|
    |frame_fixed_tf|
    |map_frames|
-   |find_frame|
-   |frame_name|
-   |frame_parent|
+
+   ;;; frame functions
    |frame_isa|
+
+
+   ;;; Shapes
+   |shape_is_box|
+   |shape_is_sphere|
+   |shape_is_cylinder|
+   |shape_is_cone|
+   |shape_is_grid|
+   |shape_is_text|
+   |shape_is_mesh|
+
    ))
