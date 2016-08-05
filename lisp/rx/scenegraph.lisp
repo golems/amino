@@ -456,23 +456,30 @@
   (print-unreadable-object (object stream :type t :identity nil)
     (write (scene-graph-frame-names object) :stream stream)))
 
-(defun %scene-graph-merge (scene-graph-1 scene-graph-2)
+(defun merge-scene-graph (scene-graph new-scene-graph &key
+                                                        (if-exists :error))
   "Combine two scene graphs."
+  (declare (type (or (eql :error) (eql :supersede)) if-exists))
   (labels ((merge-set (set-1 set-2 type-string)
-             (let ((intersection (tree-set-intersection set-1 set-2)))
-               (assert (zerop (tree-set-count intersection)) ()
-                       "Duplicate ~A in merged trees: ~A"
-                       type-string
-                       (map-tree-set 'list #'scene-object-name intersection))
-               (tree-set-union set-1 set-2))))
-    (make-scene-graph :frames (merge-set (scene-graph-frames scene-graph-1)
-                                         (scene-graph-frames scene-graph-2)
+             (ecase if-exists
+               (:error
+                (let ((intersection (tree-set-intersection set-1 set-2)))
+                  (assert (zerop (tree-set-count intersection)) ()
+                          "Duplicate ~A in merged trees: ~A"
+                          type-string
+                          (map-tree-set 'list #'scene-object-name intersection)))
+                (tree-set-union set-1 set-2))
+               (:supersede
+                (fold-tree-set #'tree-set-replace set-1 set-2)))))
+    (make-scene-graph :frames (merge-set (scene-graph-frames scene-graph)
+                                         (scene-graph-frames new-scene-graph)
                                          "frames")
-                      :configs (merge-set (scene-graph-configs scene-graph-1)
-                                          (scene-graph-configs scene-graph-2)
+                      :configs (merge-set (scene-graph-configs scene-graph)
+                                          (scene-graph-configs new-scene-graph)
                                           "configs")
-                      :allowed-collisions (tree-set-union (scene-graph-allowed-collisions scene-graph-1)
-                                                          (scene-graph-allowed-collisions scene-graph-2)))))
+                      :allowed-collisions (tree-set-union (scene-graph-allowed-collisions scene-graph)
+                                                          (scene-graph-allowed-collisions new-scene-graph)))))
+
 
 ;;; Basic Operations ;;;
 
@@ -586,10 +593,10 @@
                (scene-frame
                 (%scene-graph-add-frame scene-graph thing))
                (scene-graph
-                (%scene-graph-merge scene-graph thing))
+                (merge-scene-graph scene-graph thing))
                (list
-                (%scene-graph-merge scene-graph
-                                    (%scene-graph thing)))
+                (merge-scene-graph scene-graph
+                                   (%scene-graph thing)))
                ((or pathname string)
                 (rec scene-graph (load-scene-file thing)))
                (rope
