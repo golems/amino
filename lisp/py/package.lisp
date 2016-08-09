@@ -40,6 +40,7 @@
   (:nicknames |aminopy|)
   (:export
    ;;; Transforms
+   |inverse|
    |tf|
    |rotation|
    |translation|
@@ -49,10 +50,19 @@
    |yangle|
    |zangle|
 
+   |vec3|
+   |quat|
+
+   |mul|
+
    ;;; Scene Graphs
    |scene_frame_tf|
+   |scene_tf_abs|
+   |scene_tf_rel|
    |frame_fixed_tf|
    |map_frames|
+
+   |scene_chain|
 
    ;;; frame functions
    |frame_isa|
@@ -67,4 +77,8 @@
    |shape_is_text|
    |shape_is_mesh|
 
+   ;; Motion Planning
+   |motion_plan_ws|
+   |motion_plan|
+   |motion_plan_endpoint|
    ))

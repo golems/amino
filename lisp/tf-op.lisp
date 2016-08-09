@@ -169,7 +169,7 @@
                       (aref data 2))))
 
 (defmethod quaternion ((x array))
-  (check-type x (array double-float (4)))
+  (assert (= (length x) 4))
   (quaternion* (aref x 0)
                (aref x 1)
                (aref x 2)

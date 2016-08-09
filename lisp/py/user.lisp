@@ -29,8 +29,18 @@
 (defun |translation| (x)
   (translation x))
 
-;; (defun |vec_x| (x)
-;;   (vec-x x))
+(defun |vec3| (x)
+  (vec3 x))
+
+(defun |quat| (x)
+  (quaternion x))
+
+
+(defun |mul| (&rest args)
+  (reduce #'g* args))
+
+(defun |inverse| (x)
+  (inverse x))
 
 ;; (defun |vec_y| (x)
 ;;   (vec-y x))
@@ -52,6 +62,10 @@
 (defun |map_frames| (function scene-graph)
   (robray::map-scene-graph-frames 'list function scene-graph))
 
+
+(defun |scene_chain| (scene root tip)
+  (robray::scene-graph-chain scene root tip))
+
 (defmethod clpython:py-subs ((scene robray::scene-graph) name)
   (robray::scene-graph-find scene name))
 
@@ -66,7 +80,8 @@
   ("name" robray::scene-frame-name)
   ("parent" robray::scene-frame-parent frame)
   ("tf" robray::scene-frame-tf frame)
-  ("geometry" robray::scene-frame-geometry frame))
+  ("geometry" robray::scene-frame-geometry frame)
+  ("collision" robray::scene-frame-geometry-collision frame))
 
 
 
@@ -77,6 +92,14 @@
 (defun |scene_frame_tf| (scene name config)
   (declare (ignore config))
   (robray::scene-graph-tf-absolute scene name))
+
+(defun |scene_tf_abs| (scene config name)
+  (robray::scene-graph-tf-absolute scene name
+                                   :configuration-map config))
+
+(defun |scene_tf_rel| (scene config parent child)
+  (robray::scene-graph-tf-relative scene parent child
+                                   :configuration-map config))
 
 (defun |frame_fixed_tf| (frame)
   (robray::scene-frame-fixed-tf frame))
@@ -120,3 +143,36 @@
   ("start_radius" robray::scene-cone-start-radius)
   ("end_radius" robray::scene-cone-start-radius)
   ("height" robray::scene-cone-height))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;;; Motion Planning ;;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun |motion_plan_ws| (sub-scene-graph start-configuration goal
+                         &key
+                           (|timeout| 1d0)
+                           (|simplify| t))
+  (robray::motion-plan sub-scene-graph start-configuration
+                       :workspace-goal goal
+                       :simplify |simplify|
+                       :timeout |timeout|))
+
+
+(defgeneric |motion_plan| (sub-scene-graph start-configuration goal
+                              &key
+                                |timeout|
+                                |simplify|))
+(defmethod |motion_plan| (sub-scene-graph start-configuration (goal quaternion-translation)
+                         &key
+                           (|timeout| 1d0)
+                           (|simplify| t))
+  (or (robray::motion-plan sub-scene-graph start-configuration
+                           :workspace-goal goal
+                           :simplify |simplify|
+                           :timeout |timeout|)
+      (clpython:py-bool nil)))
+
+
+(defun |motion_plan_endpoint| (motion-plan)
+  (robray::motion-plan-endpoint-map motion-plan))
