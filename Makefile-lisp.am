@@ -53,6 +53,7 @@ aarx_core_SOURCES = \
 	lisp/rx/draw-extra.lisp \
 	lisp/rx/trajectory.lisp \
 	lisp/rx/config.lisp \
+	lisp/rx/driver.lisp \
 	lisp/rx/sg-gen.lisp
 
 EXTRA_DIST += \

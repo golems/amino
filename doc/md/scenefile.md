@@ -390,6 +390,10 @@ the C file `table.c`:
 
     aarxc table.robray -n table -o table.c
 
+To simply view a scene file, use the `--gui` option:
+
+    aarxc --gui table.robray
+
 Loading Scene Graphs
 --------------------
 

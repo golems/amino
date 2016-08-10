@@ -80,4 +80,6 @@
                (:file "rx/draw-extra" :depends-on ("rx/scenegraph"))
                (:file "rx/trajectory" :depends-on ("rx/scenegraph"))
                (:file "rx/config" :depends-on ("rx/util" "rx/scenefile/urdf" "rx/parameters"))
-               (:file "rx/sg-gen" :depends-on ("rx/scenegraph" "rx/mesh"))))
+               (:file "rx/sg-gen" :depends-on ("rx/scenegraph" "rx/mesh"))
+               (:file "rx/driver" :depends-on ("rx/sg-gen" "rx/rx-win"))
+               ))
