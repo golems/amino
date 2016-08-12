@@ -758,7 +758,6 @@ INPUT                  = include \
                          include/amino/rx \
                          include/amino/opt \
                          clapack_doc.c lapack_doc.c la_doc.c \
-                         README.md \
                          doc/md
 
 # This tag can be used to specify the character encoding of the source files

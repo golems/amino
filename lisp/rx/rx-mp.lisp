@@ -156,21 +156,83 @@
     (destructuring-bind (frame-0 . frame-1) pair
       (motion-planner-allow-collision motion-planner frame-0 frame-1))))
 
-(defstruct motion-plan
+(defstruct (motion-plan (:constructor %make-motion-plan))
   sub-scene-graph
+  config-names
+  mutable-scene-graph
+  scene-graph
   path)
+
+(defun make-motion-plan (&key
+                           sub-scene-graph
+                           mutable-scene-graph
+                           scene-graph
+                           config-names
+                           path)
+  (let* ((mutable-scene-graph (cond (mutable-scene-graph
+                                     mutable-scene-graph)
+                                    (sub-scene-graph
+                                     (sub-scene-graph-mutable-scene-graph sub-scene-graph))
+                                    (scene-graph
+                                     (mutable-scene-graph scene-graph))))
+         (config-names (cond (config-names config-names)
+                             (sub-scene-graph
+                              (sub-scene-graph-config-name-array sub-scene-graph))
+                             (mutable-scene-graph
+                              (mutable-scene-graph-config-name-array mutable-scene-graph)))))
+    (%make-motion-plan :sub-scene-graph sub-scene-graph
+                       :mutable-scene-graph mutable-scene-graph
+                       :config-names config-names
+                       :scene-graph (cond (scene-graph scene-graph)
+                                          (mutable-scene-graph
+                                           (mutable-scene-graph-scene-graph mutable-scene-graph))
+                                          (sub-scene-graph
+                                           (sub-scene-graph-scene-graph sub-scene-graph)))
+                       :path path)))
 
 (defun motion-plan-valid-p (motion-plan)
   (when (motion-plan-p motion-plan)
     (not (zerop (length (motion-plan-path motion-plan))))))
 
-(defun motion-plan-mutable-scene-graph (motion-plan)
-  (sub-scene-graph-mutable-scene-graph
-   (motion-plan-sub-scene-graph motion-plan)))
+;; (defun motion-plan-mutable-scene-graph (motion-plan)
+;;   (sub-scene-graph-mutable-scene-graph
+;;    (motion-plan-sub-scene-graph motion-plan)))
 
-(defun motion-plan-scene-graph (motion-plan)
-  (mutable-scene-graph-scene-graph
-   (motion-plan-mutable-scene-graph motion-plan)))
+;; (defun motion-plan-scene-graph (motion-plan)
+;;   (mutable-scene-graph-scene-graph
+;;    (motion-plan-mutable-scene-graph motion-plan)))
+
+(defun motion-plan-config-names-list (motion-plan)
+  (let ((cn (motion-plan-config-names motion-plan)))
+    (etypecase cn
+      (list cn)
+      (vector
+       (loop for name across cn
+          collect name)))))
+
+(defun motion-plan-config-count (motion-plan)
+  (length (motion-plan-config-names motion-plan)))
+
+(defun motion-plan-all-config-count (motion-plan)
+  (mutable-scene-graph-config-count (motion-plan-mutable-scene-graph motion-plan)))
+
+(defun motion-plan-point-count (motion-plan)
+  (/ (length (motion-plan-path motion-plan))
+     (motion-plan-all-config-count motion-plan)))
+
+(defun motion-plan-path-list (motion-plan)
+  (let* ((names (motion-plan-config-names motion-plan))
+         (m-sg (motion-plan-mutable-scene-graph motion-plan))
+         (m (motion-plan-all-config-count motion-plan))
+         (path (motion-plan-path motion-plan))
+         (indices (map 'list (lambda (name)
+                               (mutable-scene-graph-config-index m-sg name))
+                       names)))
+    (loop for j below (motion-plan-point-count motion-plan)
+       collect
+         (loop for i in indices
+            collect (aref path (+ i (* j m)))))))
+
 
 (defun motion-plan-length (motion-plan)
   (let* ((path (motion-plan-path motion-plan))
@@ -193,7 +255,6 @@
              for q = (robray::configuration-map-find p name)
              do
                (setf (matref path i j) q)))
-    (print path)
     (make-motion-plan :sub-scene-graph sub-scene-graph
                       :path (amino::matrix-data path))))
 

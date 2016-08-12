@@ -206,6 +206,10 @@ AA_API void *aa_mem_region_dup( aa_mem_region_t *region, const void *p, size_t s
     return n;
 }
 
+AA_API char *aa_mem_region_strdup( aa_mem_region_t *region, const char *str )
+{
+    return aa_mem_region_dup( region, str, 1+strlen(str) );
+}
 
 AA_API size_t aa_mem_region_chunk_count( aa_mem_region_t *region ) {
     size_t i = 1;
@@ -416,7 +420,7 @@ void aa_mem_rlist_enqueue_cons( struct aa_mem_rlist *list, aa_mem_cons_t *node )
     list->tailp = &node->next;
 }
 
-void aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n ) {
+void aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, const void *p, size_t n ) {
     struct aa_mem_cons *node = aa_mem_cons_cpy(list->reg, p, n, NULL);
     aa_mem_rlist_enqueue_cons(list,node);
 }
@@ -436,6 +440,16 @@ void *aa_mem_rlist_pop( struct aa_mem_rlist *list ) {
     if( NULL == list->head ) list->tailp = &list->head;
     return node->data;
 
+}
+
+AA_API void
+aa_mem_rlist_map( struct aa_mem_rlist *list,
+                  void (*function)(void *cx, void *element ),
+                  void *cx )
+{
+    for( struct aa_mem_cons *c = list->head; c; c = c->next ) {
+        function(cx,c->data);
+    }
 }
 
 size_t aa_mem_ftoa( char *buf, size_t size, double f ) {

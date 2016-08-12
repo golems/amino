@@ -452,6 +452,10 @@
   (allowed-collisions (make-collision-set) :type collision-set)
   (configs (make-tree-set #'scene-object-compare) :type tree-set))
 
+(defmethod print-object ((object scene-graph) stream)
+  (print-unreadable-object (object stream :type t :identity nil)
+    (write (scene-graph-frame-names object) :stream stream)))
+
 (defun %scene-graph-merge (scene-graph-1 scene-graph-2)
   "Combine two scene graphs."
   (labels ((merge-set (set-1 set-2 type-string)
@@ -919,7 +923,11 @@
 
 
 
-
+(defun scene-graph-allowed-collisions-rope (scene-graph)
+  (rope (map-tree-set 'list (lambda (pair)
+                              (format nil "allow_collision \"~A\" \"~A\";~%"
+                                      (car pair) (cdr pair)))
+                      (scene-graph-allowed-collisions scene-graph))))
 
 (defun scene-graph-dot (scene-graph &key output)
   (output-dot output

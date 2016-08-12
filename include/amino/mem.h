@@ -233,6 +233,9 @@ AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size );
  */
 AA_API void *aa_mem_region_dup( aa_mem_region_t *region, const void *p, size_t size );
 
+/** Duplicate a string, allocating from the region.
+ */
+AA_API char *aa_mem_region_strdup( aa_mem_region_t *region, const char *str );
 
 /** Deallocates all allocated objects from the region.  If the region
  * contains multiple chunks, they are merged into one.
@@ -428,11 +431,17 @@ aa_mem_rlist_push_ptr( struct aa_mem_rlist *list, void *p );
 
 /** Enqueue a copy of data at p at the back of the list */
 AA_API void
-aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, void *p, size_t n );
+aa_mem_rlist_enqueue_cpy( struct aa_mem_rlist *list, const void *p, size_t n );
 
 /** Enqueue a the pointer p at the back of the list */
 AA_API void
 aa_mem_rlist_enqueue_ptr( struct aa_mem_rlist *list, void *p );
+
+/** Apply function to each element of list */
+AA_API void
+aa_mem_rlist_map( struct aa_mem_rlist *list,
+                  void (*function)(void *cx, void *element ),
+                  void *cx );
 
 /** Remove front element of the list and return its data pointer.
  *

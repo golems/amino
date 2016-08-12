@@ -157,3 +157,4 @@ amino*.tar.gz
 /demo/simple-rx/scene/*.c
 /demo/simple-rx/scene/*.c.h
 /demo/simple-rx/libscene.so
+/doc/aarxc.1
