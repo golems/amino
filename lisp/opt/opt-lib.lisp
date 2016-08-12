@@ -57,10 +57,7 @@
               (:default "libgmp")))
   (t (:default "libgmp")))
 
-
-(use-foreign-library libgmp)
-(use-foreign-library libcgal)
-(use-foreign-library libamino-opt-cgal)
+(amino::use-foreign-library-if cgal libgmp libcgal libamino-opt-cgal)
 
 ;; LPSOLVE
 (define-foreign-library libamino-opt-lpsolve
@@ -75,8 +72,7 @@
               (:default "liblpsolve55")))
   (t (:default "liblpsolve55")))
 
-(use-foreign-library liblpsolve)
-(use-foreign-library libamino-opt-lpsolve)
+(amino::use-foreign-library-if lpsolve liblpsolve libamino-opt-lpsolve)
 
 ;; CLP
 (define-foreign-library libamino-opt-clp
@@ -91,8 +87,7 @@
               (:default "libClp")))
   (t (:default "libClp")))
 
-(use-foreign-library libclp)
-(use-foreign-library libamino-opt-clp)
+(amino::use-foreign-library-if clp libclp libamino-opt-clp)
 
 ;; GLPK
 (define-foreign-library libamino-opt-glpk
@@ -107,9 +102,7 @@
               (:default "libglpk")))
   (t (:default "libglpk")))
 
-(use-foreign-library libglpk)
-(use-foreign-library libamino-opt-glpk)
-
+(amino::use-foreign-library-if glpk libglpk libamino-opt-glpk)
 
 ;; Type
 (amino-ffi::def-foreign-container opt-cx opt-cx-t

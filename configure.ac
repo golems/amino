@@ -328,6 +328,7 @@ AS_IF([test "x$with_opengl" = xyes], [
 
 AC_SUBST([GL_CFLAGS])
 AC_SUBST([GL_LIBS])
+AC_SUBST([HAVE_GL])
 AM_CONDITIONAL([HAVE_GL], [test "x$HAVE_GL" = xyes])
 
 ## SDL ##
@@ -353,6 +354,7 @@ AC_SUBST([GLEW_CFLAGS])
 AC_SUBST([GLEW_LIBS])
 AC_SUBST([SDL2_CFLAGS])
 AC_SUBST([SDL2_LIBS])
+AC_SUBST([HAVE_SDL2])
 AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
 
 ## FCL ##
@@ -371,6 +373,7 @@ AS_IF([test "x$with_fcl" = xyes], [
 ])
 AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])
+AC_SUBST([HAVE_FCL])
 AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
 
 
@@ -409,6 +412,7 @@ AS_IF([test "x$with_ompl" = xyes], [
 
 AC_SUBST([OMPL_CFLAGS])
 AC_SUBST([OMPL_LIBS])
+AC_SUBST([HAVE_OMPL])
 AM_CONDITIONAL([HAVE_OMPL], [test "x$HAVE_OMPL" = xyes])
 
 ## Spacenav ##
@@ -445,6 +449,7 @@ AS_IF([test "x$HAVE_LPSOLVE" = xyes], [
                  [HAVE_LPSOLVE=no])
 ])
 
+AC_SUBST([HAVE_LPSOLVE])
 AH_TEMPLATE([HAVE_LPSOLVE],
             [Define presense of LP-solve library])
 AM_CONDITIONAL([HAVE_LPSOLVE], [test "x$HAVE_LPSOLVE" = xyes])
@@ -471,6 +476,7 @@ AS_IF([test "x$HAVE_GLPK" = xyes], [
                  [HAVE_GLPK=no])
 ])
 
+AC_SUBST([HAVE_GLPK])
 AM_CONDITIONAL([HAVE_GLPK], [test "x$HAVE_GLPK" = xyes])
 AH_TEMPLATE([HAVE_GLPK],
             [Define presense of GLPK library])
@@ -490,6 +496,7 @@ AS_IF([test "x$with_clp" = xauto], [
   HAVE_CLP="$with_clp"
 ])
 
+AC_SUBST([HAVE_CLP])
 AM_CONDITIONAL([HAVE_CLP], [test "x$HAVE_CLP" = xyes])
 AH_TEMPLATE([HAVE_CLP],
             [Define presense of CLP library])
@@ -509,6 +516,7 @@ AS_IF([test "x$with_cgal" = xauto], [
   HAVE_CGAL="$with_cgal"
 ])
 
+AC_SUBST([HAVE_CGAL])
 AM_CONDITIONAL([HAVE_CGAL], [test "x$HAVE_CGAL" = xyes])
 
 ## Lisp ##
@@ -602,7 +610,8 @@ AC_CONFIG_FILES([ Makefile
                   share/amino.pc
                   share/amino-gl.pc
                   share/amino-collision.pc
-                  share/amino-planning.pc])
+                  share/amino-planning.pc
+                  lisp/config.lisp])
 
 AC_DEFUN([CONFIG_SCRIPT],
          [AC_CONFIG_FILES([$1],

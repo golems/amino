@@ -160,3 +160,4 @@ amino*.tar.gz
 /doc/aarxc.1
 /demo/simple-rx/scene.c
 /demo/simple-rx/scene.c.h
+/lisp/config.lisp

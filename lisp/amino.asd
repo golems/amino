@@ -45,6 +45,8 @@
   :depends-on ("cffi" "sycamore" "cxml" "cl-ppcre")
   ;; Keep these components in sync with Makefile.am
   :components ((:file "package")
+               (:file "config-macro" :depends-on ("package"))
+               (:file "config" :depends-on ("config-macro"))
                ;; TYPE
                (:file "basic-type" :depends-on ("package"))
                (:file "sparse" :depends-on ("package"))

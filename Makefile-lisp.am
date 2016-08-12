@@ -5,6 +5,8 @@ bin_PROGRAMS += aarx.core
 # Keep this list in sync with amino.asd
 aarx_core_SOURCES = \
 	lisp/package.lisp \
+	lisp/config.lisp \
+	lisp/config-macro.lisp \
 	lisp/basic-type.lisp \
 	lisp/grovel.lisp \
 	lisp/ffi.lisp \
