@@ -5,6 +5,7 @@ BUILT_SOURCES =
 lib_LTLIBRARIES =
 EXTRA_DIST =
 CLEAN_LOCAL_FILES =
+dist_bin_SCRIPTS =
 
 DIST_SUBDIRS = submodules/sycamore .
 
@@ -54,8 +55,6 @@ dist_pkgdata_DATA = src/mac/amino.mac
 
 include_HEADERS = include/amino.h include/amino.hpp
 
-bin_PROGRAMS =
-dist_bin_SCRIPTS = share/aarxc share/aarxpy
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = \
