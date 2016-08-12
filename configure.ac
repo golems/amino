@@ -401,7 +401,7 @@ AS_IF([test "x$with_ompl" = xyes], [
     AC_MSG_ERROR([OMPL support requires FCL, but FCL not found])
   ])
   PKG_CHECK_MODULES([OMPL],
-                    [ompl >= 1.1.0],
+                    [ompl >= 1.2.1],
                     [HAVE_OMPL=yes])
   # TODO: smartly check with we also need boost_system
   OMPL_LIBS="$OMPL_LIBS = -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization"
