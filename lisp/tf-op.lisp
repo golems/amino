@@ -187,6 +187,12 @@
 (defmethod quaternion ((x z-angle))
   (tf-zangle2quat (principal-angle-value x)))
 
+(defmethod inverse ((x quaternion))
+  (tf-qinv x))
+
+(defmethod inverse ((x principal-angle))
+  (tf-qinv (quaternion x)))
+
 ;;; Axis-Angle
 (defgeneric axis-angle (x))
 

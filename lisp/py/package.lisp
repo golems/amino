@@ -56,7 +56,7 @@
    |mul|
 
    ;;; Scene Graphs
-   |scene_frame_tf|
+   ;;|scene_frame_tf|
    |scene_tf_abs|
    |scene_tf_rel|
    |frame_fixed_tf|
@@ -78,7 +78,7 @@
    |shape_is_mesh|
 
    ;; Motion Planning
-   |motion_plan_ws|
+   ;;|motion_plan_ws|
    |motion_plan|
    |motion_plan_endpoint|
    ))
