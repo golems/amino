@@ -8,6 +8,6 @@ Description: Amino Collision Checking Support
 URL: http://github.com/golems/amino
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
-Requires: amino = @PACKAGE_VERSION@, amino_collision = @PACKAGE_VERSION@
-Requires.private: ompl
-Libs: -L${libdir} -lamino_planning
+Requires: amino = @PACKAGE_VERSION@
+Requires.private: fcl
+Libs: -L${libdir} -lamino-collision

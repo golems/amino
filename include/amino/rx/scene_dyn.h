@@ -39,6 +39,11 @@
 #define AMINO_SCENE_DYN_H
 
 /**
+ * @file scene_dyn.h
+ * @brief scenegraph dynamics support
+ */
+
+/**
  * Set the frame inertial parameters.
  *
  * @param scenegraph   the scenegraph container

@@ -10,4 +10,4 @@ Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Requires: amino = @PACKAGE_VERSION@
 Requires.private: gl sdl2
-Libs: -L${libdir} -lamino_gl
+Libs: -L${libdir} -lamino-gl

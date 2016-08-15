@@ -40,6 +40,7 @@
 
 /**
  * @file scene_sdl.h
+ * @brief SDL (Simple DirectMedia Layer) support
  */
 
 

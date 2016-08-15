@@ -48,6 +48,10 @@
   name
   value)
 
+(defstruct curly-allow-collision
+  frame-0
+  frame-1)
+
 ;;; Scanner element:
 ;;;    (list regex (or type (lambda (string start end))))
 ;;;    If the second element is a function, its result is
@@ -86,6 +90,7 @@
     ("class(?!\\w)" :class)
     ("object(?!\\w)" :object)
     ("include(?!\\w)" :include)
+    ("allow_collision(?!\\w)" :allow-collision)
     ("def(?!\\w)" :def)
     ("π|pi(?!\\w)"
      ,(lambda (string start end)
@@ -128,13 +133,17 @@
 
 
 (defparameter +curly-comment-regex+
-  `(:greedy-repetition
-    0 nil
-    (:alternation :whitespace-char-class
-                  ;; line comment
-                  (:regex "(#|(//)).*?(\\n|$)")
-                  ;; block comment
-                  (:sequence "/*" (:regex "(.*?)") "*/"))))
+  `(:alternation :whitespace-char-class
+                 ;; line comment
+                 (:regex "(#|(//)).*?(\\n|$)")
+                 ;; block comment
+                 (:sequence "/*"
+                            (:greedy-repetition
+                             0 nil
+                             (:alternation (:regex "[^*]")
+                                           (:regex "\\*(?!/)")))
+                                        ;(:regex "(.|\\n)*")
+                            "*/")))
 
 (defparameter +curly-lexer+ (make-lexer +curly-token-regex+
                                         +curly-comment-regex+))
@@ -160,12 +169,11 @@
 
 (defun curly-parse-string (string &optional pathname)
   (let ((start 0)
-        (line 1)
-        (directory (file-dirname pathname)))
+        (line 1))
     (labels ((parse-error (found wanted)
                (error "Parse error ~A:~D, found ~A, wanted ~A"
                       (or pathname "line") line found wanted))
-             (next ()
+             (next (&optional valid-types)
                (multiple-value-bind (value type t-start end t-line)
                    (curly-next-token string start line)
                  (declare (ignore t-start))
@@ -173,7 +181,14 @@
                  ;;   (format t "~&token: ~A `~A'" value (subseq string t-start end)))
                  (setq start end
                        line t-line)
+                 (when valid-types
+                   (unless (find type (ensure-list valid-types))
+                     (parse-error type valid-types)))
                  (values type value)))
+             (next-token (&optional valid-types)
+               (multiple-value-bind (type token) (next valid-types)
+                 (declare (ignore type))
+                 token))
              (start ()
                ;(print 'start)
                (multiple-value-bind (type token) (next)
@@ -182,12 +197,21 @@
                      ((:frame :object :class)
                       (cons (named-block token)
                             (start)))
+                     (:allow-collision
+                      (cons (allow-collision)
+                            (start)))
                      (:include
                       (append (include)
                               (start)))
                      (:def (cons (def)
                                  (start)))
                      (otherwise (parse-error type "frame, object, or EOF"))))))
+             (allow-collision ()
+               (let* ((frame-0 (next-token '(:string :identifier)))
+                      (frame-1 (next-token '(:string :identifier))))
+                 (next-token #\;)
+                 (make-curly-allow-collision :frame-0 frame-0
+                                             :frame-1 frame-1)))
              (def ()
                (multiple-value-bind (type token) (next)
                  (case type
@@ -203,7 +227,8 @@
                (multiple-value-bind (type token) (next)
                  (case type
                    (:string
-                    (curly-parse-file (concatenate 'string directory "/" token)))
+                    (let ((include-file (merge-pathnames (pathname token) pathname)))
+                      (curly-parse-file include-file)))
                    (otherwise (parse-error type :string)))))
              (body ()
                ;(print 'body)
@@ -308,7 +333,7 @@
       (start))))
 
 (defun curly-parse-file (pathname)
-  (let ((pathname (rope-string pathname)))
+  (let ((pathname (rope-pathname pathname)))
     (curly-parse-string (read-file-into-string pathname)
                         pathname)))
 
@@ -342,6 +367,7 @@
         (file-directory (file-dirname pathname))
         (frames)
         (geoms)
+        (allowed-collisions)
         (defs)
         (classes (make-tree-map #'string-compare)))
     ;; TODO: namespaces
@@ -377,6 +403,7 @@
              (add-thing (thing)
                (etypecase thing
                  (curly-block (add-block thing nil))
+                 (curly-allow-collision (push thing allowed-collisions))
                  (curly-def (add-def thing))))
              (add-block (cb parent)
                ;(print 'add-block)
@@ -514,10 +541,19 @@
                       (parent (get-prop properties "parent" parent)))
                  (setf (scene-geometry-type geometry) (property-classes properties))
                  (push (cons parent geometry) geoms))))
+      ;; Evaluate Statements
       (dolist (c curly)
         (add-thing c))
-      ;; Add Geometry
-      (fold (lambda (sg g)
-              (scene-graph-add-geometry sg (car g) (cdr g)))
-            (scene-graph frames)
-            geoms))))
+      ;; Create Scene Graph
+      (let ((scene-graph (scene-graph frames)))
+        ;; Add Geometry
+        (setq scene-graph (fold (lambda (sg g)
+                                  (scene-graph-add-geometry sg (car g) (cdr g)))
+                                scene-graph geoms))
+        ;; Allow Collisions
+        (setq scene-graph (fold (lambda (sg ac)
+                                  (scene-graph-allow-collision sg
+                                                               (curly-allow-collision-frame-0 ac)
+                                                               (curly-allow-collision-frame-1 ac)))
+                                scene-graph allowed-collisions))
+        scene-graph))))

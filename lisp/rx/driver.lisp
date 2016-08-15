@@ -1,6 +1,6 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2015, Rice University
+;;;; Copyright (c) 2016, Rice University
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -37,4 +37,37 @@
 
 (in-package :robray)
 
-(aa-rx-cl-init)
+(defun aarx-command ()
+  (labels ((env (name)
+             (uiop/os:getenv name))
+           (env-list (name)
+             (read-from-string (concatenate 'string "(" (env name) ")"))))
+    (let* ((reload (uiop/os:getenv "AARX_RELOAD"))
+           (forward-axis (or (uiop/os:getenv "AARX_MESH_FORWARD_AXIS")
+                             "Y"))
+           (up-axis (or (uiop/os:getenv "AARX_MESH_UP_AXIS")
+                        "Z"))
+           (gui (uiop/os:getenv "AARX_GUI"))
+           (output (env "AARX_OUTPUT"))
+           (scene-name (env "AARX_SCENE_NAME"))
+           (scene-files (env-list "AARX_SCENE"))
+           (scene (fold (lambda (sg name)
+                          (scene-graph sg
+                                       (load-scene-file name
+                                                        :compile gui
+                                                        :emit-povray nil
+                                                        :bind-c-geom gui
+                                                        :reload reload
+                                                        :mesh-up-axis up-axis
+                                                        :mesh-forward-axis forward-axis)))
+                        (scene-graph) scene-files)))
+      ;; Compile Scene
+      (when output
+        (scene-graph-compile scene
+                             output
+                             :scene-name scene-name))
+      ;; Display in GUI
+      (when gui
+        (win-create :title "AARXC" :stop-on-quit t)
+        (win-set-scene-graph scene)
+        (win-join)))))

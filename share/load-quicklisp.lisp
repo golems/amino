@@ -8,10 +8,16 @@
                                "/usr/quicklisp/setup.lisp"
                                "/usr/src/quicklisp/setup.lisp"
                                "/opt/quicklisp/setup.lisp")))))
-    (cond
-      (ql (load ql))
-      ((not (find-package :asdf))
-       (require :asdf)))))
+    (when ql
+      (load ql))))
+
+
+(require :asdf)
+
+;; Include sycamore
+(push (make-pathname :directory `(:relative ,*top-srcdir* "submodules" "sycamore" "src"))
+      asdf:*central-registry*)
+
 
 ;; Define System loading function
 (defun aa-load-system (system &optional (system-package system))

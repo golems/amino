@@ -38,6 +38,11 @@
 #ifndef AMINO_RX_SCENE_FCL_H
 #define AMINO_RX_SCENE_FCL_H
 
+/**
+ * @file scene_fcl.h
+ * @brief FCL-specific collision checking
+ */
+
 /* Utility */
 #ifdef __cplusplus
 

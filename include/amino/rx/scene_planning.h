@@ -42,6 +42,7 @@
 
 /**
  * @file scene_planning.h
+ * @brief Motion Planning
  */
 
 /*--- Motion Planning ---*/

@@ -337,7 +337,7 @@ aa_rx_geom_refcount ( const struct aa_rx_geom *g ) {
 }
 
 AA_API unsigned
-aa_rx_mesh_refcount ( struct aa_rx_mesh *m )
+aa_rx_mesh_refcount ( const struct aa_rx_mesh *m )
 {
     return  m->refcount;
 }

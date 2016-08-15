@@ -1,7 +1,13 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
-AC_INIT([amino], [0.20140818], [ntd@gatech.edu])
+
+AC_INIT([amino], [1.0-beta2], [ntd@rice.edu])
+
+HEADER_VERSION=1.0
+includedir=${includedir}/amino-$HEADER_VERSION
+AC_SUBST([includedir])
+AC_SUBST([HEADER_VERSION])
 
 AM_INIT_AUTOMAKE([subdir-objects])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -16,11 +22,28 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC_C99
 AC_PROG_CXX
 AC_PROG_FC
+AC_PROG_F77
 AM_PROG_CC_C_O
-AM_PROG_LEX
 AC_PROG_LIBTOOL
-AC_CHECK_PROGS([MAXIMA], [maxima])
 AM_PATH_LISPDIR
+
+# Check for Lex/Flex
+AC_ARG_WITH([lex],
+            AS_HELP_STRING([--without-lex], [Do not run lex/flex]),
+            [],
+            [with_lex=yes])
+AS_IF([test "x$with_lex" != xyes],
+      [AM_PROG_LEX])
+AM_CONDITIONAL([HAVE_LEX], [test "x$LEX" != x -a "x$with_lex" = xyes])
+
+# Check for Maxima
+AC_ARG_WITH([maxima],
+            AS_HELP_STRING([--without-maxima], [Do not run maxima]),
+            [],
+            [with_maxima=yes])
+AS_IF([test "x$with_maxima" = xyes],
+      [AC_CHECK_PROGS([MAXIMA], [maxima])])
+AM_CONDITIONAL([HAVE_MAXIMA], [test "x$MAXIMA" != x])
 
 # Enable C++ 11
 m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
@@ -88,6 +111,7 @@ m4_ifdef([AX_CHECK_COMPILER_FLAGS],
 
 
 # Fortran Checks
+# TODO: check that we have either the fortran compiler or f2c
 AC_ARG_WITH([fortran],
             AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
             [],
@@ -97,6 +121,7 @@ AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
 
 AS_IF([test "x$with_fortran" = xyes],
 [
+AC_DEFINE([USE_FORTRAN],[1],[Use the fortran compiler])
 AC_LANG([Fortran])
 
 AC_SEARCH_LIBS([__iso_c_binding_c_f_pointer_l4],[gfortran])
@@ -107,8 +132,8 @@ APPEND_FCFLAG([-ffree-line-length-none])
 APPEND_FCFLAG([-Wall])
 APPEND_FCFLAG([-pedantic])
 APPEND_FCFLAG([-Wextra])
-APPEND_FCFLAG([-Wconversion])
-APPEND_FCFLAG([-Wconversion-extra])
+dnl APPEND_FCFLAG([-Wconversion])
+dnl APPEND_FCFLAG([-Wconversion-extra])
 APPEND_FCFLAG([-Wshadow])
 APPEND_FCFLAG([-Wimplicit-interface])
 APPEND_FCFLAG([-Wimplicit-procedure])
@@ -118,13 +143,12 @@ APPEND_FCFLAG([-Wtabs])
 APPEND_FCFLAG([-Wunused-parameter])
 APPEND_FCFLAG([-Wintrinsic-shadow])
 
-],
-[
+])
+
 AC_CHECK_PROGS([F2C], [f2c])
+AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
 AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
-]
-)
 
 
 AS_IF([test "x$with_fortran" = xyes],
@@ -158,6 +182,16 @@ m4_ifdef([DX_INIT_DOXYGEN],
           AM_CONDITIONAL([DX_COND_latex], false)
           AM_CONDITIONAL([DX_COND_man],   false)
          ])
+
+
+AC_ARG_ENABLE([man],
+              [AS_HELP_STRING([--disable-man], [Do not build man pages])],
+              [],
+              [enable_man="yes"])
+
+AS_IF([test "x$enable_man" = xyes -a "x$build" = "x$host"],
+      [AC_CHECK_PROGS([HELP2MAN], [help2man])])
+AM_CONDITIONAL([HAVE_HELP2MAN], [test x$HELP2MAN != x])
 
 AC_SUBST([BASE_CFLAGS],[$CFLAGS])
 
@@ -294,6 +328,7 @@ AS_IF([test "x$with_opengl" = xyes], [
 
 AC_SUBST([GL_CFLAGS])
 AC_SUBST([GL_LIBS])
+AC_SUBST([HAVE_GL])
 AM_CONDITIONAL([HAVE_GL], [test "x$HAVE_GL" = xyes])
 
 ## SDL ##
@@ -319,6 +354,7 @@ AC_SUBST([GLEW_CFLAGS])
 AC_SUBST([GLEW_LIBS])
 AC_SUBST([SDL2_CFLAGS])
 AC_SUBST([SDL2_LIBS])
+AC_SUBST([HAVE_SDL2])
 AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
 
 ## FCL ##
@@ -337,6 +373,7 @@ AS_IF([test "x$with_fcl" = xyes], [
 ])
 AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])
+AC_SUBST([HAVE_FCL])
 AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
 
 
@@ -367,7 +404,7 @@ AS_IF([test "x$with_ompl" = xyes], [
     AC_MSG_ERROR([OMPL support requires FCL, but FCL not found])
   ])
   PKG_CHECK_MODULES([OMPL],
-                    [ompl],
+                    [ompl >= 1.2.1],
                     [HAVE_OMPL=yes])
   # TODO: smartly check with we also need boost_system
   OMPL_LIBS="$OMPL_LIBS = -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization"
@@ -375,6 +412,7 @@ AS_IF([test "x$with_ompl" = xyes], [
 
 AC_SUBST([OMPL_CFLAGS])
 AC_SUBST([OMPL_LIBS])
+AC_SUBST([HAVE_OMPL])
 AM_CONDITIONAL([HAVE_OMPL], [test "x$HAVE_OMPL" = xyes])
 
 ## Spacenav ##
@@ -411,6 +449,7 @@ AS_IF([test "x$HAVE_LPSOLVE" = xyes], [
                  [HAVE_LPSOLVE=no])
 ])
 
+AC_SUBST([HAVE_LPSOLVE])
 AH_TEMPLATE([HAVE_LPSOLVE],
             [Define presense of LP-solve library])
 AM_CONDITIONAL([HAVE_LPSOLVE], [test "x$HAVE_LPSOLVE" = xyes])
@@ -437,6 +476,7 @@ AS_IF([test "x$HAVE_GLPK" = xyes], [
                  [HAVE_GLPK=no])
 ])
 
+AC_SUBST([HAVE_GLPK])
 AM_CONDITIONAL([HAVE_GLPK], [test "x$HAVE_GLPK" = xyes])
 AH_TEMPLATE([HAVE_GLPK],
             [Define presense of GLPK library])
@@ -456,6 +496,7 @@ AS_IF([test "x$with_clp" = xauto], [
   HAVE_CLP="$with_clp"
 ])
 
+AC_SUBST([HAVE_CLP])
 AM_CONDITIONAL([HAVE_CLP], [test "x$HAVE_CLP" = xyes])
 AH_TEMPLATE([HAVE_CLP],
             [Define presense of CLP library])
@@ -475,6 +516,7 @@ AS_IF([test "x$with_cgal" = xauto], [
   HAVE_CGAL="$with_cgal"
 ])
 
+AC_SUBST([HAVE_CGAL])
 AM_CONDITIONAL([HAVE_CGAL], [test "x$HAVE_CGAL" = xyes])
 
 ## Lisp ##
@@ -562,7 +604,14 @@ AS_IF([test "x$CXX" = "x"],
 
 
 
-AC_CONFIG_FILES([Makefile include/amino/cblas_order.h lisp/Makefile share/amino.pc share/amino_gl.pc share/amino_collision.pc share/amino_planning.pc demo/Makefile src/parse/Makefile])
+AC_CONFIG_FILES([ Makefile
+                  submodules/sycamore/Makefile
+                  include/amino/cblas_order.h
+                  share/amino.pc
+                  share/amino-gl.pc
+                  share/amino-collision.pc
+                  share/amino-planning.pc
+                  lisp/config.lisp])
 
 AC_DEFUN([CONFIG_SCRIPT],
          [AC_CONFIG_FILES([$1],

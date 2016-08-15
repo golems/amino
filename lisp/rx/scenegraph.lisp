@@ -452,23 +452,34 @@
   (allowed-collisions (make-collision-set) :type collision-set)
   (configs (make-tree-set #'scene-object-compare) :type tree-set))
 
-(defun %scene-graph-merge (scene-graph-1 scene-graph-2)
+(defmethod print-object ((object scene-graph) stream)
+  (print-unreadable-object (object stream :type t :identity nil)
+    (write (scene-graph-frame-names object) :stream stream)))
+
+(defun merge-scene-graph (scene-graph new-scene-graph &key
+                                                        (if-exists :error))
   "Combine two scene graphs."
+  (declare (type (or (eql :error) (eql :supersede)) if-exists))
   (labels ((merge-set (set-1 set-2 type-string)
-             (let ((intersection (tree-set-intersection set-1 set-2)))
-               (assert (zerop (tree-set-count intersection)) ()
-                       "Duplicate ~A in merged trees: ~A"
-                       type-string
-                       (map-tree-set 'list #'scene-object-name intersection))
-               (tree-set-union set-1 set-2))))
-    (make-scene-graph :frames (merge-set (scene-graph-frames scene-graph-1)
-                                         (scene-graph-frames scene-graph-2)
+             (ecase if-exists
+               (:error
+                (let ((intersection (tree-set-intersection set-1 set-2)))
+                  (assert (zerop (tree-set-count intersection)) ()
+                          "Duplicate ~A in merged trees: ~A"
+                          type-string
+                          (map-tree-set 'list #'scene-object-name intersection)))
+                (tree-set-union set-1 set-2))
+               (:supersede
+                (fold-tree-set #'tree-set-replace set-1 set-2)))))
+    (make-scene-graph :frames (merge-set (scene-graph-frames scene-graph)
+                                         (scene-graph-frames new-scene-graph)
                                          "frames")
-                      :configs (merge-set (scene-graph-configs scene-graph-1)
-                                          (scene-graph-configs scene-graph-2)
+                      :configs (merge-set (scene-graph-configs scene-graph)
+                                          (scene-graph-configs new-scene-graph)
                                           "configs")
-                      :allowed-collisions (tree-set-union (scene-graph-allowed-collisions scene-graph-1)
-                                                          (scene-graph-allowed-collisions scene-graph-2)))))
+                      :allowed-collisions (tree-set-union (scene-graph-allowed-collisions scene-graph)
+                                                          (scene-graph-allowed-collisions new-scene-graph)))))
+
 
 ;;; Basic Operations ;;;
 
@@ -582,10 +593,10 @@
                (scene-frame
                 (%scene-graph-add-frame scene-graph thing))
                (scene-graph
-                (%scene-graph-merge scene-graph thing))
+                (merge-scene-graph scene-graph thing))
                (list
-                (%scene-graph-merge scene-graph
-                                    (%scene-graph thing)))
+                (merge-scene-graph scene-graph
+                                   (%scene-graph thing)))
                ((or pathname string)
                 (rec scene-graph (load-scene-file thing)))
                (rope
@@ -720,41 +731,7 @@
   "Return the include file for the mesh file"
   (pov-cache-file (rope mesh-file ".inc")))
 
-(defun scene-graph-resolve-povray! (scene-graph &key
-                                                  reload
-                                                  (emit t)
-                                                  (mesh-up-axis "Z")
-                                                  (mesh-forward-axis "Y")
-                                                  (directory *robray-tmp-directory*))
-  (let ((mesh-files  ;; filename => (list mesh-nodes)
-         (make-hash-table :test #'equal)))
-    (labels ((resolve-mesh (mesh)
-               (when-let ((source (and (not (scene-mesh-povray-file mesh))
-                                       (scene-mesh-source-file  mesh))))
-                 (push mesh (gethash source mesh-files))))
-             (test-shape (shape)
-               (when (and shape (scene-mesh-p shape))
-                 (resolve-mesh shape))))
-      ;; collect mesh files
-      (do-scene-graph-geometry ((frame geometry) scene-graph)
-        (declare (ignore frame))
-        (test-shape (scene-geometry-shape geometry))))
-    ;; Load meshes
-    (when emit
-      (maphash (lambda (mesh-file mesh-nodes)
-                                        ;(format *standard-output* "~&Converting ~A..." mesh-file)
-                 (multiple-value-bind (geom-name inc-file)
-                     (mesh-povray mesh-file
-                                  :directory directory
-                                  :reload reload
-                                  :mesh-up-axis mesh-up-axis
-                                  :mesh-forward-axis mesh-forward-axis)
-                   (let ((mesh-name geom-name))
-                     (dolist (mesh-node mesh-nodes)
-                       (setf (scene-mesh-name mesh-node) mesh-name
-                             (scene-mesh-povray-file mesh-node) inc-file)))))
-               mesh-files))
-    scene-graph))
+
 
 (defun scene-graph-remove-geometry (scene-graph frames)
   (let* ((frames (etypecase frames
@@ -953,7 +930,11 @@
 
 
 
-
+(defun scene-graph-allowed-collisions-rope (scene-graph)
+  (rope (map-tree-set 'list (lambda (pair)
+                              (format nil "allow_collision \"~A\" \"~A\";~%"
+                                      (car pair) (cdr pair)))
+                      (scene-graph-allowed-collisions scene-graph))))
 
 (defun scene-graph-dot (scene-graph &key output)
   (output-dot output

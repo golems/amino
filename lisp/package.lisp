@@ -115,10 +115,12 @@
    :make-crs-matrix
    ;; TF Types
    :+tf-ident+
-   :vec3 :vec3* :with-vec3
+   :vec3 :vec3*
+   :with-vec3 :vec3-identity-p
    :vec3-normalize
    :axis-angle :axis-angle*
    :quaternion :quaternion* :quaternion-x :quaternion-y :quaternion-z :quaternion-w
+   :with-quaternion :quaternion-identity-p
    :rotation-matrix
    :euler-zyx :euler-zyx*
    :euler-rpy :euler-rpy*

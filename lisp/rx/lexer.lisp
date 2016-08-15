@@ -65,6 +65,9 @@
                      (:alternation ,@(loop for (regex thing) in token-regexes
                                         collect (list :register
                                                       (strip-registers (ensure-regex-tree regex)))))))
+        (skip-regex (when skip-regex `(:sequence :start-anchor
+                                                 (:greedy-repetition 1 nil
+                                                                     ,(ensure-regex-tree skip-regex)))))
         (handlers (loop for (regex type-or-handler token) in token-regexes
                      collect
                        (if (functionp type-or-handler)
@@ -74,7 +77,7 @@
                              (lambda (string start end)
                                (declare (ignore string start))
                                (values (or token type) type end)))))))
-    (%make-lexer :token-scanner (ppcre:create-scanner big-regex)
+    (%make-lexer :token-scanner (ppcre:create-scanner big-regex :multi-line-mode t)
                  :token-regex big-regex
                  :skip-regex skip-regex
                  :skip-scanner (when skip-regex (ppcre:create-scanner skip-regex))

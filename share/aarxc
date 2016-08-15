@@ -44,7 +44,7 @@ while test "$1" != x-- -a "x$#" != x0; do
     case "$1" in
         -h|-\?|--help)
             cat <<EOF
-Usage: aarxc [OPTION] scene-file -o output-file
+Usage: aarxc [OPTION] scene-files...
 Generate C code from scene graph files files
 
 Options:
@@ -54,6 +54,7 @@ Options:
   -U UP_AXIS                     up axis of mesh files
   -F FORWARD_AXIS                forward axis of mesh files
   -R                             reload files
+  -g,--gui                       Display scene in a GUI
 
 Examples:
   aarxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
@@ -64,55 +65,49 @@ EOF
             ;;
         -o)
             shift
-            OUTPUT_FILE="$1";
+            export AARX_OUTPUT="$1";
             ;;
         -n)
             shift
-            SCENE_NAME="$1";
+            export AARX_SCENE_NAME="$1";
             ;;
         -U)
             shift
-            MESH_UP_AXIS="$1";
+            export AARX_MESH_UP_AXIS="$1";
             ;;
         -F)
             shift
-            MESH_FORWARD_AXIS="$1";
+            export AARX_MESH_FORWARD_AXIS="$1";
             ;;
         -R)
-            RELOAD=t
+            export AARX_RELOAD=t
+            ;;
+        --gui|-g)
+            export AARX_GUI=t
             ;;
         -*)
             echo "error: unknown option: $1"
             exit 1
             ;;
         *)
-            if test -z "$INPUT_FILE"; then
-                INPUT_FILE="$1";
-            else
-                >&2 echo "error: duplicate input file: $1"
-                exit 1
-            fi
+            export AARX_SCENE="$AARX_SCENE \"$1\""
             ;;
     esac
     shift
 done
 
 
-if test -z "$INPUT_FILE"; then
+if test -z "$AARX_SCENE"; then
     >&2 echo "error: no input file specified"
     exit 1
 fi
 
+if test -z "$AARX_MEMORY"; then
+    AARX_MEMORY="2GB"
+fi
 
-aarx.core --dynamic-space-size 2GB --script <<EOF
-(robray::catch-all
-  (robray::scene-graph-compile (robray::load-scene-file "$INPUT_FILE"
-                                                         :compile nil
-                                                         :emit-povray nil
-                                                         :bind-c-geom nil
-                                                         :reload $RELOAD
-                                                         :mesh-up-axis "$MESH_UP_AXIS"
-                                                         :mesh-forward-axis "$MESH_FORWARD_AXIS")
-                               "$OUTPUT_FILE"
-                               :scene-name "$SCENE_NAME"))
-EOF
+
+exec aarx.core --dynamic-space-size "$AARX_MEMORY" \
+     --non-interactive \
+     --no-userinit \
+     --eval '(robray::aarx-command)'

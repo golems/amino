@@ -1,0 +1,3 @@
+[submodule "submodules/sycamore"]
+	path = submodules/sycamore
+	url = https://github.com/ndantam/sycamore.git

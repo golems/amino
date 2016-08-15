@@ -1,0 +1,72 @@
+if HAVE_COMMON_LISP
+
+bin_PROGRAMS += aarx.core
+dist_bin_SCRIPTS += share/aarxc share/aarxpy
+
+# Keep this list in sync with amino.asd
+aarx_core_SOURCES = \
+	lisp/package.lisp \
+	lisp/config.lisp \
+	lisp/config-macro.lisp \
+	lisp/basic-type.lisp \
+	lisp/grovel.lisp \
+	lisp/ffi.lisp \
+	lisp/basic-ops.lisp \
+	lisp/foreign.lisp \
+	lisp/blas.lisp \
+	lisp/libc.lisp \
+	lisp/amino-la.lisp \
+	lisp/op.lisp \
+	lisp/generic.lisp \
+	lisp/blas-generic.lisp \
+	lisp/mem.lisp \
+	lisp/sparse.lisp \
+	lisp/io.lisp \
+	lisp/tf-type.lisp \
+	lisp/tf.lisp \
+	lisp/tf-op.lisp \
+	lisp/rx/robray-package.lisp \
+	lisp/rx/rx-grovel.lisp \
+	lisp/rx/rx-lib.lisp \
+	lisp/rx/rx-type.lisp \
+	lisp/rx/geom-bind.lisp \
+	lisp/rx/sg-cfun.lisp \
+	lisp/rx/rx-sg.lisp \
+	lisp/rx/rx-gl.lisp \
+	lisp/rx/rx-win.lisp \
+	lisp/rx/rx-cl.lisp \
+	lisp/rx/rx-mp.lisp \
+	lisp/rx/rx-ik.lisp \
+	lisp/rx/util.lisp \
+	lisp/rx/mesh.lisp \
+	lisp/rx/wavefront.lisp \
+	lisp/rx/parameters.lisp \
+	lisp/rx/povray.lisp \
+	lisp/rx/render.lisp \
+	lisp/rx/render/mp-render.lisp \
+	lisp/rx/scenegraph.lisp \
+	lisp/rx/scenefile/urdf.lisp \
+	lisp/rx/lexer.lisp \
+	lisp/rx/inex.lisp \
+	lisp/rx/scenefile/curly.lisp \
+	lisp/rx/scenefile/moveit.lisp \
+	lisp/rx/scenefile/scenefile.lisp \
+	lisp/rx/animate.lisp \
+	lisp/rx/draw.lisp \
+	lisp/rx/draw-extra.lisp \
+	lisp/rx/trajectory.lisp \
+	lisp/rx/config.lisp \
+	lisp/rx/driver.lisp \
+	lisp/rx/sg-gen.lisp
+
+EXTRA_DIST += \
+	lisp/amino.asd \
+	lisp/amino-rx.asd \
+	lisp/amino-opt.asd
+
+aarx.core: $(top_srcdir)/share/make-aarx.lisp $(aarx_core_SOURCES) libamino.la libamino-gl.la libamino-collision.la libamino-planning.la libamino-xerbla-nop.la
+	$(top_srcdir)/share/make-aarx.sh $(COMMON_LISP) $(top_srcdir) $(top_builddir)
+
+
+
+endif # HAVE_COMMON_LISP

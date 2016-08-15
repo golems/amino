@@ -42,6 +42,14 @@
 #ifndef AA_LA_H
 #define AA_LA_H
 
+/**
+ * @file la.h
+ * @brief Linear algebra routines
+ *
+ * @sa la_doc.h
+ */
+
+
 /// type for operations
 #define AA_TYPE_DOUBLE
 /// name mangling

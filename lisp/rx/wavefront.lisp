@@ -142,28 +142,6 @@
 
 
 
-(let ((+wavefront-command-scanner+
-       (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)")))
-  (defun wavefront-obj-name (obj-file)
-    (let ((name)
-          (warned))
-      (with-open-file (stream obj-file :direction :input)
-        (loop for line = (read-line stream nil nil)
-           for lineno from 0
-           while line
-           when (eq #\o (aref line 0))
-           do
-             (if name
-                 (progn (unless warned
-                          (warn "Duplicate mesh name `~A:~D'" obj-file lineno)
-                          (setq warned t))
-                        (setq name (file-basename obj-file)))
-                 (ppcre:register-groups-bind (command data)
-                     (+wavefront-command-scanner+ line)
-                   (unless (string= command "o")
-                     (error "Invalid command on line ~D" lineno))
-                   (setq name data)))))
-      (or name (file-basename obj-file)))))
 
 (defun wavefront-mtl-extract (obj)
   (let ((result nil))
@@ -175,7 +153,7 @@
              do (push props result)))
     result))
 
-(defun wavefront-obj-load (filename )
+(defun wavefront-obj-load (filename &optional (original-filename filename))
   (format *standard-output* "~&  OBJSCAN ~A..." filename)
   (finish-output *standard-output*)
   (let* ((time (get-internal-real-time))
@@ -204,8 +182,9 @@
                  (dotimes (i n)
                    (setf (aref vf i) (aref v32 i)))
                  vf)))
-      (prog1 (make-mesh-data  :name (file-basename filename)
+      (prog1 (make-mesh-data  :name (name-mangle (file-basename original-filename))
                               :file filename
+                              :original-file original-filename
                               :vertex-vectors (get-array #'aa-rx-wf-obj-get-vertices :double 'double-float)
                               :normal-vectors (get-array #'aa-rx-wf-obj-get-normals :double 'double-float)
                               ;; TODO: uv vectors
@@ -267,7 +246,7 @@
                     (mesh-up-axis "Z")
                     (mesh-forward-axis "Y"))
   (labels ((handle-obj (obj-file)
-             (wavefront-obj-load obj-file))
+             (wavefront-obj-load obj-file mesh-file))
            (convert (source-file)
              (let ((obj-file (mesh-obj-tmp source-file directory)))
                (wavefront-convert source-file obj-file
@@ -283,16 +262,15 @@
         (otherwise (error "Unknown file type: ~A" file-type))))))
 
 
-(defun mesh-povray (mesh-file
+(defun mesh-povray (mesh-data
                     &key
                       reload
-                      (mesh-up-axis "Z")
-                      (mesh-forward-axis "Y")
+                      ;(mesh-up-axis "Z")
+                      ;(mesh-forward-axis "Y")
                       (handedness :right)
                       (directory *robray-tmp-directory*))
-  (unless (probe-file mesh-file)
-    (error "Mesh file not found"))
-  (let* ((file-type (string-downcase (file-type mesh-file)))
+  (let* ((mesh-file (mesh-data-original-file mesh-data))
+         (file-type (string-downcase (file-type mesh-file)))
          (file-basename (file-basename mesh-file))
          (file-dirname (file-dirname mesh-file))
          (src-obj-p (string= (string-downcase file-type) "obj"))
@@ -305,19 +283,15 @@
     (if (or (mesh-regen-p reload mesh-file abs-output-file)
             (not (probe-file obj-file)))
         ;; Regenerate
-        (let* ((mesh-data (load-mesh mesh-file
-                                     :reload  reload
-                                     :directory directory
-                                     :mesh-up-axis mesh-up-axis
-                                     :mesh-forward-axis mesh-forward-axis))
-               (name (mesh-data-name mesh-data)))
+        (let ((name (mesh-data-name mesh-data)))
           (format t "~&  POVENC ~A~%" obj-file)
           (output (pov-declare (mesh-data-name mesh-data)
                                (pov-mesh2 :mesh-data mesh-data :handedness handedness))
                   abs-output-file)
           (values (name-mangle name) rel-output-file))
         ;; Don't regenerate
-        (values (name-mangle (wavefront-obj-name obj-file))
+        ;; TODO: this needs to match the name in the wavefront loader
+        (values (name-mangle (file-basename mesh-file))
                 rel-output-file))))
 
 
@@ -585,3 +559,26 @@
 ;;                        :normal-indices (array-cat 'fixnum
 ;;                                                   (loop for f across faces
 ;;                                                      collect (wavefront-obj-face-normal-index f)))))))
+;;
+;; (let ((+wavefront-command-scanner+
+;;        (ppcre:create-scanner "\\s*(\\S+)\\s*(.*)")))
+;;   (defun wavefront-obj-name (obj-file)
+;;     (let ((name)
+;;           (warned))
+;;       (with-open-file (stream obj-file :direction :input)
+;;         (loop for line = (read-line stream nil nil)
+;;            for lineno from 0
+;;            while line
+;;            when (eq #\o (aref line 0))
+;;            do
+;;              (if name
+;;                  (progn (unless warned
+;;                           (warn "Duplicate mesh name `~A:~D'" obj-file lineno)
+;;                           (setq warned t))
+;;                         (setq name (file-basename obj-file)))
+;;                  (ppcre:register-groups-bind (command data)
+;;                      (+wavefront-command-scanner+ line)
+;;                    (unless (string= command "o")
+;;                      (error "Invalid command on line ~D" lineno))
+;;                    (setq name data)))))
+;;       (or name (file-basename obj-file)))))

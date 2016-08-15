@@ -58,11 +58,22 @@
 #include "amino/rx/scene_fcl.h"
 
 
+static pthread_once_t cl_once = PTHREAD_ONCE_INIT;
+
+static void
+cl_init_once( void )
+{
+    aa_rx_cl_geom_destroy_fun = aa_rx_cl_geom_destroy;
+}
+
 /* Initialize collision handling */
 AA_API void
 aa_rx_cl_init( )
 {
-    aa_rx_cl_geom_destroy_fun = aa_rx_cl_geom_destroy;
+    if( pthread_once( &cl_once, cl_init_once ) ) {
+        perror("pthread_once");
+        abort();
+    }
 }
 
 struct aa_rx_cl_geom {
@@ -205,11 +216,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 void aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph )
 {
     if( ! aa_rx_sg_is_clean_collision(scene_graph) ) {
-        if( NULL == aa_rx_cl_geom_destroy_fun ) {
-            fprintf(stderr, "ERROR: collision module not initialized, call aa_rx_cl_init()\n");
-            abort();
-            exit(EXIT_FAILURE);
-        }
+        aa_rx_cl_init();
         aa_rx_sg_map_geom( scene_graph, &cl_init_helper, scene_graph );
         aa_rx_sg_clean_collision(scene_graph);
     }

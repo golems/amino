@@ -169,7 +169,7 @@
                       (aref data 2))))
 
 (defmethod quaternion ((x array))
-  (check-type x (array double-float (4)))
+  (assert (= (length x) 4))
   (quaternion* (aref x 0)
                (aref x 1)
                (aref x 2)
@@ -186,6 +186,12 @@
   (tf-yangle2quat (principal-angle-value x)))
 (defmethod quaternion ((x z-angle))
   (tf-zangle2quat (principal-angle-value x)))
+
+(defmethod inverse ((x quaternion))
+  (tf-qinv x))
+
+(defmethod inverse ((x principal-angle))
+  (tf-qinv (quaternion x)))
 
 ;;; Axis-Angle
 (defgeneric axis-angle (x))

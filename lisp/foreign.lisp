@@ -60,9 +60,9 @@
   (t (:default "libamino")))
 
 (define-foreign-library libamino-xerbla
-  (:unix (:or "libamino_xerbla_nop.so"
-              (:default "libamino_xerbla_nop")))
-  (t (:default "libamino_xerbla_nop")))
+  (:unix (:or "libamino-xerbla-nop.so"
+              (:default "libamino-xerbla-nop")))
+  (t (:default "libamino-xerbla-nop")))
 
 
 (use-foreign-library libblas)

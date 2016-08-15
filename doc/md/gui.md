@@ -1,4 +1,4 @@
-Viewer GUI {#VIEWER}
+Viewer GUI {#viewer}
 ====================
 
 Amino includes a simple 3D visualization and user interface.

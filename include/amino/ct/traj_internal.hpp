@@ -39,7 +39,7 @@
 #define AMINO_CT_TRAJ_INTERNAL_HPP
 
 /**
- * @file traj_internal.h
+ * @file traj_internal.hpp
  */
 
 #ifdef __cplusplus

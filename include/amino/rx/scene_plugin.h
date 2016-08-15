@@ -38,15 +38,51 @@
 #ifndef AMINO_RX_SCENE_PLUGIN_H
 #define AMINO_RX_SCENE_PLUGIN_H
 
+/**
+ * @file scene_plugin.h
+ * @brief Dynamically load compiled scene graphs.
+ *
+ *
+ * @sa @ref scenegraph_compiler
+ */
+
+/**
+ * Type signature of compiled scene graph functions.
+ */
 typedef struct aa_rx_sg *(*aa_rx_dl_sg_fun)(struct aa_rx_sg *sg);
 
+/**
+ * Type signature of compiled mesh functions.
+ */
 typedef struct aa_rx_mesh *(*aa_rx_dl_mesh_fun)(void);
 
+/**
+ * Dynamically load a compiled mesh
+ */
 AA_API struct aa_rx_mesh *
 aa_rx_dl_mesh( const char *filename, const char *name );
 
+
+/**
+ * Dynamically load a compiled scene graph.
+ *
+ * This function dynamically loads the scene graph plugin (via
+ * dlopen()), looks up the symbol for the scene graph load function
+ * (via dlsym()), and calls the function to load the scene graph.
+ *
+ * @param filename   The name of the shared object, passed
+ *                   directly as the first parameter to dlopen().
+ *
+ * @param name       The name of the scene graph, as specified in the
+ *                   prior call to the scene graph compiler.  Used to
+ *                   construct the symbol argument for dlsym().
+ *
+ * @param scenegraph An initial scenegraph to which the loaded
+ *                   scenegraph will be added, or NULL.
+ *
+ */
 AA_API struct aa_rx_sg *
 aa_rx_dl_sg( const char *filename, const char *name,
-             struct aa_rx_sg *sg);
+             struct aa_rx_sg *scenegraph);
 
 #endif /*AMINO_RX_SCENE_PLUGIN_H*/

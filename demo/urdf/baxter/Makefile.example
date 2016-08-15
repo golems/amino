@@ -1,9 +1,9 @@
 CC := gcc --std=gnu99
 
 ## Use pkg-config to determine the approprate compilation flags
-PKG_CONFIG_MODULES := ompl amino amino_gl amino_planning amino_collision sdl2 glew
-CFLAGS := $(CFLAGS) -g `pkg-config --cflags $(PKG_CONFIG_MODULES)`
-LDFLAGS := $(LDLAGS) -g `pkg-config --libs $(PKG_CONFIG_MODULES)`
+PKG_CONFIG_MODULES := ompl amino amino-gl amino-planning amino-collision sdl2 glew
+DEMO_CFLAGS = $(CFLAGS) -g `pkg-config --cflags $(PKG_CONFIG_MODULES)`
+DEMO_LDFLAGS = $(LDLAGS) -g `pkg-config --libs $(PKG_CONFIG_MODULES)`
 
 
 
@@ -14,13 +14,13 @@ ALL: baxter-ompl
 OTHER_DEPS := baxter-model.o baxter-demo.c
 
 baxter-ompl: baxter-ompl.c $(OTHER_DEPS) baxter-demo.h
-	$(CC) $(CFLAGS) $(LDFLAGS) -o baxter-ompl $(OTHER_DEPS) baxter-ompl.c
+	$(CC) $(DEMO_CFLAGS) $(DEMO_LDFLAGS) -o baxter-ompl $(OTHER_DEPS) baxter-ompl.c
 
 baxter-model.c:
 	aarxc 'package://baxter_description/urdf/baxter.urdf' -o baxter-model.c -n "baxter"
 
 baxter-model.o: baxter-model.c
-	$(CC) -c $(CFLAGS) baxter-model.c
+	$(CC) -c $(DEMO_CFLAGS) baxter-model.c
 
 
 clean: mostlyclean
@@ -28,3 +28,8 @@ clean: mostlyclean
 
 mostlyclean:
 	rm -f baxter-model.c baxter-model.o
+
+
+# Local Variables:
+# mode: makefile
+# End:
