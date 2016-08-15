@@ -1,5 +1,20 @@
 (in-package |aminopy|)
 
+(defmacro def-attr-accessor (((object type) attr) &body body)
+  `(defmethod clpython::attr-hook ((,object ,type) (attr (eql ',(intern (string attr)
+                                                                        :clpython.user))))
+     ,@body))
+
+(defmacro def-subs-accessors (type &body things)
+  (with-gensyms (object name)
+    `(progn (defmethod clpython:py-subs ((,object ,type) ,name)
+              (cond ,@(loop for (key function) in things
+                         collect `((string= ,name ,key)
+                                   (,function ,object)))))
+            ,@(loop for (key function) in things
+                   collect
+                   `(def-attr-accessor ((,object ,type) ,key)
+                      (,function ,object))))))
 
 ;;;;;;;;;;;;;;;;
 ;; Transforms ;;
@@ -75,6 +90,9 @@ Examples:
     rotation(tf2(1, [1,2,3])) =>
         #S(AMINO:QUATERNION :DATA #(0.0d0 0.0d0 0.0d0 1.0d0))
 
+    tf2(1, [1,2,3]).rotation =>
+        #S(AMINO:QUATERNION :DATA #(0.0d0 0.0d0 0.0d0 1.0d0))
+
 "
   (rotation transform))
 
@@ -85,8 +103,17 @@ Examples:
 
     translation(tf2(1, [1,2,3])) =>
         #S(AMINO:VEC3 :DATA #(1.0d0 2.0d0 3.0d0))
+
+    tf2(1, [1,2,3]).translation =>
+        #S(AMINO:VEC3 :DATA #(1.0d0 2.0d0 3.0d0))
 "
   (translation transform))
+
+(def-attr-accessor ((object quaternion-translation) |rotation|)
+  (tf-quaternion object))
+
+(def-attr-accessor ((object quaternion-translation) |translation|)
+  (tf-translation object))
 
 (defun |vec3| (object)
   "Convert OBJECT to a VEC3.
@@ -153,18 +180,21 @@ Examples:
 "
   (inverse x))
 
-;; (defun |vec_y| (x)
-;;   (vec-y x))
-
-;; (defun |vec_z| (x)
-;;   (vec-z x))
-
 ;;;;;;;;;;;;;;;;;
 ;;; Subscript ;;;
 ;;;;;;;;;;;;;;;;;
 
 (defmethod clpython:py-subs ((x amino::real-array) (item #+clpython-fixnum-is-a-class fixnum #-clpython-fixnum-is-a-class integer)) ;; tuple
   (aref (amino::real-array-data x) item))
+
+(defmacro def-quat-attr (name index)
+  `(def-attr-accessor ((object amino::real-array) ,name)
+     (vecref object ,index)))
+
+(def-quat-attr |x| amino::+x+)
+(def-quat-attr |y| amino::+y+)
+(def-quat-attr |z| amino::+z+)
+(def-quat-attr |w| amino::+w+)
 
 ;;;;;;;;;;;;;;;;;;
 ;; Scene Graphs ;;
@@ -182,12 +212,6 @@ Examples:
 (defmethod clpython:py-subs ((scene robray::scene-graph) name)
   (robray::scene-graph-find scene name))
 
-(defmacro def-subs-accessors (type &body things)
-  (with-gensyms (object name)
-    `(defmethod clpython:py-subs ((,object ,type) ,name)
-       (cond ,@(loop for (key function) in things
-                  collect `((string= ,name ,key)
-                            (,function ,object)))))))
 
 (def-subs-accessors robray::scene-frame
   ("name" robray::scene-frame-name)
