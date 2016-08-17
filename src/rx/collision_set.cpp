@@ -71,11 +71,13 @@ aa_rx_cl_set_destroy(struct aa_rx_cl_set *cl_set)
 
 static inline size_t cl_set_i(
     const struct aa_rx_cl_set *set,
-    aa_rx_frame_id i,
-    aa_rx_frame_id j )
+    aa_rx_frame_id ii,
+    aa_rx_frame_id jj )
 {
-    assert( i >= 0 );
-    assert( j >= 0 );
+    assert( ii >= 0 );
+    assert( jj >= 0 );
+    size_t i = (size_t)ii;
+    size_t j = (size_t)jj;
 
     size_t r = (i < j) ?
         (set->n*j + i) :
@@ -115,17 +117,21 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
 AA_API void
 aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * set){
     for (size_t i=0; i<sg->sg->allowed_indices1.size(); i++){
-        aa_rx_cl_set_set(set, sg->sg->allowed_indices1[i], sg->sg->allowed_indices2[i], 1);
+        aa_rx_cl_set_set(set,
+                         (aa_rx_frame_id)sg->sg->allowed_indices1[i],
+                         (aa_rx_frame_id)sg->sg->allowed_indices2[i],
+                         1);
     }
 }
 
+
 AA_API void
 aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from){
-    size_t n_f = into->n;
-    assert(n_f == from->n);
+    aa_rx_frame_id n_f = (aa_rx_frame_id)into->n;
+    assert(n_f == (aa_rx_frame_id)from->n);
 
-    for (size_t i = 0; i<n_f; i++){
-        for (size_t j=0; j<i; j++){
+    for (aa_rx_frame_id i = 0; i<n_f; i++){
+        for (aa_rx_frame_id j=0; j<i; j++){
             if (aa_rx_cl_set_get(from, i, j)) {
                 aa_rx_cl_set_set(into, i, j, 1);
             }

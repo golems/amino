@@ -187,20 +187,22 @@ static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
 
 pthread_once_t sdl_once = PTHREAD_ONCE_INIT;
 
-#define DEF_SDL_HINT(THING, DEFAULT)            \
-    {                                           \
-        char *e = getenv(#THING);               \
-        if( e ) {                               \
-            SDL_SetHint(THING,  e );            \
-        } else if (DEFAULT) {                   \
-            SDL_SetHint(THING,  DEFAULT );      \
-        }                                       \
-    }                                           \
+#define DEF_SDL_HINT(THING, DEFAULT)                 \
+    {                                                \
+        char *e = getenv(#THING);                    \
+        SDL_SetHint( THING,                          \
+                     ( NULL == e || '\0' == e[0] ) ? \
+                     DEFAULT :                       \
+                     e );                            \
+    }                                                \
 
-#define DEF_SDL_ATTR(THING, DEFAULT)                       \
-    {                                                      \
-        char *e = getenv(#THING);                          \
-        SDL_GL_SetAttribute(THING, e ? atoi(e) : DEFAULT); \
+#define DEF_SDL_ATTR(THING, DEFAULT)                         \
+    {                                                        \
+        char *e = getenv(#THING);                            \
+        SDL_GL_SetAttribute( THING,                          \
+                             ( NULL == e || '\0' == e[0] ) ? \
+                             DEFAULT :                       \
+                             atoi(e) );                      \
     }
 
 static void sdl_init_once( void )

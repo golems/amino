@@ -382,7 +382,7 @@ struct aa_mem_rlist *aa_mem_rlist_alloc( struct aa_mem_region *reg ) {
 }
 
 /*-- Cons --*/
-aa_mem_cons_t *aa_mem_cons_cpy( aa_mem_region_t *reg, void *p, size_t n, aa_mem_cons_t *next  ) {
+aa_mem_cons_t *aa_mem_cons_cpy( aa_mem_region_t *reg, const void *p, size_t n, aa_mem_cons_t *next  ) {
     aa_mem_cons_t *node = (aa_mem_cons_t*) aa_mem_region_alloc( reg, sizeof(aa_mem_cons_t) + n );
     node->data = node+1;
     node->next = next;
