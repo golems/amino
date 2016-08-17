@@ -206,6 +206,7 @@ AA_API void aa_rx_win_display_sg_config(
     const struct aa_rx_sg *scenegraph,
     size_t n_q, const double *q )
 {
+    assert(aa_rx_sg_config_count(scenegraph) == n_q);
     size_t n = aa_rx_sg_frame_count(scenegraph);
     struct aa_mem_region *reg = aa_mem_region_local_get();
     double *TF_rel = AA_MEM_REGION_NEW_N( reg, double, 2 * 7 * n );
@@ -243,7 +244,7 @@ static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_disp
 
     if( (updated || win->updated) && cx && cx->sg ) {
         aa_rx_win_display_sg_config( win, params,
-                                     cx->sg, aa_rx_sg_frame_count(cx->sg), cx->q );
+                                     cx->sg, aa_rx_sg_config_count(cx->sg), cx->q );
     }
 
     return updated;
