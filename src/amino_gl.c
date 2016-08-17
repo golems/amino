@@ -35,6 +35,8 @@
  *
  */
 
+#include "config.h"
+
 #include "amino.h"
 
 #define GL_GLEXT_PROTOTYPES

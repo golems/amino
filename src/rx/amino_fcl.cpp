@@ -45,7 +45,7 @@
 #include "amino/rx/scenegraph_internal.h"
 
 #include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_geom_internal.h"
+
 
 #include "amino/rx/scene_collision.h"
 
@@ -106,8 +106,10 @@ cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
 
     /* fill vertices */
     {
-        const float *v = mesh->vertices;
-        for( unsigned i = 0, j=0; i < mesh->n_vertices; i++ ) {
+        size_t n;
+        const float *v = aa_rx_mesh_get_vertices(mesh, &n);
+
+        for( unsigned i = 0, j=0; i < n; i++ ) {
             unsigned x=j++;
             unsigned y=j++;
             unsigned z=j++;
@@ -119,9 +121,10 @@ cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
     //printf("filled verts\n");
     /* fill faces*/
     {
-        const unsigned *f = mesh->indices;
+        size_t n;
+        const unsigned *f = aa_rx_mesh_get_indices(mesh, &n);
         //printf("n_indices: %u\n",mesh->n_indices );
-        for( unsigned i=0, j=0; i < mesh->n_indices; i++ ) {
+        for( unsigned i=0, j=0; i < n; i++ ) {
             unsigned x=j++;
             unsigned y=j++;
             unsigned z=j++;
@@ -143,15 +146,16 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 {
     (void)cx; (void)frame_id;
     struct aa_rx_sg *sg = (struct aa_rx_sg*)cx;
+    const struct aa_rx_geom_opt* opt = aa_rx_geom_get_opt(geom);
 
     /* not a collision geometry */
-    if( ! geom->opt.collision ) {
+    if( ! aa_rx_geom_opt_get_collision(opt) ) {
         //printf("  not a collision geom\n");
         return;
     }
 
     /* already have collision object */
-    if( geom->cl_geom ) {
+    if( aa_rx_geom_get_collision(geom) ) {
         //printf("  already has collision geom\n");
         return;
     }
@@ -161,7 +165,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     fcl::CollisionGeometry *ptr = NULL;
     enum aa_rx_geom_shape shape_type;
     void *shape_ = aa_rx_geom_shape(geom, &shape_type);
-    double scale = aa_rx_geom_opt_get_scale(&geom->opt);
+    double scale = aa_rx_geom_opt_get_scale(opt);
 
     // printf("creating collision geometry for frame %s (%s)\n",
     //        aa_rx_sg_frame_name(sg, frame_id),
@@ -206,7 +210,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     if(ptr) {
         struct aa_rx_cl_geom *cl_geom = new aa_rx_cl_geom(ptr);
         cl_geom->ptr->setUserData(geom); // FCL user data is the amino geometry object
-        geom->cl_geom = cl_geom;   // Set the amino geometry collision object
+        aa_rx_geom_set_collision(geom, cl_geom); // Set the amino geometry collision object
     } else {
         fprintf(stderr, "Unimplemented collision type: %s\n", aa_rx_geom_shape_str( shape_type ) );
     }
@@ -251,9 +255,10 @@ static void cl_create_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_g
 
     //printf("adding cl_geom for %s\n", aa_rx_sg_frame_name(cx->sg, frame_id) );
 
-    if( ! geom->cl_geom ) return;
+    struct aa_rx_cl_geom *cl_geom = aa_rx_geom_get_collision(geom);
+    if( NULL == cl_geom ) return;
 
-    fcl::CollisionObject *obj = new fcl::CollisionObject( geom->cl_geom->ptr );
+    fcl::CollisionObject *obj = new fcl::CollisionObject( cl_geom->ptr );
     obj->setUserData( (void*) ((intptr_t) frame_id) );
     cx->manager->registerObject(obj);
     cx->objects->push_back( obj );

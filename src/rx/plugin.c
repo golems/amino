@@ -35,6 +35,8 @@
  *
  */
 
+#include "config.h"
+
 #include <dlfcn.h>
 
 #include "amino.h"

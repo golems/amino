@@ -99,6 +99,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/la.h              \
 	include/amino/la_impl.h         \
 	include/amino/mem.h             \
+	include/amino/refcount.h        \
 	include/amino/opt/opt.h         \
 	include/amino/opt/qp.h          \
 	include/amino/opt/lp.h          \

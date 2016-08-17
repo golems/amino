@@ -38,6 +38,11 @@
 #ifndef AMINO_RX_SCENE_GEOM_INTERNAL_H
 #define AMINO_RX_SCENE_GEOM_INTERNAL_H
 
+#ifdef HAVE_STDATOMIC_H
+#include <stdatomic.h>
+#include "amino/refcount.h"
+#endif
+
 /**
  * Opaque structure for geometry options.
  */
@@ -64,7 +69,7 @@ struct aa_rx_geom {
      * Decrement on Destroy
      * Free when it reaches 0
      */
-    unsigned refcount;
+    AA_ATOMIC unsigned refcount;
     struct aa_gl_buffers *gl_buffers;
 };
 
@@ -134,7 +139,7 @@ struct aa_rx_mesh {
     size_t width_rgba;
     size_t height_rgba;
 
-    unsigned refcount;
+    AA_ATOMIC unsigned refcount;
 
     void (*destructor)(void*);
     void *destructor_context;

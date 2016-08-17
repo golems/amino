@@ -79,62 +79,62 @@ aa_rx_geom_opt_set_no_shadow (
  * Get no-shadow option
  */
 AA_API int
-aa_rx_geom_opt_get_no_shadow ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_no_shadow ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get visual option.
  */
 AA_API int
-aa_rx_geom_opt_get_visual ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_visual ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get collision option.
  */
 AA_API int
-aa_rx_geom_opt_get_collision ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_collision ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get red color value.
  */
 AA_API double
-aa_rx_geom_opt_get_color_red ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_color_red ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get blue color value.
  */
 AA_API double
-aa_rx_geom_opt_get_color_blue ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_color_blue ( const struct aa_rx_geom_opt *opt );
 
 
 /**
  * Get green color value.
  */
 AA_API double
-aa_rx_geom_opt_get_color_green ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_color_green ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get alpha value.
  */
 AA_API double
-aa_rx_geom_opt_get_alpha ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_alpha ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get red specular value.
  */
 AA_API double
-aa_rx_geom_opt_get_specular_red ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_specular_red ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get blue specular value.
  */
 AA_API double
-aa_rx_geom_opt_get_specular_blue ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_specular_blue ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Get green specular value.
  */
 AA_API double
-aa_rx_geom_opt_get_specular_green ( struct aa_rx_geom_opt *opt );
+aa_rx_geom_opt_get_specular_green ( const struct aa_rx_geom_opt *opt );
 
 /**
  * Set color option
@@ -331,6 +331,24 @@ aa_rx_geom_grid (
     double width );
 
 /**
+ * Return the options for the geometry object
+ */
+AA_API const struct aa_rx_geom_opt*
+aa_rx_geom_get_opt ( const struct aa_rx_geom *geom );
+
+/**
+ * Return the collision object for the geometry object.
+ */
+AA_API struct aa_rx_cl_geom *
+aa_rx_geom_get_collision ( const struct aa_rx_geom *geom );
+
+/**
+ * Set the collision object for the geometry object.
+ */
+AA_API void
+aa_rx_geom_set_collision ( struct aa_rx_geom *geom, struct aa_rx_cl_geom * );
+
+/**
  * Opaque type for a mesh objects
  */
 struct aa_rx_mesh;
@@ -351,6 +369,18 @@ AA_API void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh );
 AA_API void aa_rx_mesh_set_vertices (
     struct aa_rx_mesh *mesh, size_t n,
     const float *vectors, int copy );
+
+/**
+ * Get the mesh vertices.
+ */
+AA_API const float *aa_rx_mesh_get_vertices (
+    const struct aa_rx_mesh *mesh, size_t *size );
+
+/**
+ * Get the mesh indices.
+ */
+AA_API const unsigned *aa_rx_mesh_get_indices (
+    const struct aa_rx_mesh *mesh, size_t *size );
 
 /**
  * Set the mesh normals
