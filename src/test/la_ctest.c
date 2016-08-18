@@ -133,7 +133,7 @@ static void test_angle()
     }
     {
         double a[]={1,0};
-        double b[]={-1,};
+        double b[]={-1,0};
         test_feq("angle2", M_PI, aa_la_d_angle(2, a, 1, b, 1), 1e-6 );
     }
     {

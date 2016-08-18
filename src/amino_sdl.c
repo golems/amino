@@ -454,7 +454,7 @@ AA_API void aa_sdl_display_loop(
     struct aa_sdl_display_params params;
     params.update = 1;
     params.quit = 0;
-    clock_gettime( CLOCK_MONOTONIC, &params.time_initial );
+    params.time_initial = aa_tm_now();
     params.time_now = params.time_initial;
     params.time_last = params.time_initial;
     params.first = 1;
@@ -481,7 +481,7 @@ AA_API void aa_sdl_display_loop(
         // wait for SDL events
         int timeout = 1;
         while( !params.quit && timeout > 0 ) {
-            clock_gettime( CLOCK_MONOTONIC, &params.time_now );
+            params.time_now = aa_tm_now();
             struct timespec ts_timeout = aa_tm_sub(next, params.time_now);
             timeout = (int) aa_tm_timespec2msec(ts_timeout);
             //printf("timeout: %d\n", timeout );
@@ -501,7 +501,7 @@ AA_API void aa_sdl_display_loop(
 #endif
 
         // update times
-        clock_gettime( CLOCK_MONOTONIC, &params.time_now );
+        params.time_now = aa_tm_now();
     } while ( !params.quit );
 }
 

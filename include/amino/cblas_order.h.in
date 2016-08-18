@@ -1,1 +1,2 @@
+@INCLUDE_CBLAS_H@
 #define AA_CBLAS_ORDER @aa_cblas_order_type@

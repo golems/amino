@@ -37,7 +37,6 @@
 
 
 #include "config.h"
-
 #include "amino.h"
 
 #include "amino/rx/rxtype.h"

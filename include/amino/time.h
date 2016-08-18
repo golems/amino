@@ -46,7 +46,18 @@
  * \file amino/time.h
  */
 
+#ifdef CLOCK_MONOTONIC
+
 #define AA_CLOCK CLOCK_MONOTONIC
+
+#else
+
+/* You're probably on a horrible MacOSX machine.  Get some real POSIX
+ * support already! */
+
+#define AA_CLOCK 0
+
+#endif
 
 #include <errno.h>
 /// create a struct timespec with given elements
@@ -81,12 +92,8 @@ aa_tm_sub( const struct timespec a, const struct timespec b ) {
 }
 
 /// gets current time via AA_CLOCK
-static inline struct timespec
-aa_tm_now() {
-    struct timespec t;
-    clock_gettime( AA_CLOCK, &t );
-    return t;
-}
+AA_API struct timespec
+aa_tm_now();
 
 /** returns reltime + now */
 static inline struct timespec

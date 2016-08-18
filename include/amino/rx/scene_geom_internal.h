@@ -40,8 +40,9 @@
 
 #ifdef HAVE_STDATOMIC_H
 #include <stdatomic.h>
-#include "amino/refcount.h"
 #endif
+
+#include "amino/refcount.h"
 
 /**
  * Opaque structure for geometry options.

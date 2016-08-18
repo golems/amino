@@ -58,31 +58,53 @@ AC_SEARCH_LIBS([dgemm_],[blas],[true],
                  [AC_MSG_ERROR([BLAS is required.])])
 AC_SEARCH_LIBS([dgesvd_],[lapack],[true],
                  [AC_MSG_ERROR([LAPACK is required.])])
-AC_CHECK_HEADERS([cblas.h], [true],
-                 [AC_MSG_ERROR([CBLAS is required.])])
 
 AC_CHECK_HEADERS([stdatomic.h])
 
-AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_SEARCH_LIBS([sqrt], [m])
 AC_SEARCH_LIBS([dlopen], [dl])
 AC_SEARCH_LIBS([pthread_once], [pthread])
 
+HAVE_TIME=no
+AH_TEMPLATE([HAVE_CLOCK_GETTIME],
+            [Define presense of clock_gettime() call])
+AH_TEMPLATE([HAVE_MACH_ABSOLUTE_TIME],
+            [Define presense of mach_absolute_time() call])
 
+AS_IF([test xyes != "x$HAVE_TIME"],
+      [AC_SEARCH_LIBS([clock_gettime], [rt],
+                     [AC_DEFINE([HAVE_CLOCK_GETTIME])
+                      HAVE_TIME=yes])])
+
+AS_IF([test xyes != "x$HAVE_TIME"],
+      [AC_SEARCH_LIBS([mach_absolute_time], [],
+                     [AC_DEFINE([HAVE_MACH_ABSOLUTE_TIME])
+                      HAVE_TIME=yes])])
+
+AS_IF([test xyes != "x$HAVE_TIME"],
+      [AC_MSG_ERROR([Could not find suitable time function.])])
+
+# Check for cblas.h
+AC_CHECK_HEADERS([cblas.h], [INCLUDE_CBLAS_H='#include <cblas.h>'])
+AS_IF([test x = "x$INCLUDE_CBLAS_H"],
+      [AC_CHECK_HEADERS([cblas_openblas.h], [INCLUDE_CBLAS_H='#include <cblas_openblas.h>'])])
+AS_IF([test x = "x$INCLUDE_CBLAS_H"],
+      [AC_MSG_ERROR([cblas.h is required.])])
+AC_SUBST([INCLUDE_CBLAS_H])
 
 # Check for cblas_blas enum
 AC_MSG_CHECKING([CBLAS_LAYOUT])
-AC_TRY_COMPILE([#include <cblas.h>
+AC_TRY_COMPILE([$INCLUDE_CBLAS_H
                ],
                [CBLAS_LAYOUT test_var;],
                [AC_MSG_RESULT([yes])
                 aa_cblas_order_type=CBLAS_LAYOUT],
                [AC_MSG_RESULT([no])])
 
-AS_IF([test x="x$aa_cblas_order_type"],
+AS_IF([test x = "x$aa_cblas_order_type"],
 [
 AC_MSG_CHECKING([enum CBLAS_ORDER])
-AC_TRY_COMPILE([#include <cblas.h>
+AC_TRY_COMPILE([$INCLUDE_CBLAS_H
                ],
                [enum CBLAS_ORDER test_var;],
                [AC_MSG_RESULT([yes])
@@ -91,6 +113,7 @@ AC_TRY_COMPILE([#include <cblas.h>
 ])
 
 AC_SUBST([aa_cblas_order_type])
+
 
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
          [AC_DEFUN([APPEND_CFLAG],
@@ -108,10 +131,18 @@ m4_ifdef([AX_CHECK_COMPILER_FLAGS],
           AC_DEFUN([APPEND_FCFLAG],
                    [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])])
 
+m4_ifdef([APPEND_FCFLAG],[],
+         [AC_DEFUN([APPEND_FCFLAG],[])])
+m4_ifdef([APPEND_CFLAG],[],
+         [AC_DEFUN([APPEND_CFLAG],[])])
+m4_ifdef([APPEND_CXXFLAG],[],
+         [AC_DEFUN([APPEND_CXXFLAG],[])])
+
 
 
 # Fortran Checks
 # TODO: check that we have either the fortran compiler or f2c
+
 AC_ARG_WITH([fortran],
             AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
             [],
@@ -196,7 +227,8 @@ AM_CONDITIONAL([HAVE_HELP2MAN], [test x$HELP2MAN != x])
 AC_SUBST([BASE_CFLAGS],[$CFLAGS])
 
 # Enable maximum warnings
-AX_CFLAGS_WARN_ALL
+m4_ifdef([AX_CFLAGS_WARN_ALL],
+         [AX_CFLAGS_WARN_ALL])
 
 dnl APPEND_FLAG( [FLAG] )
 dnl Check if FLAG is supported, and if so, add it
@@ -273,7 +305,9 @@ AS_IF([test "x$JAVAC" = "x"],
       [BUILD_JAVA=no],
       [
        BUILD_JAVA=yes
-       AX_JNI_INCLUDE_DIR
+       m4_ifdef([AX_JNI_INCLUDE_DIR],
+                [AX_JNI_INCLUDE_DIR],
+                [JAVAC=""])
        for JNI_INCLUDE_DIR in $JNI_INCLUDE_DIRS
        do
            JNICPPFLAGS="$JNICPPFLAGS -I$JNI_INCLUDE_DIR"

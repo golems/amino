@@ -41,7 +41,6 @@
  */
 
 #include "amino.h"
-#include <cblas.h>
 
 void aa_lsim_dstep( size_t m, size_t n,
                     const double *restrict A,

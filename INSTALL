@@ -55,6 +55,17 @@ features in Amino:
   - [GLPK] (https://www.gnu.org/software/glpk/)
   - [LP-Solve] (http://lpsolve.sourceforge.net/5.5/)
 
+*Note 1*: Some versions of Blender in Ubuntu and Debian do not support
+          the Collada format for 3D meshes, so you may need to install
+          Blender manually in this case
+          (see https://www.blender.org/download/).
+
+*Note 2*: The versions of SBCL in some distributions (e.g., SBCL 1.2.4
+          in Debian Jessie) do not work with new versions of [CFFI]
+          (https://common-lisp.net/project/cffi/).  In these cases,
+          you will need to install SBCL manually (see
+          http://www.sbcl.org/platform-table.html).
+
 To install these on Debian or Ubuntu GNU/Linux, you can do:
 
     sudo apt-get install build-essential gfortran \
@@ -68,17 +79,13 @@ To install these on Debian or Ubuntu GNU/Linux, you can do:
          coinor-libclp-dev libglpk-dev liblpsolve55-dev
 
 
-*Note 1*: Some versions of Blender in Ubuntu and Debian do not support
-          the Collada format for 3D meshes, so you may need to install
-          Blender manually in this case
-          (see https://www.blender.org/download/).
+To install these on MacOSX via MacPorts, you can do
 
-*Note 2*: The versions of SBCL in some distributions (e.g., SBCL 1.2.4
-          in Debian Jessie) do not work with new versions of [CFFI]
-          (https://common-lisp.net/project/cffi/).  In these cases,
-          you will need to install SBCL manually (see
-          http://www.sbcl.org/platform-table.html).
-
+    sudo port install sbcl maxima f2c flex \
+         OpenBLAS \
+         libsdl2 povray ffmpeg  \
+         fcl ompl \
+         glpk
 
 Then, install [Quicklisp](https://www.quicklisp.org) manually, if
 desired for ray tracing and robot model compilation.
