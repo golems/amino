@@ -316,15 +316,23 @@
 (defparameter *scene-graph-cflags* `("--std=gnu99" "-fPIC" "-shared")
   "Compilation flags used for compiling mutable scene graphs")
 
-(defun scene-graph-so (source-file shared-object)
-  (let* ((cflags (pkg-config "amino" :cflags t))
-         (args  `(,*scene-graph-compiler*
-                  ,@*scene-graph-cflags*
-                  ,@(split-spaces cflags)
-                  ,source-file "-o" ,shared-object)))
-    (format t "~&~A~%" (rope-string (rope-split " " args)))
-    (uiop/run-program:run-program args :output *standard-output* :error-output *error-output*)))
 
+(defun scene-graph-so (source-file shared-object)
+  (let* ((libtool (robray::find-script "libtool" '(:relative)))
+         (cc (split-spaces amino::*cc*))
+         (lo (namestring (merge-pathnames (make-pathname :type "lo")
+                                          source-file)))
+         (la (namestring (merge-pathnames (make-pathname :type "la")
+                                          shared-object))))
+    ;; compile
+    (let ((compile-args `(,libtool "--tag=CC" "--mode=compile" ,@cc "-fPIC" "-c" "-o" ,lo ,source-file)))
+      (uiop/run-program:run-program compile-args :output *standard-output* :error-output *error-output*))
+    ;; link
+    (let ((link-args `(,libtool "--tag=CC" "--mode=link" ,@cc
+                                 "-avoid-version"  "-module" "-shared" "-export-dynamic"
+                                 "-rpath" ,amino::*libdir*
+                                 "-o" ,la ,lo)))
+      (uiop/run-program:run-program link-args :output *standard-output* :error-output *error-output*))))
 
 (defun genc-mesh-link (mesh)
   (format-pathname "~A/cache/~A.so"

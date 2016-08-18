@@ -328,12 +328,14 @@
     (- 1d0 (clamp x 0d0 1d0)))
 
 (defparameter *robray-root*
-  (format-pathname "~A/../"
-                   (namestring (asdf:system-source-directory :amino))))
+  (namestring (merge-pathnames (make-pathname :directory '(:relative :up))
+                               (asdf:system-source-directory :amino))))
 
-(defun find-script (name)
-  (let ((pathname (format-pathname "~A/share/exec/~A"
-                                   *robray-root* name)))
+
+(defun find-script (name &optional directory)
+  (let ((pathname (merge-pathnames (make-pathname :directory (or directory '(:relative "share" "exec"))
+                                                  :name name)
+                                   *robray-root*)))
     (assert (probe-file pathname) ()
             "Script '~A' not found" name)
     pathname))

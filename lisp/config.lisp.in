@@ -52,3 +52,7 @@
 (defvar *have-glpk* "@HAVE_GLPK@")
 (defvar *have-clp* "@HAVE_CLP@")
 (defvar *have-cgal* "@HAVE_CGAL@")
+
+(defvar *cc* "@CC@")
+(defvar *cflags* "@CFLAGS@")
+(defvar *ldflags* "@LDFLAGS@")
