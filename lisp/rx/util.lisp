@@ -104,13 +104,6 @@
         (subseq path (aref reg-start 0) (aref reg-end 0))
         nil)))
 
-(defun create-parent-directories (pathname)
-  (let ((parents (file-dirname pathname)))
-    (when parents
-      (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))
-                                    :output *standard-output*
-                                    :error-output *error-output*))))
-
 (defun file-rope (&rest elements)
   (rope-map #'identity elements :separator '/))
 
@@ -129,6 +122,22 @@
       path
       (output-file path directory)))
 
+
+(defun subdir (root &key directory name type pathname)
+  (merge-pathnames (make-pathname :directory (let ((d (ensure-list directory)))
+                                               (case (car d)
+                                                 (:absolute (cons :relative (cdr d)))
+                                                 (:relative d)
+                                                 (otherwise (cons :relative d))))
+                                  :name name
+                                  :type type)
+                   (if pathname
+                       (subdir root
+                               :directory (pathname-directory pathname)
+                               :name (pathname-name pathname)
+                               :type (pathname-type pathname))
+
+                       root)))
 
 (defun output (object place
                &key
@@ -338,7 +347,7 @@
                                    *robray-root*)))
     (assert (probe-file pathname) ()
             "Script '~A' not found" name)
-    pathname))
+    (namestring pathname)))
 
 ;; (defun load-trajectory (pathname)
 ;;   (let ((data (with-open-file (in pathname :direction :input)

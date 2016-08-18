@@ -65,6 +65,7 @@
       (when output
         (scene-graph-compile scene
                              output
+                             :shared-object nil
                              :scene-name scene-name))
       ;; Display in GUI
       (when gui

@@ -73,9 +73,9 @@
   (when compile
     (assert filename)
     ;; Compile the the thing
-    (let ((base (format-pathname "~A/cache/~A" *robray-tmp-directory* filename)))
-      (scene-graph-compile scene-graph (format-pathname "~A.c" base)
-                           :shared-object (format-pathname "~A.so" base)
+    (let ((base (subdir *robray-cache-directory* :pathname filename)))
+      (scene-graph-compile scene-graph (subdir base :type "c")
+                           :shared-object t
                            :reload reload
                            :static-mesh nil
                            :link-meshes t)))
