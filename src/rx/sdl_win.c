@@ -41,8 +41,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "amino/amino_gl.h"
 #include <SDL.h>
 
 #ifdef HAVE_SPNAV_H

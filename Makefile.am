@@ -359,8 +359,10 @@ javadoc: doc/.javadoc.stamp
 
 endif
 
-## OpenGL support
-if HAVE_GL
+## SDL2/OpenGL ##
+if AMINO_GL
+
+# OpenGL support
 lib_LTLIBRARIES += libamino-gl.la
 libamino_gl_la_SOURCES = src/amino_gl.c src/rx/geodesic.cpp
 
@@ -369,8 +371,7 @@ libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 libamino_gl_la_LIBADD = libamino.la $(GL_LIBS)
 
 
-## SDL ##
-if HAVE_SDL2
+# SDL
 
 libamino_gl_la_SOURCES += \
 	src/amino_sdl.c \
@@ -381,17 +382,16 @@ sdl_test_SOURCES = src/rx/sdl_test.c
 sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
-sdl_test_LDADD += libamino-gl.la $(GL_LIBS) $(GLEW_LIBS)
+sdl_test_LDADD += libamino-gl.la $(GL_LIBS)
 
 bin_PROGRAMS += aarx-view
 
 aarx_view_SOURCES = src/rx/aarx-view.c
 aarx_view_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
-aarx_view_LDADD = libamino-gl.la libamino.la $(SDL2_LIBS) $(GLEW_LIBS)
+aarx_view_LDADD = libamino-gl.la libamino.la $(SDL2_LIBS)
 
-endif # SDL2
 
-endif # GL
+endif # SDL2/OpenGL
 
 
 ## TESTS ##

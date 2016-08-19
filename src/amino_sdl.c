@@ -41,8 +41,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "amino/amino_gl.h"
 #include <SDL.h>
 
 #include <pthread.h>
@@ -187,23 +186,37 @@ static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
 
 pthread_once_t sdl_once = PTHREAD_ONCE_INIT;
 
-#define DEF_SDL_HINT(THING, DEFAULT)                 \
-    {                                                \
-        char *e = getenv(#THING);                    \
-        SDL_SetHint( THING,                          \
-                     ( NULL == e || '\0' == e[0] ) ? \
-                     DEFAULT :                       \
-                     e );                            \
-    }                                                \
-
-#define DEF_SDL_ATTR(THING, DEFAULT)                         \
-    {                                                        \
-        char *e = getenv(#THING);                            \
-        SDL_GL_SetAttribute( THING,                          \
-                             ( NULL == e || '\0' == e[0] ) ? \
-                             DEFAULT :                       \
-                             atoi(e) );                      \
+#define DEF_SDL_HINT(THING, DEFAULT)                                    \
+    {                                                                   \
+        const char *str = #THING;                                       \
+        char *e = getenv(str);                                          \
+        const char *value =                                             \
+            ( NULL == e || '\0' == e[0] ) ?                             \
+            DEFAULT :                                                   \
+            e ;                                                         \
+        if( (NULL != value) && ('\0' != value[0])                       \
+            && (SDL_TRUE != SDL_SetHint( THING, value)) )               \
+        {                                                               \
+            fprintf(stderr,                                             \
+                    "Failed to set SDL HINT '%s' to '%s': %s\n",        \
+                    str, value, SDL_GetError() );                       \
+        }                                                               \
+                                                                        \
     }
+
+#define SET_SDL_ATTR(THING, value)                                     \
+    if ( SDL_GL_SetAttribute(THING, value) ) {                         \
+        fprintf(stderr,                                                \
+                "Failed to set SDL OpenGL attribute '%s' to %d: %s\n", \
+                #THING, value, SDL_GetError() );                       \
+    }                                                                  \
+
+#define DEF_SDL_ATTR(THING, DEFAULT)                                    \
+    {                                                                   \
+        char *e = getenv(#THING);                                       \
+        SET_SDL_ATTR(THING,                                             \
+                     (NULL == e || '\0' == e[0] ) ? DEFAULT : atoi(e)); \
+    }                                                                   \
 
 static void sdl_init_once( void )
 {
@@ -212,10 +225,12 @@ static void sdl_init_once( void )
         abort();
     }
 
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    /* Set OpenGL Version */
+    SET_SDL_ATTR(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SET_SDL_ATTR(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
+    /* MacOSX does not support the compatability profile */
+    SET_SDL_ATTR(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     DEF_SDL_ATTR( SDL_GL_DOUBLEBUFFER,        1 );
     DEF_SDL_ATTR( SDL_GL_DEPTH_SIZE,         24 );
@@ -552,7 +567,7 @@ AA_API void aa_sdl_gl_window(
 FINISH:
 
     *p_glcontext = SDL_GL_CreateContext( *pwindow );
-    if( p_glcontext == NULL )
+    if( *p_glcontext == NULL )
     {
         fprintf( stderr, "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
         abort();

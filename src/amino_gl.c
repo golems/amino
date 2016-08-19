@@ -41,8 +41,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "amino/amino_gl.h"
 #include <SDL.h>
 
 #include <pthread.h>
@@ -58,6 +57,20 @@
 
 #include "amino/getset.h"
 
+//static void check_error( const char *name ) {
+#define check_error(name)                                               \
+    for (GLenum err = glGetError();                                     \
+         err != GL_NO_ERROR;                                            \
+         err = glGetError())                                            \
+    {                                                                   \
+        fprintf(stderr, "OpenGL error in %s (%s:%d): %s (%d)\n",        \
+                name, __FILE__, __LINE__,                               \
+                aa_gl_error_string(err),                                \
+                (int)err                                                \
+            );                                                          \
+        abort();                                                        \
+    }
+
 
 #define CHECK_GL_STATUS(TYPE,handle,pname) {                            \
         GLint status;                                                   \
@@ -67,7 +80,8 @@
             glGet ## TYPE ## iv(handle, GL_INFO_LOG_LENGTH, &logLength); \
             char infoLog[logLength+2];                                  \
             glGet ## TYPE ## InfoLog(handle, logLength, NULL, infoLog); \
-            fprintf(stderr, "%d: %d, %s\n", __LINE__, pname, infoLog);  \
+            fprintf(stderr, "%s: %s (%s:%d)\n",                         \
+                    #pname, infoLog, __FILE__,__LINE__);                \
         }                                                               \
     }
 
@@ -140,12 +154,12 @@ AA_API GLuint aa_gl_create_program(GLuint vert_shader, GLuint frag_shader)
 }
 
 static const char aa_gl_vertex_shader[] =
-    "#version 130\n"
+    "#version 100\n"
     ""
-    "in vec3 position;"
+    "attribute vec3 position;"
     //"in vec4 color;"
-    "in vec3 normal;"
-    "in vec2 UV;"
+    "attribute vec3 normal;"
+    "attribute vec2 UV;"
     ""
     "uniform mat4 matrix_model;"   // parent: world, child: model, includes scaling
     "uniform mat3 matrix_rotate;"  // parent: world, child: rotation only, no scaling
@@ -153,12 +167,12 @@ static const char aa_gl_vertex_shader[] =
     "uniform vec3 light_world;"    // position of light in world
     "uniform vec3 camera_world;"   // position of camera in world
     ""
-    "smooth out vec4 vColor;"
-    "out vec2 vUV;"
+    "varying vec4 vColor;"
+    "varying vec2 vUV;"
 
-    "out vec3 eye_world;"
-    "out vec3 light_dir_world;"
-    "out vec3 normal_world;"
+    "varying vec3 eye_world;"
+    "varying vec3 light_dir_world;"
+    "varying vec3 normal_world;"
     ""
     "void main() {"
     "  vec4 position_world = matrix_model * vec4(position,1);"
@@ -178,14 +192,17 @@ static const char aa_gl_vertex_shader[] =
     "}";
 
 static const char aa_gl_fragment_shader[] =
-    "#version 130\n"
+    "#version 100\n"
     //"smooth in vec4 vColor;"
     ""
+    "precision mediump float;"
 
-    "in vec3 normal_world;"
-    "in vec3 eye_world;"
-    "in vec3 light_dir_world;"
-    "in vec2 vUV;"
+    "varying vec3 normal_world;"
+    "varying vec3 eye_world;"
+    "varying vec3 light_dir_world;"
+    "varying vec2 vUV;"
+
+    /*"varying vec4 out_color;"*/
 
     "uniform vec3 ambient;"
     "uniform vec3 light_color;"
@@ -196,18 +213,18 @@ static const char aa_gl_fragment_shader[] =
     "void main() {"
     ""
     ""
-    "  vec4 rgba = texture(texture_sampler, vUV);"
+    "  vec4 rgba = texture2D(texture_sampler, vUV);"
     "  vec3 diffuse = rgba.rgb;"
     "  float alpha = rgba.a;"
     ""
     "  float dist = length( light_dir_world );"
     "  vec3 n = normal_world;" // already a unit vector
     "  vec3 l = light_dir_world / dist;" // normalize
-    "  float ct = clamp(dot(n,l), 0.1, 1);"
+    "  float ct = clamp(dot(n,l), 0.1, 1.0);"
     ""
     "  vec3 E = normalize(eye_world);"
     "  vec3 R = reflect(-l,n);"
-    "  float ca = clamp(dot(E,R), 0.1, 1);"
+    "  float ca = clamp(dot(E,R), 0.1, 1.0);"
     ""
     ""
     "  vec3 color ="
@@ -216,7 +233,7 @@ static const char aa_gl_fragment_shader[] =
     // Diffuse : "color" of the object
     "    + diffuse * light_color * light_power * ct / (dist*dist)"
     // Specular : reflective highlight, like a mirror
-    "    + specular * light_color * light_power * pow(ca,5) / (dist*dist)"
+    "    + specular * light_color * light_power * pow(ca,5.0) / (dist*dist)"
     "  ;"
     "" // apply color and alpha
     "  gl_FragColor = vec4(color,alpha);"
@@ -239,12 +256,36 @@ static GLint aa_gl_id_uv;
 static GLint aa_gl_id_texture;
 static GLint aa_gl_id_rotate;
 
+static GLuint aa_gl_vao;
+
 static pthread_once_t gl_once = PTHREAD_ONCE_INIT;
 static pthread_mutex_t gl_mutex;
 static pthread_mutexattr_t gl_mattr;
 
 
 static struct aa_gl_buffers *dead_buffers = NULL;
+
+static GLint aa_gl_get_uniform_location( GLuint program, const GLchar *name )
+{
+
+    GLint i = glGetUniformLocation(program, name);
+    if( i < 0 ) {
+        fprintf(stderr, "Could not find OpenGL uniform '%s'\n", name);
+        exit(EXIT_FAILURE);
+    }
+    return i;
+}
+
+static GLint aa_gl_get_attrib_location( GLuint program, const GLchar *name )
+{
+
+    GLint i = glGetAttribLocation(program, name);
+    if( i < 0 ) {
+        fprintf(stderr, "Could not find OpenGL attribute '%s'\n", name);
+        exit(EXIT_FAILURE);
+    }
+    return i;
+}
 
 static void gl_init_once(void)
 {
@@ -265,6 +306,8 @@ static void gl_init_once(void)
 
     aa_gl_lock();
 
+    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
+
     GLuint vertexShader = aa_gl_create_shader(GL_VERTEX_SHADER, aa_gl_vertex_shader);
     GLuint fragmentShader = aa_gl_create_shader(GL_FRAGMENT_SHADER, aa_gl_fragment_shader);
 
@@ -275,25 +318,34 @@ static void gl_init_once(void)
 
     aa_gl_id_program = aa_gl_create_program(vertexShader, fragmentShader);
 
-    aa_gl_id_position = glGetAttribLocation(aa_gl_id_program, "position");
-    aa_gl_id_normal = glGetAttribLocation(aa_gl_id_program, "normal");
+    aa_gl_id_position = aa_gl_get_attrib_location(aa_gl_id_program, "position");
+    aa_gl_id_normal = aa_gl_get_attrib_location(aa_gl_id_program, "normal");
     //aa_gl_id_color = glGetAttribLocation(aa_gl_id_program, "color");
-    aa_gl_id_uv = glGetAttribLocation(aa_gl_id_program, "UV");
+    aa_gl_id_uv = aa_gl_get_attrib_location(aa_gl_id_program, "UV");
 
-    aa_gl_id_light_position = glGetUniformLocation(aa_gl_id_program, "light_world");
-    aa_gl_id_ambient = glGetUniformLocation(aa_gl_id_program, "ambient");
-    aa_gl_id_light_color = glGetUniformLocation(aa_gl_id_program, "light_color");
-    aa_gl_id_light_power = glGetUniformLocation(aa_gl_id_program, "light_power");
-    aa_gl_id_specular = glGetUniformLocation(aa_gl_id_program, "specular");
-    aa_gl_id_texture = glGetUniformLocation(aa_gl_id_program, "texture_sampler");
+    aa_gl_id_light_position = aa_gl_get_uniform_location(aa_gl_id_program, "light_world");
+    aa_gl_id_ambient = aa_gl_get_uniform_location(aa_gl_id_program, "ambient");
+    aa_gl_id_light_color = aa_gl_get_uniform_location(aa_gl_id_program, "light_color");
+    aa_gl_id_light_power = aa_gl_get_uniform_location(aa_gl_id_program, "light_power");
+    aa_gl_id_specular = aa_gl_get_uniform_location(aa_gl_id_program, "specular");
+    aa_gl_id_texture = aa_gl_get_uniform_location(aa_gl_id_program, "texture_sampler");
 
     /* printf("ids: %d\n", */
     /*        aa_gl_id_specular ); */
 
-    aa_gl_id_camera_world = glGetUniformLocation(aa_gl_id_program, "camera_world");
-    aa_gl_id_matrix_model = glGetUniformLocation(aa_gl_id_program, "matrix_model");
-    aa_gl_id_matrix_camera = glGetUniformLocation(aa_gl_id_program, "matrix_camera");
-    aa_gl_id_rotate = glGetUniformLocation(aa_gl_id_program, "matrix_rotate");
+    aa_gl_id_camera_world = aa_gl_get_uniform_location(aa_gl_id_program, "camera_world");
+    aa_gl_id_matrix_model = aa_gl_get_uniform_location(aa_gl_id_program, "matrix_model");
+    aa_gl_id_matrix_camera = aa_gl_get_uniform_location(aa_gl_id_program, "matrix_camera");
+    aa_gl_id_rotate = aa_gl_get_uniform_location(aa_gl_id_program, "matrix_rotate");
+
+
+    /* MacOSX requires a vertex attribute object, even for OpenGL 2.0. */
+    /* Linux doesn't care. */
+    glGenVertexArrays(1, &aa_gl_vao);
+    check_error("glGenVertexArrays");
+
+    glBindVertexArray(aa_gl_vao);
+    check_error("glBindVertexArray");
 
     /* Register cleanup function */
     aa_gl_buffers_destroy_fun = aa_gl_buffers_schedule_destroy;
@@ -310,21 +362,19 @@ AA_API void aa_gl_init()
 }
 
 
-static void check_error( const char *name ){
-    for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
-        abort();
-    }
-}
+
 
 AA_API void aa_gl_draw_tf (
     const double *world_E_model,
     const struct aa_rx_geom_opt *opt,
     const struct aa_gl_buffers *buffers )
 {
-    // Uniforms
-    glUniform3fv(aa_gl_id_specular, 1, buffers->specular);
-    check_error("unform specular");
+    check_error("begin aa_gl_draw_tf");
+
+    //glBindVertexArray(aa_gl_vao);
+    //check_error("glBindVertexArray");
+
+    //fprintf(stderr, "draw_tf\n");
 
     // model matrix
     GLfloat M_model[16];
@@ -342,21 +392,30 @@ AA_API void aa_gl_draw_tf (
         }
     }
 
+    /*--------- Bind Data ---------*/
+
+    // Uniforms
+    glUniform3fv(aa_gl_id_specular, 1, buffers->specular);
+    check_error("unform specular");
+
     glUniformMatrix4fv(aa_gl_id_matrix_model, 1, GL_FALSE, M_model);
     check_error("uniform mat model");
+
     glUniformMatrix3fv(aa_gl_id_rotate, 1, GL_FALSE, M_rotate);
     check_error("uniform mat rotate");
 
     // positions
     {
+        assert(buffers->values);
+
         glBindBuffer(GL_ARRAY_BUFFER, buffers->values);
         check_error("glBindBuffer");
 
-        glEnableVertexAttribArray((GLuint)aa_gl_id_position);
-        check_error("glEnableVert");
-
         glVertexAttribPointer((GLuint)aa_gl_id_position, buffers->values_size, GL_FLOAT, GL_FALSE, 0, 0);
         check_error("glVertAttribPointer position");
+
+        glEnableVertexAttribArray((GLuint)aa_gl_id_position);
+        check_error("glEnableVertexAttribArray");
 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -409,6 +468,7 @@ AA_API void aa_gl_draw_tf (
     //aa_dump_mat( stdout, v_light, 1, 3 );
 
 
+    /*--------- Render it ---------*/
 
     if( buffers->has_indices ) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers->indices);
@@ -418,15 +478,16 @@ AA_API void aa_gl_draw_tf (
             GL_UNSIGNED_INT,   // type
             (void*)0           // element array buffer offset
             );
-        //check_error("glDrawElements");
+        check_error("glDrawElements");
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
         //fprintf(stderr,"Draw simple: %u\n", buffers->count);
         glDrawArrays(buffers->mode, 0, buffers->count);
-        //check_error("glDrawArrays");
+        check_error("glDrawArrays");
     }
 
 
+    /*--------- Cleanup ---------*/
     glDisableVertexAttribArray((GLuint)aa_gl_id_position);
     /* glDisableVertexAttribArray((GLuint)aa_gl_id_color); */
 
@@ -442,7 +503,6 @@ AA_API void aa_gl_draw_tf (
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 }
 
 AA_API void
@@ -649,15 +709,15 @@ static void tri_mesh (
     bind_mesh( geom, mesh, 3 );
 }
 
-static void quad_mesh (
-    struct aa_rx_geom *geom,
-    struct aa_rx_mesh *mesh
-    )
-{
-    geom->gl_buffers = AA_NEW0(struct aa_gl_buffers);
-    geom->gl_buffers->mode = GL_QUADS;
-    bind_mesh( geom, mesh, 4 );
-}
+/* static void quad_mesh ( */
+/*     struct aa_rx_geom *geom, */
+/*     struct aa_rx_mesh *mesh */
+/*     ) */
+/* { */
+/*     geom->gl_buffers = AA_NEW0(struct aa_gl_buffers); */
+/*     geom->gl_buffers->mode = GL_QUADS; */
+/*     bind_mesh( geom, mesh, 4 ); */
+/* } */
 
 /* static void line_mesh ( */
 /*     struct aa_rx_geom *geom, */
@@ -691,10 +751,14 @@ AA_API void aa_geom_gl_buffers_init_grid (
     size_t n_vert = 8*(n_x+n_y-1);
     double w = geom->shape.width / 2;
 
+    size_t isize = 2 * n_vert * sizeof(GLfloat);
+    unsigned *indices = (unsigned*)aa_mem_region_local_alloc(isize);
     size_t vsize = 3 * n_vert * sizeof(GLfloat);
     GLfloat *values = (GLfloat*)aa_mem_region_local_alloc(vsize);;
 
     static const double a[2] = {1,-1};
+    size_t idx = 0;
+    unsigned nn = 0;
 
     // x
     size_t c = 0;
@@ -722,6 +786,15 @@ AA_API void aa_geom_gl_buffers_init_grid (
             values[c++] = y0;
             values[c++] = 0;
 
+            indices[idx++] = nn;
+            indices[idx++] = nn + 1;
+            indices[idx++] = nn + 2;
+
+            indices[idx++] = nn;
+            indices[idx++] = nn + 2;
+            indices[idx++] = nn + 3;
+
+            nn += 4;
         }
     }
 
@@ -750,6 +823,16 @@ AA_API void aa_geom_gl_buffers_init_grid (
             values[c++] = y0;
             values[c++] = 0;
 
+            indices[idx++] = nn;
+            indices[idx++] = nn + 1;
+            indices[idx++] = nn + 2;
+
+            indices[idx++] = nn;
+            indices[idx++] = nn + 2;
+            indices[idx++] = nn + 3;
+
+            nn += 4;
+
         }
     }
 
@@ -759,9 +842,10 @@ AA_API void aa_geom_gl_buffers_init_grid (
 
     aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 );
     aa_rx_mesh_set_texture(mesh, &geom->base.opt);
+    aa_rx_mesh_set_indices( mesh, idx/3, indices, 0 );
 
 
-    quad_mesh( &geom->base, mesh );
+    tri_mesh( &geom->base, mesh );
 
     aa_mem_region_local_pop(values);
     aa_rx_mesh_destroy(mesh);
@@ -782,6 +866,8 @@ AA_API void aa_geom_gl_buffers_init_box (
 
     GLfloat values[6*4*3];
     GLfloat normals[6*4*3];
+    unsigned indices[6*2*3];
+
     GLfloat d[3] = { (GLfloat)geom->shape.dimension[0] / 2,
                      (GLfloat)geom->shape.dimension[1] / 2,
                      (GLfloat)geom->shape.dimension[2] / 2};
@@ -790,7 +876,9 @@ AA_API void aa_geom_gl_buffers_init_box (
 
     // Z
     size_t n = 0;
+
     for( size_t k = 0; k < 2; k ++ ) {
+
         for( size_t ell = 0; ell<4; ell++ ) {
             size_t i = ii[ell][0];
             size_t j = ii[ell][1];
@@ -831,90 +919,32 @@ AA_API void aa_geom_gl_buffers_init_box (
             n++;
         }
     }
-    //fprintf(stderr, "n: %lu\n", n );
 
-    //aa_dump_matf( stdout, values, 3, 6*4 );
-
-
-
-    /* unsigned n_indices = 6*4; */
-    /* unsigned indices[n_indices]; */
-    /* for( unsigned i = 0; i < n_indices; i++ ) { */
-    /*     indices[i] = i; */
-    /* } */
-
-    /* aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 ); */
+    size_t idx=0;
+    {
+        unsigned nn = 0;
+        for( unsigned axis = 0; axis < 3; axis ++ ) {
+            for( size_t k = 0; k < 2; k ++ ) {
+                indices[idx++] = nn;
+                indices[idx++] = nn+1;
+                indices[idx++] = nn+2;
+                indices[idx++] = nn;
+                indices[idx++] = nn+3;
+                indices[idx++] = nn+2;
+                nn += 4;
+            }
+        }
+        assert( sizeof(indices)/sizeof(indices[0]) == idx );
+    }
 
     struct aa_rx_mesh *mesh = aa_rx_mesh_create();
     aa_rx_mesh_set_vertices( mesh, n, values, 0 );
     aa_rx_mesh_set_normals( mesh, n, normals, 0 );
+    aa_rx_mesh_set_indices( mesh, idx/3, indices, 0 );
     aa_rx_mesh_set_texture(mesh, &geom->base.opt);
-    quad_mesh( &geom->base, mesh );
+    tri_mesh( &geom->base, mesh );
     aa_rx_mesh_destroy(mesh);
 
-
-    /* // fill vertices */
-    /* for( size_t x = 0, j=0; x < 2; x ++ ) { */
-    /*     for( size_t y = 0; y < 2; y ++ ) { */
-    /*         for( size_t z = 0; z < 2; z ++ ) { */
-    /*             values[j++] = (GLfloat)(a[x]*d[0]); */
-    /*             values[j++] = (GLfloat)(a[y]*d[1]); */
-    /*             values[j++] = (GLfloat)(a[z]*d[2]); */
-    /*         } */
-    /*     } */
-    /* } */
-    /* for( size_t i = 0; i < 8; i ++ ){ */
-    /*     AA_MEM_CPY( normals+3*i, values+3*i, 3 ); */
-    /*     aa_tf_vnormalizef( normals+3*i ); */
-    /* } */
-
-    /* /\*    xyz */
-    /*  *    === */
-    /*  * 0: +++ */
-    /*  * 1: ++- */
-    /*  * 2: +-+ */
-    /*  * 3: +-- */
-    /*  * */
-    /*  * 4: -++ */
-    /*  * 5: -+- */
-    /*  * 6: --+ */
-    /*  * 7: --- */
-    /*  *\/ */
-
-    /* { */
-    /*     size_t j = 0; */
-    /*     // +x */
-    /*     quad_tr(indices+j, 0,1,2,3 ); */
-    /*     j+=6; */
-    /*     // -x */
-    /*     quad_tr(indices+j, 4,5,6,7 ); */
-    /*     j+=6; */
-    /*     // +y */
-    /*     quad_tr(indices+j, 0,1,4,5 ); */
-    /*     j+=6; */
-    /*     // -y */
-    /*     quad_tr(indices+j, 2,3,6,7 ); */
-    /*     j+=6; */
-    /*     // +z */
-    /*     quad_tr(indices+j, 0,2,4,6 ); */
-    /*     j+=6; */
-    /*     // -z */
-    /*     quad_tr(indices+j, 1,3,5,7 ); */
-    /*     j+=6; */
-    /* } */
-
-    /* for( size_t i = 0; i < sizeof(colors)/(4*sizeof(*colors)); i ++ ) { */
-    /*     for( size_t j = 0; j < 4; j ++ ) { */
-    /*         colors[4*i + j ] = (GLfloat)geom->base.opt.color[j]; */
-    /*     } */
-    /* } */
-
-    /* struct aa_rx_mesh vmesh = {0}; */
-    /* struct aa_rx_mesh *mesh = &vmesh; */
-    /* aa_rx_mesh_set_vertices( mesh, n_vert, values, 0 ); */
-    /* aa_rx_mesh_set_normals( mesh, n_vert, normals, 0 ); */
-    /* aa_rx_mesh_set_indices( mesh, n_indices, indices, 0 ); */
-    /* tri_mesh( geom, mesh ); */
 }
 
 
@@ -1230,6 +1260,8 @@ aa_rx_sg_render(
 
     aa_gl_lock();
 
+    check_error("begin aa_rx_sg_render");
+
     aa_rx_sg_gl_init((struct aa_rx_sg*)sg);
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1341,5 +1373,28 @@ void aa_gl_unlock()
     if( pthread_mutex_unlock( &gl_mutex ) ) {
         perror("AminoGL Mutex Unlock");
         abort();
+    }
+}
+
+AA_API const char *
+aa_gl_error_string( GLenum error )
+{
+    switch(error) {
+    case GL_NO_ERROR:          return "OpenGL no error (GL_NO_ERROR)";
+    case GL_INVALID_ENUM:      return "OpenGL invalid enum (GL_INVALID_ENUM)";
+    case GL_INVALID_VALUE:     return "OpenGL invalid value (GL_INVALID_VALUE)";
+    case GL_INVALID_OPERATION: return "OpenGL invalid operation (GL_INVALID_OPERATION)";
+#ifdef GL_STACK_OVERFLOW
+    case GL_STACK_OVERFLOW:    return "OpenGL stack overflow (GL_STACK_OVERFLOW)";
+#endif
+#ifdef GL_STACK_UNDERFLOW
+    case GL_STACK_UNDERFLOW:   return "OpenGL stack underflow (GL_STACK_UNDERFLOW)";
+#endif
+    case GL_OUT_OF_MEMORY:     return "OpenGL out of memory (GL_OUT_OF_MEMORY)";
+#ifdef GL_TABLE_TOO_LARGE
+    case GL_TABLE_TOO_LARGE:   return "OpenGL table too large (GL_TABLE_TOO_LARGE)";
+#endif
+    default:
+        return "Unknown OpenGL error";
     }
 }

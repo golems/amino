@@ -350,20 +350,29 @@ AC_ARG_WITH([opengl],
             [],
             [with_opengl=yes])
 
+
+UNAME=`uname`
+AS_IF([test "x$UNAME" = xDarwin],
+[
+  AS_IF([test "x$GL_CFLAGS" = x],
+        [export GL_CFLAGS="-framework OpenGL"
+         AC_MSG_NOTICE([Guessing GL_CFLAGS for Darwin: $GL_CFLAGS])
+        ])
+  AS_IF([test "x$GL_LIBS" = x],
+        [export GL_LIBS="-framework OpenGL"
+         AC_MSG_NOTICE([Guessing GL_LIBS for Darwin: $GL_LIBS])
+        ])
+])
+
 AS_IF([test "x$with_opengl" = xyes], [
   PKG_CHECK_MODULES([GL],
                     [gl],
                     [HAVE_GL=yes])
-  dnl PKG_CHECK_MODULES([GLU],
-  dnl                   [glu],
-  dnl                   [HAVE_GLU=yes])
   ]
 )
 
 AC_SUBST([GL_CFLAGS])
 AC_SUBST([GL_LIBS])
-AC_SUBST([HAVE_GL])
-AM_CONDITIONAL([HAVE_GL], [test "x$HAVE_GL" = xyes])
 
 ## SDL ##
 AC_ARG_WITH([sdl2],
@@ -379,17 +388,18 @@ AS_IF([test "x$with_sdl2" = xyes], [
   PKG_CHECK_MODULES([SDL2],
                     [sdl2],
                     [HAVE_SDL2=yes])
-
-  PKG_CHECK_MODULES([GLEW],
-                    [glew] )]
+  ]
 )
 
-AC_SUBST([GLEW_CFLAGS])
-AC_SUBST([GLEW_LIBS])
 AC_SUBST([SDL2_CFLAGS])
 AC_SUBST([SDL2_LIBS])
-AC_SUBST([HAVE_SDL2])
-AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
+
+## AMINO GL ##
+AS_IF([test "x$HAVE_SDL2" = xyes -a "x$HAVE_GL" = xyes],
+      [AMINO_GL=yes],
+      [AMINO_GL=no])
+AC_SUBST([AMINO_GL])
+AM_CONDITIONAL([AMINO_GL], [test "x$AMINO_GL" = xyes])
 
 ## FCL ##
 AC_ARG_WITH([fcl],
@@ -657,6 +667,8 @@ CONFIG_SCRIPT([demo/urdf/ur/ur10-view])
 CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
 CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
 
+CONFIG_SCRIPT([aarxc])
+
 AC_OUTPUT
 
 
@@ -683,8 +695,7 @@ AS_IF([test "x$with_java" = xyes], [
 AC_MSG_NOTICE([Java compiler:     $JAVAC])]
 AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
 )
-AC_MSG_NOTICE([Use OpenGL:        $with_opengl])
-AC_MSG_NOTICE([Use SDL2:          $HAVE_SDL2])
+AC_MSG_NOTICE([Use SDL2/OpenGL:   $AMINO_GL])
 AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
 AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
 AC_MSG_NOTICE([Use OMPL:          $HAVE_OMPL])

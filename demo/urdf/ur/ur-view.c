@@ -36,11 +36,9 @@
  */
 
 
-#include <error.h>
 #include <stdio.h>
 #include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "amino/amino_gl.h"
 #include <SDL.h>
 
 #include "amino.h"

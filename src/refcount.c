@@ -68,7 +68,7 @@ unsigned aa_mem_ref_dec_atomic( _Atomic unsigned *count )
  * If you don't like it, get proper C11 suport already. */
 static pthread_mutex_t refcount_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-unsigned aa_mem_ref_inc_mute( unsigned *count )
+unsigned aa_mem_ref_inc_mutex( unsigned *count )
 {
     pthread_mutex_lock( &refcount_mutex );
     unsigned old = *count;

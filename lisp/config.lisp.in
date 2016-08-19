@@ -40,9 +40,7 @@
 
 (in-package :amino)
 
-(defvar *have-sdl2* "@HAVE_SDL2@")
-(defvar *have-gl* "@HAVE_GL@")
-
+(defvar *have-amino-gl* "@AMINO_GL@")
 
 (defvar *have-fcl* "@HAVE_FCL@")
 (defvar *have-ompl* "@HAVE_OMPL@")
