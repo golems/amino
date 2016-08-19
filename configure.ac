@@ -141,16 +141,15 @@ m4_ifdef([APPEND_CXXFLAG],[],
 
 
 # Fortran Checks
-# TODO: check that we have either the fortran compiler or f2c
+# Use fortran compiler if it exists.  Otherwise fallback on f2c.
 
 AC_ARG_WITH([fortran],
             AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
             [],
-            [with_fortran=yes])
+            [with_fortran=auto])
 
-AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
 
-AS_IF([test "x$with_fortran" = xyes],
+AS_IF([test "x$with_fortran" != xno -a "x$FC" != x],
 [
 AC_DEFINE([USE_FORTRAN],[1],[Use the fortran compiler])
 AC_LANG([Fortran])
@@ -177,17 +176,18 @@ APPEND_FCFLAG([-Wintrinsic-shadow])
 ])
 
 AC_CHECK_PROGS([F2C], [f2c])
-AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
 AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
 
+AS_IF([test "x$with_fortran" = xyes -a "x$FC" = x],
+      [AC_MSG_ERROR([No Fortran compiler detected])])
+AS_IF([test "x$with_fortran" = xno -a "x$F2C" = x],
+      [AC_MSG_ERROR([No F2C detected])])
+AS_IF([test "x$FC" = x -a "x$F2C" = x],
+      [AC_MSG_ERROR([No Fortran compiler or F2C detected])])
 
-AS_IF([test "x$with_fortran" = xyes],
-      [AS_IF([test "x$FC" = "x"],
-             [AC_MSG_ERROR([No Fortran compiler detected])])],
-      [AS_IF([test "x$F2C" = "x"],
-             [AC_MSG_ERROR([No F2C cdetected])])])
-
+AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
+AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" != xno -a "x$FC" != x])
 
 # Doxygen
 m4_ifdef([DX_INIT_DOXYGEN],
