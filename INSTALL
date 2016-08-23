@@ -1,13 +1,15 @@
 Installation {#installation}
 ============================
 
+[TOC]
+
 This file describes the installation process for Amino.
 
-Dependencies
-============
+Setup and Dependencies {#installation_setup}
+======================
 
-Required
---------
+Required Dependencies {#installation_setup_required}
+---------------------
 
 These dependecies are required to compile and use Amino:
 
@@ -21,8 +23,8 @@ These dependecies are required to compile and use Amino:
 * [Maxima] (http://maxima.sourceforge.net/) (only to build from git)
 * [Flex] (http://flex.sourceforge.net/) (only to build from git)
 
-Optional
---------
+Optional Dependencies {#installation_setup_optional}
+---------------------
 
 These dependecies are optional and may be used to enable additional
 features in Amino:
@@ -55,18 +57,10 @@ features in Amino:
   - [GLPK] (https://www.gnu.org/software/glpk/)
   - [LP-Solve] (http://lpsolve.sourceforge.net/5.5/)
 
-*Note 1*: Some versions of Blender in Ubuntu and Debian do not support
-          the Collada format for 3D meshes, so you may need to install
-          Blender manually in this case
-          (see https://www.blender.org/download/).
+Debian and Ubuntu GNU/Linux {#installation_setup_apt}
+---------------------------
 
-*Note 2*: The versions of SBCL in some distributions (e.g., SBCL 1.2.4
-          in Debian Jessie) do not work with new versions of [CFFI]
-          (https://common-lisp.net/project/cffi/).  In these cases,
-          you will need to install SBCL manually (see
-          http://www.sbcl.org/platform-table.html).
-
-To install these on Debian or Ubuntu GNU/Linux, you can do:
+To install the dependencies on Debian or Ubuntu GNU/Linux via APT:
 
     sudo apt-get install build-essential gfortran \
          autoconf automake libtool autoconf-archive autotools-dev \
@@ -78,16 +72,61 @@ To install these on Debian or Ubuntu GNU/Linux, you can do:
          blender flex povray libav-tools \
          coinor-libclp-dev libglpk-dev liblpsolve55-dev
 
+Now proceed to Quicklisp Setup below.
 
-To install these on MacOSX via MacPorts, you can do
+*Note 1*: Some versions of Blender in Ubuntu and Debian do not support
+          the Collada format for 3D meshes, so you may need to install
+          Blender manually in this case
+          (see https://www.blender.org/download/).
 
-    sudo port install sbcl maxima f2c flex \
-         OpenBLAS \
-         libsdl2 povray ffmpeg  \
-         fcl ompl \
-         glpk
+*Note 2*: The versions of SBCL in some distributions (e.g., SBCL 1.2.4
+          in Debian Jessie) do not work with new versions of [CFFI]
+          (https://common-lisp.net/project/cffi/).  In these cases,
+          you will need to install SBCL manually (see
+          http://www.sbcl.org/platform-table.html).
 
-Then, install [Quicklisp](https://www.quicklisp.org) manually, if
+Mac OS X using MacPorts {#installation_setup_mac}
+-----------------------
+
+* To install the dependencies on Mac OS X via [MacPorts]
+  (https://www.macports.org/):
+
+        sudo port install \
+             autoconf-archive maxima f2c flex sbcl  \
+             OpenBLAS \
+             libsdl2 povray ffmpeg  \
+             fcl ompl \
+             glpk
+
+* Ensure that `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH` contains the
+  MacPorts lib directory (typically `/opt/local/lib`).
+
+        echo $LD_LIBRARY_PATH
+        echo $DYLD_LIBRARY_PATH
+
+  If `/opt/local/lib` does not appear in either `LD_LIBRARY_PATH` or
+  `DYLD_LIBRARY_PATH`, do the following (and consider adding it to
+  your shell startup script).
+
+        export LD_LIBRARY_PATH="/opt/local/lib:$LD_LIBRARY_PATH"
+
+* Ensure that autoconf can find the MacPorts-installed header files by
+  editing the `config.site` file under your preferred installation
+  prefix (default: `/usr/local`)
+
+        vi /usr/local/share/config.site
+
+  Ensure that the `CPPFLAGS` variable in config.site contains the
+  MacPorts include directory.
+
+        CPPFLAGS="-I/opt/local/include"
+
+Now proceed to Quicklisp Setup below.
+
+Quicklisp Setup {#installation_setup_quicklisp}
+---------------
+
+Finally, install [Quicklisp](https://www.quicklisp.org) manually, if
 desired for ray tracing and robot model compilation.
 
     wget https://beta.quicklisp.org/quicklisp.lisp
@@ -96,7 +135,7 @@ desired for ray tracing and robot model compilation.
          --eval '(ql:add-to-init-file)' \
          --eval '(quit)'
 
-Build Overview
+Build Overview {#installation_build_overview}
 ==============
 
 1. If you have obtained amino from the git repo, you need to
@@ -128,7 +167,7 @@ Build Overview
 
 *******************************************************************
 
-Generic Instructions for GNU Autotools
+Generic Instructions for GNU Autotools {#installation_autotools}
 ======================================
 
 
