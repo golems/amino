@@ -399,14 +399,7 @@ AS_IF([test "x$with_fcl" = xyes], [
   PKG_CHECK_MODULES([FCL],
                     [fcl],
                     [HAVE_FCL=yes])
-  # TODO: smartly check with we also need boost_system
-  FCL_LIBS="$FCL_LIBS -lboost_system"
 ])
-AC_SUBST([FCL_CFLAGS])
-AC_SUBST([FCL_LIBS])
-AC_SUBST([HAVE_FCL])
-AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
-
 
 # FCL pointer type
 AS_IF([test "x$HAVE_FCL" = xyes],
@@ -423,6 +416,48 @@ AS_IF([test "x$HAVE_FCL" = xyes],
        AC_DEFINE_UNQUOTED([AA_FCL_SHARED_PTR],[$AA_FCL_SHARED_PTR],[Type for FCL shared pointers.])])
 
 
+# FCL extra linking
+# boost_system is sometimes required
+AC_DEFUN([FCL_LINK],
+         [
+           AS_IF([test "x$FCL_LINKED" != xyes],
+           [
+             AC_LANG([C++])
+             AC_MSG_CHECKING([FCL extra libs "$1"])
+             CXXFLAGS_SAVED="$CXXFLAGS"
+             LDFLAGS_SAVED="$LDFLAGS"
+
+             LDFLAGS="$LDFLAGS $FCL_LIBS $1"
+             CXXFLAGS="$CXXFLAGS $FCL_CFLAGS"
+
+             AC_LINK_IFELSE(
+               [AC_LANG_PROGRAM([
+                                  #include <fcl/broadphase/broadphase.h>
+                                  #include <fcl/BVH/BVH_model.h>
+                                ],
+                                [fcl::BroadPhaseCollisionManager *manager =
+                                 new fcl::DynamicAABBTreeCollisionManager();])],
+               [AC_MSG_RESULT([yes])
+                FCL_LINKED=yes
+                FCL_LIBS="$FCL_LIBS $1"
+               ],
+               [AC_MSG_RESULT([no])])
+
+             CXXFLAGS="$CXXFLAGS_SAVED"
+             LDFLAGS="$LDFLAGS_SAVED"
+           ])
+         ])
+
+FCL_LINK([])
+FCL_LINK([-lboost_system])
+FCL_LINK([-lboost_system-mt])
+
+AC_SUBST([FCL_CFLAGS])
+AC_SUBST([FCL_LIBS])
+AC_SUBST([HAVE_FCL])
+AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
+
+
 ## OMPL ##
 AC_ARG_WITH([ompl],
             [AS_HELP_STRING([--without-ompl], [Disable support for the Open Motion Planning Library (OMPL)])],
@@ -437,8 +472,6 @@ AS_IF([test "x$with_ompl" = xyes], [
   PKG_CHECK_MODULES([OMPL],
                     [ompl >= 1.2.1],
                     [HAVE_OMPL=yes])
-  # TODO: smartly check with we also need boost_system
-  OMPL_LIBS="$OMPL_LIBS = -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization"
 ])
 
 AC_SUBST([OMPL_CFLAGS])
