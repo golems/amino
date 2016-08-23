@@ -16,7 +16,7 @@ PLANNING_LIBS = libamino-planning.la libamino-collision.la
 
 # call aarxc with paths set to look in the build and source trees
 AARXC_DEP = aarx.core $(top_srcdir)/share/aarxc
-AARXC = LD_LIBRARY_PATH=$(top_builddir)/.libs:$(LD_LIBRARY_PATH) PATH=$(top_builddir):$(PATH) $(top_srcdir)/share/aarxc
+AARXC = $(top_builddir)/aarxc
 
 ###############
 ## SIMPLE RX ##
