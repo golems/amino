@@ -57,19 +57,16 @@ aarx_core_SOURCES = \
 	lisp/rx/trajectory.lisp \
 	lisp/rx/config.lisp \
 	lisp/rx/driver.lisp \
-	lisp/rx/sg-gen.lisp
-
-EXTRA_DIST += \
-	lisp/amino.asd \
+	lisp/rx/sg-gen.lisp \
 	lisp/amino-rx.asd \
-	lisp/amino-opt.asd
+	lisp/amino-opt.asd \
+	lisp/amino.asd
 
-nodist_aarx_core_SOURCES: lisp/libdir.lisp
 
 lisp/libdir.lisp: configure
 	echo "(in-package :amino) (defparameter *libdir* \"${libdir}\")" > lisp/libdir.lisp
 
-aarx.core: $(top_srcdir)/share/make-aarx.lisp $(aarx_core_SOURCES) $(nodist_aarx_core_SOURCES) libamino.la libamino-gl.la libamino-collision.la libamino-planning.la libamino-xerbla-nop.la
+aarx.core: $(top_srcdir)/share/make-aarx.lisp $(aarx_core_SOURCES) libamino.la libamino-gl.la libamino-collision.la libamino-planning.la libamino-xerbla-nop.la lisp/libdir.lisp
 	$(top_srcdir)/share/make-aarx.sh $(COMMON_LISP) $(top_srcdir) $(top_builddir)
 
 
