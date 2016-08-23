@@ -595,9 +595,26 @@ distclean-local:
 sync-doc:
 	rsync -r doc/manual/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 
-doc: doxygen-doc
+
+if HAVE_DOXYGEN
+
+doxygen:
+	$(DOXYGEN)
+
+doc/manual: doxygen
+
+doc: doxygen
 	$(MKDIR_P) doc/manual/doc
 	cp doc/logo-medium.png doc/manual/doc
+
+else
+
+doc/manual:
+	$(MKDIR_P) doc/manual
+
+endif
+
+
 
 if HAVE_HELP2MAN
 doc/aarxc.1: $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
@@ -605,5 +622,3 @@ doc/aarxc.1: $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
 endif
 
 EXTRA_DIST += doc/manual
-
-include aminclude.am

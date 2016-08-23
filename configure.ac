@@ -190,29 +190,16 @@ AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
 AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" != xno -a "x$FC" != x])
 
 # Doxygen
-m4_ifdef([DX_INIT_DOXYGEN],
-         [DX_HTML_FEATURE(ON)
-          DX_PDF_FEATURE(OFF)
-          DX_MAN_FEATURE(OFF)
-          DX_PS_FEATURE(OFF)
-          DX_CHM_FEATURE(OFF)
-          DX_CHI_FEATURE(OFF)
-          DX_MAN_FEATURE(OFF)
-          DX_RTF_FEATURE(OFF)
-          DX_XML_FEATURE(OFF)
-          DX_PDF_FEATURE(OFF)
-          DX_INIT_DOXYGEN(amino)],
-         [AM_CONDITIONAL([DX_COND_doc],   false)
-          AM_CONDITIONAL([DX_COND_html],  false)
-          AM_CONDITIONAL([DX_COND_chm],   false)
-          AM_CONDITIONAL([DX_COND_chi],   false)
-          AM_CONDITIONAL([DX_COND_rtf],   false)
-          AM_CONDITIONAL([DX_COND_xml],   false)
-          AM_CONDITIONAL([DX_COND_ps],    false)
-          AM_CONDITIONAL([DX_COND_pdf],   false)
-          AM_CONDITIONAL([DX_COND_latex], false)
-          AM_CONDITIONAL([DX_COND_man],   false)
-         ])
+AC_ARG_WITH([doxygen],
+            AS_HELP_STRING([--without-doxygen], [Disable doxygen support]),
+            [],
+            [with_doxygen=auto])
+AS_IF([test "x$with_doxygen" != xno],
+      [AC_CHECK_PROGS([DOXYGEN],[doxygen])])
+AS_IF([test "x$with_doxygen" = xyes -x "x$DOXYGEN" = x],
+      [AC_MSG_ERROR([Doxygen not found])])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test "x$DOXYGEN" != x])
+
 
 
 AC_ARG_ENABLE([man],
