@@ -341,7 +341,10 @@
                  (file-write-date source-file)))
       ;; compile
       (progn
-        (let ((compile-args `(,libtool "--tag=CC" "--mode=compile" ,@cc "-c" "-o" ,lo ,source-file)))
+        (let ((compile-args `(,libtool "--tag=CC" "--mode=compile" ,@cc
+                                       ,@(split-spaces amino::*cppflags*)
+                                       ,(format nil "-I~A" *robray-include*)
+                                       "-c" "-o" ,lo ,source-file)))
           (uiop/run-program:run-program compile-args :output *standard-output* :error-output *error-output*))
         ;; link
         (let ((link-args `(,libtool "--tag=CC" "--mode=link" ,@cc

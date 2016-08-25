@@ -53,4 +53,5 @@
 
 (defvar *cc* "@CC@")
 (defvar *cflags* "@CFLAGS@")
+(defvar *cppflags* "@CPPFLAGS@")
 (defvar *ldflags* "@LDFLAGS@")

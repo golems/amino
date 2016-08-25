@@ -340,6 +340,9 @@
   (namestring (merge-pathnames (make-pathname :directory '(:relative :up))
                                (asdf:system-source-directory :amino))))
 
+(defparameter *robray-include*
+  (namestring (merge-pathnames (make-pathname :directory '(:relative "include"))
+                               *robray-root*)))
 
 (defun find-script (name &optional directory)
   (let ((pathname (merge-pathnames (make-pathname :directory (or directory '(:relative "share" "exec"))
