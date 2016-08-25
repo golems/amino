@@ -13,7 +13,7 @@ Required Dependencies {#installation_setup_required}
 
 These dependecies are required to compile and use Amino:
 
-* GCC, G++
+* GCC or Clang
 * [BLAS] (http://www.netlib.org/blas/) and [LAPACK]
   (http://www.netlib.org/lapack/) (Optimized implementions such as
   [OpenBLAS](http://www.openblas.net/), [Intel MKL]
@@ -120,6 +120,20 @@ Mac OS X using MacPorts {#installation_setup_mac}
   MacPorts include directory.
 
         CPPFLAGS="-I/opt/local/include"
+
+* When installing blender on Mac OS X, you may need to create a
+  wrapper script.  If you copy the blender binaries to
+  `/usr/local/blender-2`, then then
+
+        touch /usr/local/bin/blender
+        chmod a+x /usr/local/bin/blender
+        vi /usr/local/bin/blender
+
+  and add the following:
+
+        #!/bin/sh
+
+        exec /usr/local/blender-2/blender.app/Contents/MacOS/blender $@
 
 Now proceed to Quicklisp Setup below.
 
