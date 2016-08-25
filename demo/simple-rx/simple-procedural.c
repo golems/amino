@@ -64,6 +64,10 @@ struct aa_rx_sg * NAME(struct aa_rx_sg *sg);
 
 int main(int argc, char *argv[])
 {
+    /* setup window */
+    struct aa_rx_win * win =
+        aa_rx_win_default_create ( "Amino: AARX-View", SCREEN_WIDTH, SCREEN_HEIGHT );
+
     int visual = 1;
     int collision = 0;
     struct aa_rx_sg *scenegraph;
@@ -163,9 +167,6 @@ int main(int argc, char *argv[])
         q[i] = (max + min)/2;
     }
 
-    /* setup window */
-    struct aa_rx_win * win =
-        aa_rx_win_default_create ( "Amino: AARX-View", SCREEN_WIDTH, SCREEN_HEIGHT );
     aa_rx_win_set_sg(win, scenegraph); /* Set the scenegraph for the window */
     aa_rx_win_set_config(win, m, q);
 
@@ -174,10 +175,9 @@ int main(int argc, char *argv[])
     aa_gl_globals_set_show_collision(globals, collision);
 
     /* start display */
-    aa_rx_win_start(win);
+    aa_rx_win_run();
 
     /* Cleanup */
-    aa_rx_win_join(win);
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
     SDL_Quit();

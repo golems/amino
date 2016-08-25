@@ -119,10 +119,9 @@ int main(int argc, char *argv[])
     aa_gl_globals_set_show_collision(globals, collision);
 
     /* start display */
-    aa_rx_win_start(win);
+    aa_rx_win_run();
 
     /* Cleanup */
-    aa_rx_win_join(win);
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
     SDL_Quit();

@@ -60,6 +60,23 @@
 
 #include <pthread.h>
 
+static struct aa_rx_win *s_win = NULL;
+static int s_loop_running = 0;
+static pthread_t s_thread_async;
+static pthread_t s_thread_run;
+static pthread_t s_thread_win;
+static pthread_mutex_t s_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t s_cond = PTHREAD_COND_INITIALIZER;
+
+static void *(*s_handler)(void*) = NULL;
+static void *s_handler_arg = NULL;
+static void *s_handler_result = NULL;
+static unsigned s_handler_done = 0;
+
+static void s_lock(void);
+static void s_unlock(void);
+static void s_broadcast(void);
+static void s_wait( void );
 
 static int default_display( struct aa_rx_win *win,
                             void *cx_, struct aa_sdl_display_params *params );
@@ -80,14 +97,73 @@ struct aa_rx_win {
     pthread_mutex_t mutex;
     pthread_mutexattr_t mattr;
 
-    unsigned stop : 1;
+
+
+    unsigned stop  : 1;
     unsigned stop_on_quit : 1;
 
     unsigned updated : 1;
     unsigned running : 1;
-
-    unsigned paused : 1;
 };
+
+
+AA_API void *
+aa_rx_win_call( void *(*function)(void*),
+                void *context )
+{
+    /* Set function */
+    s_lock();
+
+    /* If we are the window thread, just run it */
+    if( s_win
+        && pthread_equal( s_thread_win, pthread_self() ) )
+    {
+        void *result = function(context);
+        s_unlock();
+        return result;
+    }
+
+    /* Else, install the handler for the window thread */
+
+    while( NULL != s_handler ) {
+        s_wait();
+    }
+
+    s_handler = function;
+    s_handler_arg = context;
+    s_handler_result = NULL;
+    s_handler_done = 0;
+
+    /* Wake window thread */
+    s_broadcast();
+
+    /* Wait for result */
+    while( ! s_handler_done ) {
+        s_wait();
+    }
+
+    /* Collect result */
+    void *result = s_handler_result;
+    s_handler_result = NULL;
+    s_handler_done = 0;
+
+    s_unlock();
+
+    return result;
+}
+
+static void
+s_handle_call( )
+{
+    /* Must hold the window lock */
+    if( s_handler ) {
+        s_handler_result = s_handler(s_handler_arg);
+        s_handler = NULL;
+        s_handler_arg = NULL;
+        s_handler_done = 1;
+        s_broadcast();
+    }
+}
 
 AA_API struct aa_rx_win *
 aa_rx_win_create(
@@ -98,8 +174,18 @@ aa_rx_win_create(
     int height,
     Uint32 flags )
 {
-    struct aa_rx_win *win = AA_NEW0( struct aa_rx_win );
+    {
+        s_lock();
+        struct aa_rx_win * tmp_win = s_win;
+        s_unlock();
+        if( tmp_win ) {
+            fprintf(stderr, "Window already created\n");
+            return NULL;
+        }
+    }
 
+    /* Initialize window struct */
+    struct aa_rx_win * win = AA_NEW0( struct aa_rx_win );
 
     if( pthread_mutexattr_init(&win->mattr) ) {
         perror("pthread_mutexattr_init");
@@ -110,10 +196,17 @@ aa_rx_win_create(
         abort();
     }
 
-    if( pthread_mutex_init( & win->mutex, &win->mattr) ) {
+    if( pthread_mutex_init( &win->mutex, &win->mattr) ) {
         perror("pthread_mutex_init");
         abort();
     }
+
+    win->gl_globals = aa_gl_globals_create();
+    aa_gl_globals_set_aspect( win->gl_globals, (double)width / (double)height );
+
+    win->display = default_display;
+    win->display_cx = NULL;
+    win->stop_on_quit = 1;
 
 
     aa_sdl_gl_window( title,
@@ -122,15 +215,19 @@ aa_rx_win_create(
                       width,
                       height,
                       flags,
-                      &win->window, &win->gl_cx);
+                      &win->window, &win->gl_cx );
 
-    win->gl_globals = aa_gl_globals_create();
-    aa_gl_globals_set_aspect( win->gl_globals, (double)width / (double)height );
+    if( SDL_GL_MakeCurrent(win->window, 0) ) {
+        fprintf(stderr, "SDL_GL_MakeCurrent() failed to release: %s\n",
+                SDL_GetError());
+        abort();
+        exit(EXIT_FAILURE);
+    }
 
-    win->display = default_display;
-    win->display_cx = NULL;
-
-    win->stop_on_quit = 1;
+    s_lock();
+    s_thread_win = pthread_self();
+    s_win = win;
+    s_unlock();
 
     return win;
 }
@@ -241,7 +338,9 @@ static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_disp
     struct default_display_cx *cx = (struct default_display_cx*) cx_;
     int updated = aa_sdl_display_params_get_update(params);
 
-    if( (updated || win->updated) && cx && cx->sg ) {
+    if( (updated || win->updated)
+        && cx && cx->sg )
+    {
         aa_rx_win_display_sg_config( win, params,
                                      cx->sg, aa_rx_sg_config_count(cx->sg), cx->q );
     }
@@ -291,14 +390,19 @@ static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {
     struct aa_rx_win *win = (struct aa_rx_win*) cx_;
     int r = 0;
+
     aa_rx_win_lock(win);
-    if( !win->paused ) {
-        r = win->display(win, win->display_cx, params );
-    }
+
+    s_handle_call();
+
+    r = win->display(win, win->display_cx, params );
+
     if( win->stop ) {
         aa_sdl_display_params_set_quit(params);
     }
+
     aa_rx_win_unlock(win);
+
     return r;
 }
 
@@ -558,10 +662,68 @@ aa_rx_win_set_display_plan( struct aa_rx_win * win,
     aa_rx_win_set_display( win, mp_seq_display, cx, destroy_plan_cx );
 }
 
-
-AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
+static void *s_win_run_fun(void* arg)
 {
+    (void)arg;
+    aa_rx_win_run();
+    return NULL;
+}
 
+AA_API void aa_rx_win_run_async( )
+{
+    s_lock();
+    if( s_win && s_win->window ) {
+        if( SDL_GL_MakeCurrent(s_win->window, 0) ) {
+            fprintf(stderr, "SDL_GL_MakeCurrent() failed to release: %s\n",
+                    SDL_GetError());
+            abort();
+            exit(EXIT_FAILURE);
+        }
+    }
+        s_unlock();
+
+    if( pthread_create( &s_thread_async, NULL, s_win_run_fun, NULL ) ) {
+        fprintf(stderr, "pthread_create failed\n");
+        abort();
+        exit(EXIT_FAILURE);
+
+    }
+}
+
+AA_API void aa_rx_win_run( )
+
+{
+    /* Check if already running */
+    s_lock();
+    if( s_loop_running ) {
+        fprintf(stderr, "Display loop already running\n");
+        s_unlock();
+        return;
+    }
+    s_loop_running = 1;
+    s_thread_run = pthread_self();
+    s_unlock();
+
+    /* Wait for window creation */
+    s_lock();
+    while( NULL == s_win )
+    {
+        if(s_handler) {
+            s_handle_call();
+        } else {
+            s_wait();
+        }
+    }
+    struct aa_rx_win *win = s_win;
+
+    if( ! pthread_equal(s_thread_win, s_thread_run) ) {
+        fprintf(stderr, "Warning, using separate threads for window creation and event handling is not portable.\n");
+    }
+
+    s_unlock();
+
+    /* Set GL Context */
+    aa_rx_win_lock(win);
 
     aa_sdl_lock();
     aa_gl_lock(win);
@@ -574,52 +736,36 @@ AA_API void aa_rx_win_display_loop( struct aa_rx_win * win )
     aa_gl_unlock(win);
     aa_sdl_unlock();
 
-    aa_rx_win_lock(win);
     win->running = 1;
+
     aa_rx_win_unlock(win);
 
-    int stop = 0;
-    int stop_on_quit = 0;
 
-    do {
-        aa_sdl_display_loop( win->window, win->gl_globals,
-                             win_display, win );
-        aa_rx_win_lock(win);
-        stop = win->stop;
-        stop_on_quit = win->stop_on_quit;
-        aa_rx_win_unlock(win);
-    } while( ! stop && !stop_on_quit );
+    /* Begin SDL Event Loop */
+    {
+        int stop = 0;
+        int stop_on_quit = 0;
+        do {
+            aa_sdl_display_loop( win->window, win->gl_globals,
+                                 win_display, win );
+            aa_rx_win_lock(win);
+            stop = win->stop;
+            stop_on_quit = win->stop_on_quit;
+            aa_rx_win_unlock(win);
+        } while( ! stop && !stop_on_quit );
+    }
 
 
+    /* Cleanup and return */
     aa_rx_win_lock(win);
     win->running = 0;
     aa_rx_win_unlock(win);
 
+    s_lock();
+    s_loop_running = 0;
+    s_unlock();
 }
 
-static void* win_thread_fun( void *arg )
-{
-    struct aa_rx_win * win = (struct aa_rx_win*)arg;
-    aa_rx_win_display_loop(win);
-
-    aa_mem_region_local_destroy();
-    return NULL;
-}
-
-AA_API void
-aa_rx_win_start( struct aa_rx_win * win )
-{
-    /* We must release the current GL context in this thread so that
-     * the other thread can use it.
-     */
-    if( SDL_GL_MakeCurrent(win->window, 0) ) {
-        fprintf(stderr, "SDL_GL_MakeCurrent() failed to release: %s\n",
-                SDL_GetError());
-        abort();
-        exit(EXIT_FAILURE);
-    }
-    pthread_create( &win->thread, NULL, win_thread_fun, win );
-}
 
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win )
@@ -641,12 +787,6 @@ aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value )
 
 
 AA_API void
-aa_rx_win_join( struct aa_rx_win * win )
-{
-    pthread_join( win->thread, NULL );
-}
-
-AA_API void
 aa_rx_win_sg_gl_init( struct aa_rx_win * win,
                       struct aa_rx_sg *sg )
 {
@@ -660,29 +800,6 @@ aa_rx_win_sg_gl_init( struct aa_rx_win * win,
 
     /* aa_rx_sg_gl_init(sg); */
 
-}
-
-
-/* AA_API void */
-/* aa_rx_win_sg_render( */
-/*     struct aa_rx_win * win, */
-/*     const struct aa_rx_sg *scenegraph, */
-/*     const struct aa_gl_globals *globals, */
-/*     size_t n_TF, double *TF_abs, size_t ld_TF ) */
-/* { */
-/*     pthread_mutex_lock( &win->mutex ); */
-/*     SDL_GL_MakeCurrent(win->window, win->gl_cx); */
-/*     aa_rx_sg_render( scenegraph, globals, */
-/*                      n_TF, TF_abs, ld_TF ); */
-/*     pthread_mutex_unlock( &win->mutex ); */
-/* } */
-
-AA_API void
-aa_rx_win_pause( struct aa_rx_win * win, int paused )
-{
-    aa_rx_win_lock(win);
-    win->paused = paused ? 1 : 0;
-    aa_rx_win_unlock(win);
 }
 
 AA_API void
@@ -708,8 +825,6 @@ aa_rx_win_lock( struct aa_rx_win * win )
         perror("Mutex Lock");
         abort();
     }
-    /* (void) win; */
-    /* aa_gl_lock(); */
 }
 
 AA_API void
@@ -719,6 +834,38 @@ aa_rx_win_unlock( struct aa_rx_win * win )
         perror("Mutex Unlock");
         abort();
     }
-    /* (void) win; */
-    /* aa_gl_unlock(); */
+}
+
+static void
+s_wait( void )
+{
+    if( pthread_cond_wait(&s_cond, &s_mutex) ) {
+        perror("pthread_cond_wait");
+        abort();
+    }
+}
+
+static void s_lock()
+{
+    if( pthread_mutex_lock( &s_mutex ) ) {
+        perror("SDL Window Mutex Lock");
+        abort();
+    }
+}
+
+static void s_unlock()
+{
+    if( pthread_mutex_unlock( &s_mutex ) ) {
+        perror("SDL Window Mutex Unlock");
+        abort();
+    }
+}
+
+static void
+s_broadcast( )
+{
+    if( pthread_cond_broadcast(&s_cond) ) {
+        perror("pthread_cond_broadcast");
+        abort();
+    }
 }

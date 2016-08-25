@@ -65,6 +65,8 @@ aa_rx_win_create(
 /**
  * Create a new SDL / OpenGL window with default parameters.
  *
+ * On Mac OS X, this function may only be called from the main thread.
+ *
  * @param title   The window title
  * @param width   Initial width of the window
  * @param height  Initial height of the window
@@ -168,20 +170,28 @@ aa_rx_win_set_display_seq( struct aa_rx_win * win, struct aa_rx_mp_seq *mp_seq);
 /**
  * Synchronous display using current thread
  *
- * This function is thread-safe.  The window will be locked while
- * display() is called.
+ * This function is thread-safe.  The window will be locked while each
+ * window's display() function is called.
+ *
+ * On Mac OS X under the Cocoa/Quartz GUI, this function may only be
+ * called from the main thread.
  *
  */
-AA_API void aa_rx_win_display_loop( struct aa_rx_win * window );
-
+AA_API void aa_rx_win_run( void );
 
 
 /**
- * Start a thread to asynchronously render the window.
+ * Asynchronous run the display in a new current thread.
+ *
+ * This function is thread-safe.  The window will be locked while each
+ * window's display() function is called.
+ *
+ * This function will not work on Mac OS X under the Cocoa GUI because
+ * Cocoa limits GUI interaction to the main program thread.  Instead,
+ * you must call aa_rx_win_run() from your program's main thread.
+ *
  */
-AA_API void
-aa_rx_win_start( struct aa_rx_win * win );
-
+AA_API void aa_rx_win_run_async( void );
 
 /*
  * Asynchronous display using new thread and default rendering
@@ -202,8 +212,6 @@ aa_rx_win_start( struct aa_rx_win * win );
  *
  * The rendering thread will gracefully terminate, possibly after it
  * finishes displaying another frame.
- *
- * \sa aa_rx_win_join()
  */
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
@@ -213,20 +221,6 @@ aa_rx_win_stop( struct aa_rx_win * win );
  */
 AA_API void
 aa_rx_win_stop_on_quit( struct aa_rx_win * win, int value );
-
-/**
- * Join the asynchronous display thread.
- *
- * \sa aa_rx_win_stop()
- */
-AA_API void
-aa_rx_win_join( struct aa_rx_win * win );
-
-/**
- * Pause rendering.
- */
-AA_API void
-aa_rx_win_pause( struct aa_rx_win * win, int paused );
 
 /**
  * Lock the window.

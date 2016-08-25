@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 
 
     aa_rx_win_set_display( win, display, &cx, NULL );
-    aa_rx_win_display_loop(win);
+    aa_rx_win_run();
 
     // cleanup
     aa_rx_sg_destroy(scenegraph);

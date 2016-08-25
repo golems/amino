@@ -71,4 +71,4 @@
       (when gui
         (win-create :title "AARXC" :stop-on-quit t)
         (win-set-scene-graph scene)
-        (win-join)))))
+        (win-run :synchronous t)))))

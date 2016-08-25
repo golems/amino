@@ -8,4 +8,6 @@
 
 (win-set-scene-graph *scene-graph*)
 
+(win-run)
+
 (win-set-config `(("left_s0" . ,(/ pi 4))))

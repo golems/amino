@@ -169,10 +169,9 @@ int main(int argc, char *argv[])
     aa_rx_win_set_display_plan(win, scenegraph, g_n_path, g_path );
 
     /* Run display loop */
-    aa_rx_win_start(win);
+    aa_rx_win_run();
 
     /* Cleanup */
-    aa_rx_win_join(win);
     aa_rx_mp_destroy(mp);
     aa_rx_sg_sub_destroy(ssg);
     aa_rx_sg_destroy(scenegraph);

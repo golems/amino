@@ -425,3 +425,25 @@
   (capture-program-output `("pkg-config"
                             ,@(when cflags '("--cflags"))
                             ,@(ensure-list modules))))
+
+
+
+(defmacro with-thread ((thread) &body body)
+  (with-gensyms (result sem)
+    `(let ((,result)
+           (,sem (sb-thread:make-semaphore)))
+       (sb-thread:interrupt-thread ,thread
+                                   (lambda ()
+                                     (setq ,result (progn ,@body))
+                                     (sb-thread:signal-semaphore ,sem)))
+       (sb-thread:wait-on-semaphore ,sem)
+       ,result)))
+
+(defmacro with-main-thread (&body body)
+  (with-gensyms (helper)
+    `(flet ((,helper ()
+              ,@body))
+       (if (sb-thread:main-thread-p)
+           (,helper)
+           (with-thread ((sb-thread:main-thread))
+             (,helper))))))
