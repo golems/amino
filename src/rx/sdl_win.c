@@ -92,12 +92,8 @@ struct aa_rx_win {
     SDL_Window* window;
     SDL_GLContext gl_cx;
 
-    pthread_t thread;
-
     pthread_mutex_t mutex;
     pthread_mutexattr_t mattr;
-
-
 
     unsigned stop  : 1;
     unsigned stop_on_quit : 1;
@@ -115,8 +111,10 @@ aa_rx_win_call( void *(*function)(void*),
     s_lock();
 
     /* If we are the window thread, just run it */
-    if( s_win
-        && pthread_equal( s_thread_win, pthread_self() ) )
+    pthread_t self_thread = pthread_self();
+    if( (s_win && pthread_equal(s_thread_win, self_thread))
+        || (s_loop_running && pthread_equal(s_thread_run, self_thread))
+        )
     {
         void *result = function(context);
         s_unlock();
@@ -248,6 +246,7 @@ aa_rx_win_default_create(
 AA_API void
 aa_rx_win_destroy( struct aa_rx_win *  win)
 {
+    if( NULL == win ) return;
 
     aa_rx_win_set_display( win, NULL, NULL, NULL );
 
@@ -258,14 +257,8 @@ aa_rx_win_destroy( struct aa_rx_win *  win)
     pthread_mutex_destroy( &win->mutex );
     pthread_mutexattr_destroy( &win->mattr );
 
-    aa_sdl_lock();
-    aa_gl_lock();
-
     SDL_GL_DeleteContext(win->gl_cx);
     SDL_DestroyWindow(win->window);
-
-    aa_gl_unlock();
-    aa_sdl_unlock();
 
     free(win);
 }
@@ -338,8 +331,7 @@ static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_disp
     struct default_display_cx *cx = (struct default_display_cx*) cx_;
     int updated = aa_sdl_display_params_get_update(params);
 
-    if( (updated || win->updated)
-        && cx && cx->sg )
+    if( (updated || win->updated) && cx )
     {
         aa_rx_win_display_sg_config( win, params,
                                      cx->sg, aa_rx_sg_config_count(cx->sg), cx->q );
@@ -354,7 +346,7 @@ aa_rx_win_set_sg( struct aa_rx_win * win,
 {
     aa_rx_win_lock(win);
 
-    struct default_display_cx *cx = AA_NEW(struct default_display_cx);
+    struct default_display_cx *cx = AA_NEW0(struct default_display_cx);
     cx->sg = sg;
     cx->n_config = aa_rx_sg_config_count(sg);
     /* TODO: fill q with something reasonable */
@@ -680,7 +672,7 @@ AA_API void aa_rx_win_run_async( )
             exit(EXIT_FAILURE);
         }
     }
-        s_unlock();
+    s_unlock();
 
     if( pthread_create( &s_thread_async, NULL, s_win_run_fun, NULL ) ) {
         fprintf(stderr, "pthread_create failed\n");
@@ -725,16 +717,12 @@ AA_API void aa_rx_win_run( )
     /* Set GL Context */
     aa_rx_win_lock(win);
 
-    aa_sdl_lock();
-    aa_gl_lock(win);
     if( SDL_GL_MakeCurrent(win->window, win->gl_cx) ) {
         fprintf(stderr, "SDL_GL_MakeCurrent() failed: %s\n",
                 SDL_GetError());
         abort();
         exit(EXIT_FAILURE);
     }
-    aa_gl_unlock(win);
-    aa_sdl_unlock();
 
     win->running = 1;
 
@@ -759,6 +747,7 @@ AA_API void aa_rx_win_run( )
     /* Cleanup and return */
     aa_rx_win_lock(win);
     win->running = 0;
+    win->stop = 1;
     aa_rx_win_unlock(win);
 
     s_lock();
@@ -774,6 +763,15 @@ aa_rx_win_stop( struct aa_rx_win * win )
     win->stop = 1;
     aa_rx_win_unlock(win);
 
+}
+
+AA_API int
+aa_rx_win_is_running( struct aa_rx_win * win )
+{
+    aa_rx_win_lock(win);
+    int r = win->stop;
+    aa_rx_win_unlock(win);
+    return !r;
 }
 
 AA_API void

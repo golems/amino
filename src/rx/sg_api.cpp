@@ -64,14 +64,18 @@ AA_API int aa_rx_sg_init ( struct aa_rx_sg *scene_graph )
 AA_API size_t aa_rx_sg_config_count(
     const struct aa_rx_sg *scene_graph )
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->config_size;
+    if( scene_graph ) {
+        aa_rx_sg_ensure_clean_frames( scene_graph );
+        return scene_graph->sg->config_size;
+    } else {
+        return 0;
+    }
 }
 
 AA_API size_t aa_rx_sg_frame_count(
     const struct aa_rx_sg *scene_graph )
 {
-    return scene_graph->sg->frames.size();
+    return scene_graph ? scene_graph->sg->frames.size() : 0;
 }
 
 AA_API enum aa_rx_frame_type aa_rx_sg_frame_type (
@@ -200,6 +204,8 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs )
 {
+    if( NULL == scene_graph ) return;
+
     aa_rx_sg_ensure_clean_frames( scene_graph );
     assert( n_q == scene_graph->sg->config_size );
 
@@ -308,12 +314,14 @@ AA_API void aa_rx_sg_map_geom (
     void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),
     void *context )
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
-    amino::SceneGraph *sg = scene_graph->sg;
-    for( auto itr = sg->frames.begin(); itr != sg->frames.end(); itr++ ) {
-        amino::SceneFrame *f = *itr;
-        for( auto g = f->geometry.begin(); g != f->geometry.end(); g++ ) {
-            function(context, f->frame_id, *g);
+    if( scene_graph ) {
+        aa_rx_sg_ensure_clean_frames( scene_graph );
+        amino::SceneGraph *sg = scene_graph->sg;
+        for( auto itr = sg->frames.begin(); itr != sg->frames.end(); itr++ ) {
+            amino::SceneFrame *f = *itr;
+            for( auto g = f->geometry.begin(); g != f->geometry.end(); g++ ) {
+                function(context, f->frame_id, *g);
+            }
         }
     }
 }

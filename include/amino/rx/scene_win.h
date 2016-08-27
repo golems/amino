@@ -193,20 +193,6 @@ AA_API void aa_rx_win_run( void );
  */
 AA_API void aa_rx_win_run_async( void );
 
-/*
- * Asynchronous display using new thread and default rendering
- * function.
- *
- * This function renders the previously set scenegraph and and
- * configuration vector.  The configuration vector may be updated
- * while the asynchronous thread is running.
- *
- * @see aa_rx_win_set_sg()
- * @see aa_rx_win_set_config()
- */
-//AA_API void
-//aa_rx_win_default_start( struct aa_rx_win * win );
-
 /**
  * Instruct the rendering thread to stop.
  *
@@ -215,6 +201,13 @@ AA_API void aa_rx_win_run_async( void );
  */
 AA_API void
 aa_rx_win_stop( struct aa_rx_win * win );
+
+/**
+ * Return true if the window is still running.
+ */
+AA_API int
+aa_rx_win_is_running( struct aa_rx_win * win );
+
 
 /**
  * Instruct the rendering thread to stop when the user closes the window.

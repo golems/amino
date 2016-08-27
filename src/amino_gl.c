@@ -42,7 +42,6 @@
 #define GL_GLEXT_PROTOTYPES
 
 #include "amino/amino_gl.h"
-#include <SDL.h>
 
 #include <pthread.h>
 
@@ -259,11 +258,8 @@ static GLint aa_gl_id_rotate;
 static GLuint aa_gl_vao;
 
 static pthread_once_t gl_once = PTHREAD_ONCE_INIT;
-static pthread_mutex_t gl_mutex;
-static pthread_mutexattr_t gl_mattr;
 
 
-static struct aa_gl_buffers *dead_buffers = NULL;
 
 static GLint aa_gl_get_uniform_location( GLuint program, const GLchar *name )
 {
@@ -289,23 +285,6 @@ static GLint aa_gl_get_attrib_location( GLuint program, const GLchar *name )
 
 static void gl_init_once(void)
 {
-    /* Initialize Mutex */
-    if( pthread_mutexattr_init(&gl_mattr) ) {
-        perror("pthread_mutexattr_init");
-        abort();
-    }
-    if( pthread_mutexattr_settype(&gl_mattr, PTHREAD_MUTEX_RECURSIVE) ) {
-        perror("pthread_mutexattr_settype");
-        abort();
-    }
-
-    if( pthread_mutex_init( &gl_mutex, &gl_mattr) ) {
-        perror("pthread_mutex_init");
-        abort();
-    }
-
-    aa_gl_lock();
-
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
     GLuint vertexShader = aa_gl_create_shader(GL_VERTEX_SHADER, aa_gl_vertex_shader);
@@ -350,7 +329,6 @@ static void gl_init_once(void)
     /* Register cleanup function */
     aa_gl_buffers_destroy_fun = aa_gl_buffers_schedule_destroy;
 
-    aa_gl_unlock();
 }
 
 AA_API void aa_gl_init()
@@ -518,25 +496,52 @@ aa_gl_buffers_destroy( struct aa_gl_buffers *bufs ) {
     //aa_gl_unlock();
 }
 
+
+static struct aa_gl_buffers *s_dead_buffers = NULL;
+static pthread_mutex_t s_cleanup_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void s_cleanup_lock()
+{
+    if( pthread_mutex_lock( &s_cleanup_mutex ) ) {
+        perror("Cleanup Mutex Lock");
+        abort();
+    }
+}
+
+void s_cleanup_unlock()
+{
+    if( pthread_mutex_unlock( &s_cleanup_mutex ) ) {
+        perror("Cleanup Mutex Unlock");
+        abort();
+    }
+}
+
 AA_API void
 aa_gl_buffers_schedule_destroy( struct aa_gl_buffers *buffers )
 {
-    aa_gl_lock();
-    buffers->next = dead_buffers;
-    dead_buffers = buffers;
-    aa_gl_unlock();
+    s_cleanup_lock();
+    buffers->next = s_dead_buffers;
+    s_dead_buffers = buffers;
+    s_cleanup_unlock();
 }
 
 AA_API void
 aa_gl_buffers_cleanup( )
 {
-    aa_gl_lock();
-    while( dead_buffers ) {
-        struct aa_gl_buffers *x = dead_buffers;
-        dead_buffers = dead_buffers->next;
+    struct aa_gl_buffers *local_dead_buffers = NULL;
+
+    s_cleanup_lock();
+    if( s_dead_buffers )  {
+        local_dead_buffers = s_dead_buffers;
+        s_dead_buffers = NULL;
+    }
+    s_cleanup_unlock();
+
+    while( local_dead_buffers ) {
+        struct aa_gl_buffers *x = local_dead_buffers;
+        local_dead_buffers = local_dead_buffers->next;
         aa_gl_buffers_destroy( x );
     }
-    aa_gl_unlock();
 }
 
 
@@ -645,7 +650,6 @@ static void bind_mesh (
     }
 
 
-    aa_gl_lock();
 
     glGenBuffers(1, &bufs->values);
     glBindBuffer(GL_ARRAY_BUFFER, bufs->values);
@@ -694,8 +698,6 @@ static void bind_mesh (
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         bufs->has_normals = 1;
     }
-
-    aa_gl_unlock();
 }
 
 
@@ -1258,8 +1260,6 @@ aa_rx_sg_render(
 {
     /* aa_rx_sg_ensure_clean_gl( sg ); */
 
-    aa_gl_lock();
-
     check_error("begin aa_rx_sg_render");
 
     aa_rx_sg_gl_init((struct aa_rx_sg*)sg);
@@ -1311,8 +1311,6 @@ aa_rx_sg_render(
     aa_rx_sg_map_geom( sg, &render_helper, &cx );
 
     glUseProgram(0);
-
-    aa_gl_unlock();
 }
 
 void gl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom *geom ) {
@@ -1360,21 +1358,6 @@ aa_gl_globals_mask( struct aa_gl_globals *globals, size_t i, int value ) {
     aa_bits_set(globals->frame_mask, i, value);
 }
 
-void aa_gl_lock()
-{
-    if( pthread_mutex_lock( &gl_mutex ) ) {
-        perror("AminoGL Mutex Lock");
-        abort();
-    }
-}
-
-void aa_gl_unlock()
-{
-    if( pthread_mutex_unlock( &gl_mutex ) ) {
-        perror("AminoGL Mutex Unlock");
-        abort();
-    }
-}
 
 AA_API const char *
 aa_gl_error_string( GLenum error )

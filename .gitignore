@@ -163,3 +163,4 @@ amino*.tar.gz
 /lisp/config.lisp
 /lisp/libdir.lisp
 /aarxc
+/demo/simple-rx/simple-thread

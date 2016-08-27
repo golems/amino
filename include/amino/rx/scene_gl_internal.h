@@ -124,8 +124,4 @@ AA_API void aa_gl_draw_tf (
     const struct aa_rx_geom_opt *opt,
     const struct aa_gl_buffers *buffers);
 
-
-void aa_gl_lock();
-void aa_gl_unlock();
-
 #endif /*AMINO_RX_SCENE_GL_INTERNAL_H*/

@@ -480,11 +480,7 @@ AA_API void aa_sdl_display_loop(
         params.first = 0;
         if( params.update ) {
             /* Take the SDL lock first, because it is slow */
-            aa_sdl_lock();
-            aa_gl_lock();
             SDL_GL_SwapWindow(window);
-            aa_gl_unlock();
-            aa_sdl_unlock();
             params.update = 0;
         }
         params.time_last = params.time_now;
@@ -501,13 +497,10 @@ AA_API void aa_sdl_display_loop(
             timeout = (int) aa_tm_timespec2msec(ts_timeout);
             //printf("timeout: %d\n", timeout );
             SDL_Event e;
-            aa_sdl_lock();
             int r = SDL_WaitEventTimeout( &e, timeout < 0 ? 0 : timeout );
             if( r ) {
                 aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
             }
-            aa_sdl_unlock();
-
         }
 
         // poll spnav
@@ -532,8 +525,6 @@ AA_API void aa_sdl_gl_window(
     SDL_GLContext *p_glcontext )
 {
     aa_sdl_init();
-
-    aa_sdl_lock();
 
     /* Create window */
     *pwindow = SDL_CreateWindow( title,
@@ -573,29 +564,8 @@ FINISH:
         abort();
     }
 
-    aa_sdl_unlock();
 
     aa_gl_init();
     //printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
-}
-
-
-static pthread_mutex_t sdl_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void aa_sdl_lock()
-{
-    if( pthread_mutex_lock( &sdl_mutex ) ) {
-        perror("AminoSDL Mutex Lock");
-        abort();
-    }
-
-}
-
-void aa_sdl_unlock()
-{
-    if( pthread_mutex_unlock( &sdl_mutex ) ) {
-        perror("AminoSDL Mutex Unlock");
-        abort();
-    }
 }

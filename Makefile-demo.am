@@ -73,6 +73,11 @@ demo_simple_rx_simple_procedural_CFLAGS = $(DEMO_CFLAGS)
 demo_simple_rx_simple_procedural_LDADD = $(DEMO_LIBS)
 
 
+noinst_PROGRAMS += demo/simple-rx/simple-thread
+demo_simple_rx_simple_thread_SOURCES = demo/simple-rx/simple-thread.c
+demo_simple_rx_simple_thread_CFLAGS = $(DEMO_CFLAGS)
+demo_simple_rx_simple_thread_LDADD = $(DEMO_LIBS)
+
 # noinst_PROGRAMS += demo/simple-rx/simple-plugin
 # demo_simple_rx_simple_plugin_SOURCES = demo/simple-rx/simple-plugin.c
 # demo_simple_rx_simple_plugin_CFLAGS = $(DEMO_CFLAGS)
