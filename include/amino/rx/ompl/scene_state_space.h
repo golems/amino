@@ -1,7 +1,7 @@
 /* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2015, Rice University
+ * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -35,30 +35,25 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_OMPL_H
-#define AMINO_RX_SCENE_OMPL_H
-
-#include "rxerr.h"
-#include "rxtype.h"
-#include "scenegraph.h"
-#include "scene_kin_internal.h"
-#include "scene_collision.h"
-#include "scene_planning.h"
-
-#include <ompl/base/StateValidityChecker.h>
-#include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <ompl/base/ProblemDefinition.h>
-#include <ompl/base/spaces/RealVectorBounds.h>
-
-#include <ompl/base/ScopedState.h>
-#include <ompl/base/TypedSpaceInformation.h>
-#include <ompl/base/TypedStateValidityChecker.h>
-#include <ompl/base/Planner.h>
+#ifndef AMINO_RX_OMPL_SCENE_STATE_SPACE_H
+#define AMINO_RX_OMPL_SCENE_STATE_SPACE_H
 
 /**
- * @file scene_ompl.h
- * @brief OMPL-specific motion planning
+ * @file scene_state_space.h
+ * @brief OMPL State Space
  */
+
+#include "amino/rx/rxerr.h"
+#include "amino/rx/rxtype.h"
+#include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_collision.h"
+#include "amino/rx/scene_planning.h"
+
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/spaces/RealVectorBounds.h>
+#include <ompl/base/ScopedState.h>
+#include <ompl/base/TypedSpaceInformation.h>
 
 
 namespace amino {
@@ -193,83 +188,8 @@ public:
 
 typedef ::ompl::base::TypedSpaceInformation<amino::sgStateSpace> sgSpaceInformation;
 
-
-class sgStateValidityChecker : public ::ompl::base::TypedStateValidityChecker<sgStateSpace> {
-public:
-    sgStateValidityChecker(sgSpaceInformation *si,
-                           const double *q_initial ) :
-        TypedStateValidityChecker(si),
-        q_all(new double[getTypedStateSpace()->config_count_all()]) {
-        size_t n_all = getTypedStateSpace()->config_count_all();
-        std::copy( q_initial, q_initial + n_all, q_all );
-    }
-
-    ~sgStateValidityChecker() {
-        delete [] q_all;
-    }
-
-    virtual bool isValid(const ompl::base::State *state_) const
-    {
-        const sgSpaceInformation::StateType *state = state_as(state_);
-        sgStateSpace *space = getTypedStateSpace();
-        size_t n_q = space->config_count_all();
-        size_t n_s = space->config_count_subset();
-        size_t n_f = space->frame_count();
-
-        // Set configs
-
-        double q[n_q];
-        std::copy( q_all, q_all + n_q, q );
-        space->insert_state(state, q);
-        //aa_dump_vec(stdout, q, n_q);
-
-        // Find TFs
-        double TF_rel[7*n_f];
-        double TF_abs[7*n_f];
-        aa_rx_sg_tf( space->scene_graph, n_q, q,
-                     n_f,
-                     TF_rel, 7,
-                     TF_abs, 7 );
-
-        // check collision
-        struct aa_rx_cl *cl = aa_rx_cl_create( space->scene_graph );
-        aa_rx_cl_allow_set( cl, space->allowed );
-        int col = aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
-        aa_rx_cl_destroy(cl);
-
-        bool valid = !col;
-        return valid;
-    }
-    double *q_all;
-};
+}
 
 
-} /* namespace amino */
 
-struct aa_rx_mp {
-    aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
-        config_start(NULL),
-        space_information(
-            new amino::sgSpaceInformation(
-                amino::sgSpaceInformation::SpacePtr(
-                    new amino::sgStateSpace (sub_sg)))),
-        problem_definition(new ompl::base::ProblemDefinition(space_information)),
-        simplify(0)
-        { }
-    ~aa_rx_mp();
-
-    void set_planner( ompl::base::Planner *p ) {
-        this->planner.reset(p);
-    }
-
-    amino::sgSpaceInformation::Ptr space_information;
-    ompl::base::ProblemDefinitionPtr problem_definition;
-
-    ompl::base::PlannerPtr planner;
-
-    double *config_start;
-
-    unsigned simplify : 1;
-};
-
-#endif /*AMINO_RX_SCENE_OMPL_H*/
+#endif

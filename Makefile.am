@@ -128,7 +128,9 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_gl.h     \
 	include/amino/rx/scene_kin.h    \
 	include/amino/rx/scene_dyn.h    \
-	include/amino/rx/scene_ompl.h   \
+	include/amino/rx/ompl/scene_state_space.h \
+	include/amino/rx/ompl/scene_state_validity_checker.h \
+	include/amino/rx/ompl/scene_ompl.h \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_planning.h \
 	include/amino/rx/scene_sdl.h    \

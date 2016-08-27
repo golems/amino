@@ -35,47 +35,59 @@
  *
  */
 
+#ifndef AMINO_RX_SCENE_OMPL_H
+#define AMINO_RX_SCENE_OMPL_H
 
-#include "amino.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 
-#include "amino/rx/ompl/scene_state_space.h"
-#include "amino/rx/ompl/scene_state_validity_checker.h"
-#include "amino/rx/ompl/scene_ompl.h"
+#include <ompl/base/StateValidityChecker.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/ProblemDefinition.h>
+#include <ompl/base/spaces/RealVectorBounds.h>
 
-#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
+#include <ompl/base/ScopedState.h>
+#include <ompl/base/TypedSpaceInformation.h>
+#include <ompl/base/TypedStateValidityChecker.h>
+#include <ompl/base/Planner.h>
+
+/**
+ * @file scene_ompl.h
+ * @brief OMPL-specific motion planning
+ */
+
+namespace amino {}
 
 
-struct aa_rx_mp_kpiece_attr
-{
 
+struct aa_rx_mp {
+    aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
+        config_start(NULL),
+        space_information(
+            new amino::sgSpaceInformation(
+                amino::sgSpaceInformation::SpacePtr(
+                    new amino::sgStateSpace (sub_sg)))),
+        problem_definition(new ompl::base::ProblemDefinition(space_information)),
+        simplify(0)
+        { }
+    ~aa_rx_mp();
+
+    void set_planner( ompl::base::Planner *p ) {
+        this->planner.reset(p);
+    }
+
+    amino::sgSpaceInformation::Ptr space_information;
+    ompl::base::ProblemDefinitionPtr problem_definition;
+
+    ompl::base::PlannerPtr planner;
+
+    double *config_start;
+
+    unsigned simplify : 1;
 };
 
-AA_API struct aa_rx_mp_kpiece_attr*
-aa_rx_mp_kpiece_attr_create(void)
-{
-    return AA_NEW(struct aa_rx_mp_kpiece_attr);
-}
-
-
-AA_API void
-aa_rx_mp_kpiece_attr_destroy(struct aa_rx_mp_kpiece_attr* a)
-{
-    free(a);
-}
-
-
-
-AA_API void
-aa_rx_mp_set_kpiece( struct aa_rx_mp* mp,
-                     const struct aa_rx_mp_kpiece_attr *attr )
-{
-    (void)attr;
-    auto p = new ompl::geometric::LBKPIECE1(mp->space_information);
-    mp->set_planner(p);
-}
+#endif /*AMINO_RX_SCENE_OMPL_H*/

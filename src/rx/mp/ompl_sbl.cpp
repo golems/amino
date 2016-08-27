@@ -38,7 +38,9 @@
 
 #include "amino.h"
 
-#include "amino/rx/scene_ompl.h"
+#include "amino/rx/ompl/scene_state_space.h"
+#include "amino/rx/ompl/scene_state_validity_checker.h"
+#include "amino/rx/ompl/scene_ompl.h"
 
 #include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/sbl/SBL.h>
