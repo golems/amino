@@ -55,9 +55,7 @@
 
 
 #include <ompl/base/Planner.h>
-#include <ompl/geometric/planners/sbl/SBL.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
-#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
 

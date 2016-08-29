@@ -1,7 +1,7 @@
 /* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2016, Rice University
+ * Copyright (c) 2015, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -35,40 +35,56 @@
  *
  */
 
-#ifndef AMINO_RX_OMPLE_SCENE_STATE_VALIDITY_CHECKER_H
-#define AMINO_RX_OMPLE_SCENE_STATE_VALIDITY_CHECKER_H
 
-/**
- * @file scene_state_space.h
- * @brief OMPL State Space
- */
-
+#include "amino.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_collision.h"
-#include "amino/rx/scene_planning.h"
 
-#include <ompl/base/TypedStateValidityChecker.h>
 
-#include "scene_state_space.h"
+#include "amino/rx/ompl/scene_state_space.h"
+
 
 namespace amino {
 
-class sgStateValidityChecker : public ::ompl::base::TypedStateValidityChecker<sgStateSpace> {
-public:
+sgStateSpace::sgStateSpace( const struct aa_rx_sg_sub *sub_sg ) :
+        scene_graph(sub_sg->scenegraph),
+        sub_scene_graph(sub_sg),
+        ompl::base::RealVectorStateSpace((unsigned)aa_rx_sg_sub_config_count(sub_sg)),
+        allowed(aa_rx_cl_set_create(scene_graph)) {
 
-    sgStateValidityChecker(sgSpaceInformation *si, const double *q_initial );
+        aa_mem_region_init(&reg, 4000);
 
-    ~sgStateValidityChecker() ;
+        // TODO: get actual bounds
+        size_t n_configs = config_count_subset();
+        ompl::base::RealVectorBounds vb( (unsigned int)n_configs );
+        for( unsigned i = 0; i < (unsigned)n_configs; i ++ ) {
+            double min,max;
+            aa_rx_config_id cid = aa_rx_sg_sub_config(sub_scene_graph, i);
+            int r = aa_rx_sg_get_limit_pos(scene_graph, cid, &min, &max);
+            if(r) {
+                fprintf(stderr, "ERROR: no position limits for %s\n",
+                        aa_rx_sg_config_name(scene_graph, cid));
+                /* This seems as good as anything */
+                min = -M_PI;
+                max = M_PI;
+            }
 
-    virtual bool isValid(const ompl::base::State *state_) const ;
-    double *q_all;
-};
+            vb.setLow(i,min);
+            vb.setHigh(i,max);
 
+        }
+        setBounds(vb);
+        // // allowed
+        // size_t n_q = config_count_all();
+        // double q[n_q];
+        // AA_MEM_ZERO(q, n_q); // TODO: give good config
+        // allow_config(q);
 
-}
+        // Load allowable configs from scenegraph
+        aa_rx_sg_cl_set_copy(scene_graph, allowed);
+    }
 
-
-#endif
+} /* namespace amino */
