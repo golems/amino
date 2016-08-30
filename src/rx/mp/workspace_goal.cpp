@@ -59,10 +59,13 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
     ob::GoalSampleableRegion(si),
     ko( aa_rx_ksol_opts_create() ),
     ik_cx( aa_rx_ik_jac_cx_create(si->getTypedStateSpace()->sub_scene_graph, ko) ),
-    n_e(n_e_)
+    n_e(n_e_),
+    state_sampler( si->allocStateSampler() ),
+    seed(typed_si->allocTypedState())
 {
     const struct aa_rx_sg_sub *ssg = si->getTypedStateSpace()->sub_scene_graph;
 
+    /* These settings should be optional */
     aa_rx_ksol_opts_center_seed( ko, ssg );
     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
@@ -75,6 +78,7 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
 
 sgWorkspaceGoal::~sgWorkspaceGoal ()
 {
+    typed_si->freeState(this->seed);
     aa_rx_ksol_opts_destroy(this->ko);
     aa_rx_ik_jac_cx_destroy(this->ik_cx);
     delete [] this->E;
@@ -87,18 +91,29 @@ void sgWorkspaceGoal::sampleGoal (ob::State *st) const
     const struct aa_rx_sg_sub *ssg = ss->sub_scene_graph;
     const struct aa_rx_sg *sg = ss->scene_graph;
 
+
     size_t n_all = aa_rx_sg_config_count(sg);
     size_t n_s = aa_rx_sg_sub_config_count(ssg);
     double qs[n_s];
 
-    int r = aa_rx_ik_jac_solve( ik_cx,
+    int r = AA_RX_NO_IK;
+
+    while( AA_RX_OK != r ) {
+        /* Re-seed */
+        state_sampler->sampleUniform(this->seed);
+        aa_rx_ksol_opts_take_seed( ko, n_s, this->seed->values, AA_MEM_COPY );
+
+        /* solve */
+        r = aa_rx_ik_jac_solve( ik_cx,
                                 n_e, E, 7,
                                 n_s, qs );
+    }
 
 
     if( AA_RX_OK == r ) {
         ss->copy_state( qs, typed_si->state_as(st) );
      } else {
+        fprintf(stderr, "Failed to sample goal\n");
         /* How to return failure? */
     }
 
