@@ -152,55 +152,6 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
     }
 }
 
-
-AA_API int
-aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
-                     aa_rx_ik_fun *ik_fun,
-                     void *ik_cx,
-                     size_t n_e,
-                     double *E, size_t ldE )
-{
-    // TODO: use an OMPL goal sampler
-    // TODO: add interface to set IK options for motion planner
-
-    amino::sgStateSpace *ss = mp->space_information->getTypedStateSpace();
-    const struct aa_rx_sg_sub *ssg = ss->sub_scene_graph;
-    const struct aa_rx_sg *sg = ss->scene_graph;
-    size_t n_all = aa_rx_sg_config_count(sg);
-    size_t n_s = aa_rx_sg_sub_config_count(ssg);
-    double qs[n_s];
-
-    // struct aa_rx_ksol_opts *ko = NULL;
-    // if( NULL == opts ) {
-    //     ko = aa_rx_ksol_opts_create();
-    //     aa_rx_ksol_opts_center_seed( ko, ssg );
-    //     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    //     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
-    //     opts = ko;
-    // }
-
-    int r = ik_fun( ik_cx,
-                    n_e, E, 7,
-                    n_s, qs );
-
-    //aa_dump_vec( stdout, opts->q_all_seed, n_all );
-    //aa_dump_vec( stdout, qs, n_s );
-
-    // Set JS Goal
-    if( AA_RX_OK == r ) {
-        return aa_rx_mp_set_goal(mp, n_s, qs);
-    } else {
-        return r;
-    }
-
-    // TODO: check state validity
-
-    // if( ko ) {
-    //     aa_rx_ksol_opts_destroy(ko);
-    // }
-
-}
-
 static void
 path_cleanup( struct aa_rx_mp *mp, ompl::geometric::PathGeometric &path )
 {

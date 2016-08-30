@@ -493,6 +493,7 @@ libamino_planning_la_SOURCES = \
 	src/rx/mp/scene_ompl.cpp \
 	src/rx/mp/scene_state_validity_checker.cpp \
 	src/rx/mp/scene_state_space.cpp \
+	src/rx/mp/workspace_goal.cpp \
 	src/rx/mp/ompl_rrt.cpp \
 	src/rx/mp/ompl_sbl.cpp \
 	src/rx/mp/ompl_kpiece.cpp
