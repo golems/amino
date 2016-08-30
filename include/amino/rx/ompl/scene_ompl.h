@@ -63,6 +63,12 @@
 namespace amino {}
 
 
+/* Forward Declaration */
+namespace ompl {
+namespace base {
+class GoalLazySamples;
+}
+}
 
 struct aa_rx_mp {
     aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
@@ -88,6 +94,8 @@ struct aa_rx_mp {
     double *config_start;
 
     unsigned simplify : 1;
+
+    ompl::base::GoalLazySamples *lazy_samples;
 };
 
 #endif /*AMINO_RX_SCENE_OMPL_H*/

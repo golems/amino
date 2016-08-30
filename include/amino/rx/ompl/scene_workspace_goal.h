@@ -50,25 +50,18 @@
 
 
 #include "amino/rx/ompl/scene_state_space.h"
-#include <ompl/base/goals/GoalSampleableRegion.h>
+#include <ompl/base/goals/GoalLazySamples.h>
 
 
 namespace amino {
 
-class sgWorkspaceGoal : public ompl::base::GoalSampleableRegion {
+class sgWorkspaceGoal : public ompl::base::GoalLazySamples {
 public:
     sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
                      size_t n_e, const double *E, size_t ldE );
 
     virtual ~sgWorkspaceGoal ();
 
-    virtual void sampleGoal (ompl::base::State *st) const;
-
-    virtual unsigned int maxSampleCount () const;
-
-    virtual double distanceGoal (const ompl::base::State *st) const;
-
-protected:
     const sgSpaceInformation::Ptr &typed_si;
     struct aa_rx_ksol_opts *ko;
     struct aa_rx_ik_jac_cx *ik_cx;

@@ -58,6 +58,8 @@
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
+#include <ompl/base/goals/GoalLazySamples.h>
+
 
 struct aa_rx_mp;
 
@@ -191,7 +193,14 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
 
     planner->setProblemDefinition(pdef);
     try {
+        if( mp->lazy_samples ) {
+            mp->lazy_samples->clear();
+            mp->lazy_samples->startSampling();
+        }
         planner->solve(timeout);
+        if( mp->lazy_samples ) {
+            mp->lazy_samples->stopSampling();
+        }
     } catch(...) {
         return AA_RX_NO_SOLUTION;
     }

@@ -53,10 +53,54 @@ namespace ob = ::ompl::base;
 
 namespace amino {
 
+
+static bool
+sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
+{
+    const sgWorkspaceGoal *wsg = static_cast<const sgWorkspaceGoal*>(arg);
+
+    amino::sgStateSpace *ss = wsg->typed_si->getTypedStateSpace();
+    const struct aa_rx_sg_sub *ssg = ss->sub_scene_graph;
+    const struct aa_rx_sg *sg = ss->scene_graph;
+
+
+    size_t n_all = aa_rx_sg_config_count(sg);
+    size_t n_s = aa_rx_sg_sub_config_count(ssg);
+    double qs[n_s];
+
+    int r = AA_RX_NO_IK;
+
+    while( AA_RX_OK != r ) {
+        /* Re-seed */
+        wsg->state_sampler->sampleUniform(wsg->seed);
+        double q[n_all];
+        AA_MEM_ZERO(q,n_all);
+        aa_rx_sg_sub_config_set( ssg,
+                                 n_s, wsg->seed->values,
+                                 n_all, q );
+
+        aa_rx_ksol_opts_take_seed( wsg->ko, n_all, q, AA_MEM_COPY );
+
+        /* solve */
+        r = aa_rx_ik_jac_solve( wsg->ik_cx,
+                                wsg->n_e, wsg->E, 7,
+                                n_s, qs );
+    }
+
+    if( AA_RX_OK == r ) {
+        ss->copy_state( qs, wsg->typed_si->state_as(state) );
+     } else {
+        fprintf(stderr, "Failed to sample goal\n");
+        /* How to return failure? */
+    }
+
+    return true;
+}
+
 sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
                                   size_t n_e_, const double *E_arg, size_t ldE ) :
     typed_si(si),
-    ob::GoalSampleableRegion(si),
+    ob::GoalLazySamples(si, ob::GoalSamplingFn(sampler_fun), false),
     ko( aa_rx_ksol_opts_create() ),
     ik_cx( aa_rx_ik_jac_cx_create(si->getTypedStateSpace()->sub_scene_graph, ko) ),
     n_e(n_e_),
@@ -84,52 +128,18 @@ sgWorkspaceGoal::~sgWorkspaceGoal ()
     delete [] this->E;
 }
 
-void sgWorkspaceGoal::sampleGoal (ob::State *st) const
-{
-    printf("sample goal\n");
-    amino::sgStateSpace *ss = typed_si->getTypedStateSpace();
-    const struct aa_rx_sg_sub *ssg = ss->sub_scene_graph;
-    const struct aa_rx_sg *sg = ss->scene_graph;
+
+// unsigned int sgWorkspaceGoal::maxSampleCount () const
+// {
+//     return UINT_MAX;
+// }
 
 
-    size_t n_all = aa_rx_sg_config_count(sg);
-    size_t n_s = aa_rx_sg_sub_config_count(ssg);
-    double qs[n_s];
-
-    int r = AA_RX_NO_IK;
-
-    while( AA_RX_OK != r ) {
-        /* Re-seed */
-        state_sampler->sampleUniform(this->seed);
-        aa_rx_ksol_opts_take_seed( ko, n_s, this->seed->values, AA_MEM_COPY );
-
-        /* solve */
-        r = aa_rx_ik_jac_solve( ik_cx,
-                                n_e, E, 7,
-                                n_s, qs );
-    }
-
-
-    if( AA_RX_OK == r ) {
-        ss->copy_state( qs, typed_si->state_as(st) );
-     } else {
-        fprintf(stderr, "Failed to sample goal\n");
-        /* How to return failure? */
-    }
-
-}
-
-unsigned int sgWorkspaceGoal::maxSampleCount () const
-{
-    return 1;
-}
-
-
-double sgWorkspaceGoal::distanceGoal (const ompl::base::State *st) const
-{
-    /* TODO: This is wrong */
-    return 0;
-}
+// double sgWorkspaceGoal::distanceGoal (const ompl::base::State *st) const
+// {
+//     /* TODO: This is wrong */
+//     return 0;
+// }
 
 } /* namespace amino */
 
@@ -150,6 +160,8 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
                                                            n_e, E, ldE);
 
     mp->problem_definition->setGoal(ompl::base::GoalPtr(g));
+    mp->lazy_samples = g;
+
     return 0;
 
     // amino::sgStateSpace *ss = mp->space_information->getTypedStateSpace();
