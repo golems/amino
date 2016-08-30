@@ -71,6 +71,7 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
     int r = AA_RX_NO_IK;
 
     while( AA_RX_OK != r ) {
+    while( AA_RX_OK != r && wsg->isSampling() ) {
         /* Re-seed */
         wsg->state_sampler->sampleUniform(wsg->seed);
         double q[n_all];
@@ -89,12 +90,11 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
 
     if( AA_RX_OK == r ) {
         ss->copy_state( qs, wsg->typed_si->state_as(state) );
-     } else {
-        fprintf(stderr, "Failed to sample goal\n");
-        /* How to return failure? */
+        return true;
+    } else {
+        return false;
     }
 
-    return true;
 }
 
 sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
@@ -114,10 +114,10 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
 
-    E = new double[n_e*7];
+    this->E = new double[n_e*7];
     aa_cla_dlacpy( '\0', 7, (int)n_e,
                    E_arg, (int)ldE,
-                   E, 7 );
+                   this->E, 7 );
 }
 
 sgWorkspaceGoal::~sgWorkspaceGoal ()
