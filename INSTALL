@@ -110,16 +110,17 @@ Mac OS X using MacPorts {#installation_setup_mac}
 
         export LD_LIBRARY_PATH="/opt/local/lib:$LD_LIBRARY_PATH"
 
-* Ensure that autoconf can find the MacPorts-installed header files by
-  editing the `config.site` file under your preferred installation
-  prefix (default: `/usr/local`)
+* Ensure that autoconf can find the MacPorts-installed header and
+  library files by editing the `config.site` file under your preferred
+  installation prefix (default: `/usr/local`)
 
         vi /usr/local/share/config.site
 
-  Ensure that the `CPPFLAGS` variable in config.site contains the
-  MacPorts include directory.
+  Ensure that the `CPPFLAGS` and `LDFLAGS` variables in config.site
+  contain the MacPorts directories.
 
         CPPFLAGS="-I/opt/local/include"
+        LDFLAGS="-L/opt/local/lib"
 
 * When installing blender on Mac OS X, you may need to create a
   wrapper script.  If you copy the blender binaries to
