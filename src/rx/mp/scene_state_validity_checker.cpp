@@ -48,16 +48,19 @@
 
 namespace amino {
 
-sgStateValidityChecker::sgStateValidityChecker(sgSpaceInformation *si,
-                                               const double *q_initial ) :
+sgStateValidityChecker::sgStateValidityChecker(sgSpaceInformation *si)
+    :
     TypedStateValidityChecker(si),
-    q_all(new double[getTypedStateSpace()->config_count_all()]) {
-    size_t n_all = getTypedStateSpace()->config_count_all();
-    std::copy( q_initial, q_initial + n_all, q_all );
+    q_all(new double[getTypedStateSpace()->config_count_all()]),
+    cl(aa_rx_cl_create(getTypedStateSpace()->scene_graph))
+{
+    this->allow();
 }
 
-sgStateValidityChecker::~sgStateValidityChecker() {
+sgStateValidityChecker::~sgStateValidityChecker()
+{
     delete [] q_all;
+    aa_rx_cl_destroy(this->cl);
 }
 
 bool sgStateValidityChecker::isValid(const ompl::base::State *state_) const
@@ -84,13 +87,23 @@ bool sgStateValidityChecker::isValid(const ompl::base::State *state_) const
                  TF_abs, 7 );
 
     // check collision
-    struct aa_rx_cl *cl = aa_rx_cl_create( space->scene_graph );
-    aa_rx_cl_allow_set( cl, space->allowed );
-    int col = aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
-    aa_rx_cl_destroy(cl);
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        return ! aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
+    }
+}
 
-    bool valid = !col;
-    return valid;
+
+void sgStateValidityChecker::set_start( size_t n_q, double *q_initial)
+{
+    assert( n_q == getTypedStateSpace()->config_count_all() );
+    std::copy( q_initial, q_initial + n_q, q_all );
+    this->allow();
+}
+
+void sgStateValidityChecker::allow( )
+{
+    aa_rx_cl_allow_set( cl, getTypedStateSpace()->allowed );
 }
 
 } /* namespace amino */

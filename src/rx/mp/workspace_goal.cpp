@@ -70,7 +70,6 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
 
     int r = AA_RX_NO_IK;
 
-    while( AA_RX_OK != r ) {
     while( AA_RX_OK != r && wsg->isSampling() ) {
         /* Re-seed */
         wsg->state_sampler->sampleUniform(wsg->seed);
@@ -79,7 +78,6 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
         aa_rx_sg_sub_config_set( ssg,
                                  n_s, wsg->seed->values,
                                  n_all, q );
-
         aa_rx_ksol_opts_take_seed( wsg->ko, n_all, q, AA_MEM_COPY );
 
         /* solve */

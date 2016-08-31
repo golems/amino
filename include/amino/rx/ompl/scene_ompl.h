@@ -60,7 +60,9 @@
  * @brief OMPL-specific motion planning
  */
 
-namespace amino {}
+namespace amino {
+class sgStateValidityChecker;
+}
 
 
 /* Forward Declaration */
@@ -70,16 +72,10 @@ class GoalLazySamples;
 }
 }
 
+
 struct aa_rx_mp {
-    aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
-        config_start(NULL),
-        space_information(
-            new amino::sgSpaceInformation(
-                amino::sgSpaceInformation::SpacePtr(
-                    new amino::sgStateSpace (sub_sg)))),
-        problem_definition(new ompl::base::ProblemDefinition(space_information)),
-        simplify(0)
-        { }
+    aa_rx_mp( const struct aa_rx_sg_sub *sub_sg );
+
     ~aa_rx_mp();
 
     void set_planner( ompl::base::Planner *p ) {
@@ -88,6 +84,8 @@ struct aa_rx_mp {
 
     amino::sgSpaceInformation::Ptr space_information;
     ompl::base::ProblemDefinitionPtr problem_definition;
+
+    amino::sgStateValidityChecker *validity_checker;
 
     ompl::base::PlannerPtr planner;
 

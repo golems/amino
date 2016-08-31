@@ -43,6 +43,8 @@
  * @brief OMPL State Space
  */
 
+#include <mutex>
+
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
@@ -59,12 +61,18 @@ namespace amino {
 class sgStateValidityChecker : public ::ompl::base::TypedStateValidityChecker<sgStateSpace> {
 public:
 
-    sgStateValidityChecker(sgSpaceInformation *si, const double *q_initial );
+    sgStateValidityChecker(sgSpaceInformation *si);
 
     ~sgStateValidityChecker() ;
 
     virtual bool isValid(const ompl::base::State *state_) const ;
     double *q_all;
+
+    void set_start( size_t n_q, double *q_all);
+    void allow( );
+
+    mutable std::mutex mutex;
+    struct aa_rx_cl *cl;
 };
 
 

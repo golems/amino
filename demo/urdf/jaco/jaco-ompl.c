@@ -146,14 +146,20 @@ int main(int argc, char *argv[])
     size_t g_n_path = 0; /* storage for plan length */
 
     /* Start and goal states */
-    aa_rx_mp_set_start( mp, m, q);
+    aa_rx_mp_set_start(mp, m, q);
 
     double q_goal[6];
     for( size_t i = 0; i < 6; i++ ) {
         aa_rx_config_id j_a = aa_rx_sg_sub_config(ssg,i);
         q_goal[i] = q1[j_a];
     }
-    aa_rx_mp_set_goal( mp, 6, q_goal );
+    {
+        int r =  aa_rx_mp_set_goal( mp, 6, q_goal );
+        if (r) {
+            fprintf(stderr, "Could not set motion planning goal\n");
+            check_mp_error(r);
+        }
+    }
 
     /* Execute Planner */
     aa_rx_mp_set_rrt(mp,NULL);
