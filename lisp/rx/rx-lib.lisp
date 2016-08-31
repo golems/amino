@@ -62,5 +62,5 @@
 
 ;; TODO: put in separate packages so reloads don't clobber static vars
 (amino::use-foreign-library-if fcl libamino-collision)
-(amino::use-foreign-library-if amino-gl libsdl libamino-gl)
+(amino::use-foreign-library-if amino-gl libamino-gl)
 (amino::use-foreign-library-if ompl libamino-planning)
