@@ -568,20 +568,20 @@ AS_IF([test "x$HAVE_CLP" = xyes], [AC_DEFINE([HAVE_CLP])])
 
 
 ## CGAL ##
-AC_LANG([C++])
 AC_ARG_WITH([cgal],
-            [AS_HELP_STRING([--without-cgal], [Disable support for CGAL])],
+            [AS_HELP_STRING([--enable-cgal], [Disable support for CGAL])],
             [],
-            [with_cgal=auto])
+            [with_cgal=no])
 
-AS_IF([test "x$with_cgal" = xauto], [
-  AC_CHECK_HEADERS([CGAL/basic.h], [HAVE_CGAL=yes], [HAVE_CGAL=no])
-],[
-  HAVE_CGAL="$with_cgal"
-])
+dnl AC_LANG([C++])
+dnl AS_IF([test "x$with_cgal" = xauto], [
+dnl   AC_CHECK_HEADERS([CGAL/basic.h], [HAVE_CGAL=yes], [HAVE_CGAL=no])
+dnl ],[
+dnl   HAVE_CGAL="$with_cgal"
+dnl ])
 
 AC_SUBST([HAVE_CGAL])
-AM_CONDITIONAL([HAVE_CGAL], [test "x$HAVE_CGAL" = xyes])
+AM_CONDITIONAL([HAVE_CGAL], [test "x$with_cgal" = xyes])
 
 ## Lisp ##
 AC_ARG_WITH([common-lisp],
