@@ -64,21 +64,25 @@ AA_API int aa_rx_sg_init ( struct aa_rx_sg *scene_graph )
 AA_API size_t aa_rx_sg_config_count(
     const struct aa_rx_sg *scene_graph )
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->config_size;
+    if( scene_graph ) {
+        aa_rx_sg_ensure_clean_frames( scene_graph );
+        return scene_graph->sg->config_size;
+    } else {
+        return 0;
+    }
 }
 
 AA_API size_t aa_rx_sg_frame_count(
     const struct aa_rx_sg *scene_graph )
 {
-    return scene_graph->sg->frames.size();
+    return scene_graph ? scene_graph->sg->frames.size() : 0;
 }
 
 AA_API enum aa_rx_frame_type aa_rx_sg_frame_type (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->frames[frame_id]->type;
+    return scene_graph->sg->frames[(size_t)frame_id]->type;
 }
 
 AA_API aa_rx_config_id aa_rx_sg_config_id(
@@ -106,7 +110,12 @@ aa_rx_sg_frame_name (
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
-    return scene_graph->sg->frames[frame_id]->name.c_str();
+    switch(frame_id) {
+    case AA_RX_FRAME_ROOT: return "";
+    case AA_RX_FRAME_NONE: return "?";
+    default:
+        return scene_graph->sg->frames[(size_t)frame_id]->name.c_str();
+    }
 }
 
 AA_API const char *
@@ -114,7 +123,14 @@ aa_rx_sg_config_name (
     const struct aa_rx_sg *scene_graph, aa_rx_config_id id )
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->config_rmap[id];
+
+    switch(id) {
+    case AA_RX_CONFIG_NONE: return "NONE";
+    case AA_RX_CONFIG_MULTI: return "MULTI";
+    default:
+        return scene_graph->sg->config_rmap[(size_t)id];
+    }
+
 }
 
 AA_API aa_rx_frame_id
@@ -122,7 +138,14 @@ aa_rx_sg_frame_parent (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame_id )
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
-    return scene_graph->sg->frames[frame_id]->parent_id;
+
+    switch(frame_id) {
+    case AA_RX_FRAME_NONE:
+    case AA_RX_FRAME_ROOT:
+        return AA_RX_FRAME_NONE;
+    default:
+        return scene_graph->sg->frames[(size_t)frame_id]->parent_id;
+    }
 }
 
 
@@ -181,7 +204,10 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs )
 {
+    if( NULL == scene_graph ) return;
+
     aa_rx_sg_ensure_clean_frames( scene_graph );
+    assert( n_q == scene_graph->sg->config_size );
 
     amino::SceneGraph *sg = scene_graph->sg;
     size_t i_frame = 0;
@@ -189,7 +215,7 @@ AA_API void aa_rx_sg_tf
          i_frame < n_tf && i_frame < sg->frames.size();
          i_frame++, i_rel += ld_rel, i_abs += ld_abs )
     {
-        amino::SceneFrame *f = sg->frames[(aa_rx_frame_id)i_frame];
+        amino::SceneFrame *f = sg->frames[i_frame];
         double *E_rel = TF_rel + i_rel;
         double *E_abs = TF_abs + i_abs;
         // compute relative
@@ -201,7 +227,7 @@ AA_API void aa_rx_sg_tf
             AA_MEM_CPY(E_abs, E_rel, 7);
         } else {
             assert( f->parent_id < (ssize_t)i_frame );
-            double *E_abs_parent = TF_abs + (ld_abs * f->parent_id);;
+            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
             aa_tf_qutr_mul(E_abs_parent, E_rel, E_abs);
         }
     }
@@ -223,6 +249,7 @@ AA_API void aa_rx_sg_tf_update
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
     amino::SceneGraph *sg = scene_graph->sg;
+    assert( n_q == scene_graph->sg->config_size );
 
     bool updated[sg->frames.size()];
 
@@ -234,7 +261,7 @@ AA_API void aa_rx_sg_tf_update
              i_rel0 += ld_rel0, i_abs0 += ld_abs0
         )
     {
-        amino::SceneFrame *f = sg->frames[(aa_rx_frame_id)i_frame];
+        amino::SceneFrame *f = sg->frames[i_frame];
         enum aa_rx_frame_type type = f->type;
         bool update_abs = 0;
         bool in_global =  f->in_global();
@@ -270,7 +297,7 @@ AA_API void aa_rx_sg_tf_update
                 AA_MEM_CPY(E_abs, E_rel, 7);
             } else {
                 assert( f->parent_id < (ssize_t)i_frame );
-                double *E_abs_parent = TF_abs + (ld_abs * f->parent_id);;
+                double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
                 aa_tf_qutr_mul(E_abs_parent, E_rel, E_abs);
             }
             updated[i_frame] = 1;
@@ -287,12 +314,14 @@ AA_API void aa_rx_sg_map_geom (
     void (*function)(void *context, aa_rx_frame_id frame_id, struct aa_rx_geom *geom),
     void *context )
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
-    amino::SceneGraph *sg = scene_graph->sg;
-    for( auto itr = sg->frames.begin(); itr != sg->frames.end(); itr++ ) {
-        amino::SceneFrame *f = *itr;
-        for( auto g = f->geometry.begin(); g != f->geometry.end(); g++ ) {
-            function(context, f->frame_id, *g);
+    if( scene_graph ) {
+        aa_rx_sg_ensure_clean_frames( scene_graph );
+        amino::SceneGraph *sg = scene_graph->sg;
+        for( auto itr = sg->frames.begin(); itr != sg->frames.end(); itr++ ) {
+            amino::SceneFrame *f = *itr;
+            for( auto g = f->geometry.begin(); g != f->geometry.end(); g++ ) {
+                function(context, f->frame_id, *g);
+            }
         }
     }
 }
@@ -341,7 +370,7 @@ AA_API const double *
 aa_rx_sg_frame_axis ( const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame )
 {
     amino::SceneGraph *sg = scene_graph->sg;
-    amino::SceneFrameJoint *f = static_cast<amino::SceneFrameJoint*> (sg->frames[frame]);
+    amino::SceneFrameJoint *f = static_cast<amino::SceneFrameJoint*> (sg->frames[(size_t)frame]);
     return f->axis;
 }
 
@@ -350,7 +379,7 @@ aa_rx_sg_frame_config (
     const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame)
 {
     amino::SceneGraph *sg = scene_graph->sg;
-    amino::SceneFrame *f = sg->frames[frame];
+    amino::SceneFrame *f = sg->frames[(size_t)frame];
     switch( f->type ) {
     case AA_RX_FRAME_FIXED:
         return AA_RX_CONFIG_NONE;
@@ -402,7 +431,7 @@ DEF_SET_LIMIT(eff)
                                   double *min, double *max )            \
     {                                                                   \
         amino::SceneGraph *sg = scenegraph->sg;                         \
-        struct aa_rx_config_limits *l = sg->limits[config_id];          \
+        struct aa_rx_config_limits *l = sg->limits[(size_t)config_id];  \
         if( l && l->has_##value ) {                                     \
             *min = l->value##_min;                                      \
             *max = l->value##_max;                                      \
@@ -442,7 +471,7 @@ aa_rx_sg_frame_get_mass( struct aa_rx_sg *scenegraph,
     aa_rx_sg_ensure_clean_frames( scenegraph );
 
     amino::SceneGraph *sg = scenegraph->sg;
-    struct amino::SceneFrame *f = sg->frames[frame];
+    struct amino::SceneFrame *f = sg->frames[(size_t)frame];
     if( f->inertial ) {
         return f->inertial->mass;
     } else {
@@ -457,7 +486,7 @@ aa_rx_sg_frame_get_inertia( struct aa_rx_sg *scenegraph,
     aa_rx_sg_ensure_clean_frames( scenegraph );
 
     amino::SceneGraph *sg = scenegraph->sg;
-    struct amino::SceneFrame *f = sg->frames[frame];
+    struct amino::SceneFrame *f = sg->frames[(size_t)frame];
     if( f->inertial ) {
         return f->inertial->inertia;
     } else {
@@ -492,16 +521,16 @@ AA_API void aa_rx_sg_rel_tf (
                         7 );
         } else {
             AA_MEM_CPY( from_tf_to,
-                        &tf_abs[frame_to * ld_abs],
+                        &tf_abs[(size_t)frame_to * ld_abs],
                         7 );
         }
     } else {
         if (frame_to == AA_RX_FRAME_ROOT){
-            aa_tf_qutr_conj( &tf_abs[frame_from * ld_abs],
+            aa_tf_qutr_conj( &tf_abs[(size_t)frame_from * ld_abs],
                              from_tf_to );
         } else {
-            aa_tf_qutr_cmul( &tf_abs[frame_from * ld_abs],
-                             &tf_abs[frame_to * ld_abs],
+            aa_tf_qutr_cmul( &tf_abs[(size_t)frame_from * ld_abs],
+                             &tf_abs[(size_t)frame_to * ld_abs],
                              from_tf_to );
         }
     }
@@ -514,8 +543,15 @@ AA_API void aa_rx_sg_reparent (const struct aa_rx_sg *scene_graph,
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
-    scene_graph->sg->frames[frame]->parent = scene_graph->sg->frames[new_parent]->name;
-    AA_MEM_CPY(scene_graph->sg->frames[frame]->E, E1, 7);
+    const char *parent_name;
+    if ( AA_RX_FRAME_ROOT == new_parent ) {
+        scene_graph->sg->frames[(size_t)frame]->parent = "";
+    } else {
+        scene_graph->sg->frames[(size_t)frame]->parent = scene_graph->sg->frames[(size_t)new_parent]->name;
+    }
+
+
+    AA_MEM_CPY(scene_graph->sg->frames[(size_t)frame]->E, E1, 7);
     scene_graph->sg->dirty_indices = 1;
 }
 
@@ -599,7 +635,8 @@ aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph,
 
 AA_API void
 aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
-			       const char* frame0, const char* frame1, const int allowed ){
+                               const char* frame0, const char* frame1, const int allowed )
+{
     bool order = strcmp(frame0, frame1) <0;
     const char *string0, *string1;
     if (strcmp(frame0, frame1)<0){

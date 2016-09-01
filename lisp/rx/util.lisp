@@ -104,13 +104,6 @@
         (subseq path (aref reg-start 0) (aref reg-end 0))
         nil)))
 
-(defun create-parent-directories (pathname)
-  (let ((parents (file-dirname pathname)))
-    (when parents
-      (uiop/run-program:run-program (list "mkdir" "-p" (file-dirname pathname))
-                                    :output *standard-output*
-                                    :error-output *error-output*))))
-
 (defun file-rope (&rest elements)
   (rope-map #'identity elements :separator '/))
 
@@ -129,6 +122,22 @@
       path
       (output-file path directory)))
 
+
+(defun subdir (root &key directory name type pathname)
+  (merge-pathnames (make-pathname :directory (let ((d (ensure-list directory)))
+                                               (case (car d)
+                                                 (:absolute (cons :relative (cdr d)))
+                                                 (:relative d)
+                                                 (otherwise (cons :relative d))))
+                                  :name name
+                                  :type type)
+                   (if pathname
+                       (subdir root
+                               :directory (pathname-directory pathname)
+                               :name (pathname-name pathname)
+                               :type (pathname-type pathname))
+
+                       root)))
 
 (defun output (object place
                &key
@@ -328,15 +337,20 @@
     (- 1d0 (clamp x 0d0 1d0)))
 
 (defparameter *robray-root*
-  (format-pathname "~A/../"
-                   (namestring (asdf:system-source-directory :amino))))
+  (namestring (merge-pathnames (make-pathname :directory '(:relative :up))
+                               (asdf:system-source-directory :amino))))
 
-(defun find-script (name)
-  (let ((pathname (format-pathname "~A/share/exec/~A"
-                                   *robray-root* name)))
+(defparameter *robray-include*
+  (namestring (merge-pathnames (make-pathname :directory '(:relative "include"))
+                               *robray-root*)))
+
+(defun find-script (name &optional directory)
+  (let ((pathname (merge-pathnames (make-pathname :directory (or directory '(:relative "share" "exec"))
+                                                  :name name)
+                                   *robray-root*)))
     (assert (probe-file pathname) ()
             "Script '~A' not found" name)
-    pathname))
+    (namestring pathname)))
 
 ;; (defun load-trajectory (pathname)
 ;;   (let ((data (with-open-file (in pathname :direction :input)
@@ -414,3 +428,25 @@
   (capture-program-output `("pkg-config"
                             ,@(when cflags '("--cflags"))
                             ,@(ensure-list modules))))
+
+
+
+(defmacro with-thread ((thread) &body body)
+  (with-gensyms (result sem)
+    `(let ((,result)
+           (,sem (sb-thread:make-semaphore)))
+       (sb-thread:interrupt-thread ,thread
+                                   (lambda ()
+                                     (setq ,result (progn ,@body))
+                                     (sb-thread:signal-semaphore ,sem)))
+       (sb-thread:wait-on-semaphore ,sem)
+       ,result)))
+
+(defmacro with-main-thread (&body body)
+  (with-gensyms (helper)
+    `(flet ((,helper ()
+              ,@body))
+       (if (sb-thread:main-thread-p)
+           (,helper)
+           (with-thread ((sb-thread:main-thread))
+             (,helper))))))

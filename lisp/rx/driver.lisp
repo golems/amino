@@ -65,9 +65,10 @@
       (when output
         (scene-graph-compile scene
                              output
+                             :shared-object nil
                              :scene-name scene-name))
       ;; Display in GUI
       (when gui
         (win-create :title "AARXC" :stop-on-quit t)
         (win-set-scene-graph scene)
-        (win-join)))))
+        (win-run :synchronous t)))))

@@ -80,7 +80,6 @@
 #include <stdarg.h>
 #endif //__cplusplus
 
-#include <cblas.h>
 #include "amino/cblas_order.h"
 
 

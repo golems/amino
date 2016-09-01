@@ -35,6 +35,8 @@
  *
  */
 
+
+#include "config.h"
 #include "amino.h"
 
 #include "amino/rx/rxtype.h"
@@ -46,7 +48,6 @@
 #include "amino/rx/scene_geom_internal.h"
 
 #include "sg_convenience.h"
-
 
 void
 (*aa_gl_buffers_destroy_fun)( struct aa_gl_buffers *bufs ) = NULL;
@@ -220,6 +221,27 @@ aa_rx_geom_shape ( const struct aa_rx_geom *g,
     return shape;
 }
 
+
+AA_API const struct aa_rx_geom_opt*
+aa_rx_geom_get_opt ( const struct aa_rx_geom *geom )
+{
+    return &geom->opt;
+}
+
+AA_API struct aa_rx_cl_geom *
+aa_rx_geom_get_collision ( const struct aa_rx_geom *geom )
+{
+    return geom->cl_geom;
+}
+
+
+AA_API void
+aa_rx_geom_set_collision ( struct aa_rx_geom *geom,  struct aa_rx_cl_geom * obj)
+{
+    geom->cl_geom = obj;
+}
+
+
 struct aa_rx_mesh* aa_rx_mesh_create()
 {
     struct aa_rx_mesh *mesh = AA_NEW0( struct aa_rx_mesh );
@@ -282,6 +304,20 @@ MESH_SET_THINGN( float, vertices, 3, n_vertices)
 MESH_SET_THING( float, normals, 3 )
 MESH_SET_THING( float, uv, 2 )
 MESH_SET_THINGN( unsigned, indices, 3, n_indices )
+
+AA_API const float *aa_rx_mesh_get_vertices (
+    const struct aa_rx_mesh *mesh, size_t *size )
+{
+    if (size) *size = mesh->n_vertices;
+    return mesh->vertices;
+}
+
+AA_API const unsigned *aa_rx_mesh_get_indices (
+    const struct aa_rx_mesh *mesh, size_t *size )
+{
+    if (size) *size = mesh->n_indices;
+    return mesh->indices;
+}
 
 void aa_rx_mesh_set_rgba (
     struct aa_rx_mesh *mesh,

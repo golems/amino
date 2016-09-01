@@ -35,7 +35,11 @@
  *
  */
 
+#include "config.h"
+
 #include "amino.h"
+
+
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
@@ -81,54 +85,54 @@ aa_rx_geom_opt_set_alpha (
 }
 
 AA_API int
-aa_rx_geom_opt_get_no_shadow ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_no_shadow ( const struct aa_rx_geom_opt *opt )
 {
     return opt->no_shadow;
 }
 AA_API int
-aa_rx_geom_opt_get_visual ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_visual ( const struct aa_rx_geom_opt *opt )
 {
     return opt->visual;
 }
 AA_API int
-aa_rx_geom_opt_get_collision ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_collision ( const struct aa_rx_geom_opt *opt )
 {
     return opt->collision;
 }
 
 AA_API double
-aa_rx_geom_opt_get_color_red ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_color_red ( const struct aa_rx_geom_opt *opt )
 {
     return opt->color[0];
 }
 AA_API double
-aa_rx_geom_opt_get_color_blue ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_color_blue ( const struct aa_rx_geom_opt *opt )
 {
     return opt->color[1];
 }
 AA_API double
-aa_rx_geom_opt_get_color_green ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_color_green ( const struct aa_rx_geom_opt *opt )
 {
     return opt->color[2];
 }
 AA_API double
-aa_rx_geom_opt_get_alpha ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_alpha ( const struct aa_rx_geom_opt *opt )
 {
     return opt->color[3];
 }
 
 AA_API double
-aa_rx_geom_opt_get_specular_red ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_specular_red ( const struct aa_rx_geom_opt *opt )
 {
     return opt->specular[0];
 }
 AA_API double
-aa_rx_geom_opt_get_specular_blue ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_specular_blue ( const struct aa_rx_geom_opt *opt )
 {
     return opt->specular[1];
 }
 AA_API double
-aa_rx_geom_opt_get_specular_green ( struct aa_rx_geom_opt *opt )
+aa_rx_geom_opt_get_specular_green ( const struct aa_rx_geom_opt *opt )
 {
     return opt->specular[2];
 }

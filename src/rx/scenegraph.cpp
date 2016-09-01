@@ -254,7 +254,7 @@ int SceneGraph::index()
     for( auto itr = frame_map.begin(); itr != frame_map.end(); itr++ ) {
         SceneFrame *f = itr->second;
         // invalidate indices
-        f->frame_id = f->parent_id = (size_t)-1;
+        f->frame_id = f->parent_id = AA_RX_FRAME_NONE;
         // Recursive sort
         sort_frame_helper( list, visited, frame_map, f->name );
     }
@@ -274,7 +274,7 @@ int SceneGraph::index()
         {
             SceneFrame *f = *itr;
             frames[i_frame] = f;
-            f->frame_id = i_frame;
+            f->frame_id = (aa_rx_frame_id)i_frame;
             if( f->in_global() ) {
                 f->parent_id = AA_RX_FRAME_ROOT;
             } else {
@@ -293,10 +293,10 @@ int SceneGraph::index()
                     config_set.insert( config_name );
                     config_rmap.push_back(config_name.c_str());
                     limits.push_back( limits_map[config_name] );
-                    config_map[config_name] = config_size;
+                    config_map[config_name] = (aa_rx_config_id)config_size;
                     config_size++;
                 }
-                fj->config_index = config_map[config_name];
+                fj->config_index = (size_t)config_map[config_name];
                 break;
             }
             }
@@ -345,33 +345,39 @@ aa_rx_sg_dirty_geom( struct aa_rx_sg *scene_graph )
 AA_API void
 aa_rx_sg_ensure_clean_frames( const struct aa_rx_sg *scene_graph )
 {
-    amino::SceneGraph *sg = scene_graph->sg;
-    if( sg->dirty_indices ) {
-        fprintf(stderr, "ERROR: scene graph indices are dirty.  Must call aa_rx_sg_init()\n");
-        abort();
-        exit(EXIT_FAILURE);
+    if( scene_graph )  {
+        amino::SceneGraph *sg = scene_graph->sg;
+        if( sg->dirty_indices ) {
+            fprintf(stderr, "ERROR: scene graph indices are dirty.  Must call aa_rx_sg_init()\n");
+            abort();
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
 AA_API void
 aa_rx_sg_ensure_clean_gl( const struct aa_rx_sg *scene_graph )
 {
-    amino::SceneGraph *sg = scene_graph->sg;
-    if( sg->dirty_gl ) {
-        fprintf(stderr, "ERROR: scene graph GL data is dirty.  Must call aa_rx_sg_gl_init()\n");
-        abort();
-        exit(EXIT_FAILURE);
+    if( scene_graph )  {
+        amino::SceneGraph *sg = scene_graph->sg;
+        if( sg->dirty_gl ) {
+            fprintf(stderr, "ERROR: scene graph GL data is dirty.  Must call aa_rx_sg_gl_init()\n");
+            abort();
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
 AA_API void
 aa_rx_sg_ensure_clean_collision( const struct aa_rx_sg *scene_graph )
 {
-    amino::SceneGraph *sg = scene_graph->sg;
-    if( sg->dirty_collision ) {
-        fprintf(stderr, "ERROR: scene graph collision data is dirty.  Must call aa_rx_sg_cl_init()\n");
-        abort();
-        exit(EXIT_FAILURE);
+    if( scene_graph )  {
+        amino::SceneGraph *sg = scene_graph->sg;
+        if( sg->dirty_collision ) {
+            fprintf(stderr, "ERROR: scene graph collision data is dirty.  Must call aa_rx_sg_cl_init()\n");
+            abort();
+            exit(EXIT_FAILURE);
+        }
     }
 }
 
@@ -393,21 +399,33 @@ aa_rx_sg_clean_collision( struct aa_rx_sg *scene_graph )
 AA_API int
 aa_rx_sg_is_clean_gl( struct aa_rx_sg *scene_graph )
 {
-    amino::SceneGraph *sg = scene_graph->sg;
-    return sg->dirty_gl ? 0 : 1;
+    if( scene_graph ) {
+        amino::SceneGraph *sg = scene_graph->sg;
+        return sg->dirty_gl ? 0 : 1;
+    } else {
+        return 1;
+    }
 }
 
 
 AA_API int
 aa_rx_sg_is_clean_collision( struct aa_rx_sg *scene_graph )
 {
-    amino::SceneGraph *sg = scene_graph->sg;
-    return sg->dirty_collision ? 0 : 1;
+    if( scene_graph ) {
+        amino::SceneGraph *sg = scene_graph->sg;
+        return sg->dirty_collision ? 0 : 1;
+    } else {
+        return 1;
+    }
 }
 
 AA_API int
 aa_rx_sg_is_clean( struct aa_rx_sg *scene_graph )
 {
-    amino::SceneGraph *sg = scene_graph->sg;
-    return sg->dirty_indices ? 0 : 1;
+    if( scene_graph ) {
+        amino::SceneGraph *sg = scene_graph->sg;
+        return sg->dirty_indices ? 0 : 1;
+    } else {
+        return 1;
+    }
 }

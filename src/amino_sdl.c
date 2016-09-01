@@ -41,8 +41,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "amino/amino_gl.h"
 #include <SDL.h>
 
 #include <pthread.h>
@@ -187,21 +186,37 @@ static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
 
 pthread_once_t sdl_once = PTHREAD_ONCE_INIT;
 
-#define DEF_SDL_HINT(THING, DEFAULT)            \
-    {                                           \
-        char *e = getenv(#THING);               \
-        if( e ) {                               \
-            SDL_SetHint(THING,  e );            \
-        } else if (DEFAULT) {                   \
-            SDL_SetHint(THING,  DEFAULT );      \
-        }                                       \
-    }                                           \
-
-#define DEF_SDL_ATTR(THING, DEFAULT)                       \
-    {                                                      \
-        char *e = getenv(#THING);                          \
-        SDL_GL_SetAttribute(THING, e ? atoi(e) : DEFAULT); \
+#define DEF_SDL_HINT(THING, DEFAULT)                                    \
+    {                                                                   \
+        const char *str = #THING;                                       \
+        char *e = getenv(str);                                          \
+        const char *value =                                             \
+            ( NULL == e || '\0' == e[0] ) ?                             \
+            DEFAULT :                                                   \
+            e ;                                                         \
+        if( (NULL != value) && ('\0' != value[0])                       \
+            && (SDL_TRUE != SDL_SetHint( THING, value)) )               \
+        {                                                               \
+            fprintf(stderr,                                             \
+                    "Failed to set SDL HINT '%s' to '%s': %s\n",        \
+                    str, value, SDL_GetError() );                       \
+        }                                                               \
+                                                                        \
     }
+
+#define SET_SDL_ATTR(THING, value)                                     \
+    if ( SDL_GL_SetAttribute(THING, value) ) {                         \
+        fprintf(stderr,                                                \
+                "Failed to set SDL OpenGL attribute '%s' to %d: %s\n", \
+                #THING, value, SDL_GetError() );                       \
+    }                                                                  \
+
+#define DEF_SDL_ATTR(THING, DEFAULT)                                    \
+    {                                                                   \
+        char *e = getenv(#THING);                                       \
+        SET_SDL_ATTR(THING,                                             \
+                     (NULL == e || '\0' == e[0] ) ? DEFAULT : atoi(e)); \
+    }                                                                   \
 
 static void sdl_init_once( void )
 {
@@ -210,10 +225,12 @@ static void sdl_init_once( void )
         abort();
     }
 
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    /* Set OpenGL Version */
+    SET_SDL_ATTR(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SET_SDL_ATTR(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
+    /* MacOSX does not support the compatability profile */
+    SET_SDL_ATTR(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     DEF_SDL_ATTR( SDL_GL_DOUBLEBUFFER,        1 );
     DEF_SDL_ATTR( SDL_GL_DEPTH_SIZE,         24 );
@@ -452,7 +469,7 @@ AA_API void aa_sdl_display_loop(
     struct aa_sdl_display_params params;
     params.update = 1;
     params.quit = 0;
-    clock_gettime( CLOCK_MONOTONIC, &params.time_initial );
+    params.time_initial = aa_tm_now();
     params.time_now = params.time_initial;
     params.time_last = params.time_initial;
     params.first = 1;
@@ -463,11 +480,7 @@ AA_API void aa_sdl_display_loop(
         params.first = 0;
         if( params.update ) {
             /* Take the SDL lock first, because it is slow */
-            aa_sdl_lock();
-            aa_gl_lock();
             SDL_GL_SwapWindow(window);
-            aa_gl_unlock();
-            aa_sdl_unlock();
             params.update = 0;
         }
         params.time_last = params.time_now;
@@ -479,18 +492,15 @@ AA_API void aa_sdl_display_loop(
         // wait for SDL events
         int timeout = 1;
         while( !params.quit && timeout > 0 ) {
-            clock_gettime( CLOCK_MONOTONIC, &params.time_now );
+            params.time_now = aa_tm_now();
             struct timespec ts_timeout = aa_tm_sub(next, params.time_now);
             timeout = (int) aa_tm_timespec2msec(ts_timeout);
             //printf("timeout: %d\n", timeout );
             SDL_Event e;
-            aa_sdl_lock();
             int r = SDL_WaitEventTimeout( &e, timeout < 0 ? 0 : timeout );
             if( r ) {
                 aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
             }
-            aa_sdl_unlock();
-
         }
 
         // poll spnav
@@ -499,7 +509,7 @@ AA_API void aa_sdl_display_loop(
 #endif
 
         // update times
-        clock_gettime( CLOCK_MONOTONIC, &params.time_now );
+        params.time_now = aa_tm_now();
     } while ( !params.quit );
 }
 
@@ -515,8 +525,6 @@ AA_API void aa_sdl_gl_window(
     SDL_GLContext *p_glcontext )
 {
     aa_sdl_init();
-
-    aa_sdl_lock();
 
     /* Create window */
     *pwindow = SDL_CreateWindow( title,
@@ -550,35 +558,14 @@ AA_API void aa_sdl_gl_window(
 FINISH:
 
     *p_glcontext = SDL_GL_CreateContext( *pwindow );
-    if( p_glcontext == NULL )
+    if( *p_glcontext == NULL )
     {
         fprintf( stderr, "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
         abort();
     }
 
-    aa_sdl_unlock();
 
     aa_gl_init();
     //printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
-}
-
-
-static pthread_mutex_t sdl_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void aa_sdl_lock()
-{
-    if( pthread_mutex_lock( &sdl_mutex ) ) {
-        perror("AminoSDL Mutex Lock");
-        abort();
-    }
-
-}
-
-void aa_sdl_unlock()
-{
-    if( pthread_mutex_unlock( &sdl_mutex ) ) {
-        perror("AminoSDL Mutex Unlock");
-        abort();
-    }
 }

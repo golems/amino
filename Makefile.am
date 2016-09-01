@@ -99,6 +99,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/la.h              \
 	include/amino/la_impl.h         \
 	include/amino/mem.h             \
+	include/amino/refcount.h        \
 	include/amino/opt/opt.h         \
 	include/amino/opt/qp.h          \
 	include/amino/opt/lp.h          \
@@ -360,18 +361,19 @@ javadoc: doc/.javadoc.stamp
 
 endif
 
-## OpenGL support
-if HAVE_GL
+## SDL2/OpenGL ##
+if AMINO_GL
+
+# OpenGL support
 lib_LTLIBRARIES += libamino-gl.la
 libamino_gl_la_SOURCES = src/amino_gl.c src/rx/geodesic.cpp
 
 libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
-libamino_gl_la_LIBADD = libamino.la $(GL_LIBS)
+libamino_gl_la_LIBADD = $(GL_LIBS) $(SDL2_LIBS)
 
 
-## SDL ##
-if HAVE_SDL2
+# SDL
 
 libamino_gl_la_SOURCES += \
 	src/amino_sdl.c \
@@ -382,17 +384,16 @@ sdl_test_SOURCES = src/rx/sdl_test.c
 sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
-sdl_test_LDADD += libamino-gl.la $(GL_LIBS) $(GLEW_LIBS)
+sdl_test_LDADD += libamino-gl.la $(GL_LIBS)
 
 bin_PROGRAMS += aarx-view
 
 aarx_view_SOURCES = src/rx/aarx-view.c
 aarx_view_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
-aarx_view_LDADD = libamino-gl.la libamino.la $(SDL2_LIBS) $(GLEW_LIBS)
+aarx_view_LDADD = libamino-gl.la libamino.la $(SDL2_LIBS)
 
-endif # SDL2
 
-endif # GL
+endif # SDL2/OpenGL
 
 
 ## TESTS ##
@@ -470,7 +471,7 @@ libamino_collision_la_SOURCES = \
 
 libamino_collision_la_CFLAGS = $(FCL_CFLAGS)
 libamino_collision_la_CXXFLAGS = $(FCL_CFLAGS)
-libamino_collision_la_LIBADD = libamino.la $(FCL_LIBS)
+libamino_collision_la_LIBADD = $(FCL_LIBS)
 
 
 TESTS += fcl_test
@@ -496,7 +497,7 @@ libamino_planning_la_SOURCES = \
 	src/rx/mp/ompl_kpiece.cpp
 libamino_planning_la_CFLAGS = $(OMPL_CFLAGS)
 libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS)
-libamino_planning_la_LIBADD = libamino.la libamino-collision.la $(OMPL_LIBS)
+libamino_planning_la_LIBADD = $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
@@ -596,9 +597,26 @@ distclean-local:
 sync-doc:
 	rsync -r doc/manual/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 
-doc: doxygen-doc
+
+if HAVE_DOXYGEN
+
+doxygen:
+	$(DOXYGEN)
+
+doc/manual: doxygen
+
+doc: doxygen
 	$(MKDIR_P) doc/manual/doc
 	cp doc/logo-medium.png doc/manual/doc
+
+else
+
+doc/manual:
+	$(MKDIR_P) doc/manual
+
+endif
+
+
 
 if HAVE_HELP2MAN
 doc/aarxc.1: $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
@@ -606,5 +624,3 @@ doc/aarxc.1: $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
 endif
 
 EXTRA_DIST += doc/manual
-
-include aminclude.am

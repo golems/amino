@@ -39,12 +39,10 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <error.h>
 #include <stdio.h>
 #include <math.h>
 #include <getopt.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "amino/amino_gl.h"
 #include <SDL.h>
 
 

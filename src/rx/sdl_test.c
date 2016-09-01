@@ -36,11 +36,9 @@
  */
 #define GL_GLEXT_PROTOTYPES
 
-#include <error.h>
 #include <stdio.h>
 #include <math.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include "amino/amino_gl.h"
 #include <SDL.h>
 
 #include "amino.h"
@@ -118,7 +116,7 @@ void Init(void)
 
 void check_error( const char *name ){
     for (GLenum err = glGetError(); err != GL_NO_ERROR; err = glGetError()) {
-        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, gluErrorString(err));
+        fprintf(stderr, "error %s: %d: %s\n",  name,  (int)err, aa_gl_error_string(err));
     }
 }
 

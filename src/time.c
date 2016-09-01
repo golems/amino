@@ -40,6 +40,8 @@
  *
  */
 
+#include "config.h"
+
 #include "amino.h"
 
 #if (defined(__GNUC__) || defined(__ICC)) && (defined(__i386__) || defined(__x86_64__))
@@ -49,5 +51,34 @@ uint64_t aa_rdtsc() {
     asm volatile("rdtsc" : "=a" (lo), "=d" (hi));
     return ((uint64_t)hi << 32) | lo;
 }
+#endif
+
+
+#ifdef HAVE_CLOCK_GETTIME
+
+struct timespec aa_tm_now()
+{
+    struct timespec t;
+    clock_gettime( AA_CLOCK, &t );
+    return t;
+}
+
+#elif HAVE_MACH_ABSOLUTE_TIME
+
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+
+struct timespec aa_tm_now()
+{
+    struct timespec t;
+    uint64_t ns = mach_absolute_time();
+    t.tv_sec = ns / AA_IBILLION;
+    t.tv_nsec = ns % AA_IBILLION;
+    return t;
+}
+
+#else
+
+#error "No suitable definition for aa_tm_now()"
 
 #endif

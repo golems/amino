@@ -58,31 +58,53 @@ AC_SEARCH_LIBS([dgemm_],[blas],[true],
                  [AC_MSG_ERROR([BLAS is required.])])
 AC_SEARCH_LIBS([dgesvd_],[lapack],[true],
                  [AC_MSG_ERROR([LAPACK is required.])])
-AC_CHECK_HEADERS([cblas.h], [true],
-                 [AC_MSG_ERROR([CBLAS is required.])])
 
 AC_CHECK_HEADERS([stdatomic.h])
 
-AC_SEARCH_LIBS([clock_gettime], [rt])
 AC_SEARCH_LIBS([sqrt], [m])
 AC_SEARCH_LIBS([dlopen], [dl])
 AC_SEARCH_LIBS([pthread_once], [pthread])
 
+HAVE_TIME=no
+AH_TEMPLATE([HAVE_CLOCK_GETTIME],
+            [Define presense of clock_gettime() call])
+AH_TEMPLATE([HAVE_MACH_ABSOLUTE_TIME],
+            [Define presense of mach_absolute_time() call])
 
+AS_IF([test xyes != "x$HAVE_TIME"],
+      [AC_SEARCH_LIBS([clock_gettime], [rt],
+                     [AC_DEFINE([HAVE_CLOCK_GETTIME])
+                      HAVE_TIME=yes])])
+
+AS_IF([test xyes != "x$HAVE_TIME"],
+      [AC_SEARCH_LIBS([mach_absolute_time], [],
+                     [AC_DEFINE([HAVE_MACH_ABSOLUTE_TIME])
+                      HAVE_TIME=yes])])
+
+AS_IF([test xyes != "x$HAVE_TIME"],
+      [AC_MSG_ERROR([Could not find suitable time function.])])
+
+# Check for cblas.h
+AC_CHECK_HEADERS([cblas.h], [INCLUDE_CBLAS_H='#include <cblas.h>'])
+AS_IF([test x = "x$INCLUDE_CBLAS_H"],
+      [AC_CHECK_HEADERS([cblas_openblas.h], [INCLUDE_CBLAS_H='#include <cblas_openblas.h>'])])
+AS_IF([test x = "x$INCLUDE_CBLAS_H"],
+      [AC_MSG_ERROR([cblas.h is required.])])
+AC_SUBST([INCLUDE_CBLAS_H])
 
 # Check for cblas_blas enum
 AC_MSG_CHECKING([CBLAS_LAYOUT])
-AC_TRY_COMPILE([#include <cblas.h>
+AC_TRY_COMPILE([$INCLUDE_CBLAS_H
                ],
                [CBLAS_LAYOUT test_var;],
                [AC_MSG_RESULT([yes])
                 aa_cblas_order_type=CBLAS_LAYOUT],
                [AC_MSG_RESULT([no])])
 
-AS_IF([test x="x$aa_cblas_order_type"],
+AS_IF([test x = "x$aa_cblas_order_type"],
 [
 AC_MSG_CHECKING([enum CBLAS_ORDER])
-AC_TRY_COMPILE([#include <cblas.h>
+AC_TRY_COMPILE([$INCLUDE_CBLAS_H
                ],
                [enum CBLAS_ORDER test_var;],
                [AC_MSG_RESULT([yes])
@@ -91,6 +113,7 @@ AC_TRY_COMPILE([#include <cblas.h>
 ])
 
 AC_SUBST([aa_cblas_order_type])
+
 
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
          [AC_DEFUN([APPEND_CFLAG],
@@ -108,18 +131,25 @@ m4_ifdef([AX_CHECK_COMPILER_FLAGS],
           AC_DEFUN([APPEND_FCFLAG],
                    [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])])
 
+m4_ifdef([APPEND_FCFLAG],[],
+         [AC_DEFUN([APPEND_FCFLAG],[])])
+m4_ifdef([APPEND_CFLAG],[],
+         [AC_DEFUN([APPEND_CFLAG],[])])
+m4_ifdef([APPEND_CXXFLAG],[],
+         [AC_DEFUN([APPEND_CXXFLAG],[])])
+
 
 
 # Fortran Checks
-# TODO: check that we have either the fortran compiler or f2c
+# Use fortran compiler if it exists.  Otherwise fallback on f2c.
+
 AC_ARG_WITH([fortran],
             AS_HELP_STRING([--without-fortran], [Disable fortran compiler]),
             [],
-            [with_fortran=yes])
+            [with_fortran=auto])
 
-AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" = xyes])
 
-AS_IF([test "x$with_fortran" = xyes],
+AS_IF([test "x$with_fortran" != xno -a "x$FC" != x],
 [
 AC_DEFINE([USE_FORTRAN],[1],[Use the fortran compiler])
 AC_LANG([Fortran])
@@ -146,42 +176,30 @@ APPEND_FCFLAG([-Wintrinsic-shadow])
 ])
 
 AC_CHECK_PROGS([F2C], [f2c])
-AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
 AC_LANG([C])
 AC_CHECK_HEADERS([f2c.h])
 
+AS_IF([test "x$with_fortran" = xyes -a "x$FC" = x],
+      [AC_MSG_ERROR([No Fortran compiler detected])])
+AS_IF([test "x$with_fortran" = xno -a "x$F2C" = x],
+      [AC_MSG_ERROR([No F2C detected])])
+AS_IF([test "x$FC" = x -a "x$F2C" = x],
+      [AC_MSG_ERROR([No Fortran compiler or F2C detected])])
 
-AS_IF([test "x$with_fortran" = xyes],
-      [AS_IF([test "x$FC" = "x"],
-             [AC_MSG_ERROR([No Fortran compiler detected])])],
-      [AS_IF([test "x$F2C" = "x"],
-             [AC_MSG_ERROR([No F2C cdetected])])])
-
+AM_CONDITIONAL([HAVE_F2C],   [test "x$F2C" != x])
+AM_CONDITIONAL([USE_FORTRAN], [test "x$with_fortran" != xno -a "x$FC" != x])
 
 # Doxygen
-m4_ifdef([DX_INIT_DOXYGEN],
-         [DX_HTML_FEATURE(ON)
-          DX_PDF_FEATURE(OFF)
-          DX_MAN_FEATURE(OFF)
-          DX_PS_FEATURE(OFF)
-          DX_CHM_FEATURE(OFF)
-          DX_CHI_FEATURE(OFF)
-          DX_MAN_FEATURE(OFF)
-          DX_RTF_FEATURE(OFF)
-          DX_XML_FEATURE(OFF)
-          DX_PDF_FEATURE(OFF)
-          DX_INIT_DOXYGEN(amino)],
-         [AM_CONDITIONAL([DX_COND_doc],   false)
-          AM_CONDITIONAL([DX_COND_html],  false)
-          AM_CONDITIONAL([DX_COND_chm],   false)
-          AM_CONDITIONAL([DX_COND_chi],   false)
-          AM_CONDITIONAL([DX_COND_rtf],   false)
-          AM_CONDITIONAL([DX_COND_xml],   false)
-          AM_CONDITIONAL([DX_COND_ps],    false)
-          AM_CONDITIONAL([DX_COND_pdf],   false)
-          AM_CONDITIONAL([DX_COND_latex], false)
-          AM_CONDITIONAL([DX_COND_man],   false)
-         ])
+AC_ARG_WITH([doxygen],
+            AS_HELP_STRING([--without-doxygen], [Disable doxygen support]),
+            [],
+            [with_doxygen=auto])
+AS_IF([test "x$with_doxygen" != xno],
+      [AC_CHECK_PROGS([DOXYGEN],[doxygen])])
+AS_IF([test "x$with_doxygen" = xyes -a "x$DOXYGEN" = x],
+      [AC_MSG_ERROR([Doxygen not found])])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test "x$DOXYGEN" != x])
+
 
 
 AC_ARG_ENABLE([man],
@@ -196,7 +214,8 @@ AM_CONDITIONAL([HAVE_HELP2MAN], [test x$HELP2MAN != x])
 AC_SUBST([BASE_CFLAGS],[$CFLAGS])
 
 # Enable maximum warnings
-AX_CFLAGS_WARN_ALL
+m4_ifdef([AX_CFLAGS_WARN_ALL],
+         [AX_CFLAGS_WARN_ALL])
 
 dnl APPEND_FLAG( [FLAG] )
 dnl Check if FLAG is supported, and if so, add it
@@ -273,7 +292,9 @@ AS_IF([test "x$JAVAC" = "x"],
       [BUILD_JAVA=no],
       [
        BUILD_JAVA=yes
-       AX_JNI_INCLUDE_DIR
+       m4_ifdef([AX_JNI_INCLUDE_DIR],
+                [AX_JNI_INCLUDE_DIR],
+                [JAVAC=""])
        for JNI_INCLUDE_DIR in $JNI_INCLUDE_DIRS
        do
            JNICPPFLAGS="$JNICPPFLAGS -I$JNI_INCLUDE_DIR"
@@ -316,20 +337,29 @@ AC_ARG_WITH([opengl],
             [],
             [with_opengl=yes])
 
+
+UNAME=`uname`
+AS_IF([test "x$UNAME" = xDarwin],
+[
+  AS_IF([test "x$GL_CFLAGS" = x],
+        [export GL_CFLAGS="-framework OpenGL"
+         AC_MSG_NOTICE([Guessing GL_CFLAGS for Darwin: $GL_CFLAGS])
+        ])
+  AS_IF([test "x$GL_LIBS" = x],
+        [export GL_LIBS="-framework OpenGL"
+         AC_MSG_NOTICE([Guessing GL_LIBS for Darwin: $GL_LIBS])
+        ])
+])
+
 AS_IF([test "x$with_opengl" = xyes], [
   PKG_CHECK_MODULES([GL],
                     [gl],
                     [HAVE_GL=yes])
-  dnl PKG_CHECK_MODULES([GLU],
-  dnl                   [glu],
-  dnl                   [HAVE_GLU=yes])
   ]
 )
 
 AC_SUBST([GL_CFLAGS])
 AC_SUBST([GL_LIBS])
-AC_SUBST([HAVE_GL])
-AM_CONDITIONAL([HAVE_GL], [test "x$HAVE_GL" = xyes])
 
 ## SDL ##
 AC_ARG_WITH([sdl2],
@@ -345,17 +375,18 @@ AS_IF([test "x$with_sdl2" = xyes], [
   PKG_CHECK_MODULES([SDL2],
                     [sdl2],
                     [HAVE_SDL2=yes])
-
-  PKG_CHECK_MODULES([GLEW],
-                    [glew] )]
+  ]
 )
 
-AC_SUBST([GLEW_CFLAGS])
-AC_SUBST([GLEW_LIBS])
 AC_SUBST([SDL2_CFLAGS])
 AC_SUBST([SDL2_LIBS])
-AC_SUBST([HAVE_SDL2])
-AM_CONDITIONAL([HAVE_SDL2], [test "x$HAVE_SDL2" = xyes])
+
+## AMINO GL ##
+AS_IF([test "x$HAVE_SDL2" = xyes -a "x$HAVE_GL" = xyes],
+      [AMINO_GL=yes],
+      [AMINO_GL=no])
+AC_SUBST([AMINO_GL])
+AM_CONDITIONAL([AMINO_GL], [test "x$AMINO_GL" = xyes])
 
 ## FCL ##
 AC_ARG_WITH([fcl],
@@ -368,14 +399,7 @@ AS_IF([test "x$with_fcl" = xyes], [
   PKG_CHECK_MODULES([FCL],
                     [fcl],
                     [HAVE_FCL=yes])
-  # TODO: smartly check with we also need boost_system
-  FCL_LIBS="$FCL_LIBS -lboost_system"
 ])
-AC_SUBST([FCL_CFLAGS])
-AC_SUBST([FCL_LIBS])
-AC_SUBST([HAVE_FCL])
-AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
-
 
 # FCL pointer type
 AS_IF([test "x$HAVE_FCL" = xyes],
@@ -392,6 +416,48 @@ AS_IF([test "x$HAVE_FCL" = xyes],
        AC_DEFINE_UNQUOTED([AA_FCL_SHARED_PTR],[$AA_FCL_SHARED_PTR],[Type for FCL shared pointers.])])
 
 
+# FCL extra linking
+# boost_system is sometimes required
+AC_DEFUN([FCL_LINK],
+         [
+           AS_IF([test "x$FCL_LINKED" != xyes],
+           [
+             AC_LANG([C++])
+             AC_MSG_CHECKING([FCL extra libs "$1"])
+             CXXFLAGS_SAVED="$CXXFLAGS"
+             LDFLAGS_SAVED="$LDFLAGS"
+
+             LDFLAGS="$LDFLAGS $FCL_LIBS $1"
+             CXXFLAGS="$CXXFLAGS $FCL_CFLAGS"
+
+             AC_LINK_IFELSE(
+               [AC_LANG_PROGRAM([
+                                  #include <fcl/broadphase/broadphase.h>
+                                  #include <fcl/BVH/BVH_model.h>
+                                ],
+                                [fcl::BroadPhaseCollisionManager *manager =
+                                 new fcl::DynamicAABBTreeCollisionManager();])],
+               [AC_MSG_RESULT([yes])
+                FCL_LINKED=yes
+                FCL_LIBS="$FCL_LIBS $1"
+               ],
+               [AC_MSG_RESULT([no])])
+
+             CXXFLAGS="$CXXFLAGS_SAVED"
+             LDFLAGS="$LDFLAGS_SAVED"
+           ])
+         ])
+
+FCL_LINK([])
+FCL_LINK([-lboost_system])
+FCL_LINK([-lboost_system-mt])
+
+AC_SUBST([FCL_CFLAGS])
+AC_SUBST([FCL_LIBS])
+AC_SUBST([HAVE_FCL])
+AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
+
+
 ## OMPL ##
 AC_ARG_WITH([ompl],
             [AS_HELP_STRING([--without-ompl], [Disable support for the Open Motion Planning Library (OMPL)])],
@@ -406,8 +472,6 @@ AS_IF([test "x$with_ompl" = xyes], [
   PKG_CHECK_MODULES([OMPL],
                     [ompl >= 1.2.1],
                     [HAVE_OMPL=yes])
-  # TODO: smartly check with we also need boost_system
-  OMPL_LIBS="$OMPL_LIBS = -lboost_date_time -lboost_system -lboost_chrono -lboost_thread -lboost_serialization"
 ])
 
 AC_SUBST([OMPL_CFLAGS])
@@ -552,11 +616,37 @@ AC_SUBST([COMMON_LISP])
 AM_CONDITIONAL([HAVE_COMMON_LISP],[test "x$COMMON_LISP" != "x"])
 
 
-AS_IF([test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes],
-      [BUILD_DEMOS=yes],
-      [BUILD_DEMOS=no])
+###########
+## Demos ##
+###########
 
-AM_CONDITIONAL([BUILD_DEMOS], [test "x$BUILD_DEMOS" = "xyes"])
+AC_ARG_ENABLE([demos],
+              [AS_HELP_STRING([--enable-demos], [Build demos])],
+              [],
+              [enable_demos=auto])
+
+# Auto-configure demo builds
+AS_IF([test "x$enable_demos" = xauto],
+[
+
+AS_IF(
+      # default to disabled demos on Darwin due to linking issues
+      [test "x$UNAME" = xDarwin],
+      [AC_MSG_NOTICE([Disabling demos on Darwin / Mac OS X])
+       enable_demos=no],
+
+      # Enable demos when required dependencies exist
+      [test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes],
+      [AC_MSG_NOTICE([Automatically enabling demos])
+       enable_demos=yes],
+
+      # Disable demos
+      [AC_MSG_NOTICE([Disabling demos due to missing dependencies])
+       enable_demos=no]
+     )
+])
+
+AM_CONDITIONAL([BUILD_DEMOS], [test "x$enable_demos" = "xyes"])
 
 ######################
 ## URDF Robot Demos ##
@@ -578,14 +668,14 @@ AM_CONDITIONAL([BUILD_DEMO_$2], [test "x$enable_demo_$1" = "xyes"])
 
 ])
 
-AC_ARG_ENABLE([demo-all],
-              [AS_HELP_STRING([--enable-demo-all], [Build all the demos])],
+AC_ARG_ENABLE([demo-all-urdf],
+              [AS_HELP_STRING([--enable-demo-all-urdf], [Build all the URDF demos])],
               [
-                enable_demo_baxter="$enable_demo_all"
-                enable_demo_ur10="$enable_demo_all"
-                enable_demo_schunk="$enable_demo_all"
-                enable_demo_mico="$enable_demo_all"
-                enable_demo_jaco="$enable_demo_all"
+                enable_demo_baxter="$enable_demo_all_urdf"
+                enable_demo_ur10="$enable_demo_all_urdf"
+                enable_demo_schunk="$enable_demo_all_urdf"
+                enable_demo_mico="$enable_demo_all_urdf"
+                enable_demo_jaco="$enable_demo_all_urdf"
               ])
 
 DEF_DEMO([baxter],[BAXTER])
@@ -623,6 +713,8 @@ CONFIG_SCRIPT([demo/urdf/ur/ur10-view])
 CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
 CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
 
+CONFIG_SCRIPT([aarxc])
+
 AC_OUTPUT
 
 
@@ -649,8 +741,7 @@ AS_IF([test "x$with_java" = xyes], [
 AC_MSG_NOTICE([Java compiler:     $JAVAC])]
 AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
 )
-AC_MSG_NOTICE([Use OpenGL:        $with_opengl])
-AC_MSG_NOTICE([Use SDL2:          $HAVE_SDL2])
+AC_MSG_NOTICE([Use SDL2/OpenGL:   $AMINO_GL])
 AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
 AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])
 AC_MSG_NOTICE([Use OMPL:          $HAVE_OMPL])
@@ -658,7 +749,8 @@ AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
 AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
-AC_MSG_NOTICE([Enabled Demos:     $ENABLED_DEMOS])
+AC_MSG_NOTICE([Build Demos:       $enable_demos])
+AC_MSG_NOTICE([URDF Demos:        $ENABLED_DEMOS])
 
 AS_IF([test '(' "x$enable_demo_baxter" = "xyes" -o "x$enable_demo_ur10" = xyes ')' -a "x$ROS_PACKAGE_PATH" = x],
       [AC_MSG_WARN([URDF demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])

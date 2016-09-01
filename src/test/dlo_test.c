@@ -28,32 +28,37 @@
  *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
  *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- *   AND ON ANY HEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
  *   LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
-#include "baxter-demo.h"
 
-int main(int argc, char *argv[])
+#include <stdio.h>
+#include <dlfcn.h>
+
+
+int main(int argc, char **argv )
 {
-    (void)argc; (void)argv;
 
-    // Initialize scene graph
-    struct aa_rx_sg *scenegraph = baxter_demo_load_baxter(NULL);
+    if( argc < 2 ) {
+        fprintf(stderr, "Shared Object not specified\n");
+    }
 
-    // setup window
-    struct aa_rx_win * win = baxter_demo_setup_window(scenegraph);
+    const char *filename = argv[1];
 
-    // start display
-    aa_rx_win_run();
+    fprintf(stdout, "dlopen(\"%s\",...);\n", filename);
 
-    // Cleanup
-    aa_rx_sg_destroy(scenegraph);
-    aa_rx_win_destroy(win);
-    SDL_Quit();
+    dlerror();
+    void *handle = dlopen(filename, RTLD_LOCAL | RTLD_LAZY);
 
-    return 0;
+    char *err = dlerror();
+    if( err ) {
+        fprintf(stderr, "ERROR: %s\n", err );
+        return -1;
+    } else {
+        return 0;
+    }
 }

@@ -1,20 +1,24 @@
-/* -*- mode: C++; c-basic-offset: 4; -*- */
+/* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2016, Rice University
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@rice.edu>
+ * This file is provided under the following "BSD-style" License:
+ *
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
  *   conditions are met:
+ *
  *   * Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
+ *
  *   * Redistributions in binary form must reproduce the above
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
+ *
  *   * Neither the name of copyright holder the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
@@ -35,53 +39,70 @@
  *
  */
 
-#include "config.h"
+#ifndef AA_REFCOUNT_H
+#define AA_REFCOUNT_H
 
-#include "amino.h"
-#include "amino/mem.h"
+/***********************************/
+/* Synchronized Reference Counting */
+/***********************************/
 
-/* If possible, use spiffy C11 atomics */
+#ifndef __cplusplus
 
-#ifdef HAVE_STDATOMIC_H
+#if  ( (__STDC_VERSION__ >= 201112L) && ! defined(__STD_NO_ATOMICS__) ) || defined (_STDATOMIC_H)
 
-#include <stdatomic.h>
+/* C11 atomics version */
+#define AA_ATOMIC _Atomic
+#define aa_mem_ref_inc aa_mem_ref_inc_atomic
+#define aa_mem_ref_dec aa_mem_ref_dec_atomic
 
-unsigned aa_mem_ref_inc_atomic( _Atomic unsigned *count )
-{
-    return atomic_fetch_add(count, 1);
-}
+/**
+ * Atomically increment the reference count and return the previous count.
+ *
+ * This version uses C11 atomics
+ */
+AA_API unsigned
+aa_mem_ref_inc_atomic( AA_ATOMIC unsigned *count );
 
-unsigned aa_mem_ref_dec_atomic( _Atomic unsigned *count )
-{
-    return atomic_fetch_sub(count, 1);
-}
+/**
+ * Atomically decrement the reference count and return the previous count.
+ *
+ * This version uses C11 atomics
+ */
+AA_API unsigned
+aa_mem_ref_dec_atomic( AA_ATOMIC unsigned *count );
 
-#endif /* HAVE_STDATOMIC_H */
+#else
+
+#warning "No C11 atomics.  Include stdatomic.h or refcounts will be slow."
+
+/* Mutex fallback version */
+#define AA_ATOMIC
+#define aa_mem_ref_inc aa_mem_ref_inc_mutex
+#define aa_mem_ref_dec aa_mem_ref_dec_mutex
+
+#endif /* __STDC_VERSION__ >= 201112L */
+
+#else
+
+/* TODO: C++ Atomic refcounts */
+
+#endif
 
 
-/* Otherwise, we don't be have nice atomics.  "Do the right thing" and
- * use a mutex. */
+/**
+ * Atomically increment the reference count and return the previous count.
+ *
+ * This fallback version uses a global mutex instead of C11 atomics.
+ */
+AA_API unsigned
+aa_mem_ref_inc_mutex( unsigned *count );
 
-#include <pthread.h>
+/**
+ * Atomically decrement the reference count and return the previous count.
+ *
+ * This fallback version uses a global mutex instead of C11 atomics.
+ */
+AA_API unsigned
+aa_mem_ref_dec_mutex( unsigned *count );
 
-/* Yeah, every refcount in the universe will go through this mutex.
- * If you don't like it, get proper C11 suport already. */
-static pthread_mutex_t refcount_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-unsigned aa_mem_ref_inc_mutex( unsigned *count )
-{
-    pthread_mutex_lock( &refcount_mutex );
-    unsigned old = *count;
-    (*count)++;
-    pthread_mutex_unlock( &refcount_mutex );
-    return old;
-}
-
-unsigned aa_mem_ref_dec_mutex( unsigned *count )
-{
-    pthread_mutex_lock( &refcount_mutex );
-    unsigned old = *count;
-    (*count)--;
-    pthread_mutex_unlock( &refcount_mutex );
-    return old;
-}
+#endif /* AA_REFCOUNT_H */

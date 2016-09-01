@@ -48,7 +48,7 @@
  */
 static inline int AA_CLA_NAME(getrf)
 ( int m, int n, AA_TYPE *A, int lda, int *ipiv ) {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME( getrf)
         (&m, &n, A, &lda, ipiv, &info );
     return info;
@@ -60,7 +60,7 @@ static inline int AA_CLA_NAME(getrf)
  */
 static inline int AA_CLA_NAME(getri)
 ( int n, AA_TYPE *A, int lda, int *ipiv, AA_TYPE *work, int lwork ) {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME( getri )
         ( &n, A, &lda, ipiv, work, &lwork, &info );
     return info;
@@ -76,7 +76,7 @@ static inline int AA_CLA_NAME(gesdd)
  AA_TYPE *work, int lwork,
  int *iwork )
 {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME(gesdd)( &jobz, &m, &n,
                            A, &lda,
                            S,
@@ -97,7 +97,7 @@ static inline int AA_CLA_NAME(geqrf)
 ( int m, int n, AA_TYPE *A, int lda,
   AA_TYPE *tau, AA_TYPE *work, int lwork )
 {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME(geqrf)
         (&m, &n, A, &lda, tau,
          work, &lwork,
@@ -110,7 +110,7 @@ static inline int AA_CLA_NAME(orgqr)
   AA_TYPE *A, const int lda, const AA_TYPE *tau,
   AA_TYPE *work, const int lwork )
 {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME(orgqr)(&m, &n, &k,
                           A, &lda, tau,
                           work, &lwork, &info);
@@ -123,7 +123,7 @@ static inline int AA_CLA_NAME(posv)
   AA_TYPE *A, int lda,
   AA_TYPE *B, int ldb )
 {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME(posv)(&uplo, &n, &nrhs,
                          A, &lda,
                          B, &ldb,
@@ -164,7 +164,7 @@ static inline int AA_CLA_NAME(gelsd)
   AA_TYPE *B, int ldb,
   AA_TYPE *S, AA_TYPE *rcond, int *rank,
   AA_TYPE *work, int lwork, int *iwork ) {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME( gelsd )
         ( &m, &n, &nrhs, A, &lda, B, &ldb,
           S, rcond, rank, work, &lwork, iwork, &info );
@@ -246,7 +246,7 @@ static inline int AA_CLA_NAME(lascl)
 ( char TYPE, int KL, int KU,
   AA_TYPE CFROM, AA_TYPE CTO,
   int M, int N, AA_TYPE *A, int LDA ) {
-    int info;
+    int info = 0;
     AA_LAPACK_NAME( lascl )
         ( &TYPE, &KL, &KU, &CFROM, &CTO,
           &M, &N, A, &LDA, &info );
@@ -262,7 +262,7 @@ static inline int AA_CLA_NAME(lag2s)
 ( int M, int N,
   double *A, int LDA,
   float *SA, int LDSA ) {
-    int info;
+    int info = 0;
     dlag2s_( &M, &N, A, &LDA, SA, &LDSA, &info);
     return info;
 }
@@ -278,7 +278,7 @@ static inline int AA_CLA_NAME(lag2d)
 ( int M, int N,
   float * SA, int LDSA,
   double *A, int LDA ) {
-    int info;
+    int info = 0;
     slag2d_( &M, &N, SA, &LDSA, A, &LDA, &info );
     return info;
 }

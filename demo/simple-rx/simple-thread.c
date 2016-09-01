@@ -43,7 +43,10 @@
 #include <math.h>
 #include <getopt.h>
 #include "amino/amino_gl.h"
+
 #include <SDL.h>
+#include <pthread.h>
+#include <unistd.h>
 
 
 
@@ -62,45 +65,14 @@ static int SCREEN_HEIGHT = 600;
 
 struct aa_rx_sg * NAME(struct aa_rx_sg *sg);
 
-int main(int argc, char *argv[])
+static int visual = 1;
+static int collision = 0;
+
+static struct aa_rx_sg *
+create_sg(void)
 {
-    /* setup window */
-    struct aa_rx_win * win =
-        aa_rx_win_default_create ( "Amino: AARX-View", SCREEN_WIDTH, SCREEN_HEIGHT );
-
-    int visual = 1;
-    int collision = 0;
-    struct aa_rx_sg *scenegraph;
-
-    /* Parse Options */
-    {
-        int c;
-        opterr = 0;
-
-        while( (c = getopt( argc, argv, "?c")) != -1 ) {
-            switch(c) {
-            case 'c':
-                visual = 0;
-                collision = 1;
-                break;
-            case '?':
-                puts("Usage: COMMAND [OPTIONS] \n"
-                     "Viewer for Amino scene graphs"
-                     "\n"
-                     "Options:\n"
-                     "  -c              view collision geometry\n"
-                     "\n"
-                     "\n"
-                     "Report bugs to " PACKAGE_BUGREPORT "\n" );
-                exit(EXIT_SUCCESS);
-                break;
-            }
-
-        }
-    }
-
-   // Initialize scene graph
-    scenegraph = aa_rx_sg_create();
+    // Initialize scene graph
+    struct aa_rx_sg * scenegraph = aa_rx_sg_create();
 
     // Add a Box
     {
@@ -158,27 +130,102 @@ int main(int argc, char *argv[])
     assert(scenegraph);
     aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
 
-    /* Center configurations */
-    size_t m = aa_rx_sg_config_count(scenegraph);
-    double q[m];
-    for(size_t i = 0; i < m; i ++ ) {
-        double min=0,max=0;
-        aa_rx_sg_get_limit_pos(scenegraph,(aa_rx_config_id)i,&min,&max);
-        q[i] = (max + min)/2;
+    return scenegraph;
+}
+
+void *thread_fun( void *arg )
+{
+    struct aa_rx_win * win = (struct aa_rx_win * )arg;
+
+    struct aa_rx_sg *sg = NULL, *sg_old = NULL;
+
+    while(aa_rx_win_is_running(win)) {
+        sg_old = sg;
+        sg = create_sg();
+
+
+        /* Center configurations */
+        size_t m = aa_rx_sg_config_count(sg);
+        double q[m];
+        for(size_t i = 0; i < m; i ++ ) {
+            double min=0,max=0;
+            aa_rx_sg_get_limit_pos(sg,(aa_rx_config_id)i,&min,&max);
+            q[i] = (max + min)/2;
+        }
+
+        aa_rx_win_set_sg(win, sg); /* Set the scenegraph for the window */
+        aa_rx_win_set_config(win, m, q);
+
+        if( sg_old ) aa_rx_sg_destroy(sg_old);
+
+        struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
+
+        aa_rx_win_lock(win);
+        aa_gl_globals_set_show_visual(globals, visual);
+        aa_gl_globals_set_show_collision(globals, collision);
+        aa_rx_win_unlock(win);
+
+        sleep(1);
     }
 
-    aa_rx_win_set_sg(win, scenegraph); /* Set the scenegraph for the window */
-    aa_rx_win_set_config(win, m, q);
+    return NULL;
+}
 
-    struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);
-    aa_gl_globals_set_show_visual(globals, visual);
-    aa_gl_globals_set_show_collision(globals, collision);
+int main(int argc, char *argv[])
+{
+
+    /* Parse Options */
+    {
+        int c;
+        opterr = 0;
+
+        while( (c = getopt( argc, argv, "?c")) != -1 ) {
+            switch(c) {
+            case 'c':
+                visual = 0;
+                collision = 1;
+                break;
+            case '?':
+                puts("Usage: COMMAND [OPTIONS] \n"
+                     "Viewer for Amino scene graphs"
+                     "\n"
+                     "Options:\n"
+                     "  -c              view collision geometry\n"
+                     "\n"
+                     "\n"
+                     "Report bugs to " PACKAGE_BUGREPORT "\n" );
+                exit(EXIT_SUCCESS);
+                break;
+            }
+
+        }
+    }
+
+
+    /* setup window */
+    struct aa_rx_win * win =
+        aa_rx_win_default_create ( "Amino: AARX-View", SCREEN_WIDTH, SCREEN_HEIGHT );
+
+    pthread_t thread;
+    if( pthread_create( &thread, NULL, thread_fun, win ) ) {
+        fprintf(stderr, "could not create thread\n");
+        abort();
+        exit(EXIT_FAILURE);
+    }
 
     /* start display */
     aa_rx_win_run();
 
+    /* Wait for other thread */
+    if( pthread_join(thread, NULL) ) {
+        fprintf(stderr, "could not join thread\n");
+        abort();
+        exit(EXIT_FAILURE);
+
+    }
+
+
     /* Cleanup */
-    aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
     SDL_Quit();
 

@@ -42,7 +42,6 @@
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_geom_internal.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
 #include "amino/rx/scene_collision.h"

@@ -135,6 +135,9 @@ Performance {#performance}
     meshes at load time.  However, the processing itself is somewhat
     expensive.
 
+    Using `Clang` instead of `GCC` may improve compilation times.  To
+    do so, configure amino with `./configure CC=clang CXX=clang++`.
+
 * Q: Ray Tracing is SLOOOWWW!
 
   - A: Ray tracing is computationally expensive. Here are a few notes

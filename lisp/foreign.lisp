@@ -43,32 +43,22 @@
 ;;; Libraries ;;;
 
 (define-foreign-library libblas
-  (:unix (:or "libopenblas.so"
-              "libblas.so"
-              (:default "libblas")))
   (t (:default "libblas")))
 
 (define-foreign-library liblapack
-  (:unix (:or "libopenblas.so"
-              "liblapack.so"
-              (:default "liblapack")))
   (t (:default "liblapack")))
 
 (define-foreign-library libamino
-  (:unix (:or "libamino.so"
-              (:default "libamino")))
   (t (:default "libamino")))
 
 (define-foreign-library libamino-xerbla
-  (:unix (:or "libamino-xerbla-nop.so"
-              (:default "libamino-xerbla-nop")))
   (t (:default "libamino-xerbla-nop")))
 
 
-(use-foreign-library libblas)
-(use-foreign-library liblapack)
-(use-foreign-library libamino)
+;;(use-foreign-library libblas)
+;;(use-foreign-library liblapack)
 
+(use-foreign-library libamino)
 (use-foreign-library libamino-xerbla)
 
 

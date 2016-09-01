@@ -43,38 +43,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (cffi:define-foreign-library libgl
-  (:unix (:or "libGL.so"
-              (:default "libGL")))
   (t (:default "libGL")))
 
 (cffi:define-foreign-library libglu
-  (:unix (:or "libGLU.so"
-              (:default "libGLU")))
   (t (:default "libGLU")))
 
 (cffi:define-foreign-library libsdl
-  (:unix (:or "libSDL2.so"
-              (:default "libSDL2")))
   (t (:default "libSDL2")))
 
 (cffi:define-foreign-library libamino-gl
-  (:unix (:or "libamino-gl.so"
-              (:default "libamino-gl")))
   (t (:default "libamino-gl")))
 
 (cffi:define-foreign-library libamino-planning
-  (:unix (:or "libamino-planning.so"
-              (:default "libamino-planning")))
   (t (:default "libamino-planning")))
 
 (cffi:define-foreign-library libamino-collision
-  (:unix (:or "libamino-collision.so"
-              (:default "libamino-collision")))
   (t (:default "libamino-collision")))
 
-
 ;; TODO: put in separate packages so reloads don't clobber static vars
-(amino::use-foreign-library-if gl libglu)
-(amino::use-foreign-library-if sdl2 libsdl libamino-gl)
 (amino::use-foreign-library-if fcl libamino-collision)
+(amino::use-foreign-library-if amino-gl libamino-gl)
 (amino::use-foreign-library-if ompl libamino-planning)

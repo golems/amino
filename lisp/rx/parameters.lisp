@@ -37,12 +37,14 @@
 
 (in-package :robray)
 
-(defparameter *robray-tmp-root* "/tmp")
+(defparameter *robray-tmp-root* "/tmp/")
 
 (defparameter *robray-tmp-directory*
-  (format-pathname "~A/robray-~A"
-                   *robray-tmp-root*
-                   (sb-posix:getenv "USER")))
+  (subdir *robray-tmp-root*
+          :directory (format nil "robray-~A" (uiop/os:getenv "USER"))))
+
+(defparameter *robray-cache-directory*
+  (subdir *robray-tmp-directory* :directory "cache"))
 
 (defun mesh-directory (directory)
   (clean-pathname (concatenate 'string (namestring directory) "/povray/")))

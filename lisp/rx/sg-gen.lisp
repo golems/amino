@@ -311,20 +311,47 @@
     (cgen-declare-fun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name))))
 
 
-(defparameter *scene-graph-compiler* "gcc" "Compiler for scene graphs")
+;; (defparameter *scene-graph-compiler* "gcc" "Compiler for scene graphs")
 
-(defparameter *scene-graph-cflags* `("--std=gnu99" "-fPIC" "-shared")
-  "Compilation flags used for compiling mutable scene graphs")
+;; (defparameter *scene-graph-cflags* `("--std=gnu99" "-fPIC" "-shared")
+;;   "Compilation flags used for compiling mutable scene graphs")
 
-(defun scene-graph-so (source-file shared-object)
-  (let* ((cflags (pkg-config "amino" :cflags t))
-         (args  `(,*scene-graph-compiler*
-                  ,@*scene-graph-cflags*
-                  ,@(split-spaces cflags)
-                  ,source-file "-o" ,shared-object)))
-    (format t "~&~A~%" (rope-string (rope-split " " args)))
-    (uiop/run-program:run-program args :output *standard-output* :error-output *error-output*)))
 
+(defun probe-scene-graph-plugin (source-file)
+  (let ((directory (directory (merge-pathnames (make-pathname :directory '(:relative ".libs") :type :wild)
+                                               source-file))))
+    (or (find-if (lambda (p)
+                   (find (pathname-type p) '("so" "dylib") :test #'string=))
+                 directory)
+        (find-if-not (lambda (p)
+                       (find (pathname-type p) '("la" "lo" "o" "a" "lai") :test #'string=))
+                     directory))))
+
+(defun scene-graph-so (source-file &key reload)
+  (let* ((libtool (robray::find-script "libtool" '(:relative)))
+         (cc (split-spaces amino::*cc*))
+         (lo (namestring (merge-pathnames (make-pathname :type "lo")
+                                          source-file)))
+         (la (namestring (merge-pathnames (make-pathname :type "la")
+                                          source-file)))
+         (source-file (namestring source-file)))
+    (when (or reload
+              (not (probe-file la))
+              (< (file-write-date la)
+                 (file-write-date source-file)))
+      ;; compile
+      (progn
+        (let ((compile-args `(,libtool "--tag=CC" "--mode=compile" ,@cc
+                                       ,@(split-spaces amino::*cppflags*)
+                                       ,(format nil "-I~A" *robray-include*)
+                                       "-c" "-o" ,lo ,source-file)))
+          (uiop/run-program:run-program compile-args :output *standard-output* :error-output *error-output*))
+        ;; link
+        (let ((link-args `(,libtool "--tag=CC" "--mode=link" ,@cc
+                                    "-avoid-version"  "-module" "-shared" "-export-dynamic"
+                                    "-rpath" ,amino::*libdir*
+                                    "-o" ,la ,lo)))
+          (uiop/run-program:run-program link-args :output *standard-output* :error-output *error-output*))))))
 
 (defun genc-mesh-link (mesh)
   (format-pathname "~A/cache/~A.so"
@@ -332,16 +359,15 @@
                    (scene-mesh-source-file mesh)))
 
 (defun scene-graph-link-meshes (scene-graph shared-object)
-
   (loop for mesh in (scene-graph-meshes scene-graph)
      for name = (genc-mesh-link mesh)
      for dirname = (file-dirname name)
      unless (probe-file name)
      do
        (progn
-         (create-parent-directories name)
+         (ensure-directories-exist name)
          (uiop/run-program:run-program
-          (list "ln" "-vsf" shared-object name)
+          (list "ln" "-vsf" (namestring shared-object) name)
           :output *standard-output*
           :error-output *error-output*
           ))))
@@ -365,7 +391,7 @@
   ;; source file
   (when (or reload
             (not (probe-file source-file)))
-    (create-parent-directories source-file)
+    (ensure-directories-exist source-file)
     (let ((*print-pretty* nil))
       (output-rope (rope (cgen-include-system "amino.h")
                          (cgen-include-system "amino/rx.h")
@@ -374,16 +400,13 @@
                                            :static-mesh static-mesh))
                    source-file
                    :if-exists :supersede)))
-  ;; shared object
-  (when (and shared-object
-             (or reload
-                 (not (probe-file shared-object))
-                 (< (file-write-date shared-object)
-                    (file-write-date source-file))))
-    (scene-graph-so source-file shared-object))
+  ;; build shared object
+  (when shared-object
+    (scene-graph-so source-file :reload reload))
   ;; links
   (when (and link-meshes shared-object)
-    (scene-graph-link-meshes scene-graph shared-object)))
+    (scene-graph-link-meshes scene-graph
+                             (probe-scene-graph-plugin source-file))))
 
 
 ;;;;;;;;;;;;;;;;;;;;

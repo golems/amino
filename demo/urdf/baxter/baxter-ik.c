@@ -123,10 +123,9 @@ int main(int argc, char *argv[])
     }
 
     /*--- Do Display ---*/
-    aa_rx_win_start(win);
+    aa_rx_win_run();
 
     /*--- Cleanup ---*/
-    aa_rx_win_join(win);
     aa_rx_sg_destroy(scenegraph);
     aa_rx_win_destroy(win);
     SDL_Quit();

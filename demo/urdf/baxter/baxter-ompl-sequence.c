@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     struct aa_rx_win * win = baxter_demo_setup_window(scenegraph);
 
     aa_rx_win_set_display_seq(win, mp_seq );
-    aa_rx_win_display_loop(win);
+    aa_rx_win_run();
 
     // Cleanup
     aa_rx_sg_sub_destroy(ssg);

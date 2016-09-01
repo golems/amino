@@ -307,4 +307,11 @@ aa_gl_buffers_schedule_destroy( struct aa_gl_buffers *buffers );
 AA_API void
 aa_gl_buffers_cleanup( void );
 
+
+/**
+ * Return a string describing the error.
+ */
+AA_API const char *
+aa_gl_error_string( GLenum error );
+
 #endif /*AMINO_RX_SCENE_GL_H*/

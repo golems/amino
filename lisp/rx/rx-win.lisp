@@ -50,6 +50,9 @@
   (window rx-win-t)
   (sg rx-sg-t))
 
+(cffi:defcfun aa-rx-win-run :void)
+
+(cffi:defcfun aa-rx-win-run-async :void)
 
 (cffi:defcfun aa-rx-win-lock :void
   (window rx-win-t))
@@ -66,13 +69,9 @@
   (with-foreign-simple-vector (pointer length) config :input
     (aa-rx-win-set-config win length pointer)))
 
-(cffi:defcfun aa-rx-win-start :void
-  (window rx-win-t))
-
 (cffi:defcfun aa-rx-win-sg-gl-init :void
   (win rx-win-t)
   (sg rx-sg-t))
-
 
 (cffi:defcfun aa-rx-win-stop-on-quit :void
   (win rx-win-t)
@@ -80,13 +79,6 @@
 
 (cffi:defcfun aa-rx-win-stop :void
   (win rx-win-t))
-
-(cffi:defcfun aa-rx-win-join :void
-  (win rx-win-t))
-
-(cffi:defcfun aa-rx-win-pause :void
-  (win rx-win-t)
-  (paused :boolean))
 
 (cffi:defcfun aa-rx-win-set-display-plan :void
   (win rx-win-t)
@@ -114,7 +106,33 @@
 ;;; Convenience ;;;
 ;;;;;;;;;;;;;;;;;;;
 
-(defvar *window* nil)
+(defvar *%window%* nil)
+(defvar *window-thread* nil)
+
+
+(defun win-create (&key
+                     (title "AminoGL")
+                     (width 800)
+                     (height 600)
+                     stop-on-quit)
+  (let ((window
+         (with-main-thread
+           (unless *%window%*
+             (setq *%window%*
+                   (aa-rx-win-default-create title width height))
+             (aa-rx-win-stop-on-quit *%window%* stop-on-quit))
+           *%window%*)))
+    (setq *%window%* window)
+    window))
+
+
+(defun window ()
+  (or *%window%* (win-create)))
+
+(defun (setf window) (value)
+  (with-main-thread
+    (setf *%window%* value)))
+
 
 (defmacro with-win-lock (win &body body)
   (with-gensyms (v-win)
@@ -123,35 +141,27 @@
        (unwind-protect (progn ,@body)
          (aa-rx-win-unlock ,v-win)))))
 
-(defun win-create (&key
-                     (title "AminoGL")
-                     (width 800)
-                     (height 600)
-                     stop-on-quit)
-  (unless *window*
-    (setq *window*
-          (aa-rx-win-default-create title width height))
-    (aa-rx-win-stop-on-quit *window* stop-on-quit)
-    (aa-rx-win-start *window*))
-  *window*)
 
-(defun win-stop (&optional (window *window*))
+
+(defun win-stop (&optional (window (window)))
   (aa-rx-win-stop window))
-
-(defun win-join (&optional (window *window*))
-  (aa-rx-win-join window))
 
 (cffi:defcfun aa-rx-win-destroy :void
   (obj :pointer))
 
-(defun win-destroy ()
-  (assert *window*)
-  (aa-rx-win-destroy (rx-win-pointer *window*))
-  (setq *window* nil)
+(defun win-run (&key synchronous)
+  (if synchronous
+      (aa-rx-win-run)
+      (aa-rx-win-run-async)))
+
+(defun win-destroy (&optional (window (window)))
+  (assert window)
+  (aa-rx-win-destroy (rx-win-pointer window))
+  (setq window nil)
   (values))
 
 
-(defun win-set-scene-graph (scene-graph &optional (window (win-create)))
+(defun win-set-scene-graph (scene-graph &optional (window (window)))
   (let* ((win window)
          (m-sg (mutable-scene-graph scene-graph))
          (q (make-vec (aa-rx-sg-config-count m-sg))))
@@ -164,7 +174,7 @@
             (rx-win-config-vector win) q)))
   (values))
 
-(defun win-scene-graph (&optional (window *window*))
+(defun win-scene-graph (&optional (window (window)))
   (mutable-scene-graph-scene-graph (rx-win-mutable-scene-graph window)))
 
 (defun win-set-config (configs)
@@ -174,25 +184,11 @@
     (mutable-scene-graph-config-vector sg configs q)
     (rx-win-set-config win q)))
 
-(defun win-pause (&optional (paused t))
-  (aa-rx-win-pause (win-create) paused))
 
-(defun win-unpause ()
-  (aa-rx-win-pause (win-create) nil))
-
-(defmacro with-win-paused (window &body body)
-  `(progn (let ((*window* ,window))
-            (win-pause)
-            (unwind-protect (progn ,@body)
-              (win-unpause)))))
-
-
-
-(defmacro with-win-gl-globals ((var &optional (window '*window*)) &body body)
-  `(with-win-paused ,window
+(defmacro with-win-gl-globals ((var &optional (window '(window))) &body body)
+  `(with-win-lock ,window
      (let ((,var (%make-rx-gl-globals (aa-rx-win-gl-globals ,window))))
        ,@body)))
-
 
 (defun win-view-visual ()
   (with-win-gl-globals (gl-globals)
@@ -206,7 +202,7 @@
 
 (defun win-mask-frames (frames &key
                                  (hide t)
-                                 (window *window*))
+                                 (window (window)))
   (with-win-gl-globals (gl-globals window)
     (let ((m-sg (rx-win-mutable-scene-graph window)))
       (map nil (lambda (frame)
@@ -216,7 +212,7 @@
            (ensure-list frames)))))
 
 
-(defun win-mask-all (&key (window *window*)
+(defun win-mask-all (&key (window (window))
                        (hide t))
   (with-win-gl-globals (gl-globals window)
     (if hide
@@ -235,7 +231,7 @@
     (setf (rx-win-display-object window) motion-plan)
     (when (zerop (length path))
       (error "Cannot view empty plan"))
-    (with-win-paused window
+    (with-win-lock window
       (with-foreign-simple-vector (pointer length) path :input
         (declare (ignore length))
         (aa-rx-win-set-display-plan window m-sg n-path pointer)))))
@@ -243,7 +239,7 @@
 (defun win-display-mp-seq (mp-seq)
   (let ((window (win-create)))
     (setf (rx-win-display-object window) mp-seq)
-    (with-win-paused window
+    (with-win-lock window
       (aa-rx-win-set-display-seq window mp-seq))))
 
 (defun win-display-motion-plan-sequence (motion-plans)
@@ -254,14 +250,14 @@
                               (make-mp-seq)
                               motion-plans))))
 
-(defun win-tf-camera (&optional (window *window*))
+(defun win-tf-camera (&optional (window (window)))
   (let ((vec (make-vec 7)))
     (declare (dynamic-extent vec))
     (cffi:with-pointer-to-vector-data (vec vec)
       (aa-rx-win-get-tf-cam window vec))
     (tf vec)))
 
-(defun (setf win-tf-camera) (value &optional (win *window*))
+(defun (setf win-tf-camera) (value &optional (win (window)))
   (let ((vec (make-vec 7)))
     (declare (dynamic-extent vec))
     (tf-array (tf value) vec)
@@ -269,12 +265,12 @@
       (aa-rx-win-set-tf-cam win vec))
     (tf vec)))
 
-(defun win-config-map (&optional (window *window*))
+(defun win-config-map (&optional (window (window)))
   (mutable-scene-graph-config-map (rx-win-mutable-scene-graph window)
                                   (rx-win-config-vector window)))
 
 (defun render-win (&key
-                     (window *window*)
+                     (window (window))
                      (camera-tf (win-tf-camera window))
                      (render t)
                      (options (render-options-default))

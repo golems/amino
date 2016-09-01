@@ -38,7 +38,4 @@
 #ifndef AMINO_RX_SCENE_SDL_INTERNAL_H
 #define AMINO_RX_SCENE_SDL_INTERNAL_H
 
-void aa_sdl_lock();
-void aa_sdl_unlock();
-
 #endif /*AMINO_RX_SCENE_SDL_INTERNAL_H*/

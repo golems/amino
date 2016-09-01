@@ -219,7 +219,7 @@
     (let* ((args (list "blender" "-b" "-P"
                        (find-script "meshconv")
                        "--"
-                       source-file
+                       (namestring source-file)
                        "-o" output-file
                        (format nil "--up=~A" mesh-up-axis)
                        (format nil "--forward=~A" mesh-forward-axis))))
