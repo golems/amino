@@ -208,6 +208,19 @@
       (< (file-write-date output-file)
          (file-write-date source-file))))
 
+;; MacOSX is unable to execute blender via a symbolic link.
+;; Resolve the symbolic link.
+(defun blender-truename ()
+  (let* ((which-blender (with-output-to-string (s)
+                          (uiop:run-program '("which" "blender")
+                                            :output s
+                                            :error-output *error-output*)))
+         (n (1- (length which-blender)))
+         (blender-path (if (eql #\Newline (aref which-blender n))
+                           (subseq which-blender 0 n)
+                           which-blender)))
+    (truename blender-path)))
+
 (defun wavefront-convert (source-file output-file
                           &key
                             reload
@@ -216,7 +229,7 @@
   "Convert something to a wavefront OBJ file."
   (when (mesh-regen-p reload source-file output-file)
     ;; load
-    (let* ((args (list "blender" "-b" "-P"
+    (let* ((args (list (blender-truename) "-b" "-P"
                        (find-script "meshconv")
                        "--"
                        (namestring source-file)

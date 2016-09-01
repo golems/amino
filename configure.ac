@@ -315,11 +315,22 @@ AC_LANG([C])
 
 ## Blender ##
 
-AC_CHECK_PROGS([BLENDER], [blender])
+AC_PATH_PROGS([BLENDER], [blender])
 
 AS_IF([test "x$BLENDER" = "x"],
   [],
   [
+      # MacOSX is unable to execute blender via a symbolic link.
+      # Resolve the symbolic link.
+      AC_CHECK_PROGS([READLINK], [greadlink readlink])
+      AC_MSG_CHECKING([blender truename])
+      AS_IF([test "x$READLINK" != x],
+            [BLENDER=`$READLINK -f "$BLENDER"`
+             AC_MSG_RESULT([$BLENDER])],
+            [AC_MSG_RESULT([unknown])
+             AC_MSG_WARN([Could not resolve potential blender symlinks.  Blender may not run.])])
+
+      # Try to load a collada object
       AC_MSG_CHECKING([blender COLLADA support])
       rm -rf colladatest.obj
       "$BLENDER" -b -P $srcdir/share/exec/meshconv -- $srcdir/colladatest.dae -o colladatest.obj > /dev/null 2>/dev/null
@@ -758,7 +769,7 @@ AS_IF([test '(' "x$enable_demo_baxter" = "xyes" -o "x$enable_demo_ur10" = xyes '
 
 AS_IF([test "x$BLENDER" = x],
       [AC_MSG_WARN([Blender not found, only Wavefront OBJ meshes supported])],
-      [AS_IF([test "x$HAVE_BLENDER_COLLADA" != xyes],
-             [AC_MSG_WARN([Blender lacks COLLADA support, cannot load DAE meshes])])])
+      [test "x$HAVE_BLENDER_COLLADA" != xyes],
+      [AC_MSG_WARN([Blender lacks COLLADA support, cannot load DAE meshes])])
 
 AS_BOX([END SUMMARY])
