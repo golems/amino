@@ -65,8 +65,6 @@
 
 (cffi:defcfun aa-rx-mp-set-wsgoal :int
   (mp rx-mp-t)
-  (ik-fun :pointer)
-  (ik-context :pointer)
   (n-e size-t)
   (E :pointer)
   (ld-e size-t))
@@ -121,26 +119,11 @@
 (defun motion-planner-set-work-goal (motion-planner work-goal)
   ;; TODO: multiple goals
   (let* ((array (tf-array work-goal))
-         (opts (aa-rx-ksol-opts-create))
-         (ssg (motion-planner-sub-scene-graph motion-planner))
-         (ik-cx (aa-rx-ik-jac-cx-create ssg opts))
-         (q-all (make-vec (sub-scene-graph-all-config-count ssg)))
-         (start-map (sub-scene-graph-center-map ssg))
          (result))
-    ;; Set options
-    ;; Set Start
-    (sub-scene-graph-all-config-vector ssg start-map q-all)
-    (with-foreign-simple-vector (q-all-ptr q-all-length) q-all :input
-      (aa-rx-ksol-opts-take-seed opts q-all-length q-all-ptr :borrow))
-    ;; Center
-    (aa-rx-ksol-opts-center-configs opts ssg .01d0)
-    ;; Solve
     (with-foreign-simple-vector (pointer length) array :input
       (assert (= 7 length))
       (setq result
             (aa-rx-mp-set-wsgoal motion-planner
-                                 (cffi:foreign-symbol-pointer "aa_rx_ik_jac_fun")
-                                 (rx-ik-jac-cx-pointer ik-cx)
                                  1 pointer 7)))
     (zerop result)))
 

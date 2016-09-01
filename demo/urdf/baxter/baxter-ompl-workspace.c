@@ -89,17 +89,9 @@ int main(int argc, char *argv[])
         double E_ref[7] = { 0.0, 1.0, 0.0, 0.0, /* quaternion x-y-z-w */
                         0.8, -.25, .3051 /* translation x-y-z */
         };
-        struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
-        struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
-        aa_rx_ksol_opts_center_seed( ko, ssg );
-        aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-        aa_rx_ksol_opts_set_tol_dq( ko, .01 );
 
-        int r = aa_rx_mp_set_wsgoal( mp, aa_rx_ik_jac_fun, ik_cx, 1, E_ref, 7 );
+        int r = aa_rx_mp_set_wsgoal( mp, 1, E_ref, 7 );
         if(r)  check_mp_error(r);
-
-        aa_rx_ksol_opts_destroy(ko);
-        aa_rx_ik_jac_cx_destroy(ik_cx);
     }
 
     /* Enable path simplification */
