@@ -52,7 +52,6 @@
 
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/spaces/RealVectorBounds.h>
-#include <ompl/base/ScopedState.h>
 #include <ompl/base/TypedSpaceInformation.h>
 
 
@@ -70,43 +69,7 @@ public:
     /**
      * Create a state space for the sub-scenegraph `sub_sg'.
      */
-    sgStateSpace( const struct aa_rx_sg_sub *sub_sg ) :
-        scene_graph(sub_sg->scenegraph),
-        sub_scene_graph(sub_sg),
-        ompl::base::RealVectorStateSpace((unsigned)aa_rx_sg_sub_config_count(sub_sg)),
-        allowed(aa_rx_cl_set_create(scene_graph)) {
-
-        aa_mem_region_init(&reg, 4000);
-
-        // TODO: get actual bounds
-        size_t n_configs = config_count_subset();
-        ompl::base::RealVectorBounds vb( (unsigned int)n_configs );
-        for( unsigned i = 0; i < (unsigned)n_configs; i ++ ) {
-            double min,max;
-            aa_rx_config_id cid = aa_rx_sg_sub_config(sub_scene_graph, i);
-            int r = aa_rx_sg_get_limit_pos(scene_graph, cid, &min, &max);
-            if(r) {
-                fprintf(stderr, "ERROR: no position limits for %s\n",
-                        aa_rx_sg_config_name(scene_graph, cid));
-                /* This seems as good as anything */
-                min = -M_PI;
-                max = M_PI;
-            }
-
-            vb.setLow(i,min);
-            vb.setHigh(i,max);
-
-        }
-        setBounds(vb);
-        // // allowed
-        // size_t n_q = config_count_all();
-        // double q[n_q];
-        // AA_MEM_ZERO(q, n_q); // TODO: give good config
-        // allow_config(q);
-
-        // Load allowable configs from scenegraph
-        aa_rx_sg_cl_set_copy(scene_graph, allowed);
-    }
+    sgStateSpace( const struct aa_rx_sg_sub *sub_sg ) ;
 
     /**
      * Destroy the state space.

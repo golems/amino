@@ -263,6 +263,8 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
         return AA_RX_INVALID_PARAMETER;
     }
 
+    assert( aa_rx_sg_sub_all_config_count(ssg) == n_q_all );
+
     const struct aa_rx_sg *sg = ssg->scenegraph;
     size_t n_f = aa_rx_sg_frame_count(sg);
 

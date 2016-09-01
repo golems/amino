@@ -1,7 +1,7 @@
 /* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2016, Rice University
+ * Copyright (c) 2015-2016, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -35,48 +35,75 @@
  *
  */
 
-#ifndef AMINO_RX_OMPLE_SCENE_STATE_VALIDITY_CHECKER_H
-#define AMINO_RX_OMPLE_SCENE_STATE_VALIDITY_CHECKER_H
 
-/**
- * @file scene_state_space.h
- * @brief OMPL State Space
- */
-
-#include <mutex>
-
+#include "amino.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_collision.h"
-#include "amino/rx/scene_planning.h"
 
-#include <ompl/base/TypedStateValidityChecker.h>
 
-#include "scene_state_space.h"
+#include "amino/rx/ompl/scene_state_validity_checker.h"
 
 namespace amino {
 
-class sgStateValidityChecker : public ::ompl::base::TypedStateValidityChecker<sgStateSpace> {
-public:
+sgStateValidityChecker::sgStateValidityChecker(sgSpaceInformation *si)
+    :
+    TypedStateValidityChecker(si),
+    q_all(new double[getTypedStateSpace()->config_count_all()]),
+    cl(aa_rx_cl_create(getTypedStateSpace()->scene_graph))
+{
+    this->allow();
+}
 
-    sgStateValidityChecker(sgSpaceInformation *si);
+sgStateValidityChecker::~sgStateValidityChecker()
+{
+    delete [] q_all;
+    aa_rx_cl_destroy(this->cl);
+}
 
-    ~sgStateValidityChecker() ;
+bool sgStateValidityChecker::isValid(const ompl::base::State *state_) const
+{
+    const sgSpaceInformation::StateType *state = state_as(state_);
+    sgStateSpace *space = getTypedStateSpace();
+    size_t n_q = space->config_count_all();
+    size_t n_s = space->config_count_subset();
+    size_t n_f = space->frame_count();
 
-    virtual bool isValid(const ompl::base::State *state_) const ;
-    double *q_all;
+    // Set configs
 
-    void set_start( size_t n_q, double *q_all);
-    void allow( );
+    double q[n_q];
+    std::copy( q_all, q_all + n_q, q );
+    space->insert_state(state, q);
+    //aa_dump_vec(stdout, q, n_q);
 
-    mutable std::mutex mutex;
-    struct aa_rx_cl *cl;
-};
+    // Find TFs
+    double TF_rel[7*n_f];
+    double TF_abs[7*n_f];
+    aa_rx_sg_tf( space->scene_graph, n_q, q,
+                 n_f,
+                 TF_rel, 7,
+                 TF_abs, 7 );
 
-
+    // check collision
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        return ! aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
+    }
 }
 
 
-#endif
+void sgStateValidityChecker::set_start( size_t n_q, double *q_initial)
+{
+    assert( n_q == getTypedStateSpace()->config_count_all() );
+    std::copy( q_initial, q_initial + n_q, q_all );
+    this->allow();
+}
+
+void sgStateValidityChecker::allow( )
+{
+    aa_rx_cl_allow_set( cl, getTypedStateSpace()->allowed );
+}
+
+} /* namespace amino */

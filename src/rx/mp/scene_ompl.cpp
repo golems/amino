@@ -54,19 +54,36 @@
 
 
 #include <ompl/base/Planner.h>
-#include <ompl/geometric/planners/sbl/SBL.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
-#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
+#include <ompl/base/goals/GoalLazySamples.h>
+
 
 struct aa_rx_mp;
+
+
+aa_rx_mp::aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
+    config_start(NULL),
+    space_information(
+        new amino::sgSpaceInformation(
+            amino::sgSpaceInformation::SpacePtr(
+                new amino::sgStateSpace (sub_sg)))),
+    problem_definition(new ompl::base::ProblemDefinition(space_information)),
+    simplify(0),
+    validity_checker(new amino::sgStateValidityChecker(space_information.get())),
+    lazy_samples(NULL)
+{
+
+    space_information->setStateValidityChecker( ompl::base::StateValidityCheckerPtr(validity_checker) );
+    space_information->setup();
+}
+
 
 AA_API struct aa_rx_mp*
 aa_rx_mp_create( const struct aa_rx_sg_sub *sub_sg )
 {
-    struct aa_rx_mp *mp = new aa_rx_mp(sub_sg);
-    return mp;
+    return new aa_rx_mp(sub_sg);
 }
 
 AA_API void
@@ -86,6 +103,9 @@ aa_rx_mp_set_start( struct aa_rx_mp *mp,
                     size_t n_all,
                     double *q_all )
 {
+    /* Assume the start state is valid */
+    aa_rx_mp_allow_config(mp, n_all, q_all);
+
     // FIXME: Seems that there are problems if this is called repeatedly
     amino::sgSpaceInformation::Ptr &si = mp->space_information;
     amino::sgStateSpace *ss = si->getTypedStateSpace();
@@ -95,16 +115,6 @@ aa_rx_mp_set_start( struct aa_rx_mp *mp,
     ss->extract_state( q_all, state.get() );
     mp->problem_definition->addStartState(state);
 
-    /* Assume the start state is valid */
-    aa_rx_mp_allow_config(mp, n_all, q_all);
-
-    /* Configure State Validty Checker */
-    si->setStateValidityChecker(
-        ompl::base::StateValidityCheckerPtr(
-            new amino::sgStateValidityChecker(si.get(), q_all)) );
-
-    /* Setup Space */
-    si->setup();
 
     /* Copy full start */
     aa_checked_free(mp->config_start);
@@ -119,6 +129,8 @@ aa_rx_mp_allow_config( struct aa_rx_mp *mp,
     amino::sgSpaceInformation::Ptr &si = mp->space_information;
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     ss->allow_config(q_all);
+
+    mp->validity_checker->set_start(n_all, q_all);
 }
 
 
@@ -129,6 +141,7 @@ aa_rx_mp_allow_collision( struct aa_rx_mp *mp,
     amino::sgSpaceInformation::Ptr &si = mp->space_information;
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     aa_rx_cl_set_set( ss->allowed, id0, id1, allowed );
+    mp->validity_checker->allow();
 }
 
 AA_API int
@@ -145,61 +158,13 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
     amino::sgSpaceInformation::ScopedStateType state(mp->space_information);
     ss->copy_state( q_subset, state.get() );
 
+    mp->validity_checker->allow();
     if( si->isValid( state.get() ) ) {
         mp->problem_definition->setGoalState(state);
         return AA_RX_OK;
     } else {
         return AA_RX_INVALID_STATE;
     }
-}
-
-
-AA_API int
-aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
-                     aa_rx_ik_fun *ik_fun,
-                     void *ik_cx,
-                     size_t n_e,
-                     double *E, size_t ldE )
-{
-    // TODO: use an OMPL goal sampler
-    // TODO: add interface to set IK options for motion planner
-
-    amino::sgStateSpace *ss = mp->space_information->getTypedStateSpace();
-    const struct aa_rx_sg_sub *ssg = ss->sub_scene_graph;
-    const struct aa_rx_sg *sg = ss->scene_graph;
-    size_t n_all = aa_rx_sg_config_count(sg);
-    size_t n_s = aa_rx_sg_sub_config_count(ssg);
-    double qs[n_s];
-
-    // struct aa_rx_ksol_opts *ko = NULL;
-    // if( NULL == opts ) {
-    //     ko = aa_rx_ksol_opts_create();
-    //     aa_rx_ksol_opts_center_seed( ko, ssg );
-    //     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    //     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
-    //     opts = ko;
-    // }
-
-    int r = ik_fun( ik_cx,
-                    n_e, E, 7,
-                    n_s, qs );
-
-    //aa_dump_vec( stdout, opts->q_all_seed, n_all );
-    //aa_dump_vec( stdout, qs, n_s );
-
-    // Set JS Goal
-    if( AA_RX_OK == r ) {
-        return aa_rx_mp_set_goal(mp, n_s, qs);
-    } else {
-        return r;
-    }
-
-    // TODO: check state validity
-
-    // if( ko ) {
-    //     aa_rx_ksol_opts_destroy(ko);
-    // }
-
 }
 
 static void
@@ -228,10 +193,17 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
                size_t *n_path,
                double **p_path_all )
 {
+
+    mp->validity_checker->allow();
+    amino::sgSpaceInformation::Ptr &si = mp->space_information;
+
+    /* Configure State Validity Checker */
+
+    /* Setup Space */
+
     *n_path = 0;
     *p_path_all = NULL;
 
-    amino::sgSpaceInformation::Ptr &si = mp->space_information;
     amino::sgStateSpace *ss = si->getTypedStateSpace();
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
@@ -241,7 +213,16 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
 
     planner->setProblemDefinition(pdef);
     try {
+        if( mp->lazy_samples ) {
+            fprintf(stderr, "Starting sampling thread\n");
+            mp->lazy_samples->clear();
+            mp->lazy_samples->startSampling();
+        }
         planner->solve(timeout);
+        if( mp->lazy_samples ) {
+            fprintf(stderr, "Stopping sampling thread\n");
+            mp->lazy_samples->stopSampling();
+        }
     } catch(...) {
         return AA_RX_NO_SOLUTION;
     }

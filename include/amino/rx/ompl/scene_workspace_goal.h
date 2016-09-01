@@ -35,48 +35,46 @@
  *
  */
 
-#ifndef AMINO_RX_OMPLE_SCENE_STATE_VALIDITY_CHECKER_H
-#define AMINO_RX_OMPLE_SCENE_STATE_VALIDITY_CHECKER_H
+#ifndef AMINO_RX_OMPL_SCENE_WORKSPACE_GOAL_H
+#define AMINO_RX_OMPL_SCENE_WORKSPACE_GOAL_H
 
 /**
- * @file scene_state_space.h
- * @brief OMPL State Space
+ * @file scene_workspace_goal.h
+ * @brief OMPL Goal Sampler
  */
-
-#include <mutex>
 
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin_internal.h"
-#include "amino/rx/scene_collision.h"
-#include "amino/rx/scene_planning.h"
+#include "amino/rx/scene_kin.h"
 
-#include <ompl/base/TypedStateValidityChecker.h>
 
-#include "scene_state_space.h"
+#include "amino/rx/ompl/scene_state_space.h"
+#include <ompl/base/goals/GoalLazySamples.h>
+
 
 namespace amino {
 
-class sgStateValidityChecker : public ::ompl::base::TypedStateValidityChecker<sgStateSpace> {
+class sgWorkspaceGoal : public ompl::base::GoalLazySamples {
 public:
+    sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
+                     size_t n_e, const double *E, size_t ldE );
 
-    sgStateValidityChecker(sgSpaceInformation *si);
+    virtual ~sgWorkspaceGoal ();
 
-    ~sgStateValidityChecker() ;
+    const sgSpaceInformation::Ptr &typed_si;
+    struct aa_rx_ksol_opts *ko;
+    struct aa_rx_ik_jac_cx *ik_cx;
 
-    virtual bool isValid(const ompl::base::State *state_) const ;
-    double *q_all;
+    ompl::base::StateSamplerPtr state_sampler;
+    sgSpaceInformation::StateType *seed;
 
-    void set_start( size_t n_q, double *q_all);
-    void allow( );
-
-    mutable std::mutex mutex;
-    struct aa_rx_cl *cl;
+    double *E;
+    size_t n_e;
 };
 
-
 }
+
 
 
 #endif
