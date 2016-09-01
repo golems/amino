@@ -97,19 +97,26 @@ void aa_test_ulimit( void ) {
         // address space
         lim.rlim_cur = (1<<30);
         lim.rlim_max = (1<<30);
-        r = setrlimit( RLIMIT_AS, &lim );
-        assert(0 == r );
+        if( setrlimit( RLIMIT_AS, &lim ) ) {
+            perror("could not limit address space size");
+        }
+
         // cpu time
         lim.rlim_cur = 60;
         lim.rlim_max = 60;
-        r = setrlimit( RLIMIT_CPU, &lim );
-        assert(0 == r );
+        if( setrlimit( RLIMIT_CPU, &lim ) ) {
+            perror("could not limit cpu time");
+        }
+
         // drop a core
-        r = getrlimit( RLIMIT_CORE, &lim );
-        assert(0==r);
+        if( getrlimit( RLIMIT_CORE, &lim ) ) {
+            perror("could not get core size limit");
+        }
+
         lim.rlim_cur = 100*1<<20;
-        r = setrlimit( RLIMIT_CORE, &lim );
-        assert(0==r);
+        if( setrlimit( RLIMIT_CORE, &lim ) ) {
+            perror("could not limit core size");
+        }
 
     }
 }

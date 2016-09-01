@@ -1944,27 +1944,8 @@ int main( int argc, char **argv ) {
     // init
     srand((unsigned int)time(NULL)); // might break in 2038
     // some limits because linux (and sometimes our software) sucks
-    {
-        int r;
-        struct rlimit lim;
-        // address space
-        lim.rlim_cur = (1<<30);
-        lim.rlim_max = (1<<30);
-        r = setrlimit( RLIMIT_AS, &lim );
-        assert(0 == r );
-        // cpu time
-        lim.rlim_cur = 60;
-        lim.rlim_max = 60;
-        r = setrlimit( RLIMIT_CPU, &lim );
-        assert(0 == r );
-        // drop a core
-        r = getrlimit( RLIMIT_CORE, &lim );
-        assert(0==r);
-        lim.rlim_cur = 100*1<<20;
-        r = setrlimit( RLIMIT_CORE, &lim );
-        assert(0==r);
 
-    }
+    aa_test_ulimit();
 
     aa_mem_region_init(&g_region, 1024*64);
     printf("Running aa_test\n");
