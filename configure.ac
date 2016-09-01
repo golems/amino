@@ -196,7 +196,7 @@ AC_ARG_WITH([doxygen],
             [with_doxygen=auto])
 AS_IF([test "x$with_doxygen" != xno],
       [AC_CHECK_PROGS([DOXYGEN],[doxygen])])
-AS_IF([test "x$with_doxygen" = xyes -x "x$DOXYGEN" = x],
+AS_IF([test "x$with_doxygen" = xyes -a "x$DOXYGEN" = x],
       [AC_MSG_ERROR([Doxygen not found])])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test "x$DOXYGEN" != x])
 
@@ -616,11 +616,37 @@ AC_SUBST([COMMON_LISP])
 AM_CONDITIONAL([HAVE_COMMON_LISP],[test "x$COMMON_LISP" != "x"])
 
 
-AS_IF([test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes],
-      [BUILD_DEMOS=yes],
-      [BUILD_DEMOS=no])
+###########
+## Demos ##
+###########
 
-AM_CONDITIONAL([BUILD_DEMOS], [test "x$BUILD_DEMOS" = "xyes"])
+AC_ARG_ENABLE([demos],
+              [AS_HELP_STRING([--enable-demos], [Build demos])],
+              [],
+              [enable_demos=auto])
+
+# Auto-configure demo builds
+AS_IF([test "x$enable_demos" = xauto],
+[
+
+AS_IF(
+      # default to disabled demos on Darwin due to linking issues
+      [test "x$UNAME" = xDarwin],
+      [AC_MSG_NOTICE([Disabling demos on Darwin / Mac OS X])
+       enable_demos=no],
+
+      # Enable demos when required dependencies exist
+      [test "x$COMMON_LISP" != "x" -a "x$HAVE_GL" = xyes -a "x$HAVE_SDL2" = xyes],
+      [AC_MSG_NOTICE([Automatically enabling demos])
+       enable_demos=yes],
+
+      # Disable demos
+      [AC_MSG_NOTICE([Disabling demos due to missing dependencies])
+       enable_demos=no]
+     )
+])
+
+AM_CONDITIONAL([BUILD_DEMOS], [test "x$enable_demos" = "xyes"])
 
 ######################
 ## URDF Robot Demos ##
@@ -642,14 +668,14 @@ AM_CONDITIONAL([BUILD_DEMO_$2], [test "x$enable_demo_$1" = "xyes"])
 
 ])
 
-AC_ARG_ENABLE([demo-all],
-              [AS_HELP_STRING([--enable-demo-all], [Build all the demos])],
+AC_ARG_ENABLE([demo-all-urdf],
+              [AS_HELP_STRING([--enable-demo-all-urdf], [Build all the URDF demos])],
               [
-                enable_demo_baxter="$enable_demo_all"
-                enable_demo_ur10="$enable_demo_all"
-                enable_demo_schunk="$enable_demo_all"
-                enable_demo_mico="$enable_demo_all"
-                enable_demo_jaco="$enable_demo_all"
+                enable_demo_baxter="$enable_demo_all_urdf"
+                enable_demo_ur10="$enable_demo_all_urdf"
+                enable_demo_schunk="$enable_demo_all_urdf"
+                enable_demo_mico="$enable_demo_all_urdf"
+                enable_demo_jaco="$enable_demo_all_urdf"
               ])
 
 DEF_DEMO([baxter],[BAXTER])
@@ -723,7 +749,8 @@ AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
 AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
-AC_MSG_NOTICE([Enabled Demos:     $ENABLED_DEMOS])
+AC_MSG_NOTICE([Build Demos:       $enable_demos])
+AC_MSG_NOTICE([URDF Demos:        $ENABLED_DEMOS])
 
 AS_IF([test '(' "x$enable_demo_baxter" = "xyes" -o "x$enable_demo_ur10" = xyes ')' -a "x$ROS_PACKAGE_PATH" = x],
       [AC_MSG_WARN([URDF demo enabled, but no ROS_PACKAGE_PATH.  May not find URDF.])])

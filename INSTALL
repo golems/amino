@@ -138,6 +138,12 @@ Mac OS X using MacPorts {#installation_setup_mac}
 
 Now proceed to Quicklisp Setup below.
 
+*Note*: By default, the demo programs are not built on Mac OS X due to
+        dynamic loading issues.  To build the demos, first install
+        Amino as described below, then manually enable the demos by
+        running `./configure --enable-demos && make`.  The demos can
+        then be built using the installed amino libraries.
+
 Quicklisp Setup {#installation_setup_quicklisp}
 ---------------
 
