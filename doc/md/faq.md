@@ -1,17 +1,10 @@
 FAQ {#FAQ}
 ===
 
-Contents {#faqcontents}
-=======
-
-* [General](@ref general)
-* [SE(3)](@ref se3)
-* [Common Errors](@ref errors)
-* [Performance](@ref performance)
-* [Comparison with Other Packages](@ref comparison)
+[TOC]
 
 
-General {#general}
+General {#faq_general}
 ====
 
 * Q: What is Amino?
@@ -34,7 +27,7 @@ General {#general}
     VirtualBox on a MacOSX host did not provide sufficient OpenGL
     support.
 
-SE(3) {#se3}
+SE(3) {#faq_se3}
 ====
 
 * Q: Why dual quaternions?
@@ -42,9 +35,7 @@ SE(3) {#se3}
   - A: Dual quaternions are more compact and computational easier to
     normalize and filter than matrices.
 
-* [Contents](@ref faqcontents)
-
-Scene Graphs {#scenegraphs}
+Scene Graphs {#faq_scenegraphs}
 ============
 
 * Q: How can I load a URDF file?
@@ -60,9 +51,7 @@ Scene Graphs {#scenegraphs}
     with dlopen().  To reload the scene graph, recompile the scene
     graph and dlopen() the library again.
 
-* [Contents](@ref faqcontents)
-
-Common Errors {#errors}
+Common Errors {#faq_errors}
 =============
 
 * Q: `./configure` fails with when checking for cffi-grovel.
@@ -109,9 +98,7 @@ Common Errors {#errors}
 
     `export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"`
 
-* [Contents](@ref faqcontents)
-
-Performance {#performance}
+Performance {#faq_performance}
 ===========
 
 * Q: How do I make it faster?
@@ -123,9 +110,33 @@ Performance {#performance}
 
   - A: An optimized BLAS library will also help some
     operations. OpenBLAS is among the fastest
-    (http://www.openblas.net/). If installed, configure amino to use
-    it with ./configure --with-blas=openblas.
+    (http://www.openblas.net/)
 
+* Q: How do I use an optimized BLAS/LAPACK implementation?
+
+    - A: (**Debian and Ubuntu**) Typically, the package manager will
+      select the fastest installed BLAS/LAPACK implementation which is
+      probably openblas:
+
+            sudo apt-get install libopenblas-dev
+
+      You can configure also manually configure the system-wide
+      BLAS and LAPACK libraries via the `update-alternatives`
+      mechanism.
+
+            sudo update-alternatives --config liblapack.so
+            sudo update-alternatives --config libblas.so
+
+    - A: (**Mac OS X**) Disable the Accelerate framework and specify
+      the desired BLAS/LAPACK libraries via LDFLAGS. For example,
+      to use openblas:
+
+            ./configure --without-accelerate-framework LDFLAGS="-lopenblas"
+
+    - A: (**General**) Specify the desired BLAS/LAPACK libraries via
+      LDFLAGS.  For example, to use openblas:
+
+            ./configure LDFLAGS="-lopenblas"
 
 * Q: Why is the scene graph (aarxc) compiler slow?
 
@@ -168,9 +179,8 @@ Performance {#performance}
       * `-flto`: enable link-time optimization. This optimizes across
         multiple translation units.
 
-* [Contents](@ref faqcontents)
 
-Comparison with Other Packages    {#comparison}
+Comparison with Other Packages    {#faq_comparison}
 ==============================
 
 * Q: How does Amino relate to MoveIt!?
@@ -229,5 +239,3 @@ Comparison with Other Packages    {#comparison}
     C++.  Amino's SE(3) functions are written in C and operate on
     double floats.  These functions are easily called from other
     languages.
-
-* [Contents](@ref faqcontents)

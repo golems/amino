@@ -52,6 +52,24 @@ m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
                    [AX_CXX_COMPILE_STDCXX_0X])])
 
 
+
+# Check the OS
+UNAME=`uname`
+
+# Use Accelerate Framework by default on MacOSX
+AC_ARG_WITH([accelerate-framework],
+            AS_HELP_STRING([--without-accelerate-framework], [Disable accelerate framework]),
+            [],
+            [with_accelerate_framework=auto])
+
+AS_IF([test "x$with_accelerate_framework" = xauto -a "x$UNAME" = xDarwin],
+      [AC_MSG_NOTICE([Automatically enabling accelerate framework on Darwin])
+       with_accelerate_framework=yes])
+
+AS_IF([test "x$with_accelerate_framework" = xyes],
+      [CFLAGS="$CFLAGS -framework Accelerate"
+       LDFLAGS="$LDFLAGS -framework Accelerate"])
+
 # Checks for libraries.
 
 AC_SEARCH_LIBS([dgemm_],[blas],[true],
@@ -349,7 +367,6 @@ AC_ARG_WITH([opengl],
             [with_opengl=yes])
 
 
-UNAME=`uname`
 AS_IF([test "x$UNAME" = xDarwin],
 [
   AS_IF([test "x$GL_CFLAGS" = x],
