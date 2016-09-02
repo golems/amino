@@ -38,6 +38,7 @@
 
 #include "baxter-demo.h"
 #include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_sub.h"
 
 
 

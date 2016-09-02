@@ -41,6 +41,7 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_collision.h"
 
 #include "amino/rx/scene_planning.h"
@@ -74,7 +75,11 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
         /* Re-seed */
         wsg->state_sampler->sampleUniform(wsg->seed);
         double q[n_all];
-        AA_MEM_ZERO(q,n_all);
+        if( wsg->q_start ) {
+            AA_MEM_CPY(q, wsg->q_start, n_all);
+        } else {
+            AA_MEM_ZERO(q,n_all);
+        }
         aa_rx_sg_sub_config_set( ssg,
                                  n_s, wsg->seed->values,
                                  n_all, q );
@@ -96,27 +101,46 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
 }
 
 sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
-                                  size_t n_e_, const double *E_arg, size_t ldE ) :
+                                  size_t n_e_,
+                                  const aa_rx_frame_id *frame_arg,
+                                  const double *E_arg, size_t ldE ) :
     typed_si(si),
     ob::GoalLazySamples(si, ob::GoalSamplingFn(sampler_fun), false),
     ko( aa_rx_ksol_opts_create() ),
     ik_cx( aa_rx_ik_jac_cx_create(si->getTypedStateSpace()->sub_scene_graph, ko) ),
     n_e(n_e_),
     state_sampler( si->allocStateSampler() ),
-    seed(typed_si->allocTypedState())
+    seed(typed_si->allocTypedState()),
+    q_start(NULL)
 {
     const struct aa_rx_sg_sub *ssg = si->getTypedStateSpace()->sub_scene_graph;
+    const struct aa_rx_sg *sg = si->getTypedStateSpace()->scene_graph;
 
-    /* These settings should be optional */
-    aa_rx_ksol_opts_center_seed( ko, ssg );
-    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+    /* Set frame id */
+    this->frames = new aa_rx_frame_id[n_e];
+    if( frame_arg ) {
+        AA_MEM_CPY(this->frames, frame_arg, n_e);
+    } else {
+        /* Fill in last frame */
+        size_t n_s = aa_rx_sg_sub_frame_count(ssg);
+        aa_rx_frame_id id_last = aa_rx_sg_sub_frame(ssg, n_s-1);
+        AA_MEM_SET(this->frames, id_last, n_e);
+    }
+    // TODO: multiple frames
+    aa_rx_ksol_opts_set_frame(ko, this->frames[0]);
 
+    /* Set goals */
     this->E = new double[n_e*7];
     aa_cla_dlacpy( '\0', 7, (int)n_e,
                    E_arg, (int)ldE,
                    this->E, 7 );
+
+    /* These settings should be optional */
+    aa_rx_ksol_opts_center_seed(ko, ssg);
+    aa_rx_ksol_opts_center_configs(ko, ssg, .1);
+    aa_rx_ksol_opts_set_tol_dq(ko, .01);
 }
+
 
 sgWorkspaceGoal::~sgWorkspaceGoal ()
 {
@@ -124,6 +148,13 @@ sgWorkspaceGoal::~sgWorkspaceGoal ()
     aa_rx_ksol_opts_destroy(this->ko);
     aa_rx_ik_jac_cx_destroy(this->ik_cx);
     delete [] this->E;
+    delete[] this->frames;
+    aa_checked_free( this->q_start );
+}
+
+void sgWorkspaceGoal::setStart(size_t n_all, double *q)
+{
+    this->q_start = q ? AA_MEM_DUP(double, q, n_all) : NULL;
 }
 
 
@@ -133,11 +164,11 @@ sgWorkspaceGoal::~sgWorkspaceGoal ()
 // }
 
 
-// double sgWorkspaceGoal::distanceGoal (const ompl::base::State *st) const
-// {
-//     /* TODO: This is wrong */
-//     return 0;
-// }
+double sgWorkspaceGoal::distanceGoal (const ompl::base::State *st) const
+{
+    /* TODO: This is wrong */
+    return 0;
+}
 
 } /* namespace amino */
 
@@ -146,14 +177,14 @@ sgWorkspaceGoal::~sgWorkspaceGoal ()
 
 AA_API int
 aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
-                     size_t n_e,
-                     double *E, size_t ldE )
+                     size_t n_e, const aa_rx_frame_id *frames,
+                     const double *E, size_t ldE )
 {
     // TODO: use an OMPL goal sampler
     // TODO: add interface to set IK options for motion planner
 
     amino::sgWorkspaceGoal *g = new amino::sgWorkspaceGoal(mp->space_information,
-                                                           n_e, E, ldE);
+                                                           n_e, frames, E, ldE);
 
     mp->problem_definition->setGoal(ompl::base::GoalPtr(g));
     mp->lazy_samples = g;

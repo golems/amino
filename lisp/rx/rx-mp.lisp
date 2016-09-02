@@ -66,6 +66,7 @@
 (cffi:defcfun aa-rx-mp-set-wsgoal :int
   (mp rx-mp-t)
   (n-e size-t)
+  (frames :pointer)
   (E :pointer)
   (ld-e size-t))
 
@@ -118,13 +119,14 @@
 
 (defun motion-planner-set-work-goal (motion-planner work-goal)
   ;; TODO: multiple goals
+  ;; TODO: frame argument
   (let* ((array (tf-array work-goal))
          (result))
     (with-foreign-simple-vector (pointer length) array :input
       (assert (= 7 length))
       (setq result
             (aa-rx-mp-set-wsgoal motion-planner
-                                 1 pointer 7)))
+                                 1 (cffi:null-pointer) pointer 7)))
     (zerop result)))
 
 (defun motion-planner-allow-collision (motion-planner frame-0 frame-1 &optional (allowed t))

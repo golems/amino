@@ -58,7 +58,8 @@ namespace amino {
 class sgWorkspaceGoal : public ompl::base::GoalLazySamples {
 public:
     sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
-                     size_t n_e, const double *E, size_t ldE );
+                     size_t n_e, const aa_rx_frame_id *frames,
+                     const double *E, size_t ldE );
 
     virtual ~sgWorkspaceGoal ();
 
@@ -69,8 +70,14 @@ public:
     ompl::base::StateSamplerPtr state_sampler;
     sgSpaceInformation::StateType *seed;
 
-    double *E;
+    double distanceGoal (const ompl::base::State *st) const;
+
+    void setStart(size_t n_all, double *q);
     size_t n_e;
+    aa_rx_frame_id *frames;
+    double *E;
+
+    double *q_start;
 };
 
 }

@@ -487,7 +487,7 @@ static inline void *aa_mem_dup( const void *src, size_t size )
  * Copy count elements from of type (type) from src into heap memory.
  */
 #define AA_MEM_DUP( type, src, count )                  \
-    (type*)aa_mem_dup( (src), sizeof(type)*(count) );
+    ((type*)aa_mem_dup((src), sizeof(type)*(count)))
 
 #define AA_MEM_DUPOP( refop, type, const_dst, dst_data, src, n_elem )   \
     switch(refop) {                                                     \

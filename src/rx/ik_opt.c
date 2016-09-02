@@ -50,6 +50,7 @@
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_sub.h"
 
 #include "amino/getset.h"
 
@@ -76,6 +77,8 @@ aa_rx_ksol_opts_create()
 
     opt->s2min = 5e-3;
     opt->k_dls = 5e-5;
+
+    opt->frame = AA_RX_FRAME_NONE;
 
     return opt;
 }
@@ -172,4 +175,10 @@ aa_rx_ksol_opts_center_seed( struct aa_rx_ksol_opts *opts, const struct aa_rx_sg
                              n_qa, q_a );
 
     aa_rx_ksol_opts_take_seed( opts, n_qa, q_a, AA_MEM_STEAL );
+}
+
+AA_API void
+aa_rx_ksol_opts_set_frame( struct aa_rx_ksol_opts *opts, aa_rx_frame_id frame )
+{
+    opts->frame = frame;
 }

@@ -44,12 +44,14 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 
 
 #include "amino/rx/ompl/scene_state_space.h"
 #include "amino/rx/ompl/scene_state_validity_checker.h"
+#include "amino/rx/ompl/scene_workspace_goal.h"
 #include "amino/rx/ompl/scene_ompl.h"
 
 
@@ -216,6 +218,7 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
         if( mp->lazy_samples ) {
             fprintf(stderr, "Starting sampling thread\n");
             mp->lazy_samples->clear();
+            mp->lazy_samples->setStart(ss->config_count_all(), mp->config_start);
             mp->lazy_samples->startSampling();
         }
         planner->solve(timeout);

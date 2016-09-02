@@ -119,8 +119,8 @@ aa_rx_mp_set_goal( struct aa_rx_mp *mp,
  */
 AA_API int
 aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
-                     size_t n_e,
-                     double *E, size_t ldE );
+                     size_t n_e, const aa_rx_frame_id *frames,
+                     const double *E, size_t ldE );
 
 
 /**

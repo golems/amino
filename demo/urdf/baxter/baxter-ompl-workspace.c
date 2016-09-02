@@ -38,6 +38,7 @@
 #include "baxter-demo.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 
@@ -90,7 +91,7 @@ int main(int argc, char *argv[])
                         0.8, -.25, .3051 /* translation x-y-z */
         };
 
-        int r = aa_rx_mp_set_wsgoal( mp, 1, E_ref, 7 );
+        int r = aa_rx_mp_set_wsgoal( mp, 1, NULL, E_ref, 7 );
         if(r)  check_mp_error(r);
     }
 

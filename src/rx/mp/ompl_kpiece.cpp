@@ -42,6 +42,7 @@
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_planning.h"
 
 #include "amino/rx/ompl/scene_state_space.h"

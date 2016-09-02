@@ -62,6 +62,7 @@
 
 namespace amino {
 class sgStateValidityChecker;
+class sgWorkspaceGoal;
 }
 
 
@@ -93,7 +94,7 @@ struct aa_rx_mp {
 
     unsigned simplify : 1;
 
-    ompl::base::GoalLazySamples *lazy_samples;
+    amino::sgWorkspaceGoal *lazy_samples;
 };
 
 #endif /*AMINO_RX_SCENE_OMPL_H*/

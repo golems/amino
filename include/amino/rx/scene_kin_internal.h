@@ -122,6 +122,8 @@ struct aa_rx_ksol_opts {
     double *q_all_seed_data;
 
     size_t max_iterations;
+
+    aa_rx_frame_id frame;
 };
 
 #endif /*AMINO_RX_SCENE_KIN_H*/

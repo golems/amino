@@ -50,6 +50,7 @@
 #include "amino/rx/rxerr.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_kin_internal.h"
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
@@ -82,13 +83,14 @@ static int ksol_duqu ( const struct kin_solve_cx *cx, const double *q_s, double 
     size_t n_q = aa_rx_sg_config_count(sg);
     size_t n_sq = aa_rx_sg_sub_config_count(ssg);
 
+    /* Get the configuration */
     double q_all[n_q];
     AA_MEM_CPY(q_all, cx->q0_all, n_q);
-
     aa_rx_sg_sub_config_set( ssg,
                              n_sq, q_s,
                              n_q, q_all);
 
+    /* Compute the transforms */
     double *TF_rel = AA_MEM_REGION_NEW_N(cx->reg, double, 7*n_f);
     double *TF_abs = AA_MEM_REGION_NEW_N(cx->reg, double, 7*n_f);
 
@@ -98,16 +100,19 @@ static int ksol_duqu ( const struct kin_solve_cx *cx, const double *q_s, double 
                         cx->TF_rel0, 7, cx->TF_abs0, 7,
                         TF_rel, 7, TF_abs, 7 );
 
-
-
+    /* Fill the desired transform */
     if( S ) {
-        aa_rx_frame_id id_ee = aa_rx_sg_sub_frame(ssg,
-                                                  aa_rx_sg_sub_frame_count(ssg) - 1 );
+        aa_rx_frame_id id_ee = ( AA_RX_FRAME_NONE == cx->opts->frame )
+            /* default to last frame in chain */
+            ? aa_rx_sg_sub_frame(ssg, aa_rx_sg_sub_frame_count(ssg) - 1 )
+            /* use specified frame */
+            : cx->opts->frame;
+
         double *E_ee = TF_abs + 7*id_ee;
-        //aa_dump_vec( stdout, E_ee, 7 );
         aa_tf_qutr2duqu( E_ee, S );
     }
 
+    /* Fill the Jacobian */
     if( J ) {
         aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
                                J, 6 );
