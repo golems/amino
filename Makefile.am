@@ -274,7 +274,6 @@ $(libamino_la_la_OBJECTS): amino_mem.mod
 $(libamino_tf_la_OBJECTS): amino_la.mod
 
 libamino_la_LIBADD +=                  \
-	-lgfortran                     \
 	libamino_mem.la                \
 	libamino_la.la                 \
 	libamino_tf.la
