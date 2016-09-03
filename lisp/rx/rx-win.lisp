@@ -119,7 +119,8 @@
          (with-main-thread
            (unless *%window%*
              (setq *%window%*
-                   (aa-rx-win-default-create title width height))
+                   (sb-int:with-float-traps-masked (:divide-by-zero :overflow :invalid :inexact)
+                     (aa-rx-win-default-create title width height)))
              (aa-rx-win-stop-on-quit *%window%* stop-on-quit))
            *%window%*)))
     (setq *%window%* window)
