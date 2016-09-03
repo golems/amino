@@ -151,7 +151,8 @@
 
 (defun win-run (&key synchronous)
   (if synchronous
-      (aa-rx-win-run)
+      (sb-int:with-float-traps-masked (:divide-by-zero :overflow  :invalid :inexact)
+        (aa-rx-win-run))
       (aa-rx-win-run-async)))
 
 (defun win-destroy (&optional (window (window)))
