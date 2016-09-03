@@ -92,7 +92,7 @@ Mac OS X using MacPorts {#installation_setup_mac}
   (https://www.macports.org/):
 
         sudo port install \
-             coreutils \
+             coreutils wget \
              autoconf-archive maxima f2c flex sbcl  \
              OpenBLAS \
              libsdl2 povray ffmpeg  \
