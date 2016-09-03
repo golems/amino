@@ -280,9 +280,9 @@ AS_IF([test "x$enable_debug" = "xyes"],[
 ## Java ##
 
 AC_ARG_WITH([java],
-            AS_HELP_STRING([--without-java], [Disable java support]),
+            AS_HELP_STRING([--with-java], [Enable java support]),
             [],
-            [with_java=yes])
+            [with_java=no])
 
 
 AS_IF( [test "x$with_java" = xyes],
