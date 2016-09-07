@@ -142,6 +142,13 @@ public:
         std::copy( q_set, q_set + config_count_subset(), state->values );
     }
 
+    double * get_tf_abs( const ompl::base::State *state, const double *q_all );
+
+    double * get_tf_abs( const ompl::base::State *state);
+
+    void region_pop( void * ptr) {
+        aa_mem_region_pop(&this->reg, ptr);
+    }
 
     const aa_rx_sg *scene_graph;
     const aa_rx_sg_sub *sub_scene_graph;

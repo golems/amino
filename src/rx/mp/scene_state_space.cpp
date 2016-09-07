@@ -88,4 +88,34 @@ sgStateSpace::sgStateSpace( const struct aa_rx_sg_sub *sub_sg ) :
         aa_rx_sg_cl_set_copy(scene_graph, allowed);
     }
 
+double * sgStateSpace::get_tf_abs( const ompl::base::State *state)
+{
+    size_t n_q = this->config_count_all();
+    double q_all[n_q];
+    AA_MEM_ZERO(q_all,n_q); // TODO: or center?
+    return this->get_tf_abs(state, q_all);
+}
+
+double * sgStateSpace::get_tf_abs( const ompl::base::State *state_, const double *q_all )
+{
+    const StateType *state = state_->as<StateType>();
+    size_t n_q = this->config_count_all();
+    size_t n_s = this->config_count_subset();
+    size_t n_f = this->frame_count();
+
+    // Set configs
+    double q[n_q];
+    std::copy( q_all, q_all + n_q, q );
+    this->insert_state(state, q);
+
+    // Find TFs
+    double TF_rel[7*n_f];
+    double *TF_abs = AA_MEM_REGION_NEW_N(&this->reg, double, 7*n_f);
+    aa_rx_sg_tf( this->scene_graph, n_q, q,
+                 n_f,
+                 TF_rel, 7,
+                 TF_abs, 7 );
+    return TF_abs;
+}
+
 } /* namespace amino */

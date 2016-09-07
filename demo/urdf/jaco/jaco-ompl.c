@@ -50,6 +50,7 @@ static int SCREEN_HEIGHT = 600;
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_win.h"
 #include "amino/rx/scene_geom.h"

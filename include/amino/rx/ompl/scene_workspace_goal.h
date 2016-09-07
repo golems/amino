@@ -73,11 +73,23 @@ public:
     double distanceGoal (const ompl::base::State *st) const;
 
     void setStart(size_t n_all, double *q);
+
+    /** number of goal frames */
     size_t n_e;
+
+    /** IDs of goal frames */
     aa_rx_frame_id *frames;
+
+    /** Poses of goal frames (quaternion-translation) */
     double *E;
 
     double *q_start;
+
+    /** Weighting of orientation error in distance computation */
+    double weight_orientation;
+
+    /** Weighting of translation error in distance computation */
+    double weight_translation;
 };
 
 }

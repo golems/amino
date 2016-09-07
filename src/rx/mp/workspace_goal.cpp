@@ -26,6 +26,7 @@
  *   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
  *   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+
  *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
  *   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
  *   AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
@@ -111,7 +112,9 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
     n_e(n_e_),
     state_sampler( si->allocStateSampler() ),
     seed(typed_si->allocTypedState()),
-    q_start(NULL)
+    q_start(NULL),
+    weight_orientation(1),
+    weight_translation(1)
 {
     const struct aa_rx_sg_sub *ssg = si->getTypedStateSpace()->sub_scene_graph;
     const struct aa_rx_sg *sg = si->getTypedStateSpace()->scene_graph;
@@ -164,10 +167,27 @@ void sgWorkspaceGoal::setStart(size_t n_all, double *q)
 // }
 
 
-double sgWorkspaceGoal::distanceGoal (const ompl::base::State *st) const
+double sgWorkspaceGoal::distanceGoal (const ompl::base::State *state) const
 {
-    /* TODO: This is wrong */
-    return 0;
+    amino::sgStateSpace *space = typed_si->getTypedStateSpace();
+    double *TF_abs = space->get_tf_abs(state, this->q_start);
+
+    double a = 0;
+    for( size_t i = 0; i < n_e; i ++ ) {
+        double *Eref = this->E + 7*i;
+        double *Eact = TF_abs + 7*i;
+
+        double *qref = Eref + AA_TF_QUTR_Q;
+        double *qact = Eact + AA_TF_QUTR_Q;
+        double *vref = Eref + AA_TF_QUTR_T;
+        double *vact = Eact + AA_TF_QUTR_T;
+
+        a += weight_orientation * aa_tf_qangle_rel(qref, qact);
+        a += weight_translation * sqrt( AA_TF_VDOT(vref, vact) );
+    }
+
+    space->region_pop(TF_abs);
+    return a;
 }
 
 } /* namespace amino */
@@ -180,15 +200,11 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
                      size_t n_e, const aa_rx_frame_id *frames,
                      const double *E, size_t ldE )
 {
-    // TODO: use an OMPL goal sampler
     // TODO: add interface to set IK options for motion planner
-
     amino::sgWorkspaceGoal *g = new amino::sgWorkspaceGoal(mp->space_information,
                                                            n_e, frames, E, ldE);
-
     mp->problem_definition->setGoal(ompl::base::GoalPtr(g));
     mp->lazy_samples = g;
-
     return 0;
 
     // amino::sgStateSpace *ss = mp->space_information->getTypedStateSpace();

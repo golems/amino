@@ -64,34 +64,21 @@ sgStateValidityChecker::~sgStateValidityChecker()
     aa_rx_cl_destroy(this->cl);
 }
 
-bool sgStateValidityChecker::isValid(const ompl::base::State *state_) const
+bool sgStateValidityChecker::isValid(const ompl::base::State *state) const
 {
-    const sgSpaceInformation::StateType *state = state_as(state_);
     sgStateSpace *space = getTypedStateSpace();
-    size_t n_q = space->config_count_all();
-    size_t n_s = space->config_count_subset();
     size_t n_f = space->frame_count();
-
-    // Set configs
-
-    double q[n_q];
-    std::copy( q_all, q_all + n_q, q );
-    space->insert_state(state, q);
-    //aa_dump_vec(stdout, q, n_q);
-
-    // Find TFs
-    double TF_rel[7*n_f];
-    double TF_abs[7*n_f];
-    aa_rx_sg_tf( space->scene_graph, n_q, q,
-                 n_f,
-                 TF_rel, 7,
-                 TF_abs, 7 );
+    double *TF_abs = space->get_tf_abs(state, this->q_all);
 
     // check collision
+    int collision;
     {
         std::lock_guard<std::mutex> lock(mutex);
-        return ! aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
+        collision = aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
     }
+    space->region_pop(TF_abs);
+
+    return !collision;
 }
 
 
