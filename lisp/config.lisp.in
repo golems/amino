@@ -55,3 +55,6 @@
 (defvar *cflags* "@CFLAGS@")
 (defvar *cppflags* "@CPPFLAGS@")
 (defvar *ldflags* "@LDFLAGS@")
+
+(defparameter +version+ "@PACKAGE_VERSION@")
+(defparameter +bug-report+ "@PACKAGE_BUGREPORT@")

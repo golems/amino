@@ -36,6 +36,9 @@ MESH_UP_AXIS="Z"
 MESH_FORWARD_AXIS="Y"
 RELOAD="nil"
 
+
+AARX_MEMORY_DEFAULT="2GB"
+
 if [ -n "$AARX_RELOAD" ]; then
     RELOAD=t
 fi
@@ -56,8 +59,23 @@ Options:
   -R                             reload files
   -g,--gui                       Display scene in a GUI
 
+Environment:
+
+  ROS_PACKAGE_PATH               Location of ROS packages, necessary to load URDF
+
+  AARX_MEMORY                    Maximum heap memory size ($AARX_MEMORY_DEFAULT)
+
+  AARX_TMPDIR                    Directory for temporary and cache files (/tmp/amino-USERNAME)
+
+Files:
+
+  /tmp/amino-USERNAME            Default directory for temporary and cache files, set via \$AARX_TMPDIR
+
 Examples:
+
   aarxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
+
+  aarxc --gui robot.urdf          Render robot.urdf in the OpenGL viewer
 
 Report bugs to <ntd@rice.edu>"
 EOF
@@ -85,6 +103,12 @@ EOF
         --gui|-g)
             export AARX_GUI=t
             ;;
+        --version)
+            export AARX_VERSION="1"
+            ;;
+        --version-man)
+            export AARX_VERSION_MAN="1"
+            ;;
         -*)
             echo "error: unknown option: $1"
             exit 1
@@ -96,15 +120,11 @@ EOF
     shift
 done
 
-
-if test -z "$AARX_SCENE"; then
-    >&2 echo "error: no input file specified"
-    exit 1
-fi
-
 if test -z "$AARX_MEMORY"; then
-    AARX_MEMORY="2GB"
+    AARX_MEMORY="$AARX_MEMORY_DEFAULT"
 fi
+
+
 
 
 exec aarx.core --dynamic-space-size "$AARX_MEMORY" \

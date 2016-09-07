@@ -37,7 +37,30 @@
 
 (in-package :robray)
 
-(defun aarx-command ()
+
+
+(defparameter +copying+
+  (read-file-into-string (merge-pathnames "COPYING" *robray-root*)))
+
+(defun aarx-version (&optional (stream *standard-output*))
+  (format stream
+          "aarxc ~A
+
+~A
+
+Written by Neil T. Dantam
+"
+          amino::+version+
+          +copying+
+          ))
+
+(defun aarx-version-man (&optional (stream *standard-output*))
+  (format stream "~A"
+          (ppcre:regex-replace-all (ppcre:create-scanner  "^[ \\*]*" :multi-line-mode t)
+                                   (aarx-version nil) "")))
+
+(defun aarx-driver ()
+  (robray-tmpdir)
   (labels ((env (name)
              (uiop/os:getenv name))
            (env-list (name)
@@ -61,6 +84,8 @@
                                                         :mesh-up-axis up-axis
                                                         :mesh-forward-axis forward-axis)))
                         (scene-graph) scene-files)))
+      (when (zerop (length scene-files))
+        (error "No input scene files specified"))
       ;; Compile Scene
       (when output
         (scene-graph-compile scene
@@ -72,3 +97,12 @@
         (win-create :title "AARXC" :stop-on-quit t)
         (win-set-scene-graph scene)
         (win-run :synchronous t)))))
+
+(defun aarx-command ()
+  (labels ((env (name)
+             (uiop/os:getenv name)))
+    (cond ((env "AARX_VERSION")
+           (aarx-version))
+          ((env "AARX_VERSION_MAN")
+           (aarx-version-man))
+          (t (aarx-driver)))))

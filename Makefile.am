@@ -600,9 +600,15 @@ sync-doc:
 	rsync -r doc/manual/ code.golems.org:/srv/www/code.golems.org/pkg/amino
 
 
+doc/md/copying.md: $(top_srcdir)/COPYING
+	$(MKDIR_P) doc/md/
+	cat $(top_srcdir)/doc/md/copying.md.header  \
+	    $(top_srcdir)/COPYING \
+	    > doc/md/copying.md
+
 if HAVE_DOXYGEN
 
-doxygen:
+doxygen: doc/md/copying.md
 	$(DOXYGEN)
 
 doc/manual: doxygen
@@ -621,8 +627,19 @@ endif
 
 
 if HAVE_HELP2MAN
-doc/aarxc.1: $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
-	$(HELP2MAN) -h -h --version-string="0.0" --no-info -n "manipulate ach channels" $(top_srcdir)/share/aarxc -o $@
+doc/aarxc.1: aarxc aarx.core $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
+	$(HELP2MAN) --version-option=--version-man --no-info -n "Compile scene graphs" $(top_builddir)/aarxc -o $@
+
+if HAVE_GROFF
+EXTRA_DIST += doc/manual/man_aarxc.html
+doc/manual/man_aarxc.html: doc/aarxc.1
+	$(MKDIR_P) doc/manual
+	$(GROFF) -mandoc -Thtml < doc/aarxc.1 > doc/manual/man_aarxc.html
+
+doxygen: doc/manual/man_aarxc.html
+
+endif
+
 endif
 
 EXTRA_DIST += doc/manual

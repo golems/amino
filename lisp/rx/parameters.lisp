@@ -37,11 +37,18 @@
 
 (in-package :robray)
 
-(defparameter *robray-tmp-root* "/tmp/")
+(defparameter *robray-tmp-root* (pathname "/tmp/"))
 
-(defparameter *robray-tmp-directory*
-  (subdir *robray-tmp-root*
-          :directory (format nil "robray-~A" (uiop/os:getenv "USER"))))
+(defvar *robray-tmp-directory*)
+
+(defun robray-tmpdir ()
+  (setq *robray-tmp-directory*
+        (if-let ((dir (uiop/os:getenv "AARX_TMPDIR")))
+          (pathname (format nil "~A/" dir))
+          (subdir *robray-tmp-root*
+                  :directory (format nil "amino-~A" (uiop/os:getenv "USER"))))))
+
+(robray-tmpdir)
 
 (defparameter *robray-cache-directory*
   (subdir *robray-tmp-directory* :directory "cache"))
