@@ -5,20 +5,48 @@ Scene Graph Compiler {#scenecompiler}
 
 The scene graph compiler `aarxc` parses scene files and outputs C
 code, which you can compile and link either statically into your
-application or into a shared library.  Compiled scene graphs are fast
-to load because the operating system directly maps into memory (via
-[mmap](https://en.wikipedia.org/wiki/Mmap)) the included mesh data,
-eliminating runtime parsing and processing.  Furthermore, when
-multiple processes operate on the same scene graph, using compiled
-scene graphs reduces overall memory use compared to runtime parsing
-because the memory mapped scene graphs in different processes share
-physical memory.
+application or into a shared library.
+
+
+Why compile scenes? {#scenecompiler_why}
+===================
+
+* **Fast:** Compiled scene are fast to load because the operating system
+  directly maps into memory (via
+  [mmap](https://en.wikipedia.org/wiki/Mmap)) the included mesh data,
+  eliminating runtime parsing and processing.
+
+* **Memory-Efficient:** Compiled scenes reduce memory use compared to runtime parsing when
+  multiple processes operate on the same scene, because the memory
+  mapped scene graphs in different processes share physical memory.
+
+* **Convenient:** Compiled scenes are easy to distribute to other
+  machines -- e.g., a cluster -- which may lack scene sources,
+  utilities, or support libraries. Only the executable or shared
+  library is required to load the compiled scene, reducing potential
+  runtime dependencies.
+
+* **Real-Time:** Compiled scenes avoid the need to include large
+  parsing libraries -- e.g., an XML parser -- in real-time processes
+  and reducing the dynamic allocations necessary to load scene.
+
+* **Composable:** Multiple compiled scenes can be efficiently composed
+  at runtime.  Thus, the static scene graph for the robot could be
+  compiled ahead of time for fast loading and then extended at runtime
+  with the environment data either procedurally or by separately
+  compiling the environment scene.
+
+Compiled scenes do, however, present an initial, one-time compilation
+cost.  Compiling the scene graph for a Rethink Baxter robot --
+including mesh conversion, C code generation, C code compilation, and
+linking -- on an Intel(R) Core(TM) i7-4790 takes about 35 seconds
+using GCC 4.9.2 and 25 seconds using Clang 3.8.1.
 
 Compiling Scene Files {#scenecompiler_compiling}
 =====================
 
-The following command will convert the previous example scene file into
-the C file `table.c`:
+The following command will convert the @ref scenefile_example into the
+C file `table.c`:
 
     aarxc table.robray -n table -o table.c
 

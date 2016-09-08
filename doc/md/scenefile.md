@@ -309,8 +309,8 @@ following commands (assuming amino was installed under /usr/local):
     mkdir -p ~/.vim/ftdetect
     ln -s /usr/local/share/amino/vim/ftdetect/robray.vim ~/.vim/ftdetect/
 
-Complete Example {#scenefile_example}
-================
+Example Scene {#scenefile_example}
+=============
 
 File `class.robray`
 ------------------
