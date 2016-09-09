@@ -450,3 +450,31 @@
            (,helper)
            (with-thread ((sb-thread:main-thread))
              (,helper))))))
+
+(defun pmap (result-type function list &key (thread-count 8))
+  (let* ((mutex (sb-thread:make-mutex))
+         (result (when result-type (make-array (length list))))
+         (i 0))
+    (labels ((process  ()
+               (let (call x j)
+                 (sb-thread:with-mutex (mutex)
+                   (setq call list
+                         x (car list)
+                         j i)
+                   (incf i)
+                   (setq list (cdr list)))
+                 (when call ; call function
+                   (let ((y (funcall function x)))
+                     (when result ; store result
+                       (sb-thread:with-mutex (mutex)
+                         (setf (aref result j) y))))
+                   t)))
+             (thread-fun ()
+               (loop while (process))))
+      ;; create and join threads
+      (let ((threads (loop for i below (1- thread-count)
+                        collect (sb-thread:make-thread #'thread-fun))))
+        (thread-fun)
+        (map nil #'sb-thread:join-thread threads))
+      ;; result
+      result)))

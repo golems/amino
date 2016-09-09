@@ -109,21 +109,33 @@
                                                 (mesh-forward-axis "Y"))
 
   (let ((mesh-hash (make-hash-table :test #'equal))) ;; source-file => scene-mesh
+    ;; Collect meshes
     (do-scene-graph-geometry ((frame geometry) scene-graph)
       (declare (ignore frame))
       (let ((shape (scene-geometry-shape geometry)))
         (when (scene-mesh-p shape)
-          (if-let ((scene-mesh  (gethash (scene-mesh-source-file shape) mesh-hash)))
-            ;; Rebind previously loaded mesh
-            (setf (scene-geometry-shape geometry) scene-mesh)
-            ;; Load and hash mesh
-            (let ((data (load-mesh (scene-mesh-source-file shape)
-                                   :reload reload
-                                   :mesh-up-axis mesh-up-axis
-                                   :mesh-forward-axis mesh-forward-axis)))
-              (setf (scene-mesh-data shape) data
-                    (scene-mesh-name shape) (mesh-data-name data)
-                    (gethash (scene-mesh-source-file shape) mesh-hash) shape)))))))
+          (setf (gethash (scene-mesh-source-file shape) mesh-hash)
+                t))))
+    ;; Covert meshes
+    (let* ((mesh-files (hash-table-keys mesh-hash))
+           (mesh-data (pmap 'vector (lambda (file)
+                                      (load-mesh file
+                                                 :reload reload
+                                                 :mesh-up-axis mesh-up-axis
+                                                 :mesh-forward-axis mesh-forward-axis))
+                            mesh-files)))
+      ;; fill meshes
+      (map nil (lambda (file mesh)
+                 (setf (gethash file mesh-hash) mesh))
+           mesh-files mesh-data))
+    ;; Bind meshes
+    (do-scene-graph-geometry ((frame geometry) scene-graph)
+      (declare (ignore frame))
+      (let ((shape (scene-geometry-shape geometry)))
+        (when (scene-mesh-p shape)
+          (let ((data  (gethash (scene-mesh-source-file shape) mesh-hash)))
+            (setf (scene-mesh-data shape) data
+                  (scene-mesh-name shape) (mesh-data-name data)))))))
   scene-graph)
 
 (defun scene-graph-resolve! (scene-graph &key

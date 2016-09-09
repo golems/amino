@@ -37,6 +37,7 @@
 
 (in-package :robray)
 
+
 ;;(declaim (optimize (speed 3) (safety 0)))
 
 ;;(cffi:defcfun aa-rx-wf-obj-create rx-wf-obj-t)
@@ -154,7 +155,7 @@
     result))
 
 (defun wavefront-obj-load (filename &optional (original-filename filename))
-  (format *standard-output* "~&  OBJSCAN ~A..." filename)
+  (format *standard-output* "~&  OBJSCAN ~A~%" filename)
   (finish-output *standard-output*)
   (let* ((time (get-internal-real-time))
          (obj (aa-rx-wf-parse (rope-string filename)))
@@ -182,25 +183,19 @@
                  (dotimes (i n)
                    (setf (aref vf i) (aref v32 i)))
                  vf)))
-      (prog1 (make-mesh-data  :name (name-mangle (file-basename original-filename))
-                              :file filename
-                              :original-file original-filename
-                              :vertex-vectors (get-array #'aa-rx-wf-obj-get-vertices :double 'double-float)
-                              :normal-vectors (get-array #'aa-rx-wf-obj-get-normals :double 'double-float)
-                              ;; TODO: uv vectors
-                              ;; :uv-vectors (array-cat 'double-float uv)
-                              :texture-properties (loop for (material . texture) across materials-array
-                                                     collect texture)
-                              :texture-indices (get-fix-array #'aa-rx-wf-obj-get-texture-indices)
-                              :uv-indices (get-fix-array #'aa-rx-wf-obj-get-uv-indices)
-                              :vertex-indices (get-fix-array #'aa-rx-wf-obj-get-vertex-indices)
-                              :normal-indices (get-fix-array #'aa-rx-wf-obj-get-normal-indices))
-        (let* ((now (get-internal-real-time))
-               (sec (/ (- now time)
-                       internal-time-units-per-second)))
-          (format *standard-output* "done (~Fms)~%"
-                  (* sec 1d3))
-          (finish-output *standard-output*))))))
+      (make-mesh-data  :name (name-mangle (file-basename original-filename))
+                       :file filename
+                       :original-file original-filename
+                       :vertex-vectors (get-array #'aa-rx-wf-obj-get-vertices :double 'double-float)
+                       :normal-vectors (get-array #'aa-rx-wf-obj-get-normals :double 'double-float)
+                       ;; TODO: uv vectors
+                       ;; :uv-vectors (array-cat 'double-float uv)
+                       :texture-properties (loop for (material . texture) across materials-array
+                                              collect texture)
+                       :texture-indices (get-fix-array #'aa-rx-wf-obj-get-texture-indices)
+                       :uv-indices (get-fix-array #'aa-rx-wf-obj-get-uv-indices)
+                       :vertex-indices (get-fix-array #'aa-rx-wf-obj-get-vertex-indices)
+                       :normal-indices (get-fix-array #'aa-rx-wf-obj-get-normal-indices)))))
 
 (defun mesh-regen-p (reload source-file output-file)
   (or reload

@@ -16,9 +16,10 @@ Why compile scenes? {#scenecompiler_why}
   [mmap](https://en.wikipedia.org/wiki/Mmap)) the included mesh data,
   eliminating runtime parsing and processing.
 
-* **Memory-Efficient:** Compiled scenes reduce memory use compared to runtime parsing when
-  multiple processes operate on the same scene, because the memory
-  mapped scene graphs in different processes share physical memory.
+* **Memory-Efficient:** Compiled scenes reduce memory use compared to
+  runtime parsing when multiple processes operate on the same scene,
+  because the memory mapped scene graphs in different processes share
+  physical memory.
 
 * **Convenient:** Compiled scenes are easy to distribute to other
   machines -- e.g., a cluster -- which may lack scene sources,
@@ -28,7 +29,7 @@ Why compile scenes? {#scenecompiler_why}
 
 * **Real-Time:** Compiled scenes avoid the need to include large
   parsing libraries -- e.g., an XML parser -- in real-time processes
-  and reducing the dynamic allocations necessary to load scene.
+  and reduce the dynamic allocations necessary to load the scene.
 
 * **Composable:** Multiple compiled scenes can be efficiently composed
   at runtime.  Thus, the static scene graph for the robot could be
@@ -38,9 +39,9 @@ Why compile scenes? {#scenecompiler_why}
 
 Compiled scenes do, however, present an initial, one-time compilation
 cost.  Compiling the scene graph for a Rethink Baxter robot --
-including mesh conversion, C code generation, C code compilation, and
-linking -- on an Intel(R) Core(TM) i7-4790 takes about 35 seconds
-using GCC 4.9.2 and 25 seconds using Clang 3.8.1.
+including mesh conversion, code generation, and C compilation -- on an
+Intel(R) Core(TM) i7-4790 takes about 15 seconds using GCC 4.9.2 and
+13 seconds using Clang 3.8.1.
 
 Compiling Scene Files {#scenecompiler_compiling}
 =====================
@@ -111,9 +112,9 @@ are best managed with build automation tools such as the Autotools or
 CMake.  For simple cases using gcc on GNU/Linux, you can build a
 shared library as follows:
 
-    PKG_CONFIG_MODULES="amino amino-gl sdl2 glew"
+    PKG_CONFIG_MODULES="amino"
     CFLAGS="$CFLAGS `pkg-config --cflags $PKG_CONFIG_MODULES`"
-    gcc -shared -fPIC $CFLAGS table.c -o libscene-table.so
+    gcc -shared -fPIC $CFLAGS table.c -c -o libscene-table.so
 
 The code to load the scene graph is identical to the static linking
 case.

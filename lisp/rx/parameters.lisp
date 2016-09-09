@@ -37,6 +37,8 @@
 
 (in-package :robray)
 
+(defvar *thread-count* 4)
+
 (defparameter *robray-tmp-root* (pathname "/tmp/"))
 
 (defvar *robray-tmp-directory*)
