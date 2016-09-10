@@ -169,6 +169,8 @@
                             (lambda (x)
                               (or (eq x #\-)
                                   (eq x #\Space)
+                                  (eq x #\/)
+                                  (eq x #\\)
                                   (eq x #\.)))
                             identifier)))
     (if (digit-char-p (aref sub 0))

@@ -157,8 +157,7 @@
 (defun wavefront-obj-load (filename &optional (original-filename filename))
   (format *standard-output* "~&  OBJSCAN ~A~%" filename)
   (finish-output *standard-output*)
-  (let* ((time (get-internal-real-time))
-         (obj (aa-rx-wf-parse (rope-string filename)))
+  (let* ((obj (aa-rx-wf-parse (rope-string filename)))
          (materials-alist (wavefront-mtl-extract obj))
          (materials-array (make-array (aa-rx-wf-obj-material-count obj))))
     ;; Fill materials array
@@ -183,7 +182,7 @@
                  (dotimes (i n)
                    (setf (aref vf i) (aref v32 i)))
                  vf)))
-      (make-mesh-data  :name (name-mangle (file-basename original-filename))
+      (make-mesh-data  :name (name-mangle original-filename)
                        :file filename
                        :original-file original-filename
                        :vertex-vectors (get-array #'aa-rx-wf-obj-get-vertices :double 'double-float)
