@@ -38,10 +38,16 @@ Why compile scenes? {#scenecompiler_why}
   compiling the environment scene.
 
 Compiled scenes do, however, present an initial, one-time compilation
-cost.  Compiling the scene graph for a Rethink Baxter robot --
-including mesh conversion, code generation, and C compilation -- on an
-Intel(R) Core(TM) i7-4790 takes about 15 seconds using GCC 4.9.2 and
-13 seconds using Clang 3.8.1.
+cost, typically 10-20 seconds for common robot models.  The following
+table summarizes average compilation time (10 runs) -- including mesh
+conversion, code generation, and C compilation -- using Blender 2.77
+and GCC 4.9.2 Intel(R) Core(TM) i7-4790:
+
+| Robot          | Compilation Time |
+|----------------|------------------|
+| Rethink Baxter | 14.0 s |
+| Universal UR10 | 11.7 s |
+| Kinova Jaco    | 15.6 s |
 
 Compiling Scene Files {#scenecompiler_compiling}
 =====================
