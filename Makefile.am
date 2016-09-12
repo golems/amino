@@ -597,7 +597,7 @@ distclean-local:
 	-rm -rf doxygen-doc
 
 sync-doc:
-	rsync -r doc/manual/ code.golems.org:/srv/www/code.golems.org/pkg/amino
+	rsync -r doc/manual/ code.golems.org:/srv/www/amino.golems.org
 
 
 doc/md/copying.md: $(top_srcdir)/COPYING

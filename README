@@ -39,5 +39,5 @@ dependencies.
 DOCUMENTATION
 =============
 
-* [Manual] (http://code.golems.org/pkg/amino/), and `./doc/manual/`
+* [Manual] (http://amino.golems.org), and `./doc/manual/`
 * Examples `./demos/`
