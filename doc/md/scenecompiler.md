@@ -11,8 +11,8 @@ application or into a shared library.
 Why compile scenes? {#scenecompiler_why}
 ===================
 
-* **Fast:** Compiled scene are fast to load because the operating system
-  directly maps into memory (via
+* **Fast:** Compiled scene are fast to load (<1ms) because the
+  operating system directly maps into memory (via
   [mmap](https://en.wikipedia.org/wiki/Mmap)) the included mesh data,
   eliminating runtime parsing and processing.
 
@@ -38,16 +38,16 @@ Why compile scenes? {#scenecompiler_why}
   compiling the environment scene.
 
 Compiled scenes do, however, present an initial, one-time compilation
-cost, typically 10-20 seconds for common robot models.  The following
+cost, around 10-20 seconds for common robot models.  The following
 table summarizes average compilation time (10 runs) -- including mesh
-conversion, code generation, and C compilation -- using Blender 2.77
-and GCC 4.9.2 Intel(R) Core(TM) i7-4790:
+processing, code generation, and C compilation -- using Blender 2.77
+and GCC 4.9.2 on an Intel(R) Core(TM) i7-4790:
 
-| Robot          | Compilation Time |
-|----------------|------------------|
-| Rethink Baxter | 14.0 s |
-| Universal UR10 | 11.7 s |
-| Kinova Jaco    | 15.6 s |
+| Robot          | Compilation Time | Run-Time Loading |
+|----------------|------------------|------------------|
+| Rethink Baxter | 14.0s            | 0.33ms           |
+| Universal UR10 | 11.7s            | 0.17ms           |
+| Kinova Jaco    | 15.6s            | 0.20ms           |
 
 Compiling Scene Files {#scenecompiler_compiling}
 =====================
