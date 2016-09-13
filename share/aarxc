@@ -82,6 +82,9 @@ Options:
   -R                             reload files
 
   -g,--gui                       Display scene in a GUI
+  --list-frames                  List all frames in the scene graph
+  --list-vars                    List all configuration variables in the scene graph
+  --version,                     output version information and exit
   -h|-?|--help,                  display this help and exit
 
 Environment:
@@ -178,6 +181,13 @@ EOF
         # Control Options
         --gui|-g)
             export AARX_GUI=t
+            ;;
+
+        --list-frames)
+            export AARX_LIST_FRAMES="1"
+            ;;
+        --list-vars)
+            export AARX_LIST_VARS="1"
             ;;
         --version)
             export AARX_VERSION="1"

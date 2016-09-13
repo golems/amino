@@ -97,6 +97,11 @@ Written by Neil T. Dantam
 
       (when (zerop (length scene-files))
         (error "No input scene files specified"))
+      ;; Print names
+      (when (env "AARX_LIST_FRAMES")
+        (format t "~{~&  ~A~%~}" (scene-graph-frame-names scene)))
+      (when (env "AARX_LIST_VARS")
+        (format t "~{~&  ~A~%~}" (scene-graph-configurations scene)))
       ;; Compile Scene
       (when output
         (scene-graph-compile scene
