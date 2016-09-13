@@ -102,6 +102,11 @@
   (win rx-win-t)
   (e :pointer))
 
+(cffi:defcfun aa-sdl-bind-key :void
+  (keycode sdl-keycode)
+  (handler :pointer)
+  (cx :pointer))
+
 ;;;;;;;;;;;;;;;;;;;
 ;;; Convenience ;;;
 ;;;;;;;;;;;;;;;;;;;
@@ -118,6 +123,7 @@
   (let ((window
          (with-main-thread
            (unless *%window%*
+             (aa-sdl-bind-key :p (cffi:callback render-callback) (cffi:null-pointer))
              (setq *%window%*
                    (sb-int:with-float-traps-masked (:divide-by-zero :overflow :invalid :inexact)
                      (aa-rx-win-default-create title width height)))
@@ -270,6 +276,38 @@
 (defun win-config-map (&optional (window (window)))
   (mutable-scene-graph-config-map (rx-win-mutable-scene-graph window)
                                   (rx-win-config-vector window)))
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;
+;;; Raytracing ;;;
+;;;;;;;;;;;;;;;;;;
+
+(defvar *win-frame* 0)
+(defvar *win-render* nil)
+
+(defun actual-render-callback ()
+  (let* ((frame *win-frame*)
+         (render *win-render*)
+         (filename (format nil "frame-~D.pov" frame)))
+    (incf *win-frame*)
+    (sb-thread:make-thread
+     (lambda ()
+       (format t "~&writing frame-~D.pov~%" frame)
+       (render-win :directory nil
+                   :render render
+                   :output filename)
+       (format t "~&finished frame-~D.pov~%" frame)
+       (finish-output *standard-output*))))
+  0)
+
+(cffi:defcallback render-callback :void
+    ((context :pointer) (params :pointer))
+  (declare (ignore context params))
+  (actual-render-callback)
+  0)
 
 (defun render-win (&key
                      (window (window))

@@ -95,6 +95,8 @@
                              (default-configuration 0d0))
 "Generate the POV-ray scene for the given scene-graph."
   (let ((pov-things)
+        (include (or include (merge-pathnames "default.inc"
+                                              *robray-share-directory*)))
         (tf-abs (scene-graph-tf-absolute-map scene-graph
                                              :configuration-map configuration-map
                                              :default-configuration default-configuration))

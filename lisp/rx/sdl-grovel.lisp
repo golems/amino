@@ -1,23 +1,21 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2016, Rice University
+;;;; Copyright (c) 2015, Rice University
 ;;;; All rights reserved.
 ;;;;
-;;;; This file is provided under the following "BSD-style" License:
-;;;;
+;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
 ;;;;
 ;;;;   Redistribution and use in source and binary forms, with or
 ;;;;   without modification, are permitted provided that the following
 ;;;;   conditions are met:
 ;;;;
-;;;;   * Redistributions of source code must retain the above copyright
-;;;;     notice, this list of conditions and the following disclaimer.
-;;;;
+;;;;   * Redistributions of source code must retain the above
+;;;;     copyright notice, this list of conditions and the following
+;;;;     disclaimer.
 ;;;;   * Redistributions in binary form must reproduce the above
 ;;;;     copyright notice, this list of conditions and the following
-;;;;     disclaimer in the documentation and/or other materials provided
-;;;;     with the distribution.
-;;;;
+;;;;     disclaimer in the documentation and/or other materials
+;;;;     provided with the distribution.
 ;;;;   * Neither the name of copyright holder the names of its
 ;;;;     contributors may be used to endorse or promote products
 ;;;;     derived from this software without specific prior written
@@ -37,26 +35,16 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
+(progn
+  (in-package :robray)
 
-(in-package :amino)
+  ;; Look for source directory includes
+  (cc-flags #.amino::*sdl2-cflags*)
+  (include "SDL.h")
 
-(defvar *have-amino-gl* "@AMINO_GL@")
+  ;; SDL Keys
+  (cenum sdl-keycode
+         ((:f11 "SDLK_F11"))
+         ((:p "SDLK_p")))
 
-(defvar *have-fcl* "@HAVE_FCL@")
-(defvar *have-ompl* "@HAVE_OMPL@")
-
-
-(defvar *have-lpsolve* "@HAVE_LPSOLVE@")
-(defvar *have-glpk* "@HAVE_GLPK@")
-(defvar *have-clp* "@HAVE_CLP@")
-(defvar *have-cgal* "@HAVE_CGAL@")
-
-(defvar *cc* "@CC@")
-(defvar *cflags* "@CFLAGS@")
-(defvar *cppflags* "@CPPFLAGS@")
-(defvar *ldflags* "@LDFLAGS@")
-
-(defvar *sdl2-cflags* "@SDL2_CFLAGS@")
-
-(defparameter +version+ "@PACKAGE_VERSION@")
-(defparameter +bug-report+ "@PACKAGE_BUGREPORT@")
+  )

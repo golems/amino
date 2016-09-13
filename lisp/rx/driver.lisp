@@ -80,6 +80,7 @@ Written by Neil T. Dantam
            (scene-name (env "AARX_SCENE_NAME"))
            (scene-files (env-list "AARX_SCENE"))
            (config-alist (env-list "AARX_CONFIG"))
+           (render (env "AARX_RENDER"))
            (config (alist-configuration-map config-alist))
            (camera-tf (amino::tf-mzlook :eye (env-vec "AARX_CAMERA_EYE")
                                         :target (env-vec "AARX_CAMERA_LOOK")
@@ -88,7 +89,7 @@ Written by Neil T. Dantam
                           (scene-graph sg
                                        (load-scene-file name
                                                         :compile gui
-                                                        :emit-povray pov
+                                                        :emit-povray (or pov gui)
                                                         :bind-c-geom gui
                                                         :reload reload
                                                         :mesh-up-axis up-axis
@@ -117,15 +118,14 @@ Written by Neil T. Dantam
                             :options (render-options-default :width (env-integer "AARX_POV_X")
                                                              :height (env-integer "AARX_POV_Y"))
                             :output pov
-                            :include (or (env-list "AARX_POV_INCLUDE")
-                                         (merge-pathnames "default.inc"
-                                                          *robray-share-directory*))
+                            :include (env-list "AARX_POV_INCLUDE")
                             :directory nil
                             :include-directory *robray-tmp-directory*
-                            :render (env "AARX_RENDER")
+                            :render render
                             ))
       ;; Display in GUI
       (when gui
+        (setq *win-render* render)
         (win-create :title "AARXC" :stop-on-quit t)
         (win-set-scene-graph scene)
         (setf (win-tf-camera) camera-tf)
