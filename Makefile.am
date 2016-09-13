@@ -630,6 +630,8 @@ if HAVE_HELP2MAN
 doc/aarxc.1: aarxc aarx.core $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
 	$(HELP2MAN) --version-option=--version-man --no-info -n "Compile scene graphs" $(top_builddir)/aarxc -o $@
 
+dist_man_MANS = doc/aarxc.1
+
 if HAVE_GROFF
 EXTRA_DIST += doc/manual/man_aarxc.html
 doc/manual/man_aarxc.html: doc/aarxc.1

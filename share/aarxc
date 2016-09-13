@@ -56,7 +56,7 @@ while test "$1" != x-- -a "x$#" != x0; do
         -h|-\?|--help)
             cat <<EOF
 Usage: aarxc [OPTION] scene-files...
-Generate C code from scene graph files files
+Generate C and POV-ray code from scene graphs
 
 Options:
 
