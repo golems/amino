@@ -42,6 +42,7 @@
 (defparameter *robray-tmp-root* (pathname "/tmp/"))
 
 (defvar *robray-tmp-directory*)
+(defvar *robray-share-directory*)
 
 (defun robray-tmpdir ()
   (setq *robray-tmp-directory*

@@ -30,17 +30,25 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 #  OF THE POSSIBILITY OF SUCH DAMAGE.
 
-OUTPUT_FILE=aarxc.out.c
-SCENE_NAME=""
-MESH_UP_AXIS="Z"
-MESH_FORWARD_AXIS="Y"
-RELOAD="nil"
+AARX_SCENE_NAME=""
+AARX_MESH_UP_AXIS="Z"
+AARX_MESH_FORWARD_AXIS="Y"
+AARX_RELOAD="nil"
 
+export AARX_CAMERA_UP="0 0 1"
+export AARX_CAMERA_EYE="1 1 1"
+export AARX_CAMERA_LOOK="0 0 0"
+export AARX_POV_X="640"
+export AARX_POV_Y="480"
+
+parse_long() {
+    echo "$1" | cut -d = -f 2
+}
 
 AARX_MEMORY_DEFAULT="2GB"
 
 if [ -n "$AARX_RELOAD" ]; then
-    RELOAD=t
+    AARX_RELOAD=t
 fi
 
 while test "$1" != x-- -a "x$#" != x0; do
@@ -51,13 +59,30 @@ Usage: aarxc [OPTION] scene-files...
 Generate C code from scene graph files files
 
 Options:
-  -h|-?|--help,                  display this help and exit
-  -o OUTPUT-FILE                 write generated code to OUTPUT_FILE
+
+  -o OUTPUT_FILE                 write generated C code to OUTPUT_FILE
   -n SCENE_NAME                  name of the scene graph
+
+  -p POVRAY_FILE                 write generated POV-Ray code to POVRAY_FILE
+  --render                       Render the image (default: no)
+  -P POVRAY_FILE                 Same as -p and --render
+  --pov-include=INCLUDE_FILE     Include INCLUDE_FILE in povray code
+  --pov-x=PIXELS                 Image X dimension (default: $AARX_POV_X)
+  --pov-y=PIXELS                 Image Y dimension (default: $AARX_POV_Y)
+
+  --cam-up=VECTOR                Camera up vector (default: "$AARX_CAMERA_UP")
+  --cam-eye=VECTOR               Camera eye vector (default: "$AARX_CAMERA_EYE")
+  --cam-look=VECTOR              Camera look vector (default: "$AARX_CAMERA_LOOK")
+
+  --var=NAME                     Name of configuration variable to set
+  --val=VALUE                    Value of previously named configuration variable
+
   -U UP_AXIS                     up axis of mesh files
   -F FORWARD_AXIS                forward axis of mesh files
   -R                             reload files
+
   -g,--gui                       Display scene in a GUI
+  -h|-?|--help,                  display this help and exit
 
 Environment:
 
@@ -73,14 +98,17 @@ Files:
 
 Examples:
 
-  aarxc robot.urdf -o robot.c     Generate robot.c from URDF file robot.urdf
+  aarxc robot.urdf -o out.c       Generate out.c from URDF file robot.urdf
 
-  aarxc --gui robot.urdf          Render robot.urdf in the OpenGL viewer
+  aarxc --gui robot.urdf          Display robot.urdf in the OpenGL viewer
+
+  aarxc robot.urdf -P out.pov     Generate out.pov and render image out.png
 
 Report bugs to <ntd@rice.edu>"
 EOF
             exit 0
             ;;
+        # C Options
         -o)
             shift
             export AARX_OUTPUT="$1";
@@ -89,6 +117,52 @@ EOF
             shift
             export AARX_SCENE_NAME="$1";
             ;;
+
+        # Configs
+        --var=*)
+            tmp_var=`parse_long "$1"`
+            ;;
+        --val=*)
+            tmp_val=`parse_long "$1"`
+            export AARX_CONFIG="$AARX_CONFIG (\"$tmp_var\" . $tmp_val)";
+            ;;
+
+        # POV-Ray Options
+        -p)
+            shift
+            export AARX_POVRAY="$1";
+            ;;
+        --render)
+            export AARX_RENDER=1
+            ;;
+        -P)
+            shift
+            export AARX_POVRAY="$1";
+            export AARX_RENDER=1
+            ;;
+        --pov-include=*)
+            tmp=`parse_long "$1"`
+            export AARX_POV_INCLUDE="$AARX_POV_INCLUDE \"$tmp\""
+            ;;
+        --pov-x=*)
+            AARX_POV_X=`parse_long "$1"`
+            ;;
+        --pov-y=*)
+            AARX_POV_Y=`parse_long "$1"`
+            ;;
+
+        # Camera
+        --cam-up=*)
+            AARX_CAMERA_UP=`parse_long "$1"`
+            ;;
+        --cam-eye=*)
+            AARX_CAMERA_EYE=`parse_long "$1"`
+            ;;
+        --cam-look=*)
+            AARX_CAMERA_LOOK=`parse_long "$1"`
+            ;;
+
+        # Mesh Options
         -U)
             shift
             export AARX_MESH_UP_AXIS="$1";
@@ -100,6 +174,8 @@ EOF
         -R)
             export AARX_RELOAD=t
             ;;
+
+        # Control Options
         --gui|-g)
             export AARX_GUI=t
             ;;
@@ -124,8 +200,7 @@ if test -z "$AARX_MEMORY"; then
     AARX_MEMORY="$AARX_MEMORY_DEFAULT"
 fi
 
-
-
+# env | sort
 
 exec aarx.core --dynamic-space-size "$AARX_MEMORY" \
      --non-interactive \

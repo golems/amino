@@ -63,8 +63,12 @@ Written by Neil T. Dantam
   (robray-tmpdir)
   (labels ((env (name)
              (uiop/os:getenv name))
+           (env-integer (name)
+             (parse-integer (env name)))
            (env-list (name)
-             (read-from-string (concatenate 'string "(" (env name) ")"))))
+             (read-from-string (concatenate 'string "(" (env name) ")")))
+           (env-vec  (name)
+             (apply #'vec (env-list name))))
     (let* ((reload (uiop/os:getenv "AARX_RELOAD"))
            (forward-axis (or (uiop/os:getenv "AARX_MESH_FORWARD_AXIS")
                              "Y"))
@@ -72,18 +76,25 @@ Written by Neil T. Dantam
                         "Z"))
            (gui (uiop/os:getenv "AARX_GUI"))
            (output (env "AARX_OUTPUT"))
+           (pov (uiop/os:getenv "AARX_POVRAY"))
            (scene-name (env "AARX_SCENE_NAME"))
            (scene-files (env-list "AARX_SCENE"))
+           (config-alist (env-list "AARX_CONFIG"))
+           (config (alist-configuration-map config-alist))
+           (camera-tf (amino::tf-mzlook :eye (env-vec "AARX_CAMERA_EYE")
+                                        :target (env-vec "AARX_CAMERA_LOOK")
+                                        :up (env-vec "AARX_CAMERA_UP")))
            (scene (fold (lambda (sg name)
                           (scene-graph sg
                                        (load-scene-file name
                                                         :compile gui
-                                                        :emit-povray nil
+                                                        :emit-povray pov
                                                         :bind-c-geom gui
                                                         :reload reload
                                                         :mesh-up-axis up-axis
                                                         :mesh-forward-axis forward-axis)))
                         (scene-graph) scene-files)))
+
       (when (zerop (length scene-files))
         (error "No input scene files specified"))
       ;; Compile Scene
@@ -92,10 +103,28 @@ Written by Neil T. Dantam
                              output
                              :shared-object nil
                              :scene-name scene-name))
+      ;; POV-Ray
+      (when pov
+        (render-scene-graph scene
+                            :camera-tf camera-tf
+
+                            :configuration-map config
+                            :options (render-options-default :width (env-integer "AARX_POV_X")
+                                                             :height (env-integer "AARX_POV_Y"))
+                            :output pov
+                            :include (or (env-list "AARX_POV_INCLUDE")
+                                         (merge-pathnames "default.inc"
+                                                          *robray-share-directory*))
+                            :directory nil
+                            :include-directory *robray-tmp-directory*
+                            :render (env "AARX_RENDER")
+                            ))
       ;; Display in GUI
       (when gui
         (win-create :title "AARXC" :stop-on-quit t)
         (win-set-scene-graph scene)
+        (setf (win-tf-camera) camera-tf)
+        (when config-alist (win-set-config config))
         (win-run :synchronous t)))))
 
 (defun aarx-command ()

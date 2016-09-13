@@ -89,6 +89,7 @@
                              configuration-map
                              output
                              (directory *robray-tmp-directory*)
+                             (include-directory *robray-tmp-directory*)
                              include
                              include-text
                              (default-configuration 0d0))
@@ -105,9 +106,10 @@
              (include (file)
                (thing (pov-include file))))
       ;; Camera
-      (thing (pov-camera camera-tf
-                         :width (get-render-option options :width)
-                         :height (get-render-option options :height)))
+      (when camera-tf
+        (thing (pov-camera camera-tf
+                           :width (get-render-option options :width)
+                           :height (get-render-option options :height))))
       ;; push frame geometry
       (do-scene-graph-geometry ((frame geometry) scene-graph)
         ;(format t "~&converting frame: ~A" (scene-frame-name frame))
@@ -125,8 +127,12 @@
                   (error "No POVray mesh file for frame ~A" name))
                 (tree-set-insertf mesh-set pov-file))))))
       ;; Include mesh files
-      (map-tree-set nil #'include mesh-set)
+      (map-tree-set nil (lambda (mesh-file)
+                          (include (merge-pathnames mesh-file include-directory)))
+                    mesh-set)
+      ;; Include text
       (when include-text (thing include-text))
+      ;; Include other files
       (map nil #'include (reverse (ensure-list include)))
       ;; version
       (thing (pov-version "3.7")))
@@ -137,7 +143,7 @@
              (pov-render result
                          :file output
                          :directory directory
-                                :options options)
+                         :options options)
              nil)
             (output
              (output result

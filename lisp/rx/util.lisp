@@ -342,6 +342,10 @@
   (namestring (merge-pathnames (make-pathname :directory '(:relative :up))
                                (asdf:system-source-directory :amino))))
 
+(defparameter *robray-share-directory*
+  (merge-pathnames (make-pathname :directory '(:relative "share"))
+                   *robray-root*))
+
 (defparameter *robray-include*
   (namestring (merge-pathnames (make-pathname :directory '(:relative "include"))
                                *robray-root*)))

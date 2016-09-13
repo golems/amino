@@ -632,7 +632,7 @@ RATIO: Floating point quality value in the range [0,1]"
     (let ((args (cons "povray" (pov-args file
                                          :output output
                                          :options options))))
-      (princ (rope-string (rope-split " " args)))
+      (format t "~&~A~%"  (rope-string (rope-split " " args)))
       (multiple-value-bind (output status)
           (capture-program-output args :directory directory)
         (unless (zerop status)
