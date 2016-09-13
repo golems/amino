@@ -376,6 +376,8 @@ libamino_gl_la_LIBADD = $(GL_LIBS) $(SDL2_LIBS)
 
 libamino_gl_la_SOURCES += \
 	src/amino_sdl.c \
+	src/sdl_handler.c \
+	src/sdl_ui.c \
 	src/rx/sdl_win.c
 
 noinst_PROGRAMS += sdl_test

@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2016, Rice University
+ * Copyright (c) 2015, Rice University
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -35,24 +35,75 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_SDL_INTERNAL_H
-#define AMINO_RX_SCENE_SDL_INTERNAL_H
+#include "config.h"
+
+#include "amino.h"
+
+#define GL_GLEXT_PROTOTYPES
+
+#include "amino/amino_gl.h"
+#include <SDL.h>
+
+#include <pthread.h>
+
+#ifdef HAVE_SPNAV_H
+#include <spnav.h>
+#endif /*HAVE_SPNAV_H*/
 
 
-struct aa_sdl_handler {
-    struct SDL_event *event;
-    struct aa_gl_globals *gl_globals;
+#include "amino/rx/rxtype.h"
+#include "amino/rx/scene_gl.h"
+#include "amino/rx/scene_gl_internal.h"
+#include "amino/rx/scene_sdl.h"
+#include "amino/rx/scene_sdl_internal.h"
 
-    unsigned update : 1;
-    unsigned quit : 1;
-};
+int s_handle_easter( void *cx, struct aa_sdl_display_params *params )
+{
+    (void) cx;
+    (void) params;
+    printf("Happy Easter!\n");
+    return 0;
+}
 
+int s_handle_fullscreen( void *cx, struct aa_sdl_display_params *params )
+{
+    (void)cx;
+    const SDL_Event *e = aa_sdl_display_params_get_event(params);
 
-AA_API int
-aa_sdl_handle_event( const SDL_Event *event,
-                     struct aa_sdl_display_params *params);
+    SDL_Window *w = SDL_GetWindowFromID(e->key.windowID);
+    uint32_t f = SDL_GetWindowFlags(w);
+    if( (f & SDL_WINDOW_FULLSCREEN) ||
+        (f & SDL_WINDOW_FULLSCREEN_DESKTOP ) )
+    {
+        SDL_SetWindowFullscreen( w, 0 );
+    } else {
+        SDL_SetWindowFullscreen( w, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    }
+
+    return 0;
+}
+
+int s_handle_quit( void *cx, struct aa_sdl_display_params *params )
+{
+    (void)cx;
+    aa_sdl_display_params_set_quit(params);
+    return 0;
+}
+
+int s_handle_expose ( void *cx, struct aa_sdl_display_params *params )
+{
+    (void) cx;
+    aa_sdl_display_params_set_update(params);
+    return 0;
+}
+
 
 AA_API void
-aa_sdl_ui_setup();
+aa_sdl_ui_setup()
+{
+    aa_sdl_bind_key(SDLK_BACKQUOTE, s_handle_easter, NULL );
+    aa_sdl_bind_key(SDLK_F11, s_handle_fullscreen, NULL );
 
-#endif /*AMINO_RX_SCENE_SDL_INTERNAL_H*/
+    aa_sdl_bind_event(SDL_QUIT, s_handle_quit, NULL );
+
+}

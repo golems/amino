@@ -59,9 +59,12 @@
 
 
 struct aa_sdl_display_params {
+
     struct timespec time_now;
     struct timespec time_initial;
     struct timespec time_last;
+
+    SDL_Event *event;
 
     int update;
     int quit;
@@ -69,6 +72,12 @@ struct aa_sdl_display_params {
     int first;
 };
 
+
+const SDL_Event *
+aa_sdl_display_params_get_event( struct aa_sdl_display_params *params )
+{
+    return params->event;
+}
 
 const struct timespec *
 aa_sdl_display_params_get_time_now( struct aa_sdl_display_params *params )
@@ -251,6 +260,8 @@ static void sdl_init_once( void )
 #ifdef HAVE_SPNAV_H
     aa_spnav_init();
 #endif
+
+    aa_sdl_ui_setup();
 }
 
 
@@ -313,9 +324,6 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
         }
         }
         break;
-    case SDL_QUIT:
-        *quit = 1;
-        break;
     case SDL_KEYDOWN: {
         //aa_dump_mat(stdout, R_cam, 3, 3);
         double sign = 1;
@@ -324,18 +332,6 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
             //case SDLK_UP: world_E_model[AA_TF_QUTR_TZ] += .1; break;
             //case SDLK_DOWN: world_E_model[AA_TF_QUTR_TZ] -= .1; break;
 
-        case SDLK_F11: {
-            SDL_Window *w = SDL_GetWindowFromID(e->key.windowID);
-            uint32_t f = SDL_GetWindowFlags(w);
-            if( (f & SDL_WINDOW_FULLSCREEN) ||
-                (f & SDL_WINDOW_FULLSCREEN_DESKTOP ) )
-            {
-                SDL_SetWindowFullscreen( w, 0 );
-            } else {
-                SDL_SetWindowFullscreen( w, SDL_WINDOW_FULLSCREEN_DESKTOP);
-            }
-        }
-            break;
         case SDLK_KP_2: sign = -1;
         case SDLK_KP_8:
             if( ctrl ) {
@@ -498,8 +494,11 @@ AA_API void aa_sdl_display_loop(
             //printf("timeout: %d\n", timeout );
             SDL_Event e;
             int r = SDL_WaitEventTimeout( &e, timeout < 0 ? 0 : timeout );
+            params.event = &e;
             if( r ) {
-                aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
+                if( aa_sdl_handle_event( &e, &params) ) {
+                    aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
+                }
             }
         }
 

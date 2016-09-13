@@ -113,4 +113,26 @@ aa_sdl_display_params_set_update( struct aa_sdl_display_params *params );
 AA_API int
 aa_sdl_display_params_is_first( struct aa_sdl_display_params *params );
 
+
+const SDL_Event *
+aa_sdl_display_params_get_event( struct aa_sdl_display_params *params );
+
+/** An event handler.
+ *
+ * @return 0 when event is handled, non-zero otherwise.
+ */
+typedef int
+(*aa_sdl_handler_function) ( void *cx,
+                             struct aa_sdl_display_params *params);
+
+AA_API void
+aa_sdl_bind_event( SDL_EventType event_type,
+                   aa_sdl_handler_function handler,
+                   void *cx );
+
+AA_API void
+aa_sdl_bind_key( SDL_Keycode key,
+                 aa_sdl_handler_function handler,
+                 void *cx );
+
 #endif /*AMINO_RX_SCENE_SDL_H*/
