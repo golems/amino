@@ -186,6 +186,72 @@ Build Overview {#installation_build_overview}
 
         sudo make install
 
+Demo Programs {#installation_demo}
+=============
+
+The Amino distribution includes a number of demo programs.  Several of
+these demos use URDF files which must be obtained separately.
+
+Obtain URDF Files
+-----------------
+
+   * If you already have an existing ROS installation, you can install
+     the `baxter_description` ROS package, for example on ROS Indigo:
+
+            sudo apt-get install ros-indigo-baxter-description
+            export ROS_PACKAGE_PATH=/opt/ros/indigo/share
+
+   * An existing ROS installation is not necessary, however, and you
+     can install only the baxter URDF and meshes:
+
+            cd ..
+            git clone https://github.com/RethinkRobotics/baxter_common
+            export ROS_PACKAGE_PATH=`pwd`/baxter_common
+            cd amino
+
+Build Demos
+-----------
+
+1. (Re)-configure to enable demos:
+
+        ./configure --enable-demos --enable-demo-baxter
+
+   **Note:** On Mac OS X, due to dynamic loading issues, it may be
+   necessary to first
+   [build and install amino] (@ref installation_build_overview), and
+   the re-configure and re-build amino with the demos enabled.
+   Under GNU/Linux, it is generally possible to enable the demos
+   during the initial build and without installing Amino beforehand.
+
+2. Build:
+
+        make
+
+Run Demos
+---------
+
+Many demo programs may be built.  The following comand will list the built demos:
+
+    find ./demo -type f -executable \
+        -not  -name '*.so' \
+        -not -path '*.libs*'
+
+The `simple-scenefile` demo will lauch the @ref gui with a simple
+scene compiled from a scene file.
+
+    ./demo/simple-rx/simple-scenefile
+
+Several demos using the Baxter model show various features.  Each can
+be invoked without arguments.
+
+* `./demo/urdf/baxter/baxter-view` displays the baxter via dynamic loading
+* `./demo/urdf/baxter/baxter-simple` via static linking
+* `./demo/urdf/baxter/baxter-wksp` moves the baxter arm in workspace
+* `./demo/urdf/baxter/baxter-collision` performs collision checking
+* `./demo/urdf/baxter/baxter-ik` computes an inverse kinematics solution
+* `./demo/urdf/baxter/baxter-ompl` computes a motion plan
+* `./demo/urdf/baxter/baxter-ompl-workspace` computes a motion plan to a workspace goal
+* `./demo/urdf/baxter/baxter-ompl-sequence` computes a sequence of motion plans
 
 *******************************************************************
 
