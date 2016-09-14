@@ -46,6 +46,7 @@ Other
 |------| ---------------------------- |
 | F11  | Toggle Fullscreen            |
 | c    | Copy Camera Pose to clipboard (see [struct aa_tf_qv](@ref aa_tf_qv)) |
+| p    | Raytrace the current frame (only when run in the @ref scenecompiler) |
 
 See Also
 ========

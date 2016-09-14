@@ -156,8 +156,32 @@ installation, and call `aarxc`.  For example, to compile the URDF for
 the Baxter robot:
 
     export ROS_PACKAGE_PATH=/opt/ros/indigo/share/
-    aarxc 'package://baxter_description/urdf/baxter.urdf' -o baxter-model.c -n baxter
+    aarxc package://baxter_description/urdf/baxter.urdf -o baxter-model.c -n baxter
 
+Visualization {#scenecompiler_visualization}
+=============
+
+When given the `--gui option`, the scene compiler will launch the @ref
+viewer.
+
+    aarxc --gui package://baxter_description/urdf/baxter.urdf
+
+You can set joint positions using the `--var` and `--val` options.
+The `--list-vars` option will display the names of all configuration
+variables.
+
+    aarxc --list-vars package://baxter_description/urdf/baxter.urdf
+    aarxc --gui  package://baxter_description/urdf/baxter.urdf \
+        --var=right_s1 --val=-.5 \
+        --var=right_e1 --val=1
+
+In addition to the @ref viewer, you can also create raytraced images
+using POV-Ray:
+
+    aarxc package://baxter_description/urdf/baxter.urdf \
+        -p scene.pov --render \
+        --cam-eye="2 2 1.75" \
+        --cam-look="0 0 .5"
 
 Options Summary {#scenecompiler_opts}
 ===============
