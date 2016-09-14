@@ -45,20 +45,17 @@
 ;;            *urdf-package-alist* :test #'equal))
 
 (defun urdf-resolve-file (filename) ; &optional (package-alist *urdf-package-alist*))
-  (if-let ((match (ppcre:scan "^package://" filename))
-           (package (ppcre:regex-replace "^package://([^/]*)/.*"
-                                       filename
-                                       "\\1")))
-    (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH")))
+  (if (ppcre:scan "^package://" filename)
+    (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH"))
+          (suffix (pathname (ppcre:regex-replace "^package://+" filename ""))))
       (loop for path in (ppcre:split ":" ros-package-path)
-         for package-directory = (concatenate 'string path "/" package)
+         for package-directory = (concatenate 'string path "/")
+         for candidate = (merge-pathnames suffix package-directory)
          do
-           (when (probe-file package-directory)
-             (return-from urdf-resolve-file
-               (ppcre:regex-replace "^package://([^/]*)"
-                                    filename
-                                    package-directory))))
-      (error "Package '~A' not found for ROS_PACKAGE_PATH='~A'" package ros-package-path))
+           (when (probe-file candidate)
+             (return-from urdf-resolve-file (namestring candidate))))
+      (error "'~A' not found for ROS_PACKAGE_PATH='~A'" filename ros-package-path))
+    ;; Not a package URL
     filename))
 
 
