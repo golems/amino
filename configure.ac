@@ -732,7 +732,8 @@ AC_CONFIG_FILES([ Makefile
                   share/amino-gl.pc
                   share/amino-collision.pc
                   share/amino-planning.pc
-                  lisp/config.lisp])
+                  lisp/config.lisp
+                  Doxyfile])
 
 AC_DEFUN([CONFIG_SCRIPT],
          [AC_CONFIG_FILES([$1],

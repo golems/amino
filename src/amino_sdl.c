@@ -41,7 +41,7 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include "amino/amino_gl.h"
+#include <SDL_opengl.h>
 #include <SDL.h>
 
 #include <pthread.h>
@@ -292,7 +292,7 @@ static void scroll( double x, double y,
 }
 
 void aa_sdl_scroll_event( struct aa_gl_globals * globals,
-                          int *update, int *quit,
+                          int *update,
                           const SDL_Event *e)
 {
     const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -497,7 +497,7 @@ AA_API void aa_sdl_display_loop(
             params.event = &e;
             if( r ) {
                 if( aa_sdl_handle_event( &e, &params) ) {
-                    aa_sdl_scroll_event(globals, &params.update, &params.quit, &e);
+                    aa_sdl_scroll_event(globals, &params.update, &e);
                 }
             }
         }

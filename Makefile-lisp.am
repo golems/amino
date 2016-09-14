@@ -27,6 +27,7 @@ aarx_core_SOURCES = \
 	lisp/tf-op.lisp \
 	lisp/rx/robray-package.lisp \
 	lisp/rx/rx-grovel.lisp \
+	lisp/rx/sdl-grovel.lisp \
 	lisp/rx/rx-lib.lisp \
 	lisp/rx/rx-type.lisp \
 	lisp/rx/geom-bind.lisp \
@@ -58,6 +59,8 @@ aarx_core_SOURCES = \
 	lisp/rx/config.lisp \
 	lisp/rx/driver.lisp \
 	lisp/rx/sg-gen.lisp \
+	lisp/rx/sg-rope.lisp \
+	lisp/libdir.lisp \
 	lisp/amino-rx.asd \
 	lisp/amino-opt.asd \
 	lisp/amino.asd

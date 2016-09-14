@@ -42,9 +42,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <getopt.h>
-#include "amino/amino_gl.h"
 
 #include <SDL.h>
+#include <SDL_opengl.h>
 #include <pthread.h>
 #include <unistd.h>
 

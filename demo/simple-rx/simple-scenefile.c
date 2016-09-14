@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <getopt.h>
-#include "amino/amino_gl.h"
+#include <SDL_opengl.h>
 #include <SDL.h>
 
 

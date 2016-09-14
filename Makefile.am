@@ -127,10 +127,12 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/scene_gl.h     \
+	include/amino/rx/scene_sub.h    \
 	include/amino/rx/scene_kin.h    \
 	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/ompl/scene_state_space.h \
 	include/amino/rx/ompl/scene_state_validity_checker.h \
+	include/amino/rx/ompl/scene_workspace_goal.h \
 	include/amino/rx/ompl/scene_ompl.h \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_planning.h \
@@ -320,7 +322,8 @@ dist_vimftdetect_DATA = share/vim/ftdetect/robray.vim
 JSOURCES =                                        \
 	$(top_srcdir)/java/Lib.java
 
-EXTRA_DIST += $(JSOURCES) doc/javadoc
+EXTRA_DIST += $(JSOURCES)
+# EXTRA_DIST += doc/javadoc
 
 if HAVE_JAVAC
 
@@ -593,10 +596,11 @@ clean-local:
                 doc/.javadoc.stamp          \
                 org.golems.amino.jar        \
                 org_golems_amino_Lib.h      \
-                org/golems/amino/Lib.class
+                org/golems/amino/Lib.class  \
+                doc/md/copying.md
 
 distclean-local:
-	-rm -rf doxygen-doc
+	-rm -rf doc/manual doc/aarxc.1 doc/doxygen_sqlite3.db
 
 sync-doc:
 	rsync -r doc/manual/ code.golems.org:/srv/www/amino.golems.org
@@ -608,6 +612,20 @@ doc/md/copying.md: $(top_srcdir)/COPYING
 	    $(top_srcdir)/COPYING \
 	    > doc/md/copying.md
 
+
+EXTRA_DIST += \
+	doc/md/copying.md.header \
+	doc/md/faq.md \
+	doc/md/Installation.md \
+	doc/md/mainpage.md \
+	doc/md/scenecompiler.md \
+	doc/md/gui.md \
+	doc/md/License.md \
+	doc/md/ReadMe.md \
+	doc/md/scenefile.md \
+	doc/footer.html \
+	doc/carousel.html
+
 if HAVE_DOXYGEN
 
 doxygen: doc/md/copying.md
@@ -617,7 +635,7 @@ doc/manual: doxygen
 
 doc: doxygen
 	$(MKDIR_P) doc/manual/doc
-	cp doc/logo-medium.png doc/manual/doc
+	cp $(top_srcdir)/doc/logo-medium.png doc/manual/doc
 
 else
 
@@ -630,6 +648,7 @@ endif
 
 if HAVE_HELP2MAN
 doc/aarxc.1: aarxc aarx.core $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
+	$(MKDIR_P) doc
 	$(HELP2MAN) --version-option=--version-man --no-info -n "Compile scene graphs" $(top_builddir)/aarxc -o $@
 
 dist_man_MANS = doc/aarxc.1

@@ -92,7 +92,6 @@ void aneq( double a, double b, double tol ) {
 void aa_test_ulimit( void ) {
     // some limits because
     {
-        int r;
         struct rlimit lim;
         // address space
         lim.rlim_cur = (1<<30);
