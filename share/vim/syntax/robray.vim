@@ -30,12 +30,12 @@
 "   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 "   POSSIBILITY OF SUCH DAMAGE.
 
-syn keyword robrayFrameAttribute parent translation quaternion rpy type axis offset
-syn keyword robrayGeomAttribute shape color alpha specular dimension radius height start_radius end_radius delta thickness isa scale
+syn keyword robrayFrameAttribute parent translation quaternion rpy type axis offset variable
+syn keyword robrayGeomAttribute shape mesh color alpha specular dimension radius height start_radius end_radius delta thickness isa scale visual collision
 syn keyword robrayKeyword frame class geometry allow_collision
 syn keyword robrayInclude include
 syn keyword robrayDef     def
-syn keyword robrayShape mesh grid box cone cylinder sphere
+syn keyword robrayShape grid box cone cylinder sphere
 syn keyword robrayJoint fixed prismatic revolute
 syn keyword robrayPi pi
 
@@ -54,7 +54,7 @@ syn match       robrayFloat          "\.\d\+\([eds][-+]\=\d\+\)\=[fl]\=\>"
 syn match       robrayFloat          "\d\+[eds][-+]\=\d\+[fl]\=\>"
 
 
-syn match       robrayId          "[a-zA-Z][a-zA-Z0-9_]\+"
+syn match       robrayId          "[a-zA-Z][a-zA-Z0-9_\-]\+"
 
 hi def link robrayLineComment   comment
 hi def link robrayBlockComment   comment
@@ -72,4 +72,3 @@ hi def link robrayString      string
 hi def link robrayFloat       float
 
 hi def link robrayId          identifier
-

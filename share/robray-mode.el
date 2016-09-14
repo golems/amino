@@ -17,7 +17,7 @@
 
 (setq robray-font-lock-keywords
       (list
-       '("\\<\\(frame\\)\\>\\s-+\\(\\sw+\\)?"
+       '("\\<\\(frame\\)\\>\\s-+\\([[:alnum:]][[:alnum:]_\\-]+\\)?"
          (1 font-lock-keyword-face) (2 font-lock-variable-name-face nil t))
        '("\\<\\(parent\\)\\>\\s-+\\(\\sw+\\)?"
          (1 font-lock-type-face) (2 font-lock-variable-name-face nil t))
@@ -31,9 +31,9 @@
              'font-lock-keyword-face)
        (cons (regexp-opt '("translation" "quaternion" "rpy" "shape" "color" "alpha" "specular"
                            "dimension" "radius" "height" "start_radius" "end_radius" "delta" "thickness" "affords"
-                           "type" "axis" "offset" "scale") 'words)
+                           "type" "axis" "offset" "scale" "visual" "collision" "variable" "mesh") 'words)
              'font-lock-type-face)
-       (cons (regexp-opt '("mesh" "grid" "box" "cone" "cylinder" "sphere"
+       (cons (regexp-opt '("grid" "box" "cone" "cylinder" "sphere"
                            "fixed" "prismatic" "revolute" "π" "pi" "deg")
                          'words)
              'font-lock-constant-face)))

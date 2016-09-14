@@ -109,6 +109,12 @@ Written by Neil T. Dantam
                              output
                              :shared-object nil
                              :scene-name scene-name))
+
+      ;; Scene File
+      (when-let ((scene-out (env "AARX_SCENE_OUT")))
+        (output-rope (rope scene)
+                     (pathname scene-out)
+                     :if-exists :supersede))
       ;; POV-Ray
       (when pov
         (render-scene-graph scene

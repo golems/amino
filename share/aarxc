@@ -63,6 +63,8 @@ Options:
   -o OUTPUT_FILE                 write generated C code to OUTPUT_FILE
   -n SCENE_NAME                  name of the scene graph
 
+  -s SCENE_FILE                  write loaded scene graph to SCENE_FILE
+
   -p POVRAY_FILE                 write generated POV-Ray code to POVRAY_FILE
   --render                       Render the image (default: no)
   -P POVRAY_FILE                 Same as -p and --render
@@ -79,7 +81,7 @@ Options:
 
   -U UP_AXIS                     up axis of mesh files
   -F FORWARD_AXIS                forward axis of mesh files
-  -R                             reload files
+  -R|--reload                    reload files
 
   -g,--gui                       Display scene in a GUI
   --list-frames                  List all frames in the scene graph
@@ -107,6 +109,8 @@ Examples:
 
   aarxc robot.urdf -P out.pov     Generate out.pov and render image out.png
 
+  aarxc robot.urdf -s out.robray  Convert URDF to scene file out.robray
+
 Report bugs to <ntd@rice.edu>"
 EOF
             exit 0
@@ -119,6 +123,11 @@ EOF
         -n)
             shift
             export AARX_SCENE_NAME="$1";
+            ;;
+
+        -s)
+            shift
+            export AARX_SCENE_OUT="$1";
             ;;
 
         # Configs
@@ -174,7 +183,7 @@ EOF
             shift
             export AARX_MESH_FORWARD_AXIS="$1";
             ;;
-        -R)
+        -R|--reload)
             export AARX_RELOAD=t
             ;;
 

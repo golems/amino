@@ -281,7 +281,7 @@ Terminals {#scenefile_terminals}
 
 | Description           | Terminal Symbol | Examples            | Regular Expression |
 |-----------------------|-----------------|---------------------|--------------------|
-| Identifier            |            <ID> | foo, foo_bar, bif42 | [a-zA-Z][a-zA-Z0-9_] |
+| Identifier            |            <ID> | foo, foo_bar, bif42 | [a-zA-Z][a-zA-Z0-9_\\-] |
 | Integer               |           <INT> | 1, 42               |-?[0-9]+ |
 | Floating Point Number |         <FLOAT> | 3.14159, 1e-2       | -?[0-9]+((\\\.[0-9]*)?([eds]-?[0-9]+)? |
 | Binary Operator       |         <BINOP> | +, -, \*, /         | [\\+\\-\\*/] |

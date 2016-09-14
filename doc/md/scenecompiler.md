@@ -158,6 +158,11 @@ the Baxter robot:
     export ROS_PACKAGE_PATH=/opt/ros/indigo/share/
     aarxc package://baxter_description/urdf/baxter.urdf -o baxter-model.c -n baxter
 
+The scene compiler can also convert URDF to its human-readable
+scene file syntax:
+
+    aarxc package://baxter_description/urdf/baxter.urdf -s baxter.robray
+
 Visualization {#scenecompiler_visualization}
 =============
 

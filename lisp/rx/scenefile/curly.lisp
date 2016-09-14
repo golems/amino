@@ -102,7 +102,7 @@
               (values (/ pi 180d0) :float end)))
     ;("isa(?!\\w)" :isa)
     ;; identifiers
-    ("[a-zA-Z][a-zA-Z0-9_]*"
+    ("[a-zA-Z][a-zA-Z0-9_\\-]*"
      ,(lambda (string start end)
               (values (subseq string start end) :identifier end)))
 
@@ -379,6 +379,10 @@
                (assert (= 2 (length stmt)))
                (acons (first stmt) (curly-eval defs (second stmt))
                       properties))
+             (add-prop-bool (properties stmt)
+               (assert (= 2 (length stmt)))
+               (acons (first stmt) (not (zerop (curly-eval defs (second stmt))))
+                      properties))
              (get-prop (properties key &optional default)
                (let ((assoc (assoc key properties :test #'equal)))
                  (if assoc (cdr assoc) default)))
@@ -434,6 +438,8 @@
                                "type" "axis" "offset" "parent"
                                "shape" "dimension" "delta" "thickness" "color" "alpha" "specular")
                               (setq properties (add-prop properties stmt)))
+                             (("visual" "collision")
+                              (setq properties (add-prop-bool properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
                               (push (get-class stmt) parent-classes))
@@ -451,7 +457,7 @@
                    (etypecase stmt
                      (null)
                      (cons (string-case (car stmt)
-                             (("axis" "quaternion" "rpy" "translation" "type" "offset")
+                             (("axis" "quaternion" "rpy" "translation" "type" "offset" "variable")
                               (setq properties
                                     (add-prop properties stmt)))
                              ("parent"
@@ -480,8 +486,10 @@
                                               (otherwise (error "Unhandled frame type ~A in frame ~A"
                                                                 frame-type name)))
                                             parent name
+                                            :configuration-name (or (get-prop properties "variable")
+                                                                    name)
                                             :axis axis
-                                            :offset offset
+                                            :configuration-offset offset
                                             :tf tf)))))
                  (push frame frames)))
              (add-geom (cb parent)
@@ -494,6 +502,8 @@
                              (("shape" "color" "alpha" "specular" "mesh"
                                        "dimension" "delta" "thickness" "radius" "height" "start-radius" "end-radius" "scale")
                               (setq properties (add-prop properties stmt)))
+                             (("visual" "collision")
+                              (setq properties (add-prop-bool properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
                               (push (get-class stmt) classes))
@@ -509,11 +519,14 @@
                  (when list
                    (apply #'tree-set #'string-compare list))))
              (property-options (properties)
-               (loop
-                  for name in '("color" "alpha" "scale" "specular")
-                  for kw in   '(:color  :alpha :scale :specular)
-                  for value = (get-prop properties name)
-                  when value collect (cons kw value)))
+               (list*
+                (cons :visual (get-prop properties "visual" t))
+                (cons :collision (get-prop properties "collision" t))
+                (loop
+                   for name in '("color" "alpha" "scale" "specular")
+                   for kw in   '(:color  :alpha :scale :specular)
+                   for value = (get-prop properties name)
+                   when value collect (cons kw value))))
              (insert-geom (properties parent)
                (let* ((shape-prop (get-prop properties "shape"))
                       (mesh-prop (get-prop properties "mesh"))
@@ -523,6 +536,8 @@
                          (shape-prop (string-case shape-prop
                                        ("box"
                                         (scene-geometry-box options (get-prop properties "dimension")))
+                                       ("sphere"
+                                        (scene-geometry-sphere options (get-prop properties "radius")))
                                        ("grid"
                                         (scene-geometry-grid options
                                                              :dimension (get-prop properties "dimension")
