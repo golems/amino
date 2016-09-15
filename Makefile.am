@@ -34,12 +34,12 @@ EXTRA_DIST += \
 	share/exec/povremote
 
 noinst_HEADERS = \
-             src/wavefront/wavefront_internal.h \
              src/opt/opt_internal.h \
              src/tf/quat_ord.c \
              src/tf/quat_duqu.c \
              src/tf/quat_qutr.c \
              src/rx/sg_convenience.h \
+             include/wavefront_internal.h \
              include/amino/ct/traj_internal.hpp \
              include/amino_internal.h \
              include/amino/rx/scene_kin_internal.h \

@@ -1,0 +1,45 @@
+sudo: required
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: gcc
+#addons:
+#  apt:
+#    packages:
+#      - gfortran
+#      - autoconf
+#      - automake
+#      - autoconf-archive
+#      - autotools-dev \
+#      - maxima
+#      - libblas-dev
+#      - liblapack-dev \
+#      - libglew-dev
+#      - libsdl2-dev
+#      - libfcl-dev
+#      - libompl-dev
+#      - flex
+#      - coinor-libclp-dev
+#      - libglpk-dev
+#      - liblpsolve55-dev
+
+
+#before_install:
+  #- sudo docker pull ubuntu:xenial
+  #- docker ps -a
+
+install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      ./install-apt.sh;
+    fi;
+
+script:
+  - autoreconf -i
+  - mkdir build
+  - cd build
+  - ../configure --without-fcl --without-ompl --without-lisp
+  - make -j4
+  - make check
