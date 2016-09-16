@@ -92,8 +92,8 @@ link using GCC:
 
     PKG_CONFIG_MODULES="amino amino-gl sdl2 glew"
     CFLAGS="$CFLAGS `pkg-config --cflags $PKG_CONFIG_MODULES`"
-    LDFLAGS="$LDLAGS `pkg-config --libs $PKG_CONFIG_MODULES`"
-    gcc $CFLAGS $LDFLAGS table.c MY_OTHER_SOURCE_FILES -o MY_PROGRAM
+    LIBS="$LDLAGS `pkg-config --libs $PKG_CONFIG_MODULES`"
+    gcc $CFLAGS $LIBS table.c MY_OTHER_SOURCE_FILES -o MY_PROGRAM
 
 (Of course, you would typically use a build automation tool such as
 Make, the Autotools, or CMake.)

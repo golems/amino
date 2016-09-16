@@ -104,8 +104,8 @@ Performance {#faq_performance}
 * Q: How do I make it faster?
 
   - A: Numerical code often benefits from newer CPU instructions. Try
-    compiling amino with -march=native either via CFLAGS="-O2
-    -march=native ./configure or adding the equivalent to your
+    compiling amino with -march=native either via `./configure
+    CFLAGS="-O2 -march=native"` or adding the equivalent to your
     Autoconf site defaults file (config.site).
 
   - A: An optimized BLAS library will also help some
@@ -116,7 +116,7 @@ Performance {#faq_performance}
 
     - A: (**Debian and Ubuntu**) Typically, the package manager will
       select the fastest installed BLAS/LAPACK implementation which is
-      probably openblas:
+      probably OpenBLAS:
 
             sudo apt-get install libopenblas-dev
 
@@ -128,15 +128,15 @@ Performance {#faq_performance}
             sudo update-alternatives --config libblas.so
 
     - A: (**Mac OS X**) Disable the Accelerate framework and specify
-      the desired BLAS/LAPACK libraries via LDFLAGS. For example,
-      to use openblas:
+      the desired BLAS/LAPACK libraries via LIBS. For example, to use
+      OpenBLAS:
 
-            ./configure --without-accelerate-framework LDFLAGS="-lopenblas"
+            ./configure --without-accelerate-framework LIBS="-lopenblas"
 
     - A: (**General**) Specify the desired BLAS/LAPACK libraries via
-      LDFLAGS.  For example, to use openblas:
+      LIBS.  For example, to use openblas:
 
-            ./configure LDFLAGS="-lopenblas"
+            ./configure LIBS="-lopenblas"
 
 * Q: Why is the scene graph (aarxc) compiler slow?
 
