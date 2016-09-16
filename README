@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/golems/amino.svg?branch=master)](https://travis-ci.org/golems/amino)
+
 ![Amino Logo](doc/logo-medium.png)
 
 Amino is library of basic utilities for robotics software.  It covers
