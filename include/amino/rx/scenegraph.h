@@ -447,11 +447,21 @@ AA_API void aa_rx_sg_rel_tf (
   size_t ld_abs,
   double * from_tf_to);
 
-AA_API void aa_rx_sg_reparent (
-                               const struct aa_rx_sg *scene_graph,
-                               const aa_rx_frame_id frame,
-                               const aa_rx_frame_id new_parent,
-                               const double * q);
+/**
+ * Change the parent of frame in the scenegraph.
+ */
+AA_API void aa_rx_sg_reparent_id ( const struct aa_rx_sg *scene_graph,
+                                   aa_rx_frame_id new_parent,
+                                   aa_rx_frame_id frame,
+                                   const double *E1);
+
+/**
+ * Change the parent of frame in the scenegraph.
+ */
+AA_API void aa_rx_sg_reparent_name ( const struct aa_rx_sg *scene_graph,
+                                     const char *new_parent,
+                                     const char *frame,
+                                     const double *E1);
 
 AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig);
 

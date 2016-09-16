@@ -536,22 +536,30 @@ AA_API void aa_rx_sg_rel_tf (
     }
 }
 
-AA_API void aa_rx_sg_reparent (const struct aa_rx_sg *scene_graph,
-                               const aa_rx_frame_id frame,
-                               const aa_rx_frame_id new_parent,
-                               const double * E1)
+AA_API void aa_rx_sg_reparent_id (const struct aa_rx_sg *scene_graph,
+                                  aa_rx_frame_id new_parent,
+                                  aa_rx_frame_id frame,
+                                  const double * E1)
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
+    aa_rx_sg_reparent_name( scene_graph,
+                            aa_rx_sg_frame_name(scene_graph, new_parent),
+                            aa_rx_sg_frame_name(scene_graph, frame),
+                            E1 );
+}
 
-    const char *parent_name;
-    if ( AA_RX_FRAME_ROOT == new_parent ) {
-        scene_graph->sg->frames[(size_t)frame]->parent = "";
-    } else {
-        scene_graph->sg->frames[(size_t)frame]->parent = scene_graph->sg->frames[(size_t)new_parent]->name;
-    }
+AA_API void aa_rx_sg_reparent_name (const struct aa_rx_sg *scene_graph,
+                                    const char *new_parent,
+                                    const char *frame,
+                                    const double * E1)
+{
+    amino::SceneFrame *f = scene_graph->sg->frame_map[frame];
 
+    f->parent = ( (NULL == new_parent || '\0' == new_parent[0])
+                  ? ""
+                  : new_parent );
 
-    AA_MEM_CPY(scene_graph->sg->frames[(size_t)frame]->E, E1, 7);
+    AA_MEM_CPY(f->E, E1, 7);
+
     scene_graph->sg->dirty_indices = 1;
 }
 
@@ -626,7 +634,7 @@ AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
 
 AA_API void
 aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph,
-                        aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed )
+                          aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed )
 {
     aa_rx_sg_allow_collision_name(scene_graph,
                                   aa_rx_sg_frame_name(scene_graph, id0),
