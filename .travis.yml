@@ -38,8 +38,5 @@ install:
 
 script:
   - autoreconf -i
-  - mkdir build
-  - cd build
-  - ../configure --without-fcl --without-ompl --without-lisp
-  - make -j4
-  - make check
+  - ./configure --without-fcl --without-ompl --without-common-lisp
+  - make -kj4 distcheck

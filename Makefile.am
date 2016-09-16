@@ -646,23 +646,5 @@ endif
 
 
 
-if HAVE_HELP2MAN
-doc/aarxc.1: aarxc aarx.core $(top_srcdir)/share/aarxc $(top_srcdir)/configure.ac
-	$(MKDIR_P) doc
-	$(HELP2MAN) --version-option=--version-man --no-info -n "Compile scene graphs" $(top_builddir)/aarxc -o $@
-
-dist_man_MANS = doc/aarxc.1
-
-if HAVE_GROFF
-EXTRA_DIST += doc/manual/man_aarxc.html
-doc/manual/man_aarxc.html: doc/aarxc.1
-	$(MKDIR_P) doc/manual
-	$(GROFF) -mandoc -Thtml < doc/aarxc.1 > doc/manual/man_aarxc.html
-
-doxygen: doc/manual/man_aarxc.html
-
-endif
-
-endif
 
 EXTRA_DIST += doc/manual
