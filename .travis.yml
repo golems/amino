@@ -1,4 +1,9 @@
-sudo: required
+#cache:
+#  apt: true
+#  directories:
+#    - /usr/local
+
+language: cpp
 
 matrix:
   include:
@@ -6,6 +11,32 @@ matrix:
       dist: trusty
       sudo: required
       compiler: gcc
+    - os: osx
+      compiler: clang
+      env: CPPFLAGS=-I/usr/local/opt/openblas/include
+
+install:
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      ./install-apt.sh;
+    fi;
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+       brew update;
+       brew unlink libtool;
+       brew install autoconf-archive homebrew/science/openblas homebrew/science/maxima sdl2 libtool;
+    fi
+
+script:
+  - autoreconf -i
+  - ./configure --without-ompl --without-common-lisp;
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+       make -kj4 distcheck;
+    fi;
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+       make -kj4 && make check;
+    fi
+
+
+
 #addons:
 #  apt:
 #    packages:
@@ -31,12 +62,3 @@ matrix:
   #- sudo docker pull ubuntu:xenial
   #- docker ps -a
 
-install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-      ./install-apt.sh;
-    fi;
-
-script:
-  - autoreconf -i
-  - ./configure --without-ompl --without-common-lisp
-  - make -kj4 distcheck
