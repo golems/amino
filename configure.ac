@@ -423,14 +423,18 @@ AM_CONDITIONAL([AMINO_GL], [test "x$AMINO_GL" = xyes])
 AC_ARG_WITH([fcl],
             [AS_HELP_STRING([--without-fcl], [Disable support for the Flexible Collision Library (FCL)])],
             [],
-            [with_fcl=yes])
+            [with_fcl=auto])
 
 HAVE_FCL=disabled
-AS_IF([test "x$with_fcl" = xyes], [
+AS_IF([test "x$with_fcl" != xno], [
   PKG_CHECK_MODULES([FCL],
                     [fcl],
-                    [HAVE_FCL=yes])
+                    [HAVE_FCL=yes],
+                    [HAVE_FCL=no])
 ])
+
+AS_IF([test "x$with_fcl" = xyes -a "x$HAVE_FCL" != xyes],
+      [AC_MSG_ERROR([FCL not found])])
 
 # FCL pointer type
 AS_IF([test "x$HAVE_FCL" = xyes],
@@ -479,9 +483,12 @@ AC_DEFUN([FCL_LINK],
            ])
          ])
 
+AS_IF([test "x$HAVE_FCL" = xyes],
+[
 FCL_LINK([])
 FCL_LINK([-lboost_system])
 FCL_LINK([-lboost_system-mt])
+])
 
 AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])
@@ -493,17 +500,23 @@ AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
 AC_ARG_WITH([ompl],
             [AS_HELP_STRING([--without-ompl], [Disable support for the Open Motion Planning Library (OMPL)])],
             [],
-            [with_ompl="$with_fcl"])
+            [with_ompl="auto"])
 
 HAVE_OMPL=disabled
-AS_IF([test "x$with_ompl" = xyes], [
-  AS_IF([test "x$HAVE_FCL" != xyes], [
-    AC_MSG_ERROR([OMPL support requires FCL, but FCL not found])
-  ])
+AS_IF([test "x$with_ompl" != xno], [
   PKG_CHECK_MODULES([OMPL],
                     [ompl >= 1.2.1],
-                    [HAVE_OMPL=yes])
+                    [HAVE_OMPL=yes],
+                    [HAVE_OMPL=no])
 ])
+
+
+
+AS_IF([test "x$with_ompl" = xyes -a "x$HAVE_OMPL" != xyes],
+      [AC_MSG_ERROR([OMPL not found])])
+
+AS_IF([test "x$HAVE_OMPL" = xyes -a "x$HAVE_FCL" != xyes],
+      [AC_MSG_ERROR([OMPL support requires FCL])])
 
 AC_SUBST([OMPL_CFLAGS])
 AC_SUBST([OMPL_LIBS])
@@ -618,7 +631,8 @@ AM_CONDITIONAL([HAVE_CGAL], [test "x$with_cgal" = xyes])
 AC_ARG_WITH([common-lisp],
             [AS_HELP_STRING([--with-common-lisp=LISP], [Set the lisp system to use, or set to 'no' to disable])],
             [],
-            [with_common_lisp="$with_ompl"])
+            [with_common_lisp="auto"])
+
 AS_IF([test "x$COMMON_LISP" = x -a "x$with_common_lisp" != xno], [
 AC_CHECK_PROGS([COMMON_LISP], [sbcl])
 
@@ -633,14 +647,20 @@ AC_DEFUN([CL_CHECK_SYSTEM],
 AC_DEFUN([CL_CHECK_SYSTEM_ERROR],
          [CL_CHECK_SYSTEM([$1],[],[AC_MSG_ERROR([$1 not found])])])
 
-CL_CHECK_SYSTEM([quicklisp],[],
+CL_CHECK_SYSTEM([quicklisp],
+                [HAVE_QUICKLISP=yes],
                 [AC_MSG_WARN([Quicklisp not found: Common Lisp dependencies may not load])])
-CL_CHECK_SYSTEM_ERROR([alexandria])
-CL_CHECK_SYSTEM_ERROR([cffi])
-CL_CHECK_SYSTEM_ERROR([cffi-grovel])
-CL_CHECK_SYSTEM_ERROR([cxml])
-CL_CHECK_SYSTEM_ERROR([cl-ppcre])
-CL_CHECK_SYSTEM_ERROR([sycamore])
+dnl CL_CHECK_SYSTEM_ERROR([alexandria])
+dnl CL_CHECK_SYSTEM_ERROR([cffi])
+dnl CL_CHECK_SYSTEM_ERROR([cffi-grovel])
+dnl CL_CHECK_SYSTEM_ERROR([cxml])
+dnl CL_CHECK_SYSTEM_ERROR([cl-ppcre])
+dnl CL_CHECK_SYSTEM_ERROR([sycamore])
+
+AS_IF([test "x$HAVE_QUICKLISP" != xyes -a "x$with_common_lisp=auto"],
+      [COMMON_LISP=""
+       AC_MSG_NOTICE([Disabling common lisp support.])])
+
 ])
 
 AC_SUBST([COMMON_LISP])

@@ -38,5 +38,5 @@ install:
 
 script:
   - autoreconf -i
-  - ./configure --without-fcl --without-ompl --without-common-lisp
+  - ./configure --without-ompl --without-common-lisp
   - make -kj4 distcheck
