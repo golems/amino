@@ -460,9 +460,9 @@ AC_DEFUN([FCL_LINK],
              AC_LANG([C++])
              AC_MSG_CHECKING([FCL extra libs "$1"])
              CXXFLAGS_SAVED="$CXXFLAGS"
-             LDFLAGS_SAVED="$LDFLAGS"
+             LIBS_SAVED="$LIBS"
 
-             LDFLAGS="$LDFLAGS $FCL_LIBS $1"
+             LIBS="$1 $FCL_LIBS $LIBS"
              CXXFLAGS="$CXXFLAGS $FCL_CFLAGS"
 
              AC_LINK_IFELSE(
@@ -479,7 +479,7 @@ AC_DEFUN([FCL_LINK],
                [AC_MSG_RESULT([no])])
 
              CXXFLAGS="$CXXFLAGS_SAVED"
-             LDFLAGS="$LDFLAGS_SAVED"
+             LIBS="$LIBS_SAVED"
            ])
          ])
 
@@ -488,6 +488,10 @@ AS_IF([test "x$HAVE_FCL" = xyes],
 FCL_LINK([])
 FCL_LINK([-lboost_system])
 FCL_LINK([-lboost_system-mt])
+
+AS_IF([test "x$FCL_LINKED" != xyes],
+      [AC_MSG_ERROR([Could not link against FCL])])
+
 ])
 
 AC_SUBST([FCL_CFLAGS])
