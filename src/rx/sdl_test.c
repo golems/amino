@@ -38,8 +38,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <SDL_opengl.h>
-#include <SDL.h>
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"

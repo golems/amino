@@ -43,7 +43,9 @@
  * @brief SDL (Simple DirectMedia Layer) support
  */
 
+#include <SDL.h>
 
+struct aa_gl_globals;
 
 /**
  * Initialize SDL library and options.

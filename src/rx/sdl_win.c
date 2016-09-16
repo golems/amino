@@ -41,8 +41,6 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <SDL_opengl.h>
-#include <SDL.h>
 
 #ifdef HAVE_SPNAV_H
 #include <spnav.h>
@@ -52,10 +50,10 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl.h"
-#include "amino/rx/scene_sdl_internal.h"
 #include "amino/rx/scene_win.h"
+#include "amino/rx/scene_gl_internal.h"
+#include "amino/rx/scene_sdl_internal.h"
 #include "amino/rx/mp_seq.h"
 
 #include <pthread.h>

@@ -37,6 +37,8 @@
 
 #include "baxter-demo.h"
 #include "amino/rx/scene_collision.h"
+#include "amino/rx/scene_gl.h"
+#include "amino/rx/scene_sdl.h"
 
 
 struct display_cx {

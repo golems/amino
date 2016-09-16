@@ -41,8 +41,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <getopt.h>
-#include <SDL_opengl.h>
-#include <SDL.h>
 
 
 
@@ -52,7 +50,6 @@
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_win.h"
 #include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_sdl.h"
 
 #include <dlfcn.h>
 

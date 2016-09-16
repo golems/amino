@@ -41,6 +41,7 @@
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
+#include "amino/rx/scene_gl.h"
 
 const char *allowed_collision[][2] = {{"right_w0_fixed" , "right_wrist-collision"},
                                       {NULL,NULL}};

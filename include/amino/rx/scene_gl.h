@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_GL_H
 #define AMINO_RX_SCENE_GL_H
 
+#include <SDL_opengl.h>
+
 /**
  * @file scene_gl.h
  * @brief OpenGL Support

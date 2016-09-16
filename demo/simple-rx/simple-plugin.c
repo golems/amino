@@ -43,9 +43,6 @@
 #include <math.h>
 #include <getopt.h>
 #include "amino/amino_gl.h"
-#include <SDL.h>
-
-
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"

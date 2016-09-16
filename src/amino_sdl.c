@@ -41,8 +41,6 @@
 
 #define GL_GLEXT_PROTOTYPES
 
-#include <SDL_opengl.h>
-#include <SDL.h>
 
 #include <pthread.h>
 
@@ -52,9 +50,10 @@
 
 
 #include "amino/rx/rxtype.h"
+#include <SDL_opengl.h>
 #include "amino/rx/scene_gl.h"
-#include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl.h"
+#include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl_internal.h"
 
 

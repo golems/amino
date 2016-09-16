@@ -39,12 +39,10 @@
 #include <stdio.h>
 #include <math.h>
 #include "amino/amino_gl.h"
-#include <SDL.h>
 
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_win.h"
 
 #include "ur10-model.c.h"

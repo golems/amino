@@ -39,6 +39,7 @@
 #include "amino/rx/rxerr.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
+#include "amino/rx/scene_gl.h"
 
 int main(int argc, char *argv[])
 {

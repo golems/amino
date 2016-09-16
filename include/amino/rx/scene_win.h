@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_WIN_H
 #define AMINO_RX_SCENE_WIN_H
 
+#include <SDL.h>
+
 /**
  * @file scene_win.h
  * @brief SDL/OpenGL window management
