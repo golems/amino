@@ -419,9 +419,14 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
 }
 
 AA_API void
-aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q, struct aa_rx_cl_set* cl_set){
+aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, size_t n_q_arg, const double* q, struct aa_rx_cl_set* cl_set)
+{
     size_t n_f = aa_rx_sg_frame_count(scene_graph);
     size_t n_q = aa_rx_sg_config_count(scene_graph);
+
+    assert(n_q == n_q_arg);
+
+
 
     double TF_rel[7*n_f];
     double TF_abs[7*n_f];
@@ -441,10 +446,10 @@ aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q, stru
     aa_rx_cl_destroy(cl);
 }
 
-AA_API void aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const double* q)
+AA_API void aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, size_t n_q, const double* q)
 {
     struct aa_rx_cl_set* allowed = aa_rx_cl_set_create(scene_graph);
-    aa_rx_sg_get_collision(scene_graph, q, allowed);
+    aa_rx_sg_get_collision(scene_graph, n_q, q, allowed);
 
     for (size_t i = 0; i<aa_rx_sg_frame_count(scene_graph); i++){
         for (size_t j=0; j<i; j++){

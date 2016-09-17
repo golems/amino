@@ -63,6 +63,9 @@ aa_dump_vec( FILE *file, const double *v, size_t n );
 AA_API void
 aa_dump_mat( FILE *file, const double *A, size_t m, size_t n );
 
+/**
+ * Print matrix to file.
+ */
 AA_API void
 aa_dump_matf( FILE *file, const float *A, size_t m, size_t n  );
 

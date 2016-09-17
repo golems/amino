@@ -150,6 +150,10 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
                size_t *n_path,
                double **p_path_all );
 
+/**
+ * Return a pointer to the allowed collision set for the motion
+ * planning context.
+ */
 AA_API struct aa_rx_cl_set* aa_rx_mp_get_allowed( const struct aa_rx_mp* mp);
 
 

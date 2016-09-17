@@ -397,8 +397,8 @@ AA_API int aa_circbuf_write( aa_circbuf_t *cb, int fd, size_t n );
 /** A "cons" cell
  */
 typedef struct aa_mem_cons {
-    void *data;
-    struct aa_mem_cons *next;
+    void *data;               ///< pointer to data
+    struct aa_mem_cons *next; ///< pointer to next list cell
 } aa_mem_cons_t;
 
 /** A linked list allocated out of a memory region
@@ -673,6 +673,9 @@ aa_bits_xor( aa_bits *a, const aa_bits *b, size_t n_bits )
 /* Swapping */
 /************/
 
+/**
+ * Type to use for memory swapping.
+ */
 typedef long aa_memswap_type;
 
 /** Swap size bytes of memory at a and b */

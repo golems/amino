@@ -92,6 +92,9 @@ aa_rx_wf_obj_material_count( struct aa_rx_wf_obj *obj );
 AA_API const char *
 aa_rx_wf_obj_get_material_name( struct aa_rx_wf_obj *obj, size_t i );
 
+/**
+ * Parse a wavefront OBJ file.
+ */
 AA_API struct aa_rx_wf_obj *
 aa_rx_wf_parse(const char *filename);
 
@@ -145,58 +148,112 @@ struct aa_rx_wf_mtl;
  */
 struct aa_rx_wf_material;
 
+/**
+ * Parse a wavefront MTL file.
+ */
 AA_API struct aa_rx_wf_mtl *
 aa_rx_wf_mtl_parse(const char *mtl_name );
 
 
+/**
+ * Destroy a wavefront MTL object.
+ */
 AA_API void
 aa_rx_wf_mtl_destroy( struct aa_rx_wf_mtl * );
 
+/**
+ * Return the number of materials.
+ */
 AA_API size_t
 aa_rx_wf_mtl_material_count( const struct aa_rx_wf_mtl * mtl);
 
+/**
+ * Return the i'th material.
+ */
 AA_API struct aa_rx_wf_material *
 aa_rx_wf_mtl_get_material( const struct aa_rx_wf_mtl * mtl, size_t i);
 
+/**
+ * Does the material have a specular weight?
+ */
 AA_API int
 aa_rx_wf_material_has_specular_weight( const struct aa_rx_wf_material * material );
 
+/**
+ * Does the material have a specular value?
+ */
 AA_API int
 aa_rx_wf_material_has_specular( const struct aa_rx_wf_material * material );
 
+/**
+ * Does the material have an ambient value?
+ */
 AA_API int
 aa_rx_wf_material_has_ambient( const struct aa_rx_wf_material * material );
 
+/**
+ * Does the material have an emission value?
+ */
 AA_API int
 aa_rx_wf_material_has_emission( const struct aa_rx_wf_material * material );
 
+/**
+ * Does the material have an diffuse value?
+ */
 AA_API int
 aa_rx_wf_material_has_diffuse( const struct aa_rx_wf_material * material );
 
+/**
+ * Does the material have an alpha value?
+ */
 AA_API int
 aa_rx_wf_material_has_alpha( const struct aa_rx_wf_material * material );
 
+/**
+ * Does the material have an index-of-refraction value?
+ */
 AA_API int
 aa_rx_wf_material_has_ior( const struct aa_rx_wf_material * material );
 
+/**
+ * Return the material's name.
+ */
 AA_API const char*
 aa_rx_wf_material_get_name( const struct aa_rx_wf_material * material );
 
+/**
+ * Return the material's specular value.
+ */
 AA_API const double*
 aa_rx_wf_material_get_specular( const struct aa_rx_wf_material * material );
 
+/**
+ * Return the material's ambient value.
+ */
 AA_API const double*
 aa_rx_wf_material_get_ambient( const struct aa_rx_wf_material * material );
 
+/**
+ * Return the material's emission value.
+ */
 AA_API const double*
 aa_rx_wf_material_get_emission( const struct aa_rx_wf_material * material );
 
+/**
+ * Return the material's diffuse value.
+ */
 AA_API const double*
 aa_rx_wf_material_get_diffuse( const struct aa_rx_wf_material * material );
 
+/**
+ * Return the material's alpha value.
+ */
 AA_API double
 aa_rx_wf_material_get_alpha( const struct aa_rx_wf_material * material );
 
+/**
+ * Return the material's index-of-refraction value.
+ */
 AA_API double
 aa_rx_wf_material_get_ior( const struct aa_rx_wf_material * material );
 

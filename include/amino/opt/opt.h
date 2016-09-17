@@ -50,46 +50,71 @@
  * @brief Optimization SUpport
  */
 
+/**
+ * Optimization constraint type
+ */
 enum aa_opt_rel_type {
-    AA_OPT_REL_EQ,
-    AA_OPT_REL_LEQ,
-    AA_OPT_REL_GEQ,
+    AA_OPT_REL_EQ,  ///< equality constraint
+    AA_OPT_REL_LEQ, ///< Less-than or equal constraint
+    AA_OPT_REL_GEQ, ///< Greater-than or equal constraint
 };
 
 
+/**
+ * Optimization direction.
+ */
 enum aa_opt_direction {
-    AA_OPT_MAXIMIZE,
-    AA_OPT_MINIMIZE,
+    AA_OPT_MAXIMIZE, ///< maximize objective function
+    AA_OPT_MINIMIZE, ///< minimize objective function
 };
 
-
+/**
+ * Type of optiziation variable.
+ */
 enum aa_opt_type {
-    AA_OPT_CONTINUOUS,
-    AA_OPT_BINARY,
-    AA_OPT_INTEGER
+    AA_OPT_CONTINUOUS, ///< continuous (float) variable
+    AA_OPT_BINARY,     ///< binary variable
+    AA_OPT_INTEGER     ///< integer variable
 };
 
 struct aa_opt_cx;
 
-
+/**
+ * Solve the optimization problem.
+ */
 AA_API int
 aa_opt_solve( struct aa_opt_cx *cx, size_t n, double *x );
 
 
+/**
+ * Destroy the optimization context.
+ */
 AA_API int
 aa_opt_destroy( struct aa_opt_cx *cx );
 
+/**
+ * Destroy the optimization direction.
+ */
 AA_API int
 aa_opt_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction );
 
+/**
+ * Destroy the quadratic objective function via compressed-row-storage
+ * format.
+ */
 AA_API int
 aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
                          const double *Q_values, int *Q_cols, int *Q_row_ptr );
 
-
+/**
+ * Destroy the optimization variable type.
+ */
 AA_API int
 aa_opt_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type );
 
+/**
+ * Optimization context constructor from general matrix format.
+ */
 typedef struct aa_opt_cx*
 aa_opt_gmcreate_fun (
     size_t m, size_t n,
@@ -99,6 +124,9 @@ aa_opt_gmcreate_fun (
     const double *x_lower, const double *x_upper
     );
 
+/**
+ * Create an optimization context for LP-Solve.
+ */
 AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
     size_t m, size_t n,
     const double *A, size_t ldA,
@@ -108,6 +136,9 @@ AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
     );
 
 
+/**
+ * Create an optimization context for CLP.
+ */
 AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
     size_t m, size_t n,
     const double *A, size_t ldA,
@@ -116,7 +147,9 @@ AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
     const double *x_lower, const double *x_upper
     );
 
-
+/**
+ * Create an optimization context for GLPK.
+ */
 AA_API struct aa_opt_cx* aa_opt_glpk_gmcreate (
     size_t m, size_t n,
     const double *A, size_t ldA,
@@ -125,6 +158,9 @@ AA_API struct aa_opt_cx* aa_opt_glpk_gmcreate (
     const double *x_lower, const double *x_upper
     );
 
+/**
+ * Create an optimization context for LP-Solve.
+ */
 AA_API struct aa_opt_cx* aa_opt_lpsolve_crscreate (
     size_t m, size_t n,
     const double *A_values, int *A_cols, int *A_row_ptr,
@@ -133,6 +169,9 @@ AA_API struct aa_opt_cx* aa_opt_lpsolve_crscreate (
     const double *x_lower, const double *x_upper );
 
 
+/**
+ * Create an optimization context for CLP.
+ */
 AA_API struct aa_opt_cx* aa_opt_clp_crscreate (
     size_t m, size_t n,
     const double *A_values, int *A_cols, int *A_row_ptr,
@@ -141,6 +180,9 @@ AA_API struct aa_opt_cx* aa_opt_clp_crscreate (
     const double *x_lower, const double *x_upper );
 
 
+/**
+ * Create an optimization context for GLPK.
+ */
 AA_API struct aa_opt_cx* aa_opt_glpk_crscreate (
     size_t m, size_t n,
     const double *A_values, int *A_cols, int *A_row_ptr,

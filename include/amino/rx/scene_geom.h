@@ -235,6 +235,9 @@ AA_API const char *aa_rx_geom_shape_str( enum aa_rx_geom_shape shape );
  * Shape for a box
  */
 struct aa_rx_shape_box {
+    /**
+     * x, y, z dimensions of the box
+     */
     double dimension[3];
 };
 
@@ -242,24 +245,24 @@ struct aa_rx_shape_box {
  * Shape for a sphere
  */
 struct aa_rx_shape_sphere {
-    double radius;
+    double radius;  ///< sphere's radius
 };
 
 /**
  * Shape for a cylinder
  */
 struct aa_rx_shape_cylinder {
-    double height;
-    double radius;
+    double height;   ///< cylinder's height
+    double radius;   ///< cylinder's radius
 };
 
 /**
  * Shape for a cone
  */
 struct aa_rx_shape_cone {
-    double height;
-    double start_radius;
-    double end_radius;
+    double height;         ///< height of the cone
+    double start_radius;   ///< radius at cone base (z=0)
+    double end_radius;     ///< radius at cone top (z=height)
 };
 
 
@@ -267,9 +270,9 @@ struct aa_rx_shape_cone {
  * Shape for a grid
  */
 struct aa_rx_shape_grid {
-    double dimension[2];
-    double delta[2];
-    double width;
+    double dimension[2];   ///< x, y dimensions of the grid
+    double delta[2];       ///< x, y line spacing of the grid
+    double width;          ///< width of each line
 };
 
 /**

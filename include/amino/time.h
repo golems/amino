@@ -48,6 +48,9 @@
 
 #ifdef CLOCK_MONOTONIC
 
+/**
+ * Use the most reasonable and portable clock
+ */
 #define AA_CLOCK CLOCK_MONOTONIC
 
 #else

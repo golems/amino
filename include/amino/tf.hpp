@@ -142,7 +142,9 @@ struct Vec3 : aa_tf_vec3 {
  * A rotation about the X axis.
  */
 struct XAngle {
-    double value;
+    double value; ///< The angle value in radians
+
+    /** Construct with the given angle */
     XAngle(double v) : value(v) {}
 };
 
@@ -150,7 +152,9 @@ struct XAngle {
  * A rotation about the Y axis.
  */
 struct YAngle {
-    double value;
+    double value; ///< The angle value in radians
+
+    /** Construct with the given angle */
     YAngle(double v) : value(v) {}
 };
 
@@ -158,7 +162,9 @@ struct YAngle {
  * A rotation about the Z axis.
  */
 struct ZAngle {
-    double value;
+    double value; ///< The angle value in radians
+
+    /** Construct with the given angle */
     ZAngle(double v) : value(v) {}
 };
 

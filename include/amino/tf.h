@@ -66,6 +66,15 @@ extern "C" {
 /**********/
 /* Series */
 /**********/
+
+/**
+ * Define an inline function for a series using Horner's rule.
+ *
+ * @param name pre-mangled name for the function
+ * @param a0 zero-order coefficient
+ * @param a1 first-order coefficient
+ * @param a2 second-order coefficient
+ */
 #define AA_TF_DEF_SERIES(name, a0, a1, a2)                  \
     static inline double                                    \
     aa_tf_ ## name ##_series2(double theta2)                \
@@ -82,6 +91,13 @@ AA_TF_DEF_SERIES( sinc, 1., -1./6, 1./120 )
 AA_TF_DEF_SERIES( cos, 1., -1./2, 1./24 )
 AA_TF_DEF_SERIES( invsinc, 1., 1./6, 7./360 )
 
+/**
+ * Compute sinc(theta), cos(theta), given the square of theta.
+ *
+ * @param theta2 theta*theta
+ * @param sc output for sinc(theta)
+ * @param c output for cos(theta)
+ */
 static inline void
 aa_tf_sinccos2( double theta2, double *sc, double *c )
 {
@@ -96,6 +112,9 @@ aa_tf_sinccos2( double theta2, double *sc, double *c )
     }
 }
 
+/**
+ * Compute sinc(theta), cos(theta)
+ */
 static inline void
 aa_tf_sinccos( double theta, double *sc, double *c )
 {
@@ -109,6 +128,9 @@ aa_tf_sinccos( double theta, double *sc, double *c )
     }
 }
 
+/**
+ * Compute sinc(theta)
+ */
 static inline double
 aa_tf_sinc( double theta )
 {
@@ -573,8 +595,14 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
 /* Matrices */
 /************/
 
+/**
+ * Construct a skew-symmetric matrix.
+ */
 AA_API void aa_tf_skewsym_scal2( double a, double b, const double u[3], double R[9] );
 
+/**
+ * Construct a skew-symmetric matrix.
+ */
 AA_API void
 aa_tf_skewsym_scal_c( const double u[AA_RESTRICT 3],
                       const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
@@ -582,14 +610,24 @@ aa_tf_skewsym_scal_c( const double u[AA_RESTRICT 3],
 
 
 /* Multiply */
+
+/**
+ * Multiple two rotation matrices.
+ */
 AA_API void aa_tf_rotmat_mul( const double R0[AA_RESTRICT 9],
                               const double R1[AA_RESTRICT 9],
                               double R[AA_RESTRICT 9] );
 
+/**
+ * Multiple two transformation matrices.
+ */
 AA_API void aa_tf_tfmat_mul( const double T0[AA_RESTRICT 12],
                              const double T1[AA_RESTRICT 12],
                              double T[AA_RESTRICT 12] );
 
+/**
+ * Multiple two transformation matrices, in split representation.
+ */
 AA_API void aa_tf_tfmat2_mul( const double R0[AA_RESTRICT 9],
                               const double v0[AA_RESTRICT 3],
                               const double R1[AA_RESTRICT 9],
@@ -598,29 +636,58 @@ AA_API void aa_tf_tfmat2_mul( const double R0[AA_RESTRICT 9],
 
 
 /* Inverting Multiply */
-
+/**
+ * Multiple inverse  of R0 by R1.
+ *
+ * \f[ R = ({R_0}^{-1}) * (R_1) \f]
+ */
 AA_API void aa_tf_rotmat_imul( const double R0[AA_RESTRICT 9],
                                const double R1[AA_RESTRICT 9],
                                double R[AA_RESTRICT 9] );
 
+/**
+ * Multiple R1 by inverse of R1.
+ *
+ * \f[ R = ({R_0}) * ({R_1}^{-1}) \f]
+ */
 AA_API void aa_tf_rotmat_muli( const double R0[AA_RESTRICT 9],
                                const double R1[AA_RESTRICT 9],
                                double R[AA_RESTRICT 9] );
 
+/**
+ * Multiple inverse  of T0 by T1.
+ *
+ * \f[ T = ({T_0}^{-1}) * (T_1) \f]
+ */
 AA_API void aa_tf_tfmat_imul( const double T0[AA_RESTRICT 12],
                               const double T1[AA_RESTRICT 12],
                               double T[AA_RESTRICT 12] );
 
+/**
+ * Multiple T1 by inverse of T1.
+ *
+ * \f[ T = ({T_0}) * ({T_1}^{-1}) \f]
+ */
 AA_API void aa_tf_tfmat_muli( const double T0[AA_RESTRICT 12],
                               const double T1[AA_RESTRICT 12],
                               double T[AA_RESTRICT 12] );
 
+/**
+ * Multiple inverse of transform (R0,v0) by transform (R1,v1).
+ *
+ * \f[ (R,v) = \left(\left(R_0,v_0\right)^{-1}\right) * ({R_1},v_1) \f]
+ */
 AA_API void aa_tf_tfmat2_imul( const double R0[AA_RESTRICT 9],
                                const double v0[AA_RESTRICT 3],
                                const double R1[AA_RESTRICT 9],
                                const double v1[AA_RESTRICT 3],
                                double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
 
+/**
+ * Multiple (R0,v0) by inverse of transform transform (R1,v1).
+ *
+ * \f[ (R,v) = ({R_0},v_0) \left(\left(R_1,v_1\right)^{-1}\right) \f]
+ */
 AA_API void aa_tf_tfmat2_muli( const double R0[AA_RESTRICT 9],
                                const double v0[AA_RESTRICT 3],
                                const double R1[AA_RESTRICT 9],
@@ -629,14 +696,23 @@ AA_API void aa_tf_tfmat2_muli( const double R0[AA_RESTRICT 9],
 
 /* Transform */
 
+/**
+ * Rotate a point using a rotation matrix.
+ */
 AA_API void aa_tf_rotmat_rot( const double R[AA_RESTRICT 9],
                               const double p0[AA_RESTRICT 3],
                               double p1[AA_RESTRICT 3] );
 
+/**
+ * Transform a point using a transformation matrix.
+ */
 AA_API void aa_tf_tfmat_tf( const double T[AA_RESTRICT 12],
-                      const double p0[AA_RESTRICT 3],
-                      double p1[AA_RESTRICT 3] );
+                            const double p0[AA_RESTRICT 3],
+                            double p1[AA_RESTRICT 3] );
 
+/**
+ * Transform a point using a split transformation matrix.
+ */
 AA_API void aa_tf_tfmat2_tf( const double R[AA_RESTRICT 9],
                              const double v[AA_RESTRICT 3],
                              const double p0[AA_RESTRICT 3],
@@ -873,9 +949,13 @@ AA_API double aa_tf_qnorm( const double q[AA_RESTRICT 4] );
 /** Minimize angle represented by the quaternion.  This puts the
  *  quaternion in the right-hand side of the complex plane.  Its w
  *  value will be positive.
-*/
+ */
 AA_API void aa_tf_qminimize( double q[AA_RESTRICT 4] );
 
+/** Minimize angle represented by the quaternion.  This puts the
+ *  quaternion in the right-hand side of the complex plane.  Its w
+ *  value will be positive.
+ */
 AA_API void aa_tf_qminimize2( const double q[AA_RESTRICT 4], double qmin[AA_RESTRICT 4] );
 
 /** Normailize quaternion.
@@ -906,6 +986,13 @@ AA_API void aa_tf_qduln( const double q[AA_RESTRICT 4],
                          const double dq[AA_RESTRICT 4],
                          double dln[AA_RESTRICT 3] );
 
+/**
+ * Derivative of the Unit Quaternion Logarithm, computed via Jacobian.
+ *
+ * \param q A unit quaternion
+ * \param dq The derivative of q
+ * \param dln The derivative of ln(dq)
+ */
 AA_API void aa_tf_qdulnj( const double q[AA_RESTRICT 4],
                          const double dq[AA_RESTRICT 4],
                          double dln[AA_RESTRICT 3] );
@@ -920,6 +1007,13 @@ AA_API void aa_tf_qdpexp( const double e[AA_RESTRICT 3],
                           const double de[AA_RESTRICT 3],
                           double dq[AA_RESTRICT 4] );
 
+/**
+ * Derivative of the Pure Quaternion Exponential, computed via Jacobian.
+ *
+ * \param e A pure quaternion
+ * \param de The derivative of e
+ * \param dq The derivative of exp(e)
+ */
 AA_API void aa_tf_qdpexpj( const double e[AA_RESTRICT 3],
                           const double de[AA_RESTRICT 3],
                           double dq[AA_RESTRICT 4] );
@@ -930,7 +1024,8 @@ AA_API void aa_tf_qdpexpj( const double e[AA_RESTRICT 3],
  */
 double aa_tf_qangle( const double q[AA_RESTRICT 4] );
 
-/* Relative quaternion angles
+/**
+ * Relative quaternion angles
  */
 double aa_tf_qangle_rel( const double *q, const double *p );
 
@@ -1043,18 +1138,18 @@ AA_API void aa_tf_qslerp3diff( double u12, double du12,
                                double u, double du,
                                double q[AA_RESTRICT 4], double dq[AA_RESTRICT 4] );
 
-/* Quaternaion time derivate to angular velocity */
+/** Quaternaion time derivate to angular velocity */
 AA_API void aa_tf_qdiff2vel( const double q[AA_RESTRICT 4],
                              const double dq_dt[AA_RESTRICT 4],
                              double v[AA_RESTRICT 3] );
 
-/* Angular velocity to quaternion time derivative */
+/** Angular velocity to quaternion time derivative */
 AA_API void aa_tf_qvel2diff( const double q[AA_RESTRICT 4],
                              const double v[AA_RESTRICT 3],
                              double dq_dt[AA_RESTRICT 4] );
 
 
-/* Convert rotation vector derivative to rotational velocity */
+/** Convert rotation vector derivative to rotational velocity */
 AA_API void aa_tf_rotvec_diff2vel( const double v[3], const double dv[3],
                                    double w[3] );
 
@@ -1130,11 +1225,14 @@ AA_API void aa_tf_yangle2quat( double theta_y, double q[AA_RESTRICT 4] );
 /** Unit quaternion for angle about z axis */
 AA_API void aa_tf_zangle2quat( double theta_z, double q[AA_RESTRICT 4] );
 
-/* Construct matrix for Davenport's q-method */
+/**
+ *  Construct matrix for Davenport's q-method
+ */
 AA_API void aa_tf_quat_davenport_matrix
 ( size_t n, const double *w, const double *q, size_t ldqq, double *M );
 
-/* Weighted average quaternion using Davenport's q-method
+/**
+ *  Weighted average quaternion using Davenport's q-method
  *
  * @param n number of quaternions
  * @param w weights
@@ -1193,7 +1291,15 @@ void aa_tf_qv_conj( const double q[4], const double v[3],
                     double qc[4], double vc[3] );
 
 
+/**
+ * Offset of quaternion part in quaternion-translation representation.
+ */
 #define AA_TF_QUTR_Q 0
+
+/**
+ * Offset of translation part in quaternion-translation
+ * representation.
+ */
 #define AA_TF_QUTR_V 4
 
 /// quaternion-translation to dual quaternion
@@ -1342,14 +1448,16 @@ AA_API void aa_tf_rotmat2eulerzyx( const double R[AA_RESTRICT 9],
 AA_API void aa_tf_quat2eulerzyx( const double q[AA_RESTRICT 4],
                                  double e[AA_RESTRICT 3] );
 
-
+/**
+ * Create declarations for Euler angle conversion functions.
+ */
 #define AA_TF_DEF_EULER(letters)                                        \
     AA_API void                                                         \
     aa_tf_euler ## letters ## 2rotmat( double e1, double e2, double e3, \
                                        double R[AA_RESTRICT 9] );       \
     AA_API void                                                         \
     aa_tf_euler ## letters ## 2quat( double e1, double e2, double e3,   \
-                                    double q[AA_RESTRICT 4] );
+                                     double q[AA_RESTRICT 4] );
 
 AA_TF_DEF_EULER( xyz )
 AA_TF_DEF_EULER( xzy )

@@ -111,7 +111,7 @@ public:
      * Mark configuration q as allowed.
      */
     void allow_config( double *q ) {
-        aa_rx_sg_get_collision(scene_graph, q, allowed);
+        aa_rx_sg_get_collision(scene_graph, config_count_all(), q, allowed);
     }
 
     /**

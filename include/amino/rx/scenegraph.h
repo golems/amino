@@ -58,12 +58,19 @@ typedef signed long aa_rx_config_id;
  */
 #define AA_RX_FRAME_ROOT ((aa_rx_frame_id)-1)
 
+/**
+ * Magic frame_id for no frame.
+ */
 #define AA_RX_FRAME_NONE ((aa_rx_frame_id)-2)
 
 /**
  * Magic config_id for no configuration variable.
  */
 #define AA_RX_CONFIG_NONE ((aa_rx_config_id)-1)
+
+/**
+ * Magic config_id for multiple configuration variables.
+ */
 #define AA_RX_CONFIG_MULTI ((aa_rx_config_id)-2)
 
 /**
@@ -189,6 +196,9 @@ aa_rx_sg_config_indices(
     const char **config_name, aa_rx_config_id *ids );
 
 
+/**
+ * Retrieve a subset of the configuration vector.
+ */
 AA_API void
 aa_rx_sg_config_get(
     const struct aa_rx_sg *scene_graph, size_t n_all, size_t n_subset,
@@ -196,6 +206,9 @@ aa_rx_sg_config_get(
     const double *config_all,
     double *config_subset );
 
+/**
+ * Fill a subset of the configuration vector.
+ */
 AA_API void
 aa_rx_sg_config_set(
     const struct aa_rx_sg *scene_graph, size_t n_all, size_t n_subset,
@@ -250,6 +263,7 @@ AA_API void aa_rx_sg_add_frame_fixed
  * @param name        The name of the frame to be added
  * @param q           The unit quaternion frame initial rotation (xyzw)
  * @param v           The frame initial translation vector
+ * @param config_name The name of the configuration variable.
  * @param axis        The axis of rotation.  A non-unit axis will
  *                    scale the translation accordingly.
  * @param offset      An offset to be added to the configuration value
@@ -272,6 +286,7 @@ AA_API void aa_rx_sg_add_frame_prismatic
  * @param name        The name of the frame to be added
  * @param q           The unit quaternion frame initial rotation (xyzw)
  * @param v           The frame initial translation vector
+ * @param config_name The name of the configuration variable.
  * @param axis        The axis of rotation.  A non-unit axis will
  *                    scale the rotation accordingly.
  * @param offset      An offset to be added to the configuration value
@@ -400,6 +415,34 @@ AA_API void aa_rx_sg_tf
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
 
+/**
+ *  Updated transforms efficiently when only some configurations change.
+ *
+ * @param scene_graph The scene graph container
+ * @param n_q         Size of configuration vector q
+ * @param q0          Initial configuration vector
+ * @param q           Current configuraiton vector
+ *
+ * @param n_tf        Number of entries in the TF array
+ *
+ * @param TF_rel0     Initial relative transform matrix in quaternion-vector format
+ * @param ld_rel0     Initial leading dimensional of TF_rel, i.e., space between each entry
+ * @param TF_abs0     Initial absolute transform matrix in quaternion-vector format
+ * @param ld_abs0     Leading dimensional of TF_abs, i.e., space between each entry
+ *
+ * @param TF_rel      Current relative transform matrix in quaternion-vector format
+ * @param ld_rel      Current leading dimensional of TF_rel, i.e., space between each entry
+ * @param TF_abs      Current absolute transform matrix in quaternion-vector format
+ * @param ld_abs      Current leading dimensional of TF_abs, i.e., space between each entry
+ *
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
+ *
+ * @pre aa_rx_sg_tf() was previously called as
+ * aa_rx_sg_tf(scene_graph, n_q, q, n_tf, TF_rel0, ld_rel0, TF_abs0,
+ * ld_abs0).
+ */
 AA_API void aa_rx_sg_tf_update
 ( const struct aa_rx_sg *scene_graph,
   size_t n_q,
@@ -431,14 +474,13 @@ AA_API void aa_rx_sg_map_geom (
 /**
   * Get transform between two given frames
   *
-  * @param scene_graph The scene graph container
-  * @param frame_from
-  * @param frame_to
-  * @param q           Current configs
-  * @param tf_rel      Relative transform from the from frame to the to frame
+  * @param scene_graph  The scene graph container
+  * @param frame_from   The parent frame id
+  * @param frame_to     The child frame id
+  * @param tf_abs       Array of absolute transforms
+  * @param ld_abs       Leading dimension of tf_abs
+  * @param from_tf_to   The relative transform
   */
-
-
 AA_API void aa_rx_sg_rel_tf (
   const struct aa_rx_sg *scene_graph,
   const aa_rx_frame_id frame_from,
@@ -463,10 +505,23 @@ AA_API void aa_rx_sg_reparent_name ( const struct aa_rx_sg *scene_graph,
                                      const char *frame,
                                      const double *E1);
 
+/**
+ * Deeply copy a scenegraph.
+ *
+ * Note that geometry objects and meshes will be shared via reference-counting.
+ */
 AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig);
 
-AA_API void aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph, const aa_rx_frame_id id0, const aa_rx_frame_id id1, const int allowed );
+/**
+ * Set allowed collisions between frames id0 and id1.
+ */
+AA_API void aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph,
+                                      aa_rx_frame_id id0, aa_rx_frame_id id1, int allowed );
 
-AA_API void aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph, const char* id0, const char* id1, const int allowed );
+/**
+ * Set allowed collisions between frame0 and frame1.
+ */
+AA_API void aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
+                                           const char* frame0, const char* frame1, int allowed );
 
 #endif /*AMINO_SCENEGRAPH_H*/

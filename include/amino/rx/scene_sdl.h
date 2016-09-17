@@ -71,11 +71,9 @@ struct aa_gl_globals;
  */
 AA_API void aa_sdl_init( void );
 
-AA_API void aa_sdl_scroll(
-    struct aa_gl_globals * globals,
-    int *update, int *quit );
-
-
+/**
+ * Run the display loop function.
+ */
 AA_API void aa_sdl_display_loop(
     SDL_Window* window,
     struct aa_gl_globals * globals,
@@ -83,7 +81,9 @@ AA_API void aa_sdl_display_loop(
     void *context );
 
 
-
+/**
+ * Create an SDL window with an OpenGL context.
+ */
 AA_API void aa_sdl_gl_window(
     const char* title,
     int x_pos,
@@ -94,28 +94,52 @@ AA_API void aa_sdl_gl_window(
     SDL_Window **pwindow,
     SDL_GLContext *p_glcontext );
 
+/**
+ * Return the current time step.
+ */
 AA_API const struct timespec *
 aa_sdl_display_params_get_time_now( struct aa_sdl_display_params *params );
 
+/**
+ * Return the previous time step.
+ */
 AA_API const struct timespec *
 aa_sdl_display_params_get_time_last( struct aa_sdl_display_params *params );
 
+/**
+ * Return the initial time step.
+ */
 AA_API const struct timespec *
 aa_sdl_display_params_get_time_initial( struct aa_sdl_display_params *params );
 
+/**
+ * Return whether to update the display.
+ */
 AA_API int
 aa_sdl_display_params_get_update( struct aa_sdl_display_params *params );
 
+/**
+ * Indicate a quit (window close) request.
+ */
 AA_API void
 aa_sdl_display_params_set_quit( struct aa_sdl_display_params *params );
 
+/**
+ * Indicate a display update is needed.
+ */
 AA_API void
 aa_sdl_display_params_set_update( struct aa_sdl_display_params *params );
 
+/**
+ * Check if this is the fist display call.
+ */
 AA_API int
 aa_sdl_display_params_is_first( struct aa_sdl_display_params *params );
 
 
+/**
+ * Retrieve the most recent SDL event.
+ */
 const SDL_Event *
 aa_sdl_display_params_get_event( struct aa_sdl_display_params *params );
 
@@ -127,11 +151,17 @@ typedef int
 (*aa_sdl_handler_function) ( void *cx,
                              struct aa_sdl_display_params *params);
 
+/**
+ * Bind a handler function for an SDL event.
+ */
 AA_API void
 aa_sdl_bind_event( SDL_EventType event_type,
                    aa_sdl_handler_function handler,
                    void *cx );
 
+/**
+ * Bind a handler function for an SDL key press.
+ */
 AA_API void
 aa_sdl_bind_key( SDL_Keycode key,
                  aa_sdl_handler_function handler,

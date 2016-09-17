@@ -109,6 +109,9 @@ AA_API void
 aa_rx_win_set_sg( struct aa_rx_win * win,
                   const struct aa_rx_sg *sg );
 
+/**
+ * Retreive the scene graph for the window.
+ */
 AA_API const struct aa_rx_sg *
 aa_rx_win_get_sg( struct aa_rx_win * win );
 
@@ -121,6 +124,9 @@ aa_rx_win_display_sg_config( struct aa_rx_win *win, struct aa_sdl_display_params
                              size_t n_q, const double *q );
 
 
+/**
+ * Display a scene graph in the window with the given transforms.
+ */
 AA_API void
 aa_rx_win_display_sg_tf( struct aa_rx_win *win, struct aa_sdl_display_params *params,
                          const struct aa_rx_sg *scenegraph,
@@ -157,7 +163,9 @@ aa_rx_win_set_display( struct aa_rx_win * win,
                        void *context,
                        void (*destructor)(void*) );
 
-
+/**
+ * Display a motion plan in the window.
+ */
 AA_API void
 aa_rx_win_set_display_plan( struct aa_rx_win * win,
                             struct aa_rx_sg *sg,
@@ -166,6 +174,9 @@ aa_rx_win_set_display_plan( struct aa_rx_win * win,
 
 struct aa_rx_mp_seq;
 
+/**
+ * Display a sequence of motion plans.
+ */
 AA_API void
 aa_rx_win_set_display_seq( struct aa_rx_win * win, struct aa_rx_mp_seq *mp_seq);
 

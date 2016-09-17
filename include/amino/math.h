@@ -622,7 +622,7 @@ AA_API void aa_la_dls( size_t m, size_t n, double k,  const double *A, const dou
  * \param m rows in A
  * \param n cols in A
  * \param A \f$ A \in \Re^m\times\Re^n \f$
- * \param A* \f$ A \in \Re^m\times\Re^n \f$
+ * \param A_star \f$ A \in \Re^m\times\Re^n \f$
  * \param b \f$ b \in \Re^m \f$
  * \param xp \f$ x \in \Re^n \f$
  * \param x \f$ x \in \Re^n \f$
@@ -820,6 +820,10 @@ enum aa_ode_integrator {
 #define AA_ODE_HEUN AA_ODE_RK2
 
 
+/**
+ * Function signature to check whether a differential equation has
+ * reached its goal
+ */
 typedef int aa_ode_check( void *cx, double t, double * AA_RESTRICT x, double *AA_RESTRICT y );
 
 /**
@@ -843,6 +847,9 @@ struct aa_ode_sol_opts {
     double adapt_factor_inc;
 };
 
+/**
+ * Solve an ordinary differential equation.
+ */
 AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
                        const struct aa_ode_sol_opts * AA_RESTRICT opts,
                        size_t n,
@@ -852,10 +859,16 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
                        const double *AA_RESTRICT x0,
                        double *AA_RESTRICT x1 );
 
+/**
+ * Function signature for a fixed integration step.
+ */
 typedef void aa_odestep_fixed( size_t n, aa_sys_fun sys, const void *cx,
                                double t0, double dt,
                                const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );
 
+/**
+ * Function signature for an adaptive integration step.
+ */
 typedef void aa_odestep_adaptive( size_t n, aa_sys_fun sys, const void *cx,
                                   double t0, double dt,
                                   const double *AA_RESTRICT x0,

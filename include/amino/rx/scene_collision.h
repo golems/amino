@@ -164,13 +164,22 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
                 const double *TF, size_t ldTF,
                 struct aa_rx_cl_set *cl_set );
 
+/**
+ * Allow all collisions at configuration q.
+ */
 AA_API void
-aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, const double* q);
+aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, size_t n_q, const double* q);
 
+/**
+ * Retrieve the set of allowed collisions.
+ */
 AA_API void
 aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * cl_set);
 
+/**
+ * Check the collisions at q.
+ */
 AA_API void
-aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, const double* q, struct aa_rx_cl_set* cl_set);
+aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, size_t n_q, const double* q, struct aa_rx_cl_set* cl_set);
 
 #endif /*AMINO_RX_SCENE_COLLISION_H*/
