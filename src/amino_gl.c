@@ -55,6 +55,9 @@
 
 #include "amino/getset.h"
 
+AA_VECTOR_DEF(GLfloat, glfloat_vec);
+AA_VECTOR_DEF(unsigned, u_vec);
+
 //static void check_error( const char *name ) {
 #define check_error(name)                                               \
     for (GLenum err = glGetError();                                     \
@@ -949,6 +952,185 @@ AA_API void aa_geom_gl_buffers_init_box (
 }
 
 
+/* static void float_fill( GLfloat *dst, const double *src, size_t size ) */
+/* { */
+/*     for( size_t i = 0; i < size; i ++ ) { */
+/*         dst[i] = (GLfloat)src[i]; */
+/*     } */
+/* } */
+
+static void glfloat_vec_push_all( glfloat_vec *dst, const double *src, size_t size )
+{
+    for( size_t i = 0; i < size; i ++ ) {
+        glfloat_vec_push(dst,(GLfloat)src[i]);
+    }
+}
+
+static void tetra_side (glfloat_vec *V, glfloat_vec *N,
+                        const double *a, const double *b, const double *c )
+{
+    double nn[3];
+    aa_tf_cross(a,b,nn);
+    glfloat_vec_push_all(V,a,3);
+    glfloat_vec_push_all(V,b,3);
+    glfloat_vec_push_all(V,c,3);
+    glfloat_vec_push_all(N,nn,3);
+    glfloat_vec_push_all(N,nn,3);
+    glfloat_vec_push_all(N,nn,3);
+
+}
+
+static void
+geodesic_round( glfloat_vec *V,
+                const u_vec *faces,
+                u_vec *new_faces,
+                double radius )
+{
+    for( unsigned i = 0; i < faces->size ; i += 3 )
+    {
+        unsigned j0 = faces->data[i];
+        unsigned j1 = faces->data[i+1];
+        unsigned j2 = faces->data[i+2];
+        GLfloat *v0 = & V->data[ 3*j0 ];
+        GLfloat *v1 = & V->data[ 3*j1 ];
+        GLfloat *v2 = & V->data[ 3*j2 ];
+
+        // New Vertices
+        double u01[3], u02[3], u12[3];
+        double a01=0, a02=0, a12=0;
+        for( size_t j = 0; j < 3; j++ ) {
+            u01[j] = (v0[j] + v1[j]) / 2;
+            u02[j] = (v0[j] + v2[j]) / 2;
+            u12[j] = (v1[j] + v2[j]) / 2;
+
+            a01 += u01[j]*u01[j];
+            a02 += u02[j]*u02[j];
+            a12 += u12[j]*u12[j];
+        }
+        // Normalize
+        {
+            double s01 = radius / sqrt(a01);
+            double s02 = radius / sqrt(a02);
+            double s12 = radius / sqrt(a12);
+            for( size_t j = 0; j < 3; j++ ) {
+                u01[j] *= (GLfloat)s01;
+                u02[j] *= (GLfloat)s02;
+                u12[j] *= (GLfloat)s12;
+            }
+        }
+
+        // Add to list
+        unsigned k01 = (unsigned)(V->size / 3);
+        glfloat_vec_push_all(V,u01,3);
+
+        unsigned k02 = (unsigned)(V->size / 3);
+        glfloat_vec_push_all(V,u02,3);
+
+        unsigned k12 = (unsigned)(V->size / 3);
+        glfloat_vec_push_all(V,u12,3);
+
+        // New Faces
+        u_vec_push(new_faces, j0);
+        u_vec_push(new_faces, k01);
+        u_vec_push(new_faces, k02);
+
+        u_vec_push(new_faces, j1);
+        u_vec_push(new_faces, k01);
+        u_vec_push(new_faces, k12);
+
+        u_vec_push(new_faces, j2);
+        u_vec_push(new_faces, k02);
+        u_vec_push(new_faces, k12);
+
+        u_vec_push(new_faces, k01);
+        u_vec_push(new_faces, k02);
+        u_vec_push(new_faces, k12);
+
+    }
+}
+
+static void
+init_sphere ( struct aa_rx_geom_sphere *geom )
+{
+    /* Initialize a tetrahedon */
+    double r = geom->shape.radius;
+    double angle = acos(-1.0 / 3.0);
+    double a[3] = {0,0,r};
+    double b[3], c[3], d[3];
+
+    double Ry[9], Rz[9];
+    aa_tf_yangle2rotmat(angle, Ry);
+    aa_tf_zangle2rotmat(2*M_PI/3, Rz);
+
+    aa_tf_rotmat_rot(Ry,a,b);
+    aa_tf_rotmat_rot(Rz,b,c);
+    aa_tf_rotmat_rot(Rz,c,d);
+
+    glfloat_vec N, V;
+    glfloat_vec_init(&N,1);
+    glfloat_vec_init(&V,1);
+
+
+    tetra_side(&V,&N, a,b,c);
+    tetra_side(&V,&N, a,b,d);
+    tetra_side(&V,&N, a,c,d);
+    tetra_side(&V,&N, b,c,d);
+
+    /* Geodesic */
+    size_t i = V.size / 3;
+    u_vec f1, f2;
+    u_vec_init(&f1,1);
+    u_vec_init(&f2,1);
+    u_vec *faces = &f1, *new_faces = &f2, *tmp_faces;
+
+    for( size_t j = 0; j < i; j ++ ) {
+        u_vec_push(new_faces, (unsigned)j);
+    }
+
+    for( size_t j = 0; j < 4; j ++ ) {
+        tmp_faces = new_faces;
+        new_faces = faces;
+        faces = tmp_faces;
+        new_faces->size = 0;
+        geodesic_round(&V, faces, new_faces, r );
+    }
+
+
+    /* Compute normals */
+    i = V.size / 3;
+    N.size = 0;
+    for ( size_t j = 0; j < i; j ++ ) {
+        GLfloat *v = V.data + 3*j;
+        /* double norm = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]); */
+        /* assert( aa_feq(norm,r,1e-6) ); */
+        for( size_t k = 0; k < 3; k ++ ) {
+            glfloat_vec_push(&N, (GLfloat)(v[k] / r));
+        }
+    }
+
+
+    printf("verts: %lu\n", V.size/3);
+    printf("faces: %lu\n", new_faces->size/3);
+
+
+    /* Construct GL mesh */
+    struct aa_rx_mesh *mesh = aa_rx_mesh_create();
+    aa_rx_mesh_set_vertices( mesh, i, V.data, 0 );
+    aa_rx_mesh_set_normals( mesh, i, N.data, 0 );
+    aa_rx_mesh_set_indices( mesh, new_faces->size/3, new_faces->data, 0 );
+    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
+    tri_mesh( &geom->base, mesh );
+    aa_rx_mesh_destroy(mesh);
+
+
+    free(N.data);
+    free(V.data);
+    free(f1.data);
+    free(f2.data);
+
+}
+
+
 
 static void init_cone_cylinder (
     struct aa_rx_geom *geom,
@@ -1093,7 +1275,14 @@ AA_API void aa_geom_gl_buffers_init (
                             cone->shape.end_radius );
         break;
     }
+
+    case AA_RX_SPHERE:
+    {
+        init_sphere((struct aa_rx_geom_sphere *)geom);
+        break;
+    }
     default:
+        fprintf(stderr, "Unknown shape type: %d\n", geom->type );
         break;
         //abort();
     }

@@ -436,7 +436,7 @@
                              (("quaternion" "rpy"
                                "translation"
                                "type" "axis" "offset" "parent"
-                               "shape" "dimension" "delta" "thickness" "color" "alpha" "specular")
+                               "shape" "mesh" "dimension" "delta" "thickness" "color" "alpha" "specular")
                               (setq properties (add-prop properties stmt)))
                              (("visual" "collision")
                               (setq properties (add-prop-bool properties stmt)))

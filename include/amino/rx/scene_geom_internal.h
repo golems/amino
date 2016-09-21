@@ -42,6 +42,7 @@
 #include <stdatomic.h>
 #endif
 
+#include "scene_geom.h"
 #include "amino/refcount.h"
 
 /**

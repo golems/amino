@@ -368,7 +368,7 @@ if AMINO_GL
 
 # OpenGL support
 lib_LTLIBRARIES += libamino-gl.la
-libamino_gl_la_SOURCES = src/amino_gl.c src/rx/geodesic.cpp
+libamino_gl_la_SOURCES = src/amino_gl.c
 
 libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)

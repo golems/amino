@@ -72,6 +72,13 @@ aa_dump_vec( FILE *file, const double *v, size_t n ) {
 }
 
 AA_API void
+aa_dump_vecf( FILE *file, const float *v, size_t n ) {
+    for( size_t i = 0; i < n-1; i ++ )
+        fprintf(file, "%f\t", v[i] );
+    fprintf(file, "%f\n", v[n-1]);
+}
+
+AA_API void
 aa_dump_mat( FILE *file, const double *A, size_t m, size_t n  ) {
     for( size_t i = 0; i < m; i ++ ) {
         for( size_t j = 0; j < n-1; j ++ ) {
