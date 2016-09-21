@@ -56,7 +56,29 @@
 #include "amino/getset.h"
 
 AA_VECTOR_DEF(GLfloat, glfloat_vec);
+
+static void glfloat_vec_push_all( glfloat_vec *dst, const double *src, size_t size )
+{
+    for( size_t i = 0; i < size; i ++ ) {
+        glfloat_vec_push(dst,(GLfloat)src[i]);
+    }
+}
+
 AA_VECTOR_DEF(unsigned, u_vec);
+
+static void u_vec_push_all( u_vec *dst, const unsigned *src, size_t size )
+{
+    for( size_t i = 0; i < size; i ++ ) {
+        u_vec_push(dst,src[i]);
+    }
+}
+
+static void u_vec_push3( u_vec *v, unsigned i, unsigned j, unsigned k )
+{
+    u_vec_push(v,i);
+    u_vec_push(v,j);
+    u_vec_push(v,k);
+}
 
 //static void check_error( const char *name ) {
 #define check_error(name)                                               \
@@ -959,26 +981,20 @@ AA_API void aa_geom_gl_buffers_init_box (
 /*     } */
 /* } */
 
-static void glfloat_vec_push_all( glfloat_vec *dst, const double *src, size_t size )
-{
-    for( size_t i = 0; i < size; i ++ ) {
-        glfloat_vec_push(dst,(GLfloat)src[i]);
-    }
-}
 
-static void tetra_side (glfloat_vec *V, glfloat_vec *N,
-                        const double *a, const double *b, const double *c )
-{
-    double nn[3];
-    aa_tf_cross(a,b,nn);
-    glfloat_vec_push_all(V,a,3);
-    glfloat_vec_push_all(V,b,3);
-    glfloat_vec_push_all(V,c,3);
-    glfloat_vec_push_all(N,nn,3);
-    glfloat_vec_push_all(N,nn,3);
-    glfloat_vec_push_all(N,nn,3);
+/* static void tetra_side (glfloat_vec *V, glfloat_vec *N, */
+/*                         const double *a, const double *b, const double *c ) */
+/* { */
+/*     double nn[3]; */
+/*     aa_tf_cross(a,b,nn); */
+/*     glfloat_vec_push_all(V,a,3); */
+/*     glfloat_vec_push_all(V,b,3); */
+/*     glfloat_vec_push_all(V,c,3); */
+/*     glfloat_vec_push_all(N,nn,3); */
+/*     glfloat_vec_push_all(N,nn,3); */
+/*     glfloat_vec_push_all(N,nn,3); */
 
-}
+/* } */
 
 static void
 geodesic_round( glfloat_vec *V,
@@ -1030,21 +1046,10 @@ geodesic_round( glfloat_vec *V,
         glfloat_vec_push_all(V,u12,3);
 
         // New Faces
-        u_vec_push(new_faces, j0);
-        u_vec_push(new_faces, k01);
-        u_vec_push(new_faces, k02);
-
-        u_vec_push(new_faces, j1);
-        u_vec_push(new_faces, k01);
-        u_vec_push(new_faces, k12);
-
-        u_vec_push(new_faces, j2);
-        u_vec_push(new_faces, k02);
-        u_vec_push(new_faces, k12);
-
-        u_vec_push(new_faces, k01);
-        u_vec_push(new_faces, k02);
-        u_vec_push(new_faces, k12);
+        u_vec_push3(new_faces, j0, k01, k02);
+        u_vec_push3(new_faces, j1, k01, k12);
+        u_vec_push3(new_faces, j2, k02, k12);
+        u_vec_push3(new_faces, k01, k02, k12);
 
     }
 }
@@ -1052,42 +1057,111 @@ geodesic_round( glfloat_vec *V,
 static void
 init_sphere ( struct aa_rx_geom_sphere *geom )
 {
-    /* Initialize a tetrahedon */
     double r = geom->shape.radius;
-    double angle = acos(-1.0 / 3.0);
-    double a[3] = {0,0,r};
-    double b[3], c[3], d[3];
-
-    double Ry[9], Rz[9];
-    aa_tf_yangle2rotmat(angle, Ry);
-    aa_tf_zangle2rotmat(2*M_PI/3, Rz);
-
-    aa_tf_rotmat_rot(Ry,a,b);
-    aa_tf_rotmat_rot(Rz,b,c);
-    aa_tf_rotmat_rot(Rz,c,d);
 
     glfloat_vec N, V;
     glfloat_vec_init(&N,1);
     glfloat_vec_init(&V,1);
-
-
-    tetra_side(&V,&N, a,b,c);
-    tetra_side(&V,&N, a,b,d);
-    tetra_side(&V,&N, a,c,d);
-    tetra_side(&V,&N, b,c,d);
-
-    /* Geodesic */
-    size_t i = V.size / 3;
     u_vec f1, f2;
     u_vec_init(&f1,1);
     u_vec_init(&f2,1);
     u_vec *faces = &f1, *new_faces = &f2, *tmp_faces;
 
-    for( size_t j = 0; j < i; j ++ ) {
-        u_vec_push(new_faces, (unsigned)j);
+    /* Initialize a tetrahedon */
+    /* double angle = acos(-1.0 / 3.0); */
+    /* double a[3] = {0,0,r}; */
+    /* double b[3], c[3], d[3]; */
+
+    /* double Ry[9], Rz[9]; */
+    /* aa_tf_yangle2rotmat(angle, Ry); */
+    /* aa_tf_zangle2rotmat(2*M_PI/3, Rz); */
+
+    /* aa_tf_rotmat_rot(Ry,a,b); */
+    /* aa_tf_rotmat_rot(Rz,b,c); */
+    /* aa_tf_rotmat_rot(Rz,c,d); */
+
+
+
+    /* tetra_side(&V,&N, a,b,c); */
+    /* tetra_side(&V,&N, a,b,d); */
+    /* tetra_side(&V,&N, a,c,d); */
+    /* tetra_side(&V,&N, b,c,d); */
+
+    {
+        double phi = ( 1 + sqrt(5) ) / 2;
+        double n = r / sqrt( 1 + phi*phi );
+
+        //double p = 1;
+        //double q = ( 1 + sqrt(5) ) / 2;
+
+        double p = n;
+        double q = phi * n ;
+        double v[] = { 0, q, p,      /*  0 */
+                       0, q, -p,     /*  1 */
+                       0, -q, p,     /*  2 */
+                       0, -q, -p,    /*  3 */
+
+                       p, 0, q,      /*  4 */
+                       p, 0, -q,     /*  5 */
+                       -p, 0, q,     /*  6 */
+                       -p, 0, -q,    /*  7 */
+
+                       q, p, 0,      /*  8 */
+                       q, -p, 0,     /*  9 */
+                       -q, p, 0,     /* 10 */
+                       -q, -p, 0 };  /* 11 */
+
+        unsigned f[] =  {
+            0, 4, 8,
+            0, 8, 1,
+            0, 1, 10,
+            0, 10, 6,
+            0, 4, 6,
+
+            3, 2, 9,
+            3, 9, 5,
+            3, 5, 7,
+            3, 7, 11,
+            3, 11, 2,
+
+            6, 2, 4,
+            2, 4, 9,
+            4, 9, 8,
+            9, 8, 5,
+            8, 5, 1,
+            5, 1, 7,
+            1, 7, 10,
+            7, 10, 11,
+            10, 11, 6,
+            11, 6, 2
+        };
+
+
+        /* Octahedron */
+        /* double v[] = { 0,  0,  r,  /\* 0 *\/ */
+        /*                0,  0, -r,  /\* 1 *\/ */
+        /*                0,  r,  0,  /\* 2 *\/ */
+        /*                0, -r,  0,  /\* 3 *\/ */
+        /*                r,  0,  0,  /\* 4 *\/ */
+        /*                -r,  0, 0}; /\* 5 *\/ */
+
+        /* unsigned f[] =  { 0, 2, 4, */
+        /*                   0, 2, 5, */
+        /*                   0, 3, 4, */
+        /*                   0, 3, 5, */
+        /*                   1, 2, 4, */
+        /*                   1, 2, 5, */
+        /*                   1, 3, 4, */
+        /*                   1, 3, 5 }; */
+
+        glfloat_vec_push_all(&V, v, sizeof(v)/sizeof(v[0]));
+        u_vec_push_all( new_faces, f, sizeof(f)/sizeof(f[0]) );
     }
 
-    for( size_t j = 0; j < 4; j ++ ) {
+
+    /* Geodesic */
+
+    for( size_t j = 0; j < 3; j ++ ) {
         tmp_faces = new_faces;
         new_faces = faces;
         faces = tmp_faces;
@@ -1097,7 +1171,7 @@ init_sphere ( struct aa_rx_geom_sphere *geom )
 
 
     /* Compute normals */
-    i = V.size / 3;
+    size_t i = V.size / 3;
     N.size = 0;
     for ( size_t j = 0; j < i; j ++ ) {
         GLfloat *v = V.data + 3*j;
@@ -1109,8 +1183,8 @@ init_sphere ( struct aa_rx_geom_sphere *geom )
     }
 
 
-    printf("verts: %lu\n", V.size/3);
-    printf("faces: %lu\n", new_faces->size/3);
+    /* printf("verts: %lu\n", V.size/3); */
+    /* printf("faces: %lu\n", new_faces->size/3); */
 
 
     /* Construct GL mesh */
