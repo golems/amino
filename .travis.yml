@@ -1,8 +1,3 @@
-#cache:
-#  apt: true
-#  directories:
-#    - /usr/local
-
 language: cpp
 
 matrix:
@@ -15,14 +10,48 @@ matrix:
       compiler: clang
       env: CPPFLAGS=-I/usr/local/opt/openblas/include
 
+addons:
+  apt:
+    packages:
+      - libboost-all-dev
+      - gfortran
+      - automake
+      - autoconf
+      - autoconf-archive
+      - autotools-dev
+      - libblas-dev
+      - liblapack-dev
+      - libsdl2-dev
+      - libompl-dev
+      - coinor-libclp-dev
+      - libglpk-dev
+      - libav-tools
+      - doxygen
+      - groff
+
 install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
       ./install-apt.sh;
+      if [ ! -e /usr/local/lib/libfcl.so ]; then
+        wget -O - https://github.com/danfis/libccd/archive/v2.0.tar.gz | tar zxf - ;
+        cd libccd-2.0;
+        cmake .;
+        sudo make install;
+        cd ..;
+        wget -O - https://github.com/flexible-collision-library/fcl/archive/0.4.0.tar.gz | tar zxf - ;
+        cd fcl-0.4.0;
+        cmake .;
+        sudo make install;
+        sudo ldconfig;
+        cd ..;
+      fi;
     fi;
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
        brew update;
+       brew tap homebrew/science;
        brew unlink libtool;
-       brew install autoconf-archive homebrew/science/openblas homebrew/science/maxima sdl2 libtool;
+       brew install autoconf-archive openblas maxima sdl2 libtool ompl;
+       brew install https://raw.github.com/dartsim/homebrew-dart/master/fcl.rb;
     fi
 
 script:
@@ -35,30 +64,11 @@ script:
        make -kj4 && make check;
     fi
 
-
-
-#addons:
-#  apt:
-#    packages:
-#      - gfortran
-#      - autoconf
-#      - automake
-#      - autoconf-archive
-#      - autotools-dev \
-#      - maxima
-#      - libblas-dev
-#      - liblapack-dev \
-#      - libglew-dev
-#      - libsdl2-dev
-#      - libfcl-dev
-#      - libompl-dev
-#      - flex
-#      - coinor-libclp-dev
-#      - libglpk-dev
-#      - liblpsolve55-dev
-
-
 #before_install:
   #- sudo docker pull ubuntu:xenial
   #- docker ps -a
 
+#cache:
+#  apt: true
+#  directories:
+#    - /usr/local
