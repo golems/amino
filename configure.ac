@@ -654,18 +654,22 @@ AC_DEFUN([CL_CHECK_SYSTEM_ERROR],
 CL_CHECK_SYSTEM([quicklisp],
                 [HAVE_QUICKLISP=yes],
                 [AC_MSG_WARN([Quicklisp not found: Common Lisp dependencies may not load])])
-dnl CL_CHECK_SYSTEM_ERROR([alexandria])
-dnl CL_CHECK_SYSTEM_ERROR([cffi])
-dnl CL_CHECK_SYSTEM_ERROR([cffi-grovel])
-dnl CL_CHECK_SYSTEM_ERROR([cxml])
-dnl CL_CHECK_SYSTEM_ERROR([cl-ppcre])
-dnl CL_CHECK_SYSTEM_ERROR([sycamore])
 
 AS_IF([test "x$HAVE_QUICKLISP" != xyes -a "x$with_common_lisp=auto"],
       [COMMON_LISP=""
        AC_MSG_NOTICE([Disabling common lisp support.])])
 
 ])
+
+AS_IF([test "x$COMMON_LISP" != x],
+      [CL_CHECK_SYSTEM_ERROR([cffi-grovel])])
+
+dnl CL_CHECK_SYSTEM_ERROR([alexandria])
+dnl CL_CHECK_SYSTEM_ERROR([cffi])
+dnl CL_CHECK_SYSTEM_ERROR([cxml])
+dnl CL_CHECK_SYSTEM_ERROR([cl-ppcre])
+dnl CL_CHECK_SYSTEM_ERROR([sycamore])
+
 
 AC_SUBST([COMMON_LISP])
 AM_CONDITIONAL([HAVE_COMMON_LISP],[test "x$COMMON_LISP" != "x"])

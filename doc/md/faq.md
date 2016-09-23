@@ -51,53 +51,6 @@ Scene Graphs {#faq_scenegraphs}
     with dlopen().  To reload the scene graph, recompile the scene
     graph and dlopen() the library again.
 
-Common Errors {#faq_errors}
-=============
-
-* Q: `./configure` fails with when checking for cffi-grovel.
-
-    - A: Older versions of SBCL (around 1.2.4) have issues with current
-      versions of CFFI.  Please try installing a recent SBCL (>1.3.4).
-
-* Q: I get error messages about missing .obj files or Blender being
-  unable to convert a .dae to Wavefront OBJ.
-
-  - A: We use Blender to convert various mesh formats to Wavefront OBJ,
-    then import the OBJ file.  The Blender binaries in the Debian and
-    Ubuntu repositories (as of Jessie and Trusty) are not built with
-    COLLADA (.dae) support.  You can download the prebuilt binaries
-    from http://www.blender.org/ which do support COLLADA.
-
-* Q: When I try to compile a URDF file, I receive the error "aarx.core:
-  not found".
-
-  - A: URDF support in amino is only built if the necessary dependencies
-    are installed.  Please ensure that you have SBCL, Quicklisp, and
-    Sycamore installed and rebuild amino if necessary.  See
-    `./INSTALL` for details.
-
-* Q: When building aarx.core, I get an enormous stack trace, starting
-  with:
-  `Unable to load any of the alternatives:
-     ("libamino_planning.so" (:DEFAULT "libamino_planning"))`.
-
-  - A: This means that SBCL is unable to load the planning library or one
-    of its dependecies, such as OMPL.  Typically, this means your
-    linker is not configured properly.
-
-    Sometimes, you just need to run `ldconfig` or `sudo ldconfig` to
-    update the linker cache.
-
-    If this doesn't work, you can set the LD_LIBRARY_PATH variable.
-    First, find the location of libompl.so, e.g., by calling `locate
-    libompl.so`.  Then, add the directory to your LD_LIBRARY_PATH
-    variable.  Most commonly, this will mean adding one of the
-    following lines to your shell startup files (e.g., .bashrc):
-
-    `export LD_LIBRARY_PATH="/usr/local/lib/:$LD_LIBRARY_PATH"`
-
-    `export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"`
-
 Performance {#faq_performance}
 ===========
 
