@@ -70,6 +70,10 @@ cache:
   directories:
     - /usr/local
 
+notifications:
+  slack:
+    secure: UsjxGKXWmNW+6nt0ZDwU3MOEFXf69Paj8gYUpTB/DLrgC9d7LtzvYYmSDitc6XFMVB3RjodhIcD3+Kayz8+SFu/fsRBPqwT19B7e0ThmGY/DHr1xN8A3s/OmHAK+Pybvj3DEUDHhoiqUzKftlxHpUhRXJyxBo9r+CYb+XDnJfQs=
+
 
 #before_install:
   #- sudo docker pull ubuntu:xenial
