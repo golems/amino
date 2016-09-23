@@ -518,9 +518,16 @@ AS_IF([test "x$with_ompl" != xno], [
 AS_IF([test "x$with_ompl" = xyes -a "x$HAVE_OMPL" != xyes],
       [AC_MSG_ERROR([OMPL not found])])
 
+# check that we also have FCL
 AS_IF([test "x$HAVE_OMPL" = xyes -a "x$HAVE_FCL" != xyes],
-      [AC_MSG_ERROR([OMPL support requires FCL])])
+[
+  AS_IF([test "x$with_ompl" = xyes],
+        [AC_MSG_ERROR([OMPL support requires FCL])],
+        [AC_MSG_WARN([OMPL support requires FCL, disabling])
+         HAVE_OMPL=disabled])
+])
 
+# check for OMPL type templates
 AS_IF([test "x$HAVE_OMPL" = xyes],
 [
   AC_LANG([C++])
