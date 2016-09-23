@@ -42,6 +42,10 @@
   (cc-flags #.(concatenate 'string "-I"
                            (namestring (asdf:system-source-directory :amino))
                            "../include")
+            #.(when (boundp 'cl-user::*top-srcdir*)
+                (concatenate 'string "-I"
+                             cl-user::*top-srcdir*
+                             "/include"))
             #.(when (boundp 'cl-user::*top-builddir*)
                 (concatenate 'string "-I"
                              cl-user::*top-builddir*

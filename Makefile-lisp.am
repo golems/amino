@@ -6,6 +6,7 @@ dist_bin_SCRIPTS += share/aarxc share/aarxpy
 # Keep this list in sync with amino.asd
 aarx_core_SOURCES = \
 	lisp/package.lisp \
+	lisp/util.lisp \
 	lisp/config-macro.lisp \
 	lisp/basic-type.lisp \
 	lisp/grovel.lisp \
@@ -72,9 +73,22 @@ nodist_aarx_core_SOURCES = \
 	$(top_builddir)/lisp/config.lisp
 
 lisp/libdir.lisp: configure
-	echo "(in-package :amino) (defparameter *libdir* \"${libdir}\")" > lisp/libdir.lisp
+	echo "(in-package :amino) " > lisp/libdir.lisp
+	echo "(defparameter *libdir* \"${libdir}\")" >>  lisp/libdir.lisp
+	echo "(defparameter *builddir* \"${builddir}\")" >>  lisp/libdir.lisp
+	echo "(defparameter *srcdir* \"${srcdir}\")" >>  lisp/libdir.lisp
 
 aarx.core: $(top_srcdir)/share/make-aarx.lisp $(aarx_core_SOURCES) $(nodist_aarx_core_SOURCES) libamino.la libamino-gl.la libamino-collision.la libamino-planning.la libamino-xerbla-nop.la lisp/libdir.lisp
+	$(MKDIR_P) lisp/rx/scenefile
+	$(MKDIR_P) lisp/rx/render
+	$(MKDIR_P) lisp/py
+	$(MKDIR_P) lisp/opt
+	if test "x$(top_srcdir)" != "x$(top_builddir)"; then \
+		for i in $(aarx_core_SOURCES); \
+		do \
+			cp -v "$(top_srcdir)/$$i" "$(top_builddir)/$$i"; \
+		done; \
+	fi
 	$(top_srcdir)/share/make-aarx.sh $(COMMON_LISP) $(top_srcdir) $(top_builddir)
 
 

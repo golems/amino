@@ -601,7 +601,10 @@ clean-local:
 
 distclean-local:
 	-rm -rf doc/manual doc/aarxc.1 doc/doxygen_sqlite3.db
-
+	-rm -rf lisp/libdir.lisp
+	if test "x$(top_srcdir)" != "x$(top_builddir)"; then \
+		rm -rf $(top_builddir)/lisp; \
+	fi
 sync-doc:
 	rsync -r doc/manual/ code.golems.org:/srv/www/amino.golems.org
 
@@ -624,7 +627,8 @@ EXTRA_DIST += \
 	doc/md/ReadMe.md \
 	doc/md/scenefile.md \
 	doc/footer.html \
-	doc/carousel.html
+	doc/carousel.html \
+	doc/logo.png
 
 if HAVE_DOXYGEN
 

@@ -48,6 +48,7 @@
                (:file "config-macro" :depends-on ("package"))
                (:file "config" :depends-on ("config-macro"))
                (:file "libdir" :depends-on ("config-macro"))
+               (:file "util" :depends-on ("package" "libdir"))
                ;; TYPE
                (:file "basic-type" :depends-on ("package"))
                (:file "sparse" :depends-on ("package"))

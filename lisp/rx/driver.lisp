@@ -40,7 +40,7 @@
 
 
 (defparameter +copying+
-  (read-file-into-string (merge-pathnames "COPYING" *robray-root*)))
+  (read-file-into-string (merge-pathnames "COPYING" amino::*amino-srcdir*)))
 
 (defun aarx-version (&optional (stream *standard-output*))
   (format stream
