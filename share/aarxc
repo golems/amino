@@ -219,6 +219,13 @@ if test -z "$AARX_MEMORY"; then
     AARX_MEMORY="$AARX_MEMORY_DEFAULT"
 fi
 
+
+if test -z "$AARX_SCENE"; then
+    >&2 echo "aarxc: error: no input scene"
+    >&2 echo "see \`aarxc --help' for usage"
+    exit 1
+fi
+
 # env | sort
 
 exec aarx.core --dynamic-space-size "$AARX_MEMORY" \
