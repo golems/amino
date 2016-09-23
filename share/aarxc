@@ -220,7 +220,7 @@ if test -z "$AARX_MEMORY"; then
 fi
 
 
-if test -z "$AARX_SCENE"; then
+if test -z "$AARX_SCENE" -a -z "$AARX_VERSION" -a -z "$AARX_VERSION_MAN"; then
     >&2 echo "aarxc: error: no input scene"
     >&2 echo "see \`aarxc --help' for usage"
     exit 1
