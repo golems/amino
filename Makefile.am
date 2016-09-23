@@ -130,10 +130,6 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_sub.h    \
 	include/amino/rx/scene_kin.h    \
 	include/amino/rx/scene_dyn.h    \
-	include/amino/rx/ompl/scene_state_space.h \
-	include/amino/rx/ompl/scene_state_validity_checker.h \
-	include/amino/rx/ompl/scene_workspace_goal.h \
-	include/amino/rx/ompl/scene_ompl.h \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_planning.h \
 	include/amino/rx/scene_sdl.h    \
@@ -141,6 +137,18 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_plugin.h \
 	include/amino/rx/mp_seq.h \
 	include/amino/rx/wavefront.h
+
+rxomplincludedir = $(rxincludedir)/ompl
+rxomplinclude_HEADERS = \
+	include/amino/rx/ompl/scene_state_space.h \
+	include/amino/rx/ompl/scene_state_validity_checker.h \
+	include/amino/rx/ompl/scene_workspace_goal.h \
+	include/amino/rx/ompl/scene_ompl.h
+
+omplcompatincludedir = $(pkgincludedir)/ompl-compat/ompl/base
+omplcompatinclude_HEADERS = \
+	include/amino/ompl-compat/ompl/base/TypedStateValidityChecker.h \
+	include/amino/ompl-compat/ompl/base/TypedSpaceInformation.h
 
 ctincludedir = $(pkgincludedir)/ct
 

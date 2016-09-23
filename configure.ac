@@ -501,6 +501,7 @@ AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
 
 
 ## OMPL ##
+AC_LANG([C++])
 AC_ARG_WITH([ompl],
             [AS_HELP_STRING([--without-ompl], [Disable support for the Open Motion Planning Library (OMPL)])],
             [],
@@ -509,18 +510,32 @@ AC_ARG_WITH([ompl],
 HAVE_OMPL=disabled
 AS_IF([test "x$with_ompl" != xno], [
   PKG_CHECK_MODULES([OMPL],
-                    [ompl >= 1.2.1],
+                    [ompl],
                     [HAVE_OMPL=yes],
                     [HAVE_OMPL=no])
 ])
-
-
 
 AS_IF([test "x$with_ompl" = xyes -a "x$HAVE_OMPL" != xyes],
       [AC_MSG_ERROR([OMPL not found])])
 
 AS_IF([test "x$HAVE_OMPL" = xyes -a "x$HAVE_FCL" != xyes],
       [AC_MSG_ERROR([OMPL support requires FCL])])
+
+AS_IF([test "x$HAVE_OMPL" = xyes],
+[
+  AC_LANG([C++])
+  CPPFLAGS_SAVED="$CPPFLAGS"
+  CPPFLAGS="$CPPFLAGS $OMPL_CFLAGS $CXXFLAGS"
+
+  AC_CHECK_HEADERS([ompl/base/TypedSpaceInformation.h],
+                   [],
+                   [
+                   AC_MSG_NOTICE([Including OMPL compatibility headers])
+                   OMPL_CFLAGS="$OMPL_CFLAGS -I$srcdir/include/amino/ompl-compat"])
+
+  CPPFLAGS="$CPPFLAGS_SAVED"
+])
+
 
 AC_SUBST([OMPL_CFLAGS])
 AC_SUBST([OMPL_LIBS])
