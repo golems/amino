@@ -57,7 +57,7 @@ install:
 
 script:
   - autoreconf -i
-  - ./configure --without-ompl --without-common-lisp;
+  - ./configure
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
        make -k -j $JOBS distcheck;
     fi;
