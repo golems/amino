@@ -29,7 +29,7 @@ Optional Dependencies {#installation_setup_optional}
 These dependecies are optional and may be used to enable additional
 features in Amino:
 
-* Robot Models (URDF, Collada, Wavefront, etc.):
+* Robot Models (URDF, COLLADA, Wavefront, etc.):
   - [Flex, The Fast Lexical Analyzer] (http://flex.sourceforge.net/)
     (needed to parse Wavefront OBJ files)
   - [Blender] (http://www.blender.org) (used to convert mesh files, see
@@ -74,22 +74,43 @@ To install the dependencies on Debian or Ubuntu GNU/Linux via APT:
 
 Now proceed to Quicklisp Setup below.
 
-*Note 1*: Some versions of Blender in Ubuntu and Debian do not support
-          the Collada format for 3D meshes, so you may need to install
-          Blender manually in this case
-          (see https://www.blender.org/download/).
+**Note 1**: Some versions of Blender in Ubuntu and Debian do not support
+           the COLLADA format for 3D meshes, so you may need to install
+           Blender manually in this case
+           (see https://www.blender.org/download/).
 
-*Note 2*: The versions of SBCL in some distributions (e.g., SBCL 1.2.4
-          in Debian Jessie) do not work with new versions of [CFFI]
-          (https://common-lisp.net/project/cffi/).  In these cases,
-          you will need to install SBCL manually (see
-          http://www.sbcl.org/platform-table.html).
+**Note 2**: The versions of SBCL in some distributions (e.g., SBCL 1.2.4
+            in Debian Jessie) do not work with new versions of [CFFI]
+            (https://common-lisp.net/project/cffi/).  In these cases,
+            you will need to install SBCL manually (see
+            http://www.sbcl.org/platform-table.html).
 
-Mac OS X using MacPorts {#installation_setup_mac}
+Mac OS X {#installation_setup_mac}
 -----------------------
 
-* To install the dependencies on Mac OS X via [MacPorts]
-  (https://www.macports.org/):
+### Install Dependencies via Homebrew
+
+If you use the [Homebrew] (http://brew.sh/) package manager, you can
+install the dependencies as follows:
+
+* Install packages:
+
+        brew tap homebrew/science
+        brew install autoconf-archive openblas maxima sdl2 libtool ompl
+        brew install https://raw.github.com/dartsim/homebrew-dart/master/fcl.rb
+
+* Set the CPPFLAGS variable so that the `cblas.h` header can be found:
+
+        CPPFLAGS=-I/usr/local/opt/openblas/include
+
+* Proceed to Blender Setup below
+
+### Install Dependencies via MacPorts
+
+If you use the [MacPorts] (https://www.macports.org/) package manager,
+you can install the dependencies as follows:
+
+* Install packages:
 
         sudo port install \
              coreutils wget \
@@ -123,6 +144,10 @@ Mac OS X using MacPorts {#installation_setup_mac}
         CPPFLAGS="-I/opt/local/include"
         LDFLAGS="-L/opt/local/lib"
 
+* Proceed to Blender Setup below
+
+### Blender Setup
+
 * When installing blender on Mac OS X, you may need to create a
   wrapper script.  If you copy the blender binaries to
   `/usr/local/blender-2`, then then
@@ -138,12 +163,6 @@ Mac OS X using MacPorts {#installation_setup_mac}
         exec /usr/local/blender-2/blender.app/Contents/MacOS/blender $@
 
 Now proceed to Quicklisp Setup below.
-
-*Note*: By default, the demo programs are not built on Mac OS X due to
-        dynamic loading issues.  To build the demos, first install
-        Amino as described below, then manually enable the demos by
-        running `./configure --enable-demos && make`.  The demos can
-        then be built using the installed amino libraries.
 
 Quicklisp Setup {#installation_setup_quicklisp}
 ---------------
