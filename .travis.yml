@@ -3,35 +3,28 @@ language: cpp
 matrix:
   include:
     - os: linux
-      dist: trusty
       sudo: required
-      compiler: gcc
-      env: JOBS=4
+      services:
+        - docker
+      env: DOCKERFILE="debian-jessie" JOBS=4
+    - os: linux
+      sudo: required
+      services:
+        - docker
+      env: DOCKERFILE="ubuntu-xenial" JOBS=4
     - os: osx
       compiler: clang
       env: CPPFLAGS=-I/usr/local/opt/openblas/include JOBS=2
-
-addons:
-  apt:
-    packages:
-      - libboost-all-dev
-      - gfortran
-      - automake
-      - autoconf
-      - autoconf-archive
-      - autotools-dev
-      - libblas-dev
-      - liblapack-dev
-      - libsdl2-dev
-      - libompl-dev
-      - coinor-libclp-dev
-      - libglpk-dev
-      - libav-tools
-      - doxygen
-      - groff
+    # - os: linux
+    #   dist: trusty
+    #   sudo: required
+    #   compiler: gcc
+    #   env: JOBS=4
 
 install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+  - if [ -n "$DOCKERFILE" ]; then
+      docker build -t "$DOCKERFILE" -f "share/docker/$DOCKERFILE" .;
+    elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
       ./install-apt.sh;
       if [ ! -e /usr/local/lib/libfcl.so ]; then
         wget -O - https://github.com/danfis/libccd/archive/v2.0.tar.gz | tar zxf - ;
@@ -46,8 +39,7 @@ install:
         sudo ldconfig;
         cd ..;
       fi;
-    fi;
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
        brew update;
        brew tap homebrew/science;
        brew unlink libtool;
@@ -56,25 +48,48 @@ install:
     fi
 
 script:
-  - autoreconf -i
-  - ./configure
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-       make -k -j $JOBS distcheck;
-    fi;
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-       make -k -j $JOBS && make check;
+  - if [ -n "$DOCKERFILE" ]; then
+      docker run "$DOCKERFILE" /bin/sh -c "cd /root/amino && autoreconf -i && ./configure && make -k -j $JOBS distcheck";
+    elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
+      autoreconf -i &&
+      ./configure &&
+      make -k -j $JOBS distcheck;
+    elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
+      autoreconf -i &&
+      ./configure &&
+      make -k -j $JOBS &&
+      make check;
     fi
-
-cache:
-  apt: true
-  directories:
-    - /usr/local
 
 notifications:
   slack:
     secure: UsjxGKXWmNW+6nt0ZDwU3MOEFXf69Paj8gYUpTB/DLrgC9d7LtzvYYmSDitc6XFMVB3RjodhIcD3+Kayz8+SFu/fsRBPqwT19B7e0ThmGY/DHr1xN8A3s/OmHAK+Pybvj3DEUDHhoiqUzKftlxHpUhRXJyxBo9r+CYb+XDnJfQs=
 
+#cache:
+  #apt: true
+  #directories:
+    #- /usr/local
 
 #before_install:
   #- sudo docker pull ubuntu:xenial
   #- docker ps -a
+
+
+# addons:
+#   apt:
+#     packages:
+#       - libboost-all-dev
+#       - gfortran
+#       - automake
+#       - autoconf
+#       - autoconf-archive
+#       - autotools-dev
+#       - libblas-dev
+#       - liblapack-dev
+#       - libsdl2-dev
+#       - libompl-dev
+#       - coinor-libclp-dev
+#       - libglpk-dev
+#       - libav-tools
+#       - doxygen
+#       - groff
