@@ -1,0 +1,53 @@
+FROM ubuntu:trusty
+
+RUN apt-get -y update && \
+    apt-get install -y  build-essential gfortran f2c \
+            autoconf automake libtool autoconf-archive autotools-dev \
+            maxima libblas-dev liblapack-dev \
+            libsdl2-dev \
+            libompl-dev \
+            doxygen groff \
+            sbcl \
+            flex libav-tools \
+            coinor-libclp-dev libglpk-dev liblpsolve55-dev \
+            libboost-all-dev cmake \
+            wget
+
+# Install libccd and FCL
+RUN cd &&  \
+    (wget -O - https://github.com/danfis/libccd/archive/v2.0.tar.gz | tar xzf -)  && \
+    cd libccd-2.0 && \
+    cmake . && \
+    make -j && sudo make install && \
+    cd .. && \
+    (wget -O - https://github.com/flexible-collision-library/fcl/archive/0.4.0.tar.gz | tar xzf -)  && \
+    cd fcl-0.4.0 && \
+    cmake . && \
+    make -j && sudo make install && \
+    sudo ldconfig
+
+# Ubuntu Trusty requires a newer SBCL
+RUN cd && \
+    wget 'http://prdownloads.sourceforge.net/sbcl/sbcl-1.3.9-x86-64-linux-binary.tar.bz2' && \
+    tar xf sbcl*.tar.* && \
+    cd sbcl*linux && \
+    sh install.sh
+
+RUN wget https://beta.quicklisp.org/quicklisp.lisp && \
+    sbcl --load quicklisp.lisp \
+         --eval '(quicklisp-quickstart:install)' \
+         --eval '(ql:quickload :cffi)' \
+         --eval '(ql:quickload :cffi-grovel)' \
+         --eval '(ql:quickload :cxml)' \
+         --eval '(ql:quickload :cl-ppcre)' \
+         --eval '(ql:quickload :clpython)' \
+         --eval '(quit)'
+
+ENV LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/lib/x86_64-linux-gnu/
+
+COPY . /root/amino
+
+
+# Local Variables:
+# mode: dockerfile
+# End:

@@ -12,6 +12,11 @@ matrix:
       services:
         - docker
       env: DOCKERFILE="ubuntu-xenial" JOBS=4
+    - os: linux
+      sudo: required
+      services:
+        - docker
+      env: DOCKERFILE="ubuntu-trusty" JOBS=4
     - os: osx
       compiler: clang
       env: CPPFLAGS=-I/usr/local/opt/openblas/include JOBS=2
@@ -26,7 +31,7 @@ matrix:
 
 install:
   - if [ -n "$DOCKERFILE" ]; then
-      docker build -t "$DOCKERFILE" -f "share/docker/$DOCKERFILE" .;
+      ./docker-build.sh "$DOCKERFILE";
     elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
       ./install-apt.sh;
       if [ ! -e /usr/local/lib/libfcl.so ]; then
@@ -52,7 +57,7 @@ install:
 
 script:
   - if [ -n "$DOCKERFILE" ]; then
-      docker run "$DOCKERFILE" /bin/sh -c "cd /root/amino && autoreconf -i && ./configure && make -k -j $JOBS distcheck";
+      ./docker-check.sh "$DOCKERFILE";
     elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
       autoreconf -i &&
       ./configure &&
