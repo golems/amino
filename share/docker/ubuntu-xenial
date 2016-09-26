@@ -9,7 +9,18 @@ RUN apt-get -y update && \
             doxygen groff \
             sbcl \
             flex povray libav-tools \
-            coinor-libclp-dev libglpk-dev liblpsolve55-dev
+            coinor-libclp-dev libglpk-dev liblpsolve55-dev \
+            wget
+
+RUN wget https://beta.quicklisp.org/quicklisp.lisp && \
+    sbcl --load quicklisp.lisp \
+         --eval '(quicklisp-quickstart:install)' \
+         --eval '(ql:quickload :cffi)' \
+         --eval '(ql:quickload :cffi-grovel)' \
+         --eval '(ql:quickload :cxml)' \
+         --eval '(ql:quickload :cl-ppcre)' \
+         --eval '(ql:quickload :clpython)' \
+         --eval '(quit)'
 
 
 COPY . /root/amino
