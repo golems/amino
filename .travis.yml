@@ -15,6 +15,9 @@ matrix:
     - os: osx
       compiler: clang
       env: CPPFLAGS=-I/usr/local/opt/openblas/include JOBS=2
+      cache:
+        directories:
+          - /usr/local
     # - os: linux
     #   dist: trusty
     #   sudo: required
