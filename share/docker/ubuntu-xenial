@@ -10,7 +10,7 @@ RUN apt-get -y update && \
             sbcl \
             flex povray libav-tools \
             coinor-libclp-dev libglpk-dev liblpsolve55-dev \
-            wget
+            wget git
 
 RUN wget https://beta.quicklisp.org/quicklisp.lisp && \
     sbcl --load quicklisp.lisp \
@@ -21,6 +21,14 @@ RUN wget https://beta.quicklisp.org/quicklisp.lisp && \
          --eval '(ql:quickload :cl-ppcre)' \
          --eval '(ql:quickload :clpython)' \
          --eval '(quit)'
+
+RUN cd /usr/local && \
+    (wget -O - http://mirror.cs.umn.edu/blender.org/release/Blender2.77/blender-2.77a-linux-glibc211-x86_64.tar.bz2 | tar xjf -) && \
+    ln -s /usr/local/blender-2.77a-linux-glibc211-x86_64/blender /usr/local/bin
+
+RUN cd && git clone https://github.com/RethinkRobotics/baxter_common
+
+ENV ROS_PACKAGE_PATH=/root/baxter_common
 
 
 COPY . /root/amino

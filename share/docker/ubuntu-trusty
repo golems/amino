@@ -1,6 +1,8 @@
 FROM ubuntu:trusty
 
-RUN apt-get -y update && \
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' && \
+    apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net --recv-key 0xB01FA116 && \
+    apt-get update && \
     apt-get install -y  build-essential gfortran f2c \
             autoconf automake libtool autoconf-archive autotools-dev \
             maxima libblas-dev liblapack-dev \
@@ -11,7 +13,10 @@ RUN apt-get -y update && \
             flex libav-tools \
             coinor-libclp-dev libglpk-dev liblpsolve55-dev \
             libboost-all-dev cmake \
-            wget
+            wget git \
+            ros-indigo-baxter-description
+
+ENV ROS_PACKAGE_PATH=/opt/ros/indigo/share
 
 # Install libccd and FCL
 RUN cd &&  \
@@ -42,6 +47,10 @@ RUN wget https://beta.quicklisp.org/quicklisp.lisp && \
          --eval '(ql:quickload :cl-ppcre)' \
          --eval '(ql:quickload :clpython)' \
          --eval '(quit)'
+
+RUN cd /usr/local && \
+    (wget -O - http://mirror.cs.umn.edu/blender.org/release/Blender2.77/blender-2.77a-linux-glibc211-x86_64.tar.bz2 | tar xjf -) && \
+    ln -s /usr/local/blender-2.77a-linux-glibc211-x86_64/blender /usr/local/bin
 
 ENV LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/lib/x86_64-linux-gnu/
 
