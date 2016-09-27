@@ -12,30 +12,18 @@ RUN apt-get -y update && \
             coinor-libclp-dev libglpk-dev liblpsolve55-dev \
             wget git
 
+COPY . /root/amino
+
 # Debian Jessie requires a newer SBCL
-RUN wget 'http://prdownloads.sourceforge.net/sbcl/sbcl-1.3.9-x86-64-linux-binary.tar.bz2' && \
-    tar xf sbcl*.tar.* && \
-    cd sbcl*linux && \
-    sh install.sh
+RUN /root/amino/share/docker/install-sbcl.sh
 
-RUN wget https://beta.quicklisp.org/quicklisp.lisp && \
-    sbcl --load quicklisp.lisp \
-         --eval '(quicklisp-quickstart:install)' \
-         --eval '(ql:quickload :cffi)' \
-         --eval '(ql:quickload :cffi-grovel)' \
-         --eval '(ql:quickload :cxml)' \
-         --eval '(ql:quickload :cl-ppcre)' \
-         --eval '(ql:quickload :clpython)' \
-         --eval '(quit)'
+RUN cd && /root/amino/share/docker/install-quicklisp.sh
 
-RUN cd /usr/local && \
-    (wget -O - http://mirror.cs.umn.edu/blender.org/release/Blender2.77/blender-2.77a-linux-glibc211-x86_64.tar.bz2 | tar xjf -) && \
-    ln -s /usr/local/blender-2.77a-linux-glibc211-x86_64/blender /usr/local/bin
+RUN /root/amino/share/docker/install-blender.sh
 
 RUN cd && git clone https://github.com/RethinkRobotics/baxter_common
 ENV ROS_PACKAGE_PATH=/root/baxter_common
 
-COPY . /root/amino
 
 
 # Local Variables:
