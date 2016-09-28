@@ -1,10 +1,9 @@
 FROM debian:jessie
 
-COPY . /root/amino
-
 # Debian's httpredir servers are too flaky,
 # retry a few times if it fails
-RUN /root/amino/share/docker/apt-retry.sh \
+COPY ./script/install /root/amino/script/install
+RUN /root/amino/script/install/apt-retry.sh \
         build-essential gfortran f2c \
         autoconf automake libtool autoconf-archive autotools-dev \
         maxima libblas-dev liblapack-dev \
@@ -18,16 +17,16 @@ RUN /root/amino/share/docker/apt-retry.sh \
         ;
 
 # Debian Jessie requires a newer SBCL
-RUN /root/amino/share/docker/install-sbcl.sh
+RUN /root/amino/script/install/install-sbcl.sh
 
-RUN cd && /root/amino/share/docker/install-quicklisp.sh
+RUN cd && /root/amino/script/install/install-quicklisp.sh
 
-RUN /root/amino/share/docker/install-blender.sh
+RUN /root/amino/script/install/install-blender.sh
 
 RUN cd && git clone https://github.com/RethinkRobotics/baxter_common
 ENV ROS_PACKAGE_PATH=/root/baxter_common
 
-
+COPY . /root/amino
 
 # Local Variables:
 # mode: dockerfile

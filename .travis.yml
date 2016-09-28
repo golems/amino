@@ -11,6 +11,11 @@ matrix:
       sudo: required
       services:
         - docker
+      env: DOCKERFILE="debian-sid" JOBS=4
+    - os: linux
+      sudo: required
+      services:
+        - docker
       env: DOCKERFILE="ubuntu-xenial" JOBS=4
     - os: linux
       sudo: required
@@ -23,6 +28,9 @@ matrix:
       cache:
         directories:
           - /usr/local
+  allow_failures:
+    - env: DOCKERFILE="debian-sid" JOBS=4
+
     # - os: linux
     #   dist: trusty
     #   sudo: required
@@ -31,7 +39,7 @@ matrix:
 
 install:
   - if [ -n "$DOCKERFILE" ]; then
-      ./docker-build.sh "$DOCKERFILE";
+      ./script/docker-build.sh "$DOCKERFILE";
     elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
        brew update;
        brew tap homebrew/science;
@@ -42,7 +50,7 @@ install:
 
 script:
   - if [ -n "$DOCKERFILE" ]; then
-      ./docker-check.sh "$DOCKERFILE";
+      ./script/docker-check.sh "$DOCKERFILE";
     elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
       autoreconf -i &&
       ./configure &&

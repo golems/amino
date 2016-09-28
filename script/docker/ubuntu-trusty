@@ -1,5 +1,6 @@
 FROM ubuntu:trusty
 
+COPY ./script/install /root/amino/script/install
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' && \
     apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net --recv-key 0xB01FA116 && \
     apt-get update && \
@@ -18,23 +19,22 @@ RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main"
 
 ENV ROS_PACKAGE_PATH=/opt/ros/indigo/share
 
-COPY . /root/amino
-
 # Install libccd and FCL
 RUN cd &&  \
-    /root/amino/share/docker/install-ccd.sh && \
-    /root/amino/share/docker/install-fcl.sh && \
+    /root/amino/script/install/install-ccd.sh && \
+    /root/amino/script/install/install-fcl.sh && \
     ldconfig
 
 # Ubuntu Trusty requires a newer SBCL
-RUN /root/amino/share/docker/install-sbcl.sh
+RUN /root/amino/script/install/install-sbcl.sh
 
-RUN cd && /root/amino/share/docker/install-quicklisp.sh
+RUN cd && /root/amino/script/install/install-quicklisp.sh
 
-RUN /root/amino/share/docker/install-blender.sh
+RUN /root/amino/script/install/install-blender.sh
 
 ENV LD_LIBRARY_PATH=/usr/local/lib/:/usr/local/lib/x86_64-linux-gnu/
 
+COPY . /root/amino
 
 
 # Local Variables:

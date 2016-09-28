@@ -1,5 +1,6 @@
 FROM ubuntu:xenial
 
+COPY ./script/install /root/amino/script/install
 RUN apt-get -y update && \
     apt-get install -y  build-essential gfortran f2c \
             autoconf automake libtool autoconf-archive autotools-dev \
@@ -12,17 +13,16 @@ RUN apt-get -y update && \
             coinor-libclp-dev libglpk-dev liblpsolve55-dev \
             wget git
 
-COPY . /root/amino
+RUN cd && /root/amino/script/install/install-quicklisp.sh
 
-RUN cd && /root/amino/share/docker/install-quicklisp.sh
-
-RUN /root/amino/share/docker/install-blender.sh
+RUN /root/amino/script/install/install-blender.sh
 
 RUN cd && git clone https://github.com/RethinkRobotics/baxter_common
 
 ENV ROS_PACKAGE_PATH=/root/baxter_common
 
 
+COPY . /root/amino
 
 
 # Local Variables:
