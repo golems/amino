@@ -1,18 +1,21 @@
 FROM debian:jessie
 
-RUN apt-get -y update && \
-    apt-get install -y  build-essential gfortran f2c \
-            autoconf automake libtool autoconf-archive autotools-dev \
-            maxima libblas-dev liblapack-dev \
-            libsdl2-dev \
-            libompl-dev libfcl-dev \
-            doxygen groff \
-            sbcl \
-            flex povray libav-tools \
-            coinor-libclp-dev libglpk-dev liblpsolve55-dev \
-            wget git
-
 COPY . /root/amino
+
+# Debian's httpredir servers are too flaky,
+# retry a few times if it fails
+RUN /root/amino/share/docker/apt-retry.sh \
+        build-essential gfortran f2c \
+        autoconf automake libtool autoconf-archive autotools-dev \
+        maxima libblas-dev liblapack-dev \
+        libsdl2-dev \
+        libompl-dev libfcl-dev \
+        doxygen groff \
+        sbcl \
+        flex povray libav-tools \
+        coinor-libclp-dev libglpk-dev liblpsolve55-dev \
+        wget git \
+        ;
 
 # Debian Jessie requires a newer SBCL
 RUN /root/amino/share/docker/install-sbcl.sh
