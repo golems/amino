@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-wget https://beta.quicklisp.org/quicklisp.lisp
+wget -q https://beta.quicklisp.org/quicklisp.lisp
 
 sbcl --load quicklisp.lisp \
      --eval '(quicklisp-quickstart:install)' \
