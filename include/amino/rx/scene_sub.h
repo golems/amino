@@ -62,6 +62,12 @@ AA_API void
 aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *sg );
 
 /**
+ * Return the original scene graph for the sub-scenegraph
+ */
+AA_API struct aa_rx_sg *
+aa_rx_sg_sub_sg( const struct aa_rx_sg_sub *sg_sub );
+
+/**
  * Return the number of configuration variables in the scenegraph subset.
  */
 AA_API size_t

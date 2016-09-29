@@ -2,4 +2,4 @@
 
 @abs_top_builddir@/aarx-view \
     @abs_top_builddir@/demo/urdf/baxter/.libs/libamino_baxter.so \
-    -n "baxter"
+    -n "baxter" -e "right_w2"

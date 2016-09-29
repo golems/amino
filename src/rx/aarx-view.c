@@ -48,6 +48,7 @@
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_win.h"
 #include "amino/rx/scene_geom.h"
@@ -62,6 +63,7 @@ int main(int argc, char *argv[])
 {
     const char *name="scenegraph";
     const char *plugin=NULL;
+    const char *end_effector=NULL;
     int visual = 1;
     int collision = 0;
 
@@ -70,7 +72,7 @@ int main(int argc, char *argv[])
         int c;
         opterr = 0;
 
-        while( (c = getopt( argc, argv, "n:?c")) != -1 ) {
+        while( (c = getopt( argc, argv, "n:e:?c")) != -1 ) {
             switch(c) {
             case 'n':
                 name = optarg;
@@ -79,12 +81,16 @@ int main(int argc, char *argv[])
                 visual = 0;
                 collision = 1;
                 break;
+            case 'e':
+                end_effector = optarg;
+                break;
             case '?':
                 puts("Usage: aarx-view [OPTIONS] PLUGIN_NAME\n"
                      "Viewer for Amino scene graphs"
                      "\n"
                      "Options:\n"
                      "  -n NAME         scene graph name (default: scenegraph)\n"
+                     "  -e NAME         name of an end-effector to control\n"
                      "  -c              view collision geometry\n"
                      "\n"
                      "\n"
@@ -126,7 +132,21 @@ int main(int argc, char *argv[])
     /* setup window */
     struct aa_rx_win * win =
         aa_rx_win_default_create ( "Amino: AARX-View", SCREEN_WIDTH, SCREEN_HEIGHT );
-    aa_rx_win_set_sg(win, scenegraph); /* Set the scenegraph for the window */
+
+    /* Set the scenegraph for the window */
+    struct aa_rx_sg_sub *sub = NULL;
+    if( end_effector ) {
+
+        aa_rx_frame_id id = aa_rx_sg_frame_id(scenegraph, end_effector);
+        if( AA_RX_FRAME_NONE == id ) {
+            fprintf(stderr, "Could not find frame `%s'\n", end_effector);
+            exit(EXIT_FAILURE);
+        }
+        sub = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, id);
+        aa_rx_win_set_sg_sub(win, sub);
+    } else {
+        aa_rx_win_set_sg(win, scenegraph);
+    }
     aa_rx_win_set_config(win, m, q);
 
     struct aa_gl_globals *globals = aa_rx_win_gl_globals(win);

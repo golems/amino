@@ -40,6 +40,8 @@
 
 #include <SDL.h>
 
+struct aa_rx_sg_sub;
+
 /**
  * @file scene_win.h
  * @brief SDL/OpenGL window management
@@ -108,6 +110,20 @@ aa_rx_win_gl_globals( struct aa_rx_win * win);
 AA_API void
 aa_rx_win_set_sg( struct aa_rx_win * win,
                   const struct aa_rx_sg *sg );
+
+/**
+ * Set a sub-scenegraph for the window.
+ *
+ * The scenegraph is used by the default rendering function.  Custom
+ * rendering functions may not need to set the window scene graph
+ * first.
+ *
+ * The end-effector of the sub-scenegraph can be interactively
+ * controlled in workspace.
+ */
+AA_API void
+aa_rx_win_set_sg_sub( struct aa_rx_win * win,
+                      const struct aa_rx_sg_sub *sg_sub );
 
 /**
  * Retreive the scene graph for the window.

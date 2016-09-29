@@ -50,6 +50,13 @@ aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *ssg )
     free(ssg);
 }
 
+
+AA_API struct aa_rx_sg *
+aa_rx_sg_sub_sg( const struct aa_rx_sg_sub *sg_sub )
+{
+    return sg_sub->scenegraph;
+}
+
 AA_API size_t
 aa_rx_sg_sub_config_count( const struct aa_rx_sg_sub *sg_sub )
 {

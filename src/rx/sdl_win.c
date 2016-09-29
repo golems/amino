@@ -49,6 +49,7 @@
 
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_sdl.h"
 #include "amino/rx/scene_win.h"
@@ -76,6 +77,8 @@ static void s_unlock(void);
 static void s_broadcast(void);
 static void s_wait( void );
 
+static double s_dx[6] = {0};
+
 static int default_display( struct aa_rx_win *win,
                             void *cx_, struct aa_sdl_display_params *params );
 
@@ -98,6 +101,8 @@ struct aa_rx_win {
 
     unsigned updated : 1;
     unsigned running : 1;
+
+
 };
 
 
@@ -312,6 +317,7 @@ AA_API void aa_rx_win_display_sg_config(
 
 struct default_display_cx {
     const struct aa_rx_sg *sg;
+    const struct aa_rx_sg_sub *sg_sub;
     size_t n_config;
     double *q;
     struct aa_rx_win *win;
@@ -323,11 +329,65 @@ static void destroy_default ( void *cx_ ) {
     free(cx);
 }
 
+static void
+workspace_control(
+    struct aa_rx_win *win, struct default_display_cx *cx, struct aa_sdl_display_params *params )
+{
+    (void)win;
+    (void)params;
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    const struct aa_rx_sg *sg = cx->sg;
+    const struct aa_rx_sg_sub *ssg = cx->sg_sub;
+    size_t n_f = aa_rx_sg_frame_count(sg);
+    size_t n_q = aa_rx_sg_config_count(sg);
+    size_t n_sq = aa_rx_sg_sub_config_count(ssg);
+
+    double *TF_rel = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
+    double *TF_abs = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
+    double *J = AA_MEM_REGION_NEW_N(reg, double, 6*n_sq);
+    double *J_star = AA_MEM_REGION_NEW_N(reg, double, 6*n_sq);
+    double q[n_sq], qc[n_sq], dq[n_sq];
+    AA_MEM_ZERO(q,n_sq);
+    aa_rx_sg_sub_center_configs(ssg, n_sq, qc);
+
+    aa_rx_sg_tf( sg, n_q, cx->q,
+                 n_f, TF_rel, 7, TF_abs, 7 );
+    aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
+                           J, 6 );
+    aa_la_dzdpinv(6, n_sq, 1e-4, J, J_star);
+
+    aa_rx_sg_sub_config_get( ssg, n_q, cx->q, n_sq, q );
+
+    double w_e[6];
+
+    w_e[0] =  s_dx[2] / 700;
+    w_e[1] = -s_dx[0] / 700;
+    w_e[2] =  s_dx[1] / 700;
+    w_e[3] =  s_dx[5] / 700;
+    w_e[4] = -s_dx[3] / 700;
+    w_e[5] =  s_dx[4] / 700;
+
+    aa_la_xlsnp( 6, n_sq, J, J_star, w_e, qc, dq );
+    cblas_daxpy( (int)n_sq, 1 / win->gl_globals->fps, dq, 1, q, 1 );
+
+    aa_rx_sg_sub_config_set( ssg, n_sq, q, n_q, cx->q );
+
+    aa_mem_region_pop(reg,TF_rel);
+}
+
 static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
 {
     /* We hold the mutex now */
     struct default_display_cx *cx = (struct default_display_cx*) cx_;
     int updated = aa_sdl_display_params_get_update(params);
+
+    if( cx->sg_sub ) {
+        double a = cblas_dasum(6, s_dx, 1);
+        if( a > 0 ) {
+            workspace_control(win,cx,params);
+        }
+
+    }
 
     if( (updated || win->updated) && cx )
     {
@@ -338,14 +398,16 @@ static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_disp
     return updated;
 }
 
-AA_API void
-aa_rx_win_set_sg( struct aa_rx_win * win,
-                  const struct aa_rx_sg *sg )
+static void
+set_sg( struct aa_rx_win * win,
+        const struct aa_rx_sg *sg,
+        const struct aa_rx_sg_sub *sg_sub )
 {
     aa_rx_win_lock(win);
 
     struct default_display_cx *cx = AA_NEW0(struct default_display_cx);
     cx->sg = sg;
+    cx->sg_sub = sg_sub;
     cx->n_config = aa_rx_sg_config_count(sg);
     /* TODO: fill q with something reasonable */
     cx->q = AA_NEW0_AR( double, cx->n_config );
@@ -355,7 +417,26 @@ aa_rx_win_set_sg( struct aa_rx_win * win,
     win->updated = 1;
     aa_gl_globals_unmask_all( win->gl_globals );
 
+    if ( cx->sg_sub ) {
+
+    }
+
     aa_rx_win_unlock(win);
+}
+
+
+AA_API void
+aa_rx_win_set_sg( struct aa_rx_win * win,
+                  const struct aa_rx_sg *sg )
+{
+    set_sg(win,sg,NULL);
+}
+
+AA_API void
+aa_rx_win_set_sg_sub( struct aa_rx_win * win,
+                  const struct aa_rx_sg_sub *sg_sub )
+{
+    set_sg(win, aa_rx_sg_sub_sg(sg_sub), sg_sub);
 }
 
 AA_API void
@@ -869,5 +950,5 @@ s_broadcast( )
 AA_API void
 aa_sdl_dx( const double dx[6] )
 {
-    aa_dump_vec( stdout, dx, 6 );
+    AA_MEM_CPY(s_dx,dx,6);
 }

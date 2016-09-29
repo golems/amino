@@ -138,19 +138,18 @@ static void aa_spnav_poll(double dx[6])
 
     double *dv = dx+AA_TF_DX_V;
     double *omega = dx+AA_TF_DX_W;
-    const double m = 350;
     spnav_event spnevent = {0};
 
     // get the latest event
     while( spnav_poll_event(&spnevent) ) {
         switch( spnevent.type ) {
         case SPNAV_EVENT_MOTION:
-            dv[0] = (double)spnevent.motion.x /  m;
-            dv[1] = (double)spnevent.motion.y /  m;
-            dv[2] = -(double)spnevent.motion.z /  m;
-            omega[0] = (double)spnevent.motion.rx / m;
-            omega[1] = (double)spnevent.motion.ry / m;
-            omega[2] = -(double)spnevent.motion.rz / m;
+            dv[0] = (double)spnevent.motion.x;
+            dv[1] = (double)spnevent.motion.y;
+            dv[2] = (double)spnevent.motion.z;
+            omega[0] = (double)spnevent.motion.rx;
+            omega[1] = (double)spnevent.motion.ry;
+            omega[2] = (double)spnevent.motion.rz;
             break;
         case SPNAV_EVENT_BUTTON: {
             int64_t i = spnevent.button.bnum;
@@ -160,7 +159,6 @@ static void aa_spnav_poll(double dx[6])
             } else {
                 spnav_button &= ~(1 << i);
             }
-            //printf("%d:%d (%lx)\n", i, x, spnav_button );
             break;
         }
         default:
@@ -169,41 +167,33 @@ static void aa_spnav_poll(double dx[6])
     }
 }
 
-static void aa_spnav_scroll(const double dx_[6], struct aa_gl_globals * globals, int *update )
+static void aa_spnav_scroll(const double axis[6], struct aa_gl_globals * globals, int *update )
 {
-    double dx[6];
-    AA_MEM_CPY(dx, dx_, 6);
-    int sp_update = 0;
-    for( size_t i = 0; i < 6; i ++ ) {
-        if( !aa_feq(0.0,dx[i],0) ) sp_update = 1;
+    if ( ! (cblas_dasum(6,axis,1) > 0) ) return;
+
+    double dx[6], dxr[6];
+    double cam1[7], *cam0 = globals->world_E_cam;
+
+    double *dv = dx+AA_TF_DX_V;
+    double *omega = dx+AA_TF_DX_W;
+
+    static const double dv_scale[3] = {1.25 / 350, 1.25/350, -1.25/350 };
+    static const double omega_scale[3] = {.4 / 350, .4 / 350, -.4/350 };
+
+    /* Select and Scale axis */
+    for( size_t i = 0; i < 3; i ++ ) {
+        dv[i] = axis[AA_TF_DX_V + i] * dv_scale[i];
+        omega[i] = axis[AA_TF_DX_W + i] * omega_scale[i];
     }
 
-    if( sp_update ) {
+    /* Rotate to camera frame velocities to global frame */
+    aa_tf_qrot(cam0, dv, dxr+AA_TF_DX_V);
+    aa_tf_qrot(cam0, omega, dxr+AA_TF_DX_W);
 
-        for( size_t i = 0; i < 3; i ++ ) {
-            dx[ i + AA_TF_DX_V ] *= 1.25;
-            dx[ i + AA_TF_DX_W ] *= .4;
-        }
-
-        //double cam1[7];
-        //aa_tf_qutr_svel(globals->world_E_cam, dx, 1.0/globals->fps, cam1);
-
-        double S0[8], twist[8], etwist[8], S1[8], E1[7];
-        /* TODO: avoid the memcpy()s */
-        aa_tf_qutr2duqu( globals->world_E_cam, S0 );
-        aa_tf_duqu_vel2twist( S0, dx, twist );
-        for( size_t i = 0; i < 8; i ++ ) twist[i] *= (1.0/globals->fps);
-        aa_tf_duqu_exp( twist, etwist);
-        aa_tf_duqu_mul( S0, etwist, S1 );
-        aa_tf_duqu2qutr(S1, E1);
-
-        aa_gl_globals_set_camera( globals, E1 );
-        *update = 1;
-    }
-    /* printf("%f, %f, %f, %f, %f, %f\n", */
-    /*         dv[0], dv[1], dv[2], */
-    /*         omega[0], omega[1], omega[2] ); */
-
+    /* Integrate and set */
+    aa_tf_qutr_svel(cam0, dxr, 1.0/globals->fps, cam1);
+    aa_gl_globals_set_camera( globals, cam1 );
+    *update = 1;
 }
 
 #endif /*HAVE_SPNAV_H*/
@@ -527,6 +517,7 @@ AA_API void aa_sdl_display_loop(
             aa_spnav_poll(spnav_axis);
 
             int f_key = keys[SDL_GetScancodeFromKey(SDLK_f)];
+            int x_key = keys[SDL_GetScancodeFromKey(SDLK_x)];
             int focus = flags & SDL_WINDOW_INPUT_FOCUS;
 
             /* Only use the spnav if focused */
@@ -534,6 +525,11 @@ AA_API void aa_sdl_display_loop(
                 aa_spnav_scroll(spnav_axis, globals, &params.update);
             }
 
+            if( focus && x_key ) {
+                aa_sdl_dx( spnav_axis );
+            } else {
+                aa_sdl_dx( dx0 );
+            }
         }
 #endif
 

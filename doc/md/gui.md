@@ -58,6 +58,9 @@ Support is provided for 3D mice from
 | Enable Key  | Axis Action       |
 |-------------| ------------------|
 | f           | Fly Camera        |
+| x           | Workspace Control |
+
+@sa aa_rx_win_set_sg_sub()
 
 See Also
 ========
