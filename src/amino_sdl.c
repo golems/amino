@@ -55,7 +55,10 @@
 #include "amino/rx/scene_sdl.h"
 #include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl_internal.h"
+#include "amino/rx/spnav_button.h"
 
+static double spnav_axis[6] = {0};
+static int64_t spnav_button = 0;
 
 struct aa_sdl_display_params {
 
@@ -129,34 +132,47 @@ static void aa_spnav_init() {
     }
 }
 
-static void aa_spnav_poll(double dv[3], double omega[3]) {
+static void aa_spnav_poll(double dx[6])
+{
+
+
+    double *dv = dx+AA_TF_DX_V;
+    double *omega = dx+AA_TF_DX_W;
     const double m = 350;
     spnav_event spnevent = {0};
 
     // get the latest event
-    while( spnav_poll_event(&spnevent) ) {}
-
-    dv[0] = (double)spnevent.motion.x /  m;
-    dv[1] = (double)spnevent.motion.y /  m;
-    dv[2] = -(double)spnevent.motion.z /  m;
-    omega[0] = (double)spnevent.motion.rx / m;
-    omega[1] = (double)spnevent.motion.ry / m;
-    omega[2] = -(double)spnevent.motion.rz / m;
-
-    // deadzone
-    /* for( size_t i = 0; i < 3; i ++ ) { */
-    /*     dv[i] = aa_fdeadzone( dv[i], -0.1, 0.1, 0 ); */
-    /*     omega[i] = aa_fdeadzone( omega[i], -0.1, 0.1, 0 ); */
-    /* } */
-
+    while( spnav_poll_event(&spnevent) ) {
+        switch( spnevent.type ) {
+        case SPNAV_EVENT_MOTION:
+            dv[0] = (double)spnevent.motion.x /  m;
+            dv[1] = (double)spnevent.motion.y /  m;
+            dv[2] = -(double)spnevent.motion.z /  m;
+            omega[0] = (double)spnevent.motion.rx / m;
+            omega[1] = (double)spnevent.motion.ry / m;
+            omega[2] = -(double)spnevent.motion.rz / m;
+            break;
+        case SPNAV_EVENT_BUTTON: {
+            int64_t i = spnevent.button.bnum;
+            int x = spnevent.button.press;
+            if (x) {
+                spnav_button |= (1 << i);
+            } else {
+                spnav_button &= ~(1 << i);
+            }
+            //printf("%d:%d (%lx)\n", i, x, spnav_button );
+            break;
+        }
+        default:
+            break;
+        }
+    }
 }
 
-static void aa_spnav_scroll(struct aa_gl_globals * globals, int *update )
+static void aa_spnav_scroll(const double dx_[6], struct aa_gl_globals * globals, int *update )
 {
     double dx[6];
-    aa_spnav_poll(dx+AA_TF_DX_V,
-                  dx+AA_TF_DX_W);
-
+    AA_MEM_CPY(dx, dx_, 6);
     int sp_update = 0;
     for( size_t i = 0; i < 6; i ++ ) {
         if( !aa_feq(0.0,dx[i],0) ) sp_update = 1;
@@ -503,7 +519,22 @@ AA_API void aa_sdl_display_loop(
 
         // poll spnav
 #ifdef HAVE_SPNAV_H
-        aa_spnav_scroll(globals, &params.update);
+        {
+            Uint32 flags = SDL_GetWindowFlags( window );
+            double dx0[6] = {0};
+            const Uint8 *keys =  SDL_GetKeyboardState(NULL);
+
+            aa_spnav_poll(spnav_axis);
+
+            int f_key = keys[SDL_GetScancodeFromKey(SDLK_f)];
+            int focus = flags & SDL_WINDOW_INPUT_FOCUS;
+
+            /* Only use the spnav if focused */
+            if( focus && f_key ) {
+                aa_spnav_scroll(spnav_axis, globals, &params.update);
+            }
+
+        }
 #endif
 
         // update times

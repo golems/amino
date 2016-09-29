@@ -48,6 +48,17 @@ Other
 | c    | Copy Camera Pose to clipboard (see [struct aa_tf_qv](@ref aa_tf_qv)) |
 | p    | Raytrace the current frame (only when run in the @ref scenecompiler) |
 
+
+3D Mouse Support
+----------------
+
+Support is provided for 3D mice from
+[3DConnexion](http://www.3dconnexion.com/) .
+
+| Enable Key  | Axis Action       |
+|-------------| ------------------|
+| f           | Fly Camera        |
+
 See Also
 ========
 * [scene_win.h](@ref scene_win.h)

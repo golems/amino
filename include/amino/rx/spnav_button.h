@@ -35,28 +35,26 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_SDL_INTERNAL_H
-#define AMINO_RX_SCENE_SDL_INTERNAL_H
+#ifndef AMINO_RX_SPNAV_BUTTON_H
+#define AMINO_RX_SPNAV_BUTTON_H
 
+/* Based on SpaceExplorer */
+enum aa_spnav_button {
+    AA_SPNAV_1 =       1<<0,
+    AA_SPNAV_2 =       1<<1,
+    AA_SPNAV_T =       1<<2,
+    AA_SPNAV_L =       1<<3,
+    AA_SPNAV_R =       1<<4,
+    AA_SPNAV_F =       1<<5,
+    AA_SPNAV_ESC =     1<<6,
+    AA_SPNAV_ALT =     1<<7,
+    AA_SPNAV_SHIFT =   1<<8,
+    AA_SPNAV_CTRL =    1<<9,
+    AA_SPNAV_PANEL =   1<<12,
+    AA_SPNAV_PLUS =    1<<12,
+    AA_SPNAV_MINUS =   1<<13,
+    AA_SPNAV_2D =      1<<14,
 
-struct aa_sdl_handler {
-    struct SDL_event *event;
-    struct aa_gl_globals *gl_globals;
-
-    unsigned update : 1;
-    unsigned quit : 1;
 };
 
-
-AA_API int
-aa_sdl_handle_event( const SDL_Event *event,
-                     struct aa_sdl_display_params *params);
-
-AA_API void
-aa_sdl_ui_setup();
-
-
-AA_API void
-aa_sdl_dx( const double dx[6] );
-
-#endif /*AMINO_RX_SCENE_SDL_INTERNAL_H*/
+#endif

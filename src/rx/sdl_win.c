@@ -865,3 +865,9 @@ s_broadcast( )
         abort();
     }
 }
+
+AA_API void
+aa_sdl_dx( const double dx[6] )
+{
+    aa_dump_vec( stdout, dx, 6 );
+}
