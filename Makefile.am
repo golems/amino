@@ -136,6 +136,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_win.h    \
 	include/amino/rx/scene_plugin.h \
 	include/amino/rx/mp_seq.h \
+	include/amino/rx/spnav_button.h \
 	include/amino/rx/wavefront.h
 
 rxomplincludedir = $(rxincludedir)/ompl
