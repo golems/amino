@@ -35,75 +35,66 @@
  *
  */
 
+#ifndef AMINO_RX_SCENE_OMPL_INTERNAL_H
+#define AMINO_RX_SCENE_OMPL_INTERNAL_H
 
-#include "amino.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
-#include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 
-#include "amino/rx/ompl/scene_state_space.h"
-#include "amino/rx/ompl/scene_state_validity_checker.h"
-#include "amino/rx/ompl/scene_ompl_internal.h"
+#include <ompl/base/StateValidityChecker.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/ProblemDefinition.h>
+#include <ompl/base/spaces/RealVectorBounds.h>
 
+#include <ompl/base/ScopedState.h>
+#include <ompl/base/TypedSpaceInformation.h>
+#include <ompl/base/TypedStateValidityChecker.h>
 #include <ompl/base/Planner.h>
-#include <ompl/geometric/planners/rrt/RRTConnect.h>
-#include <ompl/geometric/planners/rrt/RRT.h>
+
+/**
+ * @file scene_ompl_internal.h
+ * @brief OMPL-specific motion planning
+ */
+
+namespace amino {
+class sgStateValidityChecker;
+class sgWorkspaceGoal;
+}
 
 
-struct aa_rx_mp_rrt_attr
-{
-    unsigned is_bidirectional : 1;
+/* Forward Declaration */
+namespace ompl {
+namespace base {
+class GoalLazySamples;
+}
+}
+
+
+struct aa_rx_mp {
+    aa_rx_mp( const struct aa_rx_sg_sub *sub_sg );
+
+    ~aa_rx_mp();
+
+    void set_planner( ompl::base::Planner *p ) {
+        this->planner.reset(p);
+    }
+
+    amino::sgSpaceInformation::Ptr space_information;
+    ompl::base::ProblemDefinitionPtr problem_definition;
+
+    amino::sgStateValidityChecker *validity_checker;
+
+    ompl::base::PlannerPtr planner;
+
+    double *config_start;
+
+    unsigned simplify : 1;
+
+    amino::sgWorkspaceGoal *lazy_samples;
 };
 
-
-AA_API struct aa_rx_mp_rrt_attr*
-aa_rx_mp_rrt_attr_create(void)
-{
-    struct aa_rx_mp_rrt_attr * a = AA_NEW(struct aa_rx_mp_rrt_attr);
-    a->is_bidirectional = 1;
-    return a;
-}
-
-
-AA_API void
-aa_rx_mp_rrt_attr_destroy(struct aa_rx_mp_rrt_attr* a)
-{
-    free(a);
-}
-
-
-AA_API void
-aa_rx_mp_rrt_attr_set_bidirectional( struct aa_rx_mp_rrt_attr* attrs,
-                                     int is_bidirectional )
-{
-    attrs->is_bidirectional = is_bidirectional ? 1 : 0;
-}
-
-
-AA_API void
-aa_rx_mp_set_rrt( struct aa_rx_mp* mp,
-                  const struct aa_rx_mp_rrt_attr *attr )
-{
-    struct aa_rx_mp_rrt_attr *default_attr = NULL;
-    if( NULL == attr ) {
-        default_attr = aa_rx_mp_rrt_attr_create();
-        attr = default_attr;
-    }
-
-    if( attr->is_bidirectional ) {
-        auto p = new ompl::geometric::RRTConnect(mp->space_information);
-        mp->set_planner(p);
-    } else {
-        auto p = new ompl::geometric::RRT(mp->space_information);
-        mp->set_planner(p);
-    }
-
-    if( default_attr ) {
-        aa_rx_mp_rrt_attr_destroy(default_attr);
-    }
-}
+#endif /*AMINO_RX_SCENE_OMPL_INTERNAL_H*/
