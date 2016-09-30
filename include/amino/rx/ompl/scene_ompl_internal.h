@@ -35,8 +35,8 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_OMPL_H
-#define AMINO_RX_SCENE_OMPL_H
+#ifndef AMINO_RX_SCENE_OMPL_INTERNAL_H
+#define AMINO_RX_SCENE_OMPL_INTERNAL_H
 
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
@@ -56,7 +56,7 @@
 #include <ompl/base/Planner.h>
 
 /**
- * @file scene_ompl.h
+ * @file scene_ompl_internal.h
  * @brief OMPL-specific motion planning
  */
 
@@ -97,4 +97,4 @@ struct aa_rx_mp {
     amino::sgWorkspaceGoal *lazy_samples;
 };
 
-#endif /*AMINO_RX_SCENE_OMPL_H*/
+#endif /*AMINO_RX_SCENE_OMPL_INTERNAL_H*/

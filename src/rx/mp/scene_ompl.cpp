@@ -52,7 +52,7 @@
 #include "amino/rx/ompl/scene_state_space.h"
 #include "amino/rx/ompl/scene_state_validity_checker.h"
 #include "amino/rx/ompl/scene_workspace_goal.h"
-#include "amino/rx/ompl/scene_ompl.h"
+#include "amino/rx/ompl/scene_ompl_internal.h"
 
 
 #include <ompl/base/Planner.h>
