@@ -76,6 +76,7 @@
 (amino-ffi::def-foreign-container rx-win rx-win-t
   :slots ((display-object)
           (mutable-scene-graph)
+          (sub-scene-graph)
           (config-vector)))
 
 

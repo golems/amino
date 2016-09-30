@@ -90,6 +90,9 @@ struct aa_rx_win {
     void *display_cx;
     void (*destroy_cx)(void*);
 
+    double *q;
+    size_t n_q;
+
     SDL_Window* window;
     SDL_GLContext gl_cx;
 
@@ -318,14 +321,11 @@ AA_API void aa_rx_win_display_sg_config(
 struct default_display_cx {
     const struct aa_rx_sg *sg;
     const struct aa_rx_sg_sub *sg_sub;
-    size_t n_config;
-    double *q;
     struct aa_rx_win *win;
 };
 
 static void destroy_default ( void *cx_ ) {
     struct default_display_cx *cx = (struct default_display_cx *) cx_;
-    aa_checked_free(cx->q);
     free(cx);
 }
 
@@ -333,7 +333,6 @@ static void
 workspace_control(
     struct aa_rx_win *win, struct default_display_cx *cx, struct aa_sdl_display_params *params )
 {
-    (void)win;
     (void)params;
     struct aa_mem_region *reg = aa_mem_region_local_get();
     const struct aa_rx_sg *sg = cx->sg;
@@ -350,13 +349,13 @@ workspace_control(
     AA_MEM_ZERO(q,n_sq);
     aa_rx_sg_sub_center_configs(ssg, n_sq, qc);
 
-    aa_rx_sg_tf( sg, n_q, cx->q,
+    aa_rx_sg_tf( sg, n_q, win->q,
                  n_f, TF_rel, 7, TF_abs, 7 );
     aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
                            J, 6 );
     aa_la_dzdpinv(6, n_sq, 1e-4, J, J_star);
 
-    aa_rx_sg_sub_config_get( ssg, n_q, cx->q, n_sq, q );
+    aa_rx_sg_sub_config_get( ssg, n_q, win->q, n_sq, q );
 
     double w_e[6];
 
@@ -370,7 +369,7 @@ workspace_control(
     aa_la_xlsnp( 6, n_sq, J, J_star, w_e, qc, dq );
     cblas_daxpy( (int)n_sq, 1 / win->gl_globals->fps, dq, 1, q, 1 );
 
-    aa_rx_sg_sub_config_set( ssg, n_sq, q, n_q, cx->q );
+    aa_rx_sg_sub_config_set( ssg, n_sq, q, n_q, win->q );
 
     aa_mem_region_pop(reg,TF_rel);
 }
@@ -392,7 +391,7 @@ static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_disp
     if( (updated || win->updated) && cx )
     {
         aa_rx_win_display_sg_config( win, params,
-                                     cx->sg, aa_rx_sg_config_count(cx->sg), cx->q );
+                                     cx->sg, aa_rx_sg_config_count(cx->sg), win->q );
     }
 
     return updated;
@@ -408,9 +407,9 @@ set_sg( struct aa_rx_win * win,
     struct default_display_cx *cx = AA_NEW0(struct default_display_cx);
     cx->sg = sg;
     cx->sg_sub = sg_sub;
-    cx->n_config = aa_rx_sg_config_count(sg);
+    win->n_q = aa_rx_sg_config_count(sg);
     /* TODO: fill q with something reasonable */
-    cx->q = AA_NEW0_AR( double, cx->n_config );
+    win->q = AA_NEW0_AR( double, win->n_q );
 
     aa_rx_win_set_display( win, default_display, cx, destroy_default );
 
@@ -445,17 +444,22 @@ aa_rx_win_set_config( struct aa_rx_win * win,
                       const double *q )
 {
     aa_rx_win_lock(win);
-    if( win->display == default_display ) {
-        struct default_display_cx *cx = (struct default_display_cx *) win->display_cx;
-        AA_MEM_CPY( cx->q, q, AA_MIN(n, cx->n_config) );
-        win->updated = 1;
-    } else {
-        fprintf(stderr, "Invalid context to set config\n");
-    }
-
+    aa_checked_free(win->q);
+    win->n_q = n;
+    win->q = AA_MEM_DUP(double, q, n );
     aa_rx_win_unlock(win);
 }
 
+AA_API void
+aa_rx_win_get_config( struct aa_rx_win * win,
+                      size_t n,
+                      double *q )
+{
+    aa_rx_win_lock(win);
+    size_t i = AA_MIN(n,win->n_q);
+    AA_MEM_CPY(q, win->q, i);
+    aa_rx_win_unlock(win);
+}
 
 static int win_display( void *cx_, struct aa_sdl_display_params *params )
 {

@@ -61,6 +61,8 @@
   ;; Frames
   (constant (+frame-id-root+ "AA_RX_FRAME_ROOT")
             :type integer)
+  (constant (+frame-id-none+ "AA_RX_FRAME_NONE")
+            :type integer)
   (constant (+config-id-none+ "AA_RX_CONFIG_NONE")
             :type integer)
   (cenum frame-type

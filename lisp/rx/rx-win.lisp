@@ -50,6 +50,10 @@
   (window rx-win-t)
   (sg rx-sg-t))
 
+(cffi:defcfun aa-rx-win-set-sg-sub :void
+  (window rx-win-t)
+  (sg-sub rx-sg-sub-t))
+
 (cffi:defcfun aa-rx-win-run :void)
 
 (cffi:defcfun aa-rx-win-run-async :void)
@@ -68,6 +72,18 @@
 (defun rx-win-set-config (win config)
   (with-foreign-simple-vector (pointer length) config :input
     (aa-rx-win-set-config win length pointer)))
+
+
+(cffi:defcfun aa-rx-win-get-config :void
+  (window rx-win-t)
+  (n size-t)
+  (q :pointer))
+
+(defun rx-win-get-config (win)
+  (let ((vec (make-vec (mutable-scene-graph-config-count (rx-win-mutable-scene-graph win)))))
+    (with-foreign-simple-vector (pointer length) vec :output
+      (aa-rx-win-get-config win length pointer))
+    vec))
 
 (cffi:defcfun aa-rx-win-sg-gl-init :void
   (win rx-win-t)
@@ -169,16 +185,26 @@
   (values))
 
 
-(defun win-set-scene-graph (scene-graph &optional (window (window)))
+(defun win-set-scene-graph (scene-graph &key
+                                          (window (window))
+                                          end-effector
+                                          )
   (let* ((win window)
          (m-sg (mutable-scene-graph scene-graph))
+         (sg-sub (when end-effector
+                   (let ((id (aa-rx-sg-frame-id m-sg end-effector)))
+                     (assert (not (= id +frame-id-none+)))
+                     (aa-rx-sg-chain-create m-sg +frame-id-root+ id))))
          (q (make-vec (aa-rx-sg-config-count m-sg))))
     (with-win-lock win
       (aa-rx-win-sg-gl-init win m-sg)
-      (aa-rx-win-set-sg win m-sg)
+      (if sg-sub
+          (aa-rx-win-set-sg-sub win sg-sub)
+          (aa-rx-win-set-sg win m-sg))
       ;; Preserve the window display object.  The active display
       ;; function may be using it.
       (setf (rx-win-mutable-scene-graph win) m-sg
+            (rx-win-sub-scene-graph win) sg-sub
             (rx-win-config-vector win) q)))
   (values))
 
@@ -275,7 +301,7 @@
 
 (defun win-config-map (&optional (window (window)))
   (mutable-scene-graph-config-map (rx-win-mutable-scene-graph window)
-                                  (rx-win-config-vector window)))
+                                  (rx-win-get-config window)))
 
 
 
