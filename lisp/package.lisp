@@ -126,6 +126,8 @@
    :euler-rpy :euler-rpy*
    :dual-quaternion :quaternion-translation :transformation-matrix
    :dual-quaternion-2 :quaternion-translation-2 :transformation-matrix-2
+   :quaternion-translation*
+   :tf-readable :tf-readable*
    :x-angle :y-angle :z-angle
    :degrees :pi-rad
    :translation

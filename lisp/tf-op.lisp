@@ -70,6 +70,9 @@
 (defgeneric quaternion-translation-2 (r x))
 (defgeneric transformation-matrix-2 (r x))
 
+(defun quaternion-translation* (r x)
+  (quaternion-translation-2 r x))
+
 (defgeneric vec3 (x))
 
 (defmethod generic- ((a vec3) (b vec3))
@@ -106,6 +109,38 @@
 
 (deftype tf ()
   'quaternion-translation)
+
+
+(defstruct tf-readable
+  rotation translation)
+
+(defun tf-readable* (rotation translation)
+  (make-tf-readable :rotation (euler-zyx rotation)
+                    :translation (vec3 translation)))
+
+(defun tf-readable (tf)
+  (let* ((tf (tf tf)))
+    (tf-readable* (tf-quaternion tf)
+                  (tf-translation tf))))
+
+(defmethod print-object ((tf tf-readable) stream)
+  (let ((e (euler-zyx-data (tf-readable-rotation tf)))
+        (v (vec3-data (tf-readable-translation tf))))
+    (write `(tf* (euler-rpy* ,(aref e 2)
+                             ,(aref e 1)
+                             ,(aref e 1))
+                 (vec3* ,(aref v 0)
+                        ,(aref v 1)
+                        ,(aref v 2)))
+           :stream stream)))
+
+(defmethod print-object ((tf quaternion-translation) stream)
+  (with-quaternion (qx qy qz qw) (tf-quaternion tf)
+    (with-vec3  (vx vy vz) (tf-translation tf)
+      (write `(tf* (quaternion* ,qx ,qy ,qz ,qw)
+                   (vec3* ,vx ,vy ,vz))
+             :stream stream))))
+
 
 (defun tf (transform)
   "Convert TRANSFORM to TF type"
@@ -323,6 +358,9 @@
 (defmethod quaternion-translation ((x quaternion-translation))
   x)
 
+(defmethod quaternion-translation ((x tf-readable))
+  (make-quaternion-translation :quaternion (quaternion (tf-readable-rotation x))
+                               :translation (tf-readable-translation x)))
 
 (defmethod quaternion-translation ((x array))
   (check-type x (array double-float (7)))
