@@ -19,3 +19,7 @@ autom4te.cache
 **/*.lo
 **/*.mod
 *.f90
+
+aarx.core
+demo/urdf/**/*-model.c
+demo/urdf/**/*-model.c.h

@@ -276,6 +276,38 @@ be invoked without arguments.
 * `./demo/urdf/baxter/baxter-ompl-workspace` computes a motion plan to a workspace goal
 * `./demo/urdf/baxter/baxter-ompl-sequence` computes a sequence of motion plans
 
+Tests {#installation_tests}
+=====
+
+Basic Tests
+-----------
+
+* To run the unit tests:
+
+        make check
+
+* To create and check the distribution tarball:
+
+        make distcheck
+
+Docker Tests
+------------
+
+Several [Docker] (https://www.docker.com/) files are included in
+`./script/docker` which enable building testing amino in a container
+with a clean OS installation.  These Dockerfiles are also used in the
+[Continuous Integration] (https://travis-ci.org/golems/amino) tests.
+
+* To build a docker image using the `script/docker/ubuntu-xenial`
+  file:
+
+        ./script/docker-build.sh ubuntu-xenial
+
+* To build amino and run tests using docker image built from
+  `script/docker/ubuntu-xenial` file:
+
+        ./script/docker-check.sh ubuntu-xenial
+
 Common Errors {#intallation_errors}
 ===================================
 
