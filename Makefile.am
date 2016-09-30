@@ -49,7 +49,8 @@ noinst_HEADERS = \
              include/amino/rx/scene_gl_internal.h \
              include/amino/rx/scene_sdl_internal.h \
              include/amino/rx/rxtype_internal.h \
-             include/amino/rx/scene_fcl.h
+             include/amino/rx/scene_fcl.h \
+             include/amino/rx/ompl/scene_ompl.h
 
 dist_pkgdata_DATA = src/mac/amino.mac
 
