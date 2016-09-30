@@ -38,12 +38,9 @@
 
 #include "amino.h"
 
-#include "amino/rx/scene_sub.h"
-#include "amino/rx/ompl/scene_state_space.h"
-#include "amino/rx/ompl/scene_state_validity_checker.h"
+#include "amino/rx/scene_planning.h"
 #include "amino/rx/ompl/scene_ompl.h"
 
-#include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/sbl/SBL.h>
 
 struct aa_rx_mp_sbl_attr
@@ -71,6 +68,6 @@ aa_rx_mp_set_sbl( struct aa_rx_mp* mp,
                   const struct aa_rx_mp_sbl_attr *attr )
 {
     (void)attr;
-    auto p = new ompl::geometric::SBL(mp->space_information);
-    mp->set_planner(p);
+    aa_rx_mp_set_planner( mp,
+                          new ompl::geometric::SBL(aa_rx_mp_get_space_information(mp)) );
 }

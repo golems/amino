@@ -37,16 +37,8 @@
 
 
 #include "amino.h"
-#include "amino/rx/rxerr.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin.h"
-#include "amino/rx/scene_kin_internal.h"
-#include "amino/rx/scene_sub.h"
-#include "amino/rx/scene_planning.h"
 
-#include "amino/rx/ompl/scene_state_space.h"
-#include "amino/rx/ompl/scene_state_validity_checker.h"
+#include "amino/rx/scene_planning.h"
 #include "amino/rx/ompl/scene_ompl.h"
 
 #include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
@@ -77,6 +69,6 @@ aa_rx_mp_set_kpiece( struct aa_rx_mp* mp,
                      const struct aa_rx_mp_kpiece_attr *attr )
 {
     (void)attr;
-    auto p = new ompl::geometric::LBKPIECE1(mp->space_information);
-    mp->set_planner(p);
+    aa_rx_mp_set_planner( mp,
+                          new ompl::geometric::LBKPIECE1(aa_rx_mp_get_space_information(mp)) );
 }

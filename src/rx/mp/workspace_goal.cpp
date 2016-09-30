@@ -49,7 +49,7 @@
 
 
 #include "amino/rx/ompl/scene_workspace_goal.h"
-#include "amino/rx/ompl/scene_ompl.h"
+#include "amino/rx/ompl/scene_ompl_internal.h"
 
 namespace ob = ::ompl::base;
 

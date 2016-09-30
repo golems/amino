@@ -37,20 +37,10 @@
 
 
 #include "amino.h"
-#include "amino/rx/rxerr.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin.h"
-#include "amino/rx/scene_kin_internal.h"
-#include "amino/rx/scene_sub.h"
-#include "amino/rx/scene_collision.h"
-#include "amino/rx/scene_planning.h"
 
-#include "amino/rx/ompl/scene_state_space.h"
-#include "amino/rx/ompl/scene_state_validity_checker.h"
+#include "amino/rx/scene_planning.h"
 #include "amino/rx/ompl/scene_ompl.h"
 
-#include <ompl/base/Planner.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
 
@@ -96,11 +86,11 @@ aa_rx_mp_set_rrt( struct aa_rx_mp* mp,
     }
 
     if( attr->is_bidirectional ) {
-        auto p = new ompl::geometric::RRTConnect(mp->space_information);
-        mp->set_planner(p);
+        aa_rx_mp_set_planner( mp,
+                              new ompl::geometric::RRTConnect(aa_rx_mp_get_space_information(mp)) );
     } else {
-        auto p = new ompl::geometric::RRT(mp->space_information);
-        mp->set_planner(p);
+        aa_rx_mp_set_planner( mp,
+                              new ompl::geometric::RRT(aa_rx_mp_get_space_information(mp)) );
     }
 
     if( default_attr ) {

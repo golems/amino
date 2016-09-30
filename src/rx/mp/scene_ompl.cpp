@@ -52,10 +52,11 @@
 #include "amino/rx/ompl/scene_state_space.h"
 #include "amino/rx/ompl/scene_state_validity_checker.h"
 #include "amino/rx/ompl/scene_workspace_goal.h"
-#include "amino/rx/ompl/scene_ompl.h"
+#include "amino/rx/ompl/scene_ompl_internal.h"
 
 
 #include <ompl/base/Planner.h>
+#include <ompl/base/SpaceInformation.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/PathGeometric.h>
 #include <ompl/geometric/PathSimplifier.h>
@@ -266,4 +267,17 @@ AA_API struct aa_rx_cl_set*
 aa_rx_mp_get_allowed( const struct aa_rx_mp* mp)
 {
     return mp->space_information->getTypedStateSpace()->allowed;
+}
+
+
+ompl::base::SpaceInformationPtr
+aa_rx_mp_get_space_information( const struct aa_rx_mp *mp)
+{
+    return mp->space_information;
+}
+
+void
+aa_rx_mp_set_planner( struct aa_rx_mp *mp, ::ompl::base::Planner *planner)
+{
+    mp->set_planner(planner);
 }

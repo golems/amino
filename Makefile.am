@@ -41,7 +41,6 @@ noinst_HEADERS = \
              src/rx/sg_convenience.h \
              include/wavefront_internal.h \
              include/amino/ct/traj_internal.hpp \
-             include/amino_internal.h \
              include/amino/rx/scene_kin_internal.h \
              include/amino/rx/scenegraph_internal.h \
              include/amino/rx/scene_geom_internal.h \
@@ -49,7 +48,9 @@ noinst_HEADERS = \
              include/amino/rx/scene_gl_internal.h \
              include/amino/rx/scene_sdl_internal.h \
              include/amino/rx/rxtype_internal.h \
-             include/amino/rx/scene_fcl.h
+             include/amino/rx/scene_fcl.h \
+             include/amino/rx/ompl/scene_ompl_internal.h \
+             include/amino_internal.h
 
 dist_pkgdata_DATA = src/mac/amino.mac
 

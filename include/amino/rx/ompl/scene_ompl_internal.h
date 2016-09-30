@@ -35,31 +35,62 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_OMPL_H
-#define AMINO_RX_SCENE_OMPL_H
+#ifndef AMINO_RX_SCENE_OMPL_INTERNAL_H
+#define AMINO_RX_SCENE_OMPL_INTERNAL_H
 
+#include "amino/rx/rxerr.h"
+#include "amino/rx/rxtype.h"
+#include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_collision.h"
+#include "amino/rx/scene_planning.h"
+
+#include <ompl/base/StateValidityChecker.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/ProblemDefinition.h>
+#include <ompl/base/spaces/RealVectorBounds.h>
+
+#include <ompl/base/ScopedState.h>
 #include <ompl/base/TypedSpaceInformation.h>
+#include <ompl/base/TypedStateValidityChecker.h>
 #include <ompl/base/Planner.h>
 
-/**
- * @file scene_ompl.h
- * @brief OMPL-specific motion planning
- */
+#include "scene_ompl.h"
+
+namespace amino {
+class sgStateValidityChecker;
+class sgWorkspaceGoal;
+}
 
 
-struct aa_rx_mp;
+/* Forward Declaration */
+namespace ompl {
+namespace base {
+class GoalLazySamples;
+}
+}
 
-/**
- * Return the OMPL space information used by the planning context.
- */
-::ompl::base::SpaceInformationPtr
-aa_rx_mp_get_space_information( const struct aa_rx_mp *mp);
+struct aa_rx_mp {
+    aa_rx_mp( const struct aa_rx_sg_sub *sub_sg );
 
+    ~aa_rx_mp();
 
-/**
- * Set the OMPL planner to be used by the planning context.
- */
-void
-aa_rx_mp_set_planner( struct aa_rx_mp *mp, ::ompl::base::Planner *planner);
+    void set_planner( ompl::base::Planner *p ) {
+        this->planner.reset(p);
+    }
 
-#endif /*AMINO_RX_SCENE_OMPL_H*/
+    amino::sgSpaceInformation::Ptr space_information;
+    ompl::base::ProblemDefinitionPtr problem_definition;
+
+    amino::sgStateValidityChecker *validity_checker;
+
+    ompl::base::PlannerPtr planner;
+
+    double *config_start;
+
+    unsigned simplify : 1;
+
+    amino::sgWorkspaceGoal *lazy_samples;
+};
+
+#endif /*AMINO_RX_SCENE_OMPL_INTERNAL_H*/
