@@ -77,6 +77,7 @@
   :slots ((display-object)
           (mutable-scene-graph)
           (sub-scene-graph)
+          (end-effector)
           (config-vector)))
 
 

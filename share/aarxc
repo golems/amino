@@ -85,6 +85,7 @@ Options:
   -R|--reload                    reload files
 
   -g,--gui                       Display scene in a GUI
+  --end-effector=FRAME           Set an frame for interactive GUI control
   --list-frames                  List all frames in the scene graph
   --list-vars                    List all configuration variables in the scene graph
   --version,                     output version information and exit
@@ -192,7 +193,9 @@ EOF
         --gui|-g)
             export AARX_GUI=t
             ;;
-
+        --end-effector=*)
+            export AARX_END_EFFECTOR=`parse_long "$1"`
+            ;;
         --list-frames)
             export AARX_LIST_FRAMES="1"
             ;;

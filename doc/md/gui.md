@@ -1,7 +1,9 @@
 Viewer GUI {#viewer}
 ====================
 
-Amino includes a simple 3D visualization and user interface.
+Amino includes a simple 3D visualization and user interface which can
+be accessed via library calls (see @ref scene_win.h) or run in the
+@ref scenecompiler.
 
 <img style="float:right;" src="aminogl.png" alt="GL Window">
 

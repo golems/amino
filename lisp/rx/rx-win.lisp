@@ -189,34 +189,36 @@
 
 (defun win-set-scene-graph (scene-graph &key
                                           (window (window))
+                                          configuration-map
                                           end-effector
                                           )
-  (let* ((win window)
-         (m-sg (mutable-scene-graph scene-graph))
+  (let* ((m-sg (mutable-scene-graph scene-graph))
          (sg-sub (when end-effector
                    (let ((id (aa-rx-sg-frame-id m-sg end-effector)))
                      (assert (not (= id +frame-id-none+)))
                      (aa-rx-sg-chain-create m-sg +frame-id-root+ id))))
          (q (make-vec (aa-rx-sg-config-count m-sg))))
-    (with-win-lock win
-      (aa-rx-win-sg-gl-init win m-sg)
+    (with-win-lock window
+      (aa-rx-win-sg-gl-init window m-sg)
       (if sg-sub
-          (aa-rx-win-set-sg-sub win sg-sub)
-          (aa-rx-win-set-sg win m-sg))
+          (aa-rx-win-set-sg-sub window sg-sub)
+          (aa-rx-win-set-sg window m-sg))
       ;; Preserve the window display object.  The active display
       ;; function may be using it.
-      (setf (rx-win-mutable-scene-graph win) m-sg
-            (rx-win-sub-scene-graph win) sg-sub
-            (rx-win-config-vector win) q)))
+      (setf (rx-win-mutable-scene-graph window) m-sg
+            (rx-win-sub-scene-graph window) sg-sub
+            (rx-win-end-effector window ) end-effector
+            (rx-win-config-vector window) q)
+    (when configuration-map
+      (win-set-config configuration-map window))))
   (values))
 
 (defun win-scene-graph (&optional (window (window)))
   (mutable-scene-graph-scene-graph (rx-win-mutable-scene-graph window)))
 
-(defun win-set-config (configs)
-  (let* ((win (win-create))
-         (sg (rx-win-mutable-scene-graph win))
-         (q (rx-win-config-vector win)))
+(defun win-set-config (configs &optional (win (window)))
+  (let ((sg (rx-win-mutable-scene-graph win))
+        (q (rx-win-config-vector win)))
     (mutable-scene-graph-config-vector sg configs q)
     (rx-win-set-config win q)))
 
@@ -332,9 +334,15 @@
   0)
 
 (defun actual-reload-callback ()
-  (let ((sg0 (win-scene-graph)))
+  (let* ((win (window))
+         (sg0 (win-scene-graph win))
+         (e (rx-win-end-effector win))
+         (q (win-config-map win)))
     (flet ((helper ()
-             (win-set-scene-graph (reload-scene-graph sg0))))
+             (win-set-scene-graph (reload-scene-graph sg0)
+                                  :configuration-map q
+                                  :end-effector e
+                                  :window win)))
       (if (uiop/os:getenv "AARXC")
           (handler-case (progn
                           (helper)

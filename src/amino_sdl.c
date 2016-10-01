@@ -526,9 +526,9 @@ AA_API void aa_sdl_display_loop(
             }
 
             if( focus && x_key ) {
-                aa_sdl_dx( spnav_axis );
+                aa_sdl_dx( spnav_axis, 1 );
             } else {
-                aa_sdl_dx( dx0 );
+                aa_sdl_dx( dx0, 0 );
             }
         }
 #endif

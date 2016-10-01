@@ -133,7 +133,8 @@ Written by Neil T. Dantam
       (when gui
         (setq *win-render* render)
         (win-create :title "AARXC" :stop-on-quit t)
-        (win-set-scene-graph scene)
+        (win-set-scene-graph scene
+                             :end-effector (env "AARX_END_EFFECTOR"))
         (setf (win-tf-camera) camera-tf)
         (when config-alist (win-set-config config))
         (win-run :synchronous t)))))

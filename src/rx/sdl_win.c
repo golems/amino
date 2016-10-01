@@ -78,6 +78,8 @@ static void s_broadcast(void);
 static void s_wait( void );
 
 static double s_dx[6] = {0};
+static int s_dx_enable = 0;
+
 
 static int default_display( struct aa_rx_win *win,
                             void *cx_, struct aa_sdl_display_params *params );
@@ -322,6 +324,7 @@ struct default_display_cx {
     const struct aa_rx_sg *sg;
     const struct aa_rx_sg_sub *sg_sub;
     struct aa_rx_win *win;
+    double E_ref[7];
 };
 
 static void destroy_default ( void *cx_ ) {
@@ -343,33 +346,62 @@ workspace_control(
 
     double *TF_rel = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
     double *TF_abs = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
-    double *J = AA_MEM_REGION_NEW_N(reg, double, 6*n_sq);
-    double *J_star = AA_MEM_REGION_NEW_N(reg, double, 6*n_sq);
     double q[n_sq], qc[n_sq], dq[n_sq];
     AA_MEM_ZERO(q,n_sq);
     aa_rx_sg_sub_center_configs(ssg, n_sq, qc);
 
     aa_rx_sg_tf( sg, n_q, win->q,
                  n_f, TF_rel, 7, TF_abs, 7 );
-    aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
-                           J, 6 );
-    aa_la_dzdpinv(6, n_sq, 1e-4, J, J_star);
 
-    aa_rx_sg_sub_config_get( ssg, n_q, win->q, n_sq, q );
+    aa_rx_frame_id id_ee = aa_rx_sg_sub_frame( ssg, n_sq - 1 );
+    double *Ea = TF_abs + 7*id_ee;
 
-    double w_e[6];
+    if( s_dx_enable ) {
+        double *J = AA_MEM_REGION_NEW_N(reg, double, 6*n_sq);
+        double *J_star = AA_MEM_REGION_NEW_N(reg, double, 6*n_sq);
+        aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
+                               J, 6 );
+        aa_la_dzdpinv(6, n_sq, 1e-4, J, J_star);
 
-    w_e[0] =  s_dx[2] / 700;
-    w_e[1] = -s_dx[0] / 700;
-    w_e[2] =  s_dx[1] / 700;
-    w_e[3] =  s_dx[5] / 700;
-    w_e[4] = -s_dx[3] / 700;
-    w_e[5] =  s_dx[4] / 700;
+        aa_rx_sg_sub_config_get( ssg, n_q, win->q, n_sq, q );
 
-    aa_la_xlsnp( 6, n_sq, J, J_star, w_e, qc, dq );
-    cblas_daxpy( (int)n_sq, 1 / win->gl_globals->fps, dq, 1, q, 1 );
+        double w_e[6], x_e[6];
+        double dt = 1 / win->gl_globals->fps;
 
-    aa_rx_sg_sub_config_set( ssg, n_sq, q, n_q, win->q );
+        w_e[0] =  s_dx[2] / 700;
+        w_e[1] = -s_dx[0] / 700;
+        w_e[2] =  s_dx[1] / 700;
+        w_e[3] =  s_dx[5] / 250;
+        w_e[4] = -s_dx[3] / 250;
+        w_e[5] =  s_dx[4] / 250;
+
+        // position feedback
+        {
+            double Sr[7], Sa[8];
+            aa_tf_qutr2duqu(cx->E_ref, Sr);
+            aa_tf_qutr2duqu(Ea, Sa);
+
+            double twist[8], de[8];
+            aa_tf_duqu_mulc( Sa, Sr, de );  // de = d*conj(d_r)
+            aa_tf_duqu_minimize(de);
+            aa_tf_duqu_ln(de, twist);     // twist = log( de )
+            aa_tf_duqu_twist2vel(Sa, twist, x_e);
+        }
+
+        aa_tf_qutr_svel( Ea, w_e, dt, cx->E_ref );
+
+        for(size_t i = 0; i < 6; i ++ ) {
+            w_e[i] -= x_e[i];
+        }
+
+        aa_la_xlsnp( 6, n_sq, J, J_star, w_e, qc, dq );
+        cblas_daxpy( (int)n_sq, dt, dq, 1, q, 1 );
+
+        aa_rx_sg_sub_config_set( ssg, n_sq, q, n_q, win->q );
+
+    } else {
+        AA_MEM_CPY(cx->E_ref, Ea, 7);
+    }
 
     aa_mem_region_pop(reg,TF_rel);
 }
@@ -380,12 +412,9 @@ static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_disp
     struct default_display_cx *cx = (struct default_display_cx*) cx_;
     int updated = aa_sdl_display_params_get_update(params);
 
-    if( cx->sg_sub ) {
-        double a = cblas_dasum(6, s_dx, 1);
-        if( a > 0 ) {
-            workspace_control(win,cx,params);
-        }
 
+    if( cx->sg_sub ) {
+        workspace_control(win,cx,params);
     }
 
     if( (updated || win->updated) && cx )
@@ -952,7 +981,8 @@ s_broadcast( )
 }
 
 AA_API void
-aa_sdl_dx( const double dx[6] )
+aa_sdl_dx( const double dx[6], int enable )
 {
     AA_MEM_CPY(s_dx,dx,6);
+    s_dx_enable = enable;
 }

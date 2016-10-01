@@ -57,6 +57,6 @@ aa_sdl_ui_setup();
 
 
 AA_API void
-aa_sdl_dx( const double dx[6] );
+aa_sdl_dx( const double dx[6], int enable );
 
 #endif /*AMINO_RX_SCENE_SDL_INTERNAL_H*/
