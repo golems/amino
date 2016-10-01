@@ -30,6 +30,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 #  OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 AARX_SCENE_NAME=""
 AARX_MESH_UP_AXIS="Z"
 AARX_MESH_FORWARD_AXIS="Y"
@@ -226,7 +227,8 @@ if test -z "$AARX_SCENE" -a -z "$AARX_VERSION" -a -z "$AARX_VERSION_MAN"; then
     exit 1
 fi
 
-# env | sort
+# Inform Lisp that it running the scene compiler
+export AARXC="1"
 
 exec aarx.core --dynamic-space-size "$AARX_MEMORY" \
      --non-interactive \

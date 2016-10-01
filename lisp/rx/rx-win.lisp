@@ -332,8 +332,16 @@
   0)
 
 (defun actual-reload-callback ()
-  (win-set-scene-graph (reload-scene-graph (win-scene-graph)))
-  0)
+  (let ((sg0 (win-scene-graph)))
+    (flet ((helper ()
+             (win-set-scene-graph (reload-scene-graph sg0))))
+      (if (uiop/os:getenv "AARXC")
+          (handler-case (progn
+                          (helper)
+                          (format t "~&Reloaded ~{'~A'~^, ~}~%" (tree-set-list (scene-graph-files sg0))))
+            (condition (e)
+              (format *error-output* "~&~A~%" e)))
+          (helper)))))
 
 (cffi:defcallback render-callback :void
     ((context :pointer) (params :pointer))
