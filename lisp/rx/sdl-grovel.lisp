@@ -45,6 +45,7 @@
   ;; SDL Keys
   (cenum sdl-keycode
          ((:f11 "SDLK_F11"))
-         ((:p "SDLK_p")))
+         ((:p "SDLK_p"))
+         ((:r "SDLK_r")))
 
   )

@@ -276,5 +276,6 @@
                 (make-hash-table :test #'equal)
                 urdf-joints))
          ;; Create Scene Frames
-         (scene-graph (scene-graph (urdf-create-frames urdf-joints link-parent-map))))
+         (scene-graph (scene-graph (make-scene-graph :files (make-scene-graph-files urdf))
+                                   (urdf-create-frames urdf-joints link-parent-map))))
     (urdf-bind-links dom scene-graph link-parent-map)))

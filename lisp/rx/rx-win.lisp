@@ -140,6 +140,8 @@
          (with-main-thread
            (unless *%window%*
              (aa-sdl-bind-key :p (cffi:callback render-callback) (cffi:null-pointer))
+             (aa-sdl-bind-key :r (cffi:callback reload-callback) (cffi:null-pointer))
+
              (setq *%window%*
                    (sb-int:with-float-traps-masked (:divide-by-zero :overflow :invalid :inexact)
                      (aa-rx-win-default-create title width height)))
@@ -329,10 +331,21 @@
        (finish-output *standard-output*))))
   0)
 
+(defun actual-reload-callback ()
+  (win-set-scene-graph (reload-scene-graph (win-scene-graph)))
+  0)
+
 (cffi:defcallback render-callback :void
     ((context :pointer) (params :pointer))
   (declare (ignore context params))
   (actual-render-callback)
+  0)
+
+
+(cffi:defcallback reload-callback :void
+    ((context :pointer) (params :pointer))
+  (declare (ignore context params))
+  (actual-reload-callback)
   0)
 
 (defun render-win (&key

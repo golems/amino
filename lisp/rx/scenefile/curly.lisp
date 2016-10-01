@@ -560,7 +560,8 @@
       (dolist (c curly)
         (add-thing c))
       ;; Create Scene Graph
-      (let ((scene-graph (scene-graph frames)))
+      (let ((scene-graph (scene-graph (make-scene-graph :files (make-scene-graph-files (namestring pathname)))
+                                      frames)))
         ;; Add Geometry
         (setq scene-graph (fold (lambda (sg g)
                                   (scene-graph-add-geometry sg (car g) (cdr g)))

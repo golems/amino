@@ -447,9 +447,15 @@
   (or-compare (config-name-compare (car a) (car b))
               (config-name-compare (cdr a) (cdr b))))
 
+(defun make-scene-graph-files (&rest files)
+  (fold #'tree-set-insert
+        (make-tree-set #'sycamore-util:string-compare)
+        files))
+
 (defstruct scene-graph
   (frames (make-tree-set #'scene-object-compare) :type tree-set)
   (allowed-collisions (make-collision-set) :type collision-set)
+  (files (make-scene-graph-files) :type tree-set)
   (configs (make-tree-set #'scene-object-compare) :type tree-set))
 
 (defmethod print-object ((object scene-graph) stream)
@@ -474,11 +480,21 @@
     (make-scene-graph :frames (merge-set (scene-graph-frames scene-graph)
                                          (scene-graph-frames new-scene-graph)
                                          "frames")
+                      :files (tree-set-union (scene-graph-files scene-graph)
+                                             (scene-graph-files new-scene-graph))
                       :configs (merge-set (scene-graph-configs scene-graph)
                                           (scene-graph-configs new-scene-graph)
                                           "configs")
                       :allowed-collisions (tree-set-union (scene-graph-allowed-collisions scene-graph)
                                                           (scene-graph-allowed-collisions new-scene-graph)))))
+
+(defun reload-scene-graph (scene-graph &key reload)
+  (fold-tree-set (lambda (sg file)
+                   (merge-scene-graph sg
+                                      (load-scene-file file :reload reload)))
+                 (make-scene-graph)
+                 (scene-graph-files scene-graph)))
+
 
 
 ;;; Basic Operations ;;;
@@ -519,6 +535,7 @@
   ;; TODO: handle duplicate configs
   (make-scene-graph :frames (tree-set-replace (scene-graph-frames scene-graph)
                                               frame)
+                    :files (scene-graph-files scene-graph)
                     :allowed-collisions (scene-graph-allowed-collisions scene-graph)
                     :configs (if (scene-frame-joint-p frame)
                                  ;; add config
@@ -534,6 +551,7 @@
   ;; TODO: remove allowed collisions and configs
   (make-scene-graph :frames (tree-set-remove (scene-graph-frames scene-graph)
                                              frame-name)
+                    :files (scene-graph-files scene-graph)
                     :allowed-collisions (scene-graph-allowed-collisions scene-graph)
                     :configs (scene-graph-configs scene-graph)))
 
