@@ -367,12 +367,12 @@ workspace_control(
         double w_e[6], x_e[6];
         double dt = 1 / win->gl_globals->fps;
 
-        w_e[0] =  s_dx[2] / 700;
-        w_e[1] = -s_dx[0] / 700;
-        w_e[2] =  s_dx[1] / 700;
-        w_e[3] =  s_dx[5] / 250;
-        w_e[4] = -s_dx[3] / 250;
-        w_e[5] =  s_dx[4] / 250;
+        w_e[0] =  0.5 * s_dx[2];
+        w_e[1] = -0.5 * s_dx[0];
+        w_e[2] =  0.5 * s_dx[1];
+        w_e[3] =  1.5 * s_dx[5];
+        w_e[4] = -1.5 * s_dx[3];
+        w_e[5] =  1.5 * s_dx[4];
 
         // position feedback
         {

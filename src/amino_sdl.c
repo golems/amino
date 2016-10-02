@@ -150,6 +150,17 @@ static void aa_spnav_poll(double dx[6])
             omega[0] = (double)spnevent.motion.rx;
             omega[1] = (double)spnevent.motion.ry;
             omega[2] = (double)spnevent.motion.rz;
+            for( size_t i = 0; i < 6; i ++ ) {
+                /* normalize */
+                dx[i] /= 350;
+                /* deadzone */
+                const double thresh = .1;
+                if( dx[i] > thresh ) dx[i] -= thresh;
+                else if( dx[i] <- thresh ) dx[i] += thresh;
+                else dx[i] = 0;
+                /* rescale */
+                dx[i] /= (1-thresh);
+            }
             break;
         case SPNAV_EVENT_BUTTON: {
             int64_t i = spnevent.button.bnum;
@@ -177,8 +188,8 @@ static void aa_spnav_scroll(const double axis[6], struct aa_gl_globals * globals
     double *dv = dx+AA_TF_DX_V;
     double *omega = dx+AA_TF_DX_W;
 
-    static const double dv_scale[3] = {1.25 / 350, 1.25/350, -1.25/350 };
-    static const double omega_scale[3] = {.4 / 350, .4 / 350, -.4/350 };
+    static const double dv_scale[3] = {1.5, 1.5, -1.5 };
+    static const double omega_scale[3] = {2, 2, -2 };
 
     /* Select and Scale axis */
     for( size_t i = 0; i < 3; i ++ ) {
