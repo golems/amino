@@ -341,6 +341,8 @@ aa_rx_sg_set_limit_eff( struct aa_rx_sg *scenegraph,
  *
  * @pre aa_rx_sg_init() has been called after all frames were added to
  * the scenegraph.
+ *
+ * @return 0 when a limit has been set, non-zero otherwise.
  */
 AA_API int
 aa_rx_sg_get_limit_pos( const struct aa_rx_sg *scenegraph,
@@ -352,6 +354,8 @@ aa_rx_sg_get_limit_pos( const struct aa_rx_sg *scenegraph,
  *
  * @pre aa_rx_sg_init() has been called after all frames were added to
  * the scenegraph.
+ *
+ * @return 0 when a limit has been set, non-zero otherwise.
  */
 AA_API int
 aa_rx_sg_get_limit_vel( const struct aa_rx_sg *scenegraph,
@@ -363,6 +367,8 @@ aa_rx_sg_get_limit_vel( const struct aa_rx_sg *scenegraph,
  *
  * @pre aa_rx_sg_init() has been called after all frames were added to
  * the scenegraph.
+ *
+ * @return 0 when a limit has been set, non-zero otherwise.
  */
 AA_API int
 aa_rx_sg_get_limit_acc( const struct aa_rx_sg *scenegraph,

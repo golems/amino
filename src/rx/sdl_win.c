@@ -347,7 +347,6 @@ workspace_control(
     double *TF_rel = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
     double *TF_abs = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
     double q[n_sq], qc[n_sq], dq[n_sq];
-    AA_MEM_ZERO(q,n_sq);
     aa_rx_sg_sub_center_configs(ssg, n_sq, qc);
 
     aa_rx_sg_tf( sg, n_q, win->q,
@@ -395,6 +394,22 @@ workspace_control(
         }
 
         aa_la_xlsnp( 6, n_sq, J, J_star, w_e, qc, dq );
+
+
+        // check limit s
+        for (size_t i = 0; i < n_sq; i ++ ) {
+            aa_rx_config_id j = aa_rx_sg_sub_config(ssg,i);
+            double min,max;
+            // TODO: soft limits
+            if( 0 == aa_rx_sg_get_limit_pos(sg, j, &min, &max) ) {
+                if( (q[i] <= min && dq[i] <= 0) ||
+                    (q[i] >= max && dq[i] >= 0) )
+                {
+                    dq[i] = 0;
+                }
+            }
+        }
+
         cblas_daxpy( (int)n_sq, dt, dq, 1, q, 1 );
 
         aa_rx_sg_sub_config_set( ssg, n_sq, q, n_q, win->q );
