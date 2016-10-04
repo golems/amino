@@ -360,7 +360,7 @@ workspace_control(
         double *J_star = AA_MEM_REGION_NEW_N(reg, double, 6*n_sq);
         aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
                                J, 6 );
-        aa_la_dzdpinv(6, n_sq, 1e-4, J, J_star);
+        aa_la_dzdpinv(6, n_sq, 1e-3, J, J_star);
 
         aa_rx_sg_sub_config_get( ssg, n_q, win->q, n_sq, q );
 

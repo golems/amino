@@ -482,10 +482,14 @@ AA_API void aa_sdl_display_loop(
     params.quit = 0;
     params.time_initial = aa_tm_now();
     params.time_now = params.time_initial;
-    params.time_last = params.time_initial;
     params.first = 1;
 
     do {
+        // update times
+        params.time_last = params.time_now;
+        params.time_now = aa_tm_now();
+        next = aa_tm_add(params.time_now, delta);
+
         // update screen
         display(context, &params);
         params.first = 0;
@@ -494,17 +498,19 @@ AA_API void aa_sdl_display_loop(
             SDL_GL_SwapWindow(window);
             params.update = 0;
         }
-        params.time_last = params.time_now;
-        next = aa_tm_add(params.time_now, delta);
 
         // Cleanup as necessary
         aa_gl_buffers_cleanup();
 
         // wait for SDL events
-        int timeout = 1;
+        int timeout = 1, ev1 = 1;
         while( !params.quit && timeout > 0 ) {
-            params.time_now = aa_tm_now();
-            struct timespec ts_timeout = aa_tm_sub(next, params.time_now);
+            struct timespec now = aa_tm_now();
+            if( ev1 && aa_tm_cmp( now, next ) > 0 ) {
+                fprintf(stderr, "Display cycle took too long\n");
+            }
+            ev1 = 0;
+            struct timespec ts_timeout = aa_tm_sub(next, now);
             timeout = (int) aa_tm_timespec2msec(ts_timeout);
             //printf("timeout: %d\n", timeout );
             SDL_Event e;
@@ -543,8 +549,6 @@ AA_API void aa_sdl_display_loop(
         }
 #endif
 
-        // update times
-        params.time_now = aa_tm_now();
     } while ( !params.quit );
 }
 
