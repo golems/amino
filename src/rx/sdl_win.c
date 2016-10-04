@@ -427,15 +427,17 @@ static int default_display( struct aa_rx_win *win, void *cx_, struct aa_sdl_disp
     struct default_display_cx *cx = (struct default_display_cx*) cx_;
     int updated = aa_sdl_display_params_get_update(params);
 
+    if( cx ) {
 
-    if( cx->sg_sub ) {
-        workspace_control(win,cx,params);
-    }
+        if( cx->sg_sub ) {
+            workspace_control(win,cx,params);
+        }
 
-    if( (updated || win->updated) && cx )
-    {
-        aa_rx_win_display_sg_config( win, params,
-                                     cx->sg, aa_rx_sg_config_count(cx->sg), win->q );
+        if( updated || win->updated )
+        {
+            aa_rx_win_display_sg_config( win, params,
+                                         cx->sg, aa_rx_sg_config_count(cx->sg), win->q );
+        }
     }
 
     return updated;

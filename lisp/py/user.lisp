@@ -249,31 +249,31 @@ Examples:
 
 (defun |shape_is_box| (shape)
   "Test if SHAPE is a box."
-  (robray::scene-box-p shape))
+  (clpython:py-bool (robray::scene-box-p shape)))
 
 (defun |shape_is_sphere| (shape)
   "Test if SHAPE is a sphere."
-  (robray::scene-sphere-p shape))
+  (clpython:py-bool (robray::scene-sphere-p shape)))
 
 (defun |shape_is_cylinder| (shape)
   "Test if SHAPE is a cylinder."
-  (robray::scene-cylinder-p shape))
+  (clpython:py-bool (robray::scene-cylinder-p shape)))
 
 (defun |shape_is_cone| (shape)
   "Test if SHAPE is a cone."
-  (robray::scene-cone-p shape))
+  (clpython:py-bool (robray::scene-cone-p shape)))
 
 (defun |shape_is_grid| (shape)
   "Test if SHAPE is a grid."
-  (robray::scene-grid-p shape))
+  (clpython:py-bool (robray::scene-grid-p shape)))
 
 (defun |shape_is_text| (shape)
   "Test if SHAPE is a text."
-  (robray::scene-text-p shape))
+  (clpython:py-bool (robray::scene-text-p shape)))
 
 (defun |shape_is_mesh| (shape)
   "Test if SHAPE is a mesh."
-  (robray::scene-mesh-p shape))
+  (clpython:py-bool (robray::scene-mesh-p shape)))
 
 (def-subs-accessors robray::scene-box
   ("dimension" robray::scene-box-dimension))

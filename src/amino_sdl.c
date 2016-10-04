@@ -262,8 +262,6 @@ static void sdl_init_once( void )
     DEF_SDL_ATTR( SDL_GL_MULTISAMPLEBUFFERS,  1 );
     DEF_SDL_ATTR( SDL_GL_MULTISAMPLESAMPLES,  4 );
 
-    SDL_GL_SetSwapInterval(1);
-
     DEF_SDL_HINT(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
     DEF_SDL_HINT(SDL_HINT_RENDER_DRIVER, NULL);
     DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XRANDR, NULL);
@@ -271,6 +269,7 @@ static void sdl_init_once( void )
     DEF_SDL_HINT(SDL_HINT_VIDEO_X11_XINERAMA, NULL);
     DEF_SDL_HINT(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
     DEF_SDL_HINT(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    DEF_SDL_HINT(SDL_HINT_RENDER_VSYNC, "1");
 
 
 #ifdef HAVE_SPNAV_H
@@ -600,8 +599,13 @@ FINISH:
         abort();
     }
 
+    if( SDL_GL_SetSwapInterval(1) ) {
+        fprintf( stderr,
+                 "Failed to set GL Swap interval: '%s'\n",
+                 SDL_GetError() );
+    }
+
 
     aa_gl_init();
     //printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-
 }
