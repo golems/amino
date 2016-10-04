@@ -63,13 +63,14 @@ Performance {#faq_performance}
 
   - A: An optimized BLAS library will also help some
     operations. OpenBLAS is among the fastest
-    (http://www.openblas.net/)
+    (http://www.openblas.net/), but may not handle small matrices
+    well.
 
 * Q: How do I use an optimized BLAS/LAPACK implementation?
 
     - A: (**Debian and Ubuntu**) Typically, the package manager will
       select the fastest installed BLAS/LAPACK implementation which is
-      probably OpenBLAS:
+      probably OpenBLAS or ATLAS:
 
             sudo apt-get install libopenblas-dev
 
@@ -131,6 +132,34 @@ Performance {#faq_performance}
         slightly change the resulting image.
       * `-flto`: enable link-time optimization. This optimizes across
         multiple translation units.
+
+
+Known Issues {#faq_issues}
+============
+
+* Q: Linear Algebra is super slow, and I'm already using OpenBLAS.
+
+  - A: Sometimes OpenBLAS has poor small-matrix performance
+    ([related bug] (https://github.com/xianyi/OpenBLAS/issues/731)).
+
+     -  Try using a different BLAS/LAPACK implementation ([ATLAS]
+        (http://math-atlas.sourceforge.net/) is good):
+
+            apt-get remove libopenblas-base
+            apt-get install libatlas-base-dev
+
+     - Or disabling threading in OpenBLAS:
+
+            export OPENBLAS_NUM_THREADS=1
+
+
+* Q: I get tearing in the @ref viewer.
+
+  - A: Ensure that direct rendering is enabled:
+
+        glxinfo | grep -i direct
+
+  - A: Try disabling compositing in your window manager.
 
 
 Comparison with Other Packages    {#faq_comparison}
