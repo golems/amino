@@ -43,7 +43,6 @@ install:
     elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
        brew update;
        brew tap homebrew/science;
-       brew unlink libtool;
        brew install autoconf-archive openblas maxima sdl2 libtool ompl;
        brew install https://raw.github.com/dartsim/homebrew-dart/master/fcl.rb;
     fi
