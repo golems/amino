@@ -10,4 +10,4 @@ shift
 >&2 echo "Rendering on $remote_host"
 >&2 echo ""
 
-ssh "$remote_host" "cd /tmp/robray-$USER && nice -n $NICE $POVRAY $@ -D"
+ssh "$remote_host" "cd /tmp/amino-$USER && nice -n $NICE $POVRAY $@ -D"

@@ -43,6 +43,7 @@
                             config-velocity
                             (camera-tf (tf nil))
                             include
+                            render
                             include-text
                             (options robray::*render-options*))
   (let* ((n (motion-plan-length motion-plan))
@@ -61,7 +62,57 @@
                               :camera-tf camera-tf
                               :options options
                               :encode-video t
-                              :render-frames t
+                              :render-frames render
                               :include include
                               :include-text include-text
                               :scene-graph sg)))
+
+(defun render-motion-plans (plans
+                            &key
+                              (delta-t .10d0)
+                              ;config-velocity
+                              (camera-tf (tf nil))
+                              include
+                              include-text
+                              render
+                              (directory *robray-tmp-directory*)
+                              (options *render-options*))
+
+  (map nil #'delete-file (frame-files directory))
+  ;; Write povray files
+  (loop
+     with fps = (get-render-option options :frames-per-second)
+     with period = (/ 1d0 fps)
+     for time = 0d0 then (keyframe-set-end keyframes)
+     ;for t0 = time
+     for plan in plans
+     for keyframes =
+       (keyframe-set (loop
+                        for i below (motion-plan-length plan)
+                        for config = (motion-plan-refmap plan i)
+                        for array = (motion-plan-refarray plan i)
+                        for last-array = array
+                        collect (prog1 (joint-keyframe time config)
+                                  (incf time delta-t))))
+     for function = (let* ((t0 (keyframe-set-start keyframes))
+                           (t1 (keyframe-set-end keyframes))
+                           (fun (keyframe-configuration-function keyframes)))
+                      (lambda (i)
+                        (let ((tt (* i period)))
+                          ;;(format t "~&~D (~As, ~A, ~A) [~A, ~A]" i tt fps period t0 t1)
+                          (funcall fun tt))))
+
+     do
+       (scene-graph-frame-animate function
+                                   :camera-tf camera-tf
+                                   :append t
+                                   :options options
+                                   :encode-video nil
+                                   :render-frames nil
+                                   :include include
+                                   :include-text include-text
+                                   :scene-graph (motion-plan-scene-graph plan)))
+  ;; Render
+  (when render
+    (net-render :directory directory
+                :options options)))

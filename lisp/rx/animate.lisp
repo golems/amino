@@ -116,7 +116,6 @@
 
 
 (defun linterp (time t0 x0 t1 x1)
-;  (print (list time t0 x0 t1 x1))
   (+ x0 (* (- time t0)
            (/ (- x1 x0)
               (- t1 t0)))))
@@ -169,7 +168,14 @@
 
 
 (defun frame-files (directory)
-  (directory (concatenate 'string directory "/*.pov")))
+  (directory (merge-pathnames (make-pathname :name :wild
+                                             :type "pov")
+                              directory)))
+
+(defun image-files (directory)
+  (directory (merge-pathnames (make-pathname :name :wild
+                                             :type "png")
+                              directory)))
 
 (defun last-frame-number (files)
   (frame-number (car (last (sort-frames files)))))
@@ -192,9 +198,9 @@
                          (pad 15)
                          (output-file "robray"))
   ;; pad
-  (let* ((images (directory  (concatenate 'string directory "/frame-*.png")))
+  (let* ((images (directory (merge-pathnames "frame-*.png" directory)))
          (last-frame-number (frame-number (car (last (sort-frames images))))))
-    (map nil #'delete-file (directory  (concatenate 'string directory "/vframe-*.png")))
+    (map nil #'delete-file (directory (merge-pathnames "vframe-*.png" directory)))
     (loop for file in images
        for n = (frame-number file)
        do (sb-ext:run-program "ln"
@@ -228,7 +234,7 @@
                         args
                         :search t :wait t :directory directory
                         :output *standard-output*)
-    (map nil #'delete-file (directory  (concatenate 'string directory "/vframe-*.png")))
+    (map nil #'delete-file (directory  (merge-pathnames "vframe-*.png" directory)))
     (format t "~&done")))
 
 
@@ -422,16 +428,16 @@
 (defun net-render (&key
                      (directory *robray-tmp-directory*)
                      (options *render-options*)
-                     (render-host-alist *render-host-alist*)
                      (status-stream *standard-output*))
-  (let* ((compute-available (make-string-hash-table))
+  (load-config)
+  (let* ((render-host-alist *render-host-alist*)
+         (compute-available (make-string-hash-table))
          (host-args (make-string-hash-table))
          (work-queue (sort-frames (frame-files directory)))
          (semaphore (sb-thread:make-semaphore :count 0))
          (n (length work-queue))
-         (directory (ensure-directory directory))
          (i 0))
-    (map nil #'delete-file (directory (concatenate 'string directory "/*.png")))
+    (map nil #'delete-file (image-files directory))
     ;; TODO: better directory use
     ;; - proper temp directories on remote hosts
     ;; -
@@ -446,8 +452,9 @@
                            :options options
                            :threads (net-args-threads args))))
              (pov-error (item)
-               (concatenate 'string
-                            directory (pathname-name item) ".txt"))
+               (merge-pathnames (make-pathname :name (pathname-name item)
+                                               :type "txt")
+                                directory))
              (pov-local (item status-hook)
                (let ((args (gethash "localhost" host-args)))
                  (sb-ext:run-program "nice"
@@ -463,7 +470,8 @@
              (pov-remote (host item status-hook)
                (let ((args (gethash host host-args))
                      (output (concatenate 'string
-                                          directory (pov-output-file (povfile-base item)))))
+                                          (namestring directory)
+                                          (pov-output-file (povfile-base item)))))
                  (sb-ext:run-program (find-script "povremote")
                                      (list* host
                                             (net-args-povray args)
@@ -504,8 +512,8 @@
                                          "--include=povray/**.sys"
                                          "--include=**/"
                                          "--exclude=*"
-                                         directory
-                                         (format nil "~A:~A" host *robray-tmp-directory*))
+                                         (namestring directory)
+                                         (format nil "~A:~A" host (namestring *robray-tmp-directory*)))
                                    :search t :wait nil
                                    :output status-stream
                                    :error *error-output*
