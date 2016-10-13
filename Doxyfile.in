@@ -758,7 +758,14 @@ INPUT                  = include \
                          include/amino/rx \
                          include/amino/opt \
                          clapack_doc.c lapack_doc.c la_doc.c \
-                         doc/md
+                         doc/md/copying.md \
+                         doc/md/faq.md \
+                         doc/md/gui.md \
+                         doc/md/Installation.md \
+                         doc/md/License.md \
+                         doc/md/scenecompiler.md \
+                         doc/md/scenefile.md \
+                         doc/md/mainpage.md
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

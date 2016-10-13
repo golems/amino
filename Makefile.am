@@ -607,6 +607,7 @@ clean-local:
                 org.golems.amino.jar        \
                 org_golems_amino_Lib.h      \
                 org/golems/amino/Lib.class  \
+                doc/md/mainpage.md          \
                 doc/md/copying.md
 
 distclean-local:
@@ -616,21 +617,27 @@ distclean-local:
 		rm -rf $(top_builddir)/lisp; \
 	fi
 sync-doc:
-	rsync -r doc/manual/ code.golems.org:/srv/www/amino.golems.org
+	rsync -r doc/manual/ code.golems.org:/srv/www/amino
 
 
-doc/md/copying.md: $(top_srcdir)/COPYING
+doc/md/copying.md: $(top_srcdir)/COPYING $(top_srcdir)/doc/md/copying.md.header
 	$(MKDIR_P) doc/md/
 	cat $(top_srcdir)/doc/md/copying.md.header  \
 	    $(top_srcdir)/COPYING \
 	    > doc/md/copying.md
 
 
+doc/md/mainpage.md: $(top_srcdir)/AUTHORS $(top_srcdir)/doc/md/mainpage-head.md
+	$(MKDIR_P) doc/md/
+	cat $(top_srcdir)/doc/md/mainpage-head.md \
+	    $(top_srcdir)/AUTHORS \
+	    > doc/md/mainpage.md
+
 EXTRA_DIST += \
 	doc/md/copying.md.header \
 	doc/md/faq.md \
 	doc/md/Installation.md \
-	doc/md/mainpage.md \
+	doc/md/mainpage-head.md \
 	doc/md/scenecompiler.md \
 	doc/md/gui.md \
 	doc/md/License.md \
@@ -642,7 +649,7 @@ EXTRA_DIST += \
 
 if HAVE_DOXYGEN
 
-doxygen: doc/md/copying.md
+doxygen: doc/md/copying.md doc/md/mainpage.md
 	$(DOXYGEN)
 
 doc/manual: doxygen
