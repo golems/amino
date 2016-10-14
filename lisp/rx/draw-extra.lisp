@@ -54,9 +54,9 @@
                                           options)))
     (scene-graph
      (scene-frame-fixed parent name
-                        :geometry (scene-geometry-box (merge-draw-options (draw-options :color paper-color)
-                                                                          options)
-                                                      (vec3* x y offset))
+                        :geometry (when paper-color (scene-geometry-box (merge-draw-options (draw-options :color paper-color)
+                                                                                            options)
+                                                                        (vec3* x y offset)))
                         :tf (tf tf))
      (scene-frame-fixed name grid-major
                         :geometry (scene-geometry-grid grid-options
