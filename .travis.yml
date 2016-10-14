@@ -49,7 +49,7 @@ install:
 
 script:
   - if [ -n "$DOCKERFILE" ]; then
-      ./script/docker-check.sh "$DOCKERFILE";
+      ./script/docker-make.sh "$DOCKERFILE";
     elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
       autoreconf -i &&
       ./configure &&

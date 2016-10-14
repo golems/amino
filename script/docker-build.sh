@@ -1,5 +1,5 @@
-#!/bin/sh
+#!/bin/sh -e
 
 for DOCKERFILE in $@; do
-      docker build -t "amino-$DOCKERFILE" -f "script/docker/$DOCKERFILE" .;
+      docker build -t "amino:$DOCKERFILE-dep" -f "script/docker/$DOCKERFILE" .;
 done
