@@ -181,9 +181,11 @@ double sgWorkspaceGoal::distanceGoal (const ompl::base::State *state) const
         double *qact = Eact + AA_TF_QUTR_Q;
         double *vref = Eref + AA_TF_QUTR_T;
         double *vact = Eact + AA_TF_QUTR_T;
+        double vdiff[3];
+        for (size_t j=0; j<3; j++){ vdiff[j] = vref[j]-vact[j]; }
 
         a += weight_orientation * aa_tf_qangle_rel(qref, qact);
-        a += weight_translation * sqrt( AA_TF_VDOT(vref, vact) );
+        a += weight_translation * sqrt( AA_TF_VDOT(vdiff, vdiff) );
     }
 
     space->region_pop(TF_abs);
