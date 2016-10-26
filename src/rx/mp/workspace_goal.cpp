@@ -175,7 +175,7 @@ double sgWorkspaceGoal::distanceGoal (const ompl::base::State *state) const
     double a = 0;
     for( size_t i = 0; i < n_e; i ++ ) {
         double *Eref = this->E + 7*i;
-        double *Eact = TF_abs + 7*i;
+        double *Eact = TF_abs + this->frames[i]*7;
 
         double *qref = Eref + AA_TF_QUTR_Q;
         double *qact = Eact + AA_TF_QUTR_Q;
