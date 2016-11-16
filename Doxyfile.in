@@ -672,7 +672,7 @@ FILE_VERSION_FILTER    =
 # DoxygenLayout.xml, doxygen will parse it automatically even if the LAYOUT_FILE
 # tag is left empty.
 
-LAYOUT_FILE            =
+LAYOUT_FILE            = @top_srcdir@/DoxygenLayout.xml
 
 # The CITE_BIB_FILES tag can be used to specify one or more bib files containing
 # the reference definitions. This must be a list of .bib files. The .bib
@@ -759,10 +759,11 @@ INPUT                  = include \
                          include/amino/opt \
                          clapack_doc.c lapack_doc.c la_doc.c \
                          doc/md/copying.md \
+                         doc/md/download.md \
+                         doc/md/acknowledgments.md \
                          doc/md/faq.md \
                          doc/md/gui.md \
                          doc/md/Installation.md \
-                         doc/md/License.md \
                          doc/md/scenecompiler.md \
                          doc/md/scenefile.md \
                          doc/md/mainpage.md

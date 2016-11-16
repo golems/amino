@@ -627,21 +627,23 @@ doc/md/copying.md: $(top_srcdir)/COPYING $(top_srcdir)/doc/md/copying.md.header
 	    > doc/md/copying.md
 
 
-doc/md/mainpage.md: $(top_srcdir)/AUTHORS $(top_srcdir)/doc/md/mainpage-head.md
+doc/md/acknowledgements.md: $(top_srcdir)/AUTHORS $(top_srcdir)/doc/md/acknowledgments.md.header
 	$(MKDIR_P) doc/md/
-	cat $(top_srcdir)/doc/md/mainpage-head.md \
+	cat $(top_srcdir)/doc/md/acknowledgments.md.header  \
 	    $(top_srcdir)/AUTHORS \
-	    > doc/md/mainpage.md
+	    > doc/md/acknowledgments.md
+
 
 EXTRA_DIST += \
 	doc/md/copying.md.header \
 	doc/md/faq.md \
+	doc/md/download.md \
+	doc/md/acknowledgments.md \
+	doc/md/faq.md \
 	doc/md/Installation.md \
-	doc/md/mainpage-head.md \
+	doc/md/mainpage.md \
 	doc/md/scenecompiler.md \
 	doc/md/gui.md \
-	doc/md/License.md \
-	doc/md/ReadMe.md \
 	doc/md/scenefile.md \
 	doc/footer.html \
 	doc/carousel.html \
