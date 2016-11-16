@@ -43,7 +43,7 @@
  * @brief Dynamically load compiled scene graphs.
  *
  *
- * @sa @ref scenegraph_compiler
+ * @sa @ref scenecompiler
  */
 
 /**

@@ -259,7 +259,7 @@ Many demo programs may be built.  The following comand will list the built demos
         -not  -name '*.so' \
         -not -path '*.libs*'
 
-The `simple-scenefile` demo will lauch the @ref gui with a simple
+The `simple-scenefile` demo will lauch the @ref viewer with a simple
 scene compiled from a scene file.
 
     ./demo/simple-rx/simple-scenefile

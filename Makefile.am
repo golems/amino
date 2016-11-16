@@ -638,7 +638,7 @@ EXTRA_DIST += \
 	doc/md/copying.md.header \
 	doc/md/faq.md \
 	doc/md/download.md \
-	doc/md/acknowledgments.md \
+	doc/md/acknowledgments.md.header \
 	doc/md/faq.md \
 	doc/md/Installation.md \
 	doc/md/mainpage.md \

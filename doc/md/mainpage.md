@@ -7,7 +7,7 @@ management, and time-handling.  Design goals are easy integration,
 efficiency, and simplicity.
 
 - <a href="installation.html"><b>Installation</b></a>
-- [License](@ref copying): 3-clause BSD (permissive)
+- [License](@ref license): 3-clause BSD (permissive)
 - <a href="https://github.com/golems/amino"><b>Source Code</b></a>: `git clone https://github.com/golems/amino.git`
 
 \htmlonly

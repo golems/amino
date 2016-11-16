@@ -166,8 +166,7 @@ scene file syntax:
 Visualization {#scenecompiler_visualization}
 =============
 
-When given the `--gui option`, the scene compiler will launch the @ref
-viewer.
+When given the `--gui option`, the scene compiler will launch the @ref viewer.
 
     aarxc --gui package://baxter_description/urdf/baxter.urdf
 
