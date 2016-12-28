@@ -148,16 +148,20 @@
              (dom-select-path node path :singleton t :undefined-error nil :default default))
            (path-n (node path &optional default)
              (dom-select-path node path :singleton nil :undefined-error nil :default default))
-           (node-geometry (node options)
+           (node-geometry (name node options)
              (let* ((mesh-file (path-1 node '("geometry" "mesh" "@filename")))
                     (box-size (path-1 node '("geometry" "box" "@size")))
                     (sphere-radius (path-1 node '("geometry" "sphere" "@radius")))
                     (cylinder-radius (path-1 node '("geometry" "cylinder" "@radius")))
                     (cylinder-length (path-1 node '("geometry" "cylinder" "@length"))))
-               (unless (xor mesh-file box-size sphere-radius (and cylinder-length
-                                                                  cylinder-radius))
-                 (error "bad shapes in link ~A" (path-1 node '("@name"))))
-               (cond (mesh-file
+               (cond ((not (or mesh-file box-size sphere-radius cylinder-length cylinder-radius))
+                      ;; no shape
+                      nil)
+                     ((not (xor mesh-file box-size sphere-radius (and cylinder-length
+                                                                      cylinder-radius)))
+                      ;; multiple shapes
+                      (error "bad or multiple shapes in link `~A'" name))
+                     (mesh-file
                       (let* ((scale-string (path-1 node '("geometry" "mesh" "@scale") "1 1 1"))
                              (scale (or (parse-float-sequence scale-string)
                                         (list 1d0 1d0 1d0))))
@@ -215,23 +219,23 @@
                               (parse-float-sequence default-rgba-text)
                               (append default-color (list default-alpha)))
        do
-         ;; Add visuals
+       ;; Add visuals
          (loop for visual-node in visuals
             for rgba-text = (when visual-node (path-1 visual-node '("material" "color" "@rgba")))
             for rgba = (if rgba-text (parse-float-sequence rgba-text)
                            (append default-color (list default-alpha)))
-            do (let* ((options (node-options :rgba rgba :visual t))
-                      (geometry (node-geometry visual-node options))
-                      (frame-name (node-origin name visual-node "visual" geometry)))
-                 ;; bind geometry
+            for options = (node-options :rgba rgba :visual t)
+            for geometry = (node-geometry name visual-node options)
+            when geometry
+            do (let ((frame-name (node-origin name visual-node "visual" geometry)))
                  (setq scene-graph
                        (scene-graph-add-geometry scene-graph frame-name geometry))))
        ;; Add collisions
          (loop for collision-node in (path-n link-node '("collision"))
+            for options = (node-options :rgba default-rgba :visual nil :collision t)
+            for geometry = (node-geometry name collision-node options)
             do
-              (let* ((options (node-options :rgba default-rgba :visual nil :collision t))
-                     (geometry (node-geometry collision-node options))
-                     (frame-name (node-origin name collision-node "collision" geometry)))
+              (let ((frame-name (node-origin name collision-node "collision" geometry)))
                 (setq scene-graph
                       (scene-graph-add-geometry scene-graph frame-name geometry))))
        ;; Add inertials
