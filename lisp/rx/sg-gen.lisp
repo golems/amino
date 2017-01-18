@@ -155,6 +155,26 @@
                (>= f 0)))
   (clamp (round (* 255 f)) 0 255))
 
+
+;; Do not attempt to use C printf.  Depending on the locale, the %f
+;; specifier may use comma as the decimal mark.
+;;
+(defun gen-literal-float-array (type name values)
+  (let ((*print-pretty* nil)
+        (n (length values)))
+    (cgen-stmt (rope type " " name
+                     "[" n "] = {"
+                     (format nil "~{~Ff~^,~}" (vec-list values))
+                     "}"))))
+
+(defun gen-literal-int-array (type name values)
+  (let ((*print-pretty* nil))
+    (cgen-stmt (rope type " " name
+                     "[" (length values) "] = {"
+                     (format nil "~{~D~^,~}" (vec-list values))
+                     "}"))))
+
+
 (defun scene-genc-mesh-texture (var mesh-data)
   (when-let ((textures (mesh-data-texture-properties mesh-data))
              (texture-indices (mesh-data-texture-indices mesh-data)))
@@ -188,9 +208,7 @@
       ;; output
       (list
        (cgen-declare-array "static const unsigned char" "rgba" rgba)
-       (cgen-declare-array "static const float" "uv"
-                           (scene-genc-single-float-sequence uv))
-
+       (gen-literal-float-array "static const float" "uv" uv)
        (cgen-call-stmt "aa_rx_mesh_set_rgba" var n 1
                        "rgba" 0)
        (cgen-call-stmt "aa_rx_mesh_set_uv" var m "uv" 0)))))
@@ -198,26 +216,6 @@
 
 (defun scene-genc-mesh-function-name (mesh)
   (rope "aa_rx_dl_mesh__" (scene-mesh-name mesh)))
-
-(defun scene-genc-single-float-sequence (sequence)
-  (map 'vector (lambda (f)
-                 (rope (amino::float-to-string f) '|f|))
-       sequence))
-
-(defun gen-literal-float-array (type name values)
-  (let ((*print-pretty* nil)
-        (n (length values)))
-    (cgen-stmt (rope type " " name
-                     "[" n "] = {"
-                     (format nil "~{~Ff~^,~}" (vec-list values))
-                     "}"))))
-
-(defun gen-literal-int-array (type name values)
-  (let ((*print-pretty* nil))
-    (cgen-stmt (rope type " " name
-                     "[" (length values) "] = {"
-                     (format nil "~{~D~^,~}" (vec-list values))
-                     "}"))))
 
 (defun scene-genc-mesh-functions (scene-graph static)
   ;; declare

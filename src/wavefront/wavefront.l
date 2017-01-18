@@ -161,17 +161,17 @@ START {MAYBE_BLANKS}
 }
 
 <V0>{NUMBER_BLANKS} {
-    aa_rx_wf_obj_push_vertex( yyextra->wf_obj, atof(yytext) );
+    aa_rx_wf_obj_push_vertex( yyextra->wf_obj, aa_rx_wf_parse_float (yytext) );
     BEGIN(V1);
 }
 
 <V1>{NUMBER_BLANKS} {
-    aa_rx_wf_obj_push_vertex( yyextra->wf_obj, atof(yytext) );
+    aa_rx_wf_obj_push_vertex( yyextra->wf_obj, aa_rx_wf_parse_float(yytext) );
     BEGIN(V2);
 }
 
 <V2>{NUMBER_END} {
-    aa_rx_wf_obj_push_vertex( yyextra->wf_obj, atof(yytext) );
+    aa_rx_wf_obj_push_vertex( yyextra->wf_obj, aa_rx_wf_parse_float(yytext) );
     BEGIN(EOL);
 }
 
@@ -182,17 +182,17 @@ START {MAYBE_BLANKS}
 }
 
 <VN0>{NUMBER_BLANKS} {
-    aa_rx_wf_obj_push_normal( yyextra->wf_obj, atof(yytext) );
+    aa_rx_wf_obj_push_normal( yyextra->wf_obj, aa_rx_wf_parse_float(yytext) );
     BEGIN(VN1);
 }
 
 <VN1>{NUMBER_BLANKS} {
-    aa_rx_wf_obj_push_normal( yyextra->wf_obj, atof(yytext) );
+    aa_rx_wf_obj_push_normal( yyextra->wf_obj, aa_rx_wf_parse_float(yytext) );
     BEGIN(VN2);
 }
 
 <VN2>{NUMBER_END} {
-    aa_rx_wf_obj_push_normal( yyextra->wf_obj, atof(yytext) );
+    aa_rx_wf_obj_push_normal( yyextra->wf_obj, aa_rx_wf_parse_float(yytext) );
     BEGIN(EOL);
 }
 

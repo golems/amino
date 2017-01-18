@@ -157,5 +157,7 @@ AA_API void
 aa_rx_wf_mtl_push( struct aa_rx_wf_mtl *mtl, const char *name );
 
 
+AA_API double
+aa_rx_wf_parse_float( const char *str );
 
 #endif //AMINO_WAVEFRONT_H

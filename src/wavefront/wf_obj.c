@@ -38,7 +38,11 @@
 #include <libgen.h>
 
 #include "amino.h"
+
 #include "wavefront_internal.h"
+
+
+#include <ctype.h>
 
 AA_VECTOR_DEF( double, dvec_type )
 AA_VECTOR_DEF( int32_t, ivec_type )
@@ -110,6 +114,36 @@ aa_rx_wf_obj_create()
     return obj;
 }
 
+AA_API double
+aa_rx_wf_parse_float( const char *str )
+{
+    /* skip blanks */
+    while( *str &&  isblank(*str) ) str++;
+
+    char *e, *g;
+    double r = (double)strtol( str, &e, 10 );
+    long f = ('.' == *e)
+        ? strtol( e+1, &g, 10 )
+        : 0;
+
+    if( f ) {
+        long k = g - e - 1;
+        if( k ) {
+            double x = (double)f;
+            while(k--) x/=10;
+            if( r < 0 || ('-' == *str) )
+                r -= x;
+            else
+                r += x;
+        }
+    }
+
+    /* printf("t: %s\n", str); */
+    /* printf("r: %f\n", r); */
+    /* printf("a: %f\n", atof(str)); */
+
+    return r;
+}
 
 AA_API void
 aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
@@ -136,6 +170,7 @@ aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
 AA_API void
 aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, double f )
 {
+    //printf("push %f\n", f);
     dvec_type_push( &obj->vertex, f );
 }
 

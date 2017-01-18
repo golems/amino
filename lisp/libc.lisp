@@ -72,8 +72,15 @@
   (n size-t)
   (f :double))
 
+;;; atof() is locale-dependent
+
+;; (defun parse-float (string)
+;;   (amino-ffi::libc-atof string))
+
 (defun parse-float (string)
-  (amino-ffi::libc-atof string))
+  (coerce (read-from-string string)
+          'double-float))
+
 
 (defun float-to-string (float)
   (with-foreign-object (buf :char 256)

@@ -125,7 +125,7 @@ START {MAYBE_BLANKS}
 }
 
 <NS>{NUMBER}{MAYBE_BLANKS} {
-    WF_MTL_CURRENT->specular_weight = atof(yytext);
+    WF_MTL_CURRENT->specular_weight = aa_rx_wf_parse_float(yytext);
     WF_MTL_CURRENT->has_specular_weight = 1;
     BEGIN(EOL);
 }
@@ -135,24 +135,24 @@ START {MAYBE_BLANKS}
 }
 
 <NI>{NUMBER}{MAYBE_BLANKS} {
-    WF_MTL_CURRENT->ior = atof(yytext);
+    WF_MTL_CURRENT->ior = aa_rx_wf_parse_float(yytext);
     WF_MTL_CURRENT->has_ior = 1;
     BEGIN(EOL);
 }
 
     /* Vector parser */
 <V0>{NUMBER}{BLANKS} {
-    yyextra->v[0] = atof(yytext);
+    yyextra->v[0] = aa_rx_wf_parse_float(yytext);
     BEGIN(V1);
 }
 
 <V1>{NUMBER}{BLANKS} {
-    yyextra->v[1] = atof(yytext);
+    yyextra->v[1] = aa_rx_wf_parse_float(yytext);
     BEGIN(V2);
 }
 
 <V2>{NUMBER}{MAYBE_BLANKS} {
-    yyextra->v[2] = atof(yytext);
+    yyextra->v[2] = aa_rx_wf_parse_float(yytext);
     yy_pop_state(yyscanner);
 }
 
@@ -215,7 +215,7 @@ START {MAYBE_BLANKS}
 }
 
 <D>{NUMBER}{MAYBE_BLANKS} {
-    WF_MTL_CURRENT->alpha = atof(yytext);
+    WF_MTL_CURRENT->alpha = aa_rx_wf_parse_float(yytext);
     WF_MTL_CURRENT->has_alpha = 1;
     BEGIN(EOL);
 }
