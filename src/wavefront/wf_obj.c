@@ -57,6 +57,7 @@ struct aa_rx_wf_obj {
 
     dvec_type vertex;
     dvec_type normal;
+    dvec_type texture_vertex;
 
     ivec_type vertex_indices;
     ivec_type normal_indices;
@@ -172,6 +173,12 @@ aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, double f )
 {
     //printf("push %f\n", f);
     dvec_type_push( &obj->vertex, f );
+}
+
+AA_API void
+aa_rx_wf_obj_push_texture_vertex( struct aa_rx_wf_obj *obj, double f )
+{
+    dvec_type_push( &obj->texture_vertex, f );
 }
 
 AA_API void
@@ -336,4 +343,10 @@ aa_rx_wf_obj_set_filename( struct aa_rx_wf_obj *obj, const char *filename )
 
     obj->dirname = dirname( obj->dirname_data );
 
+}
+
+AA_API const char *
+aa_rx_wf_obj_get_filename( struct aa_rx_wf_obj *obj )
+{
+    return obj->filename;
 }

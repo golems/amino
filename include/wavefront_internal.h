@@ -71,6 +71,10 @@ aa_rx_wf_obj_create();
 AA_API void
 aa_rx_wf_obj_set_filename( struct aa_rx_wf_obj *obj, const char *filename );
 
+
+AA_API const char *
+aa_rx_wf_obj_get_filename( struct aa_rx_wf_obj *obj );
+
 /**
  * Add a new object name
  */
@@ -86,10 +90,16 @@ aa_rx_wf_obj_push_mtl( struct aa_rx_wf_obj *obj,
                        const char *mtl_file );
 
 /**
- * Add a new vertex element
+ * Add a new vertex (v) element
  */
 AA_API void
 aa_rx_wf_obj_push_vertex( struct aa_rx_wf_obj *obj, double f );
+
+/**
+ * Add a new texture vertex (vt) element
+ */
+AA_API void
+aa_rx_wf_obj_push_texture_vertex( struct aa_rx_wf_obj *obj, double f );
 
 /**
  * Add a new normal element

@@ -73,6 +73,8 @@
 %x V1
 %x V2
 
+%x VT0
+%x VT1
 
 %x VN0
 %x VN1
@@ -174,6 +176,23 @@ START {MAYBE_BLANKS}
     aa_rx_wf_obj_push_vertex( yyextra->wf_obj, aa_rx_wf_parse_float(yytext) );
     BEGIN(EOL);
 }
+
+   /* UV */
+
+{START}"vt"{BLANKS} {
+    BEGIN(VT0);
+}
+
+<VT0>{NUMBER_BLANKS} {
+    aa_rx_wf_obj_push_texture_vertex( yyextra->wf_obj, aa_rx_wf_parse_float (yytext) );
+    BEGIN(VT1);
+}
+
+<VT1>{NUMBER_END} {
+    aa_rx_wf_obj_push_texture_vertex( yyextra->wf_obj, aa_rx_wf_parse_float (yytext) );
+    BEGIN(EOL);
+}
+
 
     /* VECTOR-NORMAL */
 
@@ -297,7 +316,10 @@ START {MAYBE_BLANKS}
     /* This rule needs to be last */
 
 <*>. {
-    fprintf(stderr, "Unrecognized character: %s (%d)\n", yytext, yylineno);
+    fprintf(stderr, "Unrecognized character: %s (%s:%d)\n",
+                    yytext,
+                    aa_rx_wf_obj_get_filename(yyextra->wf_obj),
+                    yylineno);
     return -1;
 }
 
