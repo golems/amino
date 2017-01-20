@@ -757,6 +757,7 @@ AC_ARG_ENABLE([demo-all-urdf],
                 enable_demo_schunk="$enable_demo_all_urdf"
                 enable_demo_mico="$enable_demo_all_urdf"
                 enable_demo_jaco="$enable_demo_all_urdf"
+                enable_demo_fetch="$enable_demo_all_urdf"
               ])
 
 DEF_DEMO([baxter],[BAXTER])
@@ -764,6 +765,7 @@ DEF_DEMO([ur10],[UR10])
 DEF_DEMO([schunk],[SCHUNK])
 DEF_DEMO([mico],[MICO])
 DEF_DEMO([jaco],[JACO])
+DEF_DEMO([fetch],[FETCH])
 
 
 
@@ -794,6 +796,7 @@ CONFIG_SCRIPT([demo/urdf/mico/mico-view])
 CONFIG_SCRIPT([demo/urdf/ur/ur10-view])
 CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
 CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
+CONFIG_SCRIPT([demo/urdf/fetch/fetch-view])
 
 CONFIG_SCRIPT([aarxc])
 

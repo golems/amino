@@ -167,3 +167,6 @@ amino*.tar.gz
 /doc/md/copying.md
 /Doxyfile
 /doc/md/acknowledgments.md
+/demo/urdf/fetch/fetch-model.c
+/demo/urdf/fetch/fetch-model.c.h
+/demo/urdf/fetch/fetch-view

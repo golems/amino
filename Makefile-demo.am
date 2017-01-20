@@ -235,6 +235,25 @@ demo/urdf/jaco/jaco-ompl.$(OBJEXT): demo/urdf/jaco/jaco-model.c.h
 
 endif # BUILD_DEMO_JACO
 
+if BUILD_DEMO_FETCH
+
+demo/urdf/fetch/fetch-model.c:
+	$(AARXC) 'package://fetch_description/robots/fetch.urdf' \
+		-o demo/urdf/fetch/fetch-model.c -n "fetch"
+
+demo/urdf/fetch/fetch-model.c.h: demo/urdf/fetch/fetch-model.c
+
+BUILT_SCENES += demo/urdf/fetch/fetch-model.c
+
+noinst_LTLIBRARIES += demo/urdf/fetch/libfetch.la
+nodist_demo_urdf_fetch_libfetch_la_SOURCES = demo/urdf/fetch/fetch-model.c
+
+lib_LTLIBRARIES += demo/urdf/fetch/libamino_fetch.la
+demo_urdf_fetch_libamino_fetch_la_SOURCES =
+demo_urdf_fetch_libamino_fetch_la_LIBADD = demo/urdf/fetch/libfetch.la
+demo_urdf_fetch_libamino_fetch_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
+
+endif # BUILD_DEMO_FETCH
 
 ## Extra ##
 

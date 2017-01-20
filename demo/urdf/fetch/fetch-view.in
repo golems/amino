@@ -1,0 +1,5 @@
+#!/bin/sh
+
+@abs_top_builddir@/aarx-view \
+    @abs_top_builddir@/demo/urdf/fetch/.libs/libamino_fetch.so \
+    -n "fetch"
