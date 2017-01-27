@@ -88,9 +88,13 @@ struct aa_rx_mp {
 
     double *config_start;
 
-    unsigned simplify : 1;
-
     amino::sgWorkspaceGoal *lazy_samples;
+
+    struct aa_rx_cl_set *collisions;
+
+    unsigned simplify : 1;
+    unsigned track_collisions : 1;
+
 };
 
 #endif /*AMINO_RX_SCENE_OMPL_INTERNAL_H*/
