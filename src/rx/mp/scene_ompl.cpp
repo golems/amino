@@ -75,7 +75,8 @@ aa_rx_mp::aa_rx_mp( const struct aa_rx_sg_sub *sub_sg ) :
     problem_definition(new ompl::base::ProblemDefinition(space_information)),
     simplify(0),
     validity_checker(new amino::sgStateValidityChecker(space_information.get())),
-    lazy_samples(NULL)
+    lazy_samples(NULL),
+    collisions(NULL)
 {
 
     space_information->setStateValidityChecker( ompl::base::StateValidityCheckerPtr(validity_checker) );
@@ -99,6 +100,7 @@ aa_rx_mp_destroy( struct aa_rx_mp *mp )
 
 aa_rx_mp::~aa_rx_mp()
 {
+    if( this->collisions ) aa_rx_cl_set_destroy(this->collisions);
 }
 
 AA_API void
@@ -197,17 +199,22 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
                double **p_path_all )
 {
 
-    mp->validity_checker->allow();
     amino::sgSpaceInformation::Ptr &si = mp->space_information;
+    amino::sgStateSpace *ss = si->getTypedStateSpace();
 
     /* Configure State Validity Checker */
+    mp->validity_checker->allow();
+
+    /* clear set */
+    if( mp->collisions ) {
+        aa_rx_cl_set_clear(mp->collisions);
+    }
 
     /* Setup Space */
 
     *n_path = 0;
     *p_path_all = NULL;
 
-    amino::sgStateSpace *ss = si->getTypedStateSpace();
     ompl::base::ProblemDefinitionPtr &pdef = mp->problem_definition;
 
     ompl::base::PlannerPtr planner = (NULL == mp->planner.get()) ?
@@ -262,6 +269,36 @@ aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
 {
     mp->simplify = simplify ? 1 : 0;
 }
+
+AA_API void
+aa_rx_mp_set_track_collisions( struct aa_rx_mp *mp, int track )
+{
+    /* Destroy existing collision set */
+    if( mp->collisions ) {
+        aa_rx_cl_set_destroy(mp->collisions);
+        mp->collisions = NULL;
+    }
+
+    /* Create new collision set */
+    if( track ) {
+        mp->track_collisions = 1;
+        amino::sgStateSpace *ss = mp->space_information->getTypedStateSpace();
+        mp->collisions = aa_rx_cl_set_create( ss->get_scene_graph() );
+    } else {
+        mp->track_collisions = 0;
+
+    }
+
+    /* Setup state validity checker tracking */
+    mp->validity_checker->collisions = mp->collisions;
+}
+
+AA_API const struct aa_rx_cl_set *
+aa_rx_mp_get_collisions( const struct aa_rx_mp *mp )
+{
+    return mp->collisions;
+}
+
 
 AA_API struct aa_rx_cl_set*
 aa_rx_mp_get_allowed( const struct aa_rx_mp* mp)

@@ -138,3 +138,9 @@ aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from){
         }
     }
 }
+
+AA_API void
+aa_rx_cl_set_clear(struct aa_rx_cl_set* cl_set )
+{
+    cl_set->v->assign( cl_set->n, 0 );
+}

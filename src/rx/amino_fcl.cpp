@@ -364,8 +364,10 @@ cl_check_callback( ::fcl::CollisionObject *o1,
 
         /* Short Circuit? */
         if( data->cl_set ) {
+            // printf("Filling collision\n");
             aa_rx_cl_set_set( data->cl_set, id1, id2, 1 );
         } else {
+            // printf("Short circuit\n");
             return true;
         }
     }

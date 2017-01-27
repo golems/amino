@@ -131,6 +131,18 @@ aa_rx_mp_set_simplify( struct aa_rx_mp *mp,
                        int simplify );
 
 /**
+ * Set whether to track collisions.
+ */
+AA_API void
+aa_rx_mp_set_track_collisions( struct aa_rx_mp *mp, int track );
+
+/**
+ * Get most recent collision data.
+ */
+AA_API const struct aa_rx_cl_set *
+aa_rx_mp_get_collisions( const struct aa_rx_mp *mp );
+
+/**
  * Execute the planner.
  *
  * \param mp The motion planning context

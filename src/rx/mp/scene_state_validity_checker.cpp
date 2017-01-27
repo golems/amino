@@ -53,7 +53,8 @@ sgStateValidityChecker::sgStateValidityChecker(sgSpaceInformation *si)
     :
     TypedStateValidityChecker(si),
     q_all(new double[getTypedStateSpace()->config_count_all()]),
-    cl(aa_rx_cl_create(getTypedStateSpace()->scene_graph))
+    cl(aa_rx_cl_create(getTypedStateSpace()->scene_graph)),
+    collisions(NULL)
 {
     this->allow();
 }
@@ -71,14 +72,14 @@ bool sgStateValidityChecker::isValid(const ompl::base::State *state) const
     double *TF_abs = space->get_tf_abs(state, this->q_all);
 
     // check collision
-    int collision;
+    int is_collision;
     {
         std::lock_guard<std::mutex> lock(mutex);
-        collision = aa_rx_cl_check( cl, n_f, TF_abs, 7, NULL );
+        is_collision = aa_rx_cl_check( cl, n_f, TF_abs, 7, this->collisions );
     }
     space->region_pop(TF_abs);
 
-    return !collision;
+    return !is_collision;
 }
 
 

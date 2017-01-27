@@ -102,6 +102,13 @@ aa_rx_cl_set_get( const struct aa_rx_cl_set *cl_set,
 AA_API void
 aa_rx_cl_set_merge(struct aa_rx_cl_set* into, const struct aa_rx_cl_set* from);
 
+
+/**
+ * Clear all collisions stored in the set.
+ */
+AA_API void
+aa_rx_cl_set_clear(struct aa_rx_cl_set* cl_set );
+
 /**
  * Opaque type for collision detection context.
  */

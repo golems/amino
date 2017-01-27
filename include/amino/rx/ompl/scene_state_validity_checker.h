@@ -73,6 +73,8 @@ public:
 
     mutable std::mutex mutex;
     struct aa_rx_cl *cl;
+
+    struct aa_rx_cl_set *collisions;
 };
 
 

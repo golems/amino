@@ -55,6 +55,11 @@
   (i rx-frame-id)
   (j rx-frame-id))
 
+(cffi:defcfun ("aa_rx_cl_set_get" aa-rx-cl-set-get-ptr) :boolean
+  (cl-set :pointer)
+  (i rx-frame-id)
+  (j rx-frame-id))
+
 ;;;;;;;;;;;;;;;;;;
 ;;; Collisions ;;;
 ;;;;;;;;;;;;;;;;;;
