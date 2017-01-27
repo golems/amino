@@ -81,10 +81,26 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
                              n, TF_abs, 7 );
 
-    int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7, NULL );
+
+    struct aa_rx_cl_set *clset = aa_rx_cl_set_create( scenegraph );
+    int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7, clset );
+
     printf("in collision: %s\n",
            col ? "yes" : "no" );
 
+    if( col ) {
+        for( aa_rx_frame_id i = 0; i < (aa_rx_frame_id)n; i ++ ) {
+            for( aa_rx_frame_id j = 0; j < i; j ++ ) {
+                if( aa_rx_cl_set_get( clset, i, j ) ) {
+                    printf( "    collision:\t%s\t%s\n",
+                            aa_rx_sg_frame_name(scenegraph, i),
+                            aa_rx_sg_frame_name(scenegraph, j) );
+                }
+            }
+        }
+    }
+
+    aa_rx_cl_set_destroy( clset );
 
     return 0;
 }
