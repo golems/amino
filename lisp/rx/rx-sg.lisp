@@ -47,6 +47,9 @@
 (defun mutable-scene-graph-frame-id (m-sg frame)
   (aa-rx-sg-frame-id m-sg (rope-string frame)))
 
+(defun mutable-scene-graph-frame-name (m-sg id)
+  (aa-rx-sg-frame-name m-sg id))
+
 ;; (defmethod print-object ((object mutable-scene-graph) stream)
 ;;   (print-unreadable-object (object stream :type t)
 ;;     (format stream "(~x)"

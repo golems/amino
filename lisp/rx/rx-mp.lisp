@@ -89,6 +89,13 @@
   (mp rx-mp-t)
   (simplify :boolean))
 
+(cffi:defcfun aa-rx-mp-set-track-collisions :void
+  (mp rx-mp-t)
+  (track :boolean))
+
+(cffi:defcfun aa-rx-mp-get-collisions :pointer
+  (mp rx-mp-t))
+
 (defun motion-planner (sub-scene-graph)
   (let ((mp (aa-rx-mp-create sub-scene-graph)))
     (setf (rx-mp-sub-scene-graph mp)
@@ -97,6 +104,12 @@
 
 (defun motion-planner-sub-scene-graph (motion-planner)
   (rx-mp-sub-scene-graph motion-planner))
+
+(defun motion-planner-mutable-scene-graph (motion-planner)
+  (sub-scene-graph-mutable-scene-graph (motion-planner-sub-scene-graph motion-planner)))
+
+(defun motion-planner-scene-graph (motion-planner)
+  (sub-scene-graph-scene-graph (motion-planner-sub-scene-graph motion-planner)))
 
 (defun motion-planner-set-start (motion-planner start)
   (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
@@ -243,60 +256,90 @@
     (make-motion-plan :sub-scene-graph sub-scene-graph
                       :path (amino::matrix-data path))))
 
-
+(defun motion-planner-collisions (planner)
+  "Return set of collisions encountered during planning"
+  (let* ((ptr (aa-rx-mp-get-collisions planner))
+         (m-sg (motion-planner-mutable-scene-graph planner))
+         (n-frame (mutable-scene-graph-frame-count m-sg))
+         (result nil))
+    (when (cffi:null-pointer-p ptr)
+      (error "No collision data for motion planner"))
+    (dotimes (i n-frame)
+      (dotimes (j i)
+        (when (aa-rx-cl-set-get-ptr ptr i j)
+          (push (cons (mutable-scene-graph-frame-name m-sg i)
+                      (mutable-scene-graph-frame-name m-sg j))
+                result))))
+    result))
 
 (defun motion-plan (sub-scene-graph start-map
                     &key
                       jointspace-goal
                       workspace-goal
                       (simplify t)
+                      (track-collisions nil)
                       (timeout 1d0))
   ;;(print workspace-goal)
   ;;(declare (optimize (speed 0) (debug 3)))
   (let* ((ssg sub-scene-graph)
-         (m-sg (sub-scene-graph-mutable-scene-graph ssg))
-         (sg (mutable-scene-graph-scene-graph m-sg)))
-    (aa-rx-sg-cl-init m-sg)
-    (let* ((planner (motion-planner sub-scene-graph))
-           (n-all (sub-scene-graph-all-config-count ssg)))
-      ;; Set start state
-      (motion-planner-set-start planner start-map)
-      ;; Allow things
-      ;(print (scene-graph-allowed-collisions sg))
-      (motion-planner-allow-all planner (scene-graph-allowed-collisions sg))
-      ;; Set goal state
-      (unless (cond
-                (jointspace-goal
-                 (motion-planner-set-joint-goal planner jointspace-goal))
-                (workspace-goal
-                 (motion-planner-set-work-goal planner workspace-goal))
-                (t (error "No goal given")))
-        ;; bail out early if goal setting fails
-        (print 'bailing-out)
-        (return-from motion-plan nil)
-        )
-      ;; Setup Simplification
-      (aa-rx-mp-set-simplify planner simplify)
-      ;; Call Planner
-      (multiple-value-bind (result n-path path-ptr)
-          (cffi:with-foreign-object (plan-length 'amino-ffi:size-t)
-            (cffi:with-foreign-object (plan-ptr :pointer)
-              (let ((result (aa-rx-mp-plan planner timeout plan-length plan-ptr)))
-                (values result
-                        (cffi:mem-ref plan-length 'amino-ffi:size-t)
-                        (cffi:mem-ref plan-ptr :pointer)))))
-        (when (zerop result)
-          ;; got a plan
-          (let* ((m (* n-path n-all))
-                 (result (make-vec m)))
-            ;; copy plan to lisp-space
-            (with-foreign-simple-vector (pointer length) result :output
-              (amino-ffi:libc-memcpy pointer path-ptr
-                                     (* length (cffi:foreign-type-size :double))))
-            ;; free c-space plan
-            (amino-ffi:libc-free path-ptr)
-            (make-motion-plan :path result
-                              :sub-scene-graph sub-scene-graph)))))))
+         (m-sg (let ((m-sg (sub-scene-graph-mutable-scene-graph ssg)))
+                 (aa-rx-sg-cl-init m-sg)
+                 m-sg))
+         (sg (mutable-scene-graph-scene-graph m-sg))
+         (planner (motion-planner sub-scene-graph))
+         (n-all (sub-scene-graph-all-config-count ssg)))
+
+    ;; Setup Planner
+    (aa-rx-mp-set-simplify planner simplify)
+    (aa-rx-mp-set-track-collisions planner track-collisions)
+    (motion-planner-allow-all planner (scene-graph-allowed-collisions sg))
+
+    ;; Set start state
+    (motion-planner-set-start planner start-map)
+
+    ;; Set goal state
+    (unless (cond
+              (jointspace-goal
+               (motion-planner-set-joint-goal planner jointspace-goal))
+              (workspace-goal
+               (motion-planner-set-work-goal planner workspace-goal))
+              (t (error "No goal given")))
+      ;; bail out early if goal setting fails
+      (print 'bailing-out)
+      ;(print (motion-planner-collisions planner))
+      (return-from motion-plan (values nil planner)))
+
+    ;; Call Planner
+    (multiple-value-bind (result n-path path-ptr)
+        (cffi:with-foreign-object (plan-length 'amino-ffi:size-t)
+          (cffi:with-foreign-object (plan-ptr :pointer)
+            (let ((result (aa-rx-mp-plan planner timeout plan-length plan-ptr)))
+              (values result
+                      (cffi:mem-ref plan-length 'amino-ffi:size-t)
+                      (cffi:mem-ref plan-ptr :pointer)))))
+      ;; Collisions
+      (when track-collisions
+        (format t "~&Displaying collisions: ~%")
+        (let ((ptr (aa-rx-mp-get-collisions planner)))
+          (dotimes (i n-all)
+            (dotimes (j i)
+              (if (aa-rx-cl-set-get-ptr ptr i j)
+                  (format t "~&collisoin: ~D -> ~D~%" i j)
+                  (format t "~&OK: ~D -> ~D~%" i j))))))
+      ;; Result
+      (when (zerop result)
+        ;; got a plan
+        (let* ((m (* n-path n-all))
+               (result (make-vec m)))
+          ;; copy plan to lisp-space
+          (with-foreign-simple-vector (pointer length) result :output
+            (amino-ffi:libc-memcpy pointer path-ptr
+                                   (* length (cffi:foreign-type-size :double))))
+          ;; free c-space plan
+          (amino-ffi:libc-free path-ptr)
+          (values (make-motion-plan :path result
+                                    :sub-scene-graph sub-scene-graph)
+                  planner))))))
 
 ;; (defun win-view-plan (motion-plan)
 ;;   (win-pause)

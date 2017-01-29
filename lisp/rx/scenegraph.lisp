@@ -458,6 +458,9 @@
   (files (make-scene-graph-files) :type tree-set)
   (configs (make-tree-set #'scene-object-compare) :type tree-set))
 
+(defun scene-graph-frame-count (sg)
+  (tree-set-count (scene-graph-frames sg)))
+
 (defmethod print-object ((object scene-graph) stream)
   (print-unreadable-object (object stream :type t :identity nil)
     (write (scene-graph-frame-names object) :stream stream)))
