@@ -150,8 +150,13 @@
                          start
                          frame
                          tf
+                         parent
                          (options *ik-options*))
-  (let* ((opts (or options (aa-rx-ksol-opts-create)))
+  (let* ((tf (if parent
+                 (tf-mul (scene-graph-tf-absolute scene-graph parent :configuration-map start)
+                         tf)
+                 tf))
+         (opts (or options (aa-rx-ksol-opts-create)))
          (ssg (scene-graph-chain scene-graph nil frame))
          (ik-cx (aa-rx-ik-jac-cx-create ssg opts))
          (q-sub (make-vec (sub-scene-graph-config-count ssg)))
