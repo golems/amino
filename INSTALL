@@ -356,6 +356,19 @@ Common Errors {#intallation_errors}
 
             export LD_LIBRARY_PATH="/usr/local/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"
 
+* When building `aarx.core`, I get an enormous stack trace, starting
+  with something like:
+
+        Unable to load foreign library (LIBAMINO-PLANNING).
+        Error opening shared object "libamino-planning.so":
+        /home/user/workspace/amino/.libs/libamino-planning.so: undefined symbol: _ZNK4ompl4base20RealVectorStateSpace10getMeasureEv.
+
+  - This error may occur when you have multiple incompatible versions
+    of OMPL installed and the compiler finds one version while the
+    runtime linker finds a different version.  Either modify your
+    header (`-I`) and linking (`$LD_LIBRARY_PATH`) paths, or remove
+    the additional versions of OMPL.
+
 *******************************************************************
 
 Generic Instructions for GNU Autotools {#installation_autotools}
