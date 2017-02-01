@@ -318,28 +318,29 @@
                       (cffi:mem-ref plan-length 'amino-ffi:size-t)
                       (cffi:mem-ref plan-ptr :pointer)))))
       ;; Collisions
-      (when track-collisions
-        (format t "~&Displaying collisions: ~%")
-        (let ((ptr (aa-rx-mp-get-collisions planner)))
-          (dotimes (i n-all)
-            (dotimes (j i)
-              (if (aa-rx-cl-set-get-ptr ptr i j)
-                  (format t "~&collisoin: ~D -> ~D~%" i j)
-                  (format t "~&OK: ~D -> ~D~%" i j))))))
+      ;; (when track-collisions
+      ;;   (format t "~&Displaying collisions: ~%")
+      ;;   (let ((ptr (aa-rx-mp-get-collisions planner)))
+      ;;     (dotimes (i n-all)
+      ;;       (dotimes (j i)
+      ;;         (if (aa-rx-cl-set-get-ptr ptr i j)
+      ;;             (format t "~&collisoin: ~D -> ~D~%" i j)
+      ;;             (format t "~&OK: ~D -> ~D~%" i j))))))
+
       ;; Result
-      (when (zerop result)
-        ;; got a plan
-        (let* ((m (* n-path n-all))
-               (result (make-vec m)))
-          ;; copy plan to lisp-space
-          (with-foreign-simple-vector (pointer length) result :output
-            (amino-ffi:libc-memcpy pointer path-ptr
-                                   (* length (cffi:foreign-type-size :double))))
-          ;; free c-space plan
-          (amino-ffi:libc-free path-ptr)
-          (values (make-motion-plan :path result
-                                    :sub-scene-graph sub-scene-graph)
-                  planner))))))
+      (values (when (zerop result)
+                ;; got a plan
+                (let* ((m (* n-path n-all))
+                       (result (make-vec m)))
+                  ;; copy plan to lisp-space
+                  (with-foreign-simple-vector (pointer length) result :output
+                    (amino-ffi:libc-memcpy pointer path-ptr
+                                           (* length (cffi:foreign-type-size :double))))
+                  ;; free c-space plan
+                  (amino-ffi:libc-free path-ptr)
+                  (make-motion-plan :path result
+                                    :sub-scene-graph sub-scene-graph)))
+              planner))))
 
 ;; (defun win-view-plan (motion-plan)
 ;;   (win-pause)
