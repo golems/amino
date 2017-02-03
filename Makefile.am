@@ -607,7 +607,6 @@ clean-local:
                 org.golems.amino.jar        \
                 org_golems_amino_Lib.h      \
                 org/golems/amino/Lib.class  \
-                doc/md/mainpage.md          \
                 doc/md/copying.md
 
 distclean-local:
