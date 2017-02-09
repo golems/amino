@@ -111,6 +111,7 @@ AA_API void
 aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
                         double *q, enum aa_mem_refop refop )
 {
+    aa_checked_free(opts->q_ref_data);
     AA_MEM_DUPOP( refop, double, opts->q_ref,
                   opts->q_ref_data, q, n_q );
     opts->n_q_ref = n_q;
@@ -121,6 +122,7 @@ AA_API void
 aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
                              double *q, enum aa_mem_refop refop )
 {
+    aa_checked_free(opts->dq_dt_data);
     AA_MEM_DUPOP( refop, double, opts->dq_dt,
                   opts->dq_dt_data, q, n_q );
     opts->n_dq_dt = n_q;
@@ -130,6 +132,7 @@ AA_API void
 aa_rx_ksol_opts_take_seed( struct aa_rx_ksol_opts *opts, size_t n_q,
                            double *q, enum aa_mem_refop refop )
 {
+    aa_checked_free(opts->q_all_seed_data);
     AA_MEM_DUPOP( refop, double, opts->q_all_seed,
                   opts->q_all_seed_data, q, n_q );
     opts->n_all_seed = n_q;
