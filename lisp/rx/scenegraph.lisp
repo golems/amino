@@ -282,6 +282,19 @@
   (format stream "Frame `~A' cannot be its own parent."
           (slot-value object 'name)))
 
+(define-condition frame-exist-error (error)
+    ((name :initarg :name)))
+
+(defmethod print-object ((object frame-exist-error) stream)
+  (format stream "Frame `~A' does not exist."
+          (slot-value object 'name)))
+
+(defun check-frame-exists (frame scene-graph)
+  (unless (or (null frame)
+              (zerop (length frame))
+              (scene-graph-lookup scene-graph frame))
+    (error 'frame-exist-error :name frame)))
+
 (defun scene-frame-fixed (parent name &key
                                         geometry
                                         inertial
@@ -436,6 +449,15 @@
                     (values frame-2 frame-1))
     (tree-set-insert collision-set
                      (cons frame-1 frame-2))))
+
+(defmacro do-collision-set (((frame-1 frame-2) set &optional result)
+                            &body
+                              body)
+  (with-gensyms (c)
+    `(do-tree-set (,c ,set ,result)
+       (let ((,frame-1 (car ,c))
+             (,frame-2 (cdr ,c)))
+         ,@body))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; SCENE GRAPH STRUCTURE ;;;
@@ -669,6 +691,22 @@
 
 (defun scene-graph-frame-names (scene-graph)
   (map-scene-graph-frames 'list #'scene-frame-name scene-graph))
+
+(defun check-scene-graph (scene-graph)
+  "Validate the scene graph.
+
+Throws an error if scene graph is invalid."
+  ;; Check frames
+  (do-scene-graph-frames (frame scene-graph)
+    (let ((name (rope-string (scene-frame-name frame)))
+          (parent (rope-string (scene-frame-parent frame))))
+      (check-frame-parent parent name)
+      ;; TODO: am I my own grandparent
+      (check-frame-exists parent scene-graph)))
+  ;; Check allowed collisions
+  (do-collision-set ((frame-1 frame-2) (scene-graph-allowed-collisions scene-graph))
+    (check-frame-exists frame-1 scene-graph)
+    (check-frame-exists frame-2 scene-graph)))
 
 (defun check-scene-graph-parents (scene-graph)
   (do-scene-graph-frames (frame scene-graph)

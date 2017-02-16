@@ -150,9 +150,8 @@
     (aa-rx-mp-allow-collision motion-planner id-0 id-1 allowed)))
 
 (defun motion-planner-allow-all (motion-planner allowed-set)
-  (do-tree-set (pair allowed-set)
-    (destructuring-bind (frame-0 . frame-1) pair
-      (motion-planner-allow-collision motion-planner frame-0 frame-1))))
+  (do-collision-set ((frame-0 frame-1) allowed-set)
+    (motion-planner-allow-collision motion-planner frame-0 frame-1)))
 
 (defstruct (motion-plan (:constructor %make-motion-plan))
   sub-scene-graph
@@ -288,6 +287,8 @@
          (sg (mutable-scene-graph-scene-graph m-sg))
          (planner (motion-planner sub-scene-graph))
          (n-all (sub-scene-graph-all-config-count ssg)))
+    ;; check things
+    (check-scene-graph sg)
 
     ;; Setup Planner
     (aa-rx-mp-set-simplify planner simplify)
