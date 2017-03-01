@@ -766,6 +766,8 @@ INPUT                  = include \
                          doc/md/Installation.md \
                          doc/md/scenecompiler.md \
                          doc/md/scenefile.md \
+                         lisp-amino.md \
+                         lisp-rx.md \
                          doc/md/mainpage.md
 
 # This tag can be used to specify the character encoding of the source files

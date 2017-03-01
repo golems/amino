@@ -15,7 +15,7 @@
 (require :asdf)
 
 ;; Include sycamore
-(push (make-pathname :directory `(:relative ,*top-srcdir* "submodules" "sycamore" "src"))
+(push (make-pathname :directory `(:relative ,(uiop/os:getenv "top_srcdir") "submodules" "sycamore" "src"))
       asdf:*central-registry*)
 
 

@@ -33,6 +33,10 @@
       <!-- <tab type="hierarchy" visible="yes" title="" intro=""/> -->
       <tab type="classmembers" visible="yes" title="" intro=""/>
 
+      <tab type="usergroup" visible="yes" title="Lisp API">
+        <tab type="user" visible="yes" title="Amino Core" url="@ref AMINO_LISP_AMINO"/>
+        <tab type="user" visible="yes" title="Amino RX" url="@ref AMINO_LISP_RX"/>
+      </tab>
     </tab>
 
     <!-- <tab type="classes" visible="yes" title=""> -->

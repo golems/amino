@@ -41,29 +41,37 @@
 
 (in-package :amino)
 
-(defparameter +tf-quat-ident+ (make-quaternion :data (vec 0 0 0 1)))
+(defparameter +tf-quat-ident+ (make-quaternion :data (vec 0 0 0 1))
+  "An identity quaternion")
 
 (defparameter +tf-duqu-ident+ (make-dual-quaternion :data (vec 0 0 0 1
-                                                               0 0 0 0)))
-(defparameter +tf-vec-3-ident+ (vec3* 0 0 0))
+                                                               0 0 0 0))
+  "An identity dual quaternion")
+
+(defparameter +tf-vec-3-ident+ (vec3* 0 0 0)
+  "An \"identity\" vector, i.e., zero-valued.")
 
 (defparameter +tf-ident+ (make-quaternion-translation :quaternion +tf-quat-ident+
-                                                      :translation +tf-vec-3-ident+))
+                                                      :translation +tf-vec-3-ident+)
+  "An identity transformation.")
 
 
 ;;; Identities ;;;
 
 (declaim (inline identity-quaternion))
 (defun identity-quaternion ()
+  "Return the identity quaternion."
   +tf-quat-ident+)
 
 
 (declaim (inline identity-vec3))
 (defun identity-vec3 ()
+  "Return the \"identity\" 3-vector."
   +tf-vec-3-ident+)
 
 (declaim (inline identity-tf))
 (defun identity-tf ()
+  "Return the identity transform."
   +tf-ident+)
 
 (defcfun aa-tf-cross :void
@@ -72,6 +80,7 @@
   (c vector-3-t))
 
 (defun cross (a b &optional (c (make-vec3)))
+  "Compute the cross product of vector-3 A and B."
   (aa-tf-cross a b c)
   c)
 

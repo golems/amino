@@ -317,11 +317,12 @@ N: cols in the block."
   "Create a floating-point vector"
   (list-vec args))
 
-(defun ensure-vec (vec)
-  (etypecase vec
-    ((vec *) vec)
-    (list (list-vec vec))
-    (real-array (real-array-data vec))))
+(defun ensure-vec (thing)
+  "Coerce THING to a vec."
+  (etypecase thing
+    ((vec *) thing)
+    (list (list-vec thing))
+    (real-array (real-array-data thing))))
 
 (defun fnvec (&rest args)
   "Create a fixnum vector"

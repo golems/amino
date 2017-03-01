@@ -41,39 +41,64 @@
 
 (in-package :amino)
 
-(defgeneric rotation (x))
-(defgeneric translation (x))
+(defgeneric rotation (x)
+  (:documentation "Extract the rotation part of X"))
 
+(defgeneric translation (x)
+  (:documentation "Extract the translation part of X"))
 
 (defmethod normalize ((x quaternion-translation))
+  "Make the rotation component a unit quaternion.
+
+Translation is not altered."
   (make-quaternion-translation :quaternion (tf-qnormalize (quaternion-translation-quaternion x))
                                :translation (quaternion-translation-translation x)))
 
 
 (defmethod rotation ((x quaternion-translation))
+"Return the rotation quaternion part."
   (quaternion-translation-quaternion x))
 
 (defmethod translation ((x quaternion-translation))
+"Return the translation quaternion part."
   (quaternion-translation-translation x))
 
-(defgeneric quaternion (x))
-(defgeneric rotation-matrix (x))
+(defgeneric quaternion (x)
+  (:documentation "Convert orientation X to a quaternion."))
 
-(defgeneric euler-zyx (x))
-(defgeneric euler-rpy (x))
+(defgeneric rotation-matrix (x)
+  (:documentation "Convert orientation X to a rotation matrix."))
 
-(defgeneric dual-quaternion (x))
-(defgeneric quaternion-translation (x))
-(defgeneric transformation-matrix (x))
+(defgeneric euler-zyx (x)
+  (:documentation "Convert orientation X to Euler angle ZYX form."))
 
-(defgeneric dual-quaternion-2 (r x))
-(defgeneric quaternion-translation-2 (r x))
-(defgeneric transformation-matrix-2 (r x))
+(defgeneric euler-rpy (x)
+  (:documentation "Convert orientation X to Euler angle roll-pitch-yaw form."))
+
+(defgeneric dual-quaternion (x)
+  (:documentation "Convert transform X to dual quaternion form."))
+
+(defgeneric quaternion-translation (x)
+  (:documentation "Convert transform X to quaternion-translation form."))
+
+(defgeneric transformation-matrix (x)
+  (:documentation "Convert transform X to a trasnformation matrix form."))
+
+(defgeneric dual-quaternion-2 (r x)
+  (:documentation "Convert rotation R and translation X to dual quaternion form."))
+
+(defgeneric quaternion-translation-2 (r x)
+  (:documentation "Convert rotation R and translation X to quaternion-translation form."))
+
+(defgeneric transformation-matrix-2 (r x)
+  (:documentation "Convert rotation R and translation X to transformation matrix form."))
 
 (defun quaternion-translation* (r x)
+  "Convert transform X to quaternion-translation form."
   (quaternion-translation-2 r x))
 
-(defgeneric vec3 (x))
+(defgeneric vec3 (x)
+  (:documentation "Convert X to a 3-element vector."))
 
 (defmethod generic- ((a vec3) (b vec3))
   (with-vec3 (a-x a-y a-z) a
@@ -94,10 +119,10 @@
 (defun tf-quaternion (transform)
   "Return the rotation part as a quaternion"
   (quaternion-translation-quaternion transform))
+
 (defun tf-translation (transform)
   "Return the translation part."
   (quaternion-translation-translation transform))
-
 
 (defun tf-inverse (transform &optional (inverse (make-tf)))
   "Compute the inverse of the transform."
@@ -229,7 +254,8 @@
   (tf-qinv (quaternion x)))
 
 ;;; Axis-Angle
-(defgeneric axis-angle (x))
+(defgeneric axis-angle (x)
+  (:documentation "Convert orientation X to axis-angle form."))
 
 (defmethod axis-angle ((x quaternion))
   (tf-quat2axang x))

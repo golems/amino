@@ -102,14 +102,17 @@
 
 
 ;;; Specialized Real Arrays
-(defmacro def-specialized-array (thing length cffi-type)
+(defmacro def-specialized-array (thing length cffi-type &key
+                                                          documentation)
   (let ((make-thing (intern (concatenate 'string "MAKE-" (string thing))))
         (deep-copy-thing (intern (concatenate 'string "DEEP-COPY-" (string thing))))
         (thing-data (intern (concatenate 'string (string thing) "-DATA"))))
     `(progn
        (defstruct (,thing (:include real-array
                                     (data (make-vec ,length)
-                                          :type  (simple-array double-float (,length))))))
+                                          :type  (simple-array double-float (,length)))))
+         ,@(when documentation
+                 (list documentation)))
        (defun ,deep-copy-thing (thing &optional (result (,make-thing)))
          (replace (,thing-data result)
                   (,thing-data thing))
@@ -163,9 +166,11 @@
     (= x y z 0d0)))
 
 ;;; Axis-Angle
-(def-specialized-array axis-angle 4 axis-angle-t)
+(def-specialized-array axis-angle 4 axis-angle-t
+                       :documentation "An orientation in axis-angle form")
 
 (defun axis-angle* (x y z theta)
+  "Create an axis-angle orientation from components."
   (let ((n (sqrt (+ (* x x) (* y y) (* z z)))))
     (make-axis-angle :data (vec (/ x n) (/ y n) (/ z n) theta))))
 
@@ -223,6 +228,7 @@
   (%z-angle (coerce value 'double-float)))
 
 (defun degrees (value)
+  "Convert VALUE in degrees to radians."
   (* value (/ pi 180d0)))
 
 (defun pi-rad (value)
@@ -234,6 +240,7 @@
 (defstruct (euler-zyx (:include euler-angle)))
 
 (defun euler-zyx* (z y x)
+  "Construct Euler angle from components."
   (make-euler-zyx :data (vec z y x)))
 
 (define-foreign-type euler-zyx-t ()

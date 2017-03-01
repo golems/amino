@@ -646,9 +646,22 @@ EXTRA_DIST += \
 	doc/md/scenefile.md \
 	doc/footer.html \
 	doc/carousel.html \
-	doc/logo.png
+	doc/logo.png \
+        doc.lisp
 
 if HAVE_DOXYGEN
+
+EXTRA_DIST += lisp-amino.md lisp-rx.md
+lisp-amino.md: $(aarx_core_SOURCES) $(nodist_aarx_core_SOURCES) doc.lisp
+	LD_LIBRARY_PATH=.libs:$(LD_LIBRARY_PATH) \
+	top_srcdir=$(top_srcdir) \
+	top_builddir=$(top_builddir) \
+	sbcl --non-interactive \
+	     --eval "(load \"$(top_srcdir)/doc.lisp\")" \
+	     --eval '(sb-ext:quit)'
+
+lisp-rx.md: lisp-amino.md
+
 
 doxygen: doc/md/copying.md doc/md/mainpage.md
 	$(DOXYGEN)

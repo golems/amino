@@ -170,3 +170,5 @@ amino*.tar.gz
 /demo/urdf/fetch/fetch-model.c
 /demo/urdf/fetch/fetch-model.c.h
 /demo/urdf/fetch/fetch-view
+/lisp-amino.md
+/lisp-rx.md
