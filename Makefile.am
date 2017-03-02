@@ -649,21 +649,41 @@ EXTRA_DIST += \
 	doc/logo.png \
         doc.lisp
 
-if HAVE_DOXYGEN
+
 
 EXTRA_DIST += lisp-amino.md lisp-rx.md
-lisp-amino.md: $(aarx_core_SOURCES) $(nodist_aarx_core_SOURCES) doc.lisp
+
+if HAVE_COMMON_LISP
+
+lisp-amino.md: aarx.core doc.lisp
 	LD_LIBRARY_PATH=.libs:$(LD_LIBRARY_PATH) \
 	top_srcdir=$(top_srcdir) \
 	top_builddir=$(top_builddir) \
-	sbcl --non-interactive \
-	     --eval "(load \"$(top_srcdir)/doc.lisp\")" \
-	     --eval '(sb-ext:quit)'
+	SBCL_HOME=$(SBCL_HOME) \
+	./aarx.core --non-interactive \
+		--eval "(load \"$(top_srcdir)/doc.lisp\")" \
+		--eval '(sb-ext:quit)'
 
 lisp-rx.md: lisp-amino.md
 
+else
 
-doxygen: doc/md/copying.md doc/md/mainpage.md
+lisp-amino.md:
+	touch lisp-amino.md
+
+lisp-rx.md:
+	touch lisp-rx.md
+
+endif # HAVE_COMMON_LISP
+
+
+
+
+if HAVE_DOXYGEN
+
+
+
+doxygen: doc/md/copying.md doc/md/mainpage.md lisp-rx.md lisp-amino.md
 	$(DOXYGEN)
 
 doc/manual: doxygen

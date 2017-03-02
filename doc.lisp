@@ -1,22 +1,5 @@
-(load (make-pathname :directory (append (pathname-directory (truename (uiop/os:getenv "top_srcdir")))
-                                        '("share"))
-                     :name "load-quicklisp"
-                     :type "lisp"))
-
-
-;; Try to register lisp directory with ASDF
-(when (find-package :asdf)
-  (eval `(push (make-pathname :directory (append (pathname-directory  (truename (uiop/os:getenv "top_srcdir")))
-                                                 '("lisp")))
-               ,(intern "*CENTRAL-REGISTRY*" :asdf))))
-
-;; Try to load Amino
-(aa-load-system :amino)
-(aa-load-system :amino-rx :amino)
-(aa-load-system :amino-py '|aminopy|)
-
+;; Load doc generator
 (ql:quickload :ntdoc)
-
 
 ;; Output
 (ntdoc::markdown '(:amino-type :amino)

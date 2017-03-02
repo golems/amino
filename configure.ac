@@ -696,6 +696,14 @@ dnl CL_CHECK_SYSTEM_ERROR([sycamore])
 AC_SUBST([COMMON_LISP])
 AM_CONDITIONAL([HAVE_COMMON_LISP],[test "x$COMMON_LISP" != "x"])
 
+AS_IF([test "x$COMMON_LISP" != "x" -a "x$SBCL_HOME" = x],
+[
+AC_MSG_CHECKING([SBCL_HOME])
+SBCL_HOME=`$COMMON_LISP --noinform --non-interactive --eval '(format t "~A" (sb-posix:getenv "SBCL_HOME"))'`
+AC_MSG_RESULT(["$SBCL_HOME"])
+AC_SUBST([SBCL_HOME])
+])
+
 
 ###########
 ## Demos ##
