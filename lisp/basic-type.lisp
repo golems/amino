@@ -44,6 +44,7 @@
 ;;;;;;;;;;;;;;;;;;;
 
 (deftype vec (length)
+  "Type alias for a double floating point vector."
   `(simple-array double-float (,length)))
 
 (defstruct real-array

@@ -137,13 +137,16 @@ Translation is not altered."
 
 
 (defstruct tf-readable
+  "Human-readable transform"
   rotation translation)
 
 (defun tf-readable* (rotation translation)
+  "Create a human-readable transform."
   (make-tf-readable :rotation (euler-zyx rotation)
                     :translation (vec3 translation)))
 
 (defun tf-readable (tf)
+  "Convert TF to human-readable form."
   (let* ((tf (tf tf)))
     (tf-readable* (tf-quaternion tf)
                   (tf-translation tf))))
@@ -490,7 +493,8 @@ Translation is not altered."
   (tf-duqu-mul a (dual-quaternion b)))
 
 ;; Transformations
-(defgeneric transform (tf point))
+(defgeneric transform (tf point)
+  (:documentation "Transform a point."))
 
 (defmethod transform ((a quaternion) (b vec3))
   (tf-qrot a b))

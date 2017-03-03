@@ -173,6 +173,7 @@
                           (compile t)
                           (mesh-up-axis "Z")
                           (mesh-forward-axis "Y"))
+  "Load a scene-graph from FILENAME."
   (let* ((filename (rope-string (rope filename)))
          (type (or type (scene-file-type filename)))
          (truename (if (eq type :urdf)

@@ -41,12 +41,16 @@
 (in-package :amino)
 
 
-(defgeneric normalize (x))
+(defgeneric normalize (x)
+  (:documentation "Compute the normalized form of X"))
+
 (defmethod normalize ((x real))
   1)
 
 
-(defgeneric inverse (x))
+(defgeneric inverse (x)
+  (:documentation "Compute the inverse of X"))
+
 (defmethod inverse ((x real))
   (/ 1 x))
 
@@ -94,6 +98,7 @@
      (defgeneric ,binop (a b))
      ;; dispatch
      (defun ,name (first &rest rest)
+       ,(format nil "Generic ~A operation" op)
        (declare (dynamic-extent rest))
        (reduce #',binop rest :initial-value first))
      ;; number method
@@ -152,7 +157,8 @@
 
 ;; scalar-vector
 
-(defgeneric matrix->list (matrix))
+(defgeneric matrix->list (matrix)
+  (:documentation "Convert a matrix type to a list."))
 
 (defmethod matrix->list ((matrix array))
   (loop for x across matrix

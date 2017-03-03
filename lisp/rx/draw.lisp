@@ -45,6 +45,7 @@
         (/ b 255)))
 
 (defun draw-tf-axis (axis &optional (translation (identity-vec3)))
+  "Construct a TF given the axis for Z in the parent frame."
   (tf* (quaternion-from-vectors (vec 0d0 0d0 1d0)
                                 axis)
                       translation))
@@ -54,6 +55,7 @@
 
 (defun item-cylinder-axis (parent name &key height radius axis (translation (identity-vec3))
                                   options)
+  "Draw a cylinder in a new frame given an axis."
   (scene-frame-fixed parent name
                      :tf (draw-tf-axis axis translation)
                      :geometry (scene-geometry-cylinder options  :height height :radius radius)))
@@ -62,6 +64,7 @@
 (defun item-cone-axis (parent name
                        &key height start-radius (end-radius 0d0) axis (translation (identity-vec3))
                          options)
+  "Draw a cone in a new frame given an axis."
   (scene-frame-fixed parent name
                      :tf (draw-tf-axis axis translation)
                      :geometry (scene-geometry-cone options :height height
@@ -84,6 +87,7 @@
                           (translation (identity-vec3))
                           options)
 
+  "Draw an arrow in a new frame given an axis."
   (let ((body-length (- length
                         (if start-arrow start-arrow-length 0)
                         (if end-arrow end-arrow-length 0))))
@@ -128,6 +132,7 @@
                                                       (start-arrow-end-width 0d0)
                                                       (start-arrow-length width)
                                                       configuration-map)
+  "Draw an arrow given a start and end point."
   (let* ((v (tf-translation (scene-graph-tf-relative scene-graph tail tip
                                                      :configuration-map configuration-map))))
     (item-arrow-axis tail name
@@ -157,6 +162,7 @@
                             (y-color '(0 1 0))
                             (z-color '(0 0 1))
                             options)
+  "Draw principal axis markers for frame PARENT."
   (flet ((helper (subname axis color)
            (item-arrow-axis parent (draw-subframe name subname)
                             :options (merge-draw-options (draw-options :color color)

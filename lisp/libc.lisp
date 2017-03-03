@@ -78,6 +78,7 @@
 ;;   (amino-ffi::libc-atof string))
 
 (defun parse-float (string)
+  "Parse a floating point number"
   (coerce (read-from-string string)
           'double-float))
 

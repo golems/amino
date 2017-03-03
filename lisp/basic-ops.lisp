@@ -159,6 +159,7 @@
     (cons (nth i vector))))
 
 (defun (setf vecref) (value vec i)
+  "Set the I'th value of VEC to VALUE."
   (etypecase vec
     (simple-vector (setf (svref vec i) value))
     (array (setf (aref vec i) value))
@@ -292,12 +293,14 @@ N: cols in the block."
 ;; Lisp array vectors
 (declaim (inline make-vec n))
 (defun make-vec (n &key (initial-element 0d0))
+  "Make a floating point (double) vector."
   (make-array n
               :element-type 'double-float
               :initial-element initial-element))
 
 (declaim (inline make-fnvec n))
 (defun make-fnvec (n)
+  "Make a floating point (double) vector."
   (make-array n :element-type 'fixnum))
 
 (declaim (inline %vec))
@@ -337,6 +340,7 @@ N: cols in the block."
     (real-array (length (real-array-data vec)))))
 
 (defun vec-cat (&rest args)
+  "Concatenate vectors."
   (let* ((n (loop for x in args summing (vec-length x)))
          (y (make-vec n))
          (i -1))
@@ -356,6 +360,7 @@ N: cols in the block."
     new))
 
 (defun vec-list (vec)
+  "Convert VEC to a list."
   (etypecase vec
     (list vec)
     (array
@@ -366,6 +371,7 @@ N: cols in the block."
       (vec-list (real-array-data vec)))))
 
 (defun vec-sequence (vec)
+  "Ensure that VEC is a sequence."
   (etypecase vec
     (sequence vec)
      ;; TODO: block matrix version
@@ -390,9 +396,11 @@ N: cols in the block."
          v))
 
 (defun vec-flatten (sequence)
+  "Flatten positionly-nested sequences into a single numeric vector."
   (%vec-flatten 'double-float sequence))
 
 (defun fnvec-flatten (sequence)
+  "Flatten positionly-nested sequences into a single numeric vector."
   (%vec-flatten 'fixnum sequence))
 
 

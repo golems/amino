@@ -154,6 +154,7 @@
     (motion-planner-allow-collision motion-planner frame-0 frame-1)))
 
 (defstruct (motion-plan (:constructor %make-motion-plan))
+  "Container for a motion plan."
   sub-scene-graph
   config-names
   mutable-scene-graph
@@ -278,6 +279,7 @@
                       (simplify t)
                       (track-collisions nil)
                       (timeout 1d0))
+  "Compute a motion plan."
   ;;(print workspace-goal)
   ;;(declare (optimize (speed 0) (debug 3)))
   (let* ((ssg sub-scene-graph)
@@ -361,6 +363,7 @@
     map))
 
 (defun motion-plan-endpoint-map (motion-plan)
+  "Return the endpoint of MOTION-PLAN as an configuration map."
   (motion-plan-refmap motion-plan
                       (1- (motion-plan-length motion-plan))))
 
@@ -376,6 +379,7 @@
     array))
 
 (defun motion-plan-endpoint-array (motion-plan)
+  "Return the endpoint of MOTION-PLAN as an array."
   (let* ((ssg (motion-plan-sub-scene-graph motion-plan))
          (n-sub (sub-scene-graph-config-count ssg))
          (path (motion-plan-path motion-plan))

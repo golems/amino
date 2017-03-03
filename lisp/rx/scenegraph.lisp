@@ -54,9 +54,11 @@
   source-file
   povray-file)
 
-(defparameter *scene-font* :monospace)
+(defparameter *scene-font* :monospace
+  "Default font for scene text.")
 
 (defstruct scene-text
+  "A scene object for text."
   (value nil :type rope)
   (font *scene-font* :type rope)
   (thickness 1)
@@ -74,9 +76,11 @@
     (:visual . t)
     (:collision . t)
     (:scale . 1)
-    (:type . nil)))
+    (:type . nil))
+  "Association list of default drawing options for geometry.")
 
 (defun draw-option (options key)
+  "Return the draw option in OPTIONS for KEY."
   (alist-get-default options key *draw-options*))
 
 (defun draw-options-default (&key
@@ -89,6 +93,7 @@
                                (visual (draw-option options :visual))
                                (type (draw-option options :type))
                                (collision (draw-option options :collision)))
+  "Construct a drawing options set using default values from OPTIONS."
   (list* (cons :no-shadow no-shadow)
          (cons :color color)
          (cons :scale scale)
@@ -100,12 +105,17 @@
          options))
 
 (defun draw-options (&rest options-plist)
+  "Construct drawing options from a propetry list."
   (plist-alist options-plist))
 
 (defun merge-draw-options (new-options &optional (base-options *draw-options*))
+  "Merge two drawing options.
+
+Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
   (append new-options base-options))
 
 (defstruct scene-geometry
+  "Container for geometry attached to scene frames."
   shape
   options
   type
@@ -137,21 +147,28 @@
                        :visual (draw-option options :visual)))
 
 (defun scene-geometry-box (options dimension)
+  "Create geometry for a box.
+
+OPTIONS: drawing options for the box
+DIMESIONS: length 3 vector or sequence giving x, y, and z dimensions."
   (%rx-scene-geometry (aa-rx-geom-box (alist-rx-geom-opt options)
                                       (vec3 dimension))
                       options))
 
 (defun scene-geometry-sphere (options radius)
+  "Create geometry for a sphere."
   (%rx-scene-geometry (aa-rx-geom-sphere (alist-rx-geom-opt options)
                                          radius)
                       options))
 
 (defun scene-geometry-cylinder (options &key radius height)
+  "Create geometry for a cylinder."
   (%rx-scene-geometry (aa-rx-geom-cylinder (alist-rx-geom-opt options)
                                            height radius)
                    options))
 
 (defun scene-geometry-cone (options &key height start-radius end-radius)
+  "Create geometry for a cone."
   (%rx-scene-geometry (aa-rx-geom-cone (alist-rx-geom-opt options)
                                        height
                                        start-radius
@@ -159,6 +176,7 @@
                    options))
 
 (defun scene-geometry-grid (options &key dimension delta width)
+  "Create geometry for a grid."
   (%rx-scene-geometry (aa-rx-geom-grid (alist-rx-geom-opt options)
                                        (ensure-vec dimension)
                                        (ensure-vec delta)
@@ -166,10 +184,12 @@
                    options))
 
 (defun scene-geometry-text (options text &key (thickness 1))
+  "Create geometry for text."
   (%scene-geometry (scene-text text :thickness thickness)
                    options))
 
 (defun scene-geometry-mesh (options mesh)
+  "Create geometry for a mesh."
   (%scene-geometry (etypecase mesh
                      (scene-mesh mesh)
                      ((or pathname string)
@@ -475,6 +495,10 @@
         files))
 
 (defstruct scene-graph
+  "The data type for scene graphs, i.e., kinematic trees.
+
+This is a purely functional type, so opertions on scene-graphs
+create (partial) copies without modifying or destroying the original."
   (frames (make-tree-set #'scene-object-compare) :type tree-set)
   (allowed-collisions (make-collision-set) :type collision-set)
   (files (make-scene-graph-files) :type tree-set)
@@ -547,6 +571,7 @@
     scene-graph))
 
 (defun scene-graph-allow-collisions (scene-graph collision-set)
+  "Insert the provided allowed collisions into the allowable set for SCENE-GRAPH."
   (flet ((add-cons (scene-graph cons)
            (destructuring-bind (a . b) cons
              (scene-graph-allow-collision scene-graph a b))))
@@ -628,8 +653,6 @@
                      violations))
                  nil configuration-map))
 
-(defvar *scene-directory* (make-pathname))
-
 (defun %scene-graph (things)
   (labels ((rec (scene-graph thing)
              (etypecase thing
@@ -647,9 +670,14 @@
     (fold #'rec (make-scene-graph) things)))
 
 (defun scene-graph (&rest things)
+  "Construct a scene-graph from THINGS.
+
+Elements of things may be other scene-graphs, individual frames, files
+to load, or sequences of any of these."
   (%scene-graph things))
 
 (defmacro scene-graph-f (place &rest things)
+  "Add THINGS to the scene-graph in PLACE and assign result to PLACE."
   `(setq ,place
          (scene-graph ,place ,@things)))
 
@@ -876,6 +904,7 @@ Throws an error if scene graph is invalid."
                                   configuration-map
                                   (tf-absolute-map (make-string-hash-table))
                                   (default-configuration 0d0))
+  "Compute the absolute transform for FRAME-NAME."
   (declare (type hash-table tf-absolute-map))
   (labels ((rec (frame-name)
              (cond

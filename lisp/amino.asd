@@ -41,8 +41,13 @@
     (asdf:operate 'asdf:load-op 'cffi-grovel))
 
 (asdf:defsystem amino
-  :description "Basic utilities, numerics, and kinematics"
+  :description "Basic utilities for robotics."
+  :long-description "Amino provides numerics, geometry, and memory-management for robotics and real-time applications.  This lisp system interfaces with a foreign (C) library."
   :depends-on ("cffi" "sycamore" "cxml" "cl-ppcre")
+  :author ("Neil T. Dantam")
+  :license :bsd-3
+  :homepage "http://amino.golems.org"
+  :source-control "https://github.com/golems/amino"
   ;; Keep these components in sync with Makefile.am
   :components ((:file "package")
                (:file "config-macro" :depends-on ("package"))

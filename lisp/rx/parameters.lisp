@@ -75,9 +75,11 @@
     (:use-collision . nil)
     (:encode-video . t)
     (:antialias . t)
-    (:render-frames .t)))
+    (:render-frames . t))
+  "Association-list of default rendering options.")
 
 (defun get-render-option (options keyword &optional default)
+  "Return the rendering options in OPTIONS for KEYWORD."
   (let ((elt (assoc keyword options)))
     (if elt
         (cdr elt)
@@ -94,6 +96,7 @@
                                  (encode-video (get-render-option options :encode-video))
                                  (antialias (get-render-option options :antialias))
                                  (render-frames (get-render-option options :render-frames)))
+  "Construct a rendering options set using default values from OPTIONS."
   (list (cons :width width)
         (cons :height height)
         (cons :quality quality)
@@ -105,12 +108,17 @@
         (cons :render-frames render-frames)))
 
 (defun render-options (&rest options-plist)
+  "Construct a rendering options set from a property list."
   (plist-alist options-plist))
 
 (defun merge-render-options (new-options &optional (base-options *render-options*))
+  "Merge two drawing options.
+
+Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
   (append new-options base-options))
 
 (defun render-options-fast (&optional (base-options *render-options*))
+  "Default rendering options for fast but low quality rendering."
   (merge-render-options (render-options :quality 0.2d0
                                         :use-collision t
                                         :width (/ 1920 4)
@@ -118,6 +126,7 @@
                         base-options))
 
 (defun render-options-medium (&optional (base-options *render-options*))
+  "Default rendering options for medium quality/speed."
   (merge-render-options (render-options :quality 0.5d0
                                         :use-collision nil
                                         :width (/ 1920 2)
@@ -125,6 +134,7 @@
                         base-options))
 
 (defun render-options-full-hd (&optional (base-options *render-options*))
+  "Default rendering options for full high-definition rendering."
   (merge-render-options (render-options :quality 1d0
                                         :use-collision nil
                                         :width 1920
@@ -133,6 +143,7 @@
                         base-options))
 
 (defun render-options-4k (&optional (base-options *render-options*))
+  "Default rendering options for 4k rendering."
   (merge-render-options (render-options :quality 1d0
                                         :use-collision nil
                                         :width (* 2 1920)

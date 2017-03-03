@@ -41,7 +41,12 @@
     (asdf:operate 'asdf:load-op 'cffi-grovel))
 
 (asdf:defsystem amino-rx
-  :description "Basic utilities, numerics, and kinematics"
+  :description "Scene graph data structure and associate operations."
+  :long-description "Defines a purely-function interface for scene graphs, i.e., kinematic trees, that shares geometric types with the C implementation.  Binds associated operations such a collision checking, motion planning, and OpenGL rendering."
+  :author ("Neil T. Dantam")
+  :license :bsd-3
+  :homepage "http://amino.golems.org"
+  :source-control "https://github.com/golems/amino"
   :depends-on ("amino")
   ;; Keep these components in sync with Makefile.am
   :components ((:file "rx/robray-package")

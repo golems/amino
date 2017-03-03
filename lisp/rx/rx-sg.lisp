@@ -263,6 +263,7 @@
   ssg)
 
 (defun scene-graph-chain (scenegraph root tip)
+  "Construct the sub-scene-graph for a kinematic chain from ROOT to TIP."
   (let* ((m-sg (mutable-scene-graph scenegraph))
          (root-id (mutable-scene-graph-frame-id m-sg root))
          (tip-id (mutable-scene-graph-frame-id m-sg tip)))
@@ -320,6 +321,7 @@
                                    i))
 
 (defun sub-scene-graph-scene-graph (ssg)
+  "Return the (full) scene-graph for a sub-scene-graph."
   (mutable-scene-graph-scene-graph (sub-scene-graph-mutable-scene-graph ssg)))
 
 (defun sub-scene-graph-center-map (ssg &optional (configuration-map (make-configuration-map)))

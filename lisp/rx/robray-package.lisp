@@ -83,7 +83,6 @@
    :scene-graph-remove-frame
    :scene-graph-reparent
    :scene-graph-tf-absolute
-   :*scene-directory*
    :load-scene-file
    :scene-graph-allow-collisions
 

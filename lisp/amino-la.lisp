@@ -78,6 +78,7 @@
   (y :vector))
 
 (defun vec-ssd (a b)
+  "Return the sum of squared differences between vectors A and B."
   (let ((r 0d0))
     (with-foreign-vector (a inc-a length-a) a :input
       (with-foreign-vector (b inc-b length-b) b :input
@@ -88,12 +89,15 @@
     r))
 
 (defun vec-dist (a b)
+  "Return the Euclidean distance between two vectors."
   (sqrt (vec-ssd a b)))
 
 (defun vec-norm (x)
+  "Return the Euclidean normal of the vectors."
   (dnrm2 x))
 
 (defun vec-normalize (x &optional y)
+  "Return the Euclidean-normalized vector."
   (let ((y (dcopy x y)))
     (with-foreign-vector (y inc-y len-y) y :inout
       (blas-dscal len-y

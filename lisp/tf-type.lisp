@@ -148,9 +148,11 @@
 (def-specialized-array vec3 3 vector-3-t)
 
 (defun vec3* (x y z)
+  "Construct a vector-3 from components."
   (make-vec3 :data (vec x y z)))
 
 (defmacro with-vec3 ((x y z) vec3 &body body)
+  "Bind the elements of a VEC3."
   (with-gensyms (value)
     `(let ((,value (vec3 ,vec3)))
        (let ((,x (vecref ,value +x+))
@@ -159,9 +161,11 @@
          ,@body))))
 
 (defun vec3-normalize (v)
+  "Normalize a vector-3 to norm of 1."
   (vec-normalize v (make-vec3)))
 
 (defun vec3-identity-p (vec3)
+  "Check if vector-3 is 'identity', i.e., zero."
   (with-vec3 (x y z) vec3
     (= x y z 0d0)))
 
@@ -178,18 +182,24 @@
 (def-specialized-array quaternion 4 quaternion-t)
 
 (defun quaternion-x (q)
+  "Return the quaternion X element."
   (aref (quaternion-data q) +x+))
 (defun quaternion-y (q)
+  "Return the quaternion Y element."
   (aref (quaternion-data q) +y+))
 (defun quaternion-z (q)
+  "Return the quaternion Z element."
   (aref (quaternion-data q) +z+))
 (defun quaternion-w (q)
+  "Return the quaternion W element."
   (aref (quaternion-data q) +w+))
 
 (defun quaternion* (x y z w)
+  "Construct a quaternion from its elements."
   (make-quaternion :data (vec x y z w)))
 
 (defmacro with-quaternion ((x y z w) quaternion &body body)
+  "Bind the components of QUATERNION."
   (with-gensyms (value)
     `(let ((,value (quaternion ,quaternion)))
        (let ((,x (vecref ,value +x+))
@@ -199,6 +209,7 @@
          ,@body))))
 
 (defun quaternion-identity-p (quaternion)
+  "Test if it is the identify quaternion."
   (with-quaternion (x y z w) quaternion
     (and (= x y z 0d0)
          (= w 1d0))))
@@ -214,17 +225,23 @@
   (value 0d0 :type double-float))
 
 (defstruct (x-angle (:include principal-angle)
-                    (:constructor %x-angle (value))))
+                    (:constructor %x-angle (value)))
+  "A rotation about the X axis")
 (defstruct (y-angle (:include principal-angle)
-                    (:constructor %y-angle (value))))
+                    (:constructor %y-angle (value)))
+  "A rotation about the Y axis")
 (defstruct (z-angle (:include principal-angle)
-                    (:constructor %z-angle (value))))
+                    (:constructor %z-angle (value)))
+  "A rotation about the Z axis")
 
 (defun x-angle (value)
+  "Construct a rotation about the X axis."
   (%x-angle (coerce value 'double-float)))
 (defun y-angle (value)
+  "Construct a rotation about the Y axis."
   (%y-angle (coerce value 'double-float)))
 (defun z-angle (value)
+  "Construct a rotation about the Z axis."
   (%z-angle (coerce value 'double-float)))
 
 (defun degrees (value)
@@ -232,6 +249,7 @@
   (* value (/ pi 180d0)))
 
 (defun pi-rad (value)
+  "Return VALUE*pi"
   (* value pi))
 
 (defstruct (euler-angle (:include real-array
@@ -273,6 +291,7 @@
 
 
 (defstruct (tf-tag (:constructor tf-tag (parent tf child)))
+  "A transform tragged with parent and child frame labels."
   parent
   tf
   child)

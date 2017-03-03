@@ -61,6 +61,7 @@
   (incf (%crs-matrix-row-fill crs-matrix)))
 
 (defun make-crs-matrix (row-count column-count element-count)
+  "Create a sparse matrix in compressed row storage form"
   (let ((result (%make-crs-matrix :cols column-count
                                   :rows row-count
                                   :col-ind (make-array element-count :element-type '(foreign-int))
