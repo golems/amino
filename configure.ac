@@ -787,6 +787,7 @@ AS_IF([test "x$CXX" = "x"],
 
 AC_CONFIG_FILES([ Makefile
                   submodules/sycamore/Makefile
+                  submodules/cl-ntdoc/Makefile
                   include/amino/cblas_order.h
                   share/amino.pc
                   share/amino-gl.pc

@@ -7,7 +7,7 @@ EXTRA_DIST =
 CLEAN_LOCAL_FILES =
 dist_bin_SCRIPTS =
 
-DIST_SUBDIRS = submodules/sycamore .
+DIST_SUBDIRS = submodules/sycamore submodules/cl-ntdoc .
 
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include -I$(top_srcdir)/src/mac
 ACLOCAL_AMFLAGS = -I m4
@@ -647,7 +647,7 @@ EXTRA_DIST += \
 	doc/footer.html \
 	doc/carousel.html \
 	doc/logo.png \
-        doc.lisp
+        share/doc.lisp
 
 
 
