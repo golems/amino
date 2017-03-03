@@ -14,10 +14,12 @@
 
 (require :asdf)
 
-;; Include sycamore
+;; Include sycamore and ntdoc
 (push (make-pathname :directory `(:relative ,(uiop/os:getenv "top_srcdir") "submodules" "sycamore" "src"))
       asdf:*central-registry*)
 
+(push (make-pathname :directory `(:relative ,(uiop/os:getenv "top_srcdir") "submodules" "cl-ntdoc"))
+      asdf:*central-registry*)
 
 ;; Define System loading function
 (defun aa-load-system (system &optional (system-package system))
