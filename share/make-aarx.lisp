@@ -14,6 +14,7 @@
 (aa-load-system :amino)
 (aa-load-system :amino-rx :amino)
 (aa-load-system :amino-py '|aminopy|)
+(aa-load-system :ntdoc)
 
 ;; Make core file
 (sb-ext:save-lisp-and-die "aarx.core" :executable t)

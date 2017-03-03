@@ -655,13 +655,10 @@ EXTRA_DIST += lisp-amino.md lisp-rx.md
 
 if HAVE_COMMON_LISP
 
-lisp-amino.md: aarx.core doc.lisp
+lisp-amino.md: aarx.core share/doc.lisp
 	LD_LIBRARY_PATH=.libs:$(LD_LIBRARY_PATH) \
-	top_srcdir=$(top_srcdir) \
-	top_builddir=$(top_builddir) \
-	SBCL_HOME=$(SBCL_HOME) \
-	./aarx.core --non-interactive \
-		--eval "(load \"$(top_srcdir)/doc.lisp\")" \
+	./aarx.core \
+		--eval "(load \"$(top_srcdir)/share/doc.lisp\")" \
 		--eval '(sb-ext:quit)'
 
 lisp-rx.md: lisp-amino.md

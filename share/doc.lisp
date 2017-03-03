@@ -1,7 +1,3 @@
-;; Load doc generator
-(ql:quickload :ntdoc)
-
-;; Output
 (ntdoc::markdown '(:amino-type :amino)
                  :system :amino
                  :target "lisp-amino.md"

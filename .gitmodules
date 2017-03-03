@@ -1,3 +1,6 @@
 [submodule "submodules/sycamore"]
 	path = submodules/sycamore
 	url = https://github.com/ndantam/sycamore.git
+[submodule "submodules/cl-ntdoc"]
+	path = submodules/cl-ntdoc
+	url = https://github.com/ndantam/cl-ntdoc
