@@ -77,10 +77,14 @@
 ;; (defun parse-float (string)
 ;;   (amino-ffi::libc-atof string))
 
-(defun parse-float (string)
-  "Parse a floating point number"
-  (coerce (read-from-string string)
-          'double-float))
+(defun parse-float (string &optional (invalid-error t) (invalid-value 0d0))
+  (flet ((helper ()
+           (coerce (read-from-string string)
+                   'double-float)))
+    (if invalid-error
+        (helper)
+        (handler-case (helper)
+          (t nil invalid-value)))))
 
 
 (defun float-to-string (float)
