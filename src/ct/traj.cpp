@@ -149,10 +149,12 @@ aa_ct_seg_list_destroy(struct aa_ct_seg_list *list)
  * @param n_l      Number of lines contained in file
  */
 static void
-aa_ct_gnuplot_file(const char *filename, size_t n_l)
+aa_ct_gnuplot_file(const char *filename, size_t n_l, const char *ylabel)
 {
     FILE *pipe = popen("gnuplot -persistent", "w");
     // fprintf(pipe,"set terminal svg enhanced background rgb 'white'\n");
+    fprintf(pipe, "set xlabel \"time (s)\"\n");
+    if( ylabel ) fprintf(pipe, "set ylabel \"%s\"\n", ylabel);
     fprintf(pipe, "plot ");
     for (size_t i = 0; i < n_l; i++)
         fprintf(pipe, "\"%s\" using 1:%lu title '%lu' with lines%s",
@@ -188,8 +190,8 @@ aa_ct_seg_list_plot(struct aa_ct_seg_list *list, size_t n_q, double dt)
     fclose(qtemp);
     fclose(dqtemp);
 
-    aa_ct_gnuplot_file(qfile, n_q);
-    aa_ct_gnuplot_file(dqfile, n_q);
+    aa_ct_gnuplot_file(qfile, n_q, "Position");
+    aa_ct_gnuplot_file(dqfile, n_q, "Velocity");
 }
 
 
@@ -239,7 +241,7 @@ aa_ct_tj_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
 {
     struct aa_ct_seg_pb_cx *c_cx, *p_cx, *n_cx;
     aa_ct_tj_pb_nbrs(seg, &p_cx, &c_cx, &n_cx);
-    
+
     double dt = t - c_cx->t;
     if ((c_cx->t - c_cx->b / 2) <= t && t <= (c_cx->t + c_cx->b / 2)) {
         // Blend region
@@ -280,7 +282,7 @@ aa_ct_tj_pb_limit(double *a, double *b, double *m, size_t n_q)
         double v = fabs(((a) ? a[i] : 0) - ((b) ? b[i] : 0)) / ((m) ? m[i] : 1);
         mv = (mv < v) ? v : mv;
     }
-    
+
     return mv;
 }
 
