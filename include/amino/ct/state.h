@@ -70,6 +70,20 @@ struct aa_ct_state {
 };
 
 /**
+ * Limits on robot state.
+ */
+struct aa_ct_limit {
+    struct aa_ct_state *min; ///< The minimum limit values
+    struct aa_ct_state *max; ///< The maximum limit values
+};
+
+/**
+ * Allocate state from a memory region.
+ */
+AA_API struct aa_ct_state *
+aa_ct_state_alloc(struct aa_mem_region *reg, size_t n_q, size_t n_tf );
+
+/**
  * Creates and allocates a copy of a state.
  *
  * @param reg  Region to allocate new arrays from
@@ -78,6 +92,8 @@ struct aa_ct_state {
  */
 void aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
                        struct aa_ct_state *src);
+
+
 
 /**
  * Prints out the jointspace components of a state.

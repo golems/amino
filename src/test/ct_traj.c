@@ -100,27 +100,29 @@ test_tjX(void)
 }
 
 void
-test_tjq(void)
+test_tjq(size_t n_p)
 {
     size_t n_q = 4;
 
     struct aa_mem_region reg;
     aa_mem_region_init(&reg, 512);
 
+    /* Construct Points */
     struct aa_ct_pt_list *pt_list = aa_ct_pt_list_create(&reg);
 
-    for (size_t i = 0; i < 4; i++) {
-        struct aa_ct_state state = {0};
-        double q[n_q];
-        state.n_q = n_q;
-        state.q = q;
+    struct aa_ct_state state[n_p];
+    AA_MEM_ZERO(state,n_p);
 
-        for (size_t j = 0; j < n_q; j++)
-            state.q[j] = (double) rand() / RAND_MAX;
+    for (size_t i = 0; i < n_p; i++) {
+        state[i].q = AA_MEM_REGION_NEW_N(&reg,double,n_q);
+        state[i].n_q = n_q;
 
-        aa_ct_pt_list_add(pt_list, &state);
+        aa_vrand(n_q, state[i].q);
+
+        aa_ct_pt_list_add(pt_list, &state[i]);
     }
 
+    /* Set Limits */
     double dqlim[n_q], ddqlim[n_q];
     struct aa_ct_state limits;
     limits.n_q = n_q;
@@ -128,12 +130,33 @@ test_tjq(void)
     limits.ddq = ddqlim;
 
     for (size_t j = 0; j < n_q; j++) {
-        limits.dq[j] = 1;
-        limits.ddq[j] = 1;
+        limits.dq[j] = aa_frand() + .5;
+        limits.ddq[j] = aa_frand() + .5;
     }
 
+    /* Generate Trajectory */
     struct aa_ct_seg_list *seg_list =
         aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
+
+    /* Evaluate and Check */
+    struct aa_ct_state *vstate = aa_ct_state_alloc(&reg, n_q, 0);
+    aa_ct_seg_list_eval(seg_list, vstate, 0);
+    aveq("PBlend 0", n_q, state[0].q, vstate->q, 1e-3);
+    double t = 0;
+
+    while( aa_ct_seg_list_eval(seg_list, vstate, t) ) {
+        /* Test limits */
+        for( size_t i = 0; i < n_q; i ++ ) {
+            test( "Pblend normal q", isfinite(vstate->q[i]) );
+            test( "Pblend normal dq", isfinite(vstate->dq[i]) );
+            test( "Pblend normal ddq", isfinite(vstate->ddq[i]) );
+
+            test_flt( "Pblend limit dq",  fabs(vstate->dq[i]),  limits.dq[i], 1e-3 );
+            test_flt( "Pblend limit ddq", fabs(vstate->ddq[i]), limits.ddq[i], 1e-3 );
+        }
+        t += .01;
+    }
+    aveq("PBlend Final", n_q, state[n_p-1].q, vstate->q, 1e-3);
 
     aa_ct_seg_list_destroy(seg_list);
     aa_ct_pt_list_destroy(pt_list);
@@ -146,6 +169,16 @@ test_tjq(void)
 int
 main(void)
 {
+    time_t seed = time(NULL);
+    printf("ct_traj seed: %ld\n", seed);
+    srand((unsigned int)seed); // might break in 2038
+    aa_test_ulimit();
+
     test_tjX();
-    test_tjq();
+
+    for( size_t i = 0; i < 100; i ++ ) {
+        size_t n_p = 2 + (size_t)(10*aa_frand());
+        test_tjq(n_p);
+        test_tjq(2);
+    }
 }

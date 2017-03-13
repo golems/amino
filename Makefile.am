@@ -138,6 +138,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_plugin.h \
 	include/amino/rx/mp_seq.h \
 	include/amino/rx/spnav_button.h \
+	include/amino/rx/rx_ct.h \
 	include/amino/rx/wavefront.h
 
 rxomplincludedir = $(rxincludedir)/ompl
@@ -190,6 +191,7 @@ libamino_la_SOURCES =                  \
 	src/rx/ik_opt.c                \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
+	src/rx/rx_ct.c                 \
 	src/rx/mp_seq.cpp              \
 	src/ct/traj.cpp                \
 	src/ct/state.c                 \
