@@ -46,6 +46,9 @@
 extern "C" {
 #endif
 
+#define AA_CT_SEG_IN   1
+#define AA_CT_SEG_OUT  0
+
 /**
  * Waypoint. For use in aa_ct_pt_list.
  */
@@ -91,6 +94,19 @@ void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state);
 void aa_ct_pt_list_destroy(struct aa_ct_pt_list *list);
 
 /**
+ * Return the initial state of the point list.
+ */
+const struct aa_ct_state *
+aa_ct_pt_list_start_state(const struct aa_ct_pt_list *list);
+
+/**
+ * Return the final state of the point list.
+ */
+const struct aa_ct_state *
+aa_ct_pt_list_final_state(const struct aa_ct_pt_list *list);
+
+
+/**
  * Print out a list of points to a file.
  *
  * @param stream File to print to
@@ -127,6 +143,15 @@ void aa_ct_seg_list_plot(struct aa_ct_seg_list *list, size_t n_q, double dt);
  */
 void aa_ct_seg_list_destroy(struct aa_ct_seg_list *list);
 
+/**
+ * Return segment list configuration count.
+ */
+size_t aa_ct_seg_list_n_q(const struct aa_ct_seg_list *list);
+
+/**
+ * Return duration (time) of segment list.
+ */
+double aa_ct_seg_list_duration(const struct aa_ct_seg_list *list);
 
 /**
  * Generate a parabolic blend trajectory from a point list.
@@ -141,6 +166,20 @@ struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
                                              struct aa_ct_pt_list *list,
                                              struct aa_ct_state *limits);
 
+
+/**
+ * Generate a lienar trajectory from a point list.
+ *
+ * @param reg Region to allocate from
+ * @param list Point list to build segment list from
+ * @param limits State structure with dq and ddq kinematic limits
+ *
+ * @return An allocated segment list describing a parabolic blend trajectory.
+ */
+struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
+                                              struct aa_ct_pt_list *list,
+                                              struct aa_ct_state *limits);
+
 /**
  * Generate a parabolic blend trajectory from a point list.
  *
@@ -153,6 +192,21 @@ struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
 struct aa_ct_seg_list *aa_ct_tjX_pb_generate(struct aa_mem_region *reg,
                                              struct aa_ct_pt_list *list,
                                              struct aa_ct_state *limits);
+
+
+/**
+ * Check C0 (position) continuity of the trajectory.
+ *
+ * @param segs The segment list to check
+ * @param dt   Time intervel between steps
+ * @param tol  Maximum distance between two steps
+ * @param eps  Maximum distance between final and inital position of subsequent segments
+ *
+ * @return 0 if trajectory is C0 continuous, non-zero otherwise
+ */
+int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
+                             double tol, double eps );
+
 #ifdef __cplusplus
 }
 #endif

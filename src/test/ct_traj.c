@@ -100,6 +100,58 @@ test_tjX(void)
 }
 
 void
+test_tjq_check( struct aa_mem_region *reg,
+                struct aa_ct_pt_list *pt_list,
+                struct aa_ct_seg_list *seg_list,
+                struct aa_ct_state *limits,
+                int dq, int ddq )
+{
+    (void) pt_list;
+    size_t n_q = aa_ct_seg_list_n_q(seg_list);
+    struct aa_ct_state *vstate = aa_ct_state_alloc(reg, n_q, 0);
+    const struct aa_ct_state *state0 = aa_ct_pt_list_start_state(pt_list);
+    const struct aa_ct_state *state1 = aa_ct_pt_list_final_state(pt_list);
+    double sdq[n_q];
+    AA_MEM_CPY(sdq, state0->q, n_q);
+    aa_ct_seg_list_eval(seg_list, vstate, 0);
+    aveq("Traj q 0", n_q, state0->q, vstate->q, 1e-3);
+    double t = 0;
+    double dt = .001;
+    double duration = aa_ct_seg_list_duration(seg_list);
+
+    while( aa_ct_seg_list_eval(seg_list, vstate, t) ) {
+        if( dq )
+            aveq("Traj q integrate dq", n_q, sdq, vstate->q, 1e-2);
+
+        for( size_t i = 0; i < n_q; i ++ ) {
+            /* Finite */
+            test( "Traj q normal q", isfinite(vstate->q[i]) );
+            if( dq )
+                test( "Traj q normal dq", isfinite(vstate->dq[i]) );
+            if( ddq )
+                test( "Traj q normal ddq", isfinite(vstate->ddq[i]) );
+
+            /* Limits */
+            if( dq )
+                test_flt( "Traj q limit dq",  fabs(vstate->dq[i]),  limits->dq[i], 1e-3 );
+            if( ddq )
+                test_flt( "Traj q limit ddq", fabs(vstate->ddq[i]), limits->ddq[i], 1e-3 );
+
+            /* Integrate */
+            //sdq[i] = vstate->q[i] + dt*vstate->dq[i];
+            sdq[i] += dt*vstate->dq[i];
+        }
+        t += dt;
+    }
+
+    test_flt("Traj q dur",  duration, t, 0 );
+
+    int r = aa_ct_seg_list_eval(seg_list, vstate, duration);
+    test( "Traj dur eval", AA_CT_SEG_IN == r );
+    aveq("Traj q Final", n_q, state1->q, vstate->q, 1e-3);
+}
+
+void
 test_tjq(size_t n_p)
 {
     size_t n_q = 4;
@@ -135,30 +187,43 @@ test_tjq(size_t n_p)
     }
 
     /* Generate Trajectory */
-    struct aa_ct_seg_list *seg_list =
-        aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
+    {
+        //struct aa_ct_seg_list *seg_list =
+            //aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
+
+    }
+
+    {
+        struct aa_ct_seg_list *seg_list =
+            aa_ct_tjq_lin_generate(&reg, pt_list, &limits);
+        test_tjq_check( &reg, pt_list, seg_list,
+                        &limits, 1, 0 );
+        /* aa_ct_seg_list_plot( seg_list, n_q, .01, */
+        /*                      1, 0 ); */
+    }
 
     /* Evaluate and Check */
-    struct aa_ct_state *vstate = aa_ct_state_alloc(&reg, n_q, 0);
-    aa_ct_seg_list_eval(seg_list, vstate, 0);
-    aveq("PBlend 0", n_q, state[0].q, vstate->q, 1e-3);
-    double t = 0;
 
-    while( aa_ct_seg_list_eval(seg_list, vstate, t) ) {
-        /* Test limits */
-        for( size_t i = 0; i < n_q; i ++ ) {
-            test( "Pblend normal q", isfinite(vstate->q[i]) );
-            test( "Pblend normal dq", isfinite(vstate->dq[i]) );
-            test( "Pblend normal ddq", isfinite(vstate->ddq[i]) );
+    /* struct aa_ct_state *vstate = aa_ct_state_alloc(&reg, n_q, 0); */
+    /* aa_ct_seg_list_eval(seg_list, vstate, 0); */
+    /* aveq("PBlend 0", n_q, state[0].q, vstate->q, 1e-3); */
+    /* double t = 0; */
 
-            test_flt( "Pblend limit dq",  fabs(vstate->dq[i]),  limits.dq[i], 1e-3 );
-            test_flt( "Pblend limit ddq", fabs(vstate->ddq[i]), limits.ddq[i], 1e-3 );
-        }
-        t += .01;
-    }
-    aveq("PBlend Final", n_q, state[n_p-1].q, vstate->q, 1e-3);
+    /* while( aa_ct_seg_list_eval(seg_list, vstate, t) ) { */
+    /*     /\* Test limits *\/ */
+    /*     for( size_t i = 0; i < n_q; i ++ ) { */
+    /*         test( "Pblend normal q", isfinite(vstate->q[i]) ); */
+    /*         test( "Pblend normal dq", isfinite(vstate->dq[i]) ); */
+    /*         test( "Pblend normal ddq", isfinite(vstate->ddq[i]) ); */
 
-    aa_ct_seg_list_destroy(seg_list);
+    /*         test_flt( "Pblend limit dq",  fabs(vstate->dq[i]),  limits.dq[i], 1e-3 ); */
+    /*         test_flt( "Pblend limit ddq", fabs(vstate->ddq[i]), limits.ddq[i], 1e-3 ); */
+    /*     } */
+    /*     t += .01; */
+    /* } */
+    /* aveq("PBlend Final", n_q, state[n_p-1].q, vstate->q, 1e-3); */
+
+    //aa_ct_seg_list_destroy(seg_list);
     aa_ct_pt_list_destroy(pt_list);
     aa_mem_region_destroy(&reg);
 }
@@ -179,6 +244,6 @@ main(void)
     for( size_t i = 0; i < 100; i ++ ) {
         size_t n_p = 2 + (size_t)(10*aa_frand());
         test_tjq(n_p);
-        test_tjq(2);
+        //test_tjq(2);
     }
 }
