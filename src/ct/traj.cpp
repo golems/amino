@@ -622,6 +622,24 @@ aa_ct_tjX_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
     return Xseg_list;
 }
 
+int aa_ct_seg_list_check( struct aa_ct_seg_list * segs, double dt,
+                          int (*function)(void *cx, double t, const struct aa_ct_state *state ),
+                          void *cx )
+{
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    size_t n_q = aa_ct_seg_list_n_q(segs);
+    struct aa_ct_state *state = aa_ct_state_alloc(reg, n_q, 0);
+
+    int r = 0;
+    for( double t = 0; aa_ct_seg_list_eval(segs, state, t); t += dt )
+    {
+        if( (r = function(cx, t, state)) ) break;
+    }
+
+    aa_mem_region_pop(reg,state);
+
+    return r;
+}
 
 
 int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,

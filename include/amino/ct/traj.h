@@ -194,6 +194,23 @@ struct aa_ct_seg_list *aa_ct_tjX_pb_generate(struct aa_mem_region *reg,
                                              struct aa_ct_state *limits);
 
 
+
+/**
+ * Check the trajectory by evaluting function at points along the trajectory.
+ *
+ * @param segs      The segment list to check
+ * @param dt        Time intervel between steps to check
+ * @param function  Function to check a state, must return 0 if state is valid
+ *
+ * @return 0 if trajectory is valid (function evaluates to zero at
+ *         each point), otherwise return the return value of function
+ *         at the non-zero point
+ */
+int
+aa_ct_seg_list_check( struct aa_ct_seg_list * segs, double dt,
+                      int (*function)(void *cx, double t, const struct aa_ct_state *state ),
+                      void *cx );
+
 /**
  * Check C0 (position) continuity of the trajectory.
  *

@@ -99,6 +99,49 @@ test_tjX(void)
     aa_mem_region_destroy(&reg);
 }
 
+struct tjq_check_cx {
+    struct aa_mem_region *reg;
+    struct aa_ct_seg_list *seg_list;
+    struct aa_ct_pt_list *pt_list;
+    struct aa_ct_state *limits;
+    int dq;
+    int ddq;
+
+    double *sdq;
+    double dt;
+
+    double t;
+};
+
+static int tjq_check_fun(void *cx_, double t, const struct aa_ct_state *state )
+{
+    struct tjq_check_cx  *cx = (struct tjq_check_cx*)cx_;
+    cx->t = t;
+    size_t n_q = aa_ct_seg_list_n_q(cx->seg_list);
+
+    if( cx->dq )
+        aveq("Traj q integrate dq", n_q, cx->sdq, state->q, 1e-2);
+
+    for( size_t i = 0; i < n_q; i ++ ) {
+        /* Finite */
+        test( "Traj q normal q", isfinite(state->q[i]) );
+        if( cx->dq )
+            test( "Traj q normal dq", isfinite(state->dq[i]) );
+        if( cx->ddq )
+            test( "Traj q normal ddq", isfinite(state->ddq[i]) );
+
+        /* Limits */
+        if( cx->dq )
+            test_flt( "Traj q limit dq",  fabs(state->dq[i]),  cx->limits->dq[i], 1e-3 );
+        if( cx->ddq )
+            test_flt( "Traj q limit ddq", fabs(state->ddq[i]), cx->limits->ddq[i], 1e-3 );
+
+        /* Integrate */
+        cx->sdq[i] += cx->dt*state->dq[i];
+    }
+    return 0;
+}
+
 void
 test_tjq_check( struct aa_mem_region *reg,
                 struct aa_ct_pt_list *pt_list,
@@ -115,36 +158,23 @@ test_tjq_check( struct aa_mem_region *reg,
     AA_MEM_CPY(sdq, state0->q, n_q);
     aa_ct_seg_list_eval(seg_list, vstate, 0);
     aveq("Traj q 0", n_q, state0->q, vstate->q, 1e-3);
-    double t = 0;
     double dt = .001;
+
+    struct tjq_check_cx cx = { .reg = reg,
+                               .seg_list = seg_list,
+                               .pt_list = pt_list,
+                               .limits = limits,
+                               .dq = dq,
+                               .ddq = ddq,
+                               .sdq = sdq,
+                               .dt = dt,
+                               .t = 0 };
+    aa_ct_seg_list_check( seg_list, dt,
+                          tjq_check_fun, &cx );
+
+
     double duration = aa_ct_seg_list_duration(seg_list);
-
-    while( aa_ct_seg_list_eval(seg_list, vstate, t) ) {
-        if( dq )
-            aveq("Traj q integrate dq", n_q, sdq, vstate->q, 1e-2);
-
-        for( size_t i = 0; i < n_q; i ++ ) {
-            /* Finite */
-            test( "Traj q normal q", isfinite(vstate->q[i]) );
-            if( dq )
-                test( "Traj q normal dq", isfinite(vstate->dq[i]) );
-            if( ddq )
-                test( "Traj q normal ddq", isfinite(vstate->ddq[i]) );
-
-            /* Limits */
-            if( dq )
-                test_flt( "Traj q limit dq",  fabs(vstate->dq[i]),  limits->dq[i], 1e-3 );
-            if( ddq )
-                test_flt( "Traj q limit ddq", fabs(vstate->ddq[i]), limits->ddq[i], 1e-3 );
-
-            /* Integrate */
-            //sdq[i] = vstate->q[i] + dt*vstate->dq[i];
-            sdq[i] += dt*vstate->dq[i];
-        }
-        t += dt;
-    }
-
-    test_flt("Traj q dur",  duration, t, 0 );
+    test_flt("Traj q dur",  cx.t, duration, 0 );
 
     int r = aa_ct_seg_list_eval(seg_list, vstate, duration);
     test( "Traj dur eval", AA_CT_SEG_IN == r );
