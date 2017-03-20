@@ -53,7 +53,6 @@ AA_VECTOR_DEF( struct aa_rx_wf_mtl*, mtlvec_type )
 struct aa_rx_wf_obj {
     char *filename;
     char *dirname;
-    char *dirname_data;
 
     dvec_type vertex;
     dvec_type normal;
@@ -163,7 +162,7 @@ aa_rx_wf_obj_destroy( struct aa_rx_wf_obj * obj)
     mtlvec_type_destroy( &obj->mtl );
 
     aa_checked_free(obj->filename);
-    aa_checked_free(obj->dirname_data);
+    aa_checked_free(obj->dirname);
 
     free(obj);
 }
@@ -339,9 +338,9 @@ AA_API void
 aa_rx_wf_obj_set_filename( struct aa_rx_wf_obj *obj, const char *filename )
 {
     obj->filename = strdup(filename);
-    obj->dirname_data = strdup(filename);
-
-    obj->dirname = dirname( obj->dirname_data );
+    char *tmp = strdup(filename);
+    obj->dirname = strdup(dirname(tmp));
+    free(tmp);
 
 }
 
