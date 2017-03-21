@@ -470,6 +470,12 @@ DIMESIONS: length 3 vector or sequence giving x, y, and z dimensions."
     (tree-set-insert collision-set
                      (cons frame-1 frame-2))))
 
+
+(defun map-collision-set (result-type function collision-set)
+  (map-tree-set result-type (lambda (c)
+                              (funcall function (car c) (cdr c)))
+                collision-set))
+
 (defmacro do-collision-set (((frame-1 frame-2) set &optional result)
                             &body
                               body)
