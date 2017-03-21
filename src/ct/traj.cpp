@@ -287,8 +287,8 @@ aa_ct_seg_dq_new( struct aa_mem_region *reg,
         double dti = fabs(cx->dq[i]) / limits->dq[i];
         dt = AA_MAX(dt, dti);
 
-        if( ! std::isnormal(dti) ) {
-            fprintf(stderr, "WARNING: time for configuration %lu of linear segment is not normal.",
+        if( ! std::isfinite(dti) ) {
+            fprintf(stderr, "WARNING: time for configuration %lu of linear segment is not normal.\n",
                     i);
         }
     }
