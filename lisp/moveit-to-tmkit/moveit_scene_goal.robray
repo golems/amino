@@ -1,0 +1,17 @@
+frame box1 {
+	parent null-frame;
+	type fixed;
+	translation [0.3490000069141388, -0.2329999953508377, 0.9700000286102295];
+	geometry {
+		shape box;
+        isa moveable;
+		dimension [0.07000000029802322, 0.07000000029802322, 0.07000000029802322];
+		color [0.0, 0.0, 0.0];
+		alpha 1.0;
+	}
+}
+
+frame null-frame {
+	type fixed;
+}
+
