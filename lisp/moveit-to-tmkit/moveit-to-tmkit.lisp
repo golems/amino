@@ -6,16 +6,16 @@
 
 (defparameter *robray-tmp-directory* "/tmp/amino")
 
+(defun reparent (parent-frame frame scene-graph)
+  (setf scene-graph (robray::scene-graph-reparent scene-graph parent-frame frame)))
+
 ;; Loading Moveit scene into robray, with reparenting, etc.
 (defun moveit-to-tmkit (moveit-file &optional (out-file "~/out.robray")) 
-  (let* ((moveit-graph (robray::load-moveit-scene moveit-file))
-        (box-frame (scene-graph-find moveit-graph "box1"))) 
+  (let* ((moveit-graph (robray::load-moveit-scene moveit-file)))
     (progn 
       (robray::scene-graph-f moveit-graph (scene-frame-fixed nil "null-frame"))
-      (setf moveit-graph (robray::scene-graph-reparent moveit-graph "null-frame" "box1"))
-      (scene-graph-remove-frame moveit-graph "box1")
+      (robray::map-scene-graph-frames nil #'(lambda (frame) (setf moveit-graph (robray::reparent "null-frame" (robray::scene-frame-name frame) moveit-graph))) moveit-graph) 
       ;; Annotate frame box1 with type moveable
-      (setf (scene-geometry-type (car (scene-frame-geometry box-frame))) (sycamore:tree-set-insert (scene-geometry-type (car (scene-frame-geometry box-frame))) "moveable"))
       (with-open-file (stream out-file
                            :direction :output
                            :if-exists :supersede
