@@ -24,6 +24,14 @@
   "Convert OBJECT to the standard transform type."
   (tf object))
 
+(defmethod clpython::attr-hook ((object quaternion-translation)
+                                (attr (eql 'clpython.user::|translation|)))
+  (amino::quaternion-translation-translation object))
+
+(defmethod clpython::attr-hook ((object quaternion-translation)
+                                (attr (eql 'clpython.user::|rotation|)))
+  (amino::quaternion-translation-quaternion object))
+
 (defun |tf2| (rotation translation)
   "Create a standard transform type for ROTATION and TRANSLATION.
 
@@ -124,6 +132,22 @@ Examples:
         #S(AMINO:VEC3 :DATA #(1.0d0 2.0d0 3.0d0))
 "
   (vec3 object))
+
+(defmethod clpython::attr-hook ((object vec3)
+                                (attr (eql 'clpython.user::|x|)))
+  (aref (amino::vec3-data object)
+        amino::+x+))
+
+(defmethod clpython::attr-hook ((object vec3)
+                                (attr (eql 'clpython.user::|y|)))
+  (aref (amino::vec3-data object)
+        amino::+y+))
+
+(defmethod clpython::attr-hook ((object vec3)
+                                (attr (eql 'clpython.user::|z|)))
+  (aref (amino::vec3-data object)
+        amino::+z+))
+
 
 (defun |quat| (object)
   "Convert OBJECT to a quaternion.
