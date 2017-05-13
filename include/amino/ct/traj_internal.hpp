@@ -96,6 +96,9 @@ struct aa_ct_seg_list {
     amino::RegionList<struct aa_ct_seg *>::iterator it;      ///< Iterator
     int it_on;                                               ///< Iterator init?
 
+    size_t n_q;
+    double duration;
+
     aa_ct_seg_list(struct aa_mem_region *_reg) : alloc(_reg), list(alloc) {
         aa_mem_region_init(&reg, 512);
         it_on = 0;

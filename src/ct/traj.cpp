@@ -1,10 +1,11 @@
 /* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2016 Rice University
+ * Copyright (c) 2016-2017 Rice University
  * All rights reserved.
  *
  * Author(s): Zachary K. Kingston <zak@rice.edu>
+ *            Neil T. Dantam <ntd@rice.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -34,6 +35,8 @@
  *   POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#include <math.h>
 
 #include <amino.hpp>
 
@@ -92,6 +95,20 @@ aa_ct_pt_list_destroy(struct aa_ct_pt_list *list)
     list->~aa_ct_pt_list();
 };
 
+
+const struct aa_ct_state *
+aa_ct_pt_list_start_state(const struct aa_ct_pt_list *list)
+{
+    return &list->list.front()->state;
+}
+
+
+const struct aa_ct_state *
+aa_ct_pt_list_final_state(const struct aa_ct_pt_list *list)
+{
+    return &list->list.back()->state;
+}
+
 AA_API void
 aa_ct_pt_list_dump(FILE *stream, struct aa_ct_pt_list *list)
 {
@@ -142,6 +159,16 @@ aa_ct_seg_list_destroy(struct aa_ct_seg_list *list)
     list->~aa_ct_seg_list();
 };
 
+size_t aa_ct_seg_list_n_q(const struct aa_ct_seg_list *list)
+{
+    return list->n_q;
+}
+
+double aa_ct_seg_list_duration(const struct aa_ct_seg_list *list)
+{
+    return list->duration;
+}
+
 /**
  * Pipe a file to gnuplot to display.
  *
@@ -149,10 +176,12 @@ aa_ct_seg_list_destroy(struct aa_ct_seg_list *list)
  * @param n_l      Number of lines contained in file
  */
 static void
-aa_ct_gnuplot_file(const char *filename, size_t n_l)
+aa_ct_gnuplot_file(const char *filename, size_t n_l, const char *ylabel)
 {
     FILE *pipe = popen("gnuplot -persistent", "w");
     // fprintf(pipe,"set terminal svg enhanced background rgb 'white'\n");
+    fprintf(pipe, "set xlabel \"time (s)\"\n");
+    if( ylabel ) fprintf(pipe, "set ylabel \"%s\"\n", ylabel);
     fprintf(pipe, "plot ");
     for (size_t i = 0; i < n_l; i++)
         fprintf(pipe, "\"%s\" using 1:%lu title '%lu' with lines%s",
@@ -188,14 +217,121 @@ aa_ct_seg_list_plot(struct aa_ct_seg_list *list, size_t n_q, double dt)
     fclose(qtemp);
     fclose(dqtemp);
 
-    aa_ct_gnuplot_file(qfile, n_q);
-    aa_ct_gnuplot_file(dqfile, n_q);
+    aa_ct_gnuplot_file(qfile, n_q, "Position");
+    aa_ct_gnuplot_file(dqfile, n_q, "Velocity");
 }
 
 
 /**
- * Parabolic blend trajectory
+ * Constant joint velocity segment.
  */
+struct aa_ct_seg_dq {
+    size_t n_q;   ///< Number of configurations
+
+    double *q0;   ///< Waypoint position
+    double *dq;   ///< Velocity
+
+    double t0;   ///< Start time
+    double t1;   ///< Final time
+};
+
+static int aa_ct_seg_dq_eval( struct aa_ct_seg *seg,
+                              struct aa_ct_state *state, double t)
+{
+    struct aa_ct_seg_dq *cx = (struct aa_ct_seg_dq *)seg->cx;
+    if( t >= cx->t0 && t <= cx->t1 ) {
+        size_t n = AA_MIN( cx->n_q, state->n_q );
+        double tt = t - cx->t0;
+
+        if( state->q ) {
+            for( size_t i = 0; i < n; i ++ ) {
+                state->q[i] = cx->q0[i] + tt * cx->dq[i];
+            }
+        }
+        if( state->dq ) {
+            AA_MEM_CPY(state->dq, cx->dq, n);
+        }
+
+        return AA_CT_SEG_IN;
+    } else {
+        return AA_CT_SEG_OUT;
+    }
+}
+
+
+static struct aa_ct_seg *
+aa_ct_seg_dq_new( struct aa_mem_region *reg,
+                  double t0, struct aa_ct_state *state0,
+                  struct aa_ct_state *state1,
+                  struct aa_ct_state *limits )
+{
+    /* Allocate */
+    struct aa_ct_seg_dq *cx = AA_MEM_REGION_NEW(reg,struct aa_ct_seg_dq);
+    AA_MEM_ZERO(cx,1);
+    cx->n_q = AA_MIN(state0->n_q, state1->n_q);
+    cx->dq = AA_MEM_REGION_NEW_N( reg, double, cx->n_q );
+    cx->q0 = AA_MEM_REGION_NEW_N( reg, double, cx->n_q );
+    AA_MEM_CPY(cx->q0, state0->q, cx->n_q);
+    cx->t0 = t0;
+    cx->t1 = t0;
+
+    struct aa_ct_seg *seg = AA_MEM_REGION_NEW(reg,struct aa_ct_seg);
+    AA_MEM_ZERO(seg,1);
+    seg->eval = aa_ct_seg_dq_eval;
+    seg->cx = cx;
+
+    /* Compute segment time */
+    double dt = 0;
+    for( size_t i = 0; i < cx->n_q; i ++ ) {
+        cx->dq[i] = state1->q[i] - state0->q[i];
+        double dti = fabs(cx->dq[i]) / limits->dq[i];
+        dt = AA_MAX(dt, dti);
+
+        if( ! std::isfinite(dti) ) {
+            fprintf(stderr, "WARNING: time for configuration %lu of linear segment is not normal.\n",
+                    i);
+        }
+    }
+
+    /* Compute velocity */
+    for( size_t i = 0; i < cx->n_q; i ++ ) {
+        cx->dq[i] /= dt;
+    }
+    cx->t1 = cx->t0 + dt;
+
+    return seg;
+}
+
+
+struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
+                                              struct aa_ct_pt_list *list,
+                                              struct aa_ct_state *limits)
+{
+    struct aa_ct_seg_list *segs = new(reg) aa_ct_seg_list(reg);
+
+    auto itr0 = list->list.begin();
+    auto itr1 = list->list.begin();
+    itr1++;
+    segs->n_q = (*itr0)->state.n_q;
+
+    segs->duration = 0;
+    for( ; itr1 != list->list.end(); itr0++, itr1++ ) {
+
+        if( segs->n_q != (*itr1)->state.n_q ) {
+            fprintf(stderr, "WARNING: mistmactched confiuration count during trajectory generation.\n");
+        }
+
+        struct aa_ct_seg *seg = aa_ct_seg_dq_new( reg, segs->duration,
+                                                  &(*itr0)->state, &(*itr1)->state, limits );
+        aa_ct_seg_list_add(segs, seg);
+
+        struct aa_ct_seg_dq *cx = (struct aa_ct_seg_dq*)seg->cx;
+        segs->duration = cx->t1;
+    }
+
+    return segs;
+}
+
 
 /**
  * Parabolic blend trajectory segment context.
@@ -239,7 +375,7 @@ aa_ct_tj_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
 {
     struct aa_ct_seg_pb_cx *c_cx, *p_cx, *n_cx;
     aa_ct_tj_pb_nbrs(seg, &p_cx, &c_cx, &n_cx);
-    
+
     double dt = t - c_cx->t;
     if ((c_cx->t - c_cx->b / 2) <= t && t <= (c_cx->t + c_cx->b / 2)) {
         // Blend region
@@ -280,7 +416,7 @@ aa_ct_tj_pb_limit(double *a, double *b, double *m, size_t n_q)
         double v = fabs(((a) ? a[i] : 0) - ((b) ? b[i] : 0)) / ((m) ? m[i] : 1);
         mv = (mv < v) ? v : mv;
     }
-    
+
     return mv;
 }
 
@@ -341,10 +477,10 @@ aa_ct_tj_pb_update(struct aa_ct_seg *seg, struct aa_ct_state *limits)
     // Calculate acceleration based on new velocities
     c_cx->b = aa_ct_tj_pb_limit(c_cx->dq, (p_cx) ? p_cx->dq : NULL,
                                 limits->ddq, c_cx->n_q);
- 
+
     for (size_t i = 0; i < c_cx->n_q; i++)
         c_cx->ddq[i] = (c_cx->dq[i] - ((p_cx) ? p_cx->dq[i] : 0)) / c_cx->b;
- 
+
     // Update start time. Assume earlier segments have been updated.
     if (p_cx)
         c_cx->t = p_cx->t + p_cx->dt;
@@ -484,4 +620,31 @@ aa_ct_tjX_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
     }
 
     return Xseg_list;
+}
+
+int aa_ct_seg_list_check( struct aa_ct_seg_list * segs, double dt,
+                          int (*function)(void *cx, double t, const struct aa_ct_state *state ),
+                          void *cx )
+{
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    size_t n_q = aa_ct_seg_list_n_q(segs);
+    struct aa_ct_state *state = aa_ct_state_alloc(reg, n_q, 0);
+
+    int r = 0;
+    for( double t = 0; aa_ct_seg_list_eval(segs, state, t); t += dt )
+    {
+        if( (r = function(cx, t, state)) ) break;
+    }
+
+    aa_mem_region_pop(reg,state);
+
+    return r;
+}
+
+
+int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
+                             double tol, double eps )
+{
+    // TODO
+    return -1;
 }

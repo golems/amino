@@ -72,6 +72,7 @@ void aafeq( const char * name, double a, double b, double tol ) {
     }
 }
 
+
 void aveq( const char * name,
                   size_t n, const double *a, const double *b, double tol ) {
     if( !aa_veq(n, a, b, tol) ) {
@@ -88,6 +89,15 @@ void aneq( double a, double b, double tol ) {
     assert( !aa_feq(a,b,tol) );
 }
 
+
+void test_flt( const char *name, double a, double b, double tol )
+{
+    if( a - tol >= b ) {
+        fprintf( stderr, "FAILED: %s\n",name);
+        fprintf( stderr, "a: %f, b: %f\n", a, b);
+        abort();
+    }
+}
 
 void aa_test_ulimit( void ) {
     // some limits because

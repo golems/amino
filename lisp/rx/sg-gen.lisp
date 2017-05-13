@@ -269,6 +269,17 @@
       (rope "aa_rx_dl_sg__" scene-name)
       (scene-graph-scene-function-name "scenegraph")))
 
+
+(defun scene-graph-genc-allowed-collisions (scene-graph)
+  (map-collision-set 'list
+                     (lambda (frame0 frame1)
+                       (cgen-call-stmt "aa_rx_sg_allow_collision_name"
+                                       "sg"
+                                       (cgen-string frame0)
+                                       (cgen-string frame1)
+                                       1))
+                     (scene-graph-allowed-collisions scene-graph)))
+
 (defun scene-graph-genc (scene-graph &key
                                        (static-mesh t)
                                        scene-name)
@@ -292,6 +303,8 @@
                                       scene-graph))
 
       (item (scene-genc-mesh-cleanup scene-graph))
+      ;; Allowed collisions
+      (item (scene-graph-genc-allowed-collisions scene-graph))
       ;; Return create object
       (item (cgen-return argument-name))
       ;; Ropify

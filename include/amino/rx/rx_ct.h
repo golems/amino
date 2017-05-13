@@ -1,28 +1,23 @@
-/* -*- mode: C; c-basic-offset: 4 -*- */
+/* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2010-2013, Georgia Tech Research Corporation
+ * Copyright (c) 2017, Rice University
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@gatech.edu>
- * Georgia Tech Humanoid Robotics Lab
- * Under Direction of Prof. Mike Stilman <mstilman@cc.gatech.edu>
- *
- *
- * This file is provided under the following "BSD-style" License:
- *
+ * Author(s): Neil T. Dantam <ntd@rice.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
  *   conditions are met:
- *
  *   * Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
- *
  *   * Redistributions in binary form must reproduce the above
  *     copyright notice, this list of conditions and the following
  *     disclaimer in the documentation and/or other materials provided
  *     with the distribution.
+ *   * Neither the name of copyright holder the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
  *
  *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
  *   CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -40,22 +35,37 @@
  *
  */
 
-#ifndef AMINO_TEST_H
-#define AMINO_TEST_H
+#ifndef AMINO_RX_CT_H
+#define AMINO_RX_CT_H
+
+/**
+ * @file rx_ct.h
+ * @brief Integration between scene graphs and control
+ */
+
+#include "amino/ct/state.h"
+#include "amino/ct/traj.h"
+
+/**
+ * Return a point list for a path.
+ *
+ * @param region   Memory region to allocate point list from
+ * @param n_q      Number of configuration variables
+ * @param n_path   Number of waypoints in the path
+ * @param path     Path data
+ */
+AA_API struct aa_ct_pt_list *
+aa_rx_ct_pt_list( struct aa_mem_region *region,
+                     size_t n_q, size_t n_path, double *path );
 
 
-void test( const char *name, int check ) ;
-void test_feq( const char *name, double a, double b, double tol );
-void test_flt( const char *name, double a, double b, double tol );
+/**
+ * Extract the limits from a scene graph.
+ *
+ * @param region  Memory region to allocate limits from
+ * @param sg      The scene graph
+ */
+AA_API struct aa_ct_limit *
+aa_rx_ct_limits( struct aa_mem_region *region, const struct aa_rx_sg *sg );
 
-void afeq( double a, double b, double tol ) ;
-void aafeq( const char *name, double a, double b, double tol ) ;
-
-void aveq( const char * name, size_t n, const double *a, const double *b, double tol ) ;
-void aneq( double a, double b, double tol ) ;
-
-/* Set limits*/
-void aa_test_ulimit( void );
-
-
-#endif
+#endif /*AMINO_RX_CT_H*/

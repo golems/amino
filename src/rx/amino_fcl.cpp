@@ -275,6 +275,7 @@ aa_rx_cl_create( const struct aa_rx_sg *scene_graph )
     cl->manager = new fcl::DynamicAABBTreeCollisionManager();
 
     cl->allowed = aa_rx_cl_set_create(scene_graph);
+    aa_rx_sg_cl_set_copy(scene_graph, cl->allowed);
 
     aa_rx_sg_map_geom( scene_graph, &cl_create_helper, cl );
 
