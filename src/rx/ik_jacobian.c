@@ -60,7 +60,7 @@ struct kin_solve_cx {
     size_t n;
     const struct aa_rx_ksol_opts *opts;
     const struct aa_rx_sg_sub *ssg;
-    const double *S1;
+    const double *E1;
     //const double *dq_dt;
 
     size_t iteration;
@@ -74,7 +74,9 @@ struct kin_solve_cx {
 };
 
 
-static int ksol_duqu ( const struct kin_solve_cx *cx, const double *q_s, double S[8],  double *J)
+
+
+static int ksol_qutr ( const struct kin_solve_cx *cx, const double *q_s, double *E,  double *J)
 {
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     const struct aa_rx_sg *sg = ssg->scenegraph;
@@ -101,7 +103,7 @@ static int ksol_duqu ( const struct kin_solve_cx *cx, const double *q_s, double 
                         TF_rel, 7, TF_abs, 7 );
 
     /* Fill the desired transform */
-    if( S ) {
+    if( E ) {
         aa_rx_frame_id id_ee = ( AA_RX_FRAME_NONE == cx->opts->frame )
             /* default to last frame in chain */
             ? aa_rx_sg_sub_frame(ssg, aa_rx_sg_sub_frame_count(ssg) - 1 )
@@ -109,7 +111,7 @@ static int ksol_duqu ( const struct kin_solve_cx *cx, const double *q_s, double 
             : cx->opts->frame;
 
         double *E_ee = TF_abs + 7*id_ee;
-        aa_tf_qutr2duqu( E_ee, S );
+        AA_MEM_CPY(E, E_ee, 7);
     }
 
     /* Fill the Jacobian */
@@ -122,7 +124,6 @@ static int ksol_duqu ( const struct kin_solve_cx *cx, const double *q_s, double 
     return 0;
 }
 
-
 static void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6] ) {
     double twist[8], de[8];
     aa_tf_duqu_mulc( S, S_ref, de );  // de = d*conj(d_r)
@@ -131,24 +132,29 @@ static void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double 
     aa_tf_duqu_twist2vel( S, twist, werr );
 }
 
-
-static void rfx_kin_duqu_serr( const double S[8], const double S_ref[8],
-                       double *theta, double *x ) {
-    double S_rel[8];
-    aa_tf_duqu_cmul( S, S_ref, S_rel ); // relative dual quaternion
-    aa_tf_duqu_minimize(S_rel);
-    //printf("srel: "); aa_dump_vec(stdout, S_rel, 8 );
-
-    // quaternion angle
-    *theta = atan2( sqrt(S_rel[0]*S_rel[0] + S_rel[1]*S_rel[1] + S_rel[2]*S_rel[2]),
-                    S_rel[3] );
-
-    // translation
-    double xe[3];
-    aa_tf_duqu_trans( S_rel, xe );
-    *x = sqrt( xe[0]*xe[0] + xe[1]*xe[1] + xe[2]*xe[2] );
+static void rfx_kin_qutr_werr( const double E[7], const double E_ref[7], double werr[6] ) {
+    double S[8], S_ref[8];
+    aa_tf_qutr2duqu( E, S );
+    aa_tf_qutr2duqu( E_ref, S_ref );
+    rfx_kin_duqu_werr(S, S_ref, werr);
 }
 
+static void rfx_kin_qutr_serr( const double E_act[7], const double E_ref[7],
+                               double *theta, double *x ) {
+
+    double E_rel[7];
+    aa_tf_qutr_cmul( E_act, E_ref, E_rel );
+
+    double *q_rel = E_rel+AA_TF_QUTR_Q;
+    double *xe = E_rel+AA_TF_QUTR_T;
+    aa_tf_qminimize(q_rel);
+
+    // quaternion angle
+    *theta = atan2( sqrt(q_rel[0]*q_rel[0] + q_rel[1]*q_rel[1] + q_rel[2]*q_rel[2]), q_rel[3] );
+
+    // translation
+    *x = sqrt( xe[0]*xe[0] + xe[1]*xe[1] + xe[2]*xe[2] );
+}
 
 
 AA_API int
@@ -159,21 +165,16 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
 {
 
     double J_star[6*n_q];
-    double S_ref[8];
-    double S_act[8];
-    aa_tf_qutr2duqu( E_ref, S_ref );
-    aa_tf_qutr2duqu( E_act, S_act );
-
 
     double w_e[6];
-    rfx_kin_duqu_werr( S_act, S_ref, w_e );
+    rfx_kin_qutr_werr( E_act, E_ref, w_e );
     for( size_t i = 0; i < 3; i ++ ) {
         w_e[AA_TF_DX_V + i] *= -opts->gain_trans;
         w_e[AA_TF_DX_W + i] *= -opts->gain_angle;
     }
 
     double theta_err, x_err;
-    rfx_kin_duqu_serr( S_act, S_ref, &theta_err, &x_err );
+    rfx_kin_qutr_serr( E_act, E_ref, &theta_err, &x_err );
 
     if( theta_err < opts->tol_angle_svd &&
         x_err < opts->tol_trans_svd )
@@ -207,20 +208,17 @@ static void kin_solve_sys( const void *vcx,
     //printf("ksolve\n");
 
     // compute kinematics
-    double S[8];
     double J[6*cx->n];
-    //double J_star[6*cx->n];
-    ksol_duqu( cx, q, S, J );
-    double E_act[7], E_ref[7];
-    aa_tf_duqu2qutr(S, E_act);
-    aa_tf_duqu2qutr(cx->S1, E_ref);
+    double E_act[7];
+    ksol_qutr(cx, q, E_act, J);
 
     aa_rx_ik_jac_x2dq ( cx->opts, cx->n,
                         q,  E_act,
-                        E_ref, J, dq );
+                        cx->E1, J, dq );
     return;
 
     /* // position error */
+    /* double J_star[6*cx->n]; */
     /* double w_e[6]; */
     /* rfx_kin_duqu_werr( S, cx->S1, w_e ); */
     /* for( size_t i = 0; i < 3; i ++ ) { */
@@ -279,10 +277,10 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
     /* Check term */
     double dq_norm = aa_la_dot( cx->n, y, y );
 
-    double S[8];
-    ksol_duqu( cx, x, S, NULL );
+    double  E[7];
     double theta_err, x_err;
-    rfx_kin_duqu_serr( S, cx->S1, &theta_err, &x_err );
+    ksol_qutr( cx, x, E, NULL );
+    rfx_kin_qutr_serr( E, cx->E1, &theta_err, &x_err );
     //printf("%f, %f, %f\n", t, theta_err, x_err );
     //printf("x: ");
     //aa_dump_vec(stdout, x, cx->n);
@@ -330,9 +328,6 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     const struct aa_rx_sg *sg = ssg->scenegraph;
     size_t n_f = aa_rx_sg_frame_count(sg);
 
-    double S[8];
-    aa_tf_qutr2duqu( TF, S );
-
     assert( aa_rx_sg_sub_config_count(ssg) == n_q);
 
     double q0_sub[n_q];
@@ -350,7 +345,7 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     struct kin_solve_cx cx;
     cx.n = n_q;
     cx.opts = opts;
-    cx.S1 = S;
+    cx.E1 = TF;
     cx.ssg = ssg;
     //cx.dq_dt = opts->dq_dt;
     cx.iteration = 0;
