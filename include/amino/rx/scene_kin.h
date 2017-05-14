@@ -182,6 +182,14 @@ aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
 
 /*-- Jacobian IK Solver --*/
 
+
+AA_API int
+aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+                    const double *AA_RESTRICT q_act, const double *AA_RESTRICT E_act,
+                    const double E_ref[7], const double *J,
+                    double *AA_RESTRICT dq );
+
+
 struct aa_rx_ik_jac_cx;
 
 /**
