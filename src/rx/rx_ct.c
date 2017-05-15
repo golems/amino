@@ -113,6 +113,7 @@ struct path_cx {
     size_t n_q_all;
     size_t n_q_sub;
     size_t n_f_all;
+    aa_rx_frame_id frame;
 
 
     /* initial state */
@@ -153,7 +154,7 @@ static void path_sys( const void *vcx,
                         cx->TF_rel, 7, cx->TF_abs, 7 );
 
 
-    double *E_act = cx->TF_abs + 7*cx->opts->frame;
+    double *E_act = cx->TF_abs + 7*cx->frame;
 
     aa_rx_sg_sub_jacobian( cx->ssg, cx->n_f_all, cx->TF_abs, 7,
                            cx->J, 6 );
@@ -198,6 +199,10 @@ aa_rx_ct_tjx_path( struct aa_mem_region *region,
         cx->opts = opts;
         cx->ssg = ssg;
         cx->sg = aa_rx_sg_sub_sg(ssg);
+
+        cx->frame = (AA_RX_FRAME_NONE ==  opts->frame)
+            ? aa_rx_sg_sub_frame_ee(ssg)
+            : opts->frame;
 
         cx->n_q_all = n_q_all;
         cx->n_q_sub = aa_rx_sg_sub_config_count(ssg);

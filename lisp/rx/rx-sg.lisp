@@ -232,6 +232,9 @@
   (sg rx-sg-sub-t)
   (i size-t))
 
+(cffi:defcfun aa-rx-sg-sub-frame-ee rx-frame-id
+  (sg rx-sg-sub-t))
+
 (cffi:defcfun aa-rx-sg-sub-config-get :void
   (ssg rx-sg-sub-t)
   (n-all size-t)

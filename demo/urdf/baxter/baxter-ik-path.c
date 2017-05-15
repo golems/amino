@@ -84,8 +84,6 @@ int main(int argc, char *argv[])
     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
     aa_rx_ksol_opts_set_tol_dq( ko, .001 );
     aa_rx_ksol_opts_take_seed( ko, n_q, qstart_all, AA_MEM_BORROW );
-    aa_rx_ksol_opts_set_frame( ko, tip_id );
-    fprintf(stderr, "tip_id: %d\n", tip_id);
 
     const struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
 

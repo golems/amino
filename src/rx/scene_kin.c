@@ -93,6 +93,13 @@ aa_rx_sg_sub_frame( const struct aa_rx_sg_sub *sg_sub, size_t i )
     return sg_sub->frames[i];
 }
 
+AA_API aa_rx_frame_id
+aa_rx_sg_sub_frame_ee( const struct aa_rx_sg_sub *sg_sub )
+{
+    // Only handling chains for now
+    return aa_rx_sg_sub_frame(sg_sub, aa_rx_sg_sub_frame_count(sg_sub) - 1 );
+}
+
 AA_API aa_rx_config_id*
 aa_rx_sg_sub_configs( const struct aa_rx_sg_sub *sg_sub )
 {

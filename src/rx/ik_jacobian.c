@@ -106,7 +106,7 @@ static int ksol_qutr ( const struct kin_solve_cx *cx, const double *q_s, double 
     if( E ) {
         aa_rx_frame_id id_ee = ( AA_RX_FRAME_NONE == cx->opts->frame )
             /* default to last frame in chain */
-            ? aa_rx_sg_sub_frame(ssg, aa_rx_sg_sub_frame_count(ssg) - 1 )
+            ? aa_rx_sg_sub_frame_ee(ssg)
             /* use specified frame */
             : cx->opts->frame;
 
