@@ -347,6 +347,16 @@ If motion planning fails, return False."
       (clpython:py-bool nil)))
 
 
+(defun |cartesian_path| (sub-scene-graph start-configuration goal)
+  "Compute a Cartesian motion to a workspace goal.
+
+On failure, return False."
+  (or (robray::cartesian-path sub-scene-graph start-configuration goal
+                              :ksol-opts (robray::ksol-opt :dt .1d0
+                                                           :gain-angle 5d0
+                                                           :gain-trans 5d0))
+      (clpython:py-bool nil)))
+
 (defun |motion_plan_endpoint| (motion-plan)
   "Return the endpoint of a motion plan."
   (robray::motion-plan-endpoint-map motion-plan))
