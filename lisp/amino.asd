@@ -71,6 +71,7 @@
                (:file "generic" :depends-on ("op" "tf-type"))
                (:file "blas-generic" :depends-on ("generic" "blas"))
                (:file "mem" :depends-on ("foreign"))
+               (:file "ct" :depends-on ("mem" "tf-type"))
                (:file "io" :depends-on ("mem"))
                ;; TF
                (:file "tf-type" :depends-on ("foreign"))

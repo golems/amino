@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
     struct aa_ct_pt_list *pt_list = aa_ct_pt_list_create(reg);
     aa_ct_pt_list_add_qutr(pt_list, E_ref0);
     aa_ct_pt_list_add_qutr(pt_list, E_ref1);
-    struct aa_ct_seg_list *seg_list = aa_ct_tjX_slerp_generate(reg, pt_list);
+    struct aa_ct_seg_list *seg_list = aa_ct_tjx_slerp_generate(reg, pt_list);
     aa_rx_ksol_opts_set_dt( ko, .1 );
     aa_rx_ksol_opts_set_gain_trans( ko, .5 );
     aa_rx_ksol_opts_set_gain_angle( ko, .5 );

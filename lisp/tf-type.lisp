@@ -290,6 +290,23 @@
   (translation (make-vec3) :type  vec3))
 
 
+(defmacro with-tf-foreign-array ((var tf) &body body)
+  (with-gensyms (q v tf1)
+    `(let ((,tf1 ,tf))
+       (with-foreign-object (,var :double 7)
+         ;; Fill foreign array
+         (let ((,q (quaternion-data (quaternion-translation-quaternion ,tf1)))
+               (,v (vec3-data (quaternion-translation-translation ,tf1))))
+           (dotimes (i 4)
+             (setf (mem-aref ,var :double i)
+                   (aref ,q i)))
+           (dotimes (i 3)
+             (setf (mem-aref ,var :double (+ i 3))
+                   (aref ,v i))))
+         ;; body
+         ,@body))))
+
+
 (defstruct (tf-tag (:constructor tf-tag (parent tf child)))
   "A transform tragged with parent and child frame labels."
   parent

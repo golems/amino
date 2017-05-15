@@ -713,7 +713,7 @@ static int aa_ct_seg_slerp_eval( struct aa_ct_seg *seg,
     return 0;
 }
 
-struct aa_ct_seg_list *aa_ct_tjX_slerp_generate(struct aa_mem_region *reg,
+struct aa_ct_seg_list *aa_ct_tjx_slerp_generate(struct aa_mem_region *reg,
                                                 struct aa_ct_pt_list *list )
 {
     if(2 != list->list.size() ) {

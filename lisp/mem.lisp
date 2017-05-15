@@ -39,23 +39,15 @@
 
 (in-package :amino)
 
-(defstruct mem-region
-  pointer)
-
-(define-foreign-type mem-region-t ()
-  ()
-  (:simple-parser mem-region-t)
-  (:actual-type :pointer))
-
-(defmethod expand-to-foreign-dyn (value var body (type mem-region-t))
-  `(let ((,var (mem-region-pointer ,value)))
-     ,@body))
-
-(defmethod expand-from-foreign (form (type mem-region-t))
-  `(make-mem-region :pointer ,form))
-
+(amino-ffi::def-foreign-container mem-region mem-region-t)
 
 (defcfun aa-mem-region-local-get mem-region-t)
+
+(defcfun aa-mem-region-destroy :void
+  (ptr :pointer))
+
+(defcfun aa-mem-region-create mem-region-t
+  (size size-t))
 
 (defcfun aa-mem-region-alloc :pointer
   (reg mem-region-t)
@@ -70,3 +62,16 @@
 
 (defcfun aa-mem-region-local-pop :void
   (ptr :pointer))
+
+
+(defun mem-region-finalize (region)
+  (let ((ptr (mem-region-pointer region)))
+    (sb-ext:finalize region (lambda () (aa-mem-region-destroy ptr))))
+  region)
+
+(defmacro with-mem-region ((var &optional (size 4096)) &body body)
+  (with-gensyms (fun)
+    `(flet ((,fun (,var) ,@body))
+       (let ((,var (aa-mem-region-create ,size)))
+         (unwind-protect (,fun ,var)
+           (aa-mem-region-destroy ,var))))))

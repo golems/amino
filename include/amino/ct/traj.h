@@ -236,7 +236,7 @@ int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
  *
  * @return An allocated segment list describing a slerp trajectory.
  */
-struct aa_ct_seg_list *aa_ct_tjX_slerp_generate(struct aa_mem_region *reg,
+struct aa_ct_seg_list *aa_ct_tjx_slerp_generate(struct aa_mem_region *reg,
                                                 struct aa_ct_pt_list *list );
 
 
