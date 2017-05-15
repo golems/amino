@@ -86,6 +86,13 @@
   (opts rx-ksol-opts-t)
   (k :double))
 
+(cffi:defcfun aa-rx-ksol-opts-set-frame :void
+  (opts rx-ksol-opts-t)
+  (k :int))
+
+(cffi:defcfun aa-rx-ksol-opts-get-frame :int
+  (opts rx-ksol-opts-t))
+
 (cffi:defcfun aa-rx-ksol-opts-set-max-iterations :void
   (opts rx-ksol-opts-t)
   (n size-t))
@@ -144,6 +151,19 @@
 ;;;;;;;;;;;;;;;
 ;;; Wrapper ;;;
 ;;;;;;;;;;;;;;;
+
+(defun ksol-opt (&key dt frame-id
+                   gain-angle gain-trans)
+  (let ((opts (aa-rx-ksol-opts-create)))
+    (when dt
+      (aa-rx-ksol-opts-set-dt opts dt))
+    (when frame-id
+      (aa-rx-ksol-opts-set-frame opts frame-id))
+    (when gain-angle
+      (aa-rx-ksol-opts-set-gain-angle opts gain-angle))
+    (when gain-trans
+      (aa-rx-ksol-opts-set-gain-trans opts gain-trans))
+    opts))
 
 (defun scene-graph-ik (scene-graph
                        &key

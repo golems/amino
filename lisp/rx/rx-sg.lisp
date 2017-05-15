@@ -246,6 +246,14 @@
   (n-all size-t)
   (config-all :pointer))
 
+
+(cffi:defcfun aa-rx-sg-sub-expand-path :void
+  (ssg rx-sg-sub-t)
+  (n-pts amino-ffi::size-t)
+  (q-start :pointer)
+  (path-sub :pointer)
+  (path-all :pointer))
+
 (defun sub-scene-graph-init (m-sg ssg)
   (setf (sub-scene-graph-mutable-scene-graph ssg)
         m-sg)

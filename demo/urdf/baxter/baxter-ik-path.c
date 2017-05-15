@@ -150,24 +150,8 @@ int main(int argc, char *argv[])
 
 
     double *path_all = AA_MEM_REGION_NEW_N(reg, double, n_points*n_q);
-    //size_t n_points_all = 0;
-    for( size_t i = 0; i < n_points; i++  ) {
-        double *p_path_sub = path + i*n_qs;
-        double *p_path_all = path_all + i*n_q;
-        AA_MEM_CPY( p_path_all, qstart_all, n_q );
-        aa_rx_sg_sub_config_set( ssg,
-                                 n_qs, p_path_sub,
-                                 n_q, p_path_all );
-
-
-        /* double TF_abs[7*n_f], TF_rel[7*n_f]; */
-        /* aa_rx_sg_tf( scenegraph, */
-        /*              n_q, p_path_all, */
-        /*              n_f, */
-        /*              TF_rel, 7, */
-        /*              TF_abs, 7 ); */
-        //printf("IK/FK: "); aa_dump_vec(stdout, TF_abs + 7*tip_id, 7);
-    }
+    aa_rx_sg_sub_expand_path( ssg, n_points, qstart_all,
+                              path, path_all );
 
 
 

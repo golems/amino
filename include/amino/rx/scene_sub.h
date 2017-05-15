@@ -175,4 +175,22 @@ aa_rx_sg_sub_alloc_jacobian( const struct aa_rx_sg_sub *ssg, struct aa_mem_regio
 AA_API double *
 aa_rx_sg_sub_alloc_config( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region );
 
+
+/**
+ * Expand sub path to full config path.
+ *
+ * @param ssg       Sub scene graph for the given path
+ * @param n_pts     Number of points in the path
+ * @param q_start   A start configuration for joints not in the
+ *                  sub-scenegraph, or NULL to ignore
+ * @param path_sub  Path for the sub-scenegraph
+ * @param path_all  The full scene path
+ *
+ */
+AA_API void
+aa_rx_sg_sub_expand_path( const struct aa_rx_sg_sub *ssg, size_t n_pts,
+                          const double *q_start,
+                          const double *path_sub,
+                          double *path_all );
+
 #endif /*AMINO_RX_SCENE_SUB_H*/

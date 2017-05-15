@@ -59,6 +59,7 @@
                (:file "sparse" :depends-on ("package"))
                ;; FFI
                (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
+               (cffi-grovel:grovel-file "tf-grovel" :depends-on ("package"))
                (:file "ffi" :depends-on ("grovel" "basic-type"))
                (:file "foreign" :depends-on ("package"))
                (:file "blas" :depends-on ("foreign" "ffi"))
@@ -74,6 +75,6 @@
                (:file "ct" :depends-on ("mem" "tf-type"))
                (:file "io" :depends-on ("mem"))
                ;; TF
-               (:file "tf-type" :depends-on ("foreign"))
+               (:file "tf-type" :depends-on ("foreign" "tf-grovel"))
                (:file "tf" :depends-on ("tf-type"))
                (:file "tf-op" :depends-on ("tf" "generic"))))

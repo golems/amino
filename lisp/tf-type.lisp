@@ -183,16 +183,16 @@
 
 (defun quaternion-x (q)
   "Return the quaternion X element."
-  (aref (quaternion-data q) +x+))
+  (aref (quaternion-data q) +tf-quat-x+))
 (defun quaternion-y (q)
   "Return the quaternion Y element."
-  (aref (quaternion-data q) +y+))
+  (aref (quaternion-data q) +tf-quat-y+))
 (defun quaternion-z (q)
   "Return the quaternion Z element."
-  (aref (quaternion-data q) +z+))
+  (aref (quaternion-data q) +tf-quat-z+))
 (defun quaternion-w (q)
   "Return the quaternion W element."
-  (aref (quaternion-data q) +w+))
+  (aref (quaternion-data q) +tf-quat-w+))
 
 (defun quaternion* (x y z w)
   "Construct a quaternion from its elements."
@@ -202,10 +202,10 @@
   "Bind the components of QUATERNION."
   (with-gensyms (value)
     `(let ((,value (quaternion ,quaternion)))
-       (let ((,x (vecref ,value +x+))
-             (,y (vecref ,value +y+))
-             (,z (vecref ,value +z+))
-             (,w (vecref ,value +w+)))
+       (let ((,x (vecref ,value +tf-quat-x+))
+             (,y (vecref ,value +tf-quat-y+))
+             (,z (vecref ,value +tf-quat-z+))
+             (,w (vecref ,value +tf-quat-w+)))
          ,@body))))
 
 (defun quaternion-identity-p (quaternion)
@@ -298,10 +298,10 @@
          (let ((,q (quaternion-data (quaternion-translation-quaternion ,tf1)))
                (,v (vec3-data (quaternion-translation-translation ,tf1))))
            (dotimes (i 4)
-             (setf (mem-aref ,var :double i)
+             (setf (mem-aref ,var :double (+ i +tf-qutr-q+))
                    (aref ,q i)))
            (dotimes (i 3)
-             (setf (mem-aref ,var :double (+ i 3))
+             (setf (mem-aref ,var :double (+ i +tf-qutr-t+))
                    (aref ,v i))))
          ;; body
          ,@body))))

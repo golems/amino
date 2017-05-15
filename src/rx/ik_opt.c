@@ -185,3 +185,9 @@ aa_rx_ksol_opts_set_frame( struct aa_rx_ksol_opts *opts, aa_rx_frame_id frame )
 {
     opts->frame = frame;
 }
+
+AA_API aa_rx_frame_id
+aa_rx_ksol_opts_get_frame( const struct aa_rx_ksol_opts *opts )
+{
+    return opts->frame;
+}

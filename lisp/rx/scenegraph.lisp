@@ -643,6 +643,14 @@ create (partial) copies without modifying or destroying the original."
                    (joint-limit-min position-limit)))
         0d0)))
 
+
+(defun scene-graph-center-map (scene-graph)
+  (let ((vars (scene-graph-configurations scene-graph)))
+    (fold (lambda (map var)
+            (tree-map-insert map var (scene-graph-joint-center scene-graph var)))
+          (make-configuration-map)
+          vars)))
+
 (defun scene-graph-position-limit-p (scene-graph configuration-map)
   "Check if configuration-map is within the position limits of scene-graph"
   (fold-tree-map (lambda (violations name position)

@@ -222,6 +222,33 @@ aa_rx_sg_sub_config_set(
 }
 
 
+
+AA_API void
+aa_rx_sg_sub_expand_path( const struct aa_rx_sg_sub *ssg, size_t n_pts,
+                          const double *q_start,
+                          const double *path_sub,
+                          double *path_all )
+{
+    size_t n_all = aa_rx_sg_sub_all_config_count(ssg);
+    size_t n_sub = aa_rx_sg_sub_config_count(ssg);
+
+
+    // Fill start
+
+    if( q_start ) {
+        for( size_t i = 0; i < n_pts; i ++ ) {
+            AA_MEM_CPY( path_all + i*n_all, q_start, n_all );
+        }
+    }
+
+    for( size_t i = 0; i < n_pts; i ++ ) {
+        aa_rx_sg_sub_config_set( ssg,
+                                 n_sub, path_sub + i*n_sub,
+                                 n_all, path_all + i*n_all );
+    }
+}
+
+
 AA_API struct aa_rx_sg_sub *
 aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
                        aa_rx_frame_id root, aa_rx_frame_id tip )
