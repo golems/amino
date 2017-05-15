@@ -1,4 +1,4 @@
-/* -*- mode: C; c-basic-offset: 4; -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2016 Rice University
@@ -46,6 +46,10 @@
 extern "C" {
 #endif
 
+
+typedef int (*aa_ct_seg_eval_fun)(struct aa_ct_seg *seg,
+                                  struct aa_ct_state *state, double t);
+
 /**
  * Trajectory segment.
  */
@@ -67,6 +71,12 @@ struct aa_ct_seg {
  * @param seg  Segment to add to list
  */
 void aa_ct_seg_list_add(struct aa_ct_seg_list *list, struct aa_ct_seg *seg);
+
+
+void aa_ct_seg_list_add_cx( struct aa_ct_seg_list *list,
+                            aa_ct_seg_eval_fun eval,
+                            void *cx );
+
 
 #ifdef __cplusplus
 }
@@ -99,7 +109,10 @@ struct aa_ct_seg_list {
     size_t n_q;
     double duration;
 
-    aa_ct_seg_list(struct aa_mem_region *_reg) : alloc(_reg), list(alloc) {
+    aa_ct_seg_list(struct aa_mem_region *_reg) :
+        alloc(_reg),
+        list(alloc)
+    {
         aa_mem_region_init(&reg, 512);
         it_on = 0;
     }

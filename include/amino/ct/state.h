@@ -113,6 +113,8 @@ void aa_ct_state_dump(FILE *stream, struct aa_ct_state *state);
  */
 int aa_ct_state_eq(struct aa_ct_state *s1, struct aa_ct_state *s2);
 
+
+void aa_ct_state_set_qutr( struct aa_ct_state *state, const double E[7] );
 #ifdef __cplusplus
 }
 #endif

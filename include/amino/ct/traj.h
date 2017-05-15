@@ -38,6 +38,8 @@
 #ifndef AMINO_CT_TRAJ_H
 #define AMINO_CT_TRAJ_H
 
+#include "state.h"
+
 /**
  * @file traj.h
  */
@@ -85,6 +87,8 @@ struct aa_ct_pt_list *aa_ct_pt_list_create(struct aa_mem_region *reg);
  * @param state State to add to list
  */
 void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state);
+
+void aa_ct_pt_list_add_qutr(struct aa_ct_pt_list *list, const double E[7]);
 
 /**
  * Destroys an allocated point list.
@@ -223,6 +227,18 @@ aa_ct_seg_list_check( struct aa_ct_seg_list * segs, double dt,
  */
 int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
                              double tol, double eps );
+
+/**
+ * Generate a SLERP trajectory from a point list.
+ *
+ * @param reg Region to allocate from
+ * @param list Point list to build segment list from
+ *
+ * @return An allocated segment list describing a slerp trajectory.
+ */
+struct aa_ct_seg_list *aa_ct_tjX_slerp_generate(struct aa_mem_region *reg,
+                                                struct aa_ct_pt_list *list );
+
 
 #ifdef __cplusplus
 }

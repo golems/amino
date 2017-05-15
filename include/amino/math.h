@@ -823,6 +823,8 @@ enum aa_ode_integrator {
 /**
  * Function signature to check whether a differential equation has
  * reached its goal
+ *
+ * Return zero if not at goal.  Return non-zero if goal is reached.
  */
 typedef int aa_ode_check( void *cx, double t, double * AA_RESTRICT x, double *AA_RESTRICT y );
 
@@ -858,6 +860,19 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
                        double t0, double dt0,
                        const double *AA_RESTRICT x0,
                        double *AA_RESTRICT x1 );
+
+/**
+ * Compute the path followed during integration.
+ */
+AA_API int
+aa_ode_path( enum aa_ode_integrator integrator,
+             const struct aa_ode_sol_opts * AA_RESTRICT opts,
+             size_t n,
+             aa_sys_fun sys, const void *sys_cx,
+             aa_ode_check check, void *check_cx,
+             double t0, double dt0,
+             const double *AA_RESTRICT x0,
+             struct aa_mem_region *region, size_t *n_points, double **path );
 
 /**
  * Function signature for a fixed integration step.

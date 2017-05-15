@@ -44,8 +44,11 @@
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxerr.h"
-#include "amino/rx/rx_ct.h"
 #include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_sub.h"
+#include "amino/rx/rx_ct.h"
 
 AA_API struct aa_ct_pt_list *
 aa_rx_ct_pt_list( struct aa_mem_region *region,
@@ -99,3 +102,233 @@ aa_rx_ct_limits( struct aa_mem_region *region, const struct aa_rx_sg *sg )
 
     return limit;
 }
+
+
+
+
+struct path_cx {
+    const struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_sg_sub *ssg;
+    const struct aa_rx_sg *sg;
+    size_t n_q_all;
+    size_t n_q_sub;
+    size_t n_f_all;
+
+
+    /* initial state */
+    const double *q_start_all;
+    const double *TF_rel0;
+    const double *TF_abs0;
+
+    /* work area */
+    struct aa_ct_state *state;
+    double *J;
+    double *TF_rel;
+    double *TF_abs;
+    double *q_all;
+
+    struct aa_ct_seg_list *segs;
+    struct aa_mem_region *region;
+
+
+};
+
+
+static void path_sys( const void *vcx,
+                      double t, const double *AA_RESTRICT q,
+                      double *AA_RESTRICT dq )
+{
+    struct path_cx *cx = (struct path_cx*)vcx;
+    int r = aa_ct_seg_list_eval(cx->segs, cx->state, t);
+
+
+    aa_rx_sg_sub_config_set( cx->ssg,
+                             cx->n_q_sub, q,
+                             cx->n_q_all, cx->q_all );
+
+    aa_rx_sg_tf_update( cx->sg,
+                        cx->n_q_all, cx->q_start_all, cx->q_all,
+                        cx->n_f_all,
+                        cx->TF_rel0, 7, cx->TF_abs0, 7,
+                        cx->TF_rel, 7, cx->TF_abs, 7 );
+
+
+    double *E_act = cx->TF_abs + 7*cx->opts->frame;
+
+    aa_rx_sg_sub_jacobian( cx->ssg, cx->n_f_all, cx->TF_abs, 7,
+                           cx->J, 6 );
+
+
+    aa_rx_ik_jac_x2dq ( cx->opts,
+                        cx->n_q_sub, q, E_act,
+                        cx->state->X,
+                        cx->state->dX,
+                        cx->J, dq );
+    //aa_dump_vec( stdout, dq, cx->n_q_sub);
+}
+
+static int path_check( void *vcx, double t, double *AA_RESTRICT q, double *AA_RESTRICT dq )
+{
+    struct path_cx *cx = (struct path_cx*)vcx;
+    (void) q;
+    (void) dq;
+    return t >= aa_ct_seg_list_duration(cx->segs);
+}
+
+AA_API int
+aa_rx_ct_tjx_path( struct aa_mem_region *region,
+                   const struct aa_rx_ksol_opts *opts,
+                   const struct aa_rx_sg_sub *ssg,
+                   struct aa_ct_seg_list *segs,
+                   size_t n_q_all, const double *q_start_all,
+                   size_t *n_points, double **path )
+
+{
+    /* Only chains for now */
+    if( 0 == n_q_all || NULL == q_start_all ) {
+        return AA_RX_INVALID_PARAMETER;
+    }
+
+    assert( aa_rx_sg_sub_all_config_count(ssg) == n_q_all );
+
+    struct aa_mem_region *local_region = aa_mem_region_local_get();
+
+    struct path_cx *cx = AA_MEM_REGION_NEW( local_region, struct path_cx );
+    {
+        cx->opts = opts;
+        cx->ssg = ssg;
+        cx->sg = aa_rx_sg_sub_sg(ssg);
+
+        cx->n_q_all = n_q_all;
+        cx->n_q_sub = aa_rx_sg_sub_config_count(ssg);
+        cx->n_f_all = aa_rx_sg_sub_all_frame_count(ssg);
+
+        cx->q_start_all = q_start_all;
+
+        cx->TF_rel = aa_rx_sg_alloc_tf( cx->sg, local_region );
+        cx->TF_abs = aa_rx_sg_alloc_tf( cx->sg, local_region );
+
+        double *TF_rel0 = aa_rx_sg_alloc_tf( cx->sg, local_region );
+        double *TF_abs0 = aa_rx_sg_alloc_tf( cx->sg, local_region );
+        cx->TF_rel0 = TF_rel0;
+        cx->TF_abs0 = TF_abs0;
+
+        cx->q_all = AA_MEM_REGION_DUP(local_region, double, q_start_all, n_q_all);
+        cx->J = aa_rx_sg_sub_alloc_jacobian(ssg, local_region);
+        cx->state = aa_ct_state_alloc( local_region, n_q_all, cx->n_f_all );
+
+        cx->segs = segs;
+        cx->region = region;
+
+        AA_MEM_CPY( cx->q_all, cx->q_start_all, cx->n_q_all );
+
+        aa_rx_sg_tf( cx->sg,
+                     cx->n_q_all, cx->q_start_all,
+                     cx->n_f_all,
+                     TF_rel0, 7,
+                     TF_abs0, 7 );
+    }
+
+    struct aa_ode_sol_opts sol_opts;
+    {
+        sol_opts.adapt_tol_dec = opts->tol_dq / 16;
+        sol_opts.adapt_tol_inc = opts->tol_dq / 2;
+        sol_opts.adapt_factor_dec = 0.1;
+        sol_opts.adapt_factor_inc = 2.0;
+    }
+    double *q_start_sub = aa_rx_sg_sub_alloc_config( ssg, local_region );
+
+
+    aa_rx_sg_sub_config_get( cx->ssg,
+                             cx->n_q_all, cx->q_all,
+                             cx->n_q_sub, q_start_sub );
+
+
+    // Adapative integration does not work properly for this
+    int r = aa_ode_path( AA_ODE_RK4, &sol_opts,
+                         cx->n_q_sub,
+                         path_sys, cx,
+                         path_check, cx,
+                         0, opts->dt, q_start_sub,
+                         region, n_points, path );
+
+    aa_mem_region_pop(local_region, cx);
+
+
+    return r;
+    /* aa_mem_region_pop(cx.reg, cx.TF_rel0); */
+
+    /* if( r ) { */
+    /*     return AA_RX_NO_SOLUTION | AA_RX_NO_IK; */
+    /* } else { */
+    /*     return 0; */
+    /* } */
+
+}
+
+
+/* AA_API int */
+/* aa_rx_ct_tjx_path( struct aa_mem_region *region, */
+/*                    const struct aa_rx_ksol_opts *opts, */
+/*                    const struct aa_rx_sg_sub *ssg, aa_rx_frame_id frame, */
+/*                    struct aa_ct_seg_list *segs, */
+/*                    size_t n_q, const double *q0, */
+/*                    size_t *n_path, double **path ) */
+/* { */
+/*     const struct aa_rx_sg *sg = ssg->scenegraph; */
+/*     double dt0 = .1; */
+/*     double dt1 = .01; */
+/*     double t1 = aa_ct_seg_list_duration(segs); */
+/*     size_t h = (size_t)(t1 / dt0); */
+/*     size_t n_f = aa_rx_sg_frame_count(sg); */
+/*     size_t n_q_sub = aa_rx_sg_sub_config_count(ssg); */
+
+/*     *n_path = n_q*h; */
+/*     *path = AA_MEM_REGION_NEW_N( region, double, *n_path ); */
+/*     double *qq = *path; */
+/*     AA_MEM_CPY(qq, q0, n_q); */
+
+/*     double t = 0; */
+/*     double *TF_rel = AA_MEM_REGION_NEW_N(region, double, 7*n_f); */
+/*     double *TF_abs = AA_MEM_REGION_NEW_N(region, double, 7*n_f); */
+
+/*     for( size_t k = 0; k < h; k ++ ) { */
+/*         double tt = 0; */
+/*         AA_MEM_CPY(qq+n_q, qq, n_q); */
+/*         while( tt < dt0 ) { */
+/*             double qsub[n_q_sub], dq[n_q_sub], E_ref[7]; */
+
+/*             // Get state and ref */
+/*             aa_rx_sg_tf(sg, n_q, qq, n_f, */
+/*                         TF_rel, 7, */
+/*                         TF_abs, 7); */
+/*             double J[6*n_q_sub]; */
+/*             aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7, J, 6 ); */
+/*             aa_rx_sg_sub_config_get( ssg, */
+/*                                      n_q, qq, */
+/*                                      n_q_sub, qsub ); */
+
+/*             // TODO: eval trajectory */
+
+/*             // compute control */
+/*             aa_rx_ik_jac_x2dq ( opts, n_q_sub, */
+/*                                 qsub,  TF_abs + frame, */
+/*                                 E_ref, J, dq ); */
+/*             // integrate */
+/*             for( size_t i = 0; i < n_q_sub; i ++ ) { */
+/*                 qsub[i] += (dt1*dq[i]); */
+/*             } */
+
+
+/*             // update */
+/*             aa_rx_sg_sub_config_get( ssg, */
+/*                                      n_q_sub, qsub, */
+/*                                      n_q, qq ); */
+/*             t += dt1; */
+/*             tt += dt1; */
+/*         } */
+/*         qq += n_q; */
+/*     } */
+
+/*     return 0; */
+/* } */

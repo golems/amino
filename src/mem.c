@@ -97,12 +97,28 @@ static inline void aa_mem_region_align(aa_mem_region_t *reg, uint8_t *nhead) {
 void aa_mem_region_init( aa_mem_region_t *region, size_t size ) {
     region->node = aa_mem_region_node_alloc(size, NULL);
     aa_mem_region_align( region, region->node->d );
+    region->reserved = 0;
+    region->free_on_destroy = 0;
 }
 
-void aa_mem_region_destroy( aa_mem_region_t *region ) {
+AA_API struct aa_mem_region *
+aa_mem_region_create( size_t size )
+{
+    struct aa_mem_region *reg = AA_NEW(struct aa_mem_region);
+    aa_mem_region_init( reg, size );
+    reg->free_on_destroy = 1;
+    return reg;
+}
+
+void aa_mem_region_destroy( aa_mem_region_t *region )
+{
     struct aa_mem_region_node *p = region->node;
     while (p) { p = aa_mem_region_node_free(p); }
-    region->node = NULL;
+    if( region->free_on_destroy ) {
+        free(region);
+    } else {
+        region->node = NULL;
+    }
 }
 
 void *aa_mem_region_ptr( aa_mem_region_t *region ) {

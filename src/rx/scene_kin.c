@@ -51,7 +51,7 @@ aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *ssg )
 }
 
 
-AA_API struct aa_rx_sg *
+AA_API const struct aa_rx_sg *
 aa_rx_sg_sub_sg( const struct aa_rx_sg_sub *sg_sub )
 {
     return sg_sub->scenegraph;
@@ -73,6 +73,12 @@ AA_API size_t
 aa_rx_sg_sub_frame_count( const struct aa_rx_sg_sub *sg_sub )
 {
     return sg_sub->frame_count;
+}
+
+AA_API size_t
+aa_rx_sg_sub_all_frame_count( const struct aa_rx_sg_sub *sg_sub )
+{
+    return aa_rx_sg_frame_count( aa_rx_sg_sub_sg(sg_sub) );
 }
 
 AA_API aa_rx_config_id
@@ -332,4 +338,16 @@ aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
             q[i] = 0;
         }
     }
+}
+
+AA_API double *
+aa_rx_sg_sub_alloc_jacobian( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region )
+{
+    return AA_MEM_REGION_NEW_N( region, double, 6*aa_rx_sg_sub_config_count(ssg) );
+}
+
+AA_API double *
+aa_rx_sg_sub_alloc_config( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region )
+{
+    return AA_MEM_REGION_NEW_N( region, double, aa_rx_sg_sub_config_count(ssg) );
 }

@@ -40,7 +40,39 @@
  *
  */
 
+
+
 #include "amino.h"
+#include "amino/ct/traj.h"
+
+
+struct path_cx {
+    const struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_sg_sub *ssg;
+    const struct aa_rx_sg *sg;
+    size_t n_q_all;
+    size_t n_q_sub;
+    size_t n_f_all;
+
+
+    /* initial state */
+    const double *q_start_all;
+    const double *TF_rel0;
+    const double *TF_abs0;
+
+    /* work area */
+    struct aa_ct_state *state;
+    double *J;
+    double *TF_rel;
+    double *TF_abs;
+    double *q_all;
+
+    struct aa_ct_seg_list *segs;
+    struct aa_mem_region *region;
+
+
+};
+
 
 void aa_lsim_dstep( size_t m, size_t n,
                     const double *restrict A,
@@ -556,13 +588,13 @@ void aa_sys_affine( const aa_sys_affine_t *cx,
 }
 
 AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
-                        const struct aa_ode_sol_opts * AA_RESTRICT opts,
-                        size_t n,
-                        aa_sys_fun sys, const void *sys_cx,
-                        aa_ode_check check, void *check_cx,
-                        double t0, double dt0,
-                        const double *AA_RESTRICT x0,
-                        double *AA_RESTRICT x1 )
+                       const struct aa_ode_sol_opts * AA_RESTRICT opts,
+                       size_t n,
+                       aa_sys_fun sys, const void *sys_cx,
+                       aa_ode_check check, void *check_cx,
+                       double t0, double dt0,
+                       const double *AA_RESTRICT x0,
+                       double *AA_RESTRICT x1 )
 {
 
     /* default: RK4, fixed step */
@@ -673,4 +705,76 @@ AA_API int aa_ode_sol( enum aa_ode_integrator integrator,
     } else {
         return check_result;
     }
+}
+
+
+struct ode_path_cx {
+    struct aa_mem_region *region;
+    aa_ode_check *check;
+    void *check_cx;
+    size_t n;
+    size_t cnt;
+
+    struct aa_mem_rlist *list;
+};
+
+
+int ode_path_check( void *cx_, double t, double * AA_RESTRICT x, double *AA_RESTRICT y )
+{
+    struct ode_path_cx *cx = (struct ode_path_cx*)cx_;
+    aa_mem_rlist_enqueue_cpy( cx->list, x, cx->n*sizeof(x[0]) );
+    cx->cnt++;
+
+    return cx->check( cx->check_cx, t, x, y );
+}
+
+AA_API int
+aa_ode_path( enum aa_ode_integrator integrator,
+             const struct aa_ode_sol_opts * AA_RESTRICT opts,
+             size_t n,
+             aa_sys_fun sys, const void *sys_cx,
+             aa_ode_check check, void *check_cx,
+             double t0, double dt0,
+             const double *AA_RESTRICT x0,
+             struct aa_mem_region *region, size_t *n_points, double **path )
+{
+    /* Setup context */
+    struct aa_mem_region *local_region = aa_mem_region_local_get();
+    struct ode_path_cx cx;
+    cx.check = check;
+    cx.check_cx = check_cx;
+    cx.region = ( local_region == region ) ? aa_mem_region_create(4096) : local_region;
+    cx.list = aa_mem_rlist_alloc( cx.region );
+    cx.n = n;
+    cx.cnt = 1;
+
+    aa_mem_rlist_enqueue_cpy( cx.list, x0, n*sizeof(*x0) );
+
+    /* Call ode solve function */
+    double x1[n];
+    int r = aa_ode_sol( integrator, opts, n,
+                        sys, sys_cx,
+                        ode_path_check, &cx,
+                        t0, dt0, x0, x1 );
+
+    /* Copy result to array */
+    *n_points = cx.cnt;
+    *path = AA_MEM_REGION_NEW_N(region, double, n*(*n_points));
+
+    int i = 0;
+    for( struct aa_mem_cons *c = cx.list->head; c; c = c->next ) {
+        assert( i < cx.cnt);
+        double *p = (*path) + i*n;
+        AA_MEM_CPY(p, c->data, n);
+        i++;
+    }
+
+    /* Free temp list */
+    if( local_region == region ) {
+        aa_mem_region_destroy(cx.region);
+    } else {
+        aa_mem_region_pop(cx.region, cx.list);
+    }
+
+    return r;
 }

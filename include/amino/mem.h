@@ -198,12 +198,38 @@ struct aa_mem_region_node {
 typedef struct aa_mem_region {
     uint8_t *head;                ///< pointer to first free element of top chunk
     struct aa_mem_region_node *node;  ///< linked list of chunks
+    union {
+        /**
+         * Reserve space for other bits.
+         */
+        int reserved;
+        struct {
+            /**
+             * Free struct when calling aa_mem_region_destroy().
+             *
+             * This bit is set by either aa_mem_region_init() or
+             * aa_mem_region_create().
+             */
+            unsigned free_on_destroy;
+        };
+    };
 } aa_mem_region_t;
 
 /** Initialize memory region with an initial chunk of size bytes. */
 AA_API void aa_mem_region_init( aa_mem_region_t *region, size_t size );
 
-/** Destroy memory region freeing all chunks.
+/**
+ * Allocate and initialize memory region with an initial chunk of size bytes.
+ */
+
+AA_API struct aa_mem_region *
+aa_mem_region_create( size_t size );
+
+/**
+ *  Destroy memory region freeing all chunks.
+ *
+ * For regions created with aa_mem_region_create(), free the created
+ * struct aa_mem_region.
  */
 AA_API void aa_mem_region_destroy( aa_mem_region_t *region );
 
@@ -318,6 +344,11 @@ AA_API void aa_mem_region_local_release( void );
  * Copy objects of `type' from memory region `reg'.
  */
 #define AA_MEM_REGION_NEW_CPY( reg, src, type ) ( (type*) aa_mem_region_dup((reg), (src), sizeof(type)) )
+
+/**
+ * Copy objects of `type' from memory region `reg'.
+ */
+#define AA_MEM_REGION_DUP( reg, type, src, count ) ( (type*) aa_mem_region_dup((reg), (src), (count)*sizeof(type)) )
 
 /**
  * Allocate an array of `n' objects of `type' from memory region `reg'.

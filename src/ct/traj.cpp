@@ -89,6 +89,16 @@ aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state)
     aa_ct_list_add(list, pt);
 }
 
+
+void aa_ct_pt_list_add_qutr(struct aa_ct_pt_list *list, const double E[7])
+{
+    struct aa_ct_state state;
+    AA_MEM_ZERO(&state,1);
+    state.X = (double*)E;
+
+    aa_ct_pt_list_add(list,&state);
+}
+
 AA_API void
 aa_ct_pt_list_destroy(struct aa_ct_pt_list *list)
 {
@@ -128,6 +138,18 @@ AA_API void
 aa_ct_seg_list_add(struct aa_ct_seg_list *list, struct aa_ct_seg *seg)
 {
     aa_ct_list_add(list, seg);
+}
+
+
+void aa_ct_seg_list_add_cx( struct aa_ct_seg_list *list,
+                            aa_ct_seg_eval_fun eval,
+                            void *cx )
+{
+    struct aa_ct_seg *seg = AA_MEM_REGION_NEW(&list->reg, aa_ct_seg);
+    seg->cx = cx;
+    seg->eval = eval;
+    aa_ct_seg_list_add( list, seg );
+
 }
 
 AA_API int
@@ -647,4 +669,86 @@ int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
 {
     // TODO
     return -1;
+}
+
+
+/*********/
+/* SLERP */
+/*********/
+
+// TODO: non-unit time
+struct aa_ct_slerp_seg {
+    double *E0;
+    double *E1;
+    double dx[6];
+    double dt;
+};
+
+static int aa_ct_seg_slerp_eval( struct aa_ct_seg *seg,
+                                 struct aa_ct_state *state, double t)
+{
+    struct aa_ct_slerp_seg *cx = (struct aa_ct_slerp_seg*) seg->cx;
+    if( t <= 0 ) {
+        if(state->X) AA_MEM_CPY(state->X, cx->E0, 7);
+        if( state->dX ) AA_MEM_ZERO(state->dX,6);
+    } else if (t >= cx->dt ) {
+        if(state->X) AA_MEM_CPY(state->X, cx->E1, 7);
+        if( state->dX ) AA_MEM_ZERO(state->dX,6);
+    } else {
+        if(state->X) {
+            aa_tf_qslerp( t,
+                          cx->E0 + AA_TF_QUTR_Q,
+                          cx->E1 + AA_TF_QUTR_Q,
+                          state->X + AA_TF_QUTR_Q );
+            aa_la_linterp( 3,
+                           0, cx->E0   + AA_TF_QUTR_T,
+                           1, cx->E1   + AA_TF_QUTR_T,
+                           t, state->X + AA_TF_QUTR_T );
+        }
+
+        if( state->dX ) AA_MEM_CPY( state->dX, cx->dx, 6 );
+    }
+    if( state->ddX ) AA_MEM_ZERO(state->ddX,6);
+    if( state->eff ) AA_MEM_ZERO(state->eff,6);
+    return 0;
+}
+
+struct aa_ct_seg_list *aa_ct_tjX_slerp_generate(struct aa_mem_region *reg,
+                                                struct aa_ct_pt_list *list )
+{
+    if(2 != list->list.size() ) {
+        fprintf(stderr, "Cannot SLERP between %lu point(s)\n.", list->list.size());
+        return NULL;
+    }
+
+    struct aa_ct_slerp_seg *s = AA_MEM_REGION_NEW(reg, struct aa_ct_slerp_seg);
+    {
+        // TODO: non-unit time
+        s->dt = 1;
+
+        auto itr = list->list.begin();
+        s->E0 = (*itr)->state.X;
+        itr++;
+        s->E1 = (*itr)->state.X;
+
+        // omega
+        double qt[4], ql[4];
+        aa_tf_qmulc( s->E1+AA_TF_QUTR_Q, s->E0+AA_TF_QUTR_Q, qt);
+        aa_tf_qln(qt, ql);
+        for( size_t i = 0; i < 3; i ++ ) {
+            s->dx[AA_TF_DX_W+i] = 2 * ql[AA_TF_QUAT_V+i] / s->dt;
+        }
+
+        // dv
+        for( size_t i = 0; i < 3; i ++ ) {
+            s->dx[AA_TF_DX_V+i] = (s->E1[AA_TF_QUTR_T+i] -  s->E0[AA_TF_QUTR_T+i]) / s->dt;
+        }
+
+    }
+
+    struct aa_ct_seg_list *segs  = new(reg) aa_ct_seg_list(reg);
+    aa_ct_seg_list_add_cx(segs, aa_ct_seg_slerp_eval,  s);
+    segs->duration = 1;
+
+    return segs;
 }

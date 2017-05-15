@@ -530,4 +530,18 @@ AA_API void aa_rx_sg_allow_collision( struct aa_rx_sg *scene_graph,
 AA_API void aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
                                            const char* frame0, const char* frame1, int allowed );
 
+
+
+/**
+ * Allocate storage for TF array from region.
+ */
+AA_API double *
+aa_rx_sg_alloc_tf ( const struct aa_rx_sg *sg, struct aa_mem_region *region );
+
+/**
+ * Allocate storage for config array from region.
+ */
+AA_API double *
+aa_rx_sg_alloc_config ( const struct aa_rx_sg *sg, struct aa_mem_region *region );
+
 #endif /*AMINO_SCENEGRAPH_H*/

@@ -662,3 +662,15 @@ aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
     }
     scene_graph->sg->dirty_collision = 1;
 }
+
+AA_API double *
+aa_rx_sg_alloc_tf ( const struct aa_rx_sg *sg, struct aa_mem_region *region )
+{
+    return AA_MEM_REGION_NEW_N( region, double, 7*aa_rx_sg_frame_count(sg) );
+}
+
+AA_API double *
+aa_rx_sg_alloc_config ( const struct aa_rx_sg *sg, struct aa_mem_region *region )
+{
+    return AA_MEM_REGION_NEW_N( region, double, aa_rx_sg_config_count(sg) );
+}

@@ -65,6 +65,15 @@ aa_ct_state_alloc(struct aa_mem_region *reg, size_t n_q, size_t n_tf )
     return s;
 }
 
+static double *state_clone_helper( struct aa_mem_region *reg, const double *src, size_t cnt )
+{
+    return (src
+            ? AA_MEM_REGION_DUP(reg, double, src, cnt)
+            : NULL
+        );
+
+}
+
 AA_API void
 aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
                   struct aa_ct_state *src)
@@ -72,50 +81,23 @@ aa_ct_state_clone(struct aa_mem_region *reg, struct aa_ct_state *dest,
     dest->n_q = src->n_q;
     dest->n_tf = src->n_tf;
 
-    if (src->q) {
-        dest->q = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->q, src->q, src->n_q);
-    }
+    dest->q = state_clone_helper(reg, src->q, src->n_q);
 
-    if (src->dq) {
-        dest->dq = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->dq, src->dq, src->n_q);
-    }
+    dest->dq = state_clone_helper(reg, src->dq, src->n_q);
 
-    if (src->ddq) {
-        dest->ddq = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->ddq, src->ddq, src->n_q);
-    }
+    dest->ddq = state_clone_helper(reg, src->ddq, src->n_q);
 
-    if (src->X) {
-        dest->X = AA_MEM_REGION_NEW_N(reg, double, 7);
-        AA_MEM_CPY(dest->X, src->X, 7);
-    }
+    dest->X = state_clone_helper(reg, src->X, 7);
 
-    if (src->dX) {
-        dest->dX = AA_MEM_REGION_NEW_N(reg, double, 6);
-        AA_MEM_CPY(dest->dX, src->dX, 6);
-    }
+    dest->dX = state_clone_helper(reg, src->dX, 6);
 
-    if (src->ddX) {
-        dest->ddX = AA_MEM_REGION_NEW_N(reg, double, 6);
-        AA_MEM_CPY(dest->ddX, src->ddX, 6);
-    }
+    dest->ddX = state_clone_helper(reg, src->ddX, 6);
 
-    if (src->eff) {
-        dest->eff = AA_MEM_REGION_NEW_N(reg, double, src->n_q);
-        AA_MEM_CPY(dest->eff, src->eff, src->n_q);
-    }
+    dest->eff = state_clone_helper(reg, src->eff, src->n_q);
 
-    if (src->TF_abs) {
-        dest->TF_abs = AA_MEM_REGION_NEW_N(reg, double, src->n_tf);
-        AA_MEM_CPY(dest->TF_abs, src->TF_abs, src->n_tf);
-    }
+    dest->TF_abs = state_clone_helper(reg, src->TF_abs, src->n_tf);
 
-    if (src->TF_rel) {
-        dest->TF_rel = AA_MEM_REGION_NEW_N(reg, double, src->n_tf);
-        AA_MEM_CPY(dest->TF_rel, src->TF_rel, src->n_tf);
-    }
+    dest->TF_rel = state_clone_helper(reg, src->TF_rel, src->n_tf);
 }
 
 // TODO: Finish this
@@ -202,4 +184,9 @@ aa_ct_state_eq(struct aa_ct_state *s1, struct aa_ct_state *s2)
             return 0;
 
     return 1;
+}
+
+void aa_ct_state_set_qutr( struct aa_ct_state *state, const double E[7] )
+{
+    AA_MEM_CPY(state->X, E, 7);
 }

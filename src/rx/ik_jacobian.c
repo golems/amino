@@ -158,31 +158,21 @@ static void rfx_kin_qutr_serr( const double E_act[7], const double E_ref[7],
 
 
 AA_API int
-aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
-                    const double *AA_RESTRICT q_act, const double *AA_RESTRICT E_act,
-                    const double E_ref[7], const double *J,
-                    double *AA_RESTRICT dq )
+aa_rx_ik_jac_dx2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+                     const double *AA_RESTRICT q_act, const double *AA_RESTRICT dx, const double *J,
+                     double *AA_RESTRICT dq )
 {
 
     double J_star[6*n_q];
 
-    double w_e[6];
-    rfx_kin_qutr_werr( E_act, E_ref, w_e );
-    for( size_t i = 0; i < 3; i ++ ) {
-        w_e[AA_TF_DX_V + i] *= -opts->gain_trans;
-        w_e[AA_TF_DX_W + i] *= -opts->gain_angle;
-    }
-
-    double theta_err, x_err;
-    rfx_kin_qutr_serr( E_act, E_ref, &theta_err, &x_err );
-
-    if( theta_err < opts->tol_angle_svd &&
-        x_err < opts->tol_trans_svd )
-    {
-        aa_la_dzdpinv( 6, n_q, opts->s2min, J, J_star );
-    } else {
-        aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star );
-    }
+    /* if( theta_err < opts->tol_angle_svd && */
+    /*     x_err < opts->tol_trans_svd ) */
+    /* { */
+    // TODO: sometimes do LU
+    aa_la_dzdpinv( 6, n_q, opts->s2min, J, J_star );
+    /* } else { */
+    /*     aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star ); */
+    /* } */
 
     if( opts->q_ref ) {
         //printf("nullspace projection\n");
@@ -192,13 +182,63 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
             dqnull[i] = - opts->dq_dt[i] * ( q_act[i] - opts->q_ref[i] );
         }
         //aa_dump_vec( stdout, dqnull, cx->n );
-        aa_la_xlsnp( 6, n_q, J, J_star, w_e, dqnull, dq );
+        aa_la_xlsnp( 6, n_q, J, J_star, dx, dqnull, dq );
     } else {
         //printf("no projection\n");
-        aa_la_mvmul(n_q,6,J_star,w_e,dq);
+        aa_la_mvmul(n_q,6,J_star,dx,dq);
     }
     return 0;
 }
+
+AA_API int
+aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+                    const double *AA_RESTRICT q_act, const double *AA_RESTRICT E_act,
+                    const double E_ref[7], const double dx_ref[6],
+                    const double *J, double *AA_RESTRICT dq )
+{
+
+    double w_e[6];
+    rfx_kin_qutr_werr( E_act, E_ref, w_e );
+    for( size_t i = 0; i < 3; i ++ ) {
+        w_e[AA_TF_DX_V + i] *= -opts->gain_trans;
+        w_e[AA_TF_DX_W + i] *= -opts->gain_angle;
+    }
+
+    if( dx_ref ) {
+        for( size_t i = 0; i < 6; i ++ ) {
+            w_e[i] += dx_ref[i];
+        }
+    }
+
+    return aa_rx_ik_jac_dx2dq(opts, n_q, q_act, w_e, J, dq);
+
+    /* double theta_err, x_err; */
+    /* rfx_kin_qutr_serr( E_act, E_ref, &theta_err, &x_err ); */
+
+    /* if( theta_err < opts->tol_angle_svd && */
+    /*     x_err < opts->tol_trans_svd ) */
+    /* { */
+    /*     aa_la_dzdpinv( 6, n_q, opts->s2min, J, J_star ); */
+    /* } else { */
+    /*     aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star ); */
+    /* } */
+
+    /* if( opts->q_ref ) { */
+    /*     //printf("nullspace projection\n"); */
+    /*     // nullspace projection */
+    /*     double dqnull[n_q]; */
+    /*     for( size_t i = 0; i < n_q; i ++ )  { */
+    /*         dqnull[i] = - opts->dq_dt[i] * ( q_act[i] - opts->q_ref[i] ); */
+    /*     } */
+    /*     //aa_dump_vec( stdout, dqnull, cx->n ); */
+    /*     aa_la_xlsnp( 6, n_q, J, J_star, w_e, dqnull, dq ); */
+    /* } else { */
+    /*     //printf("no projection\n"); */
+    /*     aa_la_mvmul(n_q,6,J_star,w_e,dq); */
+    /* } */
+    /* return 0; */
+}
+
 
 static void kin_solve_sys( const void *vcx,
                            double t, const double *AA_RESTRICT q,
@@ -213,8 +253,7 @@ static void kin_solve_sys( const void *vcx,
     ksol_qutr(cx, q, E_act, J);
 
     aa_rx_ik_jac_x2dq ( cx->opts, cx->n,
-                        q,  E_act,
-                        cx->E1, J, dq );
+                        q,  E_act, cx->E1, NULL, J, dq );
     return;
 
     /* // position error */

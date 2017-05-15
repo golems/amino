@@ -64,7 +64,7 @@ aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *sg );
 /**
  * Return the original scene graph for the sub-scenegraph
  */
-AA_API struct aa_rx_sg *
+AA_API const struct aa_rx_sg *
 aa_rx_sg_sub_sg( const struct aa_rx_sg_sub *sg_sub );
 
 /**
@@ -85,6 +85,12 @@ aa_rx_sg_sub_all_config_count( const struct aa_rx_sg_sub *sg_sub );
  */
 AA_API size_t
 aa_rx_sg_sub_frame_count( const struct aa_rx_sg_sub *sg_sub );
+
+/**
+ * Return the number of frames in the full scenegraph.
+ */
+AA_API size_t
+aa_rx_sg_sub_all_frame_count( const struct aa_rx_sg_sub *sg_sub );
 
 /**
  * Return the full scenegraph config id for the i'th configuration of the sub-scenegraph.
@@ -156,5 +162,17 @@ AA_API void
 aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                        size_t n_tf, const double *TF_abs, size_t ld_TF,
                        double *J, size_t ld_J );
+
+/**
+ * Allocate jacobian matrix for sub scene graph.
+ */
+AA_API double *
+aa_rx_sg_sub_alloc_jacobian( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region );
+
+/**
+ * Allocate sub scene graph config array.
+ */
+AA_API double *
+aa_rx_sg_sub_alloc_config( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region );
 
 #endif /*AMINO_RX_SCENE_SUB_H*/
