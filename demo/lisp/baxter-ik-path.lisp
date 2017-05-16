@@ -2,7 +2,7 @@
 
 (in-package :robray)
 
-(sb-posix:setenv "ROS_PACKAGE_PATH" "/opt/ros/indigo/share/" 1)
+(sb-posix:setenv "ROS_PACKAGE_PATH" "/home/ntd/ros_ws/src/baxter_common/" 1)
 
 (setq *scene-graph* (load-scene-file "package://baxter_description/urdf/baxter.urdf"))
 
@@ -36,6 +36,7 @@
 
 (defparameter *plan*
   (cartesian-path *sub-scene-graph* *q0* *e1*
-                  :ksol-opts *ksol-opts*))
+;                  :ksol-opts *ksol-opts*
+                  ))
 
 (win-display-motion-plan *plan*)
