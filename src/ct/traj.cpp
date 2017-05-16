@@ -734,6 +734,7 @@ struct aa_ct_seg_list *aa_ct_tjx_slerp_generate(struct aa_mem_region *reg,
         // omega
         double qt[4], ql[4];
         aa_tf_qmulc( s->E1+AA_TF_QUTR_Q, s->E0+AA_TF_QUTR_Q, qt);
+        aa_tf_qminimize(qt);
         aa_tf_qln(qt, ql);
         for( size_t i = 0; i < 3; i ++ ) {
             s->dx[AA_TF_DX_W+i] = 2 * ql[AA_TF_QUAT_V+i] / s->dt;

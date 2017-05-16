@@ -115,6 +115,7 @@ struct path_cx {
     size_t n_f_all;
     aa_rx_frame_id frame;
 
+    struct aa_ct_limit *limits;
 
     /* initial state */
     const double *q_start_all;
@@ -213,6 +214,8 @@ aa_rx_ct_tjx_path( struct aa_mem_region *region,
         cx->TF_rel = aa_rx_sg_alloc_tf( cx->sg, local_region );
         cx->TF_abs = aa_rx_sg_alloc_tf( cx->sg, local_region );
 
+        cx->limits = aa_rx_ct_sg_limits(region, cx->sg);
+
         double *TF_rel0 = aa_rx_sg_alloc_tf( cx->sg, local_region );
         double *TF_abs0 = aa_rx_sg_alloc_tf( cx->sg, local_region );
         cx->TF_rel0 = TF_rel0;
@@ -257,6 +260,17 @@ aa_rx_ct_tjx_path( struct aa_mem_region *region,
                          0, opts->dt, q_start_sub,
                          region, n_points, path );
 
+
+    // clamp
+    for( size_t k = 0; k < *n_points; k ++ ) {
+        for( size_t i = 0; i < cx->n_q_sub; i ++ ) {
+            aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg, i);
+            (*path)[i + k*cx->n_q_sub] =
+                aa_fclamp( (*path)[i + k*cx->n_q_sub],
+                           cx->limits->min->q[config_id],
+                           cx->limits->max->q[config_id]);
+        }
+    }
     aa_mem_region_pop(local_region, cx);
 
 
@@ -271,6 +285,28 @@ aa_rx_ct_tjx_path( struct aa_mem_region *region,
 
 }
 
+AA_API struct aa_ct_limit *
+aa_rx_ct_sg_limits( struct aa_mem_region *region, const struct aa_rx_sg *sg )
+{
+    struct aa_ct_limit *lim = AA_MEM_REGION_NEW(region, struct aa_ct_limit);
+    size_t n_q = aa_rx_sg_config_count(sg);
+
+    lim->min = aa_ct_state_alloc(region, n_q, 0);
+    lim->max = aa_ct_state_alloc(region, n_q, 0);
+
+    for( size_t i = 0; i < n_q; i ++ ) {
+        aa_rx_sg_get_limit_pos(sg, (aa_rx_config_id)i,
+                               lim->min->q+i, lim->max->q+i);
+        aa_rx_sg_get_limit_vel(sg, (aa_rx_config_id)i,
+                               lim->min->dq+i, lim->max->dq+i);
+        aa_rx_sg_get_limit_acc(sg, (aa_rx_config_id)i,
+                               lim->min->ddq+i, lim->max->ddq+i);
+        aa_rx_sg_get_limit_eff(sg, (aa_rx_config_id)i,
+                               lim->min->eff+i, lim->max->eff+i);
+    }
+
+    return lim;
+}
 
 /* AA_API int */
 /* aa_rx_ct_tjx_path( struct aa_mem_region *region, */

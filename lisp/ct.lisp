@@ -43,7 +43,7 @@
 ;;;;;;;;;;;;;;;;
 
 (amino-ffi::def-foreign-container ct-pt-list ct-pt-list-t
-  :slots (region))
+  :slots ((region nil :type (or null mem-region))))
 
 (defcfun aa-ct-pt-list-create ct-pt-list-t
   (region mem-region-t))
@@ -73,7 +73,7 @@
 
 
 (amino-ffi::def-foreign-container ct-seg-list ct-seg-list-t
-  :slots (region))
+  :slots ((region nil :type (or null mem-region))))
 
 (defcfun aa-ct-tjx-slerp-generate ct-seg-list-t
   (region mem-region-t)

@@ -71,8 +71,10 @@
                (:file "op" :depends-on ("package"))
                (:file "generic" :depends-on ("op" "tf-type"))
                (:file "blas-generic" :depends-on ("generic" "blas"))
-               (:file "mem" :depends-on ("foreign"))
-               (:file "ct" :depends-on ("mem" "tf-type"))
+               (:file "mem-type" :depends-on ("foreign"))
+               (:file "mem" :depends-on ("mem-type"))
+               (:file "ct-type" :depends-on ("mem" "tf-type"))
+               (:file "ct" :depends-on ("ct-type"))
                (:file "io" :depends-on ("mem"))
                ;; TF
                (:file "tf-type" :depends-on ("foreign" "tf-grovel"))

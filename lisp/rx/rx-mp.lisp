@@ -433,13 +433,13 @@
   (let* ((opts (or ksol-opts (aa-rx-ksol-opts-create)))
          (sg (sub-scene-graph-scene-graph ssg))
          (m-sg (sub-scene-graph-mutable-scene-graph ssg))
-         (aa-rx-ksol-opts-get-frame ksol-opts)
-         (frame-id (let ((frame-id (aa-rx-ksol-opts-get-frame ksol-opts)))
+         (aa-rx-ksol-opts-get-frame opts)
+         (frame-id (let ((frame-id (aa-rx-ksol-opts-get-frame opts)))
                      (if (= frame-id +frame-id-none+)
                          (aa-rx-sg-sub-frame-ee ssg)
                          frame-id)))
-         (tfs (cons (scene-graph-tf-absolute sg
-                                             (mutable-scene-graph-frame-name m-sg frame-id)
+         (frame-name (mutable-scene-graph-frame-name m-sg frame-id))
+         (tfs (cons (scene-graph-tf-absolute sg frame-name
                                              :configuration-map start-map)
                     (ensure-list tfs)))
          (pt-list (amino::make-ct-pt-list-tf tfs))

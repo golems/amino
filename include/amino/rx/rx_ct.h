@@ -77,4 +77,9 @@ aa_rx_ct_tjx_path( struct aa_mem_region *region,
                    size_t n_q_all, const double *q_start_all,
                    size_t *n_points, double **path );
 
+
+AA_API struct aa_ct_limit *
+aa_rx_ct_sg_limits( struct aa_mem_region *region, const struct aa_rx_sg *sg );
+
+
 #endif /*AMINO_RX_CT_H*/
