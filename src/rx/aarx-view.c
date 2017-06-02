@@ -67,12 +67,15 @@ int main(int argc, char *argv[])
     int visual = 1;
     int collision = 0;
 
+    int print_config = 0;
+    int print_frame = 0;
+
     /* Parse Options */
     {
         int c;
         opterr = 0;
 
-        while( (c = getopt( argc, argv, "n:e:?c")) != -1 ) {
+        while( (c = getopt( argc, argv, "n:e:?cQF")) != -1 ) {
             switch(c) {
             case 'n':
                 name = optarg;
@@ -84,6 +87,12 @@ int main(int argc, char *argv[])
             case 'e':
                 end_effector = optarg;
                 break;
+            case 'Q':
+                print_config = 1;
+                break;
+            case 'F':
+                print_frame = 1;
+                break;
             case '?':
                 puts("Usage: aarx-view [OPTIONS] PLUGIN_NAME\n"
                      "Viewer for Amino scene graphs"
@@ -91,6 +100,8 @@ int main(int argc, char *argv[])
                      "Options:\n"
                      "  -n NAME         scene graph name (default: scenegraph)\n"
                      "  -e NAME         name of an end-effector to control\n"
+                     "  -Q              Print configuration names and exit\n"
+                     "  -F              Print frame names and exit\n"
                      "  -c              view collision geometry\n"
                      "\n"
                      "\n"
@@ -119,6 +130,22 @@ int main(int argc, char *argv[])
     struct aa_rx_sg *scenegraph = aa_rx_dl_sg(plugin, name, NULL);
     assert(scenegraph);
     aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
+
+    /* print things */
+    if( print_config || print_frame ) {
+
+        if( print_config ) {
+            for( aa_rx_config_id i = 0; i < aa_rx_sg_config_count(scenegraph); i ++ ) {
+                printf("config[%d]: %s\n", i, aa_rx_sg_config_name(scenegraph, i));
+            }
+        }
+        if( print_frame ) {
+            for( aa_rx_frame_id i = 0; i < aa_rx_sg_frame_count(scenegraph); i ++ ) {
+                printf("frame[%d]: %s\n", i, aa_rx_sg_frame_name(scenegraph, i));
+            }
+        }
+        exit(EXIT_SUCCESS);
+    }
 
     /* Center configurations */
     size_t m = aa_rx_sg_config_count(scenegraph);
