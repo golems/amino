@@ -445,6 +445,7 @@ TESTS += ct_traj
 noinst_PROGRAMS += ct_traj
 ct_traj_SOURCES = src/test/ct_traj.c
 ct_traj_LDADD = libamino.la libtestutil.la
+ct_traj_LDFLAGS = -no-install
 
 
 if USE_FORTRAN
