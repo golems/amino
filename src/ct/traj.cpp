@@ -76,6 +76,7 @@ aa_ct_pt_list_create(struct aa_mem_region *reg)
 AA_API void
 aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state)
 {
+    /* Don't add the same point if it's already at the end. */
     if (list->list.size()) {
         struct aa_ct_pt *p_pt = list->list.back();
 
@@ -172,7 +173,7 @@ aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
     } while (list->it != list->list.end());
 
     list->it_on = 0;
-    return 0;
+    return AA_CT_SEG_OUT;
 }
 
 AA_API void
@@ -257,6 +258,23 @@ struct aa_ct_seg_dq {
     double t1;   ///< Final time
 };
 
+/**
+ * Get the context for the neighboring segments.
+ *
+ * @param seg Segment to grab neighbors of
+ * @param p   Previous segment context
+ * @param c   Current segment context
+ * @param n   Next segment context
+ */
+void
+aa_ct_tj_dq_nbrs(struct aa_ct_seg *seg, struct aa_ct_seg_dq **p,
+                 struct aa_ct_seg_dq **c, struct aa_ct_seg_dq **n)
+{
+    *c = (struct aa_ct_seg_dq *) seg->cx;
+    *n = (seg->next) ? (struct aa_ct_seg_dq *) seg->next->cx : NULL;
+    *p = (seg->prev) ? (struct aa_ct_seg_dq *) seg->prev->cx : NULL;
+}
+
 static int aa_ct_seg_dq_eval( struct aa_ct_seg *seg,
                               struct aa_ct_state *state, double t)
 {
@@ -301,6 +319,7 @@ aa_ct_seg_dq_new( struct aa_mem_region *reg,
     AA_MEM_ZERO(seg,1);
     seg->eval = aa_ct_seg_dq_eval;
     seg->cx = cx;
+    seg->type = AA_CT_LIN_SEG;
 
     /* Compute segment time */
     double dt = 0;
@@ -357,13 +376,15 @@ struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
 
 /**
  * Parabolic blend trajectory segment context.
+ * The last segment in a trajectory is a special case: it should always have a
+ * velocity of 0 and a dt (duration) of 0.
  */
 struct aa_ct_seg_pb_cx {
     size_t n_q;  ///< Number of configurations
 
     double *q;   ///< Waypoint position
-    double *dq;  ///< Velocity
-    double *ddq; ///< Acceleration
+    double *dq;  ///< Velocity of the linear segment
+    double *ddq; ///< Acceleration of the blend segment
 
     double t;    ///< Start time
     double dt;   ///< Duration of segment
@@ -390,7 +411,7 @@ aa_ct_tj_pb_nbrs(struct aa_ct_seg *seg, struct aa_ct_seg_pb_cx **p,
 /**
  * Evaluate a parabolic blend trajectory segment.
  *
- * @return 0 if not in segment, 1 if.
+ * @return AA_CT_SEG_OUT if not in segment, AA_CT_SEG_IN if.
  */
 int
 aa_ct_tj_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
@@ -407,6 +428,7 @@ aa_ct_tj_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
             state->q[i] = c_cx->q[i] + p_dq * dt + \
                 c_cx->ddq[i] * pow((dt + c_cx->b / 2), 2) / 2;
             state->dq[i] = p_dq + c_cx->ddq[i] * (dt + c_cx->b / 2);
+            state->ddq[i] = c_cx->ddq[i];
         }
 
     } else if (n_cx && ((c_cx->t + c_cx->b / 2) <= t
@@ -415,14 +437,15 @@ aa_ct_tj_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
         for (size_t i = 0; i < c_cx->n_q; i++) {
             state->q[i] = c_cx->q[i] + c_cx->dq[i] * dt;
             state->dq[i] = c_cx->dq[i];
+            state->ddq[i] = 0;
         }
 
     } else {
         // Off-the-rails region
-        return 0;
+        return AA_CT_SEG_OUT;
     }
 
-    return 1;
+    return AA_CT_SEG_IN;
 }
 
 /**
@@ -468,6 +491,8 @@ aa_ct_tj_pb_new(struct aa_mem_region *reg, struct aa_ct_pt *pt,
 
     cx->dq = AA_MEM_REGION_NEW_N(reg, double, n_q);
     cx->ddq = AA_MEM_REGION_NEW_N(reg, double, n_q);
+    bzero(cx->dq, sizeof(double) * n_q);
+    bzero(cx->ddq, sizeof(double) * n_q);
 
     cx->t = 0;
     cx->dt = DBL_MAX;
@@ -476,6 +501,7 @@ aa_ct_tj_pb_new(struct aa_mem_region *reg, struct aa_ct_pt *pt,
     cx->b = 0;
 
     seg->cx = (void *) cx;
+    seg->type = AA_CT_PB_SEG;
     return seg;
 }
 
@@ -567,6 +593,18 @@ aa_ct_tjq_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
                 (i < n - 1) ? fmin(f[i + 1], f[i]) : 1;
     } while (flag);
 
+    // The final duration of a segment needs to be 0, defaults to DBL_MAX.
+    ((struct aa_ct_seg_pb_cx *)list->list.back()->cx)->dt = 0;
+
+    list->n_q = ((struct aa_ct_seg_pb_cx *)list->list.front()->cx)->n_q;
+
+    // The full duration of the trajectory needs to be set.
+    struct aa_ct_seg *c_seg = list->list.front();
+    list->duration = ((struct aa_ct_seg_pb_cx*)c_seg->cx)->b / 2;
+    for (; c_seg != NULL; c_seg = c_seg->next) {
+        list->duration += ((struct aa_ct_seg_pb_cx *)c_seg->cx)->dt; 
+    }
+    list->duration += ((struct aa_ct_seg_pb_cx *) list->list.back()->cx)->b / 2;
     return list;
 }
 
@@ -576,10 +614,12 @@ aa_ct_tjX_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
 {
     double *tq = state->q;
     double *tdq = state->dq;
+    double *tddq = state->ddq;
 
-    double X[6], dX[6];
+    double X[6], dX[6], ddX[6];
     state->q = X;
     state->dq = dX;
+    state->ddq = ddX;
 
     int r = aa_ct_tj_pb_eval(seg, state, t);
 
@@ -592,6 +632,7 @@ aa_ct_tjX_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
 
     state->q = tq;
     state->dq = tdq;
+    state->ddq = tddq;
 
     return r;
 }
@@ -658,7 +699,7 @@ int aa_ct_seg_list_check( struct aa_ct_seg_list * segs, double dt,
         if( (r = function(cx, t, state)) ) break;
     }
 
-    aa_mem_region_pop(reg,state);
+    aa_mem_region_pop(reg, state);
 
     return r;
 }
@@ -667,8 +708,82 @@ int aa_ct_seg_list_check( struct aa_ct_seg_list * segs, double dt,
 int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
                              double tol, double eps )
 {
-    // TODO
-    return -1;
+    // This function checks two aspects of trajectories:
+    //   1. The max dist between two steps
+    //   2. The max dist between end of one trajectory and beginning of another
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    size_t n_q = aa_ct_seg_list_n_q(segs);
+    struct aa_ct_state *state0 = aa_ct_state_alloc(reg, n_q, 0);
+    struct aa_ct_state *state1 = aa_ct_state_alloc(reg, n_q, 0);
+    struct aa_ct_state *temp;
+
+    aa_ct_seg_list_eval(segs, state1, dt);
+    for( double t0 = 0, t1 = dt; aa_ct_seg_list_eval(segs, state1, t1); t0 += dt, t1 += dt )
+    {
+        aa_ct_seg_list_eval(segs, state0, t0);
+ 
+        double state_diff = 0.0;
+        for (size_t i = 0; i < n_q; i++)
+        {
+            state_diff += fabs(state1->q[i] - state0->q[i]);
+        }
+        if (state_diff > tol)
+        {
+            // The max distance between two steps exceeded to given tolerance.
+            fprintf(stderr, "WARNING: trajectory is not continious:%f, %f\n", state_diff, tol);
+            fprintf(stderr, "Vels: dq %f, %f ...\n", state0->dq[0], state0->dq[1]);
+            fprintf(stderr, "Times: t0: %f, t1: %f\n", t0, t1);
+            return 1;
+        }
+
+        // Swap state0 to become state1, next loop will overwrite the old state0.
+        temp = state0;
+        state0 = state1;
+        state1 = temp;
+    }
+
+    struct aa_ct_seg *c_seg = segs->list.front();
+    for (; c_seg->next != NULL; c_seg = c_seg->next)
+    {
+        if (c_seg->type == AA_CT_LIN_SEG)
+        {
+            struct aa_ct_seg_dq *p_cx, *c_cx, *n_cx;
+            aa_ct_tj_dq_nbrs(c_seg, &p_cx, &c_cx, &n_cx);
+            c_seg->eval(c_seg, state0, c_cx->t1);
+            c_seg->next->eval(c_seg->next, state1, n_cx->t0);
+
+        }
+        else if (c_seg->type == AA_CT_PB_SEG)
+        {
+            struct aa_ct_seg_pb_cx *p_cx, *c_cx, *n_cx;
+            aa_ct_tj_pb_nbrs(c_seg, &p_cx, &c_cx, &n_cx);
+            c_seg->eval(c_seg, state0, c_cx->t + c_cx->dt - n_cx->b / 2);
+            c_seg->next->eval(c_seg->next, state1, n_cx->t - n_cx->b / 2);
+        }
+        else
+        {
+            // Why does the segment have a weird type?
+            return 3;
+        }
+        double state_diff = 0.0;
+        for (size_t i = 0; i < n_q; i++)
+        {
+            state_diff += fabs(state1->q[i] - state0->q[i]);
+        }
+
+        if (state_diff > eps)
+        {
+            // Max distance between two segment endpoints exceed the given epsilon.
+            fprintf(stderr, "WARNING: trajectory segment endpoints don't match: %f, %f.\n", state_diff, eps);
+            return 2;
+        }
+    }
+
+    aa_mem_region_pop(reg, state0);
+    aa_mem_region_pop(reg, state1);
+
+    // All good!
+    return 0;
 }
 
 

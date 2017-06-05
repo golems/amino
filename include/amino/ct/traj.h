@@ -51,6 +51,9 @@ extern "C" {
 #define AA_CT_SEG_IN   1
 #define AA_CT_SEG_OUT  0
 
+#define AA_CT_LIN_SEG  1
+#define AA_CT_PB_SEG   2
+
 /**
  * Waypoint. For use in aa_ct_pt_list.
  */
@@ -126,7 +129,7 @@ void aa_ct_pt_list_dump(FILE *stream, struct aa_ct_pt_list *list);
  * @param state State structure to fill in
  * @param t     Time to evaluate segment list at
  *
- * @return 1 if time is within segment list, 0 if not.
+ * @return AA_CT_SEG_IN if time is within segment list, AA_CT_SEG_OUT if not.
  */
 int aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
                         double t);
@@ -172,7 +175,7 @@ struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
 
 
 /**
- * Generate a lienar trajectory from a point list.
+ * Generate a linear trajectory from a point list.
  *
  * @param reg Region to allocate from
  * @param list Point list to build segment list from
@@ -185,7 +188,7 @@ struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
                                               struct aa_ct_state *limits);
 
 /**
- * Generate a parabolic blend trajectory from a point list.
+ * Generate a parabolic blend trajectory in the workspace from a point list.
  *
  * @param reg Region to allocate from
  * @param list Point list to build segment list from
@@ -223,7 +226,9 @@ aa_ct_seg_list_check( struct aa_ct_seg_list * segs, double dt,
  * @param tol  Maximum distance between two steps
  * @param eps  Maximum distance between final and inital position of subsequent segments
  *
- * @return 0 if trajectory is C0 continuous, non-zero otherwise
+ * @return 0 if trajectory is C0 continuous, 1 if the trajectory violates the maximum distance
+ *         between two steps, 2 if the trajectory violates the maximum distance between final and
+ *         initial of subsequent segments, non-zero otherwise
  */
 int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
                              double tol, double eps );

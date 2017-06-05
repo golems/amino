@@ -91,7 +91,6 @@ test_tjX(void)
 
     for (double t = 0; aa_ct_seg_list_eval(seg_list, &state, t); t += 0.1) {
         aa_ct_seg_list_eval(seg_list, &state, t);
-        // aa_dump_vec(stdout, state.X, 7);
     }
 
     aa_ct_seg_list_destroy(seg_list);
@@ -159,6 +158,13 @@ test_tjq_check( struct aa_mem_region *reg,
     aa_ct_seg_list_eval(seg_list, vstate, 0);
     aveq("Traj q 0", n_q, state0->q, vstate->q, 1e-3);
     double dt = .001;
+    double max = DBL_MIN;
+    for (size_t i = 0; i < n_q; i++)
+    {
+        max = AA_MAX(max, limits->dq[i]);
+    }
+    double tol = ((double) n_q) * max * dt * 1.05; // 105% of the maximum velocity. 
+    double eps = .01;
 
     struct tjq_check_cx cx = { .reg = reg,
                                .seg_list = seg_list,
@@ -171,12 +177,13 @@ test_tjq_check( struct aa_mem_region *reg,
                                .t = 0 };
     aa_ct_seg_list_check( seg_list, dt,
                           tjq_check_fun, &cx );
-
+    int r = aa_ct_seg_list_check_c0( seg_list, dt, tol, eps);
+    test( "Traj continous", r == 0);
 
     double duration = aa_ct_seg_list_duration(seg_list);
     test_flt("Traj q dur",  cx.t, duration, 0 );
 
-    int r = aa_ct_seg_list_eval(seg_list, vstate, duration);
+    r = aa_ct_seg_list_eval(seg_list, vstate, duration);
     test( "Traj dur eval", AA_CT_SEG_IN == r );
     aveq("Traj q Final", n_q, state1->q, vstate->q, 1e-3);
 }
@@ -216,44 +223,20 @@ test_tjq(size_t n_p)
         limits.ddq[j] = aa_frand() + .5;
     }
 
-    /* Generate Trajectory */
     {
-        //struct aa_ct_seg_list *seg_list =
-            //aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
-
-    }
-
-    {
-        struct aa_ct_seg_list *seg_list =
+        /* Generate Trajectory */
+        struct aa_ct_seg_list *pb_list =
+            aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
+        struct aa_ct_seg_list *lin_list =
             aa_ct_tjq_lin_generate(&reg, pt_list, &limits);
-        test_tjq_check( &reg, pt_list, seg_list,
+        /* Evaluate Trajectory */
+        test_tjq_check( &reg, pt_list, pb_list,
                         &limits, 1, 0 );
-        /* aa_ct_seg_list_plot( seg_list, n_q, .01, */
-        /*                      1, 0 ); */
+        test_tjq_check( &reg, pt_list, lin_list,
+                        &limits, 1, 0);
+
     }
 
-    /* Evaluate and Check */
-
-    /* struct aa_ct_state *vstate = aa_ct_state_alloc(&reg, n_q, 0); */
-    /* aa_ct_seg_list_eval(seg_list, vstate, 0); */
-    /* aveq("PBlend 0", n_q, state[0].q, vstate->q, 1e-3); */
-    /* double t = 0; */
-
-    /* while( aa_ct_seg_list_eval(seg_list, vstate, t) ) { */
-    /*     /\* Test limits *\/ */
-    /*     for( size_t i = 0; i < n_q; i ++ ) { */
-    /*         test( "Pblend normal q", isfinite(vstate->q[i]) ); */
-    /*         test( "Pblend normal dq", isfinite(vstate->dq[i]) ); */
-    /*         test( "Pblend normal ddq", isfinite(vstate->ddq[i]) ); */
-
-    /*         test_flt( "Pblend limit dq",  fabs(vstate->dq[i]),  limits.dq[i], 1e-3 ); */
-    /*         test_flt( "Pblend limit ddq", fabs(vstate->ddq[i]), limits.ddq[i], 1e-3 ); */
-    /*     } */
-    /*     t += .01; */
-    /* } */
-    /* aveq("PBlend Final", n_q, state[n_p-1].q, vstate->q, 1e-3); */
-
-    //aa_ct_seg_list_destroy(seg_list);
     aa_ct_pt_list_destroy(pt_list);
     aa_mem_region_destroy(&reg);
 }
@@ -274,6 +257,5 @@ main(void)
     for( size_t i = 0; i < 100; i ++ ) {
         size_t n_p = 2 + (size_t)(10*aa_frand());
         test_tjq(n_p);
-        //test_tjq(2);
     }
 }
