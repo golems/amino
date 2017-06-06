@@ -44,7 +44,7 @@ install:
        brew update;
        brew tap homebrew/science;
        brew install autoconf-archive openblas maxima sdl2 libtool ompl;
-       brew install https://raw.github.com/dartsim/homebrew-dart/master/fcl.rb;
+       brew install https://raw.github.com/dartsim/homebrew-dart/master/Formula/fcl.rb
     fi
 
 script:
