@@ -10,6 +10,7 @@ aarx_core_SOURCES = \
 	lisp/config-macro.lisp \
 	lisp/basic-type.lisp \
 	lisp/grovel.lisp \
+	lisp/tf-grovel.lisp \
 	lisp/ffi.lisp \
 	lisp/basic-ops.lisp \
 	lisp/foreign.lisp \
@@ -20,6 +21,9 @@ aarx_core_SOURCES = \
 	lisp/generic.lisp \
 	lisp/blas-generic.lisp \
 	lisp/mem.lisp \
+        lisp/mem-type.lisp \
+        lisp/ct-type.lisp \
+        lisp/ct.lisp \
 	lisp/sparse.lisp \
 	lisp/io.lisp \
 	lisp/tf-type.lisp \
