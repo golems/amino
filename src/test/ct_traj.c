@@ -98,6 +98,68 @@ test_tjX(void)
     aa_mem_region_destroy(&reg);
 }
 
+void
+test_tjq_pb_specific_numbers(void)
+{
+    struct aa_mem_region reg;
+    aa_mem_region_init(&reg, 512);
+
+    struct aa_ct_pt_list *pt_list = aa_ct_pt_list_create(&reg);
+    struct aa_ct_state pt1 = {0}, pt2 = {0}, pt3 = {0};
+    double q1[1] = {0}, q2[1] = {0}, q3[1] = {0};
+    pt1.n_q = 1;
+    pt2.n_q = 1;
+    pt3.n_q = 1;
+    pt1.q = q1;
+    pt2.q = q2;
+    pt3.q = q3;
+
+    q1[0] = 1;
+    q2[0] = 3;
+    q3[0] = 1;
+
+    aa_ct_pt_list_add(pt_list, &pt1);
+    aa_ct_pt_list_add(pt_list, &pt2);
+    aa_ct_pt_list_add(pt_list, &pt3);
+
+    double dqlim[1], ddqlim[1];
+    dqlim[0] = 2;
+    ddqlim[0] = 4;
+    struct aa_ct_state limits;
+    limits.dq = dqlim;
+    limits.ddq = ddqlim;
+    limits.n_q = 1;
+
+    struct aa_ct_seg_list *seg_list = aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
+
+    struct aa_ct_state state;
+    double q[1], dq[1], ddq[1];
+    state.q = q;
+    state.dq = dq;
+    state.ddq = ddq;
+
+    // Check specific points.
+    aa_ct_seg_list_eval(seg_list, &state, 0);
+    test_feq( "PB State at t = 0 ", state.q[0], 1, 1e-2);
+    test_feq( "PB Vel at t = 0 ", state.dq[0], 0, 1e-2);
+    test_feq( "PB Accel at t = 0 ", state.ddq[0], 4, 1e-2);
+
+    aa_ct_seg_list_eval(seg_list, &state, 0.1);
+    test_feq( "PB State at t = .1 ", state.q[0], 1.02, 1e-2);
+    test_feq( "PB Vel at t = .1 ", state.dq[0], 0.4, 1e-2);
+    test_feq( "PB Accel at t = .1 ", state.ddq[0], 4, 1e-2);
+
+    aa_ct_seg_list_eval(seg_list, &state, 1.9);
+    test_feq( "PB State at t = 1.9 ", state.q[0], 1.7, 1e-2);
+    test_feq( "PB Vel at t = 1.9 ", state.dq[0], -2, 1e-2);
+    test_feq( "PB Accel at t = 1.9 ", state.ddq[0], 0, 1e-2);
+
+    aa_ct_seg_list_destroy(seg_list);
+    aa_ct_pt_list_destroy(pt_list);
+    aa_mem_region_destroy(&reg);
+}
+
+
 struct tjq_check_cx {
     struct aa_mem_region *reg;
     struct aa_ct_seg_list *seg_list;
@@ -253,8 +315,9 @@ main(void)
     aa_test_ulimit();
 
     test_tjX();
+    test_tjq_pb_specific_numbers();
 
-    for( size_t i = 0; i < 100; i ++ ) {
+    for( size_t i = 0; i < 400; i ++ ) {
         size_t n_p = 2 + (size_t)(10*aa_frand());
         test_tjq(n_p);
     }

@@ -557,10 +557,13 @@ aa_ct_tjq_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
         flag = false;
 
         struct aa_ct_seg *c_seg = list->list.front();
-        for (; c_seg != NULL; c_seg = c_seg->next, i++) {
-            // Update each segment
+        // Update all segments before checking for overlap.
+        for (; c_seg != NULL; c_seg = c_seg->next) {
             aa_ct_tj_pb_update(c_seg, limits);
+        }
 
+        c_seg = list->list.front();
+        for (; c_seg != NULL; c_seg = c_seg->next, i++) {
             struct aa_ct_seg_pb_cx *c_cx, *p_cx, *n_cx;
             aa_ct_tj_pb_nbrs(c_seg, &p_cx, &c_cx, &n_cx);
 
@@ -602,7 +605,8 @@ aa_ct_tjq_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
     struct aa_ct_seg *c_seg = list->list.front();
     list->duration = ((struct aa_ct_seg_pb_cx*)c_seg->cx)->b / 2;
     for (; c_seg != NULL; c_seg = c_seg->next) {
-        list->duration += ((struct aa_ct_seg_pb_cx *)c_seg->cx)->dt; 
+        struct aa_ct_seg_pb_cx *seg_cx = (struct aa_ct_seg_pb_cx *)c_seg->cx;
+        list->duration += seg_cx->dt;
     }
     list->duration += ((struct aa_ct_seg_pb_cx *) list->list.back()->cx)->b / 2;
     return list;
@@ -730,7 +734,7 @@ int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
         if (state_diff > tol)
         {
             // The max distance between two steps exceeded to given tolerance.
-            fprintf(stderr, "WARNING: trajectory is not continious:%f, %f\n", state_diff, tol);
+            fprintf(stderr, "WARNING: trajectory is not continious for seg type: %f, %f\n", state_diff, tol);
             fprintf(stderr, "Vels: dq %f, %f ...\n", state0->dq[0], state0->dq[1]);
             fprintf(stderr, "Times: t0: %f, t1: %f\n", t0, t1);
             return 1;
@@ -774,7 +778,8 @@ int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
         if (state_diff > eps)
         {
             // Max distance between two segment endpoints exceed the given epsilon.
-            fprintf(stderr, "WARNING: trajectory segment endpoints don't match: %f, %f.\n", state_diff, eps);
+            fprintf(stderr, "WARNING: trajectory segment endpoints don't match for seg type %d: "
+                    "%f, %f.\n", c_seg->type, state_diff, eps);
             return 2;
         }
     }
