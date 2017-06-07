@@ -72,6 +72,7 @@
    :render-options-fast
    :render-options-medium
    :render-options-full-hd
+   :render-options-4k
    :render-scene-graph
 
    ;; Scene Graph Manipulation
