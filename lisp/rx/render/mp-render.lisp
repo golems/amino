@@ -75,6 +75,7 @@
                               include
                               include-text
                               render
+                              encode-video
                               (directory *robray-tmp-directory*)
                               (options *render-options*))
 
@@ -94,8 +95,8 @@
                         for last-array = array
                         collect (prog1 (joint-keyframe time config)
                                   (incf time delta-t))))
-     for function = (let* ((t0 (keyframe-set-start keyframes))
-                           (t1 (keyframe-set-end keyframes))
+     for function = (let* (;;(t0 (keyframe-set-start keyframes))
+                           ;;(t1 (keyframe-set-end keyframes))
                            (fun (keyframe-configuration-function keyframes)))
                       (lambda (i)
                         (let ((tt (* i period)))
@@ -107,12 +108,13 @@
                                    :camera-tf camera-tf
                                    :append t
                                    :options options
-                                   :encode-video nil
                                    :render-frames nil
                                    :include include
                                    :include-text include-text
                                    :scene-graph (motion-plan-scene-graph plan)))
-  ;; Render
-  (when render
-    (net-render :directory directory
-                :options options)))
+
+
+  (finish-render :output-directory directory
+                 :render-frames render
+                 :encode-video encode-video
+                 :options options))

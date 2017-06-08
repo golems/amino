@@ -289,6 +289,17 @@
       (sb-thread:wait-on-semaphore semaphore))))
 
 
+(defun finish-render (&key output-directory render-frames encode-video options)
+  ;; Convert Frames
+  (when render-frames
+    (load-config)
+    (net-render :directory output-directory
+                :options options)
+    ;; Encode Video
+    (when encode-video
+      (animate-encode :directory output-directory
+                      :options options))))
+
 (defun scene-graph-frame-animate (frame-configuration-function
                                   &key
                                     (camera-tf (tf nil))
@@ -328,16 +339,10 @@
                              :include include
                              :include-text include-text
                              )))
-  ;; Convert Frames
-  (when render-frames
-    (load-config)
-    (net-render :directory output-directory
-                :options options)
-    ;; Encode Video
-    (when encode-video
-      (animate-encode :directory output-directory
-                      :options options))))
-
+  (finish-render :output-directory output-directory
+                 :render-frames render-frames
+                 :encode-video encode-video
+                 :options options))
 
 
 (defun scene-graph-time-animate (configuration-function
