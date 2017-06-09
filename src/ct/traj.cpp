@@ -99,6 +99,16 @@ void aa_ct_pt_list_add_qutr(struct aa_ct_pt_list *list, const double E[7])
     aa_ct_pt_list_add(list,&state);
 }
 
+void aa_ct_pt_list_add_q(struct aa_ct_pt_list *list, size_t n_q, const double *q)
+{
+    struct aa_ct_state state;
+    AA_MEM_ZERO(&state,1);
+    state.q = (double*)q;
+    state.n_q = n_q;
+
+    aa_ct_pt_list_add(list,&state);
+}
+
 AA_API void
 aa_ct_pt_list_destroy(struct aa_ct_pt_list *list)
 {
@@ -173,6 +183,25 @@ aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
 
     list->it_on = 0;
     return 0;
+}
+
+int aa_ct_seg_list_eval_q(struct aa_ct_seg_list *list, double t, size_t n, double *q)
+{
+    struct aa_ct_state state;
+    AA_MEM_ZERO(&state,1);
+    state.n_q = n;
+    state.q = q;
+    return aa_ct_seg_list_eval(list,&state,t);
+}
+
+int aa_ct_seg_list_eval_dq(struct aa_ct_seg_list *list, double t, size_t n, double *q, double *dq)
+{
+    struct aa_ct_state state;
+    AA_MEM_ZERO(&state,1);
+    state.n_q = n;
+    state.q = q;
+    state.dq = dq;
+    return aa_ct_seg_list_eval(list,&state,t);
 }
 
 AA_API void
@@ -285,7 +314,7 @@ static struct aa_ct_seg *
 aa_ct_seg_dq_new( struct aa_mem_region *reg,
                   double t0, struct aa_ct_state *state0,
                   struct aa_ct_state *state1,
-                  struct aa_ct_state *limits )
+                  struct aa_ct_limit *limits )
 {
     /* Allocate */
     struct aa_ct_seg_dq *cx = AA_MEM_REGION_NEW(reg,struct aa_ct_seg_dq);
@@ -306,7 +335,7 @@ aa_ct_seg_dq_new( struct aa_mem_region *reg,
     double dt = 0;
     for( size_t i = 0; i < cx->n_q; i ++ ) {
         cx->dq[i] = state1->q[i] - state0->q[i];
-        double dti = fabs(cx->dq[i]) / limits->dq[i];
+        double dti = fabs(cx->dq[i]) / limits->max->dq[i]; // TODO: handle different min velocity
         dt = AA_MAX(dt, dti);
 
         if( ! std::isfinite(dti) ) {
@@ -327,7 +356,7 @@ aa_ct_seg_dq_new( struct aa_mem_region *reg,
 
 struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
                                               struct aa_ct_pt_list *list,
-                                              struct aa_ct_state *limits)
+                                              struct aa_ct_limit *limits)
 {
     struct aa_ct_seg_list *segs = new(reg) aa_ct_seg_list(reg);
 

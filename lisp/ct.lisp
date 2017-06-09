@@ -64,6 +64,16 @@
     (aa-ct-pt-list-add-qutr pt-list tf))
   pt-list)
 
+(defcfun aa-ct-pt-list-add-q :void
+  (pt-list ct-pt-list-t)
+  (n size-t)
+  (q :pointer))
+
+(defun ct-pt-list-add-q (pt-list q)
+  (with-foreign-simple-vector (q length) q :input
+    (aa-ct-pt-list-add-q pt-list length q))
+  pt-list)
+
 (defun make-ct-pt-list-tf (tfs)
   (fold #'ct-pt-list-add-tf (make-ct-pt-list) tfs))
 
@@ -79,8 +89,28 @@
   (region mem-region-t)
   (pt-list ct-pt-list-t))
 
+(defcfun aa-ct-tjq-lin-generate ct-seg-list-t
+  (region mem-region-t)
+  (pt-list ct-pt-list-t)
+  (limits ct-limits-t))
+
+(defcfun aa-ct-seg-list-duration :double
+  (seg-list ct-seg-list-t))
+
+(defun ct-tjq-lin (pt-list limits)
+  (let* ((region (ct-pt-list-region pt-list))
+         (segs (aa-ct-tjq-lin-generate region pt-list limits)))
+    (setf (ct-seg-list-region segs) region)
+    segs))
+
 (defun ct-tjx-slerp (pt-list)
   (let* ((region (ct-pt-list-region pt-list))
          (segs (aa-ct-tjx-slerp-generate region pt-list)))
     (setf (ct-seg-list-region segs) region)
     segs))
+
+(defcfun aa-ct-seg-list-eval-q :int
+  (seg-list ct-seg-list-t)
+  (time :double)
+  (n size-t)
+  (q :pointer))

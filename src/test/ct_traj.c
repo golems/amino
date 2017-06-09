@@ -205,15 +205,26 @@ test_tjq(size_t n_p)
     }
 
     /* Set Limits */
-    double dqlim[n_q], ddqlim[n_q];
-    struct aa_ct_state limits;
-    limits.n_q = n_q;
-    limits.dq = dqlim;
-    limits.ddq = ddqlim;
+    struct aa_ct_state lim_max, lim_min;
+    double dqlim_max[n_q], ddqlim_max[n_q];
+    double dqlim_min[n_q], ddqlim_min[n_q];
+    struct aa_ct_limit limit = {.max = &lim_max, .min=&lim_min};
+    limit.max->n_q = n_q;
+    limit.max->dq = dqlim_max;
+    limit.max->ddq = ddqlim_max;
+    limit.min->n_q = n_q;
+    limit.min->dq = dqlim_min;
+    limit.min->ddq = ddqlim_min;
+
 
     for (size_t j = 0; j < n_q; j++) {
-        limits.dq[j] = aa_frand() + .5;
-        limits.ddq[j] = aa_frand() + .5;
+        double dq = aa_frand() + .5;
+        double ddq = aa_frand() + .5;
+        limit.max->dq[j] = dq;
+        limit.max->ddq[j] = ddq;
+        limit.min->dq[j] = -dq; // TODO: test different values
+        limit.min->ddq[j] = -ddq;
+
     }
 
     /* Generate Trajectory */
@@ -225,9 +236,9 @@ test_tjq(size_t n_p)
 
     {
         struct aa_ct_seg_list *seg_list =
-            aa_ct_tjq_lin_generate(&reg, pt_list, &limits);
+            aa_ct_tjq_lin_generate(&reg, pt_list, &limit);
         test_tjq_check( &reg, pt_list, seg_list,
-                        &limits, 1, 0 );
+                        limit.max, 1, 0 );
         /* aa_ct_seg_list_plot( seg_list, n_q, .01, */
         /*                      1, 0 ); */
     }

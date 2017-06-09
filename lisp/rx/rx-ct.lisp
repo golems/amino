@@ -35,15 +35,8 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(in-package :amino)
+(in-package :robray)
 
-
-
-(amino-ffi::def-foreign-container ct-pt-list ct-pt-list-t
-  :slots ((region nil :type (or null mem-region))))
-
-(amino-ffi::def-foreign-container ct-seg-list ct-seg-list-t
-  :slots ((region nil :type (or null mem-region))))
-
-(amino-ffi::def-foreign-container ct-limits ct-limits-t
-  :slots ((region nil :type (or null mem-region))))
+(cffi::defcfun aa-rx-ct-sg-limits amino::ct-limits-t
+  (region amino::mem-region-t)
+  (scenegraph rx-sg-t))

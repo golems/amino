@@ -306,8 +306,6 @@
                                     (render-frames t)
                                     (encode-video t)
                                     (output-directory *robray-tmp-directory*)
-                                    ;(pov-file "frame")
-                                    (frame-start 0)
                                     append
                                     (scene-graph *scene-graph*)
                                     (options *render-options*)
@@ -315,19 +313,22 @@
                                     include-text
                                     )
   (ensure-directories-exist output-directory)
-  (let ((frame-files (frame-files output-directory)))
-    (if append
-        (setq frame-start (if frame-files
-                              (1+ (last-frame-number frame-files))
-                              0))
-        (map nil #'delete-file frame-files)))
+
   ;; Write frames
   (loop
-     for frame from frame-start
-     for configuration = (funcall frame-configuration-function frame)
+     for frame-arg from 0
+     for frame-file from (let ((frame-files (frame-files output-directory)))
+                           (if append
+                               (if frame-files
+                                   (1+ (last-frame-number frame-files))
+                                   0)
+                               (progn
+                                 (map nil #'delete-file frame-files)
+                                 0)))
+     for configuration = (funcall frame-configuration-function frame-arg)
      while configuration
      do
-       (let ((frame-file (format nil "frame-~D.pov" frame)))
+       (let ((frame-file (format nil "frame-~D.pov" frame-file)))
          ;(print frame-file)
          ;(print configuration)
          (render-scene-graph scene-graph
@@ -368,7 +369,6 @@
                                :render-frames render-frames
                                :encode-video encode-video
                                :output-directory output-directory
-                               :frame-start 0
                                :options options
                                :include include
                                :include-text include-text

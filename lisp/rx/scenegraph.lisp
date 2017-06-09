@@ -864,8 +864,10 @@ Throws an error if scene graph is invalid."
         alist))
 
 (defun pairlist-configuration-map (names values &optional default-map)
-  (alist-configuration-map (pairlis names values) default-map))
-
+  (fold (lambda (map name value)
+          (tree-map-insert map name value))
+        (or default-map (make-configuration-map))
+        names values))
 
 (defun scene-frame-configuration (frame configuration-map default-configuration)
   (let ((variable (tree-map-find configuration-map
