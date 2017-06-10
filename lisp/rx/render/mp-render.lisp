@@ -38,7 +38,8 @@
 (in-package :robray)
 
 
-(defun motion-plan-configuration-function-time (motion-plan)
+(defun motion-plan-configuration-function-time (motion-plan &key
+                                                              (time-scale 1d0))
   (let* ((pts (amino::make-ct-pt-list))
          (m-sg (motion-plan-mutable-scene-graph motion-plan))
          (names (mutable-scene-graph-config-name-array m-sg))
@@ -49,15 +50,18 @@
                                                             m-sg)))
            (duration (amino::aa-ct-seg-list-duration segs)))
       (lambda (time)
-        (when (<= time duration)
-          (let ((q (make-vec (mutable-scene-graph-config-count m-sg))))
-            (with-foreign-simple-vector (q n-q) q :output
-              (amino::aa-ct-seg-list-eval-q segs time n-q q))
-            (pairlist-configuration-map names q)))))))
+        (let ((time (* time time-scale)))
+          (when (<= time duration)
+            (let ((q (make-vec (mutable-scene-graph-config-count m-sg))))
+              (with-foreign-simple-vector (q n-q) q :output
+                (amino::aa-ct-seg-list-eval-q segs time n-q q))
+              (pairlist-configuration-map names q))))))))
 
 (defun motion-plan-configuration-function-frame (motion-plan &key
+                                                               (time-scale 1d0)
                                                                (fps 30))
-  (let ((time-function (motion-plan-configuration-function-time motion-plan)))
+  (let ((time-function (motion-plan-configuration-function-time motion-plan
+                                                                :time-scale time-scale)))
     (lambda (frame)
       (funcall time-function (coerce (/ frame fps) 'double-float)))))
 
@@ -66,20 +70,23 @@
                             (camera-tf (tf nil))
                             include
                             render
+                            (time-scale 1d0)
                             include-text
                             (options robray::*render-options*))
-    (scene-graph-time-animate (motion-plan-configuration-function-time motion-plan)
-                              :camera-tf camera-tf
-                              :options options
-                              :encode-video t
-                              :render-frames render
-                              :include include
-                              :include-text include-text
-                              :scene-graph (motion-plan-scene-graph motion-plan)))
+  (scene-graph-time-animate (motion-plan-configuration-function-time motion-plan
+                                                                     :time-scale time-scale)
+                            :camera-tf camera-tf
+                            :options options
+                            :encode-video t
+                            :render-frames render
+                            :include include
+                            :include-text include-text
+                            :scene-graph (motion-plan-scene-graph motion-plan)))
 
 (defun render-motion-plans (plans
                             &key
                               (camera-tf (tf nil))
+                              (time-scale 1d0)
                               include
                               include-text
                               render
@@ -93,7 +100,9 @@
      with fps = (get-render-option options :frames-per-second)
      for plan in plans
      do
-       (scene-graph-frame-animate (motion-plan-configuration-function-frame plan :fps fps)
+       (scene-graph-frame-animate (motion-plan-configuration-function-frame plan
+                                                                            :fps fps
+                                                                            :time-scale time-scale)
                                   :camera-tf camera-tf
                                   :append t
                                   :options options
