@@ -47,7 +47,7 @@
 using namespace amino;
 
 /**
- * Generic function to add an element to a list container.
+ * Generic function to add an element to the back of a list container.
  *
  * @param list List to add el to
  * @param el   Element to add
@@ -62,6 +62,25 @@ aa_ct_list_add(T *list, U *el)
 
     el->prev = list->list.back();
     list->list.push_back(el);
+}
+
+/**
+ * Generic function to add an element to the front of a list container.
+ *
+ * @param list List to add el to
+ * @ param el  Element to add to the front.
+ */
+template <typename T, typename U>
+static inline void
+aa_ct_list_add_front(T *list, U >el)
+{
+    el->prev = NULL;
+    if (list->list.size()) {
+        list->list.front()->prev = el;
+    }
+
+    el->next = list->list.front();
+    list->list.insert(list->list.begin(), el);
 }
 
 /**
@@ -88,6 +107,23 @@ aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state)
     aa_ct_state_clone(&list->reg, &pt->state, state);
 
     aa_ct_list_add(list, pt);
+}
+
+AA_API void
+aa_ct_pt_list_add_front(struct aa_ct_pt_list) *list, struct aa_ct_state *state)
+{
+    /* Don't add the same point if it's already at the beginning. */
+    if (list->list.size()) {
+        struct aa_ct_pt *f_pt = list->list.front();
+
+        if (aa_ct_state_eq(&f_pt->state, state)
+            return;
+    }
+
+    struct aa_ct_pt *pt = new(&list->reg) struct aa_ct_pt;
+    aa_ct_state_clone(&list->reg, &pt->state, state);
+
+    aa_ct_list_add_front(list, pt);
 }
 
 
@@ -725,7 +761,7 @@ int aa_ct_seg_list_check_c0( struct aa_ct_seg_list * segs, double dt,
     for( double t0 = 0, t1 = dt; aa_ct_seg_list_eval(segs, state1, t1); t0 += dt, t1 += dt )
     {
         aa_ct_seg_list_eval(segs, state0, t0);
- 
+
         double state_diff = 0.0;
         for (size_t i = 0; i < n_q; i++)
         {

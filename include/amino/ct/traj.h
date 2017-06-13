@@ -83,13 +83,22 @@ struct aa_ct_seg_list;
 struct aa_ct_pt_list *aa_ct_pt_list_create(struct aa_mem_region *reg);
 
 /**
- * Add a reference to a waypoint to a point list. The reference will be kept in
+ * Add a reference to a waypoint to the back of a point list. The reference will be kept in
  * the list.
  *
  * @param list  List to add point to
  * @param state State to add to list
  */
 void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state);
+
+/**
+ * Add a reference to a waypoint to the front of a point list. The reference will be kept in
+ * the list.
+ *
+ * @param list List to add point to
+ * @param state State to add to list
+ */
+void aa_ct_pt_list_add_front(struct aa_ct_pt_list *list, struct aa_ct_state *state);
 
 void aa_ct_pt_list_add_qutr(struct aa_ct_pt_list *list, const double E[7]);
 
