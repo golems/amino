@@ -1,6 +1,6 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
-;;;; Copyright (c) 2015, Rice University
+;;;; Copyright (c) 2017, Rice University
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -35,72 +35,8 @@
 ;;;;   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 ;;;;   POSSIBILITY OF SUCH DAMAGE.
 
-(defpackage :robray
-  (:use :cl :alexandria :amino :amino-ffi :sycamore :sycamore-util :sycamore-cgen)
-  (:export
+(in-package :robray)
 
-   ;; Frame Types
-   :scene-frame-fixed
-   :scene-frame-revolute
-   :scene-frame-prismatic
-
-   ;; Geometry
-   :scene-box
-   :scene-sphere
-   :scene-cylinder
-   :scene-cone
-
-
-   ;; Draw interface
-   :draw-options
-   :draw-options-default
-   :merge-draw-options
-   :draw-option
-
-   :draw-tf-axis
-
-   :item-cylinder-axis
-   :item-cone-axis
-   :item-frame-axis
-
-   ;; Render options
-   :*render-options*
-   :get-render-option
-   :render-options-default
-   :render-options
-   :merge-render-options
-   :render-options-fast
-   :render-options-medium
-   :render-options-full-hd
-   :render-options-4k
-   :render-scene-graph
-
-   ;; Scene Graph Manipulation
-   :scene-graph
-   :scene-graph-find
-   :merge-scene-graph
-   :scene-graph-parent-name
-   :scene-graph-f
-   :scene-graph-remove-frame
-   :scene-graph-reparent
-   :scene-graph-tf-absolute
-   :load-scene-file
-   :scene-graph-allow-collisions
-
-
-   ;; variables
-   :*render-host-alist
-   :*urdf-package-alist
-
-
-   ;; sub-scene-graph
-   :sub-scene-graph
-   :sub-scene-graph-scene-graph
-   :scene-graph-chain
-
-   ;; motion-plan
-   :motion-plan
-   :motion-plan-endpoint-map
-   :motion-plan-endpoint-array
-
-   ))
+(cffi::defcfun aa-rx-ct-sg-limits amino::ct-limits-t
+  (region amino::mem-region-t)
+  (scenegraph rx-sg-t))

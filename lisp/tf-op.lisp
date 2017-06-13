@@ -396,6 +396,13 @@ Translation is not altered."
   (make-quaternion-translation :quaternion (make-quaternion :data (subseq x 0 4))
                                :translation (vec3* (aref x 4) (aref x 5) (aref x 6))))
 
+(defmethod quaternion-translation ((x cons))
+  (assert (= 7 (length x)))
+  (make-quaternion-translation :quaternion (quaternion* (elt x 0)
+                                                        (elt x 1)
+                                                        (elt x 2)
+                                                        (elt x 3))
+                               :translation (vec3* (elt x 4) (elt x 5) (elt x 6))))
 
 (defmethod quaternion-translation ((x (eql nil)))
   (make-quaternion-translation :quaternion (quaternion nil)

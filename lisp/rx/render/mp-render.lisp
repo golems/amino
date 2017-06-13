@@ -37,44 +37,60 @@
 
 (in-package :robray)
 
+
+(defun motion-plan-configuration-function-time (motion-plan &key
+                                                              (time-scale 1d0))
+  (let* ((pts (amino::make-ct-pt-list))
+         (m-sg (motion-plan-mutable-scene-graph motion-plan))
+         (names (mutable-scene-graph-config-name-array m-sg))
+         (n-pts (motion-plan-point-count motion-plan)))
+    (dotimes (i n-pts)
+      (amino::ct-pt-list-add-q pts (motion-plan-refarray motion-plan i)))
+    (let* ((segs (amino::ct-tjq-lin pts (aa-rx-ct-sg-limits (amino::ct-pt-list-region pts)
+                                                            m-sg)))
+           (duration (amino::aa-ct-seg-list-duration segs)))
+      (lambda (time)
+        (let ((time (* time time-scale)))
+          (when (<= time duration)
+            (let ((q (make-vec (mutable-scene-graph-config-count m-sg))))
+              (with-foreign-simple-vector (q n-q) q :output
+                (amino::aa-ct-seg-list-eval-q segs time n-q q))
+              (pairlist-configuration-map names q))))))))
+
+(defun motion-plan-configuration-function-frame (motion-plan &key
+                                                               (time-scale 1d0)
+                                                               (fps 30))
+  (let ((time-function (motion-plan-configuration-function-time motion-plan
+                                                                :time-scale time-scale)))
+    (lambda (frame)
+      (funcall time-function (coerce (/ frame fps) 'double-float)))))
+
 (defun render-motion-plan (motion-plan
                           &key
-                            (delta-t .25d0)
-                            config-velocity
                             (camera-tf (tf nil))
                             include
                             render
+                            (time-scale 1d0)
                             include-text
                             (options robray::*render-options*))
-  (let* ((n (motion-plan-length motion-plan))
-         (keyframes (keyframe-set (loop
-                                     for i below n
-                                     for config = (motion-plan-refmap motion-plan i)
-                                     for array = (motion-plan-refarray motion-plan i)
-                                     for time = 0d0 then (if config-velocity
-                                                             (+ time (/ (vec-dist array last-array)
-                                                                        config-velocity))
-                                                             (+ time delta-t))
-                                     for last-array = array
-                                     collect (joint-keyframe time config))))
-         (sg (motion-plan-scene-graph motion-plan)))
-    (scene-graph-time-animate (keyframe-configuration-function keyframes)
-                              :camera-tf camera-tf
-                              :options options
-                              :encode-video t
-                              :render-frames render
-                              :include include
-                              :include-text include-text
-                              :scene-graph sg)))
+  (scene-graph-time-animate (motion-plan-configuration-function-time motion-plan
+                                                                     :time-scale time-scale)
+                            :camera-tf camera-tf
+                            :options options
+                            :encode-video t
+                            :render-frames render
+                            :include include
+                            :include-text include-text
+                            :scene-graph (motion-plan-scene-graph motion-plan)))
 
 (defun render-motion-plans (plans
                             &key
-                              (delta-t .10d0)
-                              ;config-velocity
                               (camera-tf (tf nil))
+                              (time-scale 1d0)
                               include
                               include-text
                               render
+                              encode-video
                               (directory *robray-tmp-directory*)
                               (options *render-options*))
 
@@ -82,37 +98,21 @@
   ;; Write povray files
   (loop
      with fps = (get-render-option options :frames-per-second)
-     with period = (/ 1d0 fps)
-     for time = 0d0 then (keyframe-set-end keyframes)
-     ;for t0 = time
      for plan in plans
-     for keyframes =
-       (keyframe-set (loop
-                        for i below (motion-plan-length plan)
-                        for config = (motion-plan-refmap plan i)
-                        for array = (motion-plan-refarray plan i)
-                        for last-array = array
-                        collect (prog1 (joint-keyframe time config)
-                                  (incf time delta-t))))
-     for function = (let* ((t0 (keyframe-set-start keyframes))
-                           (t1 (keyframe-set-end keyframes))
-                           (fun (keyframe-configuration-function keyframes)))
-                      (lambda (i)
-                        (let ((tt (* i period)))
-                          ;;(format t "~&~D (~As, ~A, ~A) [~A, ~A]" i tt fps period t0 t1)
-                          (funcall fun tt))))
-
      do
-       (scene-graph-frame-animate function
-                                   :camera-tf camera-tf
-                                   :append t
-                                   :options options
-                                   :encode-video nil
-                                   :render-frames nil
-                                   :include include
-                                   :include-text include-text
-                                   :scene-graph (motion-plan-scene-graph plan)))
-  ;; Render
-  (when render
-    (net-render :directory directory
-                :options options)))
+       (scene-graph-frame-animate (motion-plan-configuration-function-frame plan
+                                                                            :fps fps
+                                                                            :time-scale time-scale)
+                                  :camera-tf camera-tf
+                                  :append t
+                                  :options options
+                                  :render-frames nil
+                                  :include include
+                                  :include-text include-text
+                                  :scene-graph (motion-plan-scene-graph plan)))
+
+
+  (finish-render :output-directory directory
+                 :render-frames render
+                 :encode-video encode-video
+                 :options options))

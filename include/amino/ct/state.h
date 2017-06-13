@@ -74,6 +74,7 @@ struct aa_ct_state {
  */
 struct aa_ct_limit {
     struct aa_ct_state *min; ///< The minimum limit values
+                             ///< Dq and ddq should be negative.
     struct aa_ct_state *max; ///< The maximum limit values
 };
 

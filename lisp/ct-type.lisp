@@ -44,3 +44,6 @@
 
 (amino-ffi::def-foreign-container ct-seg-list ct-seg-list-t
   :slots ((region nil :type (or null mem-region))))
+
+(amino-ffi::def-foreign-container ct-limits ct-limits-t
+  :slots ((region nil :type (or null mem-region))))

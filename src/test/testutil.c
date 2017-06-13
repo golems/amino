@@ -99,6 +99,15 @@ void test_flt( const char *name, double a, double b, double tol )
     }
 }
 
+void test_fgt( const char *name, double a, double b, double tol )
+{
+    if (a + tol <= b) {
+        fprintf( stderr, "FAILDED: %s\n", name);
+        fprintf( stderr, "a: %f, b: %f\n", a, b);
+        abort();
+    }
+}
+
 void aa_test_ulimit( void ) {
     // some limits because
     {

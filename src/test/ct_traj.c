@@ -71,14 +71,22 @@ test_tjX(void)
     aa_ct_pt_list_add(pt_list, &pt2);
     aa_ct_pt_list_add(pt_list, &pt3);
 
-    double dXlim[6], ddXlim[6];
-    struct aa_ct_state limits;
-    limits.dX = dXlim;
-    limits.ddX = ddXlim;
+    double dXlimMax[6], ddXlimMax[6], dXlimMin[6], ddXlimMin[6];
+    struct aa_ct_state min, max;
+    max.dX = dXlimMax;
+    max.ddX = ddXlimMax;
+    min.dX = dXlimMin;
+    min.ddX= ddXlimMin;
+
+    struct aa_ct_limit limits;
+    limits.max = &max;
+    limits.min = &min;
 
     for (size_t j = 0; j < 6; j++) {
-        limits.dX[j] = 1;
-        limits.ddX[j] = 1;
+        limits.max->dX[j] = 1;
+        limits.max->ddX[j] = 1;
+        limits.min->dX[j] = -1;
+        limits.min->ddX[j] = -1;
     }
 
     struct aa_ct_seg_list *seg_list =
@@ -122,13 +130,21 @@ test_tjq_pb_specific_numbers(void)
     aa_ct_pt_list_add(pt_list, &pt2);
     aa_ct_pt_list_add(pt_list, &pt3);
 
-    double dqlim[1], ddqlim[1];
-    dqlim[0] = 2;
-    ddqlim[0] = 4;
-    struct aa_ct_state limits;
-    limits.dq = dqlim;
-    limits.ddq = ddqlim;
-    limits.n_q = 1;
+    double dqlimMax[1], ddqlimMax[1], dqlimMin[1], ddqlimMin[1];
+    dqlimMax[0] = 2;
+    ddqlimMax[0] = 4;
+    dqlimMin[0] = -2;
+    ddqlimMin[0] = -4;
+    struct aa_ct_state max, min;
+    max.dq = dqlimMax;
+    max.ddq = ddqlimMax;
+    max.n_q = 1;
+    min.dq = dqlimMin;
+    min.ddq = ddqlimMin;
+    min.n_q = 1;
+    struct aa_ct_limit limits;
+    limits.max = &max;
+    limits.min = &min;
 
     struct aa_ct_seg_list *seg_list = aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
 
@@ -164,7 +180,7 @@ struct tjq_check_cx {
     struct aa_mem_region *reg;
     struct aa_ct_seg_list *seg_list;
     struct aa_ct_pt_list *pt_list;
-    struct aa_ct_state *limits;
+    struct aa_ct_limit *limits;
     int dq;
     int ddq;
 
@@ -192,10 +208,14 @@ static int tjq_check_fun(void *cx_, double t, const struct aa_ct_state *state )
             test( "Traj q normal ddq", isfinite(state->ddq[i]) );
 
         /* Limits */
-        if( cx->dq )
-            test_flt( "Traj q limit dq",  fabs(state->dq[i]),  cx->limits->dq[i], 1e-3 );
-        if( cx->ddq )
-            test_flt( "Traj q limit ddq", fabs(state->ddq[i]), cx->limits->ddq[i], 1e-3 );
+        if( cx->dq ) {
+            test_flt( "Traj q max limit dq",  state->dq[i],  cx->limits->max->dq[i], 1e-3 );
+            test_fgt( "Traj q min limit dq",  state->dq[i],  cx->limits->min->dq[i], 1e-3 );
+        }
+        if( cx->ddq ) {
+            test_flt( "Traj q max limit ddq", state->ddq[i], cx->limits->max->ddq[i], 1e-3 );
+            test_fgt( "Traj q min limit ddq", state->ddq[i], cx->limits->min->ddq[i], 1e-3 );
+        }
 
         /* Integrate */
         cx->sdq[i] += cx->dt*state->dq[i];
@@ -207,7 +227,7 @@ void
 test_tjq_check( struct aa_mem_region *reg,
                 struct aa_ct_pt_list *pt_list,
                 struct aa_ct_seg_list *seg_list,
-                struct aa_ct_state *limits,
+                struct aa_ct_limit *limits,
                 int dq, int ddq )
 {
     (void) pt_list;
@@ -216,6 +236,7 @@ test_tjq_check( struct aa_mem_region *reg,
     const struct aa_ct_state *state0 = aa_ct_pt_list_start_state(pt_list);
     const struct aa_ct_state *state1 = aa_ct_pt_list_final_state(pt_list);
     double sdq[n_q];
+
     AA_MEM_CPY(sdq, state0->q, n_q);
     aa_ct_seg_list_eval(seg_list, vstate, 0);
     aveq("Traj q 0", n_q, state0->q, vstate->q, 1e-3);
@@ -223,9 +244,10 @@ test_tjq_check( struct aa_mem_region *reg,
     double max = DBL_MIN;
     for (size_t i = 0; i < n_q; i++)
     {
-        max = AA_MAX(max, limits->dq[i]);
+        max = AA_MAX(max, limits->max->dq[i]);
+        max = AA_MAX(max, fabs(limits->min->dq[i]));
     }
-    double tol = ((double) n_q) * max * dt * 1.05; // 105% of the maximum velocity. 
+    double tol = ((double) n_q) * max * dt * 1.05; // 105% of the maximum velocity.
     double eps = .01;
 
     struct tjq_check_cx cx = { .reg = reg,
@@ -274,29 +296,38 @@ test_tjq(size_t n_p)
     }
 
     /* Set Limits */
-    double dqlim[n_q], ddqlim[n_q];
-    struct aa_ct_state limits;
-    limits.n_q = n_q;
-    limits.dq = dqlim;
-    limits.ddq = ddqlim;
+    struct aa_ct_state lim_max, lim_min;
+    double dqlim_max[n_q], ddqlim_max[n_q];
+    double dqlim_min[n_q], ddqlim_min[n_q];
+    struct aa_ct_limit limit = {.max = &lim_max, .min=&lim_min};
+    limit.max->n_q = n_q;
+    limit.max->dq = dqlim_max;
+    limit.max->ddq = ddqlim_max;
+    limit.min->n_q = n_q;
+    limit.min->dq = dqlim_min;
+    limit.min->ddq = ddqlim_min;
+
 
     for (size_t j = 0; j < n_q; j++) {
-        limits.dq[j] = aa_frand() + .5;
-        limits.ddq[j] = aa_frand() + .5;
+        double dq = aa_frand() + .5;
+        double ddq = aa_frand() + .5;
+        limit.max->dq[j] = dq;
+        limit.max->ddq[j] = ddq;
+        limit.min->dq[j] = -dq * .3;
+        limit.min->ddq[j] = -ddq * .3;
     }
 
     {
         /* Generate Trajectory */
         struct aa_ct_seg_list *pb_list =
-            aa_ct_tjq_pb_generate(&reg, pt_list, &limits);
+            aa_ct_tjq_pb_generate(&reg, pt_list, &limit);
         struct aa_ct_seg_list *lin_list =
-            aa_ct_tjq_lin_generate(&reg, pt_list, &limits);
+            aa_ct_tjq_lin_generate(&reg, pt_list, &limit);
         /* Evaluate Trajectory */
         test_tjq_check( &reg, pt_list, pb_list,
-                        &limits, 1, 0 );
+                        &limit, 1, 0);
         test_tjq_check( &reg, pt_list, lin_list,
-                        &limits, 1, 0);
-
+                        &limit, 1, 0);
     }
 
     aa_ct_pt_list_destroy(pt_list);

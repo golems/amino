@@ -72,7 +72,7 @@ aa_ct_list_add(T *list, U *el)
  */
 template <typename T, typename U>
 static inline void
-aa_ct_list_add_front(T *list, U >el)
+aa_ct_list_add_front(T *list, U *el)
 {
     el->prev = NULL;
     if (list->list.size()) {
@@ -110,13 +110,13 @@ aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state)
 }
 
 AA_API void
-aa_ct_pt_list_add_front(struct aa_ct_pt_list) *list, struct aa_ct_state *state)
+aa_ct_pt_list_add_front(struct aa_ct_pt_list *list, struct aa_ct_state *state)
 {
     /* Don't add the same point if it's already at the beginning. */
     if (list->list.size()) {
         struct aa_ct_pt *f_pt = list->list.front();
 
-        if (aa_ct_state_eq(&f_pt->state, state)
+        if (aa_ct_state_eq(&f_pt->state, state))
             return;
     }
 
@@ -132,6 +132,16 @@ void aa_ct_pt_list_add_qutr(struct aa_ct_pt_list *list, const double E[7])
     struct aa_ct_state state;
     AA_MEM_ZERO(&state,1);
     state.X = (double*)E;
+
+    aa_ct_pt_list_add(list,&state);
+}
+
+void aa_ct_pt_list_add_q(struct aa_ct_pt_list *list, size_t n_q, const double *q)
+{
+    struct aa_ct_state state;
+    AA_MEM_ZERO(&state,1);
+    state.q = (double*)q;
+    state.n_q = n_q;
 
     aa_ct_pt_list_add(list,&state);
 }
@@ -210,6 +220,25 @@ aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
 
     list->it_on = 0;
     return AA_CT_SEG_OUT;
+}
+
+int aa_ct_seg_list_eval_q(struct aa_ct_seg_list *list, double t, size_t n, double *q)
+{
+    struct aa_ct_state state;
+    AA_MEM_ZERO(&state,1);
+    state.n_q = n;
+    state.q = q;
+    return aa_ct_seg_list_eval(list,&state,t);
+}
+
+int aa_ct_seg_list_eval_dq(struct aa_ct_seg_list *list, double t, size_t n, double *q, double *dq)
+{
+    struct aa_ct_state state;
+    AA_MEM_ZERO(&state,1);
+    state.n_q = n;
+    state.q = q;
+    state.dq = dq;
+    return aa_ct_seg_list_eval(list,&state,t);
 }
 
 AA_API void
@@ -339,7 +368,7 @@ static struct aa_ct_seg *
 aa_ct_seg_dq_new( struct aa_mem_region *reg,
                   double t0, struct aa_ct_state *state0,
                   struct aa_ct_state *state1,
-                  struct aa_ct_state *limits )
+                  struct aa_ct_limit *limits )
 {
     /* Allocate */
     struct aa_ct_seg_dq *cx = AA_MEM_REGION_NEW(reg,struct aa_ct_seg_dq);
@@ -361,7 +390,12 @@ aa_ct_seg_dq_new( struct aa_mem_region *reg,
     double dt = 0;
     for( size_t i = 0; i < cx->n_q; i ++ ) {
         cx->dq[i] = state1->q[i] - state0->q[i];
-        double dti = fabs(cx->dq[i]) / limits->dq[i];
+        double dti;
+        if (cx->dq[i] < 0) {
+            dti = cx->dq[i] / limits->min->dq[i];
+        } else {
+            dti = cx->dq[i] / limits->max->dq[i];
+        }
         dt = AA_MAX(dt, dti);
 
         if( ! std::isfinite(dti) ) {
@@ -382,7 +416,7 @@ aa_ct_seg_dq_new( struct aa_mem_region *reg,
 
 struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
                                               struct aa_ct_pt_list *list,
-                                              struct aa_ct_state *limits)
+                                              struct aa_ct_limit *limits)
 {
     struct aa_ct_seg_list *segs = new(reg) aa_ct_seg_list(reg);
 
@@ -485,16 +519,23 @@ aa_ct_tj_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
 }
 
 /**
- * Calculates the maximum (a - b) / m value for a n_q vector.
+ * Calculates the maximum (a - b) / (max or min) value for a n_q vector, respecting signs.
  *
+ * @param min The minumum limit, should be negative.
  * @return The maximum value.
  */
 double
-aa_ct_tj_pb_limit(double *a, double *b, double *m, size_t n_q)
+aa_ct_tj_pb_limit(double *a, double *b, double *min, double *max, size_t n_q)
 {
     double mv = DBL_MIN;
     for (size_t i = 0; i < n_q; i++) {
-        double v = fabs(((a) ? a[i] : 0) - ((b) ? b[i] : 0)) / ((m) ? m[i] : 1);
+        double mag = ((a) ? a[i] : 0) - ((b) ? b[i] : 0);
+        double v;
+        if (mag < 0) {
+            v = mag / ((min) ? min[i] : 1);
+        } else {
+            v = mag / ((max) ? max[i] : 1);
+        }
         mv = (mv < v) ? v : mv;
     }
 
@@ -512,7 +553,7 @@ aa_ct_tj_pb_limit(double *a, double *b, double *m, size_t n_q)
  */
 struct aa_ct_seg *
 aa_ct_tj_pb_new(struct aa_mem_region *reg, struct aa_ct_pt *pt,
-                struct aa_ct_state *limits)
+                struct aa_ct_limit *limits)
 {
     size_t n_q = pt->state.n_q;
     struct aa_ct_seg *seg = new(reg) struct aa_ct_seg();
@@ -532,8 +573,9 @@ aa_ct_tj_pb_new(struct aa_mem_region *reg, struct aa_ct_pt *pt,
 
     cx->t = 0;
     cx->dt = DBL_MAX;
-    if (pt->next)
-        cx->dt = aa_ct_tj_pb_limit(pt->next->state.q, cx->q, limits->dq, n_q);
+    if (pt->next) {
+        cx->dt = aa_ct_tj_pb_limit(pt->next->state.q, cx->q, limits->min->dq, limits->max->dq, n_q);
+    }
     cx->b = 0;
 
     seg->cx = (void *) cx;
@@ -548,7 +590,7 @@ aa_ct_tj_pb_new(struct aa_mem_region *reg, struct aa_ct_pt *pt,
  * @param limits Kinematic limits
  */
 void
-aa_ct_tj_pb_update(struct aa_ct_seg *seg, struct aa_ct_state *limits)
+aa_ct_tj_pb_update(struct aa_ct_seg *seg, struct aa_ct_limit *limits)
 {
     struct aa_ct_seg_pb_cx *c_cx, *p_cx, *n_cx;
     aa_ct_tj_pb_nbrs(seg, &p_cx, &c_cx, &n_cx);
@@ -560,7 +602,7 @@ aa_ct_tj_pb_update(struct aa_ct_seg *seg, struct aa_ct_state *limits)
 
     // Calculate acceleration based on new velocities
     c_cx->b = aa_ct_tj_pb_limit(c_cx->dq, (p_cx) ? p_cx->dq : NULL,
-                                limits->ddq, c_cx->n_q);
+                                limits->min->ddq, limits->max->ddq, c_cx->n_q);
 
     for (size_t i = 0; i < c_cx->n_q; i++)
         c_cx->ddq[i] = (c_cx->dq[i] - ((p_cx) ? p_cx->dq[i] : 0)) / c_cx->b;
@@ -574,7 +616,7 @@ aa_ct_tj_pb_update(struct aa_ct_seg *seg, struct aa_ct_state *limits)
 
 AA_API struct aa_ct_seg_list *
 aa_ct_tjq_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
-                      struct aa_ct_state *limits)
+                      struct aa_ct_limit *limits)
 {
     struct aa_ct_seg_list *list = new(reg) struct aa_ct_seg_list(reg);
 
@@ -680,7 +722,7 @@ aa_ct_tjX_pb_eval(struct aa_ct_seg *seg, struct aa_ct_state *state, double t)
 // TODO: This is a hack, replace with a real function later.
 AA_API struct aa_ct_seg_list *
 aa_ct_tjX_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
-                      struct aa_ct_state *limits)
+                      struct aa_ct_limit *limits)
 {
     struct aa_ct_pt_list *Xpt_list = aa_ct_pt_list_create(reg);
 
@@ -709,10 +751,16 @@ aa_ct_tjX_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
         p_pt = Xpt_list->list.back();
     }
 
-    struct aa_ct_state Xlimits;
-    Xlimits.n_q = 6;
-    Xlimits.dq = limits->dX;
-    Xlimits.ddq = limits->ddX;
+    struct aa_ct_state X_lim_max, X_lim_min;
+    struct aa_ct_limit Xlimits;
+    Xlimits.max = &X_lim_max;
+    Xlimits.min = &X_lim_min;
+    Xlimits.max->n_q = 6;
+    Xlimits.min->n_q = 6;
+    Xlimits.max->dq = limits->max->dX;
+    Xlimits.max->ddq = limits->max->ddX;
+    Xlimits.min->dq = limits->min->dX;
+    Xlimits.min->ddq = limits->min->ddX;
 
     struct aa_ct_seg_list *Xseg_list =
         aa_ct_tjq_pb_generate(reg, Xpt_list, &Xlimits);

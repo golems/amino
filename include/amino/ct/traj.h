@@ -100,7 +100,15 @@ void aa_ct_pt_list_add(struct aa_ct_pt_list *list, struct aa_ct_state *state);
  */
 void aa_ct_pt_list_add_front(struct aa_ct_pt_list *list, struct aa_ct_state *state);
 
+/**
+ * Add a quaternion-translation pose to the point list.
+ */
 void aa_ct_pt_list_add_qutr(struct aa_ct_pt_list *list, const double E[7]);
+
+/**
+ * Add a quaternion-translation position the point list.
+ */
+void aa_ct_pt_list_add_q(struct aa_ct_pt_list *list, size_t n_q, const double *q);
 
 /**
  * Destroys an allocated point list.
@@ -144,6 +152,16 @@ int aa_ct_seg_list_eval(struct aa_ct_seg_list *list, struct aa_ct_state *state,
                         double t);
 
 /**
+ * Evaluate trajectory and fill configuration array.
+ */
+int aa_ct_seg_list_eval_q(struct aa_ct_seg_list *list, double t, size_t n, double *q);
+
+/**
+ * Evaluate trajectory and fill configuration and velocity arrays.
+ */
+int aa_ct_seg_list_eval_dq(struct aa_ct_seg_list *list, double t, size_t n, double *q, double *dq);
+
+/**
  * Plots a segment list with a given resolution. Pipes commands to gnuplot.
  *
  * @param list Segment list to plot
@@ -180,7 +198,7 @@ double aa_ct_seg_list_duration(const struct aa_ct_seg_list *list);
  */
 struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
                                              struct aa_ct_pt_list *list,
-                                             struct aa_ct_state *limits);
+                                             struct aa_ct_limit *limits);
 
 
 /**
@@ -194,7 +212,7 @@ struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
  */
 struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
                                               struct aa_ct_pt_list *list,
-                                              struct aa_ct_state *limits);
+                                              struct aa_ct_limit *limits);
 
 /**
  * Generate a parabolic blend trajectory in the workspace from a point list.
@@ -207,7 +225,7 @@ struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
  */
 struct aa_ct_seg_list *aa_ct_tjX_pb_generate(struct aa_mem_region *reg,
                                              struct aa_ct_pt_list *list,
-                                             struct aa_ct_state *limits);
+                                             struct aa_ct_limit *limits);
 
 
 

@@ -45,12 +45,19 @@
 
 
 void test( const char *name, int check ) ;
+/** Test fuzzy equals. */
 void test_feq( const char *name, double a, double b, double tol );
+/** Test fuzzy less than. */
 void test_flt( const char *name, double a, double b, double tol );
+/** Test fuzzy greater than. */
+void test_fgt( const char *name, double a, double b, double tol );
 
+/** Simple assertion over a fuzzy equals. */
 void afeq( double a, double b, double tol ) ;
+/** Assertion over a fuzzy equals with an error message. */
 void aafeq( const char *name, double a, double b, double tol ) ;
 
+/** A fuzzy equals over two vectors. */
 void aveq( const char * name, size_t n, const double *a, const double *b, double tol ) ;
 void aneq( double a, double b, double tol ) ;
 
