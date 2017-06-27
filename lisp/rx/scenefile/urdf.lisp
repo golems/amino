@@ -123,6 +123,7 @@
      for axis = (urdf-joint-axis j)
      for tf = (tf* (amino:euler-rpy rpy) xyz)
      for limits = (joint-limits :effort-limit (urdf-joint-limit-effort j)
+                                :acceleration-limit (urdf-joint-limit-effort j)
                                 :velocity-limit (urdf-joint-limit-velocity j)
                                 :min-position (urdf-joint-limit-lower j)
                                 :max-position (urdf-joint-limit-upper j))
