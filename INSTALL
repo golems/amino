@@ -8,6 +8,9 @@ This file describes the installation process for Amino.
 Setup and Dependencies {#installation_setup}
 ======================
 
+The following dependies are required or optional.  Please see below
+for the corresponding list of Debian and Ubuntu packages.
+
 Required Dependencies {#installation_setup_required}
 ---------------------
 
