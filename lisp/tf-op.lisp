@@ -107,6 +107,16 @@ Translation is not altered."
              (- a-y b-y)
              (- a-z b-z)))))
 
+(defmethod generic+ ((a vec3) (b list))
+  (with-vec3 (a-x a-y a-z) a
+    (destructuring-bind (b-x b-y b-z) b
+      (vec3* (+ a-x b-x)
+             (+ a-y b-y)
+             (+ a-z b-z)))))
+
+(defmethod generic+ ((a list) (b vec3))
+  (generic+ b a))
+
 ;;; TF Interface
 (defun make-tf (&key
                   (quaternion (quaternion* 0d0 0d0 0d0 1d0))
