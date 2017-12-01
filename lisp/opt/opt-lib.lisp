@@ -40,10 +40,10 @@
 
 ;; CGAL
 (define-foreign-library libamino-opt-cgal
-  (:unix (:or "libamino_opt_cgal.so"
-              "libamino_opt_cgal.so"
-              (:default "libamino_opt_cgal")))
-  (t (:default "libamino_opt_cgal")))
+  (:unix (:or "libamino-opt-cgal.so"
+              "libamino-opt-cgal.so"
+              (:default "libamino-opt-cgal")))
+  (t (:default "libamino-opt-cgal")))
 
 (define-foreign-library libcgal
   (:unix (:or "libCGAL.so"
@@ -61,10 +61,10 @@
 
 ;; LPSOLVE
 (define-foreign-library libamino-opt-lpsolve
-  (:unix (:or "libamino_opt_lpsolve.so"
-              "libamino_opt_lpsolve.so"
-              (:default "libamino_opt_lpsolve")))
-  (t (:default "libamino_opt_lpsolve")))
+  (:unix (:or "libamino-opt-lpsolve.so"
+              "libamino-opt-lpsolve.so"
+              (:default "libamino-opt-lpsolve")))
+  (t (:default "libamino-opt-lpsolve")))
 
 (define-foreign-library liblpsolve
   (:unix (:or "liblpsolve55.so"
@@ -76,10 +76,10 @@
 
 ;; CLP
 (define-foreign-library libamino-opt-clp
-  (:unix (:or "libamino_opt_clp.so"
-              "libamino_opt_clp.so"
-              (:default "libamino_opt_clp")))
-  (t (:default "libamino_opt_clp")))
+  (:unix (:or "libamino-opt-clp.so"
+              "libamino-opt-clp.so"
+              (:default "libamino-opt-clp")))
+  (t (:default "libamino-opt-clp")))
 
 (define-foreign-library libclp
   (:unix (:or "liblClp.so"
@@ -91,10 +91,10 @@
 
 ;; GLPK
 (define-foreign-library libamino-opt-glpk
-  (:unix (:or "libamino_opt_glpk.so"
-              "libamino_opt_glpk.so"
-              (:default "libamino_opt_glpk")))
-  (t (:default "libamino_opt_glpk")))
+  (:unix (:or "libamino-opt-glpk.so"
+              "libamino-opt-glpk.so"
+              (:default "libamino-opt-glpk")))
+  (t (:default "libamino-opt-glpk")))
 
 (define-foreign-library libglpk
   (:unix (:or "liblglpk.so"
