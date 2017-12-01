@@ -124,11 +124,14 @@ aa_sdl_display_params_is_first( struct aa_sdl_display_params *params )
 }
 
 #ifdef HAVE_SPNAV_H
+static int g_have_spnav = 0;
 
 static void aa_spnav_init() {
     int r = spnav_open();
     if( -1 == r ) {
         fprintf(stderr, "Error, could not open spacenav\n");
+    } else {
+        g_have_spnav = 1;
     }
 }
 
@@ -141,7 +144,7 @@ static void aa_spnav_poll(double dx[6])
     spnav_event spnevent = {0};
 
     // get the latest event
-    while( spnav_poll_event(&spnevent) ) {
+    while( g_have_spnav && spnav_poll_event(&spnevent) ) {
         switch( spnevent.type ) {
         case SPNAV_EVENT_MOTION:
             dv[0] = (double)spnevent.motion.x;
