@@ -49,7 +49,7 @@
 /**
  * Type signature of compiled scene graph functions.
  */
-typedef struct aa_rx_sg *(*aa_rx_dl_sg_fun)(struct aa_rx_sg *sg);
+typedef struct aa_rx_sg *(*aa_rx_dl_sg_fun)(struct aa_rx_sg *sg, const char *root);
 
 /**
  * Type signature of compiled mesh functions.
@@ -80,9 +80,37 @@ aa_rx_dl_mesh( const char *filename, const char *name );
  * @param scenegraph An initial scenegraph to which the loaded
  *                   scenegraph will be added, or NULL.
  *
+ * @sa aa_rx_dl_sg_at
+ *
  */
 AA_API struct aa_rx_sg *
 aa_rx_dl_sg( const char *filename, const char *name,
              struct aa_rx_sg *scenegraph);
 
+/**
+ * Dynamically load a compiled scene graph under a root frame.
+ *
+ * This function dynamically loads the scene graph plugin (via
+ * dlopen()), looks up the symbol for the scene graph load function
+ * (via dlsym()), and calls the function to load the scene graph.
+ *
+ * @param filename   The name of the shared object, passed
+ *                   directly as the first parameter to dlopen().
+ *
+ * @param name       The name of the scene graph, as specified in the
+ *                   prior call to the scene graph compiler.  Used to
+ *                   construct the symbol argument for dlsym().
+ *
+ * @param scenegraph An initial scenegraph to which the loaded
+ *                   scenegraph will be added, or NULL.
+ *
+ * @param root       The root frame under which the new scenegraph is
+ *                   loaded.
+ *
+ * @sa aa_rx_dl_sg
+ *
+ */
+AA_API struct aa_rx_sg *
+aa_rx_dl_sg_at ( const char *filename, const char *name,
+                 struct aa_rx_sg *scenegraph, const char *root );
 #endif /*AMINO_RX_SCENE_PLUGIN_H*/

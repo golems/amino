@@ -113,8 +113,9 @@ aa_rx_dl_mesh( const char *filename, const char *name )
 }
 
 AA_API struct aa_rx_sg *
-aa_rx_dl_sg( const char *filename, const char *name,
-             struct aa_rx_sg *sg)
+aa_rx_dl_sg_at( const char *filename, const char *name,
+                struct aa_rx_sg *sg,
+                const char *root)
 {
     size_t n = strlen(name);
     char buf[32+n];
@@ -124,10 +125,18 @@ aa_rx_dl_sg( const char *filename, const char *name,
     aa_rx_dl_sg_fun fun = (aa_rx_dl_sg_fun)rx_dlopen(filename, buf, &handle);
 
     if(fun){
-        sg = fun(sg);
+        sg = fun(sg, root);
         aa_rx_sg_set_destructor(sg, plugin_destructor, handle);
         return sg;
     } else {
         return NULL;
     }
+}
+
+
+AA_API struct aa_rx_sg *
+aa_rx_dl_sg( const char *filename, const char *name,
+             struct aa_rx_sg *sg)
+{
+    return aa_rx_dl_sg_at(filename, name, sg, "");
 }

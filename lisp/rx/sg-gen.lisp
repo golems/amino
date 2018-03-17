@@ -41,18 +41,20 @@
 (defun scene-genc-mesh-var (mesh)
   (rope "mesh__" (scene-mesh-name mesh)))
 
-(defun scene-genc-frame (scene-graph argument-name frame)
+(defun scene-genc-frame (scene-graph root-frame argument-name frame)
   (let* ((tf (scene-frame-tf frame))
          (name (scene-frame-name frame))
          (name-string (cgen-string (scene-frame-name frame)))
-         (parent-string (cgen-string (scene-frame-parent frame)))
+         (parent-string (if-let ((parent (scene-frame-parent frame)))
+                          (cgen-string parent)
+                          (cgen-identifier root-frame)))
          (q (tf-quaternion tf))
          (v (tf-translation tf)))
     (list
      (cgen-line-comment (rope "FRAME: " name)))
     (cgen-block
      (cgen-declare-array "static const double" "q" (amino::vec-list q))
-     (cgen-declare-array   "static const double""v" (amino::vec-list v))
+     (cgen-declare-array   "static const double" "v" (amino::vec-list v))
      (when (scene-frame-joint-p frame)
        (cgen-declare-array "static const double" "axis" (amino::vec-list (scene-frame-joint-axis frame))))
       (etypecase frame
@@ -282,7 +284,8 @@
 
 (defun scene-graph-genc (scene-graph &key
                                        (static-mesh t)
-                                       scene-name)
+                                       scene-name
+                                       (root-frame "root"))
   (let ((argument-name "sg")
         (function-name (scene-graph-scene-function-name scene-name))
         (stmts))
@@ -292,8 +295,10 @@
                      (cgen-stmt (cgen-assign argument-name
                                              (cgen-call "aa_rx_sg_create")))))
       ;; Map Frames
-      (item (map-scene-graph-frames 'list (lambda (frame)
-                                            (scene-genc-frame scene-graph argument-name frame))
+      (item (map-scene-graph-frames 'list
+                                    (lambda (frame)
+                                      (scene-genc-frame scene-graph root-frame
+                                                        argument-name frame))
                                     scene-graph))
       ;; Initialize meshes
       (item (scene-genc-mesh-vars scene-graph))
@@ -310,7 +315,10 @@
       ;; Ropify
       (flatten (list
                 (scene-genc-mesh-functions scene-graph static-mesh)
-                (cgen-defun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name)
+                (cgen-defun "struct aa_rx_sg *" function-name
+                            (list (rope "struct aa_rx_sg *" argument-name)
+                                  (rope ", ")
+                                  (rope "const char *root"))
                             (flatten (reverse stmts))))))))
 
 (defun scene-graph-gen-header (scene-graph &key
