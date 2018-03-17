@@ -1,0 +1,35 @@
+FROM debian:stretch
+
+# Debian's httpredir servers are too flaky,
+# retry a few times if it fails
+COPY ./script/install /root/amino/script/install
+RUN /root/amino/script/install/apt-retry.sh \
+        build-essential gfortran f2c \
+        autoconf automake libtool autoconf-archive autotools-dev \
+        maxima libblas-dev liblapack-dev \
+        libsdl2-dev \
+        libompl-dev libfcl-dev \
+        doxygen groff \
+        sbcl \
+        flex povray libav-tools \
+        coinor-libclp-dev libglpk-dev liblpsolve55-dev \
+        wget git \
+        libode-dev \
+        libboost-date-time-dev \
+        libboost-thread-dev \
+        libboost-serialization-dev \
+        libboost-chrono-dev \
+        ;
+
+RUN cd && /root/amino/script/install/install-quicklisp.sh
+
+RUN /root/amino/script/install/install-blender.sh
+
+RUN cd && git clone https://github.com/RethinkRobotics/baxter_common
+ENV ROS_PACKAGE_PATH=/root/baxter_common
+
+COPY . /root/amino
+
+# Local Variables:
+# mode: dockerfile
+# End:
