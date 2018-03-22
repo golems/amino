@@ -89,7 +89,7 @@
 (defmethod object-rope ((object scene-frame-revolute))
   (frame-rope object))
 
-(defmethod object-prismatic ((object scene-frame-revolute))
+(defmethod object-rope ((object scene-frame-prismatic))
   (frame-rope object))
 
 (defmethod object-rope ((object scene-frame-fixed))
