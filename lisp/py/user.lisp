@@ -81,6 +81,8 @@ Examples:
   (z-angle angle))
 
 (defun |euler_zyx| (object)
+  "Convert OBJECT to an Euler Z-Y-X (aka yaw-pitch-roll) angle.
+"
   (euler-zyx object))
 
 (defun |vec| (&rest elements)
@@ -189,6 +191,7 @@ Examples:
         amino::+w+))
 
 (defun |duqu| (object)
+  "Convert OBJECT to a dual quaternion."
   (dual-quaternion object))
 
 (defmethod clpython::py-* ((a quaternion) (b quaternion))
@@ -272,9 +275,14 @@ Examples:
 ;;;;;;;;;;;;;;;;;;
 
 (defun |scene| (&rest things)
+  "Construct a new scene graph containing THINGS.
+
+THINGS may include other scene graphs, individual frames, or files to
+load."
   (robray::%scene-graph things))
 
 (defun |load_scene| (filename)
+  "Load the scene graph from FILENAME."
   (robray::load-scene-file filename))
 
 (defmethod clpython::attr-hook ((object robray::scene-graph)
@@ -283,6 +291,7 @@ Examples:
 
 
 (defun |write_scene| (scene filename )
+  "Write the SCENE to FILENAME."
   (robray::output-rope scene filename :if-exists :supersede))
 
 (defun |map_frames| (function scene-graph)
@@ -341,35 +350,42 @@ Examples:
             (cons :scale (val-num k))))))))
 
 (defun |geom_box| (options dimension)
+  "Construct a geometrix box."
   (robray::scene-geometry-box (pydict-draw-options options)
                               dimension))
 
 (defun |geom_sphere| (options radius)
+  "Construct a geometrix sphere."
   (robray::scene-geometry-sphere (pydict-draw-options options)
                               radius))
 
 (defun |geom_cylinder| (options height radius)
+  "Construct a geometrix cylinder."
   (robray::scene-geometry-cylinder (pydict-draw-options options)
                                    :radius radius
                                    :height height))
 
 (defun |geom_cone| (options height start-radius end-radius)
+  "Construct a geometrix cone."
   (robray::scene-geometry-cone (pydict-draw-options options)
                                :start-radius start-radius
                                :end-radius end-radius
                                :height height))
 
 (defun |geom_grid| (options dimension delta width)
+  "Construct a geometrix grid."
   (robray::scene-geometry-grid (pydict-draw-options options)
                                :dimension dimension
                                :delta delta
                                :width width))
 
 (defun |geom_mesh| (options mesh)
+  "Construct a geometrix mesh."
   (robray::scene-geometry-mesh (pydict-draw-options options)
                                mesh))
 
 (defun |scene_add_geom| (scene frame-name geom)
+  "Add GEOM to SCENE, attached at FRAME-NAME."
   (robray::scene-graph-add-geometry scene frame-name geom))
 
 (defmethod clpython::attr-hook ((object robray::scene-graph)
@@ -453,18 +469,23 @@ Examples:
 ;;;;;;;;;;;;;
 
 (defun |win_set_scene| (scene)
+  "Set the scene to display in the OpenGL window."
   (robray::win-set-scene-graph scene))
 
 (defun |win_run_sync| ()
+  "Run the OpenGL in the current thread."
   (robray::win-run :synchronous t))
 
 (defun |win_run_async| ()
+  "Run the OpenGL in a background thread."
   (robray::win-run :synchronous nil))
 
 (defun |win_view_collision| ()
+  "View collision geometry in the OpenGL window."
   (robray::win-view-collision))
 
 (defun |win_view_visual| ()
+  "View visual geometry in the OpenGL window."
   (robray::win-view-visual))
 
 ;;;;;;;;;;;;;;;;;;;;;;;

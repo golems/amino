@@ -655,7 +655,7 @@ EXTRA_DIST += \
 
 
 
-EXTRA_DIST += lisp-amino.md lisp-rx.md
+EXTRA_DIST += lisp-amino.md lisp-rx.md aminopy.md
 
 if HAVE_COMMON_LISP
 
@@ -666,6 +666,7 @@ lisp-amino.md: aarx.core share/doc.lisp
 		--eval '(sb-ext:quit)'
 
 lisp-rx.md: lisp-amino.md
+aminopy.md: lisp-amino.md
 
 else
 

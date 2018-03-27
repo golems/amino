@@ -797,6 +797,7 @@ INPUT                  = include \
                          doc/md/scenefile.md \
                          lisp-amino.md \
                          lisp-rx.md \
+                         aminopy.md \
                          doc/md/mainpage.md
 
 # This tag can be used to specify the character encoding of the source files

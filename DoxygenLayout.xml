@@ -37,6 +37,7 @@
         <tab type="user" visible="yes" title="Amino Core" url="@ref AMINO_LISP_AMINO"/>
         <tab type="user" visible="yes" title="Amino RX" url="@ref AMINO_LISP_RX"/>
       </tab>
+      <tab type="user" visible="yes" title="Amino CLPython" url="@ref AMINO_CLPYTHON"/>
     </tab>
 
     <!-- <tab type="classes" visible="yes" title=""> -->

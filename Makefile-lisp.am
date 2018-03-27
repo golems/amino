@@ -40,7 +40,7 @@ aarx_core_SOURCES = \
 	lisp/rx/rx-gl.lisp \
 	lisp/rx/rx-win.lisp \
 	lisp/rx/rx-cl.lisp \
-    lisp/rx/rx-ct.lisp \
+	lisp/rx/rx-ct.lisp \
 	lisp/rx/rx-mp.lisp \
 	lisp/rx/rx-ik.lisp \
 	lisp/rx/util.lisp \
