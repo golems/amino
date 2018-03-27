@@ -527,6 +527,8 @@
 (def-dq2 (aa-tf-duqu-exp tf-duqu-exp) "Dual quaternion exponential")
 
 (def-dq3 (aa-tf-duqu-mul tf-duqu-mul) "Dual quaternion multiply: c = a*b")
+(def-dq3 (aa-tf-duqu-add tf-duqu-add) "Dual quaternion add: c = a+b")
+(def-dq3 (aa-tf-duqu-sub tf-duqu-sub) "Dual quaternion subtract: c = a-b")
 (def-dq3 (aa-tf-duqu-cmul tf-duqu-cmul) "Dual quaternion multiply: c = conj(a)*b")
 (def-dq3 (aa-tf-duqu-mulc tf-duqu-mulc) "Dual quaternion multiply: c = a*conj(b)")
 

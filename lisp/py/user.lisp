@@ -80,6 +80,9 @@ Examples:
 "
   (z-angle angle))
 
+(defun |euler_zyx| (object)
+  (euler-zyx object))
+
 (defun |vec| (&rest elements)
   "Create a numerical vector composted of ELEMENTS.
 
@@ -165,6 +168,50 @@ Examples:
 "
   (quaternion object))
 
+(defmethod clpython::attr-hook ((object quaternion)
+                                (attr (eql 'clpython.user::|x|)))
+  (aref (amino::quaternion-data object)
+        amino::+x+))
+
+(defmethod clpython::attr-hook ((object quaternion)
+                                (attr (eql 'clpython.user::|y|)))
+  (aref (amino::quaternion-data object)
+        amino::+y+))
+
+(defmethod clpython::attr-hook ((object quaternion)
+                                (attr (eql 'clpython.user::|z|)))
+  (aref (amino::quaternion-data object)
+        amino::+z+))
+
+(defmethod clpython::attr-hook ((object quaternion)
+                                (attr (eql 'clpython.user::|w|)))
+  (aref (amino::quaternion-data object)
+        amino::+w+))
+
+(defun |duqu| (object)
+  (dual-quaternion object))
+
+(defmethod clpython::py-* ((a quaternion) (b quaternion))
+  (amino::tf-qmul a b))
+
+(defmethod clpython::py-+ ((a quaternion) (b quaternion))
+  (amino::tf-qadd a b))
+
+(defmethod clpython::py-- ((a quaternion) (b quaternion))
+  (amino::tf-qsub a b))
+
+(defmethod clpython::py-* ((a dual-quaternion) (b dual-quaternion))
+  (amino::tf-duqu-mul a b))
+
+(defmethod clpython::py-+ ((a dual-quaternion) (b dual-quaternion))
+  (amino::tf-duqu-add a b))
+
+(defmethod clpython::py-- ((a dual-quaternion) (b dual-quaternion))
+  (amino::tf-duqu-sub a b))
+
+(defmethod clpython::py-* ((a quaternion-translation) (b quaternion-translation))
+  (amino::tf-qutr-mul a b))
+
 
 (defun |mul| (&rest args)
   "Generically multiply ARGS.
@@ -224,8 +271,19 @@ Examples:
 ;; Scene Graphs ;;
 ;;;;;;;;;;;;;;;;;;
 
+(defun |scene| (&rest things)
+  (robray::%scene-graph things))
+
 (defun |load_scene| (filename)
   (robray::load-scene-file filename))
+
+(defmethod clpython::attr-hook ((object robray::scene-graph)
+                                (attr (eql 'clpython.user::|string|)))
+  (lambda () (rope-string (rope object))))
+
+
+(defun |write_scene| (scene filename )
+  (robray::output-rope scene filename :if-exists :supersede))
 
 (defun |map_frames| (function scene-graph)
   "Apply FUNCTION to every frame in SCENE-GRAPH."
@@ -239,13 +297,86 @@ Examples:
 (defmethod clpython:py-subs ((scene robray::scene-graph) name)
   (robray::scene-graph-find scene name))
 
-
 (def-subs-accessors robray::scene-frame
   ("name" robray::scene-frame-name)
   ("parent" robray::scene-frame-parent frame)
   ("tf" robray::scene-frame-tf frame)
   ("geometry" robray::scene-frame-geometry frame)
   ("collision" robray::scene-frame-geometry-collision frame))
+
+(defun |frame_fixed| (parent name tf)
+  (robray::scene-frame-fixed parent name :tf tf))
+
+;;; Geometry ;;;
+
+(defun pydict-draw-options (opts)
+  (labels ((val-vec (k)
+             (gethash k opts))
+           (val-bool (k)
+             (clpython::py-val->lisp-bool (gethash k opts)))
+           (val-num (k)
+             (gethash k opts)))
+    (when opts
+      (loop
+         for k being the hash-key of opts
+         for kd = (string-downcase k)
+       collect
+         (cond
+           ;; vec
+           ((string= kd "color")
+            (cons :color (val-vec k)))
+           ((string= kd "specular")
+            (cons :specular (val-vec k)))
+           ;; bool
+           ((string= kd "no-shadow")
+            (cons :no-shadow (val-bool k)))
+           ((string= kd "visual")
+            (cons :visual (val-bool k)))
+           ((string= kd "collision")
+            (cons :collision (val-bool k)))
+           ;; float
+           ((string= kd "alpha")
+            (cons :alpha (val-num k)))
+           ((string= kd "scale")
+            (cons :scale (val-num k))))))))
+
+(defun |geom_box| (options dimension)
+  (robray::scene-geometry-box (pydict-draw-options options)
+                              dimension))
+
+(defun |geom_sphere| (options radius)
+  (robray::scene-geometry-sphere (pydict-draw-options options)
+                              radius))
+
+(defun |geom_cylinder| (options height radius)
+  (robray::scene-geometry-cylinder (pydict-draw-options options)
+                                   :radius radius
+                                   :height height))
+
+(defun |geom_cone| (options height start-radius end-radius)
+  (robray::scene-geometry-cone (pydict-draw-options options)
+                               :start-radius start-radius
+                               :end-radius end-radius
+                               :height height))
+
+(defun |geom_grid| (options dimension delta width)
+  (robray::scene-geometry-grid (pydict-draw-options options)
+                               :dimension dimension
+                               :delta delta
+                               :width width))
+
+(defun |geom_mesh| (options mesh)
+  (robray::scene-geometry-mesh (pydict-draw-options options)
+                               mesh))
+
+(defun |scene_add_geom| (scene frame-name geom)
+  (robray::scene-graph-add-geometry scene frame-name geom))
+
+(defmethod clpython::attr-hook ((object robray::scene-graph)
+                                (attr (eql 'clpython.user::|add_geom|)))
+  (lambda (frame geom)
+    (|scene_add_geom| object frame geom)))
+
 
 (defun |frame_isa| (frame type)
   "Test if FRAME is of the given TYPE."

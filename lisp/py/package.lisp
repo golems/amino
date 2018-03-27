@@ -49,15 +49,29 @@
    |xangle|
    |yangle|
    |zangle|
+   |euler_zyx|
 
    |vec3|
    |quat|
+   |duqu|
 
    |mul|
 
    ;;; Scene Graphs
-   ;;|scene_frame_tf|
+   |scene|
    |load_scene|
+   |write_scene|
+
+   |frame_fixed|
+
+   |scene_add_geom|
+
+   |geom_box|
+   |geom_sphere|
+   |geom_cylinder|
+   |geom_cone|
+   |geom_grid|
+   |geom_mesh|
 
    |scene_tf_abs|
    |scene_tf_rel|

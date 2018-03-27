@@ -117,6 +117,7 @@ Translation is not altered."
 (defmethod generic+ ((a list) (b vec3))
   (generic+ b a))
 
+
 ;;; TF Interface
 (defun make-tf (&key
                   (quaternion (quaternion* 0d0 0d0 0d0 1d0))
@@ -265,6 +266,10 @@ Translation is not altered."
 
 (defmethod inverse ((x principal-angle))
   (tf-qinv (quaternion x)))
+
+
+(defmethod generic+ ((a quaternion) (b quaternion))
+  (tf-qadd a b))
 
 ;;; Axis-Angle
 (defgeneric axis-angle (x)
