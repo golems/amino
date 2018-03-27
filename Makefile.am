@@ -615,7 +615,7 @@ clean-local:
 distclean-local:
 	-rm -rf doc/manual doc/aarxc.1 doc/doxygen_sqlite3.db
 	-rm -rf lisp/libdir.lisp
-	-rm -rf lisp-amino.md lisp-rx.md
+	-rm -rf lisp-amino.md lisp-rx.md aminopy.md
 	if test "x$(top_srcdir)" != "x$(top_builddir)"; then \
 		rm -rf $(top_builddir)/lisp; \
 	fi
