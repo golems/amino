@@ -1,0 +1,5 @@
+(ql:quickload :clpython)
+
+(clpython:repl)
+
+import CL

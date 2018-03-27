@@ -36,7 +36,6 @@ if [ 0 = "$#" ] ; then
     aarx.core --eval "(clpython:repl)" --eval "(sb-ext:quit)"
 else
         aarx.core --script <<EOF
-(in-package :amino-py-user)
 (clpython:run (pathname "$1"))
 EOF
 fi

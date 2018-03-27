@@ -57,6 +57,8 @@
 
    ;;; Scene Graphs
    ;;|scene_frame_tf|
+   |load_scene|
+
    |scene_tf_abs|
    |scene_tf_rel|
    |frame_fixed_tf|
@@ -76,6 +78,13 @@
    |shape_is_grid|
    |shape_is_text|
    |shape_is_mesh|
+
+   ;;; Window
+   |win_set_scene|
+   |win_run_sync|
+   |win_run_async|
+   |win_view_collision|
+   |win_view_visual|
 
    ;; Motion Planning
    ;;|motion_plan_ws|

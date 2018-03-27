@@ -224,6 +224,9 @@ Examples:
 ;; Scene Graphs ;;
 ;;;;;;;;;;;;;;;;;;
 
+(defun |load_scene| (filename)
+  (robray::load-scene-file filename))
+
 (defun |map_frames| (function scene-graph)
   "Apply FUNCTION to every frame in SCENE-GRAPH."
   (robray::map-scene-graph-frames 'list function scene-graph))
@@ -314,6 +317,24 @@ Examples:
   ("end_radius" robray::scene-cone-start-radius)
   ("height" robray::scene-cone-height))
 
+;;;;;;;;;;;;;;
+;;; Window ;;;
+;;;;;;;;;;;;;
+
+(defun |win_set_scene| (scene)
+  (robray::win-set-scene-graph scene))
+
+(defun |win_run_sync| ()
+  (robray::win-run :synchronous t))
+
+(defun |win_run_async| ()
+  (robray::win-run :synchronous nil))
+
+(defun |win_view_collision| ()
+  (robray::win-view-collision))
+
+(defun |win_view_visual| ()
+  (robray::win-view-visual))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Motion Planning ;;;
