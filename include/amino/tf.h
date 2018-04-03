@@ -1205,6 +1205,7 @@ AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
                          double dt,
                          double q1[AA_RESTRICT 4] );
 
+
 /** Integrate unit quaternion from quaternion derivative.
  *
  * \param q0 Initial rotation quaternion
@@ -1216,6 +1217,19 @@ AA_API void aa_tf_qsdiff( const double q0[AA_RESTRICT 4],
                           const double dq[AA_RESTRICT 4],
                           double dt,
                           double q1[AA_RESTRICT 4] );
+
+
+AA_API void aa_tf_qsacc_rk( const double q0[AA_RESTRICT 4],
+                            const double v[AA_RESTRICT 3],
+                            const double a[AA_RESTRICT 3],
+                            double dt,
+                            double q1[AA_RESTRICT 4] );
+
+AA_API void aa_tf_qsacc( const double q0[AA_RESTRICT 4],
+                         const double v[AA_RESTRICT 3],
+                         const double a[AA_RESTRICT 3],
+                         double dt,
+                         double q1[AA_RESTRICT 4] );
 
 
 /** Unit quaternion for angle about x axis */

@@ -340,11 +340,40 @@ aa_tf_qexp( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
     const double *q_v = q + AA_TF_QUAT_V;
     double *r_v = r + AA_TF_QUAT_V;
 
+    double theta = aa_cla_dlapy3( q[AA_TF_QUAT_X],
+                                  q[AA_TF_QUAT_Y],
+                                  q[AA_TF_QUAT_Z] );
+
     ew = exp(q[AA_TF_QUAT_W]);
-    aa_tf_sinccos2( aa_tf_vdot(q_v,q_v), &sc, &c );
+    aa_tf_sinccos( theta, &sc, &c );
     r[AA_TF_QUAT_W] = ew*c;
 
     FOR_VEC(i) r_v[i] = ew*sc*q_v[i];
+}
+
+AA_API void
+aa_tf_qexp_n( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
+{
+
+    const double *q_v = q + AA_TF_QUAT_V;
+    double *r_v = r + AA_TF_QUAT_V;
+
+    double theta = aa_cla_dlapy3( q[AA_TF_QUAT_X],
+                                  q[AA_TF_QUAT_Y],
+                                  q[AA_TF_QUAT_Z] );
+    if( theta < DBL_EPSILON ) {
+        FOR_VEC(i) r_v[i] = 0;
+        r[AA_TF_QUAT_W] = 1;
+    } else {
+        double s = sin(theta);
+        double c = cos(theta);
+        double sc = s/theta;
+
+        double ew = exp(q[AA_TF_QUAT_W]);
+        r[AA_TF_QUAT_W] = ew*c;
+
+        FOR_VEC(i) r_v[i] = ew*sc*q_v[i];
+    }
 }
 
 AA_API void
@@ -423,6 +452,43 @@ aa_tf_qvel2diff( const double q[AA_RESTRICT 4], const double w[AA_RESTRICT 3], d
     FOR_VEC(i) w2[i] = w[i]/2;
     aa_tf_qmul_vq(w2,q,dq);
 }
+
+
+AA_API void aa_tf_qsacc_rk( const double q0[AA_RESTRICT 4],
+                            const double v[AA_RESTRICT 3],
+                            const double a[AA_RESTRICT 3],
+                            double dt,
+                            double q1[AA_RESTRICT 4] )
+{
+    const int steps = 10000;
+    double dtp = dt/steps;
+    double vp[3], qp[3], q1p[3];
+    AA_MEM_CPY(vp, v, 3);
+    AA_MEM_CPY(qp, q0, 4);
+
+    for( int i = 0; i < steps; i++ ){
+        aa_tf_qsvel( qp, vp, dtp, q1p );
+        AA_MEM_CPY(qp, q1p, 4);
+        FOR_VEC(j) vp[j] += dtp*a[j];
+    }
+
+    AA_MEM_CPY(q1, q1p, 4);
+
+}
+
+AA_API void aa_tf_qsacc( const double q0[AA_RESTRICT 4],
+                         const double v[AA_RESTRICT 3],
+                         const double a[AA_RESTRICT 3],
+                         double dt,
+                         double q1[AA_RESTRICT 4] )
+{
+    double pq[3], e[4];
+    double k = dt/2;
+    FOR_VEC(i) pq[i] = k*(v[i] + k*a[i]);
+    aa_tf_qpexp(pq,e);
+    aa_tf_qmul(e,q0,q1);
+}
+
 
 AA_API double
 aa_tf_qangle_rel( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )

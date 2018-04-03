@@ -854,11 +854,14 @@ static void mzlook( const double eye[3],
 
 }
 
-static void integrate(const double *E, const double *S, const double *T, const double *dx) {
+static void integrate(const double *E, const double *S, const double *T,
+                      const double *dx, const double *ddx )
+{
     const double *q = E+AA_TF_QUTR_Q;
     /* const double *v = E+AA_TF_QUTR_V; */
     /* const double *dv = dx+AA_TF_DX_V; */
     const double *w = dx+AA_TF_DX_W;
+    const double *a = ddx+AA_TF_DX_W;
     const double *R = T+AA_TF_TFMAT_R;
     double dt = aa_frand() / 100;
 
@@ -869,6 +872,7 @@ static void integrate(const double *E, const double *S, const double *T, const d
         aveq( "qdiff<->vel", 3, w, wp, 1e-5 );
 
     }
+
 
     { /* rotmat */
         double dR[9], wp[3];
@@ -892,37 +896,52 @@ static void integrate(const double *E, const double *S, const double *T, const d
         aveq( "duqu diff<->vel", 6, dx, dxp, 1e-5 );
     }
 
-    // integrate
-    double S1[8], q1[4], T1[12], R1[9], E1[7];
-    aa_tf_duqu_svel( S, dx, dt, S1 );
-    aa_tf_qsvel( q, dx+3, dt, q1 );
-    aa_tf_rotmat_svel( T, dx+3, dt, R1 );
-    aa_tf_tfmat_svel( T, dx, dt, T1 );
-    aa_tf_qutr_svel( E, dx, dt, E1 );
+    // integrate velocity
+    {
+        double S1[8], q1[4], T1[12], R1[9], E1[7];
+        aa_tf_duqu_svel( S, dx, dt, S1 );
+        aa_tf_qsvel( q, dx+3, dt, q1 );
+        aa_tf_rotmat_svel( T, dx+3, dt, R1 );
+        aa_tf_tfmat_svel( T, dx, dt, T1 );
+        aa_tf_qutr_svel( E, dx, dt, E1 );
 
-    // normalize
-    double R1q[4], T1q[8], E1q[8];
-    aa_tf_rotmat2quat( R1, R1q );
-    aa_tf_tfmat2duqu( T1, T1q );
-    aa_tf_qutr2duqu(E1, E1q);
-    aa_tf_duqu_minimize( S1 );
-    aa_tf_duqu_minimize( T1q );
-    aa_tf_duqu_minimize( E1q );
-    aa_tf_qminimize( q1 );
-    aa_tf_qminimize( R1q );
+        // normalize
+        double R1q[4], T1q[8], E1q[8];
+        aa_tf_rotmat2quat( R1, R1q );
+        aa_tf_tfmat2duqu( T1, T1q );
+        aa_tf_qutr2duqu(E1, E1q);
+        aa_tf_duqu_minimize( S1 );
+        aa_tf_duqu_minimize( T1q );
+        aa_tf_duqu_minimize( E1q );
+        aa_tf_qminimize( q1 );
+        aa_tf_qminimize( R1q );
 
-    // check
-    aveq( "duqu-quat", 4, S, q, 0 );
-    aveq( "int-duqu-quat", 4, S1, q1, 1e-8 );
-    aveq( "int-rotmat-quat", 4, R1q, q1, 1e-8 );
-    aveq( "int-duqu-tfmat", 8, S1, T1q, 1e-6 );
-    aveq( "int-qutr", 8, S1, E1q, 1e-6 );
+        // check
+        aveq( "duqu-quat", 4, S, q, 0 );
+        aveq( "int-duqu-quat", 4, S1, q1, 1e-8 );
+        aveq( "int-rotmat-quat", 4, R1q, q1, 1e-8 );
+        aveq( "int-duqu-tfmat", 8, S1, T1q, 1e-6 );
+        aveq( "int-qutr", 8, S1, E1q, 1e-6 );
 
 
-    // normalized check
-    aa_tf_duqu_normalize( T1q );
-    aa_tf_duqu_normalize( S1 );
-    aveq( "int-duqu-tfmat-norm", 8, S1, T1q, 1e-7 );
+        // normalized check
+        aa_tf_duqu_normalize( T1q );
+        aa_tf_duqu_normalize( S1 );
+        aveq( "int-duqu-tfmat-norm", 8, S1, T1q, 1e-7 );
+    }
+    // integrate acceleration
+    {
+        double q1[4], q1rk[4];
+        aa_tf_qsacc_rk(q, w, a, dt, q1rk);
+        aa_tf_qsacc(q, w, a, dt, q1);
+        aa_tf_qnormalize(q1);
+        aa_tf_qminimize(q1);
+        aa_tf_qnormalize(q1rk);
+        aa_tf_qminimize(q1rk);
+        //aveq( "aa_tf_qsacc", 4, q1, q1rk, 1e-7 );
+        aveq( "aa_tf_qsacc", 4, q1, q1rk, 1e-7 );
+    }
+
 }
 
 void qvmul(void)  {
@@ -1044,7 +1063,7 @@ int main( void ) {
         tfmat();
         tfmat_inv(T[0]);
         mzlook(dx[0]+0, dx[0]+3, dx[1]+0);
-        integrate(E[0], S[0], T[0], dx[0]);
+        integrate(E[0], S[0], T[0], dx[0], dx[1]);
         tf_conj(E, S);
         qdiff(E,dx);
     }
