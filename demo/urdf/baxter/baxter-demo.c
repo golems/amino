@@ -48,7 +48,7 @@
 #include "baxter-demo.h"
 
 /* from ./baxter-model.c.h */
-struct aa_rx_sg * aa_rx_dl_sg__baxter(struct aa_rx_sg *sg);
+struct aa_rx_sg * aa_rx_dl_sg__baxter(struct aa_rx_sg *sg, const char *root);
 
 struct aa_rx_win *
 baxter_demo_setup_window ( struct aa_rx_sg *sg  )
@@ -71,5 +71,5 @@ baxter_demo_setup_window ( struct aa_rx_sg *sg  )
 struct aa_rx_sg *
 baxter_demo_load_baxter( struct aa_rx_sg *sg)
 {
-    return aa_rx_dl_sg__baxter(sg);
+    return aa_rx_dl_sg__baxter(sg, "");
 }

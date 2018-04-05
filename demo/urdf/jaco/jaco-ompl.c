@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     (void)argc; (void)argv;
 
     // Initialize scene graph
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__jaco(NULL);
+    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__jaco(NULL, "");
 
     // add an obstacle
     {

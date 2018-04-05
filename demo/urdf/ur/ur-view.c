@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
 
     // Initialize scene graph
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__ur(NULL);
+    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__ur(NULL, "");
     aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
     aa_rx_win_set_sg(win, scenegraph); /* Set the scenegraph for the window */
 

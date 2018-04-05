@@ -327,7 +327,10 @@
   (declare (ignore static-mesh scene-graph))
   (let ((function-name (scene-graph-scene-function-name scene-name))
         (argument-name "sg"))
-    (cgen-declare-fun "struct aa_rx_sg *" function-name (rope "struct aa_rx_sg *" argument-name))))
+    (cgen-declare-fun "struct aa_rx_sg *" function-name
+                      (rope "struct aa_rx_sg *" argument-name
+                            ", "
+                            "const char *root"))))
 
 
 ;; (defparameter *scene-graph-compiler* "gcc" "Compiler for scene graphs")
