@@ -1045,6 +1045,9 @@ int main( void ) {
         for( size_t j = 0; j < k; j ++ ) {
             rand_tf(E[j], S[j], T[j]);
             aa_vrand(6,dx[j]);
+            for( size_t l = 0; l < 6; l++ ) {
+                dx[j][l] -= 0.5;
+            }
         }
         //printf("%d\n",i);
         /* Run Tests */

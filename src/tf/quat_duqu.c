@@ -165,13 +165,13 @@ AA_API void
 aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                       double t[AA_RESTRICT 8] )
 {
-    AA_MEM_CPY( &t[REAL_XYZ], &dx[OMEGA], 3 );
-    t[REAL_W] = 0;
+    double v[3];
+    aa_tf_duqu_trans(d, v );
+    aa_tf_qv_vel2twist( d+AA_TF_DUQU_REAL, v,
+                        dx+AA_TF_DX_W, dx+AA_TF_DX_V,
+                        t+AA_TF_DUQU_REAL_XYZ, t+AA_TF_DUQU_DUAL_XYZ );
 
-    double p[3];
-    aa_tf_duqu_trans(d, p );
-    aa_tf_cross( p, &dx[OMEGA], &t[DUAL_XYZ] );
-    FOR_VEC(i) t[DUAL_XYZ+i] += dx[V+i];
+    t[REAL_W] = 0;
     t[DUAL_W] = 0;
 }
 

@@ -133,9 +133,62 @@ aa_tf_qutr_mulc( const double A[AA_RESTRICT 7], const double B[AA_RESTRICT 7], d
     aa_tf_qutr_mul(A,x,C);
 }
 
+
+/***********/
+/* EXP/LOG */
+/***********/
+
+void aa_tf_qv_expv( const double w[3],  const double dv[3],
+                    double q[4], double v[3] )
+{
+    double S[8], eS[8];
+    AA_MEM_ZERO(S,8);
+    AA_MEM_CPY( S+AA_TF_DUQU_REAL_XYZ, w, 3);
+    AA_MEM_CPY( S+AA_TF_DUQU_DUAL_XYZ, dv, 3);
+    aa_tf_duqu_exp(S,eS);
+    aa_tf_duqu2qv(eS, q, v);
+}
+
+
+void aa_tf_qutr_expv
+( const double w[6], double e[7] )
+{
+    aa_tf_qv_expv(w+AA_TF_DX_W, w+AA_TF_DX_V,
+                  e+AA_TF_QUTR_Q, e+AA_TF_QUTR_T);
+}
+
+/* void aa_tf_qv_lnv */
+/* ( const double q[4], const double v[4], double w[3], double dv[3] ) */
+/* { */
+/*     double S[8], lnS[8]; */
+/*     aa_tf_qv2duqu(q, v, S); */
+/*     aa_tf_duqu_ln(S,lnS); */
+/*     AA_MEM_CPY( w, lnS+AA_TF_DUQU_REAL, 3); */
+/*     AA_MEM_CPY( dv, lnS+AA_TF_DUQU_DUAL, 3); */
+
+/* } */
+
+/* void aa_tf_qutr_lnv */
+/* ( const double e[7], double w[6] ); */
+
 /************/
 /* CALCULUS */
 /************/
+
+
+AA_API void
+aa_tf_qv_vel2twist( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+                    const double w[AA_RESTRICT 3], const double dv[AA_RESTRICT 3],
+                    double tw[AA_RESTRICT 3], double tv[AA_RESTRICT 3] )
+{
+    (void)q;
+    // rotational
+    AA_MEM_CPY( tw, w, 3 );
+
+    // translation
+    aa_tf_cross( v, w, tv );
+    FOR_VEC(i) tv[i] += dv[i];
+}
 
 AA_API void
 aa_tf_qv_svel( const double q0[AA_RESTRICT 4], const double v0[AA_RESTRICT 3],
@@ -143,13 +196,15 @@ aa_tf_qv_svel( const double q0[AA_RESTRICT 4], const double v0[AA_RESTRICT 3],
                double dt,
                double q1[AA_RESTRICT 4], double v1[AA_RESTRICT 3] )
 {
-    double dx[6], S0[8], S1[8];
-    /* TODO: avoid the memcpy()s */
-    AA_MEM_CPY( dx+AA_TF_DX_W, w, 3 );
-    AA_MEM_CPY( dx+AA_TF_DX_V, dv, 3 );
-    aa_tf_qv2duqu( q0, v0, S0 );
-    aa_tf_duqu_svel( S0, dx, dt, S1 );
-    aa_tf_duqu2qv(S1, q1, v1);
+    double tw[3], tv[3], ew[4], ev[3];
+    aa_tf_qv_vel2twist(q0,v0,w,dv,tw,tv);
+    FOR_VEC(i) {
+        tw[i] *= dt/2;
+        tv[i] *= dt/2;
+    }
+    aa_tf_qv_expv(tw,tv,ew,ev);
+    aa_tf_qv_chain( ew, ev, q0, v0, q1, v1 );
+
 }
 
 AA_API void

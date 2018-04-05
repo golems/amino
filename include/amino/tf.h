@@ -1350,6 +1350,15 @@ void aa_tf_qutr_mulc( const double a[7], const double b[7], double c[7] ) ;
 /// quaternion-translation conjugate multiply
 void aa_tf_qutr_cmul( const double a[7], const double b[7], double c[7] ) ;
 
+void aa_tf_qv_expv( const double w[3],  const double dv[3],
+                    double q[4], double v[3] );
+
+void aa_tf_qutr_expv
+( const double w[6], double e[7] );
+
+void aa_tf_qutr_lnv
+( const double e[7], double w[6] );
+
 /** Quaternion-translation derivative to spatial velocity */
 void aa_tf_qutr_diff2vel
 ( const double e[7], const double de[7], double dx[6] );
