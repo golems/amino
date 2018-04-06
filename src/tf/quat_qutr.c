@@ -164,12 +164,11 @@ void aa_tf_qv_expv( const double w[3],  const double dv[3],
     FOR_VEC(i) q[AA_TF_QUAT_V + i] = sc*w[i];
 
     // dual
-    double gamma = aa_tf_vdot(w,dv);
-    double gammak = gamma * k;
-    double nsc2 = -sc*sc2;
+    const double *q_v = q + AA_TF_QUAT_V;
+    double gammak = aa_tf_vdot(w,dv) * k;
     double cr[3];
-    aa_tf_cross(dv, w, cr);
-    FOR_VEC(i) v[i] = nsc2*cr[i] + csc*dv[i] + gammak*w[i];
+    aa_tf_cross(q_v, dv, cr);
+    FOR_VEC(i) v[i] =  csc*dv[i] + gammak*w[i] + sc2*cr[i];
 }
 
 
