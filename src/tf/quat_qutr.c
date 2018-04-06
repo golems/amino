@@ -141,12 +141,35 @@ aa_tf_qutr_mulc( const double A[AA_RESTRICT 7], const double B[AA_RESTRICT 7], d
 void aa_tf_qv_expv( const double w[3],  const double dv[3],
                     double q[4], double v[3] )
 {
-    double S[8], eS[8];
-    AA_MEM_ZERO(S,8);
-    AA_MEM_CPY( S+AA_TF_DUQU_REAL_XYZ, w, 3);
-    AA_MEM_CPY( S+AA_TF_DUQU_DUAL_XYZ, dv, 3);
-    aa_tf_duqu_exp(S,eS);
-    aa_tf_duqu2qv(eS, q, v);
+    double phi2 = aa_tf_vdot(w,w);
+    double sc, c, k, sc2, csc;
+    if( phi2 < sqrt(DBL_EPSILON) ) {
+        sc = aa_tf_sinc_series2(phi2);
+        c = aa_tf_cos_series2(phi2);
+        sc2 = 2*sc;
+        csc = c*sc2;
+        k = aa_horner3( phi2, 4.0/3, -4.0/15, 8.0/315 );
+    } else {
+        double phi = sqrt(phi2);
+        double s = sin(phi);
+        c = cos(phi);
+        sc = s/phi;
+        sc2 = 2*sc;
+        csc = c*sc2;
+        k = (2-csc)/phi2;
+    }
+
+    // real
+    q[AA_TF_QUAT_W] = c;
+    FOR_VEC(i) q[AA_TF_QUAT_V + i] = sc*w[i];
+
+    // dual
+    double gamma = aa_tf_vdot(w,dv);
+    double gammak = gamma * k;
+    double nsc2 = -sc*sc2;
+    double cr[3];
+    aa_tf_cross(dv, w, cr);
+    FOR_VEC(i) v[i] = nsc2*cr[i] + csc*dv[i] + gammak*w[i];
 }
 
 
