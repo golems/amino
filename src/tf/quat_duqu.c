@@ -367,6 +367,15 @@ aa_tf_duqu_ln( const double S[AA_RESTRICT 8], double lnS[AA_RESTRICT 8] )
         lnS[AA_TF_DUQU_DUAL_XYZ+i] = ad * S[AA_TF_DUQU_REAL_XYZ+i] + ar * S[AA_TF_DUQU_DUAL_XYZ+i];
 }
 
+
+AA_API void
+aa_tf_duqu_lnv( const double S[AA_RESTRICT 8], double w[AA_RESTRICT 6] )
+{
+    double k[8];
+    aa_tf_duqu_ln(S,k);
+    aa_tf_duqu2pure( k, w );
+}
+
 AA_API void aa_tf_xyz2duqu (
     double x, double y, double z,
     double d[AA_RESTRICT 8] )
@@ -382,4 +391,24 @@ AA_API void aa_tf_xyz2duqu (
     d[AA_TF_DUQU_DUAL_Z] = z/2;
     d[AA_TF_DUQU_DUAL_W] = 0;
 
+}
+
+
+void
+aa_tf_duqu2pure( const double S[AA_RESTRICT 8],
+                 double v[AA_RESTRICT 6] )
+{
+    AA_MEM_CPY( v + AA_TF_DX_W, S+AA_TF_DUQU_REAL_XYZ, 3);
+    AA_MEM_CPY( v + AA_TF_DX_V, S+AA_TF_DUQU_DUAL_XYZ, 3);
+}
+
+AA_API void
+aa_tf_pure2duqu( const double v[AA_RESTRICT 6],
+                 double S[AA_RESTRICT 8])
+{
+    AA_MEM_CPY( S+AA_TF_DUQU_REAL_XYZ, v + AA_TF_DX_W, 3 );
+    S[AA_TF_DUQU_REAL_W] = 0;
+
+    AA_MEM_CPY( S+AA_TF_DUQU_DUAL_XYZ, v + AA_TF_DX_V, 3 );
+    S[AA_TF_DUQU_DUAL_W] = 0;
 }

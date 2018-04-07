@@ -179,19 +179,25 @@ void aa_tf_qutr_expv
                   e+AA_TF_QUTR_Q, e+AA_TF_QUTR_T);
 }
 
-/* void aa_tf_qv_lnv */
-/* ( const double q[4], const double v[4], double w[3], double dv[3] ) */
-/* { */
-/*     double S[8], lnS[8]; */
-/*     aa_tf_qv2duqu(q, v, S); */
-/*     aa_tf_duqu_ln(S,lnS); */
-/*     AA_MEM_CPY( w, lnS+AA_TF_DUQU_REAL, 3); */
-/*     AA_MEM_CPY( dv, lnS+AA_TF_DUQU_DUAL, 3); */
+void aa_tf_qv_lnv
+( const double q[4], const double v[4], double w[3], double dv[3] )
+{
+    double S[8], lnS[8];
+    aa_tf_qv2duqu(q, v, S);
+    aa_tf_duqu_ln(S,lnS);
+    AA_MEM_CPY( w, lnS+AA_TF_DUQU_REAL, 3);
+    AA_MEM_CPY( dv, lnS+AA_TF_DUQU_DUAL, 3);
 
-/* } */
+}
 
-/* void aa_tf_qutr_lnv */
-/* ( const double e[7], double w[6] ); */
+void aa_tf_qutr_lnv
+( const double e[7], double w[6] )
+{
+    aa_tf_qv_lnv(
+        e+AA_TF_QUTR_Q, e+AA_TF_QUTR_T,
+        w+AA_TF_DX_W, w+AA_TF_DX_V
+        );
+}
 
 /************/
 /* CALCULUS */

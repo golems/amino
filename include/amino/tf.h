@@ -1350,22 +1350,44 @@ void aa_tf_qutr_mulc( const double a[7], const double b[7], double c[7] ) ;
 /// quaternion-translation conjugate multiply
 void aa_tf_qutr_cmul( const double a[7], const double b[7], double c[7] ) ;
 
-void aa_tf_qv_expv( const double w[3],  const double dv[3],
-                    double q[4], double v[3] );
+/**
+ * Quaternion-vector exponential.
+ */
+AA_API void aa_tf_qv_expv
+( const double w[3],  const double dv[3],
+  double q[4], double v[3] );
 
-void aa_tf_qutr_expv
+/**
+ * Quaternion-vector logarithm.
+ */
+AA_API void aa_tf_qv_lnv
+( const double q[4], const double v[3],
+  double w[3],  double dv[3] );
+
+/**
+ * Quaternion-vector exponential.
+ */
+AA_API void aa_tf_qutr_expv
 ( const double w[6], double e[7] );
 
-void aa_tf_qutr_lnv
+/**
+ * Quaternion-vector logarithm.
+ */
+AA_API void aa_tf_qutr_lnv
 ( const double e[7], double w[6] );
 
 /** Quaternion-translation derivative to spatial velocity */
-void aa_tf_qutr_diff2vel
+AA_API void aa_tf_qutr_diff2vel
 ( const double e[7], const double de[7], double dx[6] );
 
 /** Quaternion-translation spatial velocity to derivative */
-void aa_tf_qutr_vel2diff
+AA_API void aa_tf_qutr_vel2diff
 ( const double e[7], const double dx[6], double de[7] );
+
+AA_API void
+aa_tf_qv_vel2twist( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+                    const double w[AA_RESTRICT 3], const double dv[AA_RESTRICT 3],
+                    double tw[AA_RESTRICT 3], double tv[AA_RESTRICT 3] );
 
 /** Integrate a quaternion-translation */
 void aa_tf_qutr_svel
@@ -1704,19 +1726,32 @@ AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA
                               double dt, double d1[AA_RESTRICT 6] ) ;
 
 
+/** Convert a pure dual quaternion to conventional dual quaternion.
+*/
+AA_API void
+aa_tf_duqu2pure( const double S[AA_RESTRICT 8],
+                 double v[AA_RESTRICT 6] );
+
+/** Convert a conventional dual quaternion to pure dual quaternion.
+*/
+AA_API void
+aa_tf_pure2duqu( const double v[AA_RESTRICT 6],
+                 double S[AA_RESTRICT 8]);
 
 
 /* Misc */
 
-void aa_tf_relx_mean( size_t n, const double *R,
-                      const double *X, size_t ldx,
-                      const double *Y, size_t ldy,
-                      double rel[3]);
+AA_API void
+aa_tf_relx_mean( size_t n, const double *R,
+                 const double *X, size_t ldx,
+                 const double *Y, size_t ldy,
+                 double rel[3]);
 
-void aa_tf_relx_median( size_t n, const double *R,
-                        const double *X, size_t ldx,
-                        const double *Y, size_t ldy,
-                        double rel[3]);
+AA_API void
+aa_tf_relx_median( size_t n, const double *R,
+                   const double *X, size_t ldx,
+                   const double *Y, size_t ldy,
+                   double rel[3]);
 
 #ifdef __cplusplus
 }

@@ -601,13 +601,20 @@ static void duqu() {
 
     // exponential
     {
-        double expd[8], lnexpd[8];
+        double expd[8], lnexpd[8], sv[6], ev[6];
         aa_tf_duqu_exp(H.data, expd );
         aa_tf_duqu_ln( expd, lnexpd );
         aveq( "duqu-exp-ln", 8, H.data, lnexpd, .001 );
+
+
         aa_tf_duqu_ln( H.data, lnexpd );
         aa_tf_duqu_exp(lnexpd, expd );
+        aa_tf_duqu_lnv( H.data, sv );
+        aa_tf_qutr_lnv( E, ev );
         aveq( "duqu-ln-exp", 8, H.data, expd, .001 );
+        aveq( "duqu-lnv 0", 3, lnexpd+AA_TF_DUQU_REAL_XYZ, sv+AA_TF_DX_W, 1e-7 );
+        aveq( "duqu-lnv 1", 3, lnexpd+AA_TF_DUQU_DUAL_XYZ, sv+AA_TF_DX_V, 1e-7 );
+        aveq( "duqu-qutr-lnv", 6, sv, ev, 1e-7 );
     }
 
     // Logarithm
