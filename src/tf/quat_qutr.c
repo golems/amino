@@ -182,12 +182,34 @@ void aa_tf_qutr_expv
 void aa_tf_qv_lnv
 ( const double q[4], const double v[4], double w[3], double dv[3] )
 {
-    double S[8], lnS[8];
-    aa_tf_qv2duqu(q, v, S);
-    aa_tf_duqu_ln(S,lnS);
-    AA_MEM_CPY( w, lnS+AA_TF_DUQU_REAL, 3);
-    AA_MEM_CPY( dv, lnS+AA_TF_DUQU_DUAL, 3);
+    double isc, cisc, k;
+    const double *q_v = q + AA_TF_QUAT_V;
+    double v2 = aa_tf_vdot(q_v, q_v);
+    double s = sqrt(v2);
+    double c = q[AA_TF_QUAT_W];
+    double phi = atan2(s,c);
+    double phi2 = phi*phi;
 
+    if( phi < sqrt(DBL_EPSILON) ) {
+        isc = aa_tf_invsinc_series2(phi2);
+        k = aa_horner3( phi2, 1.0/3, 1.0/45, 2.0/945 );
+        cisc = 1 - k * phi2;
+    } else {
+        isc = phi/s;
+        cisc = c*isc;
+        k = (1 - cisc)/phi2;
+    }
+
+    /* Real */
+    FOR_VEC(i) w[i] = isc * q_v[i];
+
+    /* Dual  */
+    double v_2[3], cr[3];
+    FOR_VEC(i) v_2[i] = v[i]/2;
+    double a = k*aa_tf_vdot(v_2,w);
+    aa_tf_cross(v_2, w, cr);
+
+    FOR_VEC(i) dv[i] =  cr[i] + cisc*v_2[i] + a*w[i];
 }
 
 void aa_tf_qutr_lnv
