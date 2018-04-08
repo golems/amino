@@ -1038,6 +1038,21 @@ static void qdiff(double E[2][7], double dx[2][6] )
 
 }
 
+void normalize(const double *Rp, const double *qp) {
+    double R[9], q[4], Rq[4];
+    AA_MEM_CPY(R, Rp, 9);
+    AA_MEM_CPY(q, qp, 4);
+
+    aa_tf_qnormalize(q);
+    aa_tf_rotmat_normalize(R);
+    aa_tf_rotmat2quat( R, Rq );
+
+    aa_tf_qminimize(q);
+    aa_tf_qminimize(Rq);
+
+    aveq( "normalize", 4, q, Rq, 1e-7 );
+}
+
 int main( void ) {
     // init
     time_t seed = time(NULL);
@@ -1076,6 +1091,7 @@ int main( void ) {
         integrate(E[0], S[0], T[0], dx[0], dx[1]);
         tf_conj(E, S);
         qdiff(E,dx);
+        normalize(T[0], E[0] );
     }
 
 

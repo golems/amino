@@ -694,6 +694,13 @@ AA_API void aa_tf_tfmat2_muli( const double R0[AA_RESTRICT 9],
                                const double v1[AA_RESTRICT 3],
                                double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
 
+
+/**
+ * Orthonormalize the rotation matrix.
+ */
+AA_API void
+aa_tf_rotmat_normalize( double R[AA_RESTRICT 9] );
+
 /* Transform */
 
 /**
@@ -739,6 +746,13 @@ AA_API void aa_tf_tfmat_inv1( double T[AA_RESTRICT 12] );
  */
 AA_API void aa_tf_tfmat_inv2( const double T[AA_RESTRICT 12],
                               double Ti[AA_RESTRICT 12] );
+
+
+/**
+ * Orthonormalize the transformation matrix.
+ */
+AA_API void
+aa_tf_tfmat_normalize( double T[AA_RESTRICT 12] );
 
 /// tests if R is a rotation matrix
 AA_API int aa_tf_isrotmat( const double R[AA_RESTRICT 9] );
