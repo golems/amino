@@ -83,6 +83,8 @@ struct SceneFrame  {
     virtual ~SceneFrame() ;
 
     virtual void tf_rel( const double *q, double E[7] ) = 0;
+    virtual void tfmat_rel( const double *q, double T[12] ) = 0;
+
     //virtual aa_rx_frame_type type() = 0;
     int in_global();
 
@@ -95,6 +97,7 @@ struct SceneFrame  {
     aa_rx_frame_id frame_id;
     aa_rx_frame_id parent_id;
     double E[7];
+    double R[9];
 
 
     /* Geometry */
@@ -108,6 +111,7 @@ struct SceneFrameFixed : public SceneFrame {
                      const double q[4], const double v[3] );
     virtual ~SceneFrameFixed();
     virtual void tf_rel( const double *q, double E[7] );
+    virtual void tfmat_rel( const double *q, double R[12] );
     //virtual aa_rx_frame_type type();
 };
 
@@ -134,6 +138,7 @@ struct SceneFramePrismatic : public SceneFrameJoint {
                          double offset, const double axis[3] );
     virtual ~SceneFramePrismatic();
     virtual void tf_rel( const double *q, double E[7] );
+    virtual void tfmat_rel( const double *q, double R[12] );
     //virtual aa_rx_frame_type type();
 };
 
@@ -146,6 +151,7 @@ struct SceneFrameRevolute : public SceneFrameJoint {
                         double offset, const double axis[3] );
     virtual ~SceneFrameRevolute();
     virtual void tf_rel( const double *q, double E[7] );
+    virtual void tfmat_rel( const double *q, double R[12] );
     //virtual aa_rx_frame_type type();
 };
 
