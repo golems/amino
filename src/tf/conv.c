@@ -114,6 +114,11 @@ aa_tf_zangle2rotmat( double theta, double R[AA_RESTRICT 9] )
 AA_API void
 aa_tf_quat2rotmat( const double q[AA_RESTRICT 4], double R[AA_RESTRICT 9] )
 {
+    /* Operations:
+     * -----------
+     * Mul: 3+6  =  9
+     * Add: 3+12 =  15
+     */
     double b[3] = { 2*q[0],
                     2*q[1],
                     2*q[2] };

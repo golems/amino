@@ -168,19 +168,13 @@ void SceneFramePrismatic::tf_rel( const double *q, double _E[7] )
 
 void SceneFrameRevolute::tf_rel( const double *q, double _E[7] )
 {
-    (void)q;
-    double h[4];
-    double a[3];
     double qo = q[this->config_index] + this->offset;
-    for( size_t i = 0; i < 3; i ++ ) {
-        a[i] = qo * axis[i];
-    }
-    // TODO: call qln directly
-    aa_tf_rotvec2quat(a, h);
-    // TODO: remove redundant operation
-    aa_tf_qv_chain( E + AA_TF_QUTR_Q, E+AA_TF_QUTR_V,
-                    h, aa_tf_vec_ident,
-                    _E + AA_TF_QUTR_Q, _E+AA_TF_QUTR_V );
+    double h[4];
+    aa_tf_axang2quat2( axis, qo, h );
+    // TODO: can we elide when identify?
+    // Maybe using a different frame type.
+    aa_tf_qmul( E + AA_TF_QUTR_Q, h, _E + AA_TF_QUTR_Q );
+    AA_MEM_CPY(_E+AA_TF_QUTR_V, this->E+AA_TF_QUTR_V, 3);
 }
 
 // aa_rx_frame_type SceneFrameFixed::type()

@@ -257,7 +257,7 @@ aa_tf_rotmat_exp_aa( const double aa[AA_RESTRICT 4], double E[9] )
 AA_API void
 aa_tf_rotmat_expv( const double rv[AA_RESTRICT 4], double E[9] )
 {
-  /* Operations:
+    /* Operations:
      * -----------
      * Mul: 17
      * Add: 15
@@ -280,6 +280,12 @@ aa_tf_rotmat_expv( const double rv[AA_RESTRICT 4], double E[9] )
 AA_API void
 aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double *theta )
 {
+    /* Operations:
+     * -----------
+     * Mul: 2
+     * Add: 4
+     * Other: sqrt, atan2
+     */
     *c = (RREF(R,0,0) + RREF(R,1,1) + RREF(R,2,2) - 1) / 2;
     *s = sqrt( 1 - (*c)*(*c) );
     *theta = atan2(*s, *c);
@@ -547,6 +553,19 @@ AA_API void
 aa_tf_tfmat_lnv( const double T[AA_RESTRICT 12],
                  double v[AA_RESTRICT 6] )
 {
+    /* Operations:
+     * -----------
+     * (self) Mul: 5
+     * (self) Add: 4
+     *
+     * (other) Mul: 2 + 3 + 12 + 9
+     * (other) Add: 4 + 3 + 12 + 6
+     * (other) other: sqrt, atan2
+     *
+     * (total) Mul: 31
+     * (total) Add: 32
+     * (total) other: sqrt, atant2
+     */
     double c,s,theta, a,b;
     aa_tf_rotmat_angle( T, &c, &s, &theta );
     double theta2 = theta*theta;
