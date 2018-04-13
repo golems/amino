@@ -317,11 +317,25 @@ aa_tf_qrot1( const double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] )
 }
 
 AA_API void
-aa_tf_qrot( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
-            double r[AA_RESTRICT 3] )
+aa_tf_qrot( const double q[AA_RESTRICT 4], const double p0[AA_RESTRICT 3],
+            double p1[AA_RESTRICT 3] )
 {
-    FOR_VEC(i) r[i] = v[i];
-    aa_tf_qrot1(q,r);
+    double k[3];
+    double a[3];
+
+    k[0] = p0[0] + p0[0];
+    k[1] = p0[1] + p0[1];
+    k[2] = p0[2] + p0[2];
+
+    DECLARE_QUAT_XYZW;
+    a[0] =  (q[y]*k[z] - q[z]*k[y]) + q[w]*k[x];
+    a[1] =  (q[z]*k[x] - q[x]*k[z]) + q[w]*k[y];
+    a[2] =  (q[x]*k[y] - q[y]*k[x]) + q[w]*k[z];
+
+    p1[0] = p0[0] + q[1]*a[2] - q[2]*a[1];
+    p1[1] = p0[1] + q[2]*a[0] - q[0]*a[2];
+    p1[2] = p0[2] + q[0]*a[1] - q[1]*a[0];
+
 }
 
 AA_API void

@@ -46,13 +46,39 @@
 /*******/
 
 AA_API void
-aa_tf_tf_qv( const double quat[AA_RESTRICT 4],
+aa_tf_tf_qv( const double q[AA_RESTRICT 4],
              const double v[AA_RESTRICT 3],
              const double p0[AA_RESTRICT 3],
              double p1[AA_RESTRICT 4] )
 {
-    aa_tf_qrot( quat, p0, p1 );
-    FOR_VEC(i) p1[i] += v[i];
+    //aa_tf_qrot( quat, p0, p1 );
+
+    double a[3];
+    double k[3];
+
+    k[0] = p0[0] + p0[0];
+    k[1] = p0[1] + p0[1];
+    k[2] = p0[2] + p0[2];
+
+    DECLARE_QUAT_XYZW;
+    a[0] =  (q[y]*k[z] - q[z]*k[y]) + q[w]*k[x];
+    a[1] =  (q[z]*k[x] - q[x]*k[z]) + q[w]*k[y];
+    a[2] =  (q[x]*k[y] - q[y]*k[x]) + q[w]*k[z];
+
+    /* p1[0] = p0[0] + v[0] + q[1]*a[2] - q[2]*a[1]; */
+    /* p1[1] = p0[1] + v[1] + q[2]*a[0] - q[0]*a[2]; */
+    /* p1[2] = p0[2] + v[2] + q[0]*a[1] - q[1]*a[0]; */
+
+    p1[0] = (p0[0] +  q[1]*a[2]) + (v[0] - q[2]*a[1]);
+    p1[1] = (p0[1] +  q[2]*a[0]) + (v[1] - q[0]*a[2]);
+    p1[2] = (p0[2] +  q[0]*a[1]) + (v[2] - q[1]*a[0]);
+
+    /* p1[0] = p0[0] + v[0]; */
+    /* p1[1] = p0[1] + v[1]; */
+    /* p1[2] = p0[2] + v[2]; */
+
+    /* aa_tf_cross_a(q,a,p1); */
+
 }
 
 AA_API void
