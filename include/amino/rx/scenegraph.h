@@ -424,15 +424,15 @@ AA_API void aa_rx_sg_tf
 /**
  *  Compute transforms for the scene graph as matrices.
  *
- * Transform entries are in {R, v} *format.
+ * Transform entries are in {R, v} format.
  *
  * @param scene_graph The scene graph container
  * @param n_q         Size of configuration vector q
  * @param q           Configuraiton vector
  * @param n_tf        Number of entries in the TF array
- * @param TF_rel      Relative transform matrix in matrix format
+ * @param TF_rel      Relative transform matrix
  * @param ld_rel      Leading dimensional of TF_rel, i.e., space between each entry
- * @param TF_abs      Absolute transform matrix in matrix format
+ * @param TF_abs      Absolute transform matrix
  * @param ld_abs      Leading dimensional of TF_abs, i.e., space between each entry
  *
  *
@@ -440,6 +440,32 @@ AA_API void aa_rx_sg_tf
  * the scenegraph.
  */
 AA_API void aa_rx_sg_tfmat
+( const struct aa_rx_sg *scene_graph,
+  size_t n_q, const double *q,
+  size_t n_tf,
+  double *TF_rel, size_t ld_rel,
+  double *TF_abs, size_t ld_abs );
+
+
+/**
+ *  Compute transforms for the scene graph as dual quaternions.
+ *
+ * Transform entries are in {real, dual} format.
+ *
+ * @param scene_graph The scene graph container
+ * @param n_q         Size of configuration vector q
+ * @param q           Configuraiton vector
+ * @param n_tf        Number of entries in the TF array
+ * @param TF_rel      Relative transform in dual quaternion format
+ * @param ld_rel      Leading dimensional of TF_rel, i.e., space between each entry
+ * @param TF_abs      Absolute transform dual quaternion format
+ * @param ld_abs      Leading dimensional of TF_abs, i.e., space between each entry
+ *
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
+ */
+AA_API void aa_rx_sg_duqu
 ( const struct aa_rx_sg *scene_graph,
   size_t n_q, const double *q,
   size_t n_tf,

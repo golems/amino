@@ -63,6 +63,7 @@ SceneFrame::SceneFrame(
     AA_MEM_CPY(E+AA_TF_QUTR_Q, q ? q : aa_tf_quat_ident, 4);
     AA_MEM_CPY(E+AA_TF_QUTR_V, v ? v : aa_tf_vec_ident, 3);
     aa_tf_quat2rotmat(q,R);
+    aa_tf_qv2duqu(q,v,S);
 }
 
 SceneFrame::~SceneFrame( )
@@ -159,6 +160,13 @@ void SceneFrameFixed::tfmat_rel( const double *q, double _T[12] )
     AA_MEM_CPY(_T + AA_TF_TFMAT_V, this->E + AA_TF_QUTR_T, 9);
 }
 
+void SceneFrameFixed::duqu_rel( const double *q, double _S[8] )
+{
+    (void)q;
+    AA_MEM_CPY(_S, this->S, 8);
+}
+
+
 void SceneFramePrismatic::tf_rel( const double *q, double _E[7] )
 {
     (void)q;
@@ -184,6 +192,16 @@ void SceneFramePrismatic::tfmat_rel( const double *q, double _T[12] )
     }
 }
 
+void SceneFramePrismatic::duqu_rel( const double *q, double _S[8] )
+{
+    double qo = q[this->config_index] + this->offset;
+    double v[3];
+    for( size_t i = 0; i < 3; i ++ ) {
+        v[i] = E[AA_TF_QUTR_V+i] + qo*this->axis[i];
+    }
+    aa_tf_qv2duqu(E+AA_TF_QUTR_Q,v,S);
+}
+
 void SceneFrameRevolute::tf_rel( const double *q, double _E[7] )
 {
     double qo = q[this->config_index] + this->offset;
@@ -193,6 +211,18 @@ void SceneFrameRevolute::tf_rel( const double *q, double _E[7] )
     // Maybe using a different frame type.
     aa_tf_qmul( E + AA_TF_QUTR_Q, h, _E + AA_TF_QUTR_Q );
     AA_MEM_CPY(_E+AA_TF_QUTR_V, this->E+AA_TF_QUTR_V, 3);
+}
+
+
+void SceneFrameRevolute::duqu_rel( const double *q, double _S[8] )
+{
+    double qo = q[this->config_index] + this->offset;
+    double h[4],h1[4];
+    aa_tf_axang2quat2( axis, qo, h );
+    // TODO: can we elide when identify?
+    // Maybe using a different frame type.
+    aa_tf_qmul( E + AA_TF_QUTR_Q, h, h1 );
+    aa_tf_qv2duqu(h1, E+AA_TF_QUTR_V,S);
 }
 
 void SceneFrameRevolute::tfmat_rel( const double *q, double _T[12] )
