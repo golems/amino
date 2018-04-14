@@ -437,10 +437,23 @@ AA_API void aa_tf_tfmat2_tf( const double R[AA_RESTRICT 9],
                              const double p0[AA_RESTRICT 3],
                              double p1[AA_RESTRICT 4] )
 {
+    /*
+     *  FMA: 6
+     */
 
-    p1[0] =  R[0]*p0[0] + R[3]*p0[1] + R[6]*p0[2] + v[0];
-    p1[1] =  R[1]*p0[0] + R[4]*p0[1] + R[7]*p0[2] + v[1];
-    p1[2] =  R[2]*p0[0] + R[5]*p0[1] + R[8]*p0[2] + v[2];
+    p1[0] = v[0] + R[0]*p0[0] + R[3]*p0[1] + R[6]*p0[2];
+    p1[1] = v[1] + R[1]*p0[0] + R[4]*p0[1] + R[7]*p0[2];
+    p1[2] = v[2] + R[2]*p0[0] + R[5]*p0[1] + R[8]*p0[2];
+
+
+    /* dgemv is slower than direct arithmetic */
+    /* p1[0] = v[0]; */
+    /* p1[1] = v[1]; */
+    /* p1[2] = v[2]; */
+    /* cblas_dgemv( CblasColMajor, CblasNoTrans, */
+    /*              3, 3, */
+    /*              1.0, R, 3, p0, 1, */
+    /*              1, p1, 1 ); */
 }
 
 
@@ -449,9 +462,38 @@ AA_API void aa_tf_rotmat_mul( const double R1[AA_RESTRICT 9],
                               const double R2[AA_RESTRICT 9],
                               double R3[AA_RESTRICT 9] )
 {
-    aa_tf_rotmat_rot( R1, R2, R3 );
-    aa_tf_rotmat_rot( R1, R2+3, R3+3 );
-    aa_tf_rotmat_rot( R1, R2+6, R3+6 );
+    /* aa_tf_rotmat_rot( R1, R2, R3 ); */
+    /* aa_tf_rotmat_rot( R1, R2+3, R3+3 ); */
+    /* aa_tf_rotmat_rot( R1, R2+6, R3+6 ); */
+
+    /*  Mul: 9
+     *  FMA: 18
+     */
+
+    const double *p0 = R2;
+
+    R3[0] =  R1[0]*p0[0] + R1[3]*p0[1] + R1[6]*p0[2];
+    R3[1] =  R1[1]*p0[0] + R1[4]*p0[1] + R1[7]*p0[2];
+    R3[2] =  R1[2]*p0[0] + R1[5]*p0[1] + R1[8]*p0[2];
+
+    p0 = R2+3;
+    R3[3] =  R1[0]*p0[0] + R1[3]*p0[1] + R1[6]*p0[2];
+    R3[4] =  R1[1]*p0[0] + R1[4]*p0[1] + R1[7]*p0[2];
+    R3[5] =  R1[2]*p0[0] + R1[5]*p0[1] + R1[8]*p0[2];
+
+    p0 = R2+6;
+    R3[6] =  R1[0]*p0[0] + R1[3]*p0[1] + R1[6]*p0[2];
+    R3[7] =  R1[1]*p0[0] + R1[4]*p0[1] + R1[7]*p0[2];
+    R3[8] =  R1[2]*p0[0] + R1[5]*p0[1] + R1[8]*p0[2];
+
+
+    /* dgemm is slower than direct arithmetic */
+
+    /* cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans, */
+    /*              3, 3, 3, */
+    /*              1.0, R1, 3, R2, 3, */
+    /*              0, R3, 3 ); */
+
 }
 
 AA_API void aa_tf_tfmat_mul( const double T0[AA_RESTRICT 12],

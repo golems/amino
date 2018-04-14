@@ -218,6 +218,9 @@ AA_API void
 aa_tf_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
 {
     DECLARE_QUAT_XYZW;
+    /*  Mul: 4
+     *  FMA: 12
+     */
 
     c[x] =    a[x]*b[w] + a[y]*b[z] + a[w]*b[x] - a[z]*b[y];
     c[y] =    a[z]*b[x] + a[w]*b[y] + a[y]*b[w] - a[x]*b[z];
@@ -229,6 +232,9 @@ AA_API void
 aa_tf_qmul_a( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
 {
     DECLARE_QUAT_XYZW;
+
+    /*  FMA: 16
+     */
 
     c[x] =  c[x] + a[x]*b[w] + a[y]*b[z] + a[w]*b[x] - a[z]*b[y];
     c[y] =  c[y] + a[z]*b[x] + a[w]*b[y] + a[y]*b[w] - a[x]*b[z];

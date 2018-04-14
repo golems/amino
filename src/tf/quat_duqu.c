@@ -70,6 +70,10 @@ AA_API void
 aa_tf_duqu_mul( const double _a[AA_RESTRICT 8], const double _b[AA_RESTRICT 8],
                 double _c[AA_RESTRICT 8] )
 {
+    /*
+     * Mul: 8
+     * FMA: 40
+     */
     const struct aa_tf_duqu *A = (struct aa_tf_duqu *)_a;
     const struct aa_tf_duqu *B = (struct aa_tf_duqu *)_b;
     struct aa_tf_duqu *C = (struct aa_tf_duqu *)_c;
