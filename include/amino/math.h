@@ -169,6 +169,9 @@ AA_API size_t aa_fmaxloc( size_t n, double *v );
 /// uniform pseudo-random in [0,1.0]
 AA_API double aa_frand();
 
+/// uniform pseudo-random in [min,max]
+AA_API double aa_frand_minmax(double min, double max);
+
 /// fills v with random numbers in [0,1.0]
 AA_API void aa_vrand(size_t n, double *v);
 
