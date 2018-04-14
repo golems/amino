@@ -217,12 +217,20 @@ void SceneFrameRevolute::tf_rel( const double *q, double _E[7] )
 void SceneFrameRevolute::duqu_rel( const double *q, double _S[8] )
 {
     double qo = q[this->config_index] + this->offset;
-    double h[4],h1[4];
+    double h[4],v2[3];
     aa_tf_axang2quat2( axis, qo, h );
     // TODO: can we elide when identify?
     // Maybe using a different frame type.
-    aa_tf_qmul( E + AA_TF_QUTR_Q, h, h1 );
-    aa_tf_qv2duqu(h1, E+AA_TF_QUTR_V,S);
+
+    // double h1[4];
+    // aa_tf_qmul( E + AA_TF_QUTR_Q, h, h1 );
+    // aa_tf_qv2duqu(h1, E+AA_TF_QUTR_V,S);
+
+    aa_tf_qmul( E + AA_TF_QUTR_Q, h, _S+AA_TF_DUQU_REAL );
+    v2[0] = E[AA_TF_QUTR_V + 0] / 2;
+    v2[1] = E[AA_TF_QUTR_V + 1] / 2;
+    v2[2] = E[AA_TF_QUTR_V + 2] / 2;
+    aa_tf_qmul_vq(v2, _S+AA_TF_DUQU_REAL , _S+AA_TF_DUQU_DUAL);
 }
 
 void SceneFrameRevolute::tfmat_rel( const double *q, double _T[12] )
