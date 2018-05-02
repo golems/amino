@@ -622,17 +622,22 @@ aa_ct_tjq_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
 
     // Populate segment list with one segment per point
     struct aa_ct_pt *c_pt = pt_list->list.front();
-    for (; c_pt != NULL; c_pt = c_pt->next)
+    for (; c_pt != NULL; c_pt = c_pt->next) {
+        if (c_pt->next != NULL && aa_veq(c_pt->state.n_q, c_pt->state.q, c_pt->next->state.q, AA_EPSILON)) {
+            fprintf(stdout, "Skipping duplicate point\n");
+            continue;
+        } 
         aa_ct_seg_list_add(list, aa_ct_tj_pb_new(&list->reg, c_pt, limits));
+    }
 
-    bool flag;
+    bool overlap_flag;
     size_t n = pt_list->list.size();
 
     // Iterate and update segments until no overlap
     do {
         size_t i = 0;
         double f[n];
-        flag = false;
+        overlap_flag = false;
 
         struct aa_ct_seg *c_seg = list->list.front();
         // Update all segments before checking for overlap.
@@ -661,18 +666,22 @@ aa_ct_tjq_pb_generate(struct aa_mem_region *reg, struct aa_ct_pt_list *pt_list,
             if (overlap) {
                 double p_dt = (p_cx) ? p_cx->dt : DBL_MAX;
                 f[i] = sqrt(fmin(p_dt, c_cx->dt) / c_cx->b);
-                flag = true;
+                overlap_flag = true;
             } else
                 f[i] = 1;
+
+            if (aa_feq(f[i], 0.0, 0.00001)) {
+                f[i] = 0.00001;
+            }
         }
 
         i = 0;
-        c_seg = list->list.front();
-        for (; c_seg != NULL; c_seg = c_seg->next, i++)
+        for (c_seg = list->list.front(); c_seg != NULL; c_seg = c_seg->next, i++) {
             // Scale each region's time based on calculated constant
             ((struct aa_ct_seg_pb_cx *) c_seg->cx)->dt /= \
                 (i < n - 1) ? fmin(f[i + 1], f[i]) : 1;
-    } while (flag);
+        }
+    } while (overlap_flag);
 
     // The final duration of a segment needs to be 0, defaults to DBL_MAX.
     ((struct aa_ct_seg_pb_cx *)list->list.back()->cx)->dt = 0;
