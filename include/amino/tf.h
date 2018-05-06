@@ -597,6 +597,20 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
 
 /**
  * Construct a skew-symmetric matrix.
+ *
+ * @f[
+ *     I + a*[u] + b*[u]^2
+ * @f]
+ *
+ * where
+ *
+ * @f[
+ *     [u] = \begin{bmatrix}
+ *          0 & -u_2 & u_1 \\
+ *          u_2 & 0 & -u_0 \\
+ *          -u_1 & u_0 & 0
+ *         \end{bmatrix}
+ * @f]
  */
 AA_API void aa_tf_skewsym_scal2( double a, double b, const double u[3], double R[9] );
 

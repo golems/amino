@@ -254,6 +254,9 @@
 (def-q3 (aa-tf-qcmul tf-qcmul) "Multiply conjugate of first arg with second arg")
 (def-q3 (aa-tf-qmulc tf-qmulc) "Multiply first arg with conjugate of second arg")
 
+(defcfun ("aa_tf_qnorm" tf-qnorm) :double
+  (q quaternion-t))
+
 (defcfun aa-tf-qpow :void
   (q quaternion-t)
   (a :double)
