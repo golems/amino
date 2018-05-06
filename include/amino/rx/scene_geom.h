@@ -223,7 +223,8 @@ enum aa_rx_geom_shape {
     AA_RX_SPHERE,     ///< A sphere (ball) shape
     AA_RX_CYLINDER,   ///< A cylinder shape
     AA_RX_CONE,       ///< A cone shape
-    AA_RX_GRID        ///< A grid-lines shape
+    AA_RX_GRID,       ///< A grid-lines shape
+    AA_RX_TORUS,      ///< A torus shape
 };
 
 /**
@@ -273,6 +274,15 @@ struct aa_rx_shape_grid {
     double dimension[2];   ///< x, y dimensions of the grid
     double delta[2];       ///< x, y line spacing of the grid
     double width;          ///< width of each line
+};
+
+/**
+ * Shape for a torus
+ */
+struct aa_rx_shape_torus {
+    double angle;          ///< arc angle of the torus
+    double major_radius;   ///< major torus radius
+    double minor_radius;   ///< minor torus radius
 };
 
 /**
@@ -332,6 +342,18 @@ aa_rx_geom_grid (
     const double dimension[2],
     const double delta[2],
     double width );
+
+
+/**
+ * Create a torus
+ */
+AA_API struct aa_rx_geom *
+aa_rx_geom_torus (
+    struct aa_rx_geom_opt *opt,
+    double angle,
+    double major_radius,
+    double minor_radius
+    );
 
 /**
  * Return the options for the geometry object

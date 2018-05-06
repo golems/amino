@@ -80,6 +80,13 @@ static void u_vec_push3( u_vec *v, unsigned i, unsigned j, unsigned k )
     u_vec_push(v,k);
 }
 
+static void d2glf(size_t n, const double *d, GLfloat *f)
+{
+    for( size_t i = 0; i < n; i ++ ) {
+        f[i] = (GLfloat)d[i];
+    }
+}
+
 //static void check_error( const char *name ) {
 #define check_error(name)                                               \
     for (GLenum err = glGetError();                                     \
@@ -759,6 +766,7 @@ AA_API void aa_geom_gl_buffers_init_mesh(
     struct aa_rx_geom_mesh *geom
     )
 {
+
     tri_mesh( &geom->base, geom->shape );
 }
 
@@ -1316,6 +1324,122 @@ static void init_cone_cylinder (
 }
 
 
+
+
+static void init_torus (
+    struct aa_rx_geom_torus *geom
+    )
+{
+    double angle = geom->shape.angle;
+    double major_radius = geom->shape.major_radius;
+    double minor_radius = geom->shape.minor_radius;
+
+    /* Draw torus in x-y plane */
+
+    static const double dangle0 = M_PI*2 / 72;
+
+    angle = aa_ang_norm_2pi(angle);
+    unsigned n_major = (unsigned) (angle / dangle0);
+    if( n_major < 2 ) n_major = 2;
+    double dangle = angle / (n_major-1);
+
+    unsigned p = 36;
+
+    unsigned n_values = p*n_major;
+    unsigned n_indices = p*n_major*2;
+    GLfloat values[n_values*3];
+    GLfloat normals[n_values*3];
+    unsigned indices[n_indices*3];
+
+
+    /* base circle */
+    double circ_base[p*3];
+    double circ_norm[p*3];
+    unsigned a = 0;
+    for( size_t i = 0; i < p; i ++ ) {
+        double theta = (double)i * (2*M_PI/p);
+        double s = sin(theta);
+        double c = cos(theta);
+        // x
+        circ_base[a] = (GLfloat)(major_radius + c*minor_radius);
+        circ_norm[a++] = (GLfloat)c;
+
+        // y
+        circ_base[a] =  0;
+        circ_norm[a++] = 0;
+
+        // z
+        circ_base[a] =  (GLfloat)(s*minor_radius);
+        circ_norm[a++] = (GLfloat)s;
+    }
+
+
+    /* rotate base circle along torus */
+    a=0;
+    for( size_t j = 0; j < n_major; j ++ ) {
+        double phi = (double)j*dangle;
+        double R[9];
+        if (phi > angle ) phi = angle;
+        aa_tf_zangle2rotmat(phi,R);
+
+        double v[p*3];
+        cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+                    3, (int)p, 3,
+                    1.0, R, 3,
+                    circ_base, 3,
+                    0, v, 3 );
+        d2glf(p*3,v,values+a);
+
+        cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+                    3, (int)p, 3,
+                    1.0, R, 3,
+                    circ_norm, 3,
+                    0, v, 3 );
+        d2glf(p*3,v,normals+a);
+        a += p*3;
+
+    }
+    assert(a == n_values*3);
+
+
+    /* collect indices */
+    unsigned b = 0;
+    for( unsigned j = 0; j < n_major - 1; j ++ ) {
+        for( unsigned i = 0; i < p; i ++ ) {
+            unsigned k0 = j*p + i;
+            unsigned k1 = k0 + p;
+            unsigned kd = (i+1 == p) ? -i : 1;
+
+            unsigned k2 = k0 + kd;
+            unsigned k3 = k1 + kd;
+
+            indices[b++] = k0;
+            indices[b++] = k1;
+            indices[b++] = k2;
+
+            indices[b++] = k3;
+            indices[b++] = k1;
+            indices[b++] = k2;
+        }
+    }
+    assert( b = n_indices*3 );
+
+    // TODO: ends
+
+
+
+    struct aa_rx_mesh *mesh = aa_rx_mesh_create();
+
+    aa_rx_mesh_set_vertices( mesh, a/3, values, 0 );
+    aa_rx_mesh_set_normals( mesh, a/3, normals, 0 );
+    aa_rx_mesh_set_indices( mesh, b/3, indices, 0 );
+    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
+    tri_mesh( &geom->base, mesh );
+    aa_rx_mesh_destroy(mesh);
+
+}
+
+
 AA_API void aa_geom_gl_buffers_init (
     struct aa_rx_geom *geom
     )
@@ -1353,6 +1477,12 @@ AA_API void aa_geom_gl_buffers_init (
     case AA_RX_SPHERE:
     {
         init_sphere((struct aa_rx_geom_sphere *)geom);
+        break;
+    }
+
+    case AA_RX_TORUS:
+    {
+        init_torus((struct aa_rx_geom_torus *)geom);
         break;
     }
     default:

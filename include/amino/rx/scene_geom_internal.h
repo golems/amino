@@ -100,6 +100,11 @@ struct aa_rx_geom_grid {
     struct aa_rx_shape_grid shape;
 };
 
+struct aa_rx_geom_torus {
+    struct aa_rx_geom base;
+    struct aa_rx_shape_torus shape;
+};
+
 struct aa_rx_geom_mesh {
     struct aa_rx_geom base;
     struct aa_rx_mesh *shape;

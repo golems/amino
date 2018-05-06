@@ -131,6 +131,23 @@ aa_rx_geom_grid (
 }
 
 struct aa_rx_geom *
+aa_rx_geom_torus (
+    struct aa_rx_geom_opt *opt,
+    double angle,
+    double major_radius,
+    double minor_radius
+    )
+{
+    ALLOC_GEOM( struct aa_rx_geom_torus, g,
+                AA_RX_TORUS, opt );
+    g->shape.angle = angle;
+    g->shape.major_radius = major_radius;
+    g->shape.minor_radius = minor_radius;
+
+    return &g->base;
+}
+
+struct aa_rx_geom *
 aa_rx_geom_mesh (
     struct aa_rx_geom_opt *opt,
     struct aa_rx_mesh *mesh )
@@ -215,6 +232,9 @@ aa_rx_geom_shape ( const struct aa_rx_geom *g,
         break;
     case AA_RX_GRID:
         shape = &((struct aa_rx_geom_grid*)g)->shape;
+        break;
+    case AA_RX_TORUS:
+        shape = &((struct aa_rx_geom_torus*)g)->shape;
         break;
     }
     if( shape_type ) *shape_type = g->type;
@@ -362,6 +382,7 @@ aa_rx_geom_shape_str( enum aa_rx_geom_shape shape )
     case AA_RX_CYLINDER: return "cylinder";
     case AA_RX_CONE: return "cone";
     case AA_RX_GRID: return "grid";
+    case AA_RX_TORUS: return "torus";
     }
     return "?";
 }
