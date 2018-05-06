@@ -52,6 +52,8 @@
   :struct-type shape-cone)
 (amino-ffi::def-foreign-container scene-grid rx-shape-grid-t
   :struct-type shape-grid)
+(amino-ffi::def-foreign-container scene-torus rx-shape-torus-t
+  :struct-type shape-torus)
 
 ;; mesh
 (amino-ffi::def-foreign-container rx-mesh rx-mesh-t

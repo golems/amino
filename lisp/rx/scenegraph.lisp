@@ -183,6 +183,18 @@ DIMESIONS: length 3 vector or sequence giving x, y, and z dimensions."
                                        width)
                    options))
 
+(defun scene-geometry-torus (options &key major-radius minor-radius (angle (* 2 pi)))
+  "Create geometry for a torus.
+
+OPTIONS: drawing options for the box
+DIMESIONS: length 3 vector or sequence giving x, y, and z dimensions."
+  (%rx-scene-geometry (aa-rx-geom-torus (alist-rx-geom-opt options)
+                                        angle
+                                        major-radius
+                                        minor-radius)
+
+                      options))
+
 (defun scene-geometry-text (options text &key (thickness 1))
   "Create geometry for text."
   (%scene-geometry (scene-text text :thickness thickness)

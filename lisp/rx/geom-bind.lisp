@@ -182,6 +182,12 @@
   (delta amino::vector-2-t)
   (width amino-ffi::coercible-double))
 
+(cffi:defcfun aa-rx-geom-torus rx-geom-t
+  (opt rx-geom-opt-t)
+  (angle amino-ffi::coercible-double)
+  (major-radius amino-ffi::coercible-double)
+  (minor-radius amino-ffi::coercible-double))
+
 (cffi:defcfun aa-rx-geom-mesh rx-geom-t
   (opt rx-geom-opt-t)
   (mesh rx-mesh-t))
@@ -201,6 +207,7 @@
         (:sphere (%make-scene-sphere ptr))
         (:cylinder (%make-scene-cylinder ptr))
         (:cone (%make-scene-cone ptr))
+        (:torus (%make-scene-torus ptr))
         (:grid (%make-scene-grid ptr))))))
 
 

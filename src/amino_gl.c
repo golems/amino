@@ -1338,7 +1338,7 @@ static void init_torus (
 
     static const double dangle0 = M_PI*2 / 72;
 
-    angle = aa_ang_norm_2pi(angle);
+    //angle = aa_ang_norm_2pi(angle);
     unsigned n_major = (unsigned) (angle / dangle0);
     if( n_major < 2 ) n_major = 2;
     double dangle = angle / (n_major-1);

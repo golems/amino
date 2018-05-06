@@ -84,6 +84,7 @@
          ((:sphere "AA_RX_SPHERE"))
          ((:cylinder "AA_RX_CYLINDER"))
          ((:cone "AA_RX_CONE"))
+         ((:torus "AA_RX_TORUS"))
          ((:grid "AA_RX_GRID")))
 
 
