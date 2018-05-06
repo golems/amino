@@ -103,4 +103,8 @@
            (dimension "dimension" :type :double :count 2)
            (delta "delta" :type :double :count 2)
            (width "width" :type :double))
+  (cstruct shape-torus "struct aa_rx_shape_torus"
+           (angle "angle" :type :double)
+           (major-radius "major_radius" :type :double)
+           (minor-radius "minor_radius" :type :double))
   )

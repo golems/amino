@@ -248,6 +248,10 @@
   "Convert VALUE in degrees to radians."
   (* value (/ pi 180d0)))
 
+(defun radians->degrees (radians)
+  "Convert radians to degrees"
+  (* radians (/ 180d0 pi)))
+
 (defun pi-rad (value)
   "Return VALUE*pi"
   (* value pi))

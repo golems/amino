@@ -300,6 +300,11 @@
 (defun scene-grid-thickness (object)
   (scene-grid-width object))
 
+;;; Torus ;;;
+(amino-ffi::def-foreign-container-accessor scene-torus major-radius)
+(amino-ffi::def-foreign-container-accessor scene-torus minor-radius)
+(amino-ffi::def-foreign-container-accessor scene-torus angle)
+
 ;;;;;;;;;;;;
 ;;; Mesh ;;;
 ;;;;;;;;;;;;

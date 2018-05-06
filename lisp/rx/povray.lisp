@@ -135,6 +135,19 @@
 (defun pov-rgbf (elements)
   (apply #'pov-rgbf* (subseq elements 0 4)))
 
+(defun pov-rotate (x y z)
+  (pov-item '|rotate| (%pov-float-vector x y z)))
+
+(defun pov-rotate-right (x y z)
+  (pov-rotate x z y))
+
+;;; Constructive Geometry ;;;
+
+(defun pov-union (&rest things)
+  (pov-block "union" things))
+
+(defun pov-intersection (&rest things)
+  (pov-block "intersection" things))
 
 ;;; Complex Types ;;;
 
@@ -280,6 +293,27 @@
   (pov-cone (pov-float-vector-right '(0 0 0)) big-radius
             (pov-float-vector-right axis) small-radius
             modifiers))
+
+
+(defun pov-torus (angle major-axis minor-axis)
+  (let ((torus (pov-block "torus"
+                          (list
+                           (rope (pov-float major-axis) #\, (pov-float  minor-axis))))))
+    (if (>= angle (* 2 pi))
+        torus
+        (let* ((x (+ major-axis minor-axis))
+               (z minor-axis)
+               (deg (amino::radians->degrees angle))
+               (box1 (pov-box (%pov-float-vector-right x 0 z)
+                              (%pov-float-vector-right (- x) x (- z))))
+               (box2 (pov-box (%pov-float-vector-right (- x) (- x) (- z))
+                              (%pov-float-vector-right x 0 z)
+                              (list (pov-rotate-right 0 0 (- deg))))))
+          (if (> angle pi)
+              (pov-intersection torus (pov-union box1 box2))
+              (pov-intersection torus box1 box2))))))
+
+
 
 
 (defun pov-quote (text)

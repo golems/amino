@@ -36,6 +36,10 @@
        (pov-cylinder-axis (vec 0 0 (scene-cylinder-height shape))
                           (scene-cylinder-radius shape)
                           modifiers))
+      (scene-torus
+       (pov-torus (scene-torus-angle shape)
+                  (scene-torus-major-radius shape)
+                  (scene-torus-minor-radius shape)))
       (scene-cone
        (pov-cone-axis (vec 0 0 (scene-cone-height shape))
                       (scene-cone-start-radius shape)
