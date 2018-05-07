@@ -84,7 +84,23 @@
   (aa-tf-cross a b c)
   c)
 
+(defcfun aa-tf-proj :void
+  (a vector-3-t)
+  (b vector-3-t)
+  (c vector-3-t))
 
+(defun tf-proj (a b &optional (c (make-vec3)))
+  (aa-tf-proj a b c)
+  c)
+
+(defcfun aa-tf-proj-orth :void
+  (a vector-3-t)
+  (b vector-3-t)
+  (c vector-3-t))
+
+(defun tf-orth (a b &optional (c (make-vec3)))
+  (aa-tf-proj-orth a b c)
+  c)
 
 ;;; Matrices
 

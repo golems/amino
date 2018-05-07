@@ -42,6 +42,7 @@
 
 #define _GNU_SOURCE
 #include "amino.h"
+#include "amino_internal.h"
 
 void aa_tf_93inv_( const double R[restrict 9],
                    const double v[restrict 3],
@@ -537,6 +538,27 @@ void aa_tf_relx_median( size_t n, const double *R,
     for( size_t i = 0; i < 3; i ++ )
         rel[i] = aa_la_d_median( n, yp+i, 3 );
     aa_mem_region_local_pop(yp);
+}
+
+AA_API
+void aa_tf_proj( const double a[AA_RESTRICT 3],
+                 const double b[AA_RESTRICT 3],
+                 double c[AA_RESTRICT 3] )
+{
+    double ab = aa_tf_vdot(a,b);
+    double bb = aa_tf_vdot(b,b);
+    double k = ab/bb;
+    FOR_VEC(i) c[i] = k*b[i];
+}
+
+AA_API
+void aa_tf_proj_orth( const double a[AA_RESTRICT 3],
+                      const double b[AA_RESTRICT 3],
+                      double c[AA_RESTRICT 3] )
+{
+    double p[3];
+    aa_tf_proj(a,b,p);
+    FOR_VEC(i) c[i] = a[i] - p[i];
 }
 
 /* double aa_tf_qangle_rel( const double *q, const double *p ) */

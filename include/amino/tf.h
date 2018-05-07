@@ -1683,6 +1683,7 @@ AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA
 
 
 
+
 /* Misc */
 
 void aa_tf_relx_mean( size_t n, const double *R,
@@ -1694,6 +1695,34 @@ void aa_tf_relx_median( size_t n, const double *R,
                         const double *X, size_t ldx,
                         const double *Y, size_t ldy,
                         double rel[3]);
+
+/**
+ * Vector projection of a onto b.
+ *
+ * \f[
+ *   \vec{c}
+ *    = \mathrm{proj}_\vec{b}(\vec{a})
+ *    = \frac{\vec{a} \cdot \vec{b}}{\vec{b} \cdot \vec{b}} \vec{b}
+ * \f]
+ */
+AA_API
+void aa_tf_proj( const double a[AA_RESTRICT 3],
+                 const double b[AA_RESTRICT 3],
+                 double c[AA_RESTRICT 3] );
+
+/**
+ * Orthogonal projection of a onto b.
+ *
+ * \f[
+ *   \vec{c}
+ *    = \vec{a} - \mathrm{proj}_\vec{b}(\vec{a})
+ * \f]
+ */
+AA_API
+void aa_tf_proj_orth( const double a[AA_RESTRICT 3],
+                      const double b[AA_RESTRICT 3],
+                      double c[AA_RESTRICT 3] );
+
 
 #ifdef __cplusplus
 }

@@ -71,6 +71,9 @@
                                                     :start-radius start-radius
                                                     :end-radius end-radius)))
 
+
+
+
 (defun item-arrow-axis (parent name
                         &key
                           axis
@@ -150,6 +153,38 @@
                      :start-arrow-length start-arrow-length)))
 
 
+(defun draw-dimension-linear (scene-graph tail tip name
+                              &key
+                                options
+                                end-arrow
+                                start-arrow
+                                (width .01)
+                                (end-arrow-start-width (* 2 width))
+                                (end-arrow-end-width 0d0)
+                                (end-arrow-length width)
+                                (start-arrow-start-width (* 2 width))
+                                (start-arrow-end-width 0d0)
+                                (start-arrow-length width)
+                                (offset '(0 0 .33))
+                                configuration-map)
+  "Draw arrow orthogonal to OFFSET"
+  (let* ((v (tf-translation (scene-graph-tf-relative scene-graph tail tip
+                                                     :configuration-map configuration-map)))
+         (y (amino::tf-orth v offset)))
+    (item-arrow-axis tail name
+                     :options options
+                     :translation offset
+                     :axis (vec3-normalize y)
+                     :length (vec-norm y)
+                     :width width
+                     :end-arrow end-arrow
+                     :start-arrow start-arrow
+                     :end-arrow-start-width end-arrow-start-width
+                     :end-arrow-end-width end-arrow-end-width
+                     :end-arrow-length end-arrow-length
+                     :start-arrow-start-width start-arrow-start-width
+                     :start-arrow-end-width start-arrow-end-width
+                     :start-arrow-length start-arrow-length)))
 
 
 (defun item-frame-marker (parent name
