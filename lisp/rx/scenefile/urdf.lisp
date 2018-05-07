@@ -44,6 +44,19 @@
 ;;   (pushnew (cons name directory)
 ;;            *urdf-package-alist* :test #'equal))
 
+(defun ros-package-path () (uiop/os:getenv "ROS_PACKAGE_PATH"))
+
+(defun (setf ros-package-path) (value)
+  (etypecase value
+    (string (sb-posix:setenv "ROS_PACKAGE_PATH" value 1))
+    (pathname (setf (ros-package-path) (namestring value)))
+    (list
+     (setf (ros-package-path)
+           (format nil "~{~A~^:~}" (loop for part in value
+                                      collect (etypecase part
+                                                (string part)
+                                                (pathname (namestring part)))))))))
+
 (defun urdf-resolve-file (filename) ; &optional (package-alist *urdf-package-alist*))
   (if (ppcre:scan "^package://" filename)
     (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH"))
