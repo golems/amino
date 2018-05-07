@@ -194,18 +194,60 @@
                                  radius
                                  width
                                  offset
-                                 angle)
+                                 angle
+                                 end-arrow
+                                 (end-arrow-start-width (* 2 width))
+                                 (end-arrow-end-width 0d0)
+                                 (end-arrow-length width)
+                                 start-arrow
+                                 (start-arrow-start-width (* 2 width))
+                                 (start-arrow-end-width 0d0)
+                                 (start-arrow-length width)
+                                 )
   (declare (ignore scene-graph))
-  (let ((angle (or angle pi)))
-    (scene-frame-fixed parent name
-                       ;; TODO: offset rotation
-                       :tf (tf* rotation offset)
-                       :geometry
-                       (scene-geometry-torus options
-                                             :angle angle
-                                             :major-radius radius
-                                             :minor-radius (/ width 2)))
-    ))
+  (let* ((start-angle (if start-arrow
+                          (/ start-arrow-length radius)
+                          0))
+         (angle (- angle
+                   (if end-arrow
+                       (/ end-arrow-length radius)
+                       0)
+                   start-angle)))
+
+    (nconc
+     (list
+      (scene-frame-fixed parent name
+                         ;; TODO: offset rotation
+                         :tf (tf* rotation offset))
+
+      (scene-frame-fixed name (draw-subframe name "body")
+                         :tf (tf* (z-angle start-angle)
+                                  nil)
+                         :geometry
+                         (scene-geometry-torus options
+                                               :angle angle
+                                               :major-radius radius
+                                               :minor-radius (/ width 2))))
+     (when start-arrow
+       (list (item-cone-axis (draw-subframe name "body") (draw-subframe name "start-arrow")
+                             :options options
+                             :height end-arrow-length
+                             :start-radius (/ end-arrow-start-width 2)
+                             :end-radius (/ end-arrow-end-width 2)
+                             :axis (vec3* 0 -1 0)
+                             :translation (vec3* radius 0 0)
+                             )))
+     (when end-arrow
+       (let ((R (rotation-matrix (z-angle angle))))
+         (list (item-cone-axis (draw-subframe name "body") (draw-subframe name "end-arrow")
+                               :options options
+                               :height end-arrow-length
+                               :start-radius (/ end-arrow-start-width 2)
+                               :end-radius (/ end-arrow-end-width 2)
+                               :axis (transform R (vec3* 0 1 0))
+                               :translation (transform R (vec3* radius 0 0))
+                               ))))
+     )))
 
 
 
