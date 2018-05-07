@@ -1340,13 +1340,13 @@ static void init_torus (
 
     //angle = aa_ang_norm_2pi(angle);
     unsigned n_major = (unsigned) (angle / dangle0);
-    if( n_major < 4 ) n_major = 4;
+    if( n_major < 8 ) n_major = 8;
     double dangle = angle / (n_major-1);
 
     unsigned p = 36;
 
     unsigned n_values = p*n_major;
-    unsigned n_indices = p*n_major*2;
+    unsigned n_indices = p*(n_major-1)*2;
     GLfloat values[n_values*3];
     GLfloat normals[n_values*3];
     unsigned indices[n_indices*3];
@@ -1422,7 +1422,9 @@ static void init_torus (
             indices[b++] = k2;
         }
     }
-    assert( b = n_indices*3 );
+    /* fprintf(stderr, "b: %u\n",b); */
+    /* fprintf(stderr, "3i: %u\n",n_indices*3); */
+    assert( b == n_indices*3 );
 
     // TODO: ends
 
