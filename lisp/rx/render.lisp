@@ -39,7 +39,8 @@
       (scene-torus
        (pov-torus (scene-torus-angle shape)
                   (scene-torus-major-radius shape)
-                  (scene-torus-minor-radius shape)))
+                  (scene-torus-minor-radius shape)
+                  modifiers))
       (scene-cone
        (pov-cone-axis (vec 0 0 (scene-cone-height shape))
                       (scene-cone-start-radius shape)

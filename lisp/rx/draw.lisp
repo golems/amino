@@ -187,6 +187,29 @@
                      :start-arrow-length start-arrow-length)))
 
 
+(defun draw-dimension-angular (scene-graph parent name
+                               &key
+                                 rotation
+                                 options
+                                 radius
+                                 width
+                                 offset
+                                 angle)
+  (declare (ignore scene-graph))
+  (let ((angle (or angle pi)))
+    (scene-frame-fixed parent name
+                       ;; TODO: offset rotation
+                       :tf (tf* rotation offset)
+                       :geometry
+                       (scene-geometry-torus options
+                                             :angle angle
+                                             :major-radius radius
+                                             :minor-radius (/ width 2)))
+    ))
+
+
+
+
 (defun item-frame-marker (parent name
                           &key
                             length

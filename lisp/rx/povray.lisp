@@ -143,11 +143,11 @@
 
 ;;; Constructive Geometry ;;;
 
-(defun pov-union (&rest things)
-  (pov-block "union" things))
+(defun pov-union (things &optional modifiers)
+  (pov-block "union" (list* things modifiers)))
 
-(defun pov-intersection (&rest things)
-  (pov-block "intersection" things))
+(defun pov-intersection (things &optional modifiers)
+  (pov-block "intersection" (list* things modifiers)))
 
 ;;; Complex Types ;;;
 
@@ -295,7 +295,7 @@
             modifiers))
 
 
-(defun pov-torus (angle major-axis minor-axis)
+(defun pov-torus (angle major-axis minor-axis &optional modifiers)
   (let ((torus (pov-block "torus"
                           (list
                            (rope (pov-float major-axis) #\, (pov-float  minor-axis))))))
@@ -310,8 +310,8 @@
                               (%pov-float-vector-right x 0 z)
                               (list (pov-rotate-right 0 0 (- deg))))))
           (if (> angle pi)
-              (pov-intersection torus (pov-union box1 box2))
-              (pov-intersection torus box1 box2))))))
+              (pov-intersection (list torus (pov-union (list box1 box2))) modifiers)
+              (pov-intersection (list torus box1 box2) modifiers))))))
 
 
 
