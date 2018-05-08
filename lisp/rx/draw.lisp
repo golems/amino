@@ -95,7 +95,15 @@
                         (if start-arrow start-arrow-length 0)
                         (if end-arrow end-arrow-length 0))))
 
-    (nconc (when start-arrow
+    (nconc (list (item-cylinder-axis parent name
+                                     :options options
+                                     :height body-length :radius (/ width 2)
+                                     :axis axis
+                                     :translation (if start-arrow
+                                                      (g+ (g* start-arrow-length axis)
+                                                          translation)
+                                                      translation)))
+           (when start-arrow
              (list (item-cone-axis parent (draw-subframe name "start-arrow")
                                    :options options
                                    :height start-arrow-length
@@ -104,14 +112,7 @@
                                    :axis axis
                                    :translation  (g+ (g* axis start-arrow-length)
                                                              translation))))
-           (list (item-cylinder-axis parent (draw-subframe name "body")
-                                     :options options
-                                     :height body-length :radius (/ width 2)
-                                     :axis axis
-                                     :translation (if start-arrow
-                                                      (g+ (g* start-arrow-length axis)
-                                                          translation)
-                                                      translation)))
+
            (when end-arrow
              (list (item-cone-axis parent (draw-subframe name "end-arrow")
                                    :options options
@@ -159,32 +160,35 @@
                                 end-arrow
                                 start-arrow
                                 (width .01)
-                                (end-arrow-start-width (* 2 width))
+                                (arrow-width (* 2 width))
+                                (arrow-length width)
+                                (end-arrow-start-width arrow-width)
                                 (end-arrow-end-width 0d0)
-                                (end-arrow-length width)
-                                (start-arrow-start-width (* 2 width))
+                                (end-arrow-length arrow-length)
+                                (start-arrow-start-width arrow-width)
                                 (start-arrow-end-width 0d0)
-                                (start-arrow-length width)
+                                (start-arrow-length arrow-length)
                                 (offset '(0 0 .33))
                                 configuration-map)
   "Draw arrow orthogonal to OFFSET"
   (let* ((v (tf-translation (scene-graph-tf-relative scene-graph tail tip
                                                      :configuration-map configuration-map)))
          (y (amino::tf-orth v offset)))
-    (item-arrow-axis tail name
-                     :options options
-                     :translation offset
-                     :axis (vec3-normalize y)
-                     :length (vec-norm y)
-                     :width width
-                     :end-arrow end-arrow
-                     :start-arrow start-arrow
-                     :end-arrow-start-width end-arrow-start-width
-                     :end-arrow-end-width end-arrow-end-width
-                     :end-arrow-length end-arrow-length
-                     :start-arrow-start-width start-arrow-start-width
-                     :start-arrow-end-width start-arrow-end-width
-                     :start-arrow-length start-arrow-length)))
+    (nconc
+     (item-arrow-axis tail name
+                      :options options
+                      :translation offset
+                      :axis (vec3-normalize y)
+                      :length (vec-norm y)
+                      :width width
+                      :end-arrow end-arrow
+                      :start-arrow start-arrow
+                      :end-arrow-start-width end-arrow-start-width
+                      :end-arrow-end-width end-arrow-end-width
+                      :end-arrow-length end-arrow-length
+                      :start-arrow-start-width start-arrow-start-width
+                      :start-arrow-end-width start-arrow-end-width
+                      :start-arrow-length start-arrow-length))))
 
 
 (defun draw-dimension-angular (scene-graph parent name
@@ -196,13 +200,13 @@
                                  offset
                                  angle
                                  end-arrow
-                                 (end-arrow-start-width (* 2 width))
-                                 (end-arrow-end-width 0d0)
-                                 (end-arrow-length width)
+                                 (arrow-width (* 2 width))
+                                 (arrow-length (* 2 width))
+                                 (end-arrow-start-width arrow-width)
+                                 (end-arrow-length arrow-length)
                                  start-arrow
-                                 (start-arrow-start-width (* 2 width))
-                                 (start-arrow-end-width 0d0)
-                                 (start-arrow-length width)
+                                 (start-arrow-start-width arrow-width)
+                                 (start-arrow-length arrow-length)
                                  )
   (declare (ignore scene-graph))
   (let* ((start-angle (if start-arrow
@@ -231,9 +235,9 @@
      (when start-arrow
        (list (item-cone-axis (draw-subframe name "body") (draw-subframe name "start-arrow")
                              :options options
-                             :height end-arrow-length
-                             :start-radius (/ end-arrow-start-width 2)
-                             :end-radius (/ end-arrow-end-width 2)
+                             :height start-arrow-length
+                             :start-radius (/ start-arrow-start-width 2)
+                             :end-radius 0
                              :axis (vec3* 0 -1 0)
                              :translation (vec3* radius 0 0)
                              )))
@@ -243,7 +247,7 @@
                                :options options
                                :height end-arrow-length
                                :start-radius (/ end-arrow-start-width 2)
-                               :end-radius (/ end-arrow-end-width 2)
+                               :end-radius 0
                                :axis (transform R (vec3* 0 1 0))
                                :translation (transform R (vec3* radius 0 0))
                                ))))
