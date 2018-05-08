@@ -81,28 +81,33 @@
   (clean-pathname (concatenate 'string path separator) separator))
 
 (defun file-dirname (path)
-  (multiple-value-bind (start end reg-start reg-end)
-      (ppcre:scan "^(.*)/[^/]*$" path)
-    (declare (ignore end))
-    (if start
-        (subseq path (aref reg-start 0) (aref reg-end 0))
-        nil)))
+  (let ((path (etypecase path
+                (string path)
+                (pathname (namestring path)))))
+    (multiple-value-bind (start end reg-start reg-end)
+        (ppcre:scan "^(.*)/[^/]*$" path)
+      (declare (ignore end))
+      (if start
+          (subseq path (aref reg-start 0) (aref reg-end 0))
+          nil))))
 
 (defun file-type (path)
-  (multiple-value-bind (start end reg-start reg-end)
-      (ppcre:scan "^.*\\.([^/\.]+)$" path)
-    (declare (ignore end))
-    (if start
-        (subseq path (aref reg-start 0) (aref reg-end 0))
-        nil)))
+  (pathname-type path))
+  ;; (multiple-value-bind (start end reg-start reg-end)
+  ;;     (ppcre:scan "^.*\\.([^/\.]+)$" path)
+  ;;   (declare (ignore end))
+  ;;   (if start
+  ;;       (subseq path (aref reg-start 0) (aref reg-end 0))
+  ;;       nil)))
 
 (defun file-basename (path)
-  (multiple-value-bind (start end reg-start reg-end)
-      (ppcre:scan "^.*/([^/]+)\\.[^/\.]*$" path)
-    (declare (ignore end))
-    (if start
-        (subseq path (aref reg-start 0) (aref reg-end 0))
-        nil)))
+  (pathname-name path))
+  ;; (multiple-value-bind (start end reg-start reg-end)
+  ;;     (ppcre:scan "^.*/([^/]+)\\.[^/\.]*$" path)
+  ;;   (declare (ignore end))
+  ;;   (if start
+  ;;       (subseq path (aref reg-start 0) (aref reg-end 0))
+  ;;       nil)))
 
 (defun file-rope (&rest elements)
   (rope-map #'identity elements :separator '/))
