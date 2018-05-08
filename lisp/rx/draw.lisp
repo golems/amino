@@ -109,7 +109,7 @@
                                    :height start-arrow-length
                                    :start-radius (/ start-arrow-start-width 2)
                                    :end-radius (/ start-arrow-end-width 2)
-                                   :axis axis
+                                   :axis (g* -1 axis)
                                    :translation  (g+ (g* axis start-arrow-length)
                                                              translation))))
 
@@ -169,12 +169,28 @@
                                 (start-arrow-end-width 0d0)
                                 (start-arrow-length arrow-length)
                                 (offset '(0 0 .33))
+                                extension-width
+                                (extension-length 0)
+                                (extension-options (draw-options-default))
                                 configuration-map)
   "Draw arrow orthogonal to OFFSET"
   (let* ((v (tf-translation (scene-graph-tf-relative scene-graph tail tip
                                                      :configuration-map configuration-map)))
          (y (amino::tf-orth v offset)))
     (nconc
+     (when extension-width
+       (list
+        (item-cylinder-axis tail (draw-subframe name "extension-0")
+                            :options extension-options
+                            :height (+ (vec-norm offset) extension-length)
+                            :radius (/ extension-width 2)
+                            :axis offset)
+        (item-cylinder-axis tail (draw-subframe name "extension-1")
+                            :translation v
+                            :options extension-options
+                            :height (+ (vec-norm offset) extension-length)
+                            :radius (/ extension-width 2)
+                            :axis offset)))
      (item-arrow-axis tail name
                       :options options
                       :translation offset
