@@ -57,19 +57,54 @@
                                                 (string part)
                                                 (pathname (namestring part)))))))))
 
+(defun ros-find-package (package)
+  (labels ((dir-name (dir)
+             (car (last (pathname-directory dir))))
+           (rec (dirs)
+             (some #'visit dirs))
+           (visit (dir)
+             (cond
+               ;; does not exits
+               ((not (uiop/filesystem:directory-exists-p dir))
+                nil)
+               ;; is the package
+               ((string= (dir-name dir) package)
+                dir)
+               ;; is a different package
+               ((probe-file (merge-pathnames "package.xml" dir))
+                nil)
+               ;; Recurse
+               (t (rec (uiop/filesystem:subdirectories dir))))))
+    (rec (ppcre:split ":" (ros-package-path)))))
+
+
 (defun urdf-resolve-file (filename) ; &optional (package-alist *urdf-package-alist*))
   (if (ppcre:scan "^package://" filename)
-    (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH"))
-          (suffix (pathname (ppcre:regex-replace "^package://+" filename ""))))
-      (loop for path in (ppcre:split ":" ros-package-path)
-         for package-directory = (concatenate 'string path "/")
-         for candidate = (merge-pathnames suffix package-directory)
-         do
-           (when (probe-file candidate)
-             (return-from urdf-resolve-file (namestring candidate))))
-      (error "'~A' not found for ROS_PACKAGE_PATH='~A'" filename ros-package-path))
-    ;; Not a package URL
-    filename))
+      (let ((suffix (ppcre:regex-replace "^package://+" filename "")))
+        (ppcre:register-groups-bind (package-name sep file-part)
+            ("^([^/]+)(/|$)(.*)" suffix)
+          (declare (ignore sep))
+          (if-let ((package (ros-find-package package-name)))
+            (merge-pathnames file-part package)
+            (error "'~A' not found for ROS_PACKAGE_PATH='~A'"
+                   package-name (ros-package-path)))))
+      ;; Not a package URL
+      filename))
+
+
+;; (defun urdf-resolve-file (filename) ; &optional (package-alist *urdf-package-alist*))
+;;   (if (ppcre:scan "^package://" filename)
+;;     (let ((ros-package-path (uiop/os:getenv "ROS_PACKAGE_PATH"))
+;;           (suffix (pathname (ppcre:regex-replace "^package://+" filename ""))))
+;;       (loop for path in (ppcre:split ":" ros-package-path)
+;;          for package-directory = (concatenate 'string path "/")
+;;          for candidate = (merge-pathnames suffix package-directory)
+;;          do
+;;            (when (probe-file candidate)
+;;              (return-from urdf-resolve-file (namestring candidate))))
+;;       (error "'~A' not found for ROS_PACKAGE_PATH='~A'" filename ros-package-path))
+;;     ;; Not a package URL
+;;     filename))
 
 
 (defstruct urdf-joint
@@ -280,7 +315,8 @@
                      (mesh-up-axis "Z")
                      (mesh-forward-axis "Y"))
 
-  (let* ((dom (if (stringp urdf)
+  (let* ((dom (if (or (stringp urdf)
+                      (pathnamep urdf))
                   (urdf-load urdf)
                   urdf))
          (urdf-joints (urdf-extract-joints :dom dom))

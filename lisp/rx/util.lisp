@@ -81,9 +81,7 @@
   (clean-pathname (concatenate 'string path separator) separator))
 
 (defun file-dirname (path)
-  (let ((path (etypecase path
-                (string path)
-                (pathname (namestring path)))))
+  (let ((path  (rope-string (rope path))))
     (multiple-value-bind (start end reg-start reg-end)
         (ppcre:scan "^(.*)/[^/]*$" path)
       (declare (ignore end))

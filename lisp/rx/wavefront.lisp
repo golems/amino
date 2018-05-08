@@ -261,7 +261,7 @@
                                   :mesh-up-axis mesh-up-axis
                                   :mesh-forward-axis mesh-forward-axis)
                (handle-obj obj-file))))
-    (let ((file-type (string-downcase (file-type mesh-file))))
+    (let ((file-type (string-downcase (pathname-type mesh-file))))
       (string-case file-type
         ("obj" (handle-obj mesh-file))
         ("stl" (convert mesh-file))
@@ -277,7 +277,7 @@
                       (handedness :right)
                       (directory *robray-tmp-directory*))
   (let* ((mesh-file (mesh-data-original-file mesh-data))
-         (file-type (string-downcase (file-type mesh-file)))
+         (file-type (string-downcase (pathname-type mesh-file)))
          (file-basename (file-basename mesh-file))
          (file-dirname (file-dirname mesh-file))
          (src-obj-p (string= (string-downcase file-type) "obj"))

@@ -177,7 +177,7 @@
   (let* ((filename (rope-string (rope filename)))
          (type (or type (scene-file-type filename)))
          (truename (if (eq type :urdf)
-                       (urdf-resolve-file filename)
+                       (namestring (urdf-resolve-file filename))
                        filename))
          (scene-graph
           (ecase type
