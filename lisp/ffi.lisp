@@ -63,6 +63,7 @@ Note that destructor must operate on the raw pointer type.
                      (symbol-package lisp-type))))
     (let ((%make-it (sym "%MAKE-" (string lisp-type)))
           (null-fun (sym "NULL-" (string lisp-type)))
+          ;;(%destroy-it (sym "%DESTROY-" (string lisp-type)))
           (%finalize-it (sym "%FINALIZE-" (string lisp-type))))
       `(progn
          (defstruct (,lisp-type (:include foreign-container)
@@ -85,12 +86,15 @@ Note that destructor must operate on the raw pointer type.
                                               '(:struct ,struct-type) slot))))
 
          ,@(when destructor
-                 `((cffi:defcfun ,destructor :void
-                     (object :pointer))
-                   (defun ,%finalize-it (pointer)
-                     (let ((object (,%make-it pointer)))
-                       (sb-ext:finalize object (lambda () (,destructor pointer)))
-                       object))))
+             (let ((destructor-lisp (if (listp destructor)
+                                        (second destructor)
+                                        destructor)))
+               `((cffi:defcfun ,destructor :void
+                   (object :pointer))
+                 (defun ,%finalize-it (pointer)
+                   (let ((object (,%make-it pointer)))
+                     (sb-ext:finalize object (lambda () (,destructor-lisp pointer)))
+                     object)))))
          (defmethod cffi:expand-from-foreign (form (type ,cffi-type))
            ,(if destructor
                 `(list ',%finalize-it form)
