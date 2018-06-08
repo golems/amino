@@ -131,8 +131,11 @@
     (when-let ((a (assoc :alpha alist)))
       (aa-rx-geom-opt-set-alpha opt (cdr a)))
     (when-let ((a (assoc :specular alist)))
-      (with-vec3 (r g b) (cdr a)
-        (aa-rx-geom-opt-set-specular3 opt r g b)))
+      (let ((v (cdr a)))
+        (if (numberp v)
+            (aa-rx-geom-opt-set-specular3 opt v v v)
+            (with-vec3 (r g b) v
+              (aa-rx-geom-opt-set-specular3 opt r g b)))))
     (when-let ((a (assoc :visual alist)))
       (aa-rx-geom-opt-set-visual opt (cdr a)))
     (when-let ((a (assoc :collision alist)))

@@ -73,6 +73,7 @@
     (:color . (0 0 0))
     (:specular . (0 0 0))
     (:alpha . 1d0)
+    (:metallic nil)
     (:visual . t)
     (:collision . t)
     (:scale . 1)
@@ -83,26 +84,53 @@
   "Return the draw option in OPTIONS for KEY."
   (alist-get-default options key *draw-options*))
 
+(defun octet-color (r g b)
+  (list (/ r 255.0)
+        (/ g 255.0)
+        (/ b 255.0)))
+
+(defmacro push-option (keyword value supplied place)
+  `(when ,supplied
+     (push (cons ,keyword ,value) ,place)))
+
 (defun draw-options-default (&key
                                (options *draw-options*)
-                               (scale (draw-option options :scale))
-                               (no-shadow (draw-option options :no-shadow))
-                               (specular (draw-option options :specular))
-                               (color (draw-option options :color))
-                               (alpha (draw-option options :alpha))
-                               (visual (draw-option options :visual))
-                               (type (draw-option options :type))
-                               (collision (draw-option options :collision)))
+                               (scale nil scale-supplied)
+                               (no-shadow nil no-shadow-supplied)
+                               (specular nil specular-supplied)
+                               (color nil color-supplied)
+                               (alpha nil alpha-supplied)
+                               ;; povray options
+                               (metallic nil metallic-supplied)
+                               (brilliance nil brilliance-supplied)
+                               (diffuse nil diffuse-supplied)
+                               (roughness nil roughness-supplied)
+                               (reflection nil reflection-supplied)
+                               (ambient nil ambient-supplied)
+                               (crand nil crand-supplied)
+                               ;; collision vs. visual
+                               (visual nil visual-supplied)
+                               (type nil type-supplied)
+                               (collision nil collision-supplied))
   "Construct a drawing options set using default values from OPTIONS."
-  (list* (cons :no-shadow no-shadow)
-         (cons :color color)
-         (cons :scale scale)
-         (cons :specular specular)
-         (cons :alpha alpha)
-         (cons :visual visual)
-         (cons :collision collision)
-         (cons :type type)
-         options))
+  (push-option :scale scale scale-supplied options)
+  (push-option :no-shadow no-shadow no-shadow-supplied options)
+  (push-option :specular specular specular-supplied options)
+  (push-option :color color color-supplied options)
+  (push-option :alpha alpha alpha-supplied options)
+
+  (push-option :metallic metallic metallic-supplied options)
+  (push-option :brilliance brilliance brilliance-supplied options)
+  (push-option :diffuse diffuse diffuse-supplied options)
+  (push-option :roughness roughness roughness-supplied options)
+  (push-option :reflection reflection reflection-supplied options)
+  (push-option :ambient ambient ambient-supplied options)
+  (push-option :crand crand crand-supplied options)
+
+  (push-option :visual visual visual-supplied options)
+  (push-option :collision collision collision-supplied options)
+  (push-option :type type type-supplied options)
+  options)
 
 (defun draw-options (&rest options-plist)
   "Construct drawing options from a propetry list."
