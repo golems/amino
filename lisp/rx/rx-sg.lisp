@@ -83,8 +83,8 @@
                 (aa-rx-sg-add-frame-revolute sg parent name q v
                                              config-name axis offset))
                (scene-frame-prismatic
-                (aa-rx-sg-add-frame-revolute sg parent name q v
-                                             config-name axis offset)))
+                (aa-rx-sg-add-frame-prismatic sg parent name q v
+                                              config-name axis offset)))
              ;; set limits
              (when limits
                (when-let ((limit (joint-limits-position limits)))
