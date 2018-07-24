@@ -82,25 +82,28 @@ static void scara( struct aa_rx_sg *sg )
     static const double L2[3] = {l2, 0, 0};
     static const double L3[3] = {0, 0, 0};
 
+
+    double q_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
+
     /* Construct a scara manipulator */
     aa_rx_sg_add_frame_revolute( sg,
                                  "q0", "q1",
-                                 NULL, L1,
+                                 q_ident, L1,
                                  NULL, aa_tf_vec_z, 0);
 
     aa_rx_sg_add_frame_revolute( sg,
                                  "", "q0",
-                                 NULL, L0,
+                                 q_ident, L0,
                                  NULL, aa_tf_vec_z, 0);
 
     aa_rx_sg_add_frame_prismatic( sg,
                                   "q2", "q3",
-                                  NULL, L3,
+                                  q_ident, L3,
                                   NULL, aa_tf_vec_z, 0);
 
     aa_rx_sg_add_frame_revolute( sg,
                                  "q1", "q2",
-                                 NULL, L2,
+                                 q_ident, L2,
                                  NULL, aa_tf_vec_z, 0);
 }
 
