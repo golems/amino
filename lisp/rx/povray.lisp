@@ -118,12 +118,18 @@
 (defun pov-rgb (elements)
   (multiple-value-call #'pov-rgb*
     (etypecase elements
+      ;;(number (values elements elements elements))
       (list (values (first elements)
                     (second elements)
                     (third elements)))
       (array (values (aref elements 0)
                      (aref elements 1)
                      (aref elements 2))))))
+
+(defun pov-maybe-rgb (elements)
+  (if (numberp elements)
+      elements
+      (pov-rgb elements)))
 
 (defun %pov-rgbf (r g b f)
   (rope '|rgbf|
@@ -462,13 +468,16 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
         (has-image-map (assoc :image-map alist)))
     (labels ((avg-rgb (rgb)
                (etypecase rgb
-                 ((or single-float double-float) rgb)
+                 (number rgb)
                  (sequence (/ (+ (elt rgb 0)
                                  (elt rgb 1)
                                  (elt rgb 2))
                               3))))
              (add-finish (name finish)
-               (push (pov-item name finish) finishes))
+               (push (if finish
+                         (pov-item name finish)
+                         name)
+                     finishes))
              (add-pigment (name pigment)
                (unless has-image-map
                  (push (pov-item name pigment) pigments)))
@@ -477,13 +486,15 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                  (unless has-image-map
                    (push (pov-alpha (cdr assoc-alpha)) pigments)))))
       (loop
-         for property in '(:ambient :diffuse :color :specular :index-of-refraction :image-map)
+         for property in '(:ambient :diffuse :color :specular :index-of-refraction :image-map
+                           :metallic :reflection :roughness :brilliance :crand)
          for pair = (assoc property alist)
          for value = (cdr pair)
          when pair
+         ;for (property . value) in alist
          do (case property
               (:ambient
-               (add-finish "ambient" (pov-rgb value)))
+               (add-finish "ambient" (pov-maybe-rgb value)))
               (:diffuse
                (add-finish "diffuse" (avg-rgb value))
                ;; color information can also in the diffuse property
@@ -497,6 +508,16 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (add-pigment "color" (pov-rgb value)))
               (:specular
                (add-finish "specular" (avg-rgb value)))
+              (:roughness
+               (add-finish "roughness" value))
+              (:brilliance
+               (add-finish "brilliance" value))
+              (:crand
+               (add-finish "crand" value))
+              (:reflection
+               (add-finish "reflection" (pov-maybe-rgb value)))
+              (:metallic
+               (add-finish "metallic" nil))
               (:index-of-refraction ; TODO
                )
               (:image-map
