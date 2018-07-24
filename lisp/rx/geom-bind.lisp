@@ -76,6 +76,10 @@
   (opts rx-geom-opt-t)
   (a amino-ffi::coercible-double))
 
+(cffi:defcfun aa-rx-geom-opt-set-scale :void
+  (opts rx-geom-opt-t)
+  (a amino-ffi::coercible-double))
+
 
 (cffi:defcfun aa-rx-geom-opt-get-no-shadow :boolean
   (opts rx-geom-opt-t))
@@ -130,6 +134,8 @@
         (aa-rx-geom-opt-set-color3 opt r g b)))
     (when-let ((a (assoc :alpha alist)))
       (aa-rx-geom-opt-set-alpha opt (cdr a)))
+    (when-let ((a (assoc :scale alist)))
+      (aa-rx-geom-opt-set-scale opt (cdr a)))
     (when-let ((a (assoc :specular alist)))
       (with-vec3 (r g b) (cdr a)
         (aa-rx-geom-opt-set-specular3 opt r g b)))

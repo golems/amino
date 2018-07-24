@@ -165,6 +165,11 @@ aa_tf_skewsym_scal_c( const double u[AA_RESTRICT 3],
                       const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
                       double R[AA_RESTRICT 9] )
 {
+    /* Operations:
+     * -----------
+     * Mul: 6
+     * Add: 12
+     */
     double  bu[3] = { b[0]*u[0],
                       b[1]*u[1],
                       b[2]*u[2] };
@@ -203,6 +208,12 @@ AA_API void
 aa_tf_skewsym_scal2( double a, double b, const double u[AA_RESTRICT 3],
                      double R[AA_RESTRICT 9] )
 {
+
+    /* Operations:
+     * -----------
+     * Mul: 12
+     * Add: 12
+     */
     double au[3] = {a*u[0], a*u[1], a*u[2]};
     double bu[3] = {b*u[0], b*u[1], b*u[2]};
     aa_tf_skewsym_scal_c( u, au, bu, R );
@@ -211,6 +222,11 @@ aa_tf_skewsym_scal2( double a, double b, const double u[AA_RESTRICT 3],
 AA_API void
 aa_tf_unskewsym_scal( double c, const double R[AA_RESTRICT 9], double u[AA_RESTRICT 3] )
 {
+    /* Operations:
+     * -----------
+     * Mul: 3
+     * Add: 3
+     */
     double a[3] = {RREF(R,2,1), RREF(R,0,2), RREF(R,1,0)};
     double b[3] = {RREF(R,1,2), RREF(R,2,0), RREF(R,0,1)};
 
@@ -220,6 +236,12 @@ aa_tf_unskewsym_scal( double c, const double R[AA_RESTRICT 9], double u[AA_RESTR
 AA_API void
 aa_tf_unskewsym( const double R[AA_RESTRICT 9], double u[AA_RESTRICT 3] )
 {
+    /* Operations:
+     * -----------
+     * Mul: 4
+     * Add: 6
+     * Other: sqrt
+     */
     double tr = RREF(R,0,0) + RREF(R,1,1) + RREF(R,2,2);
     double c = sqrt( tr + 1 ) / 2;
     aa_tf_unskewsym_scal( c, R, u );
@@ -235,6 +257,12 @@ aa_tf_rotmat_exp_aa( const double aa[AA_RESTRICT 4], double E[9] )
 AA_API void
 aa_tf_rotmat_expv( const double rv[AA_RESTRICT 4], double E[9] )
 {
+    /* Operations:
+     * -----------
+     * Mul: 17
+     * Add: 15
+     * Other: sqrt, sincos
+     */
     double theta2 = dot3(rv,rv);
     double theta = sqrt(theta2);
     double sc,cc;
@@ -252,6 +280,12 @@ aa_tf_rotmat_expv( const double rv[AA_RESTRICT 4], double E[9] )
 AA_API void
 aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double *theta )
 {
+    /* Operations:
+     * -----------
+     * Mul: 2
+     * Add: 4
+     * Other: sqrt, atan2
+     */
     *c = (RREF(R,0,0) + RREF(R,1,1) + RREF(R,2,2) - 1) / 2;
     *s = sqrt( 1 - (*c)*(*c) );
     *theta = atan2(*s, *c);
@@ -403,10 +437,23 @@ AA_API void aa_tf_tfmat2_tf( const double R[AA_RESTRICT 9],
                              const double p0[AA_RESTRICT 3],
                              double p1[AA_RESTRICT 4] )
 {
+    /*
+     *  FMA: 6
+     */
 
-    p1[0] =  R[0]*p0[0] + R[3]*p0[1] + R[6]*p0[2] + v[0];
-    p1[1] =  R[1]*p0[0] + R[4]*p0[1] + R[7]*p0[2] + v[1];
-    p1[2] =  R[2]*p0[0] + R[5]*p0[1] + R[8]*p0[2] + v[2];
+    p1[0] = v[0] + R[0]*p0[0] + R[3]*p0[1] + R[6]*p0[2];
+    p1[1] = v[1] + R[1]*p0[0] + R[4]*p0[1] + R[7]*p0[2];
+    p1[2] = v[2] + R[2]*p0[0] + R[5]*p0[1] + R[8]*p0[2];
+
+
+    /* dgemv is slower than direct arithmetic */
+    /* p1[0] = v[0]; */
+    /* p1[1] = v[1]; */
+    /* p1[2] = v[2]; */
+    /* cblas_dgemv( CblasColMajor, CblasNoTrans, */
+    /*              3, 3, */
+    /*              1.0, R, 3, p0, 1, */
+    /*              1, p1, 1 ); */
 }
 
 
@@ -415,9 +462,38 @@ AA_API void aa_tf_rotmat_mul( const double R1[AA_RESTRICT 9],
                               const double R2[AA_RESTRICT 9],
                               double R3[AA_RESTRICT 9] )
 {
-    aa_tf_rotmat_rot( R1, R2, R3 );
-    aa_tf_rotmat_rot( R1, R2+3, R3+3 );
-    aa_tf_rotmat_rot( R1, R2+6, R3+6 );
+    /* aa_tf_rotmat_rot( R1, R2, R3 ); */
+    /* aa_tf_rotmat_rot( R1, R2+3, R3+3 ); */
+    /* aa_tf_rotmat_rot( R1, R2+6, R3+6 ); */
+
+    /*  Mul: 9
+     *  FMA: 18
+     */
+
+    const double *p0 = R2;
+
+    R3[0] =  R1[0]*p0[0] + R1[3]*p0[1] + R1[6]*p0[2];
+    R3[1] =  R1[1]*p0[0] + R1[4]*p0[1] + R1[7]*p0[2];
+    R3[2] =  R1[2]*p0[0] + R1[5]*p0[1] + R1[8]*p0[2];
+
+    p0 = R2+3;
+    R3[3] =  R1[0]*p0[0] + R1[3]*p0[1] + R1[6]*p0[2];
+    R3[4] =  R1[1]*p0[0] + R1[4]*p0[1] + R1[7]*p0[2];
+    R3[5] =  R1[2]*p0[0] + R1[5]*p0[1] + R1[8]*p0[2];
+
+    p0 = R2+6;
+    R3[6] =  R1[0]*p0[0] + R1[3]*p0[1] + R1[6]*p0[2];
+    R3[7] =  R1[1]*p0[0] + R1[4]*p0[1] + R1[7]*p0[2];
+    R3[8] =  R1[2]*p0[0] + R1[5]*p0[1] + R1[8]*p0[2];
+
+
+    /* dgemm is slower than direct arithmetic */
+
+    /* cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans, */
+    /*              3, 3, 3, */
+    /*              1.0, R1, 3, R2, 3, */
+    /*              0, R3, 3 ); */
+
 }
 
 AA_API void aa_tf_tfmat_mul( const double T0[AA_RESTRICT 12],
@@ -482,6 +558,19 @@ AA_API void
 aa_tf_tfmat_expv( const double v[AA_RESTRICT 6],
                   double T[AA_RESTRICT 12] )
 {
+    /* Operations:
+     * -----------
+     * (self) Mul: 6
+     * (self) Add: 4
+     *
+     * (other) Mul: 2*12 + 9
+     * (other) Add: 2*12 + 6
+     *
+     * (total) Mul: 39
+     * (total) Add: 34
+     * (total) other: sqrt, sincos
+     */
+
     double theta2 = dot3(v+3, v+3);
     double theta = sqrt(theta2);
     double sc, cc, ssc;
@@ -506,6 +595,19 @@ AA_API void
 aa_tf_tfmat_lnv( const double T[AA_RESTRICT 12],
                  double v[AA_RESTRICT 6] )
 {
+    /* Operations:
+     * -----------
+     * (self) Mul: 5
+     * (self) Add: 4
+     *
+     * (other) Mul: 2 + 3 + 12 + 9
+     * (other) Add: 4 + 3 + 12 + 6
+     * (other) other: sqrt, atan2
+     *
+     * (total) Mul: 31
+     * (total) Add: 32
+     * (total) other: sqrt, atant2
+     */
     double c,s,theta, a,b;
     aa_tf_rotmat_angle( T, &c, &s, &theta );
     double theta2 = theta*theta;
@@ -520,4 +622,34 @@ aa_tf_tfmat_lnv( const double T[AA_RESTRICT 12],
     aa_tf_unskewsym_scal( a/2, T, v+3 );
     aa_tf_skewsym_scal2( -.5, b, v+3, K );
     aa_tf_9( K, T+9, v );
+}
+
+
+AA_API void
+aa_tf_rotmat_normalize( double R[AA_RESTRICT 9] )
+{
+    double *a = R;
+    double *b = a + 3;
+    double *c = b + 3;
+    /* Operations:
+     * -----------
+     * Mul: 3*(6+3) = 27
+     * Add: 3*(3+2)
+     * Other:
+     */
+
+    aa_tf_cross( a, b, c );
+    aa_tf_vnormalize(c);
+
+    aa_tf_cross( c, a, b );
+    aa_tf_vnormalize(b);
+
+    aa_tf_cross( b, c, a );
+    aa_tf_vnormalize(a);
+}
+
+AA_API void
+aa_tf_tfmat_normalize( double T[AA_RESTRICT 12] )
+{
+    aa_tf_rotmat_normalize(T);
 }

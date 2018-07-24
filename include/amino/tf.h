@@ -597,6 +597,20 @@ AA_API void aa_tf_12rel( const double T1[AA_RESTRICT 12],
 
 /**
  * Construct a skew-symmetric matrix.
+ *
+ * @f[
+ *     I + a*[u] + b*[u]^2
+ * @f]
+ *
+ * where
+ *
+ * @f[
+ *     [u] = \begin{bmatrix}
+ *          0 & -u_2 & u_1 \\
+ *          u_2 & 0 & -u_0 \\
+ *          -u_1 & u_0 & 0
+ *         \end{bmatrix}
+ * @f]
  */
 AA_API void aa_tf_skewsym_scal2( double a, double b, const double u[3], double R[9] );
 
@@ -694,6 +708,13 @@ AA_API void aa_tf_tfmat2_muli( const double R0[AA_RESTRICT 9],
                                const double v1[AA_RESTRICT 3],
                                double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] );
 
+
+/**
+ * Orthonormalize the rotation matrix.
+ */
+AA_API void
+aa_tf_rotmat_normalize( double R[AA_RESTRICT 9] );
+
 /* Transform */
 
 /**
@@ -739,6 +760,13 @@ AA_API void aa_tf_tfmat_inv1( double T[AA_RESTRICT 12] );
  */
 AA_API void aa_tf_tfmat_inv2( const double T[AA_RESTRICT 12],
                               double Ti[AA_RESTRICT 12] );
+
+
+/**
+ * Orthonormalize the transformation matrix.
+ */
+AA_API void
+aa_tf_tfmat_normalize( double T[AA_RESTRICT 12] );
 
 /// tests if R is a rotation matrix
 AA_API int aa_tf_isrotmat( const double R[AA_RESTRICT 9] );
@@ -1205,6 +1233,7 @@ AA_API void aa_tf_qsvel( const double q0[AA_RESTRICT 4],
                          double dt,
                          double q1[AA_RESTRICT 4] );
 
+
 /** Integrate unit quaternion from quaternion derivative.
  *
  * \param q0 Initial rotation quaternion
@@ -1216,6 +1245,19 @@ AA_API void aa_tf_qsdiff( const double q0[AA_RESTRICT 4],
                           const double dq[AA_RESTRICT 4],
                           double dt,
                           double q1[AA_RESTRICT 4] );
+
+
+AA_API void aa_tf_qsacc_rk( const double q0[AA_RESTRICT 4],
+                            const double v[AA_RESTRICT 3],
+                            const double a[AA_RESTRICT 3],
+                            double dt,
+                            double q1[AA_RESTRICT 4] );
+
+AA_API void aa_tf_qsacc( const double q0[AA_RESTRICT 4],
+                         const double v[AA_RESTRICT 3],
+                         const double a[AA_RESTRICT 3],
+                         double dt,
+                         double q1[AA_RESTRICT 4] );
 
 
 /** Unit quaternion for angle about x axis */
@@ -1336,13 +1378,44 @@ void aa_tf_qutr_mulc( const double a[7], const double b[7], double c[7] ) ;
 /// quaternion-translation conjugate multiply
 void aa_tf_qutr_cmul( const double a[7], const double b[7], double c[7] ) ;
 
+/**
+ * Quaternion-vector exponential.
+ */
+AA_API void aa_tf_qv_expv
+( const double w[3],  const double dv[3],
+  double q[4], double v[3] );
+
+/**
+ * Quaternion-vector logarithm.
+ */
+AA_API void aa_tf_qv_lnv
+( const double q[4], const double v[3],
+  double w[3],  double dv[3] );
+
+/**
+ * Quaternion-vector exponential.
+ */
+AA_API void aa_tf_qutr_expv
+( const double w[6], double e[7] );
+
+/**
+ * Quaternion-vector logarithm.
+ */
+AA_API void aa_tf_qutr_lnv
+( const double e[7], double w[6] );
+
 /** Quaternion-translation derivative to spatial velocity */
-void aa_tf_qutr_diff2vel
+AA_API void aa_tf_qutr_diff2vel
 ( const double e[7], const double de[7], double dx[6] );
 
 /** Quaternion-translation spatial velocity to derivative */
-void aa_tf_qutr_vel2diff
+AA_API void aa_tf_qutr_vel2diff
 ( const double e[7], const double dx[6], double de[7] );
+
+AA_API void
+aa_tf_qv_vel2twist( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+                    const double w[AA_RESTRICT 3], const double dv[AA_RESTRICT 3],
+                    double tw[AA_RESTRICT 3], double tv[AA_RESTRICT 3] );
 
 /** Integrate a quaternion-translation */
 void aa_tf_qutr_svel
@@ -1425,6 +1498,12 @@ AA_API void aa_tf_rotmat2rotvec( const double R[AA_RESTRICT 9],
 /// convert axis angle to rotation matrix
 AA_API void aa_tf_axang2rotmat( const double ra[AA_RESTRICT 4],
                                 double R[AA_RESTRICT 9] );
+
+/// convert axis angle to rotation matrix
+AA_API void aa_tf_axang2rotmat2( const double axis[AA_RESTRICT 3],
+                                 double angle,
+                                 double R[AA_RESTRICT 9] );
+
 /// convert rotatoin vector to rotation matrix
 AA_API void aa_tf_rotvec2rotmat( const double rv[AA_RESTRICT 3],
                                  double R[AA_RESTRICT 9] );
@@ -1681,20 +1760,33 @@ AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA
                               double dt, double d1[AA_RESTRICT 6] ) ;
 
 
+/** Convert a pure dual quaternion to conventional dual quaternion.
+*/
+AA_API void
+aa_tf_duqu2pure( const double S[AA_RESTRICT 8],
+                 double v[AA_RESTRICT 6] );
+
+/** Convert a conventional dual quaternion to pure dual quaternion.
+*/
+AA_API void
+aa_tf_pure2duqu( const double v[AA_RESTRICT 6],
+                 double S[AA_RESTRICT 8]);
 
 
 
 /* Misc */
 
-void aa_tf_relx_mean( size_t n, const double *R,
-                      const double *X, size_t ldx,
-                      const double *Y, size_t ldy,
-                      double rel[3]);
+AA_API void
+aa_tf_relx_mean( size_t n, const double *R,
+                 const double *X, size_t ldx,
+                 const double *Y, size_t ldy,
+                 double rel[3]);
 
-void aa_tf_relx_median( size_t n, const double *R,
-                        const double *X, size_t ldx,
-                        const double *Y, size_t ldy,
-                        double rel[3]);
+AA_API void
+aa_tf_relx_median( size_t n, const double *R,
+                   const double *X, size_t ldx,
+                   const double *Y, size_t ldy,
+                   double rel[3]);
 
 /**
  * Vector projection of a onto b.

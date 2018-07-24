@@ -70,6 +70,10 @@ AA_API void
 aa_tf_duqu_mul( const double _a[AA_RESTRICT 8], const double _b[AA_RESTRICT 8],
                 double _c[AA_RESTRICT 8] )
 {
+    /*
+     * Mul: 8
+     * FMA: 40
+     */
     const struct aa_tf_duqu *A = (struct aa_tf_duqu *)_a;
     const struct aa_tf_duqu *B = (struct aa_tf_duqu *)_b;
     struct aa_tf_duqu *C = (struct aa_tf_duqu *)_c;
@@ -165,13 +169,13 @@ AA_API void
 aa_tf_duqu_vel2twist( const double d[AA_RESTRICT 8], const double dx[AA_RESTRICT 6],
                       double t[AA_RESTRICT 8] )
 {
-    AA_MEM_CPY( &t[REAL_XYZ], &dx[OMEGA], 3 );
-    t[REAL_W] = 0;
+    double v[3];
+    aa_tf_duqu_trans(d, v );
+    aa_tf_qv_vel2twist( d+AA_TF_DUQU_REAL, v,
+                        dx+AA_TF_DX_W, dx+AA_TF_DX_V,
+                        t+AA_TF_DUQU_REAL_XYZ, t+AA_TF_DUQU_DUAL_XYZ );
 
-    double p[3];
-    aa_tf_duqu_trans(d, p );
-    aa_tf_cross( p, &dx[OMEGA], &t[DUAL_XYZ] );
-    FOR_VEC(i) t[DUAL_XYZ+i] += dx[V+i];
+    t[REAL_W] = 0;
     t[DUAL_W] = 0;
 }
 
@@ -367,6 +371,15 @@ aa_tf_duqu_ln( const double S[AA_RESTRICT 8], double lnS[AA_RESTRICT 8] )
         lnS[AA_TF_DUQU_DUAL_XYZ+i] = ad * S[AA_TF_DUQU_REAL_XYZ+i] + ar * S[AA_TF_DUQU_DUAL_XYZ+i];
 }
 
+
+AA_API void
+aa_tf_duqu_lnv( const double S[AA_RESTRICT 8], double w[AA_RESTRICT 6] )
+{
+    double k[8];
+    aa_tf_duqu_ln(S,k);
+    aa_tf_duqu2pure( k, w );
+}
+
 AA_API void aa_tf_xyz2duqu (
     double x, double y, double z,
     double d[AA_RESTRICT 8] )
@@ -382,4 +395,24 @@ AA_API void aa_tf_xyz2duqu (
     d[AA_TF_DUQU_DUAL_Z] = z/2;
     d[AA_TF_DUQU_DUAL_W] = 0;
 
+}
+
+
+void
+aa_tf_duqu2pure( const double S[AA_RESTRICT 8],
+                 double v[AA_RESTRICT 6] )
+{
+    AA_MEM_CPY( v + AA_TF_DX_W, S+AA_TF_DUQU_REAL_XYZ, 3);
+    AA_MEM_CPY( v + AA_TF_DX_V, S+AA_TF_DUQU_DUAL_XYZ, 3);
+}
+
+AA_API void
+aa_tf_pure2duqu( const double v[AA_RESTRICT 6],
+                 double S[AA_RESTRICT 8])
+{
+    AA_MEM_CPY( S+AA_TF_DUQU_REAL_XYZ, v + AA_TF_DX_W, 3 );
+    S[AA_TF_DUQU_REAL_W] = 0;
+
+    AA_MEM_CPY( S+AA_TF_DUQU_DUAL_XYZ, v + AA_TF_DX_V, 3 );
+    S[AA_TF_DUQU_DUAL_W] = 0;
 }

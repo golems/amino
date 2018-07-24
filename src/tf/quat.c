@@ -59,14 +59,11 @@ AA_API void
 aa_tf_cross_a( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3], double c[AA_RESTRICT 3] )
 {
     /* Let the compiler do fused-multiple-add */
-    c[0] += a[1]*b[2];
-    c[0] -= a[2]*b[1];
-
-    c[1] += a[2]*b[0];
-    c[1] -= a[0]*b[2];
-
-    c[2] += a[0]*b[1];
-    c[2] -= a[1]*b[0];
+    /* c[0] += a[1]*b[2]; */
+    /* c[0] -= a[2]*b[1]; */
+    c[0] = c[0] + a[1]*b[2] - a[2]*b[1];
+    c[1] = c[1] + a[2]*b[0] - a[0]*b[2];
+    c[2] = c[2] + a[0]*b[1] - a[1]*b[0];
 }
 
 AA_API void

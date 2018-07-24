@@ -218,6 +218,9 @@ AA_API void
 aa_tf_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
 {
     DECLARE_QUAT_XYZW;
+    /*  Mul: 4
+     *  FMA: 12
+     */
 
     c[x] =    a[x]*b[w] + a[y]*b[z] + a[w]*b[x] - a[z]*b[y];
     c[y] =    a[z]*b[x] + a[w]*b[y] + a[y]*b[w] - a[x]*b[z];
@@ -229,6 +232,9 @@ AA_API void
 aa_tf_qmul_a( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )
 {
     DECLARE_QUAT_XYZW;
+
+    /*  FMA: 16
+     */
 
     c[x] =  c[x] + a[x]*b[w] + a[y]*b[z] + a[w]*b[x] - a[z]*b[y];
     c[y] =  c[y] + a[z]*b[x] + a[w]*b[y] + a[y]*b[w] - a[x]*b[z];
@@ -317,11 +323,25 @@ aa_tf_qrot1( const double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] )
 }
 
 AA_API void
-aa_tf_qrot( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
-            double r[AA_RESTRICT 3] )
+aa_tf_qrot( const double q[AA_RESTRICT 4], const double p0[AA_RESTRICT 3],
+            double p1[AA_RESTRICT 3] )
 {
-    FOR_VEC(i) r[i] = v[i];
-    aa_tf_qrot1(q,r);
+    double k[3];
+    double a[3];
+
+    k[0] = p0[0] + p0[0];
+    k[1] = p0[1] + p0[1];
+    k[2] = p0[2] + p0[2];
+
+    DECLARE_QUAT_XYZW;
+    a[0] =  (q[y]*k[z] - q[z]*k[y]) + q[w]*k[x];
+    a[1] =  (q[z]*k[x] - q[x]*k[z]) + q[w]*k[y];
+    a[2] =  (q[x]*k[y] - q[y]*k[x]) + q[w]*k[z];
+
+    p1[0] = p0[0] + q[1]*a[2] - q[2]*a[1];
+    p1[1] = p0[1] + q[2]*a[0] - q[0]*a[2];
+    p1[2] = p0[2] + q[0]*a[1] - q[1]*a[0];
+
 }
 
 AA_API void
@@ -340,11 +360,40 @@ aa_tf_qexp( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
     const double *q_v = q + AA_TF_QUAT_V;
     double *r_v = r + AA_TF_QUAT_V;
 
+    double theta = aa_cla_dlapy3( q[AA_TF_QUAT_X],
+                                  q[AA_TF_QUAT_Y],
+                                  q[AA_TF_QUAT_Z] );
+
     ew = exp(q[AA_TF_QUAT_W]);
-    aa_tf_sinccos2( aa_tf_vdot(q_v,q_v), &sc, &c );
+    aa_tf_sinccos( theta, &sc, &c );
     r[AA_TF_QUAT_W] = ew*c;
 
     FOR_VEC(i) r_v[i] = ew*sc*q_v[i];
+}
+
+AA_API void
+aa_tf_qexp_n( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
+{
+
+    const double *q_v = q + AA_TF_QUAT_V;
+    double *r_v = r + AA_TF_QUAT_V;
+
+    double theta = aa_cla_dlapy3( q[AA_TF_QUAT_X],
+                                  q[AA_TF_QUAT_Y],
+                                  q[AA_TF_QUAT_Z] );
+    if( theta < DBL_EPSILON ) {
+        FOR_VEC(i) r_v[i] = 0;
+        r[AA_TF_QUAT_W] = 1;
+    } else {
+        double s = sin(theta);
+        double c = cos(theta);
+        double sc = s/theta;
+
+        double ew = exp(q[AA_TF_QUAT_W]);
+        r[AA_TF_QUAT_W] = ew*c;
+
+        FOR_VEC(i) r_v[i] = ew*sc*q_v[i];
+    }
 }
 
 AA_API void
@@ -423,6 +472,43 @@ aa_tf_qvel2diff( const double q[AA_RESTRICT 4], const double w[AA_RESTRICT 3], d
     FOR_VEC(i) w2[i] = w[i]/2;
     aa_tf_qmul_vq(w2,q,dq);
 }
+
+
+AA_API void aa_tf_qsacc_rk( const double q0[AA_RESTRICT 4],
+                            const double v[AA_RESTRICT 3],
+                            const double a[AA_RESTRICT 3],
+                            double dt,
+                            double q1[AA_RESTRICT 4] )
+{
+    const int steps = 10000;
+    double dtp = dt/steps;
+    double vp[3], qp[3], q1p[3];
+    AA_MEM_CPY(vp, v, 3);
+    AA_MEM_CPY(qp, q0, 4);
+
+    for( int i = 0; i < steps; i++ ){
+        aa_tf_qsvel( qp, vp, dtp, q1p );
+        AA_MEM_CPY(qp, q1p, 4);
+        FOR_VEC(j) vp[j] += dtp*a[j];
+    }
+
+    AA_MEM_CPY(q1, q1p, 4);
+
+}
+
+AA_API void aa_tf_qsacc( const double q0[AA_RESTRICT 4],
+                         const double v[AA_RESTRICT 3],
+                         const double a[AA_RESTRICT 3],
+                         double dt,
+                         double q1[AA_RESTRICT 4] )
+{
+    double pq[3], e[4];
+    double k = dt/2;
+    FOR_VEC(i) pq[i] = k*(v[i] + k*a[i]);
+    aa_tf_qpexp(pq,e);
+    aa_tf_qmul(e,q0,q1);
+}
+
 
 AA_API double
 aa_tf_qangle_rel( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )

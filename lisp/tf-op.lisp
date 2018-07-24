@@ -93,6 +93,7 @@ Translation is not altered."
 (defgeneric transformation-matrix-2 (r x)
   (:documentation "Convert rotation R and translation X to transformation matrix form."))
 
+
 (defun quaternion-translation* (r x)
   "Convert transform X to quaternion-translation form."
   (quaternion-translation-2 r x))
@@ -271,6 +272,7 @@ Translation is not altered."
 (defmethod generic+ ((a quaternion) (b quaternion))
   (tf-qadd a b))
 
+
 ;;; Axis-Angle
 (defgeneric axis-angle (x)
   (:documentation "Convert orientation X to axis-angle form."))
@@ -398,6 +400,10 @@ Translation is not altered."
 (defmethod dual-quaternion-2 ((r matrix) (x vec3))
   (tf-qv2duqu (quaternion r) x))
 
+
+(defmethod generic+ ((a dual-quaternion) (b dual-quaternion))
+  (tf-duqu-add a b))
+
 ;;; Quaternion-Translation
 (defmethod quaternion-translation ((x quaternion-translation))
   x)
@@ -486,6 +492,18 @@ Translation is not altered."
   (tf-zangle2rotmat (principal-angle-value x)))
 
 ;;; Transformation Matrix
+
+(defmethod transformation-matrix ((a quaternion-translation))
+  (let ((m (make-transformation-matrix)))
+    (aa-tf-qv2tfmat (quaternion-translation-quaternion a)
+                    (quaternion-translation-translation a)
+                    m)
+    m))
+
+(defmethod transformation-matrix ((a dual-quaternion))
+  (let ((m (make-transformation-matrix)))
+    (aa-tf-duqu2tfmat a m)
+    m))
 
 ;;; Multiplies
 
@@ -578,3 +596,16 @@ Translation is not altered."
           (g* (tf-tag-tf a)
               (tf-tag-tf b))
           (tf-tag-child b)))
+
+;; Logarithm
+
+(defgeneric tf-ln (o)
+  (:documentation "Log-map"))
+
+(defmethod tf-ln ((a dual-quaternion))
+  (tf-duqu-ln a))
+
+(defmethod tf-ln ((a matrix))
+  (etypecase a
+    (transformation-matrix
+     (tf-tfmat-lnv a))))

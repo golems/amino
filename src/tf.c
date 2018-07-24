@@ -368,6 +368,15 @@ void aa_tf_axang2rotmat( const double ra[restrict 4],
     aa_tf_quat2rotmat(quat,R);
 }
 
+AA_API void aa_tf_axang2rotmat2( const double axis[AA_RESTRICT 3],
+                                 double angle,
+                                 double R[AA_RESTRICT 9] )
+{
+    double quat[4];
+    aa_tf_axang2quat2(axis,angle,quat);
+    aa_tf_quat2rotmat(quat,R);
+}
+
 /* void aa_tf_rotvec2rotmat( const double rv[3], double R[9] ) { */
 
 /* } */

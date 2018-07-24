@@ -233,6 +233,79 @@ AA_API void aa_rx_sg_tf
     }
 }
 
+AA_API void aa_rx_sg_tfmat
+( const struct aa_rx_sg *scene_graph,
+  size_t n_q, const double *q,
+  size_t n_tf,
+  double *TF_rel, size_t ld_rel,
+  double *TF_abs, size_t ld_abs )
+{
+    if( NULL == scene_graph ) return;
+
+    aa_rx_sg_ensure_clean_frames( scene_graph );
+    assert( n_q == scene_graph->sg->config_size );
+
+    amino::SceneGraph *sg = scene_graph->sg;
+    size_t i_frame = 0;
+    for( size_t i_rel = 0, i_abs = 0;
+         i_frame < n_tf && i_frame < sg->frames.size();
+         i_frame++, i_rel += ld_rel, i_abs += ld_abs )
+    {
+        amino::SceneFrame *f = sg->frames[i_frame];
+        double *E_rel = TF_rel + i_rel;
+        double *E_abs = TF_abs + i_abs;
+        // compute relative
+        f->tfmat_rel( q, E_rel );
+        // chain to global
+        if( f->in_global() ) {
+            // TODO: can we somehow get rid of this branch?
+            //       maybe a separate type for global frames
+            AA_MEM_CPY(E_abs, E_rel, 12);
+        } else {
+            assert( f->parent_id < (ssize_t)i_frame );
+            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
+            aa_tf_tfmat_mul(E_abs_parent, E_rel, E_abs);
+        }
+    }
+}
+
+AA_API void aa_rx_sg_duqu
+( const struct aa_rx_sg *scene_graph,
+  size_t n_q, const double *q,
+  size_t n_tf,
+  double *TF_rel, size_t ld_rel,
+  double *TF_abs, size_t ld_abs )
+{
+
+    if( NULL == scene_graph ) return;
+
+    aa_rx_sg_ensure_clean_frames( scene_graph );
+    assert( n_q == scene_graph->sg->config_size );
+
+    amino::SceneGraph *sg = scene_graph->sg;
+    size_t i_frame = 0;
+    for( size_t i_rel = 0, i_abs = 0;
+         i_frame < n_tf && i_frame < sg->frames.size();
+         i_frame++, i_rel += ld_rel, i_abs += ld_abs )
+    {
+        amino::SceneFrame *f = sg->frames[i_frame];
+        double *E_rel = TF_rel + i_rel;
+        double *E_abs = TF_abs + i_abs;
+        // compute relative
+        f->duqu_rel( q, E_rel );
+        // chain to global
+        if( f->in_global() ) {
+            // TODO: can we somehow get rid of this branch?
+            //       maybe a separate type for global frames
+            AA_MEM_CPY(E_abs, E_rel, 8);
+        } else {
+            assert( f->parent_id < (ssize_t)i_frame );
+            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
+            aa_tf_duqu_mul(E_abs_parent, E_rel, E_abs);
+        }
+    }
+}
+
 
 
 AA_API void aa_rx_sg_tf_update

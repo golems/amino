@@ -224,6 +224,17 @@
          (matref r 1 2)
          (matref r 2 2)))
 
+(defcfun aa-tf-tfmat-lnv :void
+  (m transformation-matrix-t)
+  (v :pointer))
+
+(defun tf-tfmat-lnv (m &optional (v (make-vec 6)))
+  (assert (= (length v) 6))
+  (with-pointer-to-vector-data (v v)
+    (aa-tf-tfmat-lnv m v))
+  v)
+
+
 ;;; Quaternions
 (defmacro def-q2 ((c-fun lisp-fun) doc-string)
   `(progn (defcfun ,c-fun :void
@@ -251,11 +262,16 @@
 (def-q2 (aa-tf-qexp tf-qexp) "Quaternion exponential")
 (def-q2 (aa-tf-qln tf-qln) "Quaternion logarithm")
 
+(def-q2 (aa-tf-qexp-n tf-qexp-n) "Quaternion exponential alternate version")
+
 (def-q3 (aa-tf-qadd tf-qadd) "Add two quaternions")
 (def-q3 (aa-tf-qsub tf-qsub) "Subtract quaternions")
 (def-q3 (aa-tf-qmul tf-qmul) "Multiply quaternions")
 (def-q3 (aa-tf-qcmul tf-qcmul) "Multiply conjugate of first arg with second arg")
 (def-q3 (aa-tf-qmulc tf-qmulc) "Multiply first arg with conjugate of second arg")
+
+(defcfun ("aa_tf_qnorm" tf-qnorm) :double
+  (q quaternion-t))
 
 (defcfun aa-tf-qpow :void
   (q quaternion-t)
@@ -630,3 +646,33 @@
                    (quaternion-translation-quaternion tf)
                    (quaternion-translation-translation tf))
   tf)
+
+
+;;; Conv
+
+(defcfun aa-tf-tfmat2qv :void
+  (m transformation-matrix-t)
+  (q quaternion-t)
+  (v vector-3-t))
+
+(defcfun aa-tf-qv2tfmat :void
+  (q quaternion-t)
+  (v vector-3-t)
+  (m transformation-matrix-t))
+
+(defcfun aa-tf-tfmat2duqu :void
+  (m transformation-matrix-t)
+  (dq dual-quaternion-t))
+
+(defcfun aa-tf-duqu2tfmat :void
+  (dq dual-quaternion-t)
+  (m transformation-matrix-t))
+
+;; (defmacro def-dq2 ((c-fun lisp-fun) doc-string)
+;;   `(progn (defcfun ,c-fun :void
+;;             (x dual-quaternion-t)
+;;             (y dual-quaternion-t))
+;;           (defun ,lisp-fun (x &optional (y (make-dual-quaternion)))
+;;             ,doc-string
+;;             (,c-fun x y)
+;;             y)))
