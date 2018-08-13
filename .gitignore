@@ -175,3 +175,6 @@ amino*.tar.gz
 /demo/urdf/baxter/baxter-ik-path
 /aminopy.md
 /demo/simple-rx/simple-torus
+/demo/build-script/baxter-model.c
+/demo/build-script/baxter-model.c.h
+/demo/build-script/baxter-simple

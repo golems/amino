@@ -1,0 +1,24 @@
+Amino Build Script Example
+
+This directory contains example build scripts to compile and link
+against the Amino libraries.  It will build a scenegraph for the
+Baxter robot.
+
+Make
+====
+
+The file `Makefile.example` contains an example makefile.  To use:
+
+1. Set the ROS_PACkAGE_PATH to point to the directory containg the
+   `baxter_description` package.  (You must change the path for your
+   system.)
+
+       export ROS_PACKAGE_PATH=PATH/TO/ROS/PACKAGES
+
+2. Make using the example makefile:
+
+       make -f Makefile.example
+
+3. Run:
+
+       ./baxter-simple

@@ -1,0 +1,40 @@
+##################################################
+## Example Makefile to build/link against Amino ##
+##################################################
+
+# Default CFLAGS if not already set
+CFLAGS ?= -g -O2
+
+# Use pkg-config to add CFLAGS for Amino
+CFLAGS += $(shell pkg-config --cflags amino)
+
+# Use pkg-config to add CFLAGS for SDL2
+CFLAGS += $(shell pkg-config --cflags sdl2)
+
+# Default LDFLAGS if not set
+LDFLAGS ?= -lblas -lm
+
+# Use pkg-config to add the necessary libraries from Amino, SDL2, and OpenGL
+LDFLAGS = $(shell pkg-config --libs amino --libs amino-gl --libs sdl2 --libs gl)
+
+# Default target
+baxter-simple: baxter-simple.o baxter-model.o
+	gcc $(CFLAGS) $(LDFLAGS) baxter-simple.o baxter-model.o -o baxter-simple
+
+# Scene graph compilation
+baxter-model.c:
+	aarxc 'package://baxter_description/urdf/baxter.urdf' \
+		-o baxter-model.c -n "baxter"
+
+baxter-model.c.h: baxter-model.c
+
+clean:
+	rm -f baxter-simple.o
+
+# Remove the compile scenegraph
+realclean:
+	rm -f baxter-model.*
+
+# Local Variables:
+# mode: makefile
+# End:
