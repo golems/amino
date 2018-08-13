@@ -9,7 +9,7 @@ Make
 
 The file `Makefile.example` contains an example makefile.  To use:
 
-1. Set the ROS_PACkAGE_PATH to point to the directory containg the
+1. Set the ROS_PACKAGE_PATH to point to the directory containg the
    `baxter_description` package.  (You must change the path for your
    system.)
 
@@ -20,5 +20,36 @@ The file `Makefile.example` contains an example makefile.  To use:
        make -f Makefile.example
 
 3. Run:
+
+       ./baxter-simple
+
+CMake
+=====
+
+The file `CMakeLists.txt` contains an example CMake script.  To use:
+
+1. Set the ROS_PACKAGE_PATH to point to the directory containg the
+   `baxter_description` package.  (You must change the path for your
+   system.)
+
+       export ROS_PACKAGE_PATH=PATH/TO/ROS/PACKAGES
+
+2. Create a build directory:
+
+       mkdir build
+
+3. Change to the build direct:
+
+       cd ./build
+
+4. Call cmake to generate the Makefile:
+
+       cmake ..
+
+5. Make using the cmake-generate makefile:
+
+       make
+
+5. Run:
 
        ./baxter-simple
