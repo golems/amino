@@ -482,7 +482,7 @@ AA_API void aa_tf_qsacc_rk( const double q0[AA_RESTRICT 4],
 {
     const int steps = 10000;
     double dtp = dt/steps;
-    double vp[3], qp[3], q1p[3];
+    double vp[3], qp[4], q1p[4];
     AA_MEM_CPY(vp, v, 3);
     AA_MEM_CPY(qp, q0, 4);
 
