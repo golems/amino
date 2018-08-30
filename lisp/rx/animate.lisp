@@ -180,7 +180,7 @@
 (defun last-frame-number (files)
   (frame-number (car (last (sort-frames files)))))
 
-(defun codec-avconv-arg (codec)
+(defun codec-ffmpeg-arg (codec)
   (ecase codec
     (:x264 "libx264")
     (:theora "libtheora")
@@ -220,17 +220,17 @@
                                    (format nil "vframe-~D.png" n))
                              :search t :wait t :directory directory
                              :output *standard-output*)))
-  ;; avconv -f image2 -r 30 -i frame-%d.png foo.mp4
+  ;; ffmpeg -f image2 -r 30 -i frame-%d.png foo.mp4
   (let* ((codec (draw-option options :codec))
          (args (list "-f" "image2"
                      "-r" (write-to-string (get-render-option options :frames-per-second))
                      "-i" "vframe-%d.png"
-                     "-codec:v" (codec-avconv-arg codec)
+                     "-codec:v" (codec-ffmpeg-arg codec)
                      "-loglevel" "warning"
                      "-y"
                      (rope-string (rope output-file "." (codec-container codec))))))
-    (format t "~&avconv ~{~A ~}" args)
-    (sb-ext:run-program "avconv"
+    (format t "~&ffmpeg ~{~A ~}" args)
+    (sb-ext:run-program "ffmpeg"
                         args
                         :search t :wait t :directory directory
                         :output *standard-output*)

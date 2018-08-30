@@ -47,7 +47,7 @@ features in Amino:
     meshes, URDF, etc.
 * Raytracing (everything under Robot Models, plus):
   - [POV-ray] (http://www.povray.org/)
-  - [avconv] (https://libav.org/)
+  - [ffmpeg] (https://www.ffmpeg.org/)
 * Motion Planning:
   - [FCL] (https://github.com/flexible-collision-library/fcl)
   - [OMPL] (http://ompl.kavrakilab.org/)
@@ -72,7 +72,7 @@ To install the dependencies on Debian or Ubuntu GNU/Linux via APT:
          libfcl-dev libompl-dev \
          sbcl \
          default-jdk \
-         blender flex povray libav-tools \
+         blender flex povray ffmpeg \
          coinor-libclp-dev libglpk-dev liblpsolve55-dev
 
 Now proceed to Quicklisp Setup below.
