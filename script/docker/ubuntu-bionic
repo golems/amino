@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 
 COPY ./script/install /root/amino/script/install
 RUN apt-get -y update && \

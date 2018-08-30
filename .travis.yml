@@ -17,6 +17,11 @@ matrix:
       services:
         - docker
       env: DOCKERFILE="ubuntu-xenial" JOBS=4
+    - os: linux
+      sudo: required
+      services:
+        - docker
+      env: DOCKERFILE="ubuntu-bionic" JOBS=4
   allow_failures:
     - env: DOCKERFILE="debian-sid" JOBS=4
 
