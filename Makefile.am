@@ -153,6 +153,11 @@ omplcompatinclude_HEADERS = \
 	include/amino/ompl-compat/ompl/base/TypedStateValidityChecker.h \
 	include/amino/ompl-compat/ompl/base/TypedSpaceInformation.h
 
+omplcompat2includedir = $(pkgincludedir)/ompl-compat2/ompl/base
+omplcompat2include_HEADERS = \
+	include/amino/ompl-compat2/ompl/base/TypedStateValidityChecker.h \
+	include/amino/ompl-compat2/ompl/base/TypedSpaceInformation.h
+
 ctincludedir = $(pkgincludedir)/ct
 
 ctinclude_HEADERS = \

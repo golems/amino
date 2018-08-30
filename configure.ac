@@ -534,11 +534,82 @@ AS_IF([test "x$HAVE_OMPL" = xyes],
   CPPFLAGS_SAVED="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $OMPL_CFLAGS $CXXFLAGS"
 
-  AC_CHECK_HEADERS([ompl/base/TypedSpaceInformation.h],
-                   [],
-                   [
-                   AC_MSG_NOTICE([Including OMPL compatibility headers])
-                   OMPL_CFLAGS="$OMPL_CFLAGS -I$srcdir/include/amino/ompl-compat"])
+
+  AC_MSG_CHECKING([bundled TypedSpaceInformation.h])
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+                               #include <ompl/base/TypedSpaceInformation.h>
+                               int main() { return 0; }
+                      ])
+                    ],
+                    [
+                      AC_MSG_RESULT([yes])
+                      ompl_typed_header=yes
+                    ],
+                    [
+                      AC_MSG_RESULT([no])
+                    ])
+
+  # Check boost::shared_ptr compat header
+  AS_IF([test "x$ompl_typed_header" != xyes],
+        [
+          AC_MSG_CHECKING([compat TypedSpaceInformation.h using boost::shared_ptr])
+          CPPFLAGS="$CPPFLAGS_SAVED $OMPL_CFLAGS $CXXFLAGS -I$srcdir/include/amino/ompl-compat"
+          AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+#include <ompl/base/TypedSpaceInformation.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+using namespace ::ompl::base;
+typedef TypedSpaceInformation<RealVectorStateSpace> RVSpaceInformation;
+int main() {
+    RVSpaceInformation::SpacePtr ss(new RealVectorStateSpace(1));
+    TypedSpaceInformation<RealVectorStateSpace> x(ss);
+    return 0;
+}
+                               ])
+                             ],
+                            [
+                              AC_MSG_RESULT([yes])
+                              ompl_typed_header=yes
+                              OMPL_CFLAGS="$OMPL_CFLAGS -I$srcdir/include/amino/ompl-compat"
+                            ],
+                            [AC_MSG_RESULT([no])])
+       ])
+
+
+  # Check std::shared_ptr compat header
+  AS_IF([test "x$ompl_typed_header" != xyes],
+        [
+          AC_MSG_CHECKING([compat TypedSpaceInformation.h using std::shared_ptr])
+          CPPFLAGS="$CPPFLAGS_SAVED $OMPL_CFLAGS $CXXFLAGS -I$srcdir/include/amino/ompl-compat2"
+          AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+#include <ompl/base/TypedSpaceInformation.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+using namespace ::ompl::base;
+typedef TypedSpaceInformation<RealVectorStateSpace> RVSpaceInformation;
+int main() {
+    RVSpaceInformation::SpacePtr ss(new RealVectorStateSpace(1));
+    TypedSpaceInformation<RealVectorStateSpace> x(ss);
+    return 0;
+}
+                              ])
+                            ],
+                            [
+                              AC_MSG_RESULT([yes])
+                              ompl_typed_header=yes
+                              OMPL_CFLAGS="$OMPL_CFLAGS -I$srcdir/include/amino/ompl-compat2"
+                            ],
+                            [AC_MSG_RESULT([no])])
+       ])
+
+
+  AS_IF([test "x$ompl_typed_header" != xyes],
+        [AC_MSG_ERROR([Could not compile with OMPL TypedSpaceInformation])])
+
+
+  dnl AC_CHECK_HEADERS([ompl/base/TypedSpaceInformation.h],
+  dnl                  [],
+  dnl                  [
+  dnl                  AC_MSG_NOTICE([Including OMPL compatibility headers])
+  dnl                  OMPL_CFLAGS="$OMPL_CFLAGS -I$srcdir/include/amino/ompl-compat2"])
 
   CPPFLAGS="$CPPFLAGS_SAVED"
 ])
