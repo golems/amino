@@ -53,7 +53,7 @@
 
 #include <dlfcn.h>
 
-struct aa_rx_sg * aa_rx_dl_sg__scenegraph(struct aa_rx_sg *sg);
+struct aa_rx_sg * aa_rx_dl_sg__scenegraph(struct aa_rx_sg *sg, const char *root);
 
 
 static int SCREEN_WIDTH = 800;
@@ -91,10 +91,11 @@ int main(int argc, char *argv[])
     }
 
     /* Initialize scene graph */
-    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph( NULL);
-
+    struct aa_rx_sg *scenegraph = aa_rx_dl_sg__scenegraph( NULL, "");
     assert(scenegraph);
-    aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
+    int r = aa_rx_sg_init(scenegraph); /* initialize scene graph internal structures */
+    assert(0 == r);
+
 
     /* Center configurations */
     size_t m = aa_rx_sg_config_count(scenegraph);
