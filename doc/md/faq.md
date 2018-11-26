@@ -44,6 +44,15 @@ Scene Graphs {#faq_scenegraphs}
     URDF file.  Note that URDF support has additional dependencies;
     see `./INSTALL` for details.
 
+* Q: How do I specify a link from my URDF?
+
+  - A: Amino doesn't distinguish between joints and links like URDF
+    does.  We model the scene as a tree of local coordinate frames
+    ("frames") and attach geometry to the frames.  When we import a
+    URDF file, we use the joint names as the names of the frames and
+    we discard the link names.  So you would specify the frame name as
+    the joint whose parent is the desired link.
+
 * Q: How can I reload a modified scene graph file without restarting my
   program?
 

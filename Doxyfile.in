@@ -784,6 +784,7 @@ INPUT                  = include \
                          include/amino \
                          include/amino/rx \
                          include/amino/opt \
+                         include/amino/ct \
                          clapack_doc.c \
                          lapack_doc.c \
                          la_doc.c \
