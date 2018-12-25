@@ -247,6 +247,14 @@ void aa_tf_qutr_lnv
         );
 }
 
+void aa_tf_qutr_twist2vel
+( const double e[7], const double w[6], double dx[6] )
+{
+    aa_tf_qv_twist2vel( e+AA_TF_QUTR_Q, e+AA_TF_QUTR_V,
+                        w+AA_TF_DX_W, w+AA_TF_DX_V,
+                        dx+AA_TF_DX_W, dx+AA_TF_DX_V );
+}
+
 /************/
 /* CALCULUS */
 /************/
@@ -264,6 +272,20 @@ aa_tf_qv_vel2twist( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3]
     // translation
     aa_tf_cross( v, w, tv );
     FOR_VEC(i) tv[i] += dv[i];
+}
+
+AA_API void
+aa_tf_qv_twist2vel( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+                    const double tw[AA_RESTRICT 3], const double tv[AA_RESTRICT 3],
+                    double w[AA_RESTRICT 3], double dv[AA_RESTRICT 3] )
+{
+    (void)q;
+    // rotational
+    AA_MEM_CPY( w, tw, 3 );
+
+    // translation
+    FOR_VEC(i) dv[i] = tv[i];
+    aa_tf_cross_a(tw, v, dv );
 }
 
 AA_API void

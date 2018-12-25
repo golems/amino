@@ -1404,6 +1404,10 @@ AA_API void aa_tf_qutr_expv
 AA_API void aa_tf_qutr_lnv
 ( const double e[7], double w[6] );
 
+/** Quaternion-translation twist to velocity */
+void aa_tf_qutr_twist2vel
+( const double e[7], const double w[6], double dx[6] );
+
 /** Quaternion-translation derivative to spatial velocity */
 AA_API void aa_tf_qutr_diff2vel
 ( const double e[7], const double de[7], double dx[6] );
@@ -1412,10 +1416,19 @@ AA_API void aa_tf_qutr_diff2vel
 AA_API void aa_tf_qutr_vel2diff
 ( const double e[7], const double dx[6], double de[7] );
 
+
+
+/** Quaternion-vector velocity to twist */
 AA_API void
 aa_tf_qv_vel2twist( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
                     const double w[AA_RESTRICT 3], const double dv[AA_RESTRICT 3],
                     double tw[AA_RESTRICT 3], double tv[AA_RESTRICT 3] );
+
+/** Quaternion-vector twist to velocity */
+AA_API void
+aa_tf_qv_twist2vel( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3],
+                    const double tw[AA_RESTRICT 3], const double tv[AA_RESTRICT 3],
+                    double w[AA_RESTRICT 3], double dv[AA_RESTRICT 3] );
 
 /** Integrate a quaternion-translation */
 void aa_tf_qutr_svel

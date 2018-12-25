@@ -41,6 +41,7 @@
 #include "amino/rx/scene_sdl.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
+#include "amino/rx/rx_ct.h"
 
 
 
@@ -48,6 +49,8 @@ struct display_cx {
     struct aa_rx_win *win;
     const struct aa_rx_sg *scenegraph;
     const struct aa_rx_sg_sub *ssg;
+    struct aa_rx_ct_wk_opts *wk_opts;
+    double E0[7];
     double *q;
 };
 
@@ -69,6 +72,10 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     size_t m = aa_rx_sg_config_count(scenegraph);
     size_t n_c = aa_rx_sg_sub_config_count(cx->ssg);
 
+    double q_subset[n_c];
+    aa_rx_sg_config_get( scenegraph, m, n_c,
+                         aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset );
+
     double TF_rel[7*n];
     double TF_abs[7*n];
     aa_rx_sg_tf(scenegraph, m, cx->q,
@@ -76,54 +83,57 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
                 TF_rel, 7,
                 TF_abs, 7 );
 
-
     aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
                              n, TF_abs, 7 );
 
+    /* Reference Velocity and Position */
     double dx_r[6] = {0};
-    size_t rows,cols;
-    aa_rx_sg_sub_jacobian_size( cx->ssg, &rows, &cols );
+    {
+        double *E_act =  TF_abs + 7*aa_rx_sg_sub_frame_ee(cx->ssg);
+
+        double z_pos = sin(t*2*M_PI) / (4*M_PI);
+        double z_vel = cos( t*2*M_PI ) / 2; // derivative of position
+
+        double wx_pos = sin(t*2*M_PI) / (2*M_PI);
+        double wx_vel = cos( t*2*M_PI );
+
+        // feed-forward velocity
+        dx_r[AA_TF_DX_V+2] += z_vel;
+        dx_r[AA_TF_DX_W+0] += wx_vel;
+
+        // proportional control on position
+        double E_ref[7]; // Reference pose
+        double E_rel[7]; // Relative pose
+        aa_tf_xangle2quat(wx_pos, E_rel+AA_TF_QUTR_Q);
+        E_rel[AA_TF_QUTR_T + 0] = 0;
+        E_rel[AA_TF_QUTR_T + 0] = 0;
+        E_rel[AA_TF_QUTR_T + 2] = z_pos;
+        aa_tf_qutr_mul(cx->E0, E_rel, E_ref);
+
+        // compute the proportional control
+        aa_rx_ct_wk_dx_pos( cx->wk_opts, E_act, E_ref, dx_r );
+    }
+
+    // joint-centering velocity for the nullspace projection
+    double dqr_subset[n_c];
+    aa_rx_ct_wk_dqcenter( cx->ssg, cx->wk_opts,
+                          n_c, q_subset, dqr_subset );
+
+    // Cartesian to joint velocities, with nullspace projection
     double dq_subset[n_c];
-    /* Feed forward velocity only, so some drift */
-    dx_r[AA_TF_DX_V+2] = .5*cos(t*2*M_PI);
-
-    double J[rows*cols];
-    aa_rx_sg_sub_jacobian( cx->ssg, n, TF_abs, 7,
-                           J, rows );
-    // dx = J * dq
-    aa_la_dls( rows, n_c, 1e-6, J, dx_r, dq_subset );
-
-    /* Alternative damped-least squares computation */
-    /* aa_la_dzdpinv( 6, n_c, 1e-2, J, J_star ); */
-    /* aa_la_dpinv( 6, n_c, 5e-3, J, J_star ); */
-    /* double dq_r[cx->n_ch_config]; */
-    /* AA_MEM_ZERO(dq_r,cx->n_ch_config); */
-    /* aa_la_xlsnp( 6, cx->n_ch_config, J, J_star, */
-    /*              dx_r, dq_r, dq_subset ); */
-
-    // check
-    double dx_u[6];
-    cblas_dgemv( CblasColMajor, CblasNoTrans,
-                 6, (int)n_c,
-                 1.0, J, 6,
-                 dq_subset, 1,
-                 0.0, dx_u, 1 );
-    //aa_dump_vec( stdout, dx_u, 6 );
-
-
+    int r = aa_rx_ct_wk_dx2dq_np( cx->ssg, cx->wk_opts,
+                                  n, TF_abs, 7,
+                                  6, dx_r,
+                                  n_c, dqr_subset, dq_subset );
+    assert(0 == r);
 
     // integrate
-    double q_subset[n_c];
-    aa_rx_sg_config_get( scenegraph, m, n_c,
-                         aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset );
     for( size_t i = 0; i < n_c; i ++ ) {
         q_subset[i] += dt*dq_subset[i];
     }
     aa_rx_sg_config_set( scenegraph, m, n_c,
                          aa_rx_sg_sub_configs(cx->ssg),
                          q_subset, cx->q );
-
-
 
     aa_sdl_display_params_set_update(params);
 
@@ -153,6 +163,7 @@ int main(int argc, char *argv[])
 
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
+    cx.wk_opts = aa_rx_ct_wk_opts_create();
 
     // set start and goal states
     const char *names[] = {"right_s0",
@@ -175,6 +186,18 @@ int main(int argc, char *argv[])
     };
     aa_rx_sg_config_set( scenegraph, n_q, 7,
                          ids, q1, cx.q );
+
+    // initial end-effector config
+    {
+        size_t n = aa_rx_sg_frame_count(scenegraph);
+        double TF_abs[7*n];
+        double TF_rel[7*n];
+        aa_rx_sg_tf( scenegraph, n_q, cx.q,
+                     n,
+                     TF_rel, 7,
+                     TF_abs, 7 );
+        AA_MEM_CPY( cx.E0, TF_abs + 7*tip_id, 7 );
+    }
 
 
     aa_rx_win_set_display( win, display, &cx, NULL );

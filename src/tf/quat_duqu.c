@@ -184,12 +184,11 @@ aa_tf_duqu_twist2vel( const double d[AA_RESTRICT 8], const double t[AA_RESTRICT 
                       double dx[AA_RESTRICT 6] )
 {
     double p[3];
-
-    AA_MEM_CPY( &dx[OMEGA], &t[XYZ], 3 );
-
     aa_tf_duqu_trans(d,p);
-    FOR_VEC(i) dx[V+i] = t[DUAL_XYZ+i];
-    aa_tf_cross_a(&t[REAL_XYZ], p, dx+V );
+
+    aa_tf_qv_twist2vel( d+AA_TF_DUQU_REAL, p,
+                        t+REAL_XYZ, t+DUAL_XYZ,
+                        dx + AA_TF_DX_W, dx + AA_TF_DX_V );
 }
 
 AA_API void
