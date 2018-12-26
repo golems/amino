@@ -159,6 +159,17 @@ aa_rx_ct_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
                      size_t n_x, const double *dx,
                      size_t n_q, const double *dq_r, double *dq );
 
+
+AA_API int
+aa_rx_ct_wk_dx2dq_lc3( const const struct aa_rx_sg_sub *ssg,
+                       const struct aa_rx_ct_wk_opts * opts,
+                       double dt,
+                       size_t n_tf, const double *TF_abs, size_t ld_tf,
+                       size_t n_x, const double *dx_r,
+                       size_t n_q,
+                       const double *q_a, const double *dq_a,
+                       const double *dq_r, double *dq );
+
 /**
  * Find joint-centering reference velocity.
  *

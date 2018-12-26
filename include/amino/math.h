@@ -615,9 +615,24 @@ AA_API void aa_la_dzdpinv( size_t m, size_t n, double s2_min, const double *A, d
 AA_API void aa_la_dls( size_t m, size_t n, double k,  const double *A, const double *b, double *x );
 
 
+/**
+ * Computer Nullspace Projection Matrix
+ *
+ * \f[ B = (A^* A) - I  \f]
+ *
+ * @param m rows in A
+ * @param n cols in A
+ * @param A matrix
+ * @param A_star pseudoinverse of A
+ * @param B nullspace projection matrix
+ */
+AA_API void aa_la_np( size_t m, size_t n,
+                      const double *A, const double *A_star,
+                      double *B );
+
 /** Least Squares with Nullspace projection.
  *
- * \f[ x = A^* b + (I-A^* A) x_p \f]
+ * \f[ x = A^* b - (A^* A - I) x_p \f]
  *
  * See "Introduction to inverse kinematics with jacobian transpose,
  * pseudoinverse and damped least squares methods". Buss, S.R. 2004

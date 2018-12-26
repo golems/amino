@@ -52,6 +52,7 @@ struct display_cx {
     struct aa_rx_ct_wk_opts *wk_opts;
     double E0[7];
     double *q;
+    double *dq_subset;
 };
 
 int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
@@ -121,13 +122,24 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
     // Cartesian to joint velocities, with nullspace projection
     double dq_subset[n_c];
-    int r = aa_rx_ct_wk_dx2dq_np( cx->ssg, cx->wk_opts,
-                                  n, TF_abs, 7,
-                                  6, dx_r,
-                                  n_c, dqr_subset, dq_subset );
+
+    /* int r = aa_rx_ct_wk_dx2dq_np( cx->ssg, cx->wk_opts, */
+    /*                               n, TF_abs, 7, */
+    /*                               6, dx_r, */
+    /*                               n_c, dqr_subset, dq_subset ); */
+    //aa_tick("lc3: ");
+    int r = aa_rx_ct_wk_dx2dq_lc3( cx->ssg, cx->wk_opts,
+                                   dt,
+                                   n, TF_abs, 7,
+                                   6, dx_r,
+                                   n_c, q_subset, cx->dq_subset,
+                                   dqr_subset, dq_subset );
+    //aa_tock();
+
     assert(0 == r);
 
     // integrate
+    AA_MEM_CPY(cx->dq_subset, dq_subset, n_c );
     for( size_t i = 0; i < n_c; i ++ ) {
         q_subset[i] += dt*dq_subset[i];
     }
@@ -164,6 +176,7 @@ int main(int argc, char *argv[])
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     cx.wk_opts = aa_rx_ct_wk_opts_create();
+    cx.dq_subset = AA_NEW0_AR(double, aa_rx_sg_sub_config_count(cx.ssg) );
 
     // set start and goal states
     const char *names[] = {"right_s0",

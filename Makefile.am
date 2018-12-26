@@ -197,6 +197,7 @@ libamino_la_SOURCES =                  \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/rx_ct.c                 \
+	src/rx/lc3.c                   \
 	src/rx/mp_seq.cpp              \
 	src/ct/traj.cpp                \
 	src/ct/state.c                 \
@@ -218,6 +219,9 @@ libamino_la_SOURCES =                  \
 
 
 libamino_la_LIBADD =
+
+libamino_la_SOURCES += src/opt/opt_clp.cpp src/opt/opt_lpsolve.c
+libamino_la_LIBADD  +=  -lClp
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 

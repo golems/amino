@@ -51,13 +51,7 @@
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/rx_ct.h"
 
-struct aa_rx_ct_wk_opts {
-    double s2min; ///< minimum singular value for DLS via SVD
-    double k_dls; ///< damping constant for DLS via LU
-    double k_np;  ///< gain for nullspace projection
-    double k_pos;  ///< gain for position error
-};
-
+#include "rx_ct_internal.h"
 
 AA_API struct aa_rx_ct_wk_opts *
 aa_rx_ct_wk_opts_create(void)
@@ -155,7 +149,8 @@ aa_rx_ct_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
     aa_rx_sg_sub_center_configs(ssg, n_q, dq_r);
     for( size_t i = 0; i < n_q; i ++ ) {
         double x = (q[i] - dq_r[i]);
-        dq_r[i] = - opts->k_np * x * fabs(x);
+        //dq_r[i] = - opts->k_np * x * fabs(x);
+        dq_r[i] = - opts->k_np * x;
     }
 }
 

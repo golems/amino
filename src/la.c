@@ -357,14 +357,10 @@ AA_API void aa_la_dls( size_t m, size_t n,
     aa_mem_region_local_pop( A_star );
 }
 
-
-AA_API void aa_la_xlsnp( size_t m, size_t n,
-                         const double *A, const double *A_star, const double *x,
-                         const double *yp, double *y ) {
-    aa_la_mvmul(n,m,A_star,x,y);
-
-    double *B = (double*)aa_mem_region_local_alloc( sizeof(double) * n*n );
-
+AA_API void aa_la_np( size_t m, size_t n,
+                      const double *A, const double *A_star,
+                      double *B )
+{
     // B = A^* A
     cblas_dgemm( CblasColMajor, CblasNoTrans, CblasNoTrans,
                  (int)n, (int)n, (int)m,
@@ -373,6 +369,18 @@ AA_API void aa_la_xlsnp( size_t m, size_t n,
     // B =  A^* A - I
     for( size_t i = 0; i < n; i ++ )
         AA_MATREF(B,n,i,i) -= 1;
+
+}
+
+
+AA_API void aa_la_xlsnp( size_t m, size_t n,
+                         const double *A, const double *A_star, const double *x,
+                         const double *yp, double *y ) {
+    aa_la_mvmul(n,m,A_star,x,y);
+
+    double *B = (double*)aa_mem_region_local_alloc( sizeof(double) * n*n );
+    aa_la_np( m, n, A, A_star, B );
+
 
     // y = y + -B yp
     cblas_dgemv( CblasColMajor, CblasNoTrans, (int)n, (int)n,

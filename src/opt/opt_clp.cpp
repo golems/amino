@@ -161,6 +161,7 @@ AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
 
     ClpSimplex *pM = new ClpSimplex();
     ClpSimplex &M = *pM;
+    pM->setLogLevel(0); // shut up
 
     int rows[m];
     int mi = (int)m;
