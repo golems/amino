@@ -388,6 +388,19 @@ aa_rx_sg_get_limit_eff( const struct aa_rx_sg *scenegraph,
 
 
 /**
+ * Get the centered position of a configuration variable.
+ */
+AA_API double
+aa_rx_sg_config_center( const struct aa_rx_sg *sg, aa_rx_config_id config_id );
+
+/**
+ * Fill q with the centered positions of each configuration.
+ */
+AA_API void
+aa_rx_sg_center_configs( const struct aa_rx_sg *sg,
+                             size_t n, double *q );
+
+/**
  * Return pointer to frame axis.
  *
  * Only valid for univariate joint frames.

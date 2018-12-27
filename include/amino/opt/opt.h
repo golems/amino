@@ -93,13 +93,41 @@ AA_API int
 aa_opt_destroy( struct aa_opt_cx *cx );
 
 /**
- * Destroy the optimization direction.
+ * Set the optimization direction.
  */
 AA_API int
 aa_opt_set_direction( struct aa_opt_cx *cx, enum aa_opt_direction );
 
 /**
- * Destroy the quadratic objective function via compressed-row-storage
+ * Set the linear objective function.
+ */
+AA_API int
+aa_opt_set_obj( struct aa_opt_cx *cx, size_t n, const double * c);
+
+/**
+ * Set the bounds on the optimization variables
+ */
+AA_API int
+aa_opt_set_bnd( struct aa_opt_cx *cx, size_t n,
+                const double * x_min, const double *x_max);
+
+/**
+ * Set the constraint bounds
+ */
+AA_API int
+aa_opt_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
+                     const double *b_min, const double *b_max );
+
+/**
+ * Set the constraint matrix
+ */
+AA_API int
+aa_opt_set_cstr_gm( struct aa_opt_cx *cx,
+                    size_t m, size_t n,
+                    const double *A, size_t lda );
+
+/**
+ * Set the quadratic objective function via compressed-row-storage
  * format.
  */
 AA_API int

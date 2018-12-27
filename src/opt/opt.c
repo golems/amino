@@ -72,3 +72,33 @@ aa_opt_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type )
 {
     return cx->vtab->set_type(cx, i, type);
 }
+
+
+AA_API int
+aa_opt_set_obj( struct aa_opt_cx *cx, size_t n, const double * c)
+{
+    return cx->vtab->set_obj(cx,n,c);
+}
+
+AA_API int
+aa_opt_set_bnd( struct aa_opt_cx *cx, size_t n,
+                const double * x_min, const double *x_max)
+{
+    return cx->vtab->set_bnd(cx,n,x_min,x_max);
+}
+
+AA_API int
+aa_opt_set_cstr_gm( struct aa_opt_cx *cx,
+                    size_t m, size_t n,
+                    const double *A, size_t lda )
+{
+    return cx->vtab->set_cstr_gm( cx, m, n,
+                                  A, lda );
+}
+
+AA_API int
+aa_opt_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
+                     const double * b_min, const double *b_max )
+{
+    return cx->vtab->set_cstr_bnd( cx, m, b_min, b_max );
+}

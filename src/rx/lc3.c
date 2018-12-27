@@ -54,38 +54,86 @@
 
 #include "rx_ct_internal.h"
 
-AA_API int
-aa_rx_ct_wk_dx2dq_lc3( const const struct aa_rx_sg_sub *ssg,
-                       const struct aa_rx_ct_wk_opts * opts,
-                       double dt,
-                       size_t n_tf, const double *TF_abs, size_t ld_tf,
-                       size_t n_x, const double *dx_r,
-                       size_t n_q,
-                       const double *q_a, const double *dq_a,
-                       const double *dq_r, double *dq )
+struct aa_rx_ct_wk_lc3_cx {
+    struct aa_opt_cx *opt_cx;
+    const struct aa_rx_sg_sub *ssg;
+    double s2min;
+    double k_dls;
+};
+
+
+
+static void
+lc3_constraints (
+    const struct aa_rx_ct_wk_lc3_cx *cx,
+    double dt,
+    size_t n_x, size_t n_q,
+    size_t n_tf, const double *TF_abs, size_t ld_tf,
+    const double *dx_r,
+    const double *q_a, const double *dq_a, const double *dq_r,
+    double **pA,
+    double **pb_min,
+    double **pb_max,
+    double **px_min,
+    double **px_max,
+    double **pc
+    )
 {
-
-    size_t rows,cols;
-    aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
-    assert(n_x == rows);
-    assert(n_q == cols);
-
-    double *J = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
-    double *J_star = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
-    double *N = AA_MEM_REGION_LOCAL_NEW_N(double, cols*cols);
-    double *dx_a = AA_MEM_REGION_LOCAL_NEW_N(double, n_x);
-
-    aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, rows );
-
-    // Compute a damped pseudo inverse
-    if( opts->s2min > 0 ) {
-        aa_la_dzdpinv( n_x, n_q, opts->s2min, J, J_star );
-    } else  {
-        aa_la_dpinv( n_x, n_q, opts->k_dls, J, J_star );
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    const struct aa_rx_sg_sub *ssg = cx->ssg;
+    {
+        size_t rows,cols;
+        aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
+        assert(n_x == rows);
+        assert(n_q == cols);
     }
 
-    // Compute nullspace projection matrix
-    aa_la_np( n_x, n_q, J, J_star, N );
+
+    /* Optimization variables
+     *
+     * Maximize: x .dot. c
+     * Subject to:
+     *   x_lower <=   x <= x_upper
+     *   b_lower <= A*x <= b_upper
+     */
+    double *A     = AA_MEM_REGION_NEW_N( reg, double, n_q * (n_x+1) );
+    double *b_min = AA_MEM_REGION_NEW_N( reg, double, n_q );
+    double *b_max = AA_MEM_REGION_NEW_N( reg, double, n_q );
+    double *x_min = AA_MEM_REGION_NEW_N( reg, double, n_x + 1 );
+    double *x_max = AA_MEM_REGION_NEW_N( reg, double, n_x + 1 );
+    double *c     = AA_MEM_REGION_NEW_N( reg, double, n_x + 1 );
+    *pA     = A;
+    *pb_min = b_min;
+    *pb_max = b_max;
+    *px_min = x_min;
+    *px_max = x_max;
+    *pc     = c;
+
+
+    // Rest of allocated arrays are local temps
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+    double *J     = AA_MEM_REGION_NEW_N(reg, double, n_x*n_q);
+    double *N     = AA_MEM_REGION_NEW_N(reg, double, n_q*n_q);
+    double *dx_a  = AA_MEM_REGION_NEW_N(reg, double, n_x);
+    double *dq_rn = AA_MEM_REGION_NEW_N(reg, double, n_q );
+
+    aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, n_x );
+
+
+    {
+        double *J_star = A; // Reuse A matrix
+
+        // Compute a damped pseudo inverse
+        if( cx->s2min > 0 ) {
+            aa_la_dzdpinv( n_x, n_q, cx->s2min, J, J_star );
+        } else  {
+        aa_la_dpinv( n_x, n_q, cx->k_dls, J, J_star );
+        }
+
+        // Compute nullspace projection matrix
+        aa_la_np( n_x, n_q, J, J_star, N );
+    }
 
     // actual workspace velocity
     cblas_dgemv( CblasColMajor, CblasNoTrans,
@@ -94,32 +142,13 @@ aa_rx_ct_wk_dx2dq_lc3( const const struct aa_rx_sg_sub *ssg,
                  dq_a, 1,
                  0.0, dx_a, 1 );
 
-    // Optimization variables
-
-    /*
-     * Maximize: x .dot. c
-     * Subject to:
-     *   x_lower <=   x <= x_upper
-     *   b_lower <= A*x <= b_upper
-     */
-
-    /* // A = [J_star*dt, N*dq_rn ] */
-    double *A     = AA_MEM_REGION_LOCAL_NEW_N( double, n_q * (n_x+1) );
-    double *b_min = AA_MEM_REGION_LOCAL_NEW_N( double, n_q );
-    double *b_max = AA_MEM_REGION_LOCAL_NEW_N( double, n_q );
-    double *x_min = AA_MEM_REGION_LOCAL_NEW_N( double, n_x + 1 );
-    double *x_max = AA_MEM_REGION_LOCAL_NEW_N( double, n_x + 1 );
-    double *c     = AA_MEM_REGION_LOCAL_NEW_N( double, n_x + 1 );
-    double *opt_x = AA_MEM_REGION_LOCAL_NEW_N( double, n_x + 1 );
-    double *dq_rn = AA_MEM_REGION_LOCAL_NEW_N( double, n_q );
-
 
     // Fill A
-    AA_MEM_CPY(A, J_star, n_q*n_x );
-    cblas_dscal( (int)(n_q*n_x), dt, A, 1 );
+    cblas_dscal( (int)(n_q*n_x), dt, A, 1 ); // A = J_star * dt
     for( size_t i = 0; i < n_q; i++) {
         dq_rn[i] = dq_a[i] - dq_r[i];
     }
+    /*  A = [J_star*dt, N*(dq_a - dq_r) ] */
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n_q, (int)n_q,
                  1.0, N, (int)n_q,
@@ -184,18 +213,132 @@ aa_rx_ct_wk_dx2dq_lc3( const const struct aa_rx_sg_sub *ssg,
         }
     }
 
-    struct aa_opt_cx *opt_cx = NULL;
-    opt_cx =
+    aa_mem_region_pop(reg,ptrtop);
+}
+
+
+AA_API  struct aa_rx_ct_wk_lc3_cx *
+aa_rx_ct_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
+                         const struct aa_rx_ct_wk_opts * opts )
+{
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+
+    struct aa_rx_ct_wk_lc3_cx *cx = AA_NEW(struct aa_rx_ct_wk_lc3_cx);
+    cx->s2min = opts->s2min;
+    cx->k_dls = opts->k_dls;
+    cx->ssg = ssg;
+
+    size_t n_x, n_q;
+    aa_rx_sg_sub_jacobian_size( ssg, &n_x, &n_q );
+    double dt = .01;
+    const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
+    size_t n_qall = aa_rx_sg_config_count(sg);
+    size_t n_tf = aa_rx_sg_frame_count(sg);
+    size_t ld_tf = 14;
+
+    double *dx_r = AA_MEM_REGION_NEW_N(reg,double,n_x);
+    double *q_all = AA_MEM_REGION_NEW_N(reg,double,n_qall);
+    double *TF = AA_MEM_REGION_NEW_N(reg,double,ld_tf*n_tf);
+    double *q_a = AA_MEM_REGION_NEW_N(reg,double,n_q);
+    double *dq_a = AA_MEM_REGION_NEW_N(reg,double,n_q);
+    double *dq_r = AA_MEM_REGION_NEW_N(reg,double,n_q);
+
+    AA_MEM_ZERO(dx_r, n_x);
+    aa_rx_sg_center_configs(sg, n_qall, q_all);
+    aa_rx_sg_sub_center_configs(ssg, n_q, q_a);
+    AA_MEM_ZERO(dq_a, n_q);
+    AA_MEM_ZERO(dq_r, n_q);
+    aa_rx_sg_tf( sg, n_qall, q_all,
+                 n_tf, TF, ld_tf,
+                 TF+ld_tf/2, ld_tf );
+
+    double *A;
+    double *b_min, *b_max;
+    double *x_min, *x_max;
+    double *c;
+
+    lc3_constraints (
+        cx, dt,
+        n_x, n_q,
+        n_tf, TF+ld_tf/2, ld_tf,
+        dx_r,
+        q_a, dq_a, dq_r,
+        &A,
+        &b_min, &b_max,
+        &x_min, &x_max,
+        &c );
+
+
+    cx->opt_cx =
         aa_opt_clp_gmcreate( n_q, n_x+1,
                              A, n_q,
                              b_min, b_max,
                              c,
                              x_min, x_max );
 
-    aa_opt_set_direction( opt_cx, AA_OPT_MAXIMIZE );
+    aa_opt_set_direction( cx->opt_cx, AA_OPT_MAXIMIZE );
+
+    aa_mem_region_pop(reg,ptrtop);
+
+    return cx;
+}
+
+
+AA_API int
+aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *cx,
+                       double dt,
+                       size_t n_tf, const double *TF_abs, size_t ld_tf,
+                       size_t n_x, const double *dx_r,
+                       size_t n_q,
+                       const double *q_a, const double *dq_a,
+                       const double *dq_r, double *dq )
+{
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+
+    double *A;
+    double *b_min, *b_max;
+    double *x_min, *x_max;
+    double *c;
+    double *opt_x = AA_MEM_REGION_NEW_N(reg,double, 1+n_x);
+
+    lc3_constraints (
+        cx, dt,
+        n_x, n_q,
+        n_tf, TF_abs, ld_tf,
+        dx_r,
+        q_a, dq_a, dq_r,
+        &A,
+        &b_min, &b_max,
+        &x_min, &x_max,
+        &c );
+
+
+    aa_tick("create: ");
+
+    struct aa_opt_cx *opt_cx = cx->opt_cx;
+    /* opt_cx = */
+    /*     aa_opt_clp_gmcreate( n_q, n_x+1, */
+    /*                          A, n_q, */
+    /*                          b_min, b_max, */
+    /*                          c, */
+    /*                          x_min, x_max ); */
+
+
+    aa_opt_set_obj( opt_cx, n_x+1, c );
+    aa_opt_set_bnd( opt_cx, n_x+1, x_min, x_max );
+    aa_opt_set_cstr_bnd( opt_cx, n_q, b_min, b_max );
+    aa_opt_set_cstr_gm( opt_cx, n_q, n_x+1, A, n_q );
+
+    aa_tock();
 
     int r = 0;
+    aa_tick("solve: ");
     r = aa_opt_solve( opt_cx, n_x+1, opt_x );
+    aa_tock();
 
     if( 0 == r ) {
         /* printf("x_min: "); aa_dump_vec(stdout, x_min, n_x + 1 ); */
@@ -204,10 +347,8 @@ aa_rx_ct_wk_dx2dq_lc3( const const struct aa_rx_sg_sub *ssg,
         /* printf("opt_x: "); aa_dump_vec(stdout, opt_x, n_x + 1 ); */
         /* printf("opt_k: %f\n",opt_x[n_x]); */
 
-
         // extract velocity
         AA_MEM_CPY( dq, dq_a, n_q );
-
 
         // WS reference
         cblas_dgemv( CblasColMajor, CblasNoTrans,
@@ -223,10 +364,10 @@ aa_rx_ct_wk_dx2dq_lc3( const const struct aa_rx_sg_sub *ssg,
 
     }
 
-    aa_opt_destroy(opt_cx);
+    /* aa_opt_destroy(opt_cx); */
 
 
-    aa_mem_region_local_pop(J);
+    aa_mem_region_pop(reg,ptrtop);
 
 
     //printf("--\n");

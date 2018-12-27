@@ -50,6 +50,7 @@ struct display_cx {
     const struct aa_rx_sg *scenegraph;
     const struct aa_rx_sg_sub *ssg;
     struct aa_rx_ct_wk_opts *wk_opts;
+    const struct aa_rx_ct_wk_lc3_cx *lc3;
     double E0[7];
     double *q;
     double *dq_subset;
@@ -77,20 +78,23 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     aa_rx_sg_config_get( scenegraph, m, n_c,
                          aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset );
 
-    double TF_rel[7*n];
-    double TF_abs[7*n];
+    size_t ld_tf = 14;
+    double TF[14*n];
+    double *TF_rel = TF;
+    double *TF_abs = TF+7;
+
     aa_rx_sg_tf(scenegraph, m, cx->q,
                 n,
-                TF_rel, 7,
-                TF_abs, 7 );
+                TF_rel, ld_tf,
+                TF_abs, ld_tf );
 
     aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
-                             n, TF_abs, 7 );
+                             n, TF_abs, ld_tf );
 
     /* Reference Velocity and Position */
     double dx_r[6] = {0};
     {
-        double *E_act =  TF_abs + 7*aa_rx_sg_sub_frame_ee(cx->ssg);
+        double *E_act =  TF_abs + ld_tf*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
 
         double z_pos = sin(t*2*M_PI) / (4*M_PI);
         double z_vel = cos( t*2*M_PI ) / 2; // derivative of position
@@ -128,9 +132,8 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     /*                               6, dx_r, */
     /*                               n_c, dqr_subset, dq_subset ); */
     //aa_tick("lc3: ");
-    int r = aa_rx_ct_wk_dx2dq_lc3( cx->ssg, cx->wk_opts,
-                                   dt,
-                                   n, TF_abs, 7,
+    int r = aa_rx_ct_wk_dx2dq_lc3( cx->lc3, dt,
+                                   n, TF_abs, ld_tf,
                                    6, dx_r,
                                    n_c, q_subset, cx->dq_subset,
                                    dqr_subset, dq_subset );
@@ -177,6 +180,8 @@ int main(int argc, char *argv[])
     cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     cx.wk_opts = aa_rx_ct_wk_opts_create();
     cx.dq_subset = AA_NEW0_AR(double, aa_rx_sg_sub_config_count(cx.ssg) );
+    cx.lc3 = aa_rx_ct_wk_lc3_create(cx.ssg,cx.wk_opts);
+
 
     // set start and goal states
     const char *names[] = {"right_s0",

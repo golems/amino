@@ -47,16 +47,30 @@ aa_opt_is_eq( double l, double u)
 }
 
 #ifdef __cplusplus
+
 static inline int
 aa_isinf( double l ) {
     return std::isinf(l);
 }
+
+static inline int
+aa_isfinite( double l ) {
+    return std::isfinite(l);
+}
+
 #else
+
+static inline int
+aa_isfinite( double l ) {
+    return isfinite(l);
+}
+
 static inline int
 aa_isinf( double l ) {
     return isinf(l);
 }
-#endif
+
+#endif /* __cplusplus */
 
 static inline int
 aa_opt_is_lbound( double l )
@@ -99,8 +113,24 @@ struct aa_opt_vtab {
                              const double *Q_values, int *Q_cols, int *Q_row_ptr );
     int
     (*set_type)( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type );
-};
 
+
+    int
+    (*set_obj)( struct aa_opt_cx *cx, size_t n, const double * c);
+
+    int
+    (*set_bnd)( struct aa_opt_cx *cx, size_t n,
+                const double * x_min, const double *x_max);
+
+    int
+    (*set_cstr_bnd)( struct aa_opt_cx *cx, size_t m,
+                     const double *b_min, const double *b_max );
+
+    int
+    (*set_cstr_gm)( struct aa_opt_cx *cx,
+                    size_t m, size_t n,
+                    const double *A, size_t lda );
+};
 
 struct aa_opt_cx {
     struct aa_opt_vtab *vtab;

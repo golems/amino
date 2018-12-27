@@ -520,6 +520,27 @@ DEF_GET_LIMIT(acc)
 DEF_GET_LIMIT(eff)
 
 
+AA_API double
+aa_rx_sg_config_center( const struct aa_rx_sg *sg, aa_rx_config_id config_id )
+{
+    double min=0 ,max=0;
+    int r = aa_rx_sg_get_limit_pos( sg, config_id, &min, &max );
+    return ( 0 == r )
+        ? ((max + min) / 2)
+        : 0;
+}
+
+AA_API void
+aa_rx_sg_center_configs( const struct aa_rx_sg *sg,
+                             size_t n, double *q )
+{
+    size_t n_qs = aa_rx_sg_config_count(sg);
+    size_t n_min = AA_MIN(n,n_qs);
+    for( size_t i = 0; i < n_min; i ++ ) {
+        q[i] = aa_rx_sg_config_center(sg,  (aa_rx_config_id)i);
+    }
+}
+
 /* Inertial */
 
 AA_API void

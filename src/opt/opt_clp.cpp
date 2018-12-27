@@ -140,14 +140,113 @@ static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
 }
 
 
+static int
+s_set_obj( struct aa_opt_cx *cx, size_t n, const double * c)
+{
+    SolverType * M = static_cast<SolverType*>(cx->data);
+    int ni = (int) n;
+    for( int i = 0; i < ni; i ++ ) {
+        M->setObjectiveCoefficient( i, c[i] );
+    }
+}
+
+static int
+s_set_bnd( struct aa_opt_cx *cx, size_t n,
+           const double * x_min, const double *x_max)
+{
+    SolverType * M = static_cast<SolverType*>(cx->data);
+    int ni = (int) n;
+    for( int i = 0; i < ni; i ++ ) {
+        double lo = x_min[i];
+        double hi = x_max[i];
+        M->setColumnBounds( i,
+                            aa_isfinite(lo) ? lo : -DBL_MAX,
+                            aa_isfinite(hi) ? hi : DBL_MAX );
+    }
+}
+
+static int
+s_set_cstr_gm( struct aa_opt_cx *cx,
+               size_t m, size_t n,
+               const double *A, size_t lda )
+{
+    SolverType * M = static_cast<SolverType*>(cx->data);
+    int mi = (int) m;
+    int ni = (int) n;
+    for( int j = 0; j < ni; j ++ ) {
+        for( int i = 0; i < mi; i ++ ) {
+            M->modifyCoefficient( i, j, AA_MATREF(A,lda, i,j) );
+        }
+    }
+}
+
+static int
+s_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
+                const double * b_min, const double *b_max )
+{
+    SolverType * M = static_cast<SolverType*>(cx->data);
+    int mi = (int) m;
+    for( int i = 0; i < mi; i ++ ) {
+        double lo = b_min[i];
+        double hi = b_max[i];
+        M->setRowBounds(i,
+                        aa_isfinite(lo) ? lo : -DBL_MAX,
+                        aa_isfinite(hi) ? hi : DBL_MAX );
+    }
+}
+
 static struct aa_opt_vtab s_vtab = {
     .solve = s_solve,
     .destroy = s_destroy,
     .set_direction = s_set_direction,
     .set_quad_obj_crs = s_set_quad_obj_crs,
-    .set_type = s_set_type
+    .set_type = s_set_type,
+    .set_obj = s_set_obj,
+    .set_bnd = s_set_bnd,
+    .set_cstr_bnd = s_set_cstr_bnd,
+    .set_cstr_gm = s_set_cstr_gm
 };
 
+
+// AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
+//     size_t m, size_t n,
+//     const double *A, size_t ldA,
+//     const double *b_lower, const double *b_upper,
+//     const double *c,
+//     const double *x_lower, const double *x_upper
+//     )
+// {
+
+
+//     ClpSimplex *pM = new ClpSimplex();
+//     ClpSimplex &M = *pM;
+//     pM->setLogLevel(0); // shut up
+
+//     int rows[m];
+//     int mi = (int)m;
+//     int ni = (int)n;
+//     M.resize(mi,0);
+
+//     for( int i = 0; i < mi; i ++ ) rows[i] = i;
+
+//     /* A, c, l, u */
+//     for( size_t j = 0; j < n; j ++ ) {
+//         M.addColumn( mi, rows,
+//                      AA_MATCOL(A,ldA,j),
+//                      x_lower[j], x_upper[j], c[j] );
+//     }
+
+//     /* b */
+//     for( int i = 0; i < mi; i ++ ) {
+//         M.setRowBounds(i,b_lower[i],b_upper[i]);
+//     }
+
+
+//     M.setOptimizationDirection( -1 );
+
+
+//     return cx_finish( &s_vtab, pM );
+// }
 
 AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
     size_t m, size_t n,
@@ -157,36 +256,40 @@ AA_API struct aa_opt_cx* aa_opt_clp_gmcreate (
     const double *x_lower, const double *x_upper
     )
 {
-
-
     ClpSimplex *pM = new ClpSimplex();
     ClpSimplex &M = *pM;
+
+    struct aa_opt_cx *cx = cx_finish( &s_vtab, pM );
+
     pM->setLogLevel(0); // shut up
 
-    int rows[m];
     int mi = (int)m;
     int ni = (int)n;
     M.resize(mi,0);
 
-    for( int i = 0; i < mi; i ++ ) rows[i] = i;
 
     /* A, c, l, u */
+    int rows[m];
+    for( int i = 0; i < mi; i ++ ) rows[i] = i;
+    // TODO: is there a better way to initialize?
     for( size_t j = 0; j < n; j ++ ) {
         M.addColumn( mi, rows,
                      AA_MATCOL(A,ldA,j),
                      x_lower[j], x_upper[j], c[j] );
     }
+    // s_set_cstr_gm( cx, m, n, A, ldA );
 
-    /* b */
-    for( int i = 0; i < mi; i ++ ) {
-        M.setRowBounds(i,b_lower[i],b_upper[i]);
-    }
+
+    s_set_bnd( cx, n, x_lower, x_upper );
+    s_set_obj( cx, n, c );
+
+    s_set_cstr_bnd( cx, m, b_lower, b_upper );
 
 
     M.setOptimizationDirection( -1 );
 
 
-    return cx_finish( &s_vtab, pM );
+    return cx;
 }
 
 
@@ -226,6 +329,9 @@ AA_API struct aa_opt_cx* aa_opt_clp_crscreate (
 
     return cx_finish( &s_vtab, pM );
 }
+
+
+
 
 int aa_opt_lp_clp (
     size_t m, size_t n,

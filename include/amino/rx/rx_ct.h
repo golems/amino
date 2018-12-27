@@ -83,6 +83,7 @@ AA_API struct aa_ct_limit *
 aa_rx_ct_sg_limits( struct aa_mem_region *region, const struct aa_rx_sg *sg );
 
 /**
+ * @struct aa_rx_ct_wk_opts
  * Opaque structure for workspace control options.
  */
 struct aa_rx_ct_wk_opts;
@@ -160,9 +161,25 @@ aa_rx_ct_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
                      size_t n_q, const double *dq_r, double *dq );
 
 
+/**
+ * @struct aa_rx_ct_wk_lc3_cx;
+ *
+ * Opaque context struct for LC3.
+ *
+ *  Z. Kingston, N. Dantam, and L. Kavraki.
+ * [Kinematically Constrained  Workspace Control via Linear  Optimization]
+ * (http://dx.doi.org/10.1109/HUMANOIDS.2015.7363455). International
+ *  Conference on Humanoid Robots (Humanoids), IEEE. 2015.
+ *
+ */
+struct aa_rx_ct_wk_lc3_cx;
+
+AA_API  struct aa_rx_ct_wk_lc3_cx *
+aa_rx_ct_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
+                         const struct aa_rx_ct_wk_opts * opts );
+
 AA_API int
-aa_rx_ct_wk_dx2dq_lc3( const const struct aa_rx_sg_sub *ssg,
-                       const struct aa_rx_ct_wk_opts * opts,
+aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *lc3,
                        double dt,
                        size_t n_tf, const double *TF_abs, size_t ld_tf,
                        size_t n_x, const double *dx_r,

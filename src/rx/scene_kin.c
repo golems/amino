@@ -363,14 +363,9 @@ aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
     size_t n_min = AA_MIN(n,n_qs);
     for( size_t i = 0; i < n_min; i ++ ) {
-        double min=0 ,max=0;
-        aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg, i);
-        int r = aa_rx_sg_get_limit_pos( ssg->scenegraph, config_id, &min, &max );
-        if( 0 == r ) {
-            q[i] = (max + min) / 2;
-        } else {
-            q[i] = 0;
-        }
+        q[i] = aa_rx_sg_config_center( ssg->scenegraph,
+                                       aa_rx_sg_sub_config(ssg, i) );
+
     }
 }
 
