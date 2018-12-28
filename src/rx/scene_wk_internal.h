@@ -42,14 +42,14 @@
  */
 
 
-#ifndef AMINO_RX_CT_INTERNAL_H
-#define AMINO_RX_CT_INTERNAL_H
+#ifndef AMINO_RX_WK_INTERNAL_H
+#define AMINO_RX_WK_INTERNAL_H
 
 #include "amino.h"
 #include "amino/opt/opt.h"
-#include "amino/rx/rx_ct.h"
+#include "amino/rx/scene_wk.h"
 
-struct aa_rx_ct_wk_opts {
+struct aa_rx_wk_opts {
     double s2min; ///< minimum singular value for DLS via SVD
     double k_dls; ///< damping constant for DLS via LU
     double k_np;  ///< gain for nullspace projection
@@ -58,4 +58,4 @@ struct aa_rx_ct_wk_opts {
 };
 
 
-#endif /*AMINO_RX_CT_INTERNAL_H*/
+#endif /*AMINO_RX_WK_INTERNAL_H*/

@@ -48,13 +48,14 @@
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_kin_internal.h"
 #include "amino/rx/scene_sub.h"
-#include "amino/rx/rx_ct.h"
+
+#include "amino/rx/scene_wk.h"
 
 #include "amino/opt/opt.h"
 
-#include "rx_ct_internal.h"
+#include "scene_wk_internal.h"
 
-struct aa_rx_ct_wk_lc3_cx {
+struct aa_rx_wk_lc3_cx {
     struct aa_opt_cx *opt_cx;
     const struct aa_rx_sg_sub *ssg;
     double s2min;
@@ -65,7 +66,7 @@ struct aa_rx_ct_wk_lc3_cx {
 
 static void
 lc3_constraints (
-    const struct aa_rx_ct_wk_lc3_cx *cx,
+    const struct aa_rx_wk_lc3_cx *cx,
     double dt,
     size_t n_x, size_t n_q,
     size_t n_tf, const double *TF_abs, size_t ld_tf,
@@ -127,7 +128,7 @@ lc3_constraints (
         if( cx->s2min > 0 ) {
             aa_la_dzdpinv( n_x, n_q, cx->s2min, J, J_star );
         } else  {
-        aa_la_dpinv( n_x, n_q, cx->k_dls, J, J_star );
+            aa_la_dpinv( n_x, n_q, cx->k_dls, J, J_star );
         }
 
         // Compute nullspace projection matrix
@@ -216,15 +217,15 @@ lc3_constraints (
 }
 
 
-AA_API  struct aa_rx_ct_wk_lc3_cx *
-aa_rx_ct_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
-                         const struct aa_rx_ct_wk_opts * opts )
+AA_API  struct aa_rx_wk_lc3_cx *
+aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
+                      const struct aa_rx_wk_opts * opts )
 {
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
 
 
-    struct aa_rx_ct_wk_lc3_cx *cx = AA_NEW(struct aa_rx_ct_wk_lc3_cx);
+    struct aa_rx_wk_lc3_cx *cx = AA_NEW(struct aa_rx_wk_lc3_cx);
     cx->s2min = opts->s2min;
     cx->k_dls = opts->k_dls;
     cx->ssg = ssg;
@@ -287,13 +288,13 @@ aa_rx_ct_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
 
 
 AA_API int
-aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *cx,
-                       double dt,
-                       size_t n_tf, const double *TF_abs, size_t ld_tf,
-                       size_t n_x, const double *dx_r,
-                       size_t n_q,
-                       const double *q_a, const double *dq_a,
-                       const double *dq_r, double *dq )
+aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
+                    double dt,
+                    size_t n_tf, const double *TF_abs, size_t ld_tf,
+                    size_t n_x, const double *dx_r,
+                    size_t n_q,
+                    const double *q_a, const double *dq_a,
+                    const double *dq_r, double *dq )
 {
 
     if( dt <= 0 ) return -1;

@@ -39,6 +39,7 @@ noinst_HEADERS = \
              src/tf/quat_duqu.c \
              src/tf/quat_qutr.c \
              src/rx/sg_convenience.h \
+             src/rx/scene_wk_internal.h \
              include/wavefront_internal.h \
              include/amino/ct/traj_internal.hpp \
              include/amino/rx/scene_kin_internal.h \
@@ -139,6 +140,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/mp_seq.h \
 	include/amino/rx/spnav_button.h \
 	include/amino/rx/rx_ct.h \
+	include/amino/rx/scene_wk.h \
 	include/amino/rx/wavefront.h
 
 rxomplincludedir = $(rxincludedir)/ompl
@@ -197,6 +199,7 @@ libamino_la_SOURCES =                  \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/rx_ct.c                 \
+	src/rx/scene_wk.c              \
 	src/rx/lc3.c                   \
 	src/rx/mp_seq.cpp              \
 	src/ct/traj.cpp                \

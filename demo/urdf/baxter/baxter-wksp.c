@@ -41,7 +41,7 @@
 #include "amino/rx/scene_sdl.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
-#include "amino/rx/rx_ct.h"
+#include "amino/rx/scene_wk.h"
 
 
 
@@ -49,8 +49,8 @@ struct display_cx {
     struct aa_rx_win *win;
     const struct aa_rx_sg *scenegraph;
     const struct aa_rx_sg_sub *ssg;
-    struct aa_rx_ct_wk_opts *wk_opts;
-    const struct aa_rx_ct_wk_lc3_cx *lc3;
+    struct aa_rx_wk_opts *wk_opts;
+    const struct aa_rx_wk_lc3_cx *lc3;
     double E0[7];
     double *q;
     double *dq_subset;
@@ -118,13 +118,13 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
         aa_tf_qutr_mul(cx->E0, E_rel, E_ref);
 
         // compute the proportional control
-        aa_rx_ct_wk_dx_pos( cx->wk_opts, E_act, E_ref, dx_r );
+        aa_rx_wk_dx_pos( cx->wk_opts, E_act, E_ref, dx_r );
     }
 
     // joint-centering velocity for the nullspace projection
     double dqr_subset[n_c];
-    aa_rx_ct_wk_dqcenter( cx->ssg, cx->wk_opts,
-                          n_c, q_subset, dqr_subset );
+    aa_rx_wk_dqcenter( cx->ssg, cx->wk_opts,
+                       n_c, q_subset, dqr_subset );
 
     // Cartesian to joint velocities, with nullspace projection
     double dq_subset[n_c];
@@ -136,12 +136,12 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
         firsttime = 0;
     } else  {
         //aa_tick("solve: ");
-        int r = aa_rx_ct_wk_dx2dq_lc3( cx->lc3, dt,
-                                       n, TF_abs, ld_tf,
-                                       6, dx_r,
-                                       n_c, q_subset, cx->dq_subset,
-                                       dqr_subset, dq_subset );
-        /* int r = aa_rx_ct_wk_dx2dq_np( cx->ssg, cx->wk_opts, */
+        int r = aa_rx_wk_dx2dq_lc3( cx->lc3, dt,
+                                    n, TF_abs, ld_tf,
+                                    6, dx_r,
+                                    n_c, q_subset, cx->dq_subset,
+                                    dqr_subset, dq_subset );
+        /* int r = aa_rx_wk_dx2dq_np( cx->ssg, cx->wk_opts, */
         /*                               n, TF_abs, 7, */
         /*                               6, dx_r, */
         /*                               n_c, dqr_subset, dq_subset ); */
@@ -187,9 +187,9 @@ int main(int argc, char *argv[])
 
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
-    cx.wk_opts = aa_rx_ct_wk_opts_create();
+    cx.wk_opts = aa_rx_wk_opts_create();
     cx.dq_subset = AA_NEW0_AR(double, aa_rx_sg_sub_config_count(cx.ssg) );
-    cx.lc3 = aa_rx_ct_wk_lc3_create(cx.ssg,cx.wk_opts);
+    cx.lc3 = aa_rx_wk_lc3_create(cx.ssg,cx.wk_opts);
 
 
     // set start and goal states
