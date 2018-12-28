@@ -115,7 +115,6 @@ lc3_constraints (
 
     double *J     = AA_MEM_REGION_NEW_N(reg, double, n_x*n_q);
     double *N     = AA_MEM_REGION_NEW_N(reg, double, n_q*n_q);
-    double *dx_a  = AA_MEM_REGION_NEW_N(reg, double, n_x);
     double *dq_rn = AA_MEM_REGION_NEW_N(reg, double, n_q );
 
     aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, n_x );
@@ -135,29 +134,28 @@ lc3_constraints (
         aa_la_np( n_x, n_q, J, J_star, N );
     }
 
+    // Fill A
+    /*  A = [J_star*dt, N*(dq_a - dq_r) ] */
+    cblas_dscal( (int)(n_q*n_x), dt, A, 1 ); // A = J_star * dt
+    for( size_t i = 0; i < n_q; i++) {
+        dq_rn[i] = dq_a[i] - dq_r[i];
+    }
+    cblas_dgemv( CblasColMajor, CblasNoTrans,
+                 (int)n_q, (int)n_q,
+                 1, N, (int)n_q,
+                 dq_rn, 1,
+                 0.0, A+n_q*n_x, 1 );
+
+    // Fill C
     // actual workspace velocity
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n_x, (int)n_q,
                  1.0, J, (int)n_x,
                  dq_a, 1,
-                 0.0, dx_a, 1 );
-
-
-    // Fill A
-    cblas_dscal( (int)(n_q*n_x), dt, A, 1 ); // A = J_star * dt
-    for( size_t i = 0; i < n_q; i++) {
-        dq_rn[i] = dq_a[i] - dq_r[i];
-    }
-    /*  A = [J_star*dt, N*(dq_a - dq_r) ] */
-    cblas_dgemv( CblasColMajor, CblasNoTrans,
-                 (int)n_q, (int)n_q,
-                 1.0, N, (int)n_q,
-                 dq_rn, 1,
-                 0.0, A+n_q*n_x, 1 );
-
-    // Fill C
+                 0.0, c, 1 );
+    // c now holds dx_a
     for( size_t i = 0; i < n_x; i ++ ) {
-        c[i] = (dx_r[i] - dx_a[i])/dt;
+        c[i] = (dx_r[i] - c[i])/dt;
     }
     c[n_x] = 1; // TODO: add weighting parameter to options
 
@@ -185,7 +183,7 @@ lc3_constraints (
         double ddq_max = INFINITY, ddq_min = -INFINITY;
         aa_rx_config_id j = aa_rx_sg_sub_config(ssg, i);
         b_min[i] = -INFINITY;
-        b_max[i] = -INFINITY;
+        b_max[i] =  INFINITY;
         aa_rx_sg_get_limit_pos(sg, j, &q_min, &q_max);
         aa_rx_sg_get_limit_vel(sg, j, &dq_min, &dq_max);
         aa_rx_sg_get_limit_acc(sg, j, &ddq_min, &ddq_max);
@@ -200,7 +198,7 @@ lc3_constraints (
             // position constraint
             if( isfinite(q_min) )
                 b_min[i] = fmax( b_min[i],
-                                 (q_min-q_a[i])/dt - ddq_max*dt/2 - dq_a[i] );
+                                 (q_min-q_a[i])/dt - ddq_max*(dt/2) - dq_a[i] );
         }
 
         if( isfinite(ddq_min) ) {
@@ -209,8 +207,9 @@ lc3_constraints (
             // position constraint
             if( isfinite(q_max) )
                 b_max[i] = fmin( b_max[i],
-                                 (q_max - q_a[i])/dt - ddq_min*dt/2 - dq_a[i] );
+                                 (q_max - q_a[i])/dt - ddq_min*(dt/2) - dq_a[i] );
         }
+
     }
 
     aa_mem_region_pop(reg,ptrtop);

@@ -147,14 +147,19 @@ aa_rx_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
                    size_t n_q, const double *q, double *dq_r )
 {
-    aa_rx_sg_sub_center_configs(ssg, n_q, dq_r);
+    const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
     for( size_t i = 0; i < n_q; i ++ ) {
-        double x = (q[i] - dq_r[i]);
-        dq_r[i] = - opts->k_np * x * fabs(x);
-        //dq_r[i] = - opts->k_np * x;
+        double min=0 ,max=0;
+        aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg,i);
+        if( aa_rx_sg_get_limit_pos(sg, config_id, &min, &max) ) {
+            dq_r[i] =  0;
+        } else {
+            double c = (max + min)/2;
+            double d = (c - q[i]) / (max - min);
+            dq_r[i] =  opts->k_np * d * fabs(d);
+        }
     }
 }
-
 
 AA_API void
 aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
