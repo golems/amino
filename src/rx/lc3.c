@@ -88,7 +88,6 @@ lc3_constraints (
         assert(n_q == cols);
     }
 
-
     /* Optimization variables
      *
      * Maximize: x .dot. c
@@ -295,6 +294,10 @@ aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *cx,
                        const double *q_a, const double *dq_a,
                        const double *dq_r, double *dq )
 {
+
+    if( dt <= 0 ) return -1;
+
+
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
 
@@ -303,7 +306,6 @@ aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *cx,
     double *b_min, *b_max;
     double *x_min, *x_max;
     double *c;
-    double *opt_x = AA_MEM_REGION_NEW_N(reg,double, 1+n_x);
 
     lc3_constraints (
         cx, dt,
@@ -316,37 +318,18 @@ aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *cx,
         &x_min, &x_max,
         &c );
 
-
-    aa_tick("create: ");
-
+    double *opt_x = AA_MEM_REGION_NEW_N(reg,double, 1+n_x);
     struct aa_opt_cx *opt_cx = cx->opt_cx;
-    /* opt_cx = */
-    /*     aa_opt_clp_gmcreate( n_q, n_x+1, */
-    /*                          A, n_q, */
-    /*                          b_min, b_max, */
-    /*                          c, */
-    /*                          x_min, x_max ); */
-
-
     aa_opt_set_obj( opt_cx, n_x+1, c );
     aa_opt_set_bnd( opt_cx, n_x+1, x_min, x_max );
-    aa_opt_set_cstr_bnd( opt_cx, n_q, b_min, b_max );
-    aa_opt_set_cstr_gm( opt_cx, n_q, n_x+1, A, n_q );
+    aa_opt_set_cstr_gm( opt_cx, n_q, n_x+1, A, n_q, b_min, b_max );
 
     aa_tock();
 
-    int r = 0;
-    aa_tick("solve: ");
-    r = aa_opt_solve( opt_cx, n_x+1, opt_x );
+    int  r = aa_opt_solve( opt_cx, n_x+1, opt_x );
     aa_tock();
 
     if( 0 == r ) {
-        /* printf("x_min: "); aa_dump_vec(stdout, x_min, n_x + 1 ); */
-        /* printf("x_max: "); aa_dump_vec(stdout, x_max, n_x + 1 ); */
-        /* printf("opt_x: "); aa_dump_vec(stdout, opt_x, n_x + 1 ); */
-        /* printf("opt_x: "); aa_dump_vec(stdout, opt_x, n_x + 1 ); */
-        /* printf("opt_k: %f\n",opt_x[n_x]); */
-
         // extract velocity
         AA_MEM_CPY( dq, dq_a, n_q );
 
@@ -364,13 +347,7 @@ aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *cx,
 
     }
 
-    /* aa_opt_destroy(opt_cx); */
-
-
     aa_mem_region_pop(reg,ptrtop);
 
-
-    //printf("--\n");
     return r;
-
 }

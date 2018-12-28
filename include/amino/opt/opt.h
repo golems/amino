@@ -111,12 +111,6 @@ AA_API int
 aa_opt_set_bnd( struct aa_opt_cx *cx, size_t n,
                 const double * x_min, const double *x_max);
 
-/**
- * Set the constraint bounds
- */
-AA_API int
-aa_opt_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
-                     const double *b_min, const double *b_max );
 
 /**
  * Set the constraint matrix
@@ -124,7 +118,8 @@ aa_opt_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
 AA_API int
 aa_opt_set_cstr_gm( struct aa_opt_cx *cx,
                     size_t m, size_t n,
-                    const double *A, size_t lda );
+                    const double *A, size_t lda,
+                    const double *b_min, const double *b_max );
 
 /**
  * Set the quadratic objective function via compressed-row-storage
@@ -135,7 +130,7 @@ aa_opt_set_quad_obj_crs( struct aa_opt_cx *cx, size_t n,
                          const double *Q_values, int *Q_cols, int *Q_row_ptr );
 
 /**
- * Destroy the optimization variable type.
+ * Set the optimization variable type.
  */
 AA_API int
 aa_opt_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type );

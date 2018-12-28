@@ -148,6 +148,7 @@ s_set_obj( struct aa_opt_cx *cx, size_t n, const double * c)
     for( int i = 0; i < ni; i ++ ) {
         M->setObjectiveCoefficient( i, c[i] );
     }
+    return 0;
 }
 
 static int
@@ -163,12 +164,13 @@ s_set_bnd( struct aa_opt_cx *cx, size_t n,
                             aa_isfinite(lo) ? lo : -DBL_MAX,
                             aa_isfinite(hi) ? hi : DBL_MAX );
     }
+    return 0;
 }
 
 static int
-s_set_cstr_gm( struct aa_opt_cx *cx,
-               size_t m, size_t n,
-               const double *A, size_t lda )
+s_set_cstr_mat_gm( struct aa_opt_cx *cx,
+                   size_t m, size_t n,
+                   const double *A, size_t lda )
 {
     SolverType * M = static_cast<SolverType*>(cx->data);
     int mi = (int) m;
@@ -178,6 +180,7 @@ s_set_cstr_gm( struct aa_opt_cx *cx,
             M->modifyCoefficient( i, j, AA_MATREF(A,lda, i,j) );
         }
     }
+    return 0;
 }
 
 static int
@@ -195,6 +198,17 @@ s_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
     }
 }
 
+static int
+s_set_cstr_gm( struct aa_opt_cx *cx,
+               size_t m, size_t n,
+               const double *A, size_t lda,
+               const double *b_lower, const double *b_upper )
+{
+    s_set_cstr_mat_gm( cx, m, n, A, lda );
+    s_set_cstr_bnd( cx, m, b_lower, b_upper );
+    return 0;
+}
+
 static struct aa_opt_vtab s_vtab = {
     .solve = s_solve,
     .destroy = s_destroy,
@@ -203,7 +217,6 @@ static struct aa_opt_vtab s_vtab = {
     .set_type = s_set_type,
     .set_obj = s_set_obj,
     .set_bnd = s_set_bnd,
-    .set_cstr_bnd = s_set_cstr_bnd,
     .set_cstr_gm = s_set_cstr_gm
 };
 

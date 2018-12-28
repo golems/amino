@@ -84,10 +84,6 @@ AA_API int aa_opt_lp_crs_lpsolve (
 }
 
 
-
-
-
-
 int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
 {
 
@@ -161,12 +157,137 @@ static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
     return 0;
 }
 
+
+
+static int
+s_set_obj( struct aa_opt_cx *cx, size_t n, const double * c)
+{
+    lprec *lp = (lprec*)cx->data;
+    for( size_t j = 0; j < n; j ++ ) {
+        set_obj( lp, 1+(int)j, c[j] );
+    }
+    return 0;
+}
+
+static int
+s_set_bnd( struct aa_opt_cx *cx, size_t n,
+           const double * x_lower, const double *x_upper)
+{
+    lprec *lp = (lprec*)cx->data;
+    for( size_t j = 0; j < n; j ++ ) {
+        set_bounds( lp, 1+(int)j, x_lower[j], x_upper[j] );
+    }
+    return 0;
+}
+
+static int s_count_rows( size_t m,
+                         const double *b_lower, const double *b_upper )
+{
+    int row_count = 0;
+    /* Count constraints */
+    for( size_t i = 0; i < m; i ++ ) {
+        int lb = aa_opt_is_lbound(b_lower[i]);
+        int ub = aa_opt_is_ubound(b_upper[i]);
+        if( !aa_opt_is_free(lb, ub) ) {
+            if( aa_opt_is_bound(lb,ub) ) {
+                row_count += 2;
+            } else {
+                row_count ++;
+            }
+        }
+    }
+    return row_count;
+}
+
+static int s_set_row( lprec *lp, int con_type,
+                      size_t n, const double *A, size_t incA,
+                      int ilp, double val )
+{
+    // fill row
+    for( size_t j = 0; j < n; j ++ ) {
+        double v = A[j*incA];
+        int col = 1 + (int)j;
+        set_mat( lp, ilp, col, v );
+    }
+    // set cstr
+    set_rh(lp,ilp,val);
+    return  set_constr_type( lp, ilp, con_type );
+}
+
+
+static int
+s_set_cstr_gm( struct aa_opt_cx *cx,
+               size_t m, size_t n,
+               const double *A, size_t ldA,
+               const double *b_lower, const double *b_upper )
+{
+    lprec *lp = (lprec*)cx->data;
+    int row_count = s_count_rows(m, b_lower, b_upper);
+
+
+    int ilp = 1;
+    for( size_t i = 0; i < m; i ++ ) {
+        double rh = 0;
+        int con_type = 0;
+        {
+            double l=b_lower[i], u=b_upper[i];
+            int lb = aa_opt_is_lbound(l);
+            int ub = aa_opt_is_ubound(u);
+            if( !aa_opt_is_free(lb,ub) ) {
+                if( aa_feq(l,u,0) ) {
+                    // equality
+                    rh = u;
+                    con_type = EQ;
+                } else if ( aa_opt_is_leq(lb,ub) ) {
+                    // less than
+                    rh = u;
+                    con_type = LE;
+                } else if ( aa_opt_is_geq(lb,ub) ) {
+                    // greater than
+                    rh = l;
+                    con_type = GE;
+                } else if (aa_opt_is_bound(lb,ub) ) {
+                    // leq
+                    if( ! s_set_row( lp, LE,
+                                     n, A+i, ldA,
+                                     ilp, u ) ) {
+                        goto ERROR;
+                    }
+                    ilp++;
+                    // ge
+                    rh = l;
+                    con_type = GE;
+                } else {
+                    assert(0);
+                    goto ERROR;
+                }
+            }
+        }
+        if( ! s_set_row( lp, con_type,
+                         n, A+i, ldA,
+                         ilp, rh ) ) {
+            goto ERROR;
+        }
+        ilp++;
+    }
+    assert( ilp == row_count + 1 );
+
+    return 0;
+
+ERROR:
+    return -1;
+}
+
+
 static struct aa_opt_vtab vtab = {
     .solve = s_solve,
     .destroy = s_destroy,
     .set_direction = s_set_direction,
     .set_quad_obj_crs = s_set_quad_obj_crs,
-    .set_type = s_set_type
+    .set_type = s_set_type,
+    .set_obj = s_set_obj,
+    .set_bnd = s_set_bnd,
+    .set_cstr_gm = s_set_cstr_gm
 };
 
 static struct aa_opt_cx*
@@ -190,6 +311,7 @@ s_finish (
     return cx_finish( &vtab, lp );
 }
 
+
 AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
     size_t m, size_t n,
     const double *A, size_t ldA,
@@ -200,63 +322,23 @@ AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
 {
     assert( sizeof(REAL) == sizeof(*A) );
 
-    int mi = (int)m;
+    //int mi = (int)m;
     int ni = (int)n;
-    lprec *lp = make_lp(mi, ni);
 
+    int row_count = s_count_rows(m, b_lower, b_upper);
+    lprec *lp = make_lp(row_count, ni);
     if( NULL == lp ) goto ERROR;
+    set_verbose(lp, 1);
+
+    struct opt_cx *cx =  cx_finish(&vtab, lp);
+
     set_add_rowmode(lp, FALSE);
     set_maxim(lp);
 
-    /* A, b */
-    int ilp = 1;
-    for( size_t i = 0; i < m; i ++ ) {
-        /* set row */
-        for( size_t j = 0; j < n; j ++ ) {
-            int col = 1 + (int)j;
-            double v = AA_MATREF(A, ldA, i, j);
-            set_mat( lp, ilp, col, v );
-        }
+    s_set_bnd(cx, n, x_lower, x_upper);
+    s_set_obj(cx, n, c );
+    s_set_cstr_gm( cx, m, n, A, ldA, b_lower, b_upper );
 
-        /* set row bound */
-        double rh;
-        int con_type;
-        {
-            double l=b_lower[i], u=b_upper[i];
-            if( aa_feq(l,u,0) ) {
-                // equality
-                rh = u;
-                con_type = EQ;
-            } else {
-                int lb = aa_opt_is_lbound(l);
-                int ub = aa_opt_is_ubound(u);
-                if ( aa_opt_is_leq(lb,ub) ) {
-                    // less than
-                    rh = u;
-                    con_type = LE;
-                } else if ( aa_opt_is_geq(lb,ub) ) {
-                    rh = l;
-                    con_type = GE;
-                } else {
-                    // leq
-                    set_rh(lp,ilp,u);
-                    if( ! set_constr_type( lp, ilp, LE ) ) goto ERROR;
-                    ilp++;
-                    // geq
-                    for( size_t j = 0; j < n; j ++ ) {
-                        int col = 1 + (int)j;
-                        double v = AA_MATREF(A, ldA, i, j);
-                        set_mat( lp, ilp, col, v );
-                    }
-                    rh = l;
-                    con_type = GE;
-                }
-            }
-        }
-        set_rh(lp,ilp,rh);
-        if( ! set_constr_type( lp, ilp, con_type ) ) goto ERROR;
-        ilp++;
-    }
 
     return s_finish(m,n,lp,
                     c, x_lower, x_upper);

@@ -123,13 +123,11 @@ struct aa_opt_vtab {
                 const double * x_min, const double *x_max);
 
     int
-    (*set_cstr_bnd)( struct aa_opt_cx *cx, size_t m,
-                     const double *b_min, const double *b_max );
-
-    int
     (*set_cstr_gm)( struct aa_opt_cx *cx,
                     size_t m, size_t n,
-                    const double *A, size_t lda );
+                    const double *A, size_t lda,
+                    const double *b_min, const double *b_max );
+
 };
 
 struct aa_opt_cx {

@@ -92,7 +92,8 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
                              n, TF_abs, ld_tf );
 
     /* Reference Velocity and Position */
-    double dx_r[6] = {0};
+    double dx_r[6];
+    AA_MEM_ZERO(dx_r, 6);
     {
         double *E_act =  TF_abs + ld_tf*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
 
@@ -107,12 +108,13 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
         dx_r[AA_TF_DX_W+0] += wx_vel;
 
         // proportional control on position
-        double E_ref[7]; // Reference pose
         double E_rel[7]; // Relative pose
         aa_tf_xangle2quat(wx_pos, E_rel+AA_TF_QUTR_Q);
         E_rel[AA_TF_QUTR_T + 0] = 0;
-        E_rel[AA_TF_QUTR_T + 0] = 0;
+        E_rel[AA_TF_QUTR_T + 1] = 0;
         E_rel[AA_TF_QUTR_T + 2] = z_pos;
+
+        double E_ref[7]; // Reference pose
         aa_tf_qutr_mul(cx->E0, E_rel, E_ref);
 
         // compute the proportional control
@@ -132,14 +134,20 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     /*                               6, dx_r, */
     /*                               n_c, dqr_subset, dq_subset ); */
     //aa_tick("lc3: ");
-    int r = aa_rx_ct_wk_dx2dq_lc3( cx->lc3, dt,
-                                   n, TF_abs, ld_tf,
-                                   6, dx_r,
-                                   n_c, q_subset, cx->dq_subset,
-                                   dqr_subset, dq_subset );
+    static int firsttime = 1;
+    if (firsttime) {
+        AA_MEM_ZERO(dq_subset, n_c);
+        firsttime = 0;
+    } else  {
+        int r = aa_rx_ct_wk_dx2dq_lc3( cx->lc3, dt,
+                                       n, TF_abs, ld_tf,
+                                       6, dx_r,
+                                       n_c, q_subset, cx->dq_subset,
+                                       dqr_subset, dq_subset );
+        assert(0 == r);
+    }
     //aa_tock();
 
-    assert(0 == r);
 
     // integrate
     AA_MEM_CPY(cx->dq_subset, dq_subset, n_c );

@@ -90,15 +90,10 @@ aa_opt_set_bnd( struct aa_opt_cx *cx, size_t n,
 AA_API int
 aa_opt_set_cstr_gm( struct aa_opt_cx *cx,
                     size_t m, size_t n,
-                    const double *A, size_t lda )
+                    const double *A, size_t lda,
+                    const double *b_min, const double *b_max )
 {
     return cx->vtab->set_cstr_gm( cx, m, n,
-                                  A, lda );
-}
-
-AA_API int
-aa_opt_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
-                     const double * b_min, const double *b_max )
-{
-    return cx->vtab->set_cstr_bnd( cx, m, b_min, b_max );
+                                  A, lda,
+                                  b_min, b_max );
 }

@@ -35,6 +35,7 @@
  *
  */
 
+#include <pthread.h>
 
 #include "amino.h"
 #include "amino/opt/lp.h"
@@ -42,6 +43,13 @@
 #include "opt_internal.h"
 
 #include <glpk.h>
+
+static pthread_once_t s_glp_once = PTHREAD_ONCE_INIT;
+
+static void s_glp_init_once(void)
+{
+    glp_term_out(GLP_OFF);
+}
 
 static int s_solve( struct aa_opt_cx *cx, size_t n, double *x )
 {
@@ -197,21 +205,6 @@ s_set_bnd( struct aa_opt_cx *cx, size_t n,
 }
 
 static int
-s_set_cstr_gm( struct aa_opt_cx *cx,
-               size_t m, size_t n,
-               const double *A, size_t ldA )
-{
-    glp_prob *lp = (glp_prob*)(cx->data);
-    int rows[m], mi = (int)m, ni = (int)n;
-    for( int i = 0; i < mi; i ++ ) rows[i] = i+1;
-    for( int j = 0; j < ni; j ++ ) {
-        glp_set_mat_col( lp, j+1, mi,
-                         rows-1, AA_MATCOL(A,ldA,(size_t)j) - 1 );
-    }
-    return 0;
-}
-
-static int
 s_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
                 const double * b_lower, const double *b_upper )
 {
@@ -225,6 +218,36 @@ s_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
     return 0;
 }
 
+static int
+s_set_cstr_mat_gm( struct aa_opt_cx *cx,
+                   size_t m, size_t n,
+                   const double *A, size_t ldA )
+{
+    glp_prob *lp = (glp_prob*)(cx->data);
+    int rows[m], mi = (int)m, ni = (int)n;
+    for( int i = 0; i < mi; i ++ ) rows[i] = i+1;
+    for( int j = 0; j < ni; j ++ ) {
+        glp_set_mat_col( lp, j+1, mi,
+                         rows-1, AA_MATCOL(A,ldA,(size_t)j) - 1 );
+    }
+
+
+    return 0;
+}
+
+
+
+static int
+s_set_cstr_gm( struct aa_opt_cx *cx,
+               size_t m, size_t n,
+               const double *A, size_t ldA,
+               const double *b_lower, const double *b_upper )
+{
+    s_set_cstr_mat_gm( cx, m, n, A, ldA );
+    s_set_cstr_bnd( cx, m, b_lower, b_upper );
+    return 0;
+}
+
 
 static struct aa_opt_vtab s_vtab = {
     .solve = s_solve,
@@ -234,7 +257,6 @@ static struct aa_opt_vtab s_vtab = {
     .set_type = s_set_type,
     .set_obj = s_set_obj,
     .set_bnd = s_set_bnd,
-    .set_cstr_bnd = s_set_cstr_bnd,
     .set_cstr_gm = s_set_cstr_gm
 };
 
@@ -245,6 +267,12 @@ s_init (
     const double *c,
     const double *x_lower, const double *x_upper )
 {
+
+    if( pthread_once( &s_glp_once, s_glp_init_once ) ) {
+        perror("pthread_once");
+        abort();
+    }
+
     glp_prob *lp = glp_create_prob();
     struct aa_opt_cx *cx = cx_finish( &s_vtab, lp );
 
@@ -282,7 +310,7 @@ aa_opt_glpk_gmcreate (
                c,
                x_lower, x_upper );
 
-    s_set_cstr_gm(cx, m, n, A, ldA);
+    s_set_cstr_mat_gm(cx, m, n, A, ldA);
 
     return cx;
 }
