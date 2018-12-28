@@ -75,13 +75,13 @@ aa_isinf( double l ) {
 static inline int
 aa_opt_is_lbound( double l )
 {
-    return -DBL_MAX < l && !aa_isinf(l);
+    return -DBL_MAX < l && aa_isfinite(l);
 }
 
 static inline int
 aa_opt_is_ubound( double u )
 {
-    return DBL_MAX > u && !aa_isinf(u);
+    return DBL_MAX > u && aa_isfinite(u);
 }
 
 static inline int

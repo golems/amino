@@ -220,7 +220,7 @@ libamino_la_SOURCES =                  \
 
 libamino_la_LIBADD =
 
-libamino_la_SOURCES += src/opt/opt_clp.cpp src/opt/opt_lpsolve.c
+libamino_la_SOURCES += src/opt/opt_clp.cpp src/opt/opt_lpsolve.c src/opt/opt_glpk.c
 libamino_la_LIBADD  +=  -lClp
 
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c

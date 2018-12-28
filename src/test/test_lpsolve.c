@@ -52,7 +52,7 @@
 #include <sys/resource.h>
 
 
-void helper( const char *name, aa_opt_gmcreate_fun fun) {
+void helper0( const char *name, aa_opt_gmcreate_fun fun) {
 
     double A[] = {120, 110, 1,  210, 30, 1};
     double b_u[] = {15000, 4000, 75};
@@ -79,8 +79,109 @@ void helper( const char *name, aa_opt_gmcreate_fun fun) {
     aa_dump_vec( stdout, x, 2 );
 
     double xref[] = {21.875, 53.125};
+    assert(sizeof(xref) == sizeof(x));
 
     aafeq( name, xref[0] + xref[1], x[0]+x[1], 1e-3 );
+}
+
+
+
+void helper1( const char *name, aa_opt_gmcreate_fun fun) {
+
+    double A[] = {.5, 1,
+                  2, 2,
+                  1, 4 };
+
+    double b_u[] = {24, 60};
+    double b_l[] = {-DBL_MAX, -DBL_MAX };
+    double c[] = {6, 14, 13};
+
+    double x_l[] = {0,0, 0};
+    double x_u[] = {DBL_MAX,DBL_MAX,DBL_MAX};
+
+    size_t n_x = sizeof(x_l) / sizeof(x_l[0]);
+    size_t n_c = sizeof(b_u) / sizeof(b_u[0]);
+
+    assert( n_x == sizeof(x_l)/sizeof(double) );
+    assert( n_x == sizeof(x_u)/sizeof(double) );
+    assert( n_x == sizeof(c)/sizeof(double) );
+    assert( sizeof(b_l) == sizeof(b_u) );
+    assert( n_x * sizeof(b_u)
+            ==
+            sizeof(A) );
+
+    double x[n_x];
+
+    struct aa_opt_cx *cx = fun( n_c, n_x,
+                                A, n_c,
+                                b_l, b_u,
+                                c,
+                                x_l, x_u );
+
+
+    aa_opt_set_direction(cx, AA_OPT_MAXIMIZE );
+    int r = aa_opt_solve(cx,n_x,x);
+
+    printf("r: %d\n", r );
+
+    aa_dump_vec( stdout, x, n_x );
+
+    double xref[] = {36, 0, 6 };
+    assert(sizeof(xref) == sizeof(x));
+
+    aafeq( name,
+           cblas_ddot( (int)n_x, xref, 1, c, 1 ),
+           cblas_ddot( (int)n_x, x, 1, c, 1 ),
+           1e-3 );
+}
+
+
+void helper2( const char *name, aa_opt_gmcreate_fun fun) {
+
+    double A[] = {1, 1};
+
+    double b_u[] = {DBL_MAX};
+    double b_l[] = {20};
+    double c[] = {4, 2};
+
+    double x_l[] = {0, 0};
+    double x_u[] = {20, 10};
+
+    size_t n_x = sizeof(x_l) / sizeof(x_l[0]);
+    size_t n_c = sizeof(b_u) / sizeof(b_u[0]);
+
+    assert( n_x == sizeof(x_l)/sizeof(double) );
+    assert( n_x == sizeof(x_u)/sizeof(double) );
+    assert( n_x == sizeof(c)/sizeof(double) );
+    assert( sizeof(b_l) == sizeof(b_u) );
+    assert( n_x * sizeof(b_u)
+            ==
+            sizeof(A) );
+
+    double x[n_x];
+
+    struct aa_opt_cx *cx = fun( n_c, n_x,
+                                A, n_c,
+                                b_l, b_u,
+                                c,
+                                x_l, x_u );
+
+
+    aa_opt_set_direction(cx, AA_OPT_MINIMIZE );
+    int r = aa_opt_solve(cx,n_x,x);
+
+    printf("r: %d\n", r );
+
+    aa_dump_vec( stdout, x, n_x );
+
+    double xref[] = {10,10};
+
+    assert(sizeof(xref) == sizeof(x));
+
+    aafeq( name,
+           cblas_ddot( (int)n_x, xref, 1, c, 1 ),
+           cblas_ddot( (int)n_x, x, 1, c, 1 ),
+           1e-3 );
 }
 
 int main( int argc, char **argv ) {
@@ -88,15 +189,21 @@ int main( int argc, char **argv ) {
 
 
 #ifdef HAVE_LPSOLVE
-    helper("LP Solve", aa_opt_lpsolve_gmcreate);
+    helper0("LP Solve", aa_opt_lpsolve_gmcreate);
+    helper1("LP Solve", aa_opt_lpsolve_gmcreate);
+    helper2("LP Solve", aa_opt_lpsolve_gmcreate);
 #endif
 
 #ifdef HAVE_GLPK
-    helper("GLPK", aa_opt_glpk_gmcreate);
+    helper0("GLPK", aa_opt_glpk_gmcreate);
+    helper1("GLPK", aa_opt_glpk_gmcreate);
+    helper2("GLPK", aa_opt_glpk_gmcreate);
 #endif
 
 #ifdef HAVE_CLP
-    helper("CLP", aa_opt_clp_gmcreate);
+    helper0("CLP", aa_opt_clp_gmcreate);
+    helper1("CLP", aa_opt_clp_gmcreate);
+    helper2("CLP", aa_opt_clp_gmcreate);
 #endif
 
 }

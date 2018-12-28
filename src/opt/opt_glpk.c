@@ -143,13 +143,6 @@ static int s_set_type( struct aa_opt_cx *cx, size_t i, enum aa_opt_type type ) {
     return 0;
 }
 
-static struct aa_opt_vtab s_vtab = {
-    .solve = s_solve,
-    .destroy = s_destroy,
-    .set_direction = s_set_direction,
-    .set_quad_obj_crs = s_set_quad_obj_crs,
-    .set_type = s_set_type
-};
 
 static int bounds_type (double l, double u) {
     if( aa_opt_is_eq(l,u) ) {
@@ -176,7 +169,76 @@ static int bounds_type (double l, double u) {
 }
 
 
-AA_API glp_prob *
+
+
+static int
+s_set_obj( struct aa_opt_cx *cx, size_t n, const double * c)
+{
+    glp_prob *lp = (glp_prob*)(cx->data);
+    int ni = (int) n;
+    for( int j = 0; j < ni; j ++ ) {
+        glp_set_obj_coef(lp, j+1, c[j]);
+    }
+    return 0;
+}
+
+static int
+s_set_bnd( struct aa_opt_cx *cx, size_t n,
+           const double * x_lower, const double *x_upper)
+{
+    glp_prob *lp = (glp_prob*)(cx->data);
+    int ni = (int) n;
+    for( int j = 0; j < ni; j ++ ) {
+        double l=x_lower[j], u=x_upper[j];
+        int type = bounds_type(l,u);;
+        glp_set_col_bnds(lp, j+1, type, l, u);
+    }
+    return 0;
+}
+
+static int
+s_set_cstr_gm( struct aa_opt_cx *cx,
+               size_t m, size_t n,
+               const double *A, size_t ldA )
+{
+    glp_prob *lp = (glp_prob*)(cx->data);
+    int rows[m], mi = (int)m, ni = (int)n;
+    for( int i = 0; i < mi; i ++ ) rows[i] = i+1;
+    for( int j = 0; j < ni; j ++ ) {
+        glp_set_mat_col( lp, j+1, mi,
+                         rows-1, AA_MATCOL(A,ldA,(size_t)j) - 1 );
+    }
+    return 0;
+}
+
+static int
+s_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
+                const double * b_lower, const double *b_upper )
+{
+    glp_prob *lp = (glp_prob*)(cx->data);
+    int mi = (int) m;
+    for( int i = 0; i < mi; i ++ ) {
+        double l=b_lower[i], u=b_upper[i];
+        int type = bounds_type(l,u);;
+        glp_set_row_bnds(lp, i+1, type, l, u);
+    }
+    return 0;
+}
+
+
+static struct aa_opt_vtab s_vtab = {
+    .solve = s_solve,
+    .destroy = s_destroy,
+    .set_direction = s_set_direction,
+    .set_quad_obj_crs = s_set_quad_obj_crs,
+    .set_type = s_set_type,
+    .set_obj = s_set_obj,
+    .set_bnd = s_set_bnd,
+    .set_cstr_bnd = s_set_cstr_bnd,
+    .set_cstr_gm = s_set_cstr_gm
+};
+
+AA_API struct aa_opt_cx *
 s_init (
     size_t m, size_t n,
     const double *b_lower, const double *b_upper,
@@ -184,6 +246,8 @@ s_init (
     const double *x_lower, const double *x_upper )
 {
     glp_prob *lp = glp_create_prob();
+    struct aa_opt_cx *cx = cx_finish( &s_vtab, lp );
+
     int ni = (int)n;
     int mi = (int)m;
 
@@ -193,27 +257,16 @@ s_init (
     glp_add_cols(lp,ni);
 
     /* b_lower / b_upper */
-    for( int i = 0; i < mi; i ++ ) {
-        double l=b_lower[i], u=b_upper[i];
-        int type = bounds_type(l,u);;
-        glp_set_row_bnds(lp, i+1, type, l, u);
-    }
+    s_set_cstr_bnd(cx, m, b_lower, b_upper);
 
-    /* u_lower / u_upper */
-    for( int j = 0; j < ni; j ++ ) {
-        double l=x_lower[j], u=x_upper[j];
-        int type = bounds_type(l,u);;
-        glp_set_col_bnds(lp, j+1, type, l, u);
-    }
+    /* x_lower / x_upper */
+    s_set_bnd(cx, n, x_lower, x_upper);
 
     /* c */
-    for( int j = 0; j < ni; j ++ ) {
-        glp_set_obj_coef(lp, j+1, c[j]);
-    }
+    s_set_obj(cx, n, c );
 
-    return lp;
+    return cx;
 }
-
 
 AA_API struct aa_opt_cx *
 aa_opt_glpk_gmcreate (
@@ -223,22 +276,15 @@ aa_opt_glpk_gmcreate (
     const double *c,
     const double *x_lower, const double *x_upper )
 {
-    int ni = (int)n;
-    int mi = (int)m;
-    glp_prob *lp = s_init(m,n,
-                          b_lower, b_upper,
-                          c,
-                          x_lower, x_upper );
+    struct aa_opt_cx * cx =
+        s_init(m,n,
+               b_lower, b_upper,
+               c,
+               x_lower, x_upper );
 
-    /* A */
-    int rows[m];
-    for( int i = 0; i < mi; i ++ ) rows[i] = i+1;
-    for( int j = 0; j < ni; j ++ ) {
-        glp_set_mat_col( lp, j+1, mi,
-                         rows-1, AA_MATCOL(A,ldA,(size_t)j) - 1 );
-    }
+    s_set_cstr_gm(cx, m, n, A, ldA);
 
-    return cx_finish( &s_vtab, lp );
+    return cx;
 }
 
 
@@ -251,10 +297,12 @@ aa_opt_glpk_crscreate (
     const double *x_lower, const double *x_upper )
 {
     int mi = (int)m;
-    glp_prob *lp = s_init(m,n,
-                          b_lower, b_upper,
-                          c,
-                          x_lower, x_upper );
+    struct aa_opt_cx * cx =
+        s_init(m,n,
+               b_lower, b_upper,
+               c,
+               x_lower, x_upper );
+    glp_prob *lp = (glp_prob*)(cx->data);
 
     /* A */
     for( int i = 0; i < mi; i ++ ) {
