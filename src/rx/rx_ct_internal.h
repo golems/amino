@@ -46,13 +46,16 @@
 #define AMINO_RX_CT_INTERNAL_H
 
 #include "amino.h"
+#include "amino/opt/opt.h"
 #include "amino/rx/rx_ct.h"
 
 struct aa_rx_ct_wk_opts {
     double s2min; ///< minimum singular value for DLS via SVD
     double k_dls; ///< damping constant for DLS via LU
     double k_np;  ///< gain for nullspace projection
-    double k_pos;  ///< gain for position error
+    double k_pos; ///< gain for position error
+    enum aa_opt_lp_solver lp_solver; ///< linear program solver
 };
+
 
 #endif /*AMINO_RX_CT_INTERNAL_H*/

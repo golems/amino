@@ -37,7 +37,7 @@
 
 
 #include "amino.h"
-#include "amino/opt/lp.h"
+//#include "amino/opt/lp.h"
 #include "amino/opt/opt.h"
 #include "opt_internal.h"
 

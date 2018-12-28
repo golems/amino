@@ -62,6 +62,7 @@ aa_rx_ct_wk_opts_create(void)
     r->k_dls = 1e-3;
     r->k_np = 1;
     r->k_pos = 1;
+    r->lp_solver = AA_OPT_LP_SOLVER_DEFAULT;
 
     return r;
 }

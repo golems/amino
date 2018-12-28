@@ -220,9 +220,6 @@ libamino_la_SOURCES =                  \
 
 libamino_la_LIBADD =
 
-libamino_la_SOURCES += src/opt/opt_clp.cpp src/opt/opt_lpsolve.c src/opt/opt_glpk.c
-libamino_la_LIBADD  +=  -lClp
-
 libamino_xerbla_nop_la_SOURCES = src/xerbla_nop.c
 
 EXTRA_DIST += src/mac/amino.mac src/mac/euler.mac src/mac/euler77.mac src/mac/ls.mac
@@ -537,25 +534,17 @@ test_lpsolve_LDADD =
 TESTS += test_lpsolve
 
 if HAVE_LPSOLVE
-lib_LTLIBRARIES += libamino-opt-lpsolve.la
-libamino_opt_lpsolve_la_SOURCES = src/opt/opt_lpsolve.c
-test_lpsolve_LDADD += libamino-opt-lpsolve.la
+libamino_la_SOURCES += src/opt/opt_lpsolve.c
 endif
-
 
 if HAVE_GLPK
-lib_LTLIBRARIES += libamino-opt-glpk.la
-libamino_opt_glpk_la_SOURCES = src/opt/opt_glpk.c
-test_lpsolve_LDADD += libamino-opt-glpk.la
-endif
+libamino_la_SOURCES += src/opt/opt_glpk.c
+endif # HAVE_GLPK
 
 if HAVE_CLP
-
-lib_LTLIBRARIES += libamino-opt-clp.la
-libamino_opt_clp_la_SOURCES = src/opt/opt_clp.cpp
-libamino_opt_clp_la_LIBADD = libamino.la -lClp
-test_lpsolve_LDADD += libamino-opt-clp.la
-endif
+libamino_la_SOURCES += src/opt/opt_clp.cpp
+libamino_la_LIBADD += -lClp
+endif # HAVE_CLP
 
 test_lpsolve_LDADD += libamino.la libtestutil.la
 

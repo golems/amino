@@ -60,6 +60,15 @@ enum aa_opt_rel_type {
 };
 
 
+
+enum aa_opt_lp_solver {
+    AA_OPT_LP_SOLVER_DEFAULT,  ///< A sane default
+    AA_OPT_LP_SOLVER_LPSOLVE,  ///< LPSolve
+    AA_OPT_LP_SOLVER_GLPK,     ///< GNU Linear Programming Kit
+    AA_OPT_LP_SOLVER_CLP,      ///< COIN-OR LP Solver
+};
+
+
 /**
  * Optimization direction.
  */
@@ -146,6 +155,25 @@ aa_opt_gmcreate_fun (
     const double *c,
     const double *x_lower, const double *x_upper
     );
+
+
+
+/**
+ * Create an optimization context using named plugin.
+ */
+AA_API struct aa_opt_cx* aa_opt_gmcreate (
+    enum aa_opt_lp_solver solver,
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    );
+
+
+/*******************************/
+/** Solver-specific functions **/
+/*******************************/
 
 /**
  * Create an optimization context for LP-Solve.

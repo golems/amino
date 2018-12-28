@@ -129,24 +129,25 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     // Cartesian to joint velocities, with nullspace projection
     double dq_subset[n_c];
 
-    /* int r = aa_rx_ct_wk_dx2dq_np( cx->ssg, cx->wk_opts, */
-    /*                               n, TF_abs, 7, */
-    /*                               6, dx_r, */
-    /*                               n_c, dqr_subset, dq_subset ); */
-    //aa_tick("lc3: ");
+
     static int firsttime = 1;
     if (firsttime) {
         AA_MEM_ZERO(dq_subset, n_c);
         firsttime = 0;
     } else  {
+        //aa_tick("solve: ");
         int r = aa_rx_ct_wk_dx2dq_lc3( cx->lc3, dt,
                                        n, TF_abs, ld_tf,
                                        6, dx_r,
                                        n_c, q_subset, cx->dq_subset,
                                        dqr_subset, dq_subset );
+        /* int r = aa_rx_ct_wk_dx2dq_np( cx->ssg, cx->wk_opts, */
+        /*                               n, TF_abs, 7, */
+        /*                               6, dx_r, */
+        /*                               n_c, dqr_subset, dq_subset ); */
         assert(0 == r);
+        //aa_tock();
     }
-    //aa_tock();
 
 
     // integrate

@@ -271,11 +271,12 @@ aa_rx_ct_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
 
 
     cx->opt_cx =
-        aa_opt_glpk_gmcreate( n_q, n_x+1,
-                              A, n_q,
-                              b_min, b_max,
-                              c,
-                              x_min, x_max );
+        aa_opt_gmcreate( opts->lp_solver,
+                         n_q, n_x+1,
+                         A, n_q,
+                         b_min, b_max,
+                         c,
+                         x_min, x_max );
 
     aa_opt_set_direction( cx->opt_cx, AA_OPT_MAXIMIZE );
 
@@ -324,10 +325,7 @@ aa_rx_ct_wk_dx2dq_lc3( const struct aa_rx_ct_wk_lc3_cx *cx,
     aa_opt_set_bnd( opt_cx, n_x+1, x_min, x_max );
     aa_opt_set_cstr_gm( opt_cx, n_q, n_x+1, A, n_q, b_min, b_max );
 
-    aa_tock();
-
     int  r = aa_opt_solve( opt_cx, n_x+1, opt_x );
-    aa_tock();
 
     if( 0 == r ) {
         // extract velocity

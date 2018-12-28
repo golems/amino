@@ -35,6 +35,7 @@
  *
  */
 
+#include "config.h"
 
 #include "amino.h"
 #include "amino/opt/opt.h"
@@ -96,4 +97,38 @@ aa_opt_set_cstr_gm( struct aa_opt_cx *cx,
     return cx->vtab->set_cstr_gm( cx, m, n,
                                   A, lda,
                                   b_min, b_max );
+}
+
+AA_API struct aa_opt_cx* aa_opt_gmcreate (
+    enum aa_opt_lp_solver solver,
+    size_t m, size_t n,
+    const double *A, size_t ldA,
+    const double *b_lower, const double *b_upper,
+    const double *c,
+    const double *x_lower, const double *x_upper
+    )
+{
+    aa_opt_gmcreate_fun *fun;
+    switch(solver) {
+    case AA_OPT_LP_SOLVER_DEFAULT:
+#ifdef HAVE_GLPK
+    case AA_OPT_LP_SOLVER_GLPK:
+        fun = aa_opt_glpk_gmcreate;
+        break;
+#endif
+#ifdef HAVE_CLP
+    case AA_OPT_LP_SOLVER_CLP:
+        fun = aa_opt_clp_gmcreate;
+        break;
+#endif
+#ifdef HAVE_LPSOLVE
+    case AA_OPT_LP_SOLVER_LPSOLVE:
+        fun = aa_opt_lpsolve_gmcreate;
+        break;
+#endif
+    default:
+        return NULL;
+    };
+
+    return fun(m,n,A,ldA,b_lower,b_upper,c,x_lower,x_upper);
 }
