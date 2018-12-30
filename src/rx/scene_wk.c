@@ -72,30 +72,58 @@ aa_rx_wk_opts_destroy( struct aa_rx_wk_opts * opts)
     free(opts);
 }
 
-AA_API int
-aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
-                const struct aa_rx_wk_opts * opts,
-                size_t n_tf, const double *TF_abs, size_t ld_tf,
-                size_t n_x, const double *dx,
-                size_t n_q, double *dq )
+static int
+s_jstar( const const struct aa_rx_sg_sub *ssg,
+         const struct aa_rx_wk_opts * opts,
+         size_t n_tf, const double *TF_abs, size_t ld_tf,
+         size_t *prows, size_t *pcols,
+         double **pJ, double **pJstar )
 {
-
     size_t rows,cols;
     aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
-    assert(n_x == rows);
-    assert(n_q == cols);
-
     double *J = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
     double *J_star = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
 
+    *prows = rows;
+    *pcols = cols;
+    *pJ = J;
+    *pJstar = J_star;
+
     aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, rows );
 
+
     // Compute a damped pseudo inverse
+    // TODO: Try DGECON to avoid damping when possible without taking the SVD
     if( opts->s2min > 0 ) {
-        aa_la_dzdpinv( n_x, n_q, opts->s2min, J, J_star );
+        aa_la_dzdpinv( rows, cols, opts->s2min, J, J_star );
     } else  {
-        aa_la_dpinv( n_x, n_q, opts->k_dls, J, J_star );
+        aa_la_dpinv( rows, cols, opts->k_dls, J, J_star );
     }
+
+    return 0;
+}
+
+AA_API int
+aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
+                const struct aa_rx_wk_opts * opts,
+                size_t n_tf, const double*TF_abs, size_t ld_tf,
+                size_t n_x, const double *dx,
+                size_t n_q, double *dq )
+{
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+    size_t rows,cols;
+    double *J, *J_star;
+
+    s_jstar( ssg, opts,
+             n_tf, TF_abs, ld_tf,
+             &rows, &cols,
+             &J, &J_star );
+
+
+    assert(n_x == rows);
+    assert(n_q == cols);
+
 
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n_q, (int)n_x,
@@ -103,7 +131,7 @@ aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
                  dx, 1,
                  0.0, dq, 1 );
 
-    aa_mem_region_local_pop(J);
+    aa_mem_region_pop(reg,ptrtop);
 
     return 0;
 }
@@ -117,27 +145,24 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
                    size_t n_q, const double *dq_r, double *dq )
 {
 
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
-    aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
+    double *J, *J_star;
+
+    s_jstar( ssg, opts,
+             n_tf, TF_abs, ld_tf,
+             &rows, &cols,
+             &J, &J_star );
+
     assert(n_x == rows);
     assert(n_q == cols);
 
-    double *J = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
-    double *J_star = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
-
-    aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, rows );
-
-    // Compute a damped pseudo inverse
-    if( opts->s2min > 0 ) {
-        aa_la_dzdpinv( n_x, n_q, opts->s2min, J, J_star );
-    } else  {
-        aa_la_dpinv( n_x, n_q, opts->k_dls, J, J_star );
-    }
 
     aa_la_xlsnp( n_x, n_q, J, J_star, dx, dq_r, dq );
 
-    aa_mem_region_local_pop(J);
 
+    aa_mem_region_pop(reg,ptrtop);
     return 0;
 }
 

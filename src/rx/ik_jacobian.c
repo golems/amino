@@ -57,7 +57,6 @@
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
 
-
 struct kin_solve_cx {
     size_t n;
     const struct aa_rx_ksol_opts *opts;
@@ -75,10 +74,10 @@ struct kin_solve_cx {
     double *TF_abs0;
 };
 
-
-
-
-static int ksol_qutr ( const struct kin_solve_cx *cx, const double *q_s, double *E,  double *J)
+static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
+                  double *TF_rel, size_t ld_rel,
+                  double *TF_abs, size_t ld_abs,
+                  double *E)
 {
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     const struct aa_rx_sg *sg = ssg->scenegraph;
@@ -95,50 +94,21 @@ static int ksol_qutr ( const struct kin_solve_cx *cx, const double *q_s, double 
                              n_q, q_all);
 
     /* Compute the transforms */
-    double *TF_rel = AA_MEM_REGION_NEW_N(cx->reg, double, 7*n_f);
-    double *TF_abs = AA_MEM_REGION_NEW_N(cx->reg, double, 7*n_f);
-
     aa_rx_sg_tf_update( sg,
                         n_q, cx->q0_all, q_all,
                         n_f,
                         cx->TF_rel0, 7, cx->TF_abs0, 7,
-                        TF_rel, 7, TF_abs, 7 );
+                        TF_rel, ld_rel, TF_abs, ld_abs );
 
     /* Fill the desired transform */
-    if( E ) {
-        aa_rx_frame_id id_ee = ( AA_RX_FRAME_NONE == cx->opts->frame )
-            /* default to last frame in chain */
-            ? aa_rx_sg_sub_frame_ee(ssg)
-            /* use specified frame */
-            : cx->opts->frame;
+    aa_rx_frame_id id_ee = ( AA_RX_FRAME_NONE == cx->opts->frame )
+        /* default to last frame in chain */
+        ? aa_rx_sg_sub_frame_ee(ssg)
+        /* use specified frame */
+        : cx->opts->frame;
 
-        double *E_ee = TF_abs + 7*id_ee;
-        AA_MEM_CPY(E, E_ee, 7);
-    }
-
-    /* Fill the Jacobian */
-    if( J ) {
-        aa_rx_sg_sub_jacobian( ssg, n_f, TF_abs, 7,
-                               J, 6 );
-    }
-
-    aa_mem_region_pop(cx->reg, TF_rel);
-    return 0;
-}
-
-static void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6] ) {
-    double twist[8], de[8];
-    aa_tf_duqu_mulc( S, S_ref, de );  // de = d*conj(d_r)
-    aa_tf_duqu_minimize(de);
-    aa_tf_duqu_ln( de, twist );     // twist = log( de )
-    aa_tf_duqu_twist2vel( S, twist, werr );
-}
-
-static void rfx_kin_qutr_werr( const double E[7], const double E_ref[7], double werr[6] ) {
-    double S[8], S_ref[8];
-    aa_tf_qutr2duqu( E, S );
-    aa_tf_qutr2duqu( E_ref, S_ref );
-    rfx_kin_duqu_werr(S, S_ref, werr);
+    double *E_ee = TF_abs + (int)ld_abs*id_ee;
+    AA_MEM_CPY(E, E_ee, 7);
 }
 
 static void rfx_kin_qutr_serr( const double E_act[7], const double E_ref[7],
@@ -159,146 +129,54 @@ static void rfx_kin_qutr_serr( const double E_act[7], const double E_ref[7],
 }
 
 
-AA_API int
-aa_rx_ik_jac_dx2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
-                     const double *AA_RESTRICT q_act, const double *AA_RESTRICT dx, const double *J,
-                     double *AA_RESTRICT dq )
-{
-
-    double J_star[6*n_q];
-
-    /* if( theta_err < opts->tol_angle_svd && */
-    /*     x_err < opts->tol_trans_svd ) */
-    /* { */
-    // TODO: sometimes do LU
-    aa_la_dzdpinv( 6, n_q, opts->wk_opts.s2min, J, J_star );
-    /* } else { */
-    /*     aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star ); */
-    /* } */
-
-    if( opts->q_ref ) {
-        //printf("nullspace projection\n");
-        // nullspace projection
-        double dqnull[n_q];
-        for( size_t i = 0; i < n_q; i ++ )  {
-            dqnull[i] = - opts->dq_dt[i] * ( q_act[i] - opts->q_ref[i] );
-        }
-        //aa_dump_vec( stdout, dqnull, cx->n );
-        aa_la_xlsnp( 6, n_q, J, J_star, dx, dqnull, dq );
-    } else {
-        //printf("no projection\n");
-        aa_la_mvmul(n_q,6,J_star,dx,dq);
-    }
-    return 0;
-}
-
-AA_API int
-aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
-                    const double *AA_RESTRICT q_act, const double *AA_RESTRICT E_act,
-                    const double E_ref[7], const double dx_ref[6],
-                    const double *J, double *AA_RESTRICT dq )
-{
-
-    double w_e[6];
-    rfx_kin_qutr_werr( E_act, E_ref, w_e );
-    for( size_t i = 0; i < 3; i ++ ) {
-        w_e[AA_TF_DX_V + i] *= -opts->wk_opts.gain_trans;
-        w_e[AA_TF_DX_W + i] *= -opts->wk_opts.gain_angle;
-    }
-
-    if( dx_ref ) {
-        for( size_t i = 0; i < 6; i ++ ) {
-            w_e[i] += dx_ref[i];
-        }
-    }
-
-    return aa_rx_ik_jac_dx2dq(opts, n_q, q_act, w_e, J, dq);
-
-    /* double theta_err, x_err; */
-    /* rfx_kin_qutr_serr( E_act, E_ref, &theta_err, &x_err ); */
-
-    /* if( theta_err < opts->tol_angle_svd && */
-    /*     x_err < opts->tol_trans_svd ) */
-    /* { */
-    /*     aa_la_dzdpinv( 6, n_q, opts->s2min, J, J_star ); */
-    /* } else { */
-    /*     aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star ); */
-    /* } */
-
-    /* if( opts->q_ref ) { */
-    /*     //printf("nullspace projection\n"); */
-    /*     // nullspace projection */
-    /*     double dqnull[n_q]; */
-    /*     for( size_t i = 0; i < n_q; i ++ )  { */
-    /*         dqnull[i] = - opts->dq_dt[i] * ( q_act[i] - opts->q_ref[i] ); */
-    /*     } */
-    /*     //aa_dump_vec( stdout, dqnull, cx->n ); */
-    /*     aa_la_xlsnp( 6, n_q, J, J_star, w_e, dqnull, dq ); */
-    /* } else { */
-    /*     //printf("no projection\n"); */
-    /*     aa_la_mvmul(n_q,6,J_star,w_e,dq); */
-    /* } */
-    /* return 0; */
-}
-
 
 static void kin_solve_sys( const void *vcx,
                            double t, const double *AA_RESTRICT q,
                            double *AA_RESTRICT dq ) {
     (void) t; // time invariant
     const struct kin_solve_cx *cx = (const struct kin_solve_cx*)vcx;
+    double E_act[7];
     //printf("ksolve\n");
 
-    // compute kinematics
-    double J[6*cx->n];
-    double E_act[7];
-    ksol_qutr(cx, q, E_act, J);
+    const struct aa_rx_sg_sub *ssg = cx->ssg;
+    const struct aa_rx_sg *sg = ssg->scenegraph;
+    size_t n_f = aa_rx_sg_frame_count(sg);
+    size_t n_q = aa_rx_sg_config_count(sg);
+    size_t n_c = aa_rx_sg_sub_config_count(ssg);
 
-    aa_rx_ik_jac_x2dq ( cx->opts, cx->n,
-                        q,  E_act, cx->E1, NULL, J, dq );
+
+    AA_RX_SG_TF_ALLOC( sg, cx->reg, TF_rel, ld_rel, TF_abs, ld_abs );
+    s_tf( cx, q,
+          TF_rel, ld_rel,
+          TF_abs, ld_abs,
+          E_act );
+
+    double w_e[6];
+    AA_MEM_ZERO(w_e, 6);
+    aa_rx_wk_dx_pos( &cx->opts->wk_opts, E_act, cx->E1, w_e );
+
+    if( cx->opts->q_ref ) {
+        double dqnull[n_q];
+        for( size_t i = 0; i < n_q; i ++ )  {
+            dqnull[i] = - cx->opts->dq_dt[i] * ( q[i] - cx->opts->q_ref[i] );
+        }
+
+        aa_rx_wk_dx2dq_np( ssg, &cx->opts->wk_opts,
+                           n_f, TF_abs, ld_abs,
+                           6, w_e,
+                           n_c, dqnull, dq );
+    } else {
+        aa_rx_wk_dx2dq( ssg, &cx->opts->wk_opts,
+                        n_f, TF_abs, ld_abs,
+                        6, w_e,
+                        n_c, dq );
+    }
+    aa_rx_sg_tf_pop(sg, cx->reg, TF_rel, TF_abs);
+
     return;
 
-    /* // position error */
-    /* double J_star[6*cx->n]; */
-    /* double w_e[6]; */
-    /* rfx_kin_duqu_werr( S, cx->S1, w_e ); */
-    /* for( size_t i = 0; i < 3; i ++ ) { */
-    /*     w_e[AA_TF_DX_V + i] *= -cx->opts->gain_trans; */
-    /*     w_e[AA_TF_DX_W + i] *= -cx->opts->gain_angle; */
-    /* } */
-
-    /* double theta_err, x_err; */
-    /* rfx_kin_duqu_serr( S, cx->S1, &theta_err, &x_err ); */
-
-    /* // TODO: Try DGECON to avoid damping when possible without taking the SVD */
-
-    /* // damped least squares */
-    /* if( theta_err < cx->opts->tol_angle_svd && */
-    /*     x_err < cx->opts->tol_trans_svd ) */
-    /* { */
-    /*     aa_la_dzdpinv( 6, cx->n, cx->opts->s2min, J, J_star ); */
-    /* } else { */
-    /*     aa_la_dpinv( 6, cx->n, cx->opts->k_dls, J, J_star ); */
-    /* } */
-
-    /* if( cx->opts->q_ref ) { */
-    /*     //printf("nullspace projection\n"); */
-    /*     // nullspace projection */
-    /*     double dqnull[cx->n]; */
-    /*     for( size_t i = 0; i < cx->n; i ++ )  { */
-    /*         dqnull[i] = - cx->dq_dt[i] * ( q[i] - cx->opts->q_ref[i] ); */
-    /*     } */
-    /*     //aa_dump_vec( stdout, dqnull, cx->n ); */
-    /*     aa_la_xlsnp( 6, cx->n, J, J_star, w_e, dqnull, dq ); */
-    /* } else { */
-    /*     //printf("no projection\n"); */
-    /*     aa_la_mvmul(cx->n,6,J_star,w_e,dq); */
-    /* } */
 }
 
-/* struct kin_solve_cx { */
-/*     const struct aa_rx_sg_sub *ssg; */
-/* } */
 
 static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *AA_RESTRICT y )
 {
@@ -319,14 +197,24 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
     double dq_norm = aa_la_dot( cx->n, y, y );
 
     double  E[7];
+    {
+
+        const struct aa_rx_sg *sg = ssg->scenegraph;
+        size_t n_f = aa_rx_sg_frame_count(sg);
+        size_t ld_tf = 14;
+        double *TF = AA_MEM_REGION_NEW_N(cx->reg, double, ld_tf*n_f);
+        double *TF_rel = TF, *TF_abs = TF+ld_tf/2;
+
+
+        s_tf( cx, x,
+              TF_rel, ld_tf,
+              TF_abs, ld_tf,
+              E );
+        aa_mem_region_pop(cx->reg,TF);
+    }
+
     double theta_err, x_err;
-    ksol_qutr( cx, x, E, NULL );
     rfx_kin_qutr_serr( E, cx->E1, &theta_err, &x_err );
-    //printf("%f, %f, %f\n", t, theta_err, x_err );
-    //printf("x: ");
-    //aa_dump_vec(stdout, x, cx->n);
-    //printf("y: ");
-    //aa_dump_vec(stdout, y, cx->n);
 
     cx->iteration++;
     if( (theta_err < cx->opts->tol_angle) &&
@@ -462,6 +350,17 @@ AA_API int aa_rx_ik_jac_solve( const struct aa_rx_ik_jac_cx *context,
                                   n_q, q );
 }
 
+
+
+
+
+
+
+
+
+
+/***** OLD STUFF *****/
+
 AA_API int aa_rx_ik_jac_fun( void *context_,
                              size_t n_tf, const double *TF, size_t ld_TF,
                              size_t n_q, double *q )
@@ -473,6 +372,100 @@ AA_API int aa_rx_ik_jac_fun( void *context_,
 }
 
 
+AA_API int
+aa_rx_ik_jac_dx2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+                     const double *AA_RESTRICT q_act, const double *AA_RESTRICT dx, const double *J,
+                     double *AA_RESTRICT dq )
+{
+
+    double J_star[6*n_q];
+
+    /* if( theta_err < opts->tol_angle_svd && */
+    /*     x_err < opts->tol_trans_svd ) */
+    /* { */
+    // TODO: sometimes do LU
+    aa_la_dzdpinv( 6, n_q, opts->wk_opts.s2min, J, J_star );
+    /* } else { */
+    /*     aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star ); */
+    /* } */
+
+    if( opts->q_ref ) {
+        //printf("nullspace projection\n");
+        // nullspace projection
+        double dqnull[n_q];
+        for( size_t i = 0; i < n_q; i ++ )  {
+            dqnull[i] = - opts->dq_dt[i] * ( q_act[i] - opts->q_ref[i] );
+        }
+        //aa_dump_vec( stdout, dqnull, cx->n );
+        aa_la_xlsnp( 6, n_q, J, J_star, dx, dqnull, dq );
+    } else {
+        //printf("no projection\n");
+        aa_la_mvmul(n_q,6,J_star,dx,dq);
+    }
+    return 0;
+}
+
+AA_API int
+aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+                    const double *AA_RESTRICT q_act, const double *AA_RESTRICT E_act,
+                    const double E_ref[7], const double dx_ref[6],
+                    const double *J, double *AA_RESTRICT dq )
+{
+
+    double w_e[6];
+    if( dx_ref ) {
+        AA_MEM_CPY( w_e, dx_ref, 6 );
+    } else {
+        AA_MEM_ZERO(w_e, 6);
+    }
+    aa_rx_wk_dx_pos( &opts->wk_opts, E_act, E_ref, w_e );
+
+
+
+    return aa_rx_ik_jac_dx2dq(opts, n_q, q_act, w_e, J, dq);
+
+    /* double theta_err, x_err; */
+    /* rfx_kin_qutr_serr( E_act, E_ref, &theta_err, &x_err ); */
+
+    /* if( theta_err < opts->tol_angle_svd && */
+    /*     x_err < opts->tol_trans_svd ) */
+    /* { */
+    /*     aa_la_dzdpinv( 6, n_q, opts->s2min, J, J_star ); */
+    /* } else { */
+    /*     aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star ); */
+    /* } */
+
+    /* if( opts->q_ref ) { */
+    /*     //printf("nullspace projection\n"); */
+    /*     // nullspace projection */
+    /*     double dqnull[n_q]; */
+    /*     for( size_t i = 0; i < n_q; i ++ )  { */
+    /*         dqnull[i] = - opts->dq_dt[i] * ( q_act[i] - opts->q_ref[i] ); */
+    /*     } */
+    /*     //aa_dump_vec( stdout, dqnull, cx->n ); */
+    /*     aa_la_xlsnp( 6, n_q, J, J_star, w_e, dqnull, dq ); */
+    /* } else { */
+    /*     //printf("no projection\n"); */
+    /*     aa_la_mvmul(n_q,6,J_star,w_e,dq); */
+    /* } */
+    /* return 0; */
+}
+
+
+/* static void rfx_kin_duqu_werr( const double S[8], const double S_ref[8], double werr[6] ) { */
+/*     double twist[8], de[8]; */
+/*     aa_tf_duqu_mulc( S, S_ref, de );  // de = d*conj(d_r) */
+/*     aa_tf_duqu_minimize(de); */
+/*     aa_tf_duqu_ln( de, twist );     // twist = log( de ) */
+/*     aa_tf_duqu_twist2vel( S, twist, werr ); */
+/* } */
+
+/* static void rfx_kin_qutr_werr( const double E[7], const double E_ref[7], double werr[6] ) { */
+/*     double S[8], S_ref[8]; */
+/*     aa_tf_qutr2duqu( E, S ); */
+/*     aa_tf_qutr2duqu( E_ref, S_ref ); */
+/*     rfx_kin_duqu_werr(S, S_ref, werr); */
+/* } */
 
 /* Levenberg Marquardt
  *

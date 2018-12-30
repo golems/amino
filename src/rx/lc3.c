@@ -234,12 +234,10 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     double dt = .01;
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
     size_t n_qall = aa_rx_sg_config_count(sg);
-    size_t n_tf = aa_rx_sg_frame_count(sg);
-    size_t ld_tf = 14;
+
 
     double *dx_r = AA_MEM_REGION_NEW_N(reg,double,n_x);
     double *q_all = AA_MEM_REGION_NEW_N(reg,double,n_qall);
-    double *TF = AA_MEM_REGION_NEW_N(reg,double,ld_tf*n_tf);
     double *q_a = AA_MEM_REGION_NEW_N(reg,double,n_q);
     double *dq_a = AA_MEM_REGION_NEW_N(reg,double,n_q);
     double *dq_r = AA_MEM_REGION_NEW_N(reg,double,n_q);
@@ -249,9 +247,9 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     aa_rx_sg_sub_center_configs(ssg, n_q, q_a);
     AA_MEM_ZERO(dq_a, n_q);
     AA_MEM_ZERO(dq_r, n_q);
-    aa_rx_sg_tf( sg, n_qall, q_all,
-                 n_tf, TF, ld_tf,
-                 TF+ld_tf/2, ld_tf );
+
+    AA_RX_SG_TF_COUNT_GET( sg, reg, n_qall, q_all, n_tf,
+                           TF_rel, ld_rel, TF_abs, ld_abs );
 
     double *A;
     double *b_min, *b_max;
@@ -261,7 +259,7 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     lc3_constraints (
         cx, dt,
         n_x, n_q,
-        n_tf, TF+ld_tf/2, ld_tf,
+        n_tf, TF_abs, ld_abs,
         dx_r,
         q_a, dq_a, dq_r,
         &A,

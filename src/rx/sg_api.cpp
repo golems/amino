@@ -197,6 +197,33 @@ AA_API void aa_rx_sg_rm_frame
     sg->frame_map.erase(name);
 }
 
+AA_API void
+aa_rx_sg_tf_alloc( const struct aa_rx_sg *scene_graph,
+                   struct aa_mem_region *reg,
+                   double **TF_rel, size_t *ld_rel,
+                   double **TF_abs, size_t *ld_abs)
+{
+
+    size_t ld_tf = 14;
+    size_t n_f = aa_rx_sg_frame_count(scene_graph);
+    double *TF = AA_MEM_REGION_NEW_N(reg, double, ld_tf*n_f);
+    *TF_rel = TF, *TF_abs = TF+ld_tf/2;
+    *ld_rel = ld_tf;
+    *ld_abs = ld_tf;
+}
+
+
+AA_API void
+aa_rx_sg_tf_pop( const struct aa_rx_sg *scene_graph,
+                 struct aa_mem_region *reg,
+                 double *tf_rel, double *tf_abs )
+{
+    (void)scene_graph;
+    (void)tf_abs;
+    aa_mem_region_pop(reg,tf_rel);
+}
+
+
 AA_API void aa_rx_sg_tf
 ( const struct aa_rx_sg *scene_graph,
   size_t n_q, const double *q,
@@ -210,14 +237,14 @@ AA_API void aa_rx_sg_tf
     assert( n_q == scene_graph->sg->config_size );
 
     amino::SceneGraph *sg = scene_graph->sg;
-    size_t i_frame = 0;
-    for( size_t i_rel = 0, i_abs = 0;
+
+    double *E_rel = TF_rel, *E_abs = TF_abs;
+    for( size_t i_frame = 0;
          i_frame < n_tf && i_frame < sg->frames.size();
-         i_frame++, i_rel += ld_rel, i_abs += ld_abs )
+         i_frame++,
+             E_rel += ld_rel, E_abs += ld_abs )
     {
         amino::SceneFrame *f = sg->frames[i_frame];
-        double *E_rel = TF_rel + i_rel;
-        double *E_abs = TF_abs + i_abs;
         // compute relative
         f->tf_rel( q, E_rel );
         // chain to global
@@ -326,23 +353,23 @@ AA_API void aa_rx_sg_tf_update
 
     bool updated[sg->frames.size()];
 
-    size_t i_frame = 0;
-    for( size_t i_rel0 = 0, i_abs0 = 0,
-             i_rel = 0, i_abs = 0;
+    const double *E_rel0 = TF_rel0;
+    const double *E_abs0 = TF_abs0;
+    double *E_rel  = TF_rel;
+    double *E_abs  = TF_abs;
+    for( size_t i_frame = 0;
          i_frame < n_tf && i_frame < sg->frames.size();
-         i_frame++, i_rel += ld_rel, i_abs += ld_abs,
-             i_rel0 += ld_rel0, i_abs0 += ld_abs0
+         i_frame++,
+             E_rel0 += ld_rel0,
+             E_abs0 += ld_abs0,
+             E_rel += ld_rel,
+             E_abs += ld_abs
         )
     {
         amino::SceneFrame *f = sg->frames[i_frame];
         enum aa_rx_frame_type type = f->type;
         bool update_abs = 0;
         bool in_global =  f->in_global();
-
-        const double *E_rel0 = TF_rel0 + i_rel0;
-        const double *E_abs0 = TF_abs0 + i_abs0;
-        double *E_rel  = TF_rel + i_rel;
-        double *E_abs  = TF_abs + i_abs;
 
         switch( type ) {
         case AA_RX_FRAME_FIXED:
