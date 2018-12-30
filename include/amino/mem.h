@@ -251,6 +251,15 @@ AA_API void *aa_mem_region_tmpalloc( aa_mem_region_t *region, size_t size );
  */
 AA_API void *aa_mem_region_alloc( aa_mem_region_t *region, size_t size );
 
+/**
+ * Allocate size bytes from the region and zero-initialize.
+ *
+ *  The head pointer of the top
+ * chunk will be returned if it has sufficient space for the
+ * allocation.
+ */
+AA_API void *aa_mem_region_zalloc( aa_mem_region_t *region, size_t size );
+
 /** Temporary allocation, ensuring that there is enough room for size bytes.
  */
 AA_API void *aa_mem_region_tmprealloc( aa_mem_region_t *region, size_t size );
@@ -341,6 +350,12 @@ AA_API void aa_mem_region_local_release( void );
 #define AA_MEM_REGION_NEW( reg, type ) ( (type*) aa_mem_region_alloc((reg), sizeof(type)) )
 
 /**
+ * Allocate zero-initialized object of `type' from memory region `reg'.
+ */
+#define AA_MEM_REGION_ZNEW( reg, type )                         \
+    ( (type*) aa_mem_region_zalloc((reg), sizeof(type)) )
+
+/**
  * Copy objects of `type' from memory region `reg'.
  */
 #define AA_MEM_REGION_NEW_CPY( reg, src, type ) ( (type*) aa_mem_region_dup((reg), (src), sizeof(type)) )
@@ -354,6 +369,11 @@ AA_API void aa_mem_region_local_release( void );
  * Allocate an array of `n' objects of `type' from memory region `reg'.
  */
 #define AA_MEM_REGION_NEW_N( reg, type, n ) ( (type*) aa_mem_region_alloc((reg), (n)*sizeof(type)) )
+
+/**
+ * Allocate zero-initialized array of `n' objects of `type' from memory region `reg'.
+ */
+#define AA_MEM_REGION_ZNEW_N( reg, type, n ) ( (type*) aa_mem_region_alloc((reg), (n)*sizeof(type)) )
 
 /**
  * Allocate a new object of `type' the thread-local memory region.

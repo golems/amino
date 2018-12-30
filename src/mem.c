@@ -216,6 +216,13 @@ void *aa_mem_region_alloc( aa_mem_region_t *region, size_t size ) {
     return p;
 }
 
+void *aa_mem_region_zalloc( aa_mem_region_t *region, size_t size )
+{
+    void *p = aa_mem_region_alloc(region,size);
+    memset(p, 0, size );
+    return p;
+}
+
 AA_API void *aa_mem_region_dup( aa_mem_region_t *region, const void *p, size_t size ) {
     void *n = aa_mem_region_alloc(region, size);
     memcpy( n, p, size );

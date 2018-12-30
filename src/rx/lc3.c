@@ -236,17 +236,14 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     size_t n_qall = aa_rx_sg_config_count(sg);
 
 
-    double *dx_r = AA_MEM_REGION_NEW_N(reg,double,n_x);
-    double *q_all = AA_MEM_REGION_NEW_N(reg,double,n_qall);
-    double *q_a = AA_MEM_REGION_NEW_N(reg,double,n_q);
-    double *dq_a = AA_MEM_REGION_NEW_N(reg,double,n_q);
-    double *dq_r = AA_MEM_REGION_NEW_N(reg,double,n_q);
+    double *dx_r  = AA_MEM_REGION_ZNEW_N(reg,double,n_x);
+    double *dq_a  = AA_MEM_REGION_ZNEW_N(reg,double,n_q);
+    double *dq_r  = AA_MEM_REGION_ZNEW_N(reg,double,n_q);
 
-    AA_MEM_ZERO(dx_r, n_x);
+    double *q_a   = AA_MEM_REGION_NEW_N(reg,double,n_q);
+    double *q_all = AA_MEM_REGION_NEW_N(reg,double,n_qall);
     aa_rx_sg_center_configs(sg, n_qall, q_all);
     aa_rx_sg_sub_center_configs(ssg, n_q, q_a);
-    AA_MEM_ZERO(dq_a, n_q);
-    AA_MEM_ZERO(dq_r, n_q);
 
     AA_RX_SG_TF_COUNT_GET( sg, reg, n_qall, q_all, n_tf,
                            TF_rel, ld_rel, TF_abs, ld_abs );
