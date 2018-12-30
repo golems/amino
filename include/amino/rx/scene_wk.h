@@ -91,7 +91,7 @@ aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
  * @param[out] dq reference joint velocity for subscenegraph
  */
 AA_API int
-aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
                 size_t n_tf, const double *TF_abs, size_t ld_tf,
                 size_t n_x, const double *dx,
@@ -115,7 +115,7 @@ aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
  * @param[out] dq computed reference joint velocity for subscenegraph
  */
 AA_API int
-aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_dx2dq_np( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
                    size_t n_tf, const double *TF_abs, size_t ld_tf,
                    size_t n_x, const double *dx,
@@ -136,7 +136,7 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
 struct aa_rx_wk_lc3_cx;
 
 AA_API  struct aa_rx_wk_lc3_cx *
-aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_lc3_create ( const struct aa_rx_sg_sub *ssg,
                       const struct aa_rx_wk_opts * opts );
 
 AA_API int
@@ -158,7 +158,7 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *lc3,
  * @param[out] dq_r centering velocities for the subscenegraph
  */
 AA_API void
-aa_rx_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_dqcenter( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
                    size_t n_q, const double *q, double *dq_r );
 

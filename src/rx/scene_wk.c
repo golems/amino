@@ -46,12 +46,10 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin.h"
-#include "amino/rx/scene_kin_internal.h"
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_wk.h"
 
-#include "scene_wk_internal.h"
+#include "amino/rx/scene_wk_internal.h"
 
 AA_API struct aa_rx_wk_opts *
 aa_rx_wk_opts_create(void)
@@ -60,8 +58,9 @@ aa_rx_wk_opts_create(void)
 
     r->s2min = 1e-3;
     r->k_dls = 1e-3;
-    r->k_np = 1;
-    r->k_pos = 1;
+    r->gain_np = 1;
+    r->gain_trans = 1;
+    r->gain_angle = 1;
     r->lp_solver = AA_OPT_LP_SOLVER_DEFAULT;
 
     return r;
@@ -156,7 +155,7 @@ aa_rx_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
         } else {
             double c = (max + min)/2;
             double d = (c - q[i]) / (max - min);
-            dq_r[i] =  opts->k_np * d * fabs(d);
+            dq_r[i] =  opts->gain_np * d;// * fabs(d);
         }
     }
 }
@@ -176,7 +175,8 @@ aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
     double vel[6];
     aa_tf_qutr_twist2vel( E_act, w, vel );
 
-    for(size_t i = 0; i < 6; i++ ) {
-        dx[i] -= opts->k_pos * vel[i];
+    for(size_t i = 0; i < 3; i++ ) {
+        dx[AA_TF_DX_W + i] -= opts->gain_angle * vel[AA_TF_DX_W + i];
+        dx[AA_TF_DX_V + i] -= opts->gain_trans * vel[AA_TF_DX_V + i];
     }
 }

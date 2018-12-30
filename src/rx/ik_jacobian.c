@@ -53,6 +53,8 @@
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_kin_internal.h"
 
+#include "amino/rx/scene_wk.h"
+
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
 
 
@@ -169,7 +171,7 @@ aa_rx_ik_jac_dx2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
     /*     x_err < opts->tol_trans_svd ) */
     /* { */
     // TODO: sometimes do LU
-    aa_la_dzdpinv( 6, n_q, opts->s2min, J, J_star );
+    aa_la_dzdpinv( 6, n_q, opts->wk_opts.s2min, J, J_star );
     /* } else { */
     /*     aa_la_dpinv( 6, n_q, opts->k_dls, J, J_star ); */
     /* } */
@@ -200,8 +202,8 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
     double w_e[6];
     rfx_kin_qutr_werr( E_act, E_ref, w_e );
     for( size_t i = 0; i < 3; i ++ ) {
-        w_e[AA_TF_DX_V + i] *= -opts->gain_trans;
-        w_e[AA_TF_DX_W + i] *= -opts->gain_angle;
+        w_e[AA_TF_DX_V + i] *= -opts->wk_opts.gain_trans;
+        w_e[AA_TF_DX_W + i] *= -opts->wk_opts.gain_angle;
     }
 
     if( dx_ref ) {

@@ -53,7 +53,7 @@
 
 #include "amino/opt/opt.h"
 
-#include "scene_wk_internal.h"
+#include "amino/rx/scene_wk_internal.h"
 
 struct aa_rx_wk_lc3_cx {
     struct aa_opt_cx *opt_cx;

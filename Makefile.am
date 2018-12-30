@@ -39,10 +39,10 @@ noinst_HEADERS = \
              src/tf/quat_duqu.c \
              src/tf/quat_qutr.c \
              src/rx/sg_convenience.h \
-             src/rx/scene_wk_internal.h \
              include/wavefront_internal.h \
              include/amino/ct/traj_internal.hpp \
              include/amino/rx/scene_kin_internal.h \
+             include/amino/rx/scene_wk_internal.h \
              include/amino/rx/scenegraph_internal.h \
              include/amino/rx/scene_geom_internal.h \
              include/amino/rx/scene_collision_internal.h \

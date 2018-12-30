@@ -71,12 +71,12 @@ aa_rx_ksol_opts_create()
 
     opt->tol_dq = .1*M_PI/180;
 
-    opt->gain_angle = 1;
-    opt->gain_trans = 1;
+    opt->wk_opts.gain_angle = 1;
+    opt->wk_opts.gain_trans = 1;
     opt->max_iterations = 1000;
 
-    opt->s2min = 5e-3;
-    opt->k_dls = 5e-5;
+    opt->wk_opts.s2min = 5e-3;
+    opt->wk_opts.k_dls = 5e-5;
 
     opt->frame = AA_RX_FRAME_NONE;
 
@@ -99,12 +99,14 @@ AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_angle_svd )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_trans_svd )
 
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_dq )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, s2min )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, k_dls )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_angle )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, gain_trans )
 AA_DEF_SETTER( aa_rx_ksol_opts, size_t, max_iterations )
 
+
+AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, s2min, wk_opts.s2min )
+AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, k_dls, wk_opts.k_dls )
+
+AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, gain_angle, wk_opts.gain_angle )
+AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, gain_trans,  wk_opts.gain_trans)
 
 
 AA_API void

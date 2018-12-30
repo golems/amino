@@ -38,6 +38,7 @@
 #ifndef AMINO_RX_SCENE_KIN_INTERNAL_H
 #define AMINO_RX_SCENE_KIN_INTERNAL_H
 
+#include "scene_wk_internal.h"
 #include "scene_kin.h"
 
 struct aa_rx_sg_sub
@@ -93,7 +94,9 @@ aa_rx_sg_chain_jacobian( const struct aa_rx_sg *sg,
 
 
 struct aa_rx_ksol_opts {
-    double dt;          ///< initial timestep
+    struct aa_rx_wk_opts wk_opts; ///< workspace solver options
+
+    double dt;            ///< initial timestep
 
     double tol_angle;    ///< angle error tolerate
     double tol_trans;    ///< translation error tolerance
@@ -102,12 +105,10 @@ struct aa_rx_ksol_opts {
     double tol_trans_svd;    ///< translation error tolerance
 
     double tol_dq;       ///< translation error tolerance
-    double s2min;        ///< minimum square singular value for damped least squares
-    double k_dls;        ///< damped least squares constant
 
     //double dx_dt;        ///< scaling for cartesian error
-    double gain_angle;     ///< scaling for cartesian error
-    double gain_trans;     ///< scaling for cartesian error
+    /* double gain_angle;     ///< scaling for cartesian error */
+    /* double gain_trans;     ///< scaling for cartesian error */
 
     const double *dq_dt;       ///< scaling for joint error
     size_t n_dq_dt;

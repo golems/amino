@@ -71,6 +71,12 @@
         obj->field_name = field_name;                            \
     }
 
+#define AA_DEF_SETTER_SUB( struct_type, field_type, field_name, field_sub )       \
+    AA_DEC_SETTER( struct_type, field_type, field_name )         \
+    {                                                            \
+        obj->field_sub = field_name;                             \
+    }
+
 #define AA_DEF_BOOL_SETTER( struct_type, field_name )            \
     AA_DEC_SETTER( struct_type, int, field_name )                \
     {                                                            \
