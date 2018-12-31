@@ -49,9 +49,13 @@
 #include "amino/rx/scene_kin_internal.h"
 #include "amino/rx/scene_sub.h"
 
+#include "amino/math.h"
+
 #include "amino/rx/scene_wk.h"
 
 #include "amino/opt/opt.h"
+
+#include "amino/mat_internal.h"
 
 #include "amino/rx/scene_wk_internal.h"
 
@@ -69,9 +73,13 @@ lc3_constraints (
     const struct aa_rx_wk_lc3_cx *cx,
     double dt,
     size_t n_x, size_t n_q,
-    size_t n_tf, const double *TF_abs, size_t ld_tf,
-    const double *dx_r,
-    const double *q_a, const double *dq_a, const double *dq_r,
+    const struct aa_dmat *TF_abs,
+    /* const double *dx_r, */
+    /* const double *q_a, const double *dq_a, const double *dq_r, */
+    const struct aa_dvec *dx_r,
+    const struct aa_dvec *q_a,
+    const struct aa_dvec *dq_a,
+    const struct aa_dvec *dq_r,
     double **pA,
     double **pb_min,
     double **pb_max,
@@ -114,12 +122,12 @@ lc3_constraints (
     // Rest of allocated arrays are local temps
     void *ptrtop = aa_mem_region_ptr(reg);
 
-    double *J     = AA_MEM_REGION_NEW_N(reg, double, n_x*n_q);
     double *N     = AA_MEM_REGION_NEW_N(reg, double, n_q*n_q);
     double *dq_rn = AA_MEM_REGION_NEW_N(reg, double, n_q );
 
     assert(TF_abs);
-    aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, n_x );
+    //aa_rx_sg_sub_jacobian( ssg, TF_abs->cols, TF_abs->data, TF_abs->ld, J, n_x );
+    struct aa_dmat *J = aa_rx_sg_sub_jacobian_alloc( ssg, reg, TF_abs );
 
 
     {
@@ -127,20 +135,20 @@ lc3_constraints (
 
         // Compute a damped pseudo inverse
         if( cx->s2min > 0 ) {
-            aa_la_dzdpinv( n_x, n_q, cx->s2min, J, J_star );
+            aa_la_dzdpinv( n_x, n_q, cx->s2min, J->data, J_star );
         } else  {
-            aa_la_dpinv( n_x, n_q, cx->k_dls, J, J_star );
+            aa_la_dpinv( n_x, n_q, cx->k_dls, J->data, J_star );
         }
 
         // Compute nullspace projection matrix
-        aa_la_np( n_x, n_q, J, J_star, N );
+        aa_la_np( n_x, n_q, J->data, J_star, N );
     }
 
     // Fill A
     /*  A = [J_star*dt, N*(dq_a - dq_r) ] */
     cblas_dscal( (int)(n_q*n_x), dt, A, 1 ); // A = J_star * dt
     for( size_t i = 0; i < n_q; i++) {
-        dq_rn[i] = dq_a[i] - dq_r[i];
+        dq_rn[i] = dq_a->data[i*dq_a->inc] - dq_r->data[i*dq_r->inc];
     }
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n_q, (int)n_q,
@@ -152,12 +160,13 @@ lc3_constraints (
     // actual workspace velocity
     cblas_dgemv( CblasColMajor, CblasNoTrans,
                  (int)n_x, (int)n_q,
-                 1.0, J, (int)n_x,
-                 dq_a, 1,
+                 1.0, AA_MAT_ARGS(J),
+                 AA_VEC_ARGS(dq_a),
                  0.0, c, 1 );
+
     // c now holds dx_a
     for( size_t i = 0; i < n_x; i ++ ) {
-        c[i] = (dx_r[i] - c[i])/dt;
+        c[i] = (dx_r->data[i*dx_r->inc] - c[i])/dt;
     }
     c[n_x] = 1; // TODO: add weighting parameter to options
 
@@ -190,9 +199,12 @@ lc3_constraints (
         aa_rx_sg_get_limit_vel(sg, j, &dq_min, &dq_max);
         aa_rx_sg_get_limit_acc(sg, j, &ddq_min, &ddq_max);
 
+        double v_dq_a = dq_a->data[i*dq_a->inc];
+        double v_q_a = q_a->data[i*q_a->inc];
+
         // velocity constraints
-        if( isfinite(dq_min) ) b_min[i] = dq_min - dq_a[i];
-        if( isfinite(dq_max) ) b_max[i] = dq_max - dq_a[i];
+        if( isfinite(dq_min) ) b_min[i] = dq_min - v_dq_a;
+        if( isfinite(dq_max) ) b_max[i] = dq_max - v_dq_a;
 
         if( isfinite(ddq_max) ) {
             // acceleration constraint
@@ -200,7 +212,7 @@ lc3_constraints (
             // position constraint
             if( isfinite(q_min) )
                 b_min[i] = fmax( b_min[i],
-                                 (q_min-q_a[i])/dt - ddq_max*(dt/2) - dq_a[i] );
+                                 (q_min-v_q_a)/dt - ddq_max*(dt/2) - v_dq_a );
         }
 
         if( isfinite(ddq_min) ) {
@@ -209,7 +221,7 @@ lc3_constraints (
             // position constraint
             if( isfinite(q_max) )
                 b_max[i] = fmin( b_max[i],
-                                 (q_max - q_a[i])/dt - ddq_min*(dt/2) - dq_a[i] );
+                                 (q_max - v_q_a)/dt - ddq_min*(dt/2) - v_dq_a );
         }
 
     }
@@ -236,17 +248,17 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     double dt = .01;
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
     size_t n_qall = aa_rx_sg_config_count(sg);
-    size_t n_tf = aa_rx_sg_frame_count(sg);
 
 
-    double *dx_r  = AA_MEM_REGION_ZNEW_N(reg,double,n_x);
-    double *dq_a  = AA_MEM_REGION_ZNEW_N(reg,double,n_q);
-    double *dq_r  = AA_MEM_REGION_ZNEW_N(reg,double,n_q);
+    struct aa_dvec *dx_r = aa_dvec_alloc(reg,n_x);
+    struct aa_dvec *dq_a = aa_dvec_alloc(reg,n_q);
+    struct aa_dvec *dq_r = aa_dvec_alloc(reg,n_q);
+    struct aa_dvec *q_a  = aa_dvec_alloc(reg,n_q);
 
-    double *q_a   = AA_MEM_REGION_NEW_N(reg,double,n_q);
     double *q_all = AA_MEM_REGION_NEW_N(reg,double,n_qall);
     aa_rx_sg_center_configs(sg, n_qall, q_all);
-    aa_rx_sg_sub_center_configs(ssg, n_q, q_a);
+    aa_rx_sg_sub_center_configs(ssg, n_q, q_a->data);
+
 
     struct aa_dvec qv;
     aa_dvec_view( &qv, n_qall, q_all, 1 );
@@ -260,7 +272,7 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     lc3_constraints (
         cx, dt,
         n_x, n_q,
-        n_tf, TF_abs->data, TF_abs->ld,
+        TF_abs,
         dx_r,
         q_a, dq_a, dq_r,
         &A,
@@ -288,14 +300,22 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
 AA_API int
 aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
                     double dt,
-                    size_t n_tf, const double *TF_abs, size_t ld_tf,
-                    size_t n_x, const double *dx_r,
-                    size_t n_q,
-                    const double *q_a, const double *dq_a,
-                    const double *dq_r, double *dq )
+                    const struct aa_dmat *TF_abs,
+                    const struct aa_dvec *dx_r,
+                    const struct aa_dvec *q_a,  const struct aa_dvec *dq_a,
+                    const struct aa_dvec *dq_r, struct aa_dvec *dq )
 {
 
     if( dt <= 0 ) return -1;
+    const struct aa_rx_sg_sub *ssg = cx->ssg;
+
+    size_t n_x, n_q;
+    aa_rx_sg_sub_jacobian_size( ssg, &n_x, &n_q );
+    aa_lb_check_size( dx_r->len, n_x);
+    aa_lb_check_size( q_a->len,  n_q);
+    aa_lb_check_size( dq_a->len, n_q);
+    aa_lb_check_size( dq_r->len, n_q);
+    aa_lb_check_size( dq->len,   n_q);
 
 
     struct aa_mem_region *reg =  aa_mem_region_local_get();
@@ -310,7 +330,7 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
     lc3_constraints (
         cx, dt,
         n_x, n_q,
-        n_tf, TF_abs, ld_tf,
+        TF_abs,
         dx_r,
         q_a, dq_a, dq_r,
         &A,
@@ -335,12 +355,12 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
                      (int)n_q, (int)n_x,
                      1.0, A, (int)n_q,
                      opt_x, 1,
-                     1.0, dq, 1 );
+                     1.0, AA_VEC_ARGS(dq) );
 
         // Nullspace Projection
         cblas_daxpy( (int)n_x,
                      opt_x[n_x], A+(n_x*n_q), 1,
-                     dq, 1 );
+                     AA_VEC_ARGS(dq) );
 
     }
 

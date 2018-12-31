@@ -53,7 +53,7 @@ struct display_cx {
     const struct aa_rx_wk_lc3_cx *lc3;
     double E0[7];
     double *q;
-    double *dq_subset;
+    struct aa_dvec *dq_subset;
 };
 
 int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
@@ -77,9 +77,9 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     size_t n = aa_rx_sg_frame_count(scenegraph);
     size_t n_c = aa_rx_sg_sub_config_count(cx->ssg);
 
-    double q_subset[n_c];
+    struct aa_dvec *q_subset = aa_dvec_alloc(reg,n_c);
     aa_rx_sg_config_get( scenegraph, m, n_c,
-                         aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset );
+                         aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset->data );
 
 
     struct aa_dvec qv;
@@ -90,20 +90,23 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
                              n, TF_abs->data, TF_abs->ld );
 
     /* Reference Velocity and Position */
-    double dx_r[6];
-    AA_MEM_ZERO(dx_r, 6);
+    /* double dx_r[6]; */
+    /* AA_MEM_ZERO(dx_r, 6); */
+    struct aa_dvec *dx_r = aa_dvec_alloc(reg,6);
+    aa_dvec_zero(dx_r);
     {
         double *E_act =  TF_abs->data + TF_abs->ld*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
 
         double z_pos = sin(t*2*M_PI) / (4*M_PI);
         double z_vel = cos( t*2*M_PI ) / 2; // derivative of position
 
+
         double wx_pos = sin(t*2*M_PI) / (2*M_PI);
         double wx_vel = cos( t*2*M_PI );
 
         // feed-forward velocity
-        dx_r[AA_TF_DX_V+2] += z_vel;
-        dx_r[AA_TF_DX_W+0] += wx_vel;
+        dx_r->data[AA_TF_DX_V+2] += z_vel;
+        dx_r->data[AA_TF_DX_W+0] += wx_vel;
 
         // proportional control on position
         double E_rel[7]; // Relative pose
@@ -120,35 +123,35 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     }
 
     // joint-centering velocity for the nullspace projection
-    double dqr_subset[n_c];
+    struct aa_dvec *dqr_subset = aa_dvec_alloc(reg,n_c);
     aa_rx_wk_dqcenter( cx->ssg, cx->wk_opts,
-                       n_c, q_subset, dqr_subset );
+                       q_subset, dqr_subset );
 
     // Cartesian to joint velocities, with nullspace projection
-    double dq_subset[n_c];
+    struct aa_dvec *dq_subset = aa_dvec_alloc(reg,n_c);
 
 
     static int firsttime = 1;
     if (firsttime) {
-        AA_MEM_ZERO(dq_subset, n_c);
+        aa_dvec_zero(dq_subset);
         firsttime = 0;
     } else  {
         //aa_tick("solve: ");
 
         /* int r = aa_rx_wk_dx2dq( cx->ssg, cx->wk_opts, */
-        /*                         n, TF_abs, ld_abs, */
+        /*                         TF_abs, */
         /*                         6, dx_r, */
         /*                         n_c, dq_subset ); */
 
         /* int r = aa_rx_wk_dx2dq_np( cx->ssg, cx->wk_opts, */
-        /*                               n, TF_abs, ld_abs, */
+        /*                               TF_abs, */
         /*                               6, dx_r, */
         /*                               n_c, dqr_subset, dq_subset ); */
 
         int r = aa_rx_wk_dx2dq_lc3( cx->lc3, dt,
-                                    n, TF_abs->data, TF_abs->ld,
-                                    6, dx_r,
-                                    n_c, q_subset, cx->dq_subset,
+                                    TF_abs,
+                                    dx_r,
+                                    q_subset, cx->dq_subset,
                                     dqr_subset, dq_subset );
 
         assert(0 == r);
@@ -157,13 +160,13 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
 
     // integrate
-    AA_MEM_CPY(cx->dq_subset, dq_subset, n_c );
+    aa_lb_dcopy(dq_subset, cx->dq_subset);
     for( size_t i = 0; i < n_c; i ++ ) {
-        q_subset[i] += dt*dq_subset[i];
+        q_subset->data[i] += dt*dq_subset->data[i];
     }
     aa_rx_sg_config_set( scenegraph, m, n_c,
                          aa_rx_sg_sub_configs(cx->ssg),
-                         q_subset, cx->q );
+                         q_subset->data, cx->q );
 
     aa_sdl_display_params_set_update(params);
 
@@ -196,7 +199,7 @@ int main(int argc, char *argv[])
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     cx.wk_opts = aa_rx_wk_opts_create();
-    cx.dq_subset = AA_NEW0_AR(double, aa_rx_sg_sub_config_count(cx.ssg) );
+    cx.dq_subset = aa_dvec_malloc(aa_rx_sg_sub_config_count(cx.ssg));
     cx.lc3 = aa_rx_wk_lc3_create(cx.ssg,cx.wk_opts);
 
 

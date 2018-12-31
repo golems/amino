@@ -70,21 +70,19 @@ aa_rx_wk_opts_destroy( struct aa_rx_wk_opts * );
  * @param[in] opts Workspace control options
  * @param[in] E_act Actual pose (quaternion-translation)
  * @param[in] E_ref Reference pose (quaternion-translation)
- * @param[inout] dx Reference workspace velocity
+ * @param[inout] dx Reference workspace velocity (size 6)
  */
 AA_API void
 aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
                  const double *E_act, const double *E_ref,
-                 double *dx );
+                 struct aa_dvec *dx );
 
 /**
  * Convert workspace (Cartesian) velocity to joint velocity.
  *
  * @param[in] ssg the subscenegraph to control
  * @param[in] opts workspace control options
- * @param[in] n_tf number of frames in TF_abs
  * @param[in] TF_abs absolute frames (quaternion-translations) for the entire scenegraph
- * @param[in] ld_tf Leading dimension of TF_abs
  * @param[in] n_x size of dx
  * @param[in] dx reference workspace velocity
  * @param[in] n_q size of dq
@@ -93,7 +91,7 @@ aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
 AA_API int
 aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
-                size_t n_tf, const double *TF_abs, size_t ld_tf,
+                const struct aa_dmat *TF_abs,
                 size_t n_x, const double *dx,
                 size_t n_q, double *dq );
 
@@ -105,9 +103,7 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
  *
  * @param[in] ssg the subscenegraph to control
  * @param[in] opts workspace control options
- * @param[in] n_tf number of frames in TF_abs
  * @param[in] TF_abs absolute frames (quaternion-translations) for the entire scenegraph
- * @param[in] ld_tf Leading dimension of TF_abs
  * @param[in] n_x size of dx
  * @param[in] dx reference workspace velocity
  * @param[in] n_q size of dq
@@ -117,7 +113,7 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
 AA_API int
 aa_rx_wk_dx2dq_np( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
-                   size_t n_tf, const double *TF_abs, size_t ld_tf,
+                   const struct aa_dmat *TF_abs,
                    size_t n_x, const double *dx,
                    size_t n_q, const double *dq_r, double *dq );
 
@@ -142,11 +138,10 @@ aa_rx_wk_lc3_create ( const struct aa_rx_sg_sub *ssg,
 AA_API int
 aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *lc3,
                     double dt,
-                    size_t n_tf, const double *TF_abs, size_t ld_tf,
-                    size_t n_x, const double *dx_r,
-                    size_t n_q,
-                    const double *q_a, const double *dq_a,
-                    const double *dq_r, double *dq );
+                    const struct aa_dmat *TF_abs,
+                    const struct aa_dvec *dx_r,
+                    const struct aa_dvec *q_a, const struct aa_dvec *dq_a,
+                    const struct aa_dvec *dq_r, struct aa_dvec *dq );
 
 /**
  * Find joint-centering reference velocity.
@@ -160,7 +155,8 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *lc3,
 AA_API void
 aa_rx_wk_dqcenter( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
-                   size_t n_q, const double *q, double *dq_r );
+                   const struct aa_dvec *q,
+                   struct aa_dvec *dq_r );
 
 
 #endif /*AMINO_RX_SCENE_WK_H*/

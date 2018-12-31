@@ -172,12 +172,12 @@ aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                        double *J, size_t ld_J );
 
 /**
- * Allocate and computer the Jacobian matrix for the sub-scenegraph.
+ * Allocate and compute the Jacobian matrix for the sub-scenegraph.
  */
 AA_API struct aa_dmat *
 aa_rx_sg_sub_jacobian_alloc( const struct aa_rx_sg_sub *ssg,
                              struct aa_mem_region *reg,
-                             struct aa_dmat *TF_abs );
+                             const struct aa_dmat *TF_abs );
 
 /**
  * Allocate jacobian matrix for sub scene graph.

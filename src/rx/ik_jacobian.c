@@ -147,7 +147,6 @@ static void kin_solve_sys( const void *vcx,
 
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     const struct aa_rx_sg *sg = ssg->scenegraph;
-    size_t n_f = aa_rx_sg_frame_count(sg);
     size_t n_q = aa_rx_sg_config_count(sg);
     size_t n_c = aa_rx_sg_sub_config_count(ssg);
 
@@ -155,8 +154,8 @@ static void kin_solve_sys( const void *vcx,
     struct aa_dmat *TF_abs;
     s_tf( cx, q,  &TF_abs, E_act );
 
-    double w_e[6];
-    AA_MEM_ZERO(w_e, 6);
+    struct aa_dvec *w_e = aa_dvec_alloc(cx->reg,6);
+    aa_dvec_zero(w_e);
     aa_rx_wk_dx_pos( &cx->opts->wk_opts, E_act, cx->E1, w_e );
 
     if( cx->opts->q_ref ) {
@@ -166,13 +165,13 @@ static void kin_solve_sys( const void *vcx,
         }
 
         aa_rx_wk_dx2dq_np( ssg, &cx->opts->wk_opts,
-                           n_f, TF_abs->data, TF_abs->ld,
-                           6, w_e,
+                           TF_abs,
+                           6, w_e->data,
                            n_c, dqnull, dq );
     } else {
         aa_rx_wk_dx2dq( ssg, &cx->opts->wk_opts,
-                        n_f, TF_abs->data, TF_abs->ld,
-                        6, w_e,
+                        TF_abs,
+                        6, w_e->data,
                         n_c, dq );
     }
     aa_mem_region_pop(cx->reg, ptrtop);
@@ -406,18 +405,24 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
                     const double E_ref[7], const double dx_ref[6],
                     const double *J, double *AA_RESTRICT dq )
 {
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    struct aa_dvec *w_e = aa_dvec_alloc(reg,6);
+    aa_dvec_zero(w_e);
 
-    double w_e[6];
     if( dx_ref ) {
-        AA_MEM_CPY( w_e, dx_ref, 6 );
+        struct aa_dvec dx_refd;
+        aa_dvec_view(&dx_refd, 6, (double*)dx_ref, 1);
+        aa_lb_dcopy( &dx_refd, w_e );
     } else {
-        AA_MEM_ZERO(w_e, 6);
+        aa_dvec_zero(w_e);
     }
     aa_rx_wk_dx_pos( &opts->wk_opts, E_act, E_ref, w_e );
 
+    int r = aa_rx_ik_jac_dx2dq(opts, n_q, q_act, w_e->data, J, dq);
 
+    aa_mem_region_pop(reg, w_e);
 
-    return aa_rx_ik_jac_dx2dq(opts, n_q, q_act, w_e, J, dq);
+    return  r;
 
     /* double theta_err, x_err; */
     /* rfx_kin_qutr_serr( E_act, E_ref, &theta_err, &x_err ); */

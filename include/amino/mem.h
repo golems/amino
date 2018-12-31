@@ -373,7 +373,7 @@ AA_API void aa_mem_region_local_release( void );
 /**
  * Allocate zero-initialized array of `n' objects of `type' from memory region `reg'.
  */
-#define AA_MEM_REGION_ZNEW_N( reg, type, n ) ( (type*) aa_mem_region_alloc((reg), (n)*sizeof(type)) )
+#define AA_MEM_REGION_ZNEW_N( reg, type, n ) ( (type*) aa_mem_region_zalloc((reg), (n)*sizeof(type)) )
 
 /**
  * Allocate a new object of `type' the thread-local memory region.

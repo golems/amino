@@ -360,7 +360,7 @@ aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
 AA_API struct aa_dmat *
 aa_rx_sg_sub_jacobian_alloc( const struct aa_rx_sg_sub *ssg,
                              struct aa_mem_region *reg,
-                             struct aa_dmat *TF_abs )
+                             const struct aa_dmat *TF_abs )
 {
     size_t rows, cols;
     aa_rx_sg_sub_jacobian_size(ssg,&rows,&cols);

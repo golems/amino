@@ -49,23 +49,12 @@
 
 #include "amino.h"
 #include "amino/mat.h"
+#include "amino/mat_internal.h"
 
 #define VEC_LEN(X) ((int)(X->len))
-#define VEC_ARGS(X) (X->data), ((int)(X->inc))
-
-#define MAT_ARGS(X) (X->data), ((int)(X->ld))
-
 #define MAT_ROWS(X) ((int)(X->rows))
 #define MAT_COLS(X) ((int)(X->cols))
 
-static void check_size( size_t a, size_t b )
-{
-    if( a != b ) {
-        fprintf(stderr, "Mismatched sizes: %lu != %lu\n", a, b);
-        abort();
-        exit(EXIT_FAILURE);
-    }
-}
 
 AA_API void
 aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc )
@@ -90,10 +79,14 @@ aa_dvec_malloc( size_t len ) {
     const size_t s_desc = sizeof(*r);
     const size_t s_elem = sizeof(r->data[0]);
     const size_t pad =  s_elem - (s_desc % s_elem);
-    char *ptr = (char*)malloc( s_desc + pad + len * s_elem );
+    const size_t size = s_desc + pad + len * s_elem;
+
+    const size_t off = s_desc + pad;
+
+    char *ptr = (char*)malloc( size );
 
     r = (struct aa_dvec*)ptr;
-    aa_dvec_view( r, len, (double*)(ptr+s_desc+pad), 1 );
+    aa_dvec_view( r, len, (double*)(ptr+off), 1 );
     return r;
 }
 
@@ -116,7 +109,7 @@ aa_dmat_malloc( size_t rows, size_t cols )
     struct aa_dmat *r;
     const size_t s_desc = sizeof(*r);
     const size_t s_elem = sizeof(r->data[0]);
-    const size_t pad =  s_elem - s_desc % s_elem;
+    const size_t pad =  s_elem - (s_desc % s_elem);
     char *ptr = (char*)malloc( s_desc + pad + rows*cols * s_elem );
 
     r = (struct aa_dmat*)ptr;
@@ -131,7 +124,7 @@ aa_dmat_alloc( struct aa_mem_region *reg, size_t rows, size_t cols )
     struct aa_dmat *r;
     const size_t s_desc = sizeof(*r);
     const size_t s_elem = sizeof(r->data[0]);
-    const size_t pad =  s_elem - s_desc % s_elem;
+    const size_t pad =  s_elem - (s_desc % s_elem);
     size_t size = s_desc + pad + rows*cols * s_elem ;
 
     char *ptr = (char*)aa_mem_region_alloc(reg, size);
@@ -142,45 +135,56 @@ aa_dmat_alloc( struct aa_mem_region *reg, size_t rows, size_t cols )
     return r;
 }
 
+
+void
+aa_dvec_zero( struct aa_dvec *vec )
+{
+    double *end = vec->data + vec->len*vec->inc;
+    for( double *x = vec->data; x < end; x += vec->inc ) {
+        *x = 0.0;
+    }
+}
+
+
 /* Level 1 BLAS */
 AA_API void
 aa_lb_dswap( struct aa_dvec *x, struct aa_dvec *y )
 {
-    check_size(x->len, y->len);
-    cblas_dswap( VEC_LEN(x), VEC_ARGS(x), VEC_ARGS(y) );
+    aa_lb_check_size(x->len, y->len);
+    cblas_dswap( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API void
 aa_lb_dscal( double a, struct aa_dvec *x )
 {
-    cblas_dscal( VEC_LEN(x), a, VEC_ARGS(x) );
+    cblas_dscal( VEC_LEN(x), a, AA_VEC_ARGS(x) );
 }
 
 AA_API void
 aa_lb_dcopy( const struct aa_dvec *x, struct aa_dvec *y )
 {
-    check_size(x->len, y->len);
-    cblas_dcopy( VEC_LEN(x), VEC_ARGS(x), VEC_ARGS(y) );
+    aa_lb_check_size(x->len, y->len);
+    cblas_dcopy( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API void
 aa_lb_daxpy( double a, const struct aa_dvec *x, struct aa_dvec *y )
 {
-    check_size(x->len, y->len);
-    cblas_daxpy( VEC_LEN(x), a, VEC_ARGS(x), VEC_ARGS(y) );
+    aa_lb_check_size(x->len, y->len);
+    cblas_daxpy( VEC_LEN(x), a, AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API double
 aa_lb_ddot( const struct aa_dvec *x, struct aa_dvec *y )
 {
-    check_size(x->len, y->len);
-    return cblas_ddot( VEC_LEN(x), VEC_ARGS(x), VEC_ARGS(y) );
+    aa_lb_check_size(x->len, y->len);
+    return cblas_ddot( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API double
 aa_lb_dnrm2( const struct aa_dvec *x )
 {
-    return cblas_dnrm2( VEC_LEN(x), VEC_ARGS(x) );
+    return cblas_dnrm2( VEC_LEN(x), AA_VEC_ARGS(x) );
 }
 
 /* Level 2 BLAS */
@@ -190,14 +194,14 @@ aa_lb_dgemv( CBLAS_TRANSPOSE trans,
              const struct aa_dvec *x,
              double beta, struct aa_dvec *y )
 {
-    check_size( A->rows, y->len );
-    check_size( A->cols, x->len );
+    aa_lb_check_size( A->rows, y->len );
+    aa_lb_check_size( A->cols, x->len );
 
     cblas_dgemv( CblasColMajor, trans,
                  MAT_ROWS(A), MAT_COLS(A),
-                 alpha, MAT_ARGS(A),
-                 VEC_ARGS(x),
-                 beta, VEC_ARGS(y) );
+                 alpha, AA_MAT_ARGS(A),
+                 AA_VEC_ARGS(x),
+                 beta, AA_VEC_ARGS(y) );
 
 }
 
@@ -208,14 +212,14 @@ aa_lb_dgemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
              const struct aa_dmat *B,
              double beta, struct aa_dmat *C )
 {
-    check_size( A->rows, C->rows );
-    check_size( A->cols, B->rows );
-    check_size( B->cols, C->cols );
+    aa_lb_check_size( A->rows, C->rows );
+    aa_lb_check_size( A->cols, B->rows );
+    aa_lb_check_size( B->cols, C->cols );
 
     cblas_dgemm( CblasColMajor,
                  transA, transB,
                  MAT_ROWS(A), MAT_COLS(A), MAT_COLS(B),
-                 alpha, MAT_ARGS(A),
-                 MAT_ARGS(B),
-                 beta, MAT_ARGS(C) );
+                 alpha, AA_MAT_ARGS(A),
+                 AA_MAT_ARGS(B),
+                 beta, AA_MAT_ARGS(C) );
 }

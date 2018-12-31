@@ -52,6 +52,8 @@
  *
  */
 
+typedef size_t aa_lb_size ;
+
 /**
  * Descriptor for a vector.
  */
@@ -72,6 +74,15 @@ struct aa_dmat {
 };
 
 
+/**
+ * BLAS arguments for a vector
+ */
+#define AA_VEC_ARGS(X) (X->data), ((int)(X->inc))
+
+/**
+ * BLAS arguments for a matrix
+ */
+#define AA_MAT_ARGS(X) (X->data), ((int)(X->ld))
 
 /* Construction */
 
@@ -97,6 +108,7 @@ aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
  */
 AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t inc );
+
 
 /**
  * Region-allocate a vector.
@@ -131,6 +143,18 @@ aa_dvec_malloc( size_t len );
  */
 AA_API struct aa_dmat *
 aa_dmat_malloc( size_t rows, size_t cols );
+
+/**
+ * Zero a vector.
+ */
+AA_API void
+aa_dvec_zero( struct aa_dvec *vec );
+
+/**
+ * Zero a matrix.
+ */
+AA_API void
+aa_dmat_zero( struct aa_dmat *mat );
 
 /* Level 1 BLAS */
 

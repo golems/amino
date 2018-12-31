@@ -50,6 +50,7 @@
 #include "amino/rx/scene_wk.h"
 
 #include "amino/rx/scene_wk_internal.h"
+#include "amino/mat_internal.h"
 
 AA_API struct aa_rx_wk_opts *
 aa_rx_wk_opts_create(void)
@@ -75,7 +76,7 @@ aa_rx_wk_opts_destroy( struct aa_rx_wk_opts * opts)
 static int
 s_jstar( const const struct aa_rx_sg_sub *ssg,
          const struct aa_rx_wk_opts * opts,
-         struct aa_dmat *TF_abs,
+         const struct aa_dmat *TF_abs,
          size_t *prows, size_t *pcols,
          struct aa_dmat **pJ, struct aa_dmat **pJstar
     )
@@ -104,7 +105,7 @@ s_jstar( const const struct aa_rx_sg_sub *ssg,
 AA_API int
 aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
-                size_t n_tf, const double*TF_abs, size_t ld_tf,
+                const struct aa_dmat *TF_abs,
                 size_t n_x, const double *dx,
                 size_t n_q, double *dq )
 {
@@ -112,12 +113,10 @@ aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
     void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
 
-    struct aa_dmat tfd;
-    aa_dmat_view( &tfd, 7, n_tf, (double*)TF_abs, ld_tf );
 
     struct aa_dmat *J, *J_star;
     s_jstar( ssg, opts,
-             &tfd,
+             TF_abs,
              &rows, &cols,
              &J, &J_star );
 
@@ -142,7 +141,7 @@ aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
 AA_API int
 aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
-                   size_t n_tf, const double *TF_abs, size_t ld_tf,
+                   const struct aa_dmat *TF_abs,
                    size_t n_x, const double *dx,
                    size_t n_q, const double *dq_r, double *dq )
 {
@@ -151,12 +150,13 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
     void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
 
-    struct aa_dmat tfd;
-    aa_dmat_view( &tfd, 7, n_tf, (double*)TF_abs, ld_tf );
+
+    /* struct aa_dmat tfd; */
+    /* aa_dmat_view( &tfd, 7, n_tf, (double*)TF_abs, ld_tf ); */
 
     struct aa_dmat *J, *J_star;
     s_jstar( ssg, opts,
-             &tfd,
+             TF_abs,
              &rows, &cols,
              &J, &J_star );
 
@@ -174,18 +174,26 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
 AA_API void
 aa_rx_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
-                   size_t n_q, const double *q, double *dq_r )
+                   const struct aa_dvec *q,
+                   struct aa_dvec *dq_r )
 {
+    size_t n_q = aa_rx_sg_sub_config_count(ssg);
+    aa_lb_check_size(q->len, n_q);
+    aa_lb_check_size(dq_r->len, n_q);
+
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
-    for( size_t i = 0; i < n_q; i ++ ) {
+
+    double *xq = q->data;
+    double *xdq_r = dq_r->data;
+    for( size_t i = 0; i < n_q; i ++, xq+=q->inc, xdq_r+=dq_r->inc ) {
         double min=0 ,max=0;
         aa_rx_config_id config_id = aa_rx_sg_sub_config(ssg,i);
         if( aa_rx_sg_get_limit_pos(sg, config_id, &min, &max) ) {
-            dq_r[i] =  0;
+            *xdq_r =  0;
         } else {
             double c = (max + min)/2;
-            double d = (c - q[i]) / (max - min);
-            dq_r[i] =  opts->gain_np * d;// * fabs(d);
+            double d = (c - *xq) / (max - min);
+            *xdq_r =  opts->gain_np * d;// * fabs(d);
         }
     }
 }
@@ -193,8 +201,10 @@ aa_rx_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
 AA_API void
 aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
                  const double *E_act, const double *E_ref,
-                 double *dx )
+                 struct aa_dvec *dx )
 {
+    aa_lb_check_size(dx->len, 6);
+
     double Ee[7];
     aa_tf_qutr_mulc( E_act, E_ref, Ee );
     aa_tf_qminimize(Ee + AA_TF_QUTR_Q );
@@ -205,8 +215,12 @@ aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
     double vel[6];
     aa_tf_qutr_twist2vel( E_act, w, vel );
 
-    for(size_t i = 0; i < 3; i++ ) {
-        dx[AA_TF_DX_W + i] -= opts->gain_angle * vel[AA_TF_DX_W + i];
-        dx[AA_TF_DX_V + i] -= opts->gain_trans * vel[AA_TF_DX_V + i];
+    const size_t inc = dx->inc;
+    double *dv = dx->data + AA_TF_DX_V*inc;
+    double *dw = dx->data + AA_TF_DX_W*inc;
+
+    for(size_t i = 0; i < 3; i++, dv+=inc, dw+=inc ) {
+        *dw -= opts->gain_angle * vel[AA_TF_DX_W + i];
+        *dv -= opts->gain_trans * vel[AA_TF_DX_V + i];
     }
 }
