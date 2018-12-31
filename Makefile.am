@@ -87,6 +87,7 @@ nodist_pkginclude_HEADERS = \
 pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
 	include/amino/rx.h              \
+	include/amino/mat.h             \
 	include/amino/tf.hpp            \
 	include/amino/debug.h           \
 	include/amino/test.h            \
@@ -180,6 +181,7 @@ lib_LTLIBRARIES += libamino.la libamino-xerbla-nop.la
 libamino_la_SOURCES =                  \
 	src/mem.c                      \
 	src/refcount.c                 \
+	src/mat.c                      \
 	src/la.c                       \
 	src/la2.c                      \
 	src/opt/opt.c                  \
@@ -455,6 +457,11 @@ noinst_PROGRAMS += ct_traj
 ct_traj_SOURCES = src/test/ct_traj.c
 ct_traj_LDADD = libamino.la libtestutil.la
 ct_traj_LDFLAGS = -no-install
+
+
+noinst_PROGRAMS += mat_test
+mat_test_SOURCES = src/test/mat_test.c
+mat_test_LDADD = libamino.la libtestutil.la
 
 
 if USE_FORTRAN
