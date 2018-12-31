@@ -80,6 +80,7 @@ lc3_constraints (
     double **pc
     )
 {
+    assert(TF_abs);
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     {
@@ -117,6 +118,7 @@ lc3_constraints (
     double *N     = AA_MEM_REGION_NEW_N(reg, double, n_q*n_q);
     double *dq_rn = AA_MEM_REGION_NEW_N(reg, double, n_q );
 
+    assert(TF_abs);
     aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, n_x );
 
 
@@ -234,6 +236,7 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     double dt = .01;
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
     size_t n_qall = aa_rx_sg_config_count(sg);
+    size_t n_tf = aa_rx_sg_frame_count(sg);
 
 
     double *dx_r  = AA_MEM_REGION_ZNEW_N(reg,double,n_x);
@@ -245,8 +248,9 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     aa_rx_sg_center_configs(sg, n_qall, q_all);
     aa_rx_sg_sub_center_configs(ssg, n_q, q_a);
 
-    AA_RX_SG_TF_COUNT_GET( sg, reg, n_qall, q_all, n_tf,
-                           TF_rel, ld_rel, TF_abs, ld_abs );
+    struct aa_dvec qv;
+    aa_dvec_view( &qv, n_qall, q_all, 1 );
+    struct aa_dmat *TF_abs = aa_rx_sg_tf_abs(sg, reg, &qv);
 
     double *A;
     double *b_min, *b_max;
@@ -256,7 +260,7 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     lc3_constraints (
         cx, dt,
         n_x, n_q,
-        n_tf, TF_abs, ld_abs,
+        n_tf, TF_abs->data, TF_abs->ld,
         dx_r,
         q_a, dq_a, dq_r,
         &A,

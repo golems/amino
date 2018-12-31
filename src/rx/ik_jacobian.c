@@ -75,14 +75,12 @@ struct kin_solve_cx {
 };
 
 static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
-                  double *TF_rel, size_t ld_rel,
-                  double *TF_abs, size_t ld_abs,
+                  struct aa_dmat **pTF_abs,
                   double *E)
 {
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     const struct aa_rx_sg *sg = ssg->scenegraph;
 
-    size_t n_f = aa_rx_sg_frame_count(sg);
     size_t n_q = aa_rx_sg_config_count(sg);
     size_t n_sq = aa_rx_sg_sub_config_count(ssg);
 
@@ -94,11 +92,19 @@ static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
                              n_q, q_all);
 
     /* Compute the transforms */
-    aa_rx_sg_tf_update( sg,
-                        n_q, cx->q0_all, q_all,
-                        n_f,
-                        cx->TF_rel0, 7, cx->TF_abs0, 7,
-                        TF_rel, ld_rel, TF_abs, ld_abs );
+    {
+        struct aa_dvec qv;
+        aa_dvec_view( &qv, n_q, q_all, 1 );
+        // TODO: faster TF update
+        *pTF_abs = aa_rx_sg_tf_abs(sg, cx->reg, &qv );
+    }
+
+
+    /* aa_rx_sg_tf_update( sg, */
+    /*                     n_q, cx->q0_all, q_all, */
+    /*                     n_f, */
+    /*                     cx->TF_rel0, 7, cx->TF_abs0, 7, */
+    /*                     TF_rel, ld_rel, TF_abs, ld_abs ); */
 
     /* Fill the desired transform */
     aa_rx_frame_id id_ee = ( AA_RX_FRAME_NONE == cx->opts->frame )
@@ -107,7 +113,7 @@ static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
         /* use specified frame */
         : cx->opts->frame;
 
-    double *E_ee = TF_abs + (int)ld_abs*id_ee;
+    double *E_ee = (*pTF_abs)->data + (int)(*pTF_abs)->ld*id_ee;
     AA_MEM_CPY(E, E_ee, 7);
 }
 
@@ -135,6 +141,7 @@ static void kin_solve_sys( const void *vcx,
                            double *AA_RESTRICT dq ) {
     (void) t; // time invariant
     const struct kin_solve_cx *cx = (const struct kin_solve_cx*)vcx;
+    void *ptrtop = aa_mem_region_ptr(cx->reg);
     double E_act[7];
     //printf("ksolve\n");
 
@@ -145,11 +152,8 @@ static void kin_solve_sys( const void *vcx,
     size_t n_c = aa_rx_sg_sub_config_count(ssg);
 
 
-    AA_RX_SG_TF_ALLOC( sg, cx->reg, TF_rel, ld_rel, TF_abs, ld_abs );
-    s_tf( cx, q,
-          TF_rel, ld_rel,
-          TF_abs, ld_abs,
-          E_act );
+    struct aa_dmat *TF_abs;
+    s_tf( cx, q,  &TF_abs, E_act );
 
     double w_e[6];
     AA_MEM_ZERO(w_e, 6);
@@ -162,16 +166,16 @@ static void kin_solve_sys( const void *vcx,
         }
 
         aa_rx_wk_dx2dq_np( ssg, &cx->opts->wk_opts,
-                           n_f, TF_abs, ld_abs,
+                           n_f, TF_abs->data, TF_abs->ld,
                            6, w_e,
                            n_c, dqnull, dq );
     } else {
         aa_rx_wk_dx2dq( ssg, &cx->opts->wk_opts,
-                        n_f, TF_abs, ld_abs,
+                        n_f, TF_abs->data, TF_abs->ld,
                         6, w_e,
                         n_c, dq );
     }
-    aa_rx_sg_tf_pop(sg, cx->reg, TF_rel, TF_abs);
+    aa_mem_region_pop(cx->reg, ptrtop);
 
     return;
 
@@ -198,19 +202,10 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
 
     double  E[7];
     {
-
-        const struct aa_rx_sg *sg = ssg->scenegraph;
-        size_t n_f = aa_rx_sg_frame_count(sg);
-        size_t ld_tf = 14;
-        double *TF = AA_MEM_REGION_NEW_N(cx->reg, double, ld_tf*n_f);
-        double *TF_rel = TF, *TF_abs = TF+ld_tf/2;
-
-
-        s_tf( cx, x,
-              TF_rel, ld_tf,
-              TF_abs, ld_tf,
-              E );
-        aa_mem_region_pop(cx->reg,TF);
+        void *ptrtop = aa_mem_region_ptr(cx->reg);
+        struct aa_dmat *TF_abs;
+        s_tf( cx, x, &TF_abs, E );
+        aa_mem_region_pop(cx->reg, ptrtop);
     }
 
     double theta_err, x_err;

@@ -40,7 +40,7 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
- #include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_geom.h"
 
 
 AA_API struct aa_rx_sg *aa_rx_sg_create()
@@ -197,31 +197,31 @@ AA_API void aa_rx_sg_rm_frame
     sg->frame_map.erase(name);
 }
 
-AA_API void
-aa_rx_sg_tf_alloc( const struct aa_rx_sg *scene_graph,
-                   struct aa_mem_region *reg,
-                   double **TF_rel, size_t *ld_rel,
-                   double **TF_abs, size_t *ld_abs)
-{
+// AA_API void
+// aa_rx_sg_tf_alloc( const struct aa_rx_sg *scene_graph,
+//                    struct aa_mem_region *reg,
+//                    double **TF_rel, size_t *ld_rel,
+//                    double **TF_abs, size_t *ld_abs)
+// {
 
-    size_t ld_tf = 14;
-    size_t n_f = aa_rx_sg_frame_count(scene_graph);
-    double *TF = AA_MEM_REGION_NEW_N(reg, double, ld_tf*n_f);
-    *TF_rel = TF, *TF_abs = TF+ld_tf/2;
-    *ld_rel = ld_tf;
-    *ld_abs = ld_tf;
-}
+//     size_t ld_tf = 14;
+//     size_t n_f = aa_rx_sg_frame_count(scene_graph);
+//     double *TF = AA_MEM_REGION_NEW_N(reg, double, ld_tf*n_f);
+//     *TF_rel = TF, *TF_abs = TF+ld_tf/2;
+//     *ld_rel = ld_tf;
+//     *ld_abs = ld_tf;
+// }
 
 
-AA_API void
-aa_rx_sg_tf_pop( const struct aa_rx_sg *scene_graph,
-                 struct aa_mem_region *reg,
-                 double *tf_rel, double *tf_abs )
-{
-    (void)scene_graph;
-    (void)tf_abs;
-    aa_mem_region_pop(reg,tf_rel);
-}
+// AA_API void
+// aa_rx_sg_tf_pop( const struct aa_rx_sg *scene_graph,
+//                  struct aa_mem_region *reg,
+//                  double *tf_rel, double *tf_abs )
+// {
+//     (void)scene_graph;
+//     (void)tf_abs;
+//     aa_mem_region_pop(reg,tf_rel);
+// }
 
 
 AA_API void aa_rx_sg_tf
@@ -237,6 +237,7 @@ AA_API void aa_rx_sg_tf
     assert( n_q == scene_graph->sg->config_size );
 
     amino::SceneGraph *sg = scene_graph->sg;
+
 
     double *E_rel = TF_rel, *E_abs = TF_abs;
     for( size_t i_frame = 0;
@@ -258,6 +259,25 @@ AA_API void aa_rx_sg_tf
             aa_tf_qutr_mul(E_abs_parent, E_rel, E_abs);
         }
     }
+
+}
+
+AA_API struct aa_dmat *
+aa_rx_sg_tf_abs ( const struct aa_rx_sg *scene_graph,
+                  struct aa_mem_region *reg,
+                  const struct aa_dvec *q )
+{
+    size_t n_f = aa_rx_sg_frame_count(scene_graph);
+    struct aa_dmat *TF_abs = aa_dmat_alloc(reg, 7, n_f);
+    struct aa_dmat *TF_rel = aa_dmat_alloc(reg, 7, n_f);
+    assert( 1 == q->inc );
+    aa_rx_sg_tf( scene_graph,
+                 q->len, q->data,
+                 n_f,
+                 TF_rel->data, TF_rel->ld,
+                 TF_abs->data, TF_abs->ld );
+    aa_mem_region_pop(reg,TF_rel);
+    return TF_abs;
 }
 
 AA_API void aa_rx_sg_tfmat

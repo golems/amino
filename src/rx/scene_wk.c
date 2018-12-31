@@ -75,29 +75,27 @@ aa_rx_wk_opts_destroy( struct aa_rx_wk_opts * opts)
 static int
 s_jstar( const const struct aa_rx_sg_sub *ssg,
          const struct aa_rx_wk_opts * opts,
-         size_t n_tf, const double *TF_abs, size_t ld_tf,
+         struct aa_dmat *TF_abs,
          size_t *prows, size_t *pcols,
-         double **pJ, double **pJstar )
+         struct aa_dmat **pJ, struct aa_dmat **pJstar
+    )
 {
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
     size_t rows,cols;
     aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
-    double *J = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
-    double *J_star = AA_MEM_REGION_LOCAL_NEW_N(double, rows*cols);
-
     *prows = rows;
     *pcols = cols;
-    *pJ = J;
-    *pJstar = J_star;
 
-    aa_rx_sg_sub_jacobian( ssg, n_tf, TF_abs, ld_tf, J, rows );
+    *pJ = aa_rx_sg_sub_jacobian_alloc( ssg, reg, TF_abs );
+    *pJstar = aa_dmat_alloc(reg,rows,cols);
 
 
     // Compute a damped pseudo inverse
     // TODO: Try DGECON to avoid damping when possible without taking the SVD
     if( opts->s2min > 0 ) {
-        aa_la_dzdpinv( rows, cols, opts->s2min, J, J_star );
+        aa_la_dzdpinv( rows, cols, opts->s2min, (*pJ)->data, (*pJstar)->data );
     } else  {
-        aa_la_dpinv( rows, cols, opts->k_dls, J, J_star );
+        aa_la_dpinv( rows, cols, opts->k_dls, (*pJ)->data, (*pJstar)->data );
     }
 
     return 0;
@@ -113,10 +111,13 @@ aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
-    double *J, *J_star;
 
+    struct aa_dmat tfd;
+    aa_dmat_view( &tfd, 7, n_tf, (double*)TF_abs, ld_tf );
+
+    struct aa_dmat *J, *J_star;
     s_jstar( ssg, opts,
-             n_tf, TF_abs, ld_tf,
+             &tfd,
              &rows, &cols,
              &J, &J_star );
 
@@ -124,12 +125,13 @@ aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
     assert(n_x == rows);
     assert(n_q == cols);
 
+    struct aa_dvec dxd, dqd;
+    aa_dvec_view( &dxd, n_x, (double*)dx, 1 );
+    aa_dvec_view( &dqd, n_q, (double*)dq, 1 );
 
-    cblas_dgemv( CblasColMajor, CblasNoTrans,
-                 (int)n_q, (int)n_x,
-                 1.0, J_star, (int)n_q,
-                 dx, 1,
-                 0.0, dq, 1 );
+    aa_lb_dgemv( CblasNoTrans,
+                 1.0, J_star, &dxd,
+                 0.0, &dqd );
 
     aa_mem_region_pop(reg,ptrtop);
 
@@ -148,10 +150,13 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
-    double *J, *J_star;
 
+    struct aa_dmat tfd;
+    aa_dmat_view( &tfd, 7, n_tf, (double*)TF_abs, ld_tf );
+
+    struct aa_dmat *J, *J_star;
     s_jstar( ssg, opts,
-             n_tf, TF_abs, ld_tf,
+             &tfd,
              &rows, &cols,
              &J, &J_star );
 
@@ -159,7 +164,7 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
     assert(n_q == cols);
 
 
-    aa_la_xlsnp( n_x, n_q, J, J_star, dx, dq_r, dq );
+    aa_la_xlsnp( n_x, n_q, J->data, J_star->data, dx, dq_r, dq );
 
 
     aa_mem_region_pop(reg,ptrtop);

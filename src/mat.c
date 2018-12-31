@@ -88,12 +88,12 @@ AA_API struct aa_dvec *
 aa_dvec_malloc( size_t len ) {
     struct aa_dvec *r;
     const size_t s_desc = sizeof(*r);
-    const size_t s_elem = sizeof(r->data);
-    const size_t off =  s_elem - (s_desc % s_elem);
-    char *ptr = (char*)malloc( s_desc + off + len * s_elem );
+    const size_t s_elem = sizeof(r->data[0]);
+    const size_t pad =  s_elem - (s_desc % s_elem);
+    char *ptr = (char*)malloc( s_desc + pad + len * s_elem );
 
     r = (struct aa_dvec*)ptr;
-    aa_dvec_view( r, len, (double*)(ptr+off), 1 );
+    aa_dvec_view( r, len, (double*)(ptr+s_desc+pad), 1 );
     return r;
 }
 
@@ -101,12 +101,12 @@ AA_API struct aa_dvec *
 aa_dvec_alloc( struct aa_mem_region *reg, size_t len ) {
     struct aa_dvec *r;
     const size_t s_desc = sizeof(*r);
-    const size_t s_elem = sizeof(r->data);
-    const size_t off =  s_elem - (s_desc % s_elem);
-    char *ptr = (char*)aa_mem_region_alloc(reg, s_desc + off + len * s_elem );
+    const size_t s_elem = sizeof(r->data[0]);
+    const size_t pad =  s_elem - (s_desc % s_elem);
+    char *ptr = (char*)aa_mem_region_alloc(reg, s_desc + pad + len * s_elem );
 
     r = (struct aa_dvec*)ptr;
-    aa_dvec_view( r, len, (double*)(ptr+off), 1 );
+    aa_dvec_view( r, len, (double*)(ptr+s_desc+pad), 1 );
     return r;
 }
 
@@ -115,12 +115,12 @@ aa_dmat_malloc( size_t rows, size_t cols )
 {
     struct aa_dmat *r;
     const size_t s_desc = sizeof(*r);
-    const size_t s_elem = sizeof(r->data);
-    const size_t off =  s_elem - s_desc % s_elem;
-    char *ptr = (char*)malloc( s_desc + off + rows*cols * s_elem );
+    const size_t s_elem = sizeof(r->data[0]);
+    const size_t pad =  s_elem - s_desc % s_elem;
+    char *ptr = (char*)malloc( s_desc + pad + rows*cols * s_elem );
 
     r = (struct aa_dmat*)ptr;
-    aa_dmat_view( r, rows, cols, (double*)(ptr+off), rows );
+    aa_dmat_view( r, rows, cols, (double*)(ptr+s_desc+pad), rows );
 
     return r;
 }
@@ -130,12 +130,14 @@ aa_dmat_alloc( struct aa_mem_region *reg, size_t rows, size_t cols )
 {
     struct aa_dmat *r;
     const size_t s_desc = sizeof(*r);
-    const size_t s_elem = sizeof(r->data);
-    const size_t off =  s_elem - s_desc % s_elem;
-    char *ptr = (char*)aa_mem_region_alloc(reg, s_desc + off + rows*cols * s_elem );
+    const size_t s_elem = sizeof(r->data[0]);
+    const size_t pad =  s_elem - s_desc % s_elem;
+    size_t size = s_desc + pad + rows*cols * s_elem ;
+
+    char *ptr = (char*)aa_mem_region_alloc(reg, size);
 
     r = (struct aa_dmat*)ptr;
-    aa_dmat_view( r, rows, cols, (double*)(ptr+off), rows );
+    aa_dmat_view( r, rows, cols, (double*)(ptr+s_desc+pad), rows );
 
     return r;
 }

@@ -58,7 +58,7 @@
 struct aa_dvec {
     size_t len;   ///< Number of elements in vector
     double *data; ///< Pointer to data
-    size_t inc;   ///< Increment between vector elements
+    size_t inc;   ///< Increment between successive vector elements
 };
 
 /**
@@ -77,12 +77,23 @@ struct aa_dmat {
 
 /**
  * Fill in a vector descriptor.
+ *
+ * @param vec  Pointer to descriptor
+ * @param len  Number of elements in vector
+ * @param data Pointer to vector data
+ * @param inc  Increment between sucessive elements
  */
 AA_API void
 aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
 
 /**
  * Fill in a matrix descriptor.
+ *
+ * @param mat   Pointer to descriptor
+ * @param rows  Number of rows in matrix
+ * @param cols  Number of colums in matrix
+ * @param data  Pointer to vector data
+ * @param ld    Leading dimension of matrix
  */
 AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t inc );

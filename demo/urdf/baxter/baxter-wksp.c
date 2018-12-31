@@ -74,25 +74,26 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
 
     size_t m = aa_rx_sg_config_count(scenegraph);
+    size_t n = aa_rx_sg_frame_count(scenegraph);
     size_t n_c = aa_rx_sg_sub_config_count(cx->ssg);
 
     double q_subset[n_c];
     aa_rx_sg_config_get( scenegraph, m, n_c,
                          aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset );
 
-    AA_RX_SG_TF_COUNT_GET( scenegraph, reg,
-                           m, cx->q, n,
-                           TF_rel, ld_rel,
-                           TF_abs, ld_abs );
+
+    struct aa_dvec qv;
+    aa_dvec_view( &qv, m, cx->q, 1 );
+    struct aa_dmat *TF_abs = aa_rx_sg_tf_abs(scenegraph, reg, &qv );
 
     aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
-                             n, TF_abs, ld_abs );
+                             n, TF_abs->data, TF_abs->ld );
 
     /* Reference Velocity and Position */
     double dx_r[6];
     AA_MEM_ZERO(dx_r, 6);
     {
-        double *E_act =  TF_abs + ld_abs*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
+        double *E_act =  TF_abs->data + TF_abs->ld*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
 
         double z_pos = sin(t*2*M_PI) / (4*M_PI);
         double z_vel = cos( t*2*M_PI ) / 2; // derivative of position
@@ -145,7 +146,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
         /*                               n_c, dqr_subset, dq_subset ); */
 
         int r = aa_rx_wk_dx2dq_lc3( cx->lc3, dt,
-                                    n, TF_abs, ld_abs,
+                                    n, TF_abs->data, TF_abs->ld,
                                     6, dx_r,
                                     n_c, q_subset, cx->dq_subset,
                                     dqr_subset, dq_subset );

@@ -38,6 +38,7 @@
 #ifndef AMINO_SCENEGRAPH_H
 #define AMINO_SCENEGRAPH_H
 
+#include "amino/mat.h"
 /**
  * @file scenegraph.h
  * @brief The scenegraph data structure
@@ -409,31 +410,31 @@ AA_API const double *aa_rx_sg_frame_axis
 ( const struct aa_rx_sg *scene_graph, aa_rx_frame_id frame );
 
 
-AA_API void
-aa_rx_sg_tf_alloc( const struct aa_rx_sg *scene_graph,
-                   struct aa_mem_region *reg,
-                   double **TF_rel, size_t *ld_rel,
-                   double **TF_abs, size_t *ld_abs);
+/* AA_API void */
+/* aa_rx_sg_tf_alloc( const struct aa_rx_sg *scene_graph, */
+/*                    struct aa_mem_region *reg, */
+/*                    double **TF_rel, size_t *ld_rel, */
+/*                    double **TF_abs, size_t *ld_abs); */
 
-AA_API void
-aa_rx_sg_tf_pop( const struct aa_rx_sg *scene_graph,
-                 struct aa_mem_region *reg,
-                 double *TF_rel, double *TF_abs );
+/* AA_API void */
+/* aa_rx_sg_tf_pop( const struct aa_rx_sg *scene_graph, */
+/*                  struct aa_mem_region *reg, */
+/*                  double *TF_rel, double *TF_abs ); */
 
 
-#define AA_RX_SG_TF_ALLOC( SCENE_GRAPH, REG, TF_REL, LD_REL, TF_ABS, LD_ABS ) \
-    double *TF_REL, *TF_ABS;                                            \
-    size_t LD_REL, LD_ABS;                                              \
-    aa_rx_sg_tf_alloc( SCENE_GRAPH, REG, &TF_REL, &LD_REL, &TF_ABS, &LD_ABS );
+/* #define AA_RX_SG_TF_ALLOC( SCENE_GRAPH, REG, TF_REL, LD_REL, TF_ABS, LD_ABS ) \ */
+/*     double *TF_REL, *TF_ABS;                                            \ */
+/*     size_t LD_REL, LD_ABS;                                              \ */
+/*     aa_rx_sg_tf_alloc( SCENE_GRAPH, REG, &TF_REL, &LD_REL, &TF_ABS, &LD_ABS ); */
 
-#define AA_RX_SG_TF_COUNT_GET( SCENE_GRAPH, REG, N_Q, Q, N_TF, TF_REL, LD_REL, TF_ABS, LD_ABS ) \
-    double *TF_REL, *TF_ABS;                                            \
-    size_t LD_REL, LD_ABS;                                              \
-    size_t N_TF = aa_rx_sg_frame_count(SCENE_GRAPH);                    \
-    aa_rx_sg_tf_alloc( SCENE_GRAPH, REG, &TF_REL, &LD_REL, &TF_ABS, &LD_ABS ); \
-    aa_rx_sg_tf(SCENE_GRAPH, N_Q, Q, N_TF,                              \
-                TF_REL, LD_REL,                                         \
-                TF_ABS, LD_ABS );                                       \
+/* #define AA_RX_SG_TF_COUNT_GET( SCENE_GRAPH, REG, N_Q, Q, N_TF, TF_REL, LD_REL, TF_ABS, LD_ABS ) \ */
+/*     double *TF_REL, *TF_ABS;                                            \ */
+/*     size_t LD_REL, LD_ABS;                                              \ */
+/*     size_t N_TF = aa_rx_sg_frame_count(SCENE_GRAPH);                    \ */
+/*     aa_rx_sg_tf_alloc( SCENE_GRAPH, REG, &TF_REL, &LD_REL, &TF_ABS, &LD_ABS ); \ */
+/*     aa_rx_sg_tf(SCENE_GRAPH, N_Q, Q, N_TF,                              \ */
+/*                 TF_REL, LD_REL,                                         \ */
+/*                 TF_ABS, LD_ABS );       */                                 \
 
 /**
  *  Compute transforms for the scene graph as quaternion-translations.
@@ -460,6 +461,25 @@ AA_API void aa_rx_sg_tf
   size_t n_tf,
   double *TF_rel, size_t ld_rel,
   double *TF_abs, size_t ld_abs );
+
+
+/**
+ *  Allocate and compute absolute transforms for the scene graph.
+ *
+ * Transform entries are in {q_x, q_y, q_z, q_w, v_x, v_y, v_z}
+ * format.
+ *
+ * @param scene_graph The scene graph container
+ * @param q           Configuraiton vector
+ *
+ *
+ * @pre aa_rx_sg_init() has been called after all frames were added to
+ * the scenegraph.
+ */
+AA_API struct aa_dmat *
+aa_rx_sg_tf_abs( const struct aa_rx_sg *scene_graph,
+                   struct aa_mem_region *reg,
+                   const struct aa_dvec *q );
 
 /**
  *  Compute transforms for the scene graph as matrices.

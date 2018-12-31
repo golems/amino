@@ -356,6 +356,22 @@ aa_rx_sg_sub_jacobian( const struct aa_rx_sg_sub *ssg,
                              J, ld_J );
 }
 
+
+AA_API struct aa_dmat *
+aa_rx_sg_sub_jacobian_alloc( const struct aa_rx_sg_sub *ssg,
+                             struct aa_mem_region *reg,
+                             struct aa_dmat *TF_abs )
+{
+    size_t rows, cols;
+    aa_rx_sg_sub_jacobian_size(ssg,&rows,&cols);
+    struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
+    aa_rx_sg_sub_jacobian(ssg,
+                          TF_abs->cols, TF_abs->data, TF_abs->ld,
+                          J->data, J->ld );
+    return J;
+
+}
+
 AA_API void
 aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
                              size_t n, double *q )
