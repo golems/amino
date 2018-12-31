@@ -92,8 +92,8 @@ AA_API int
 aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
                 const struct aa_dmat *TF_abs,
-                size_t n_x, const double *dx,
-                size_t n_q, double *dq );
+                const struct aa_dvec *dx,
+                struct aa_dvec *dq );
 
 /**
  * Convert workspace (Cartesian) velocity to joint velocity, with
@@ -114,8 +114,8 @@ AA_API int
 aa_rx_wk_dx2dq_np( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
                    const struct aa_dmat *TF_abs,
-                   size_t n_x, const double *dx,
-                   size_t n_q, const double *dq_r, double *dq );
+                   const struct aa_dvec *dx, const struct aa_dvec *dq_r,
+                   struct aa_dvec *dq );
 
 
 /**

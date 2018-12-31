@@ -40,6 +40,7 @@ noinst_HEADERS = \
              src/tf/quat_qutr.c \
              src/rx/sg_convenience.h \
              include/wavefront_internal.h \
+             include/amino/mat_internal.h \
              include/amino/ct/traj_internal.hpp \
              include/amino/rx/scene_kin_internal.h \
              include/amino/rx/scene_wk_internal.h \

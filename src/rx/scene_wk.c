@@ -88,7 +88,7 @@ s_jstar( const const struct aa_rx_sg_sub *ssg,
     *pcols = cols;
 
     *pJ = aa_rx_sg_sub_jacobian_alloc( ssg, reg, TF_abs );
-    *pJstar = aa_dmat_alloc(reg,rows,cols);
+    *pJstar = aa_dmat_alloc(reg,cols,rows);
 
 
     // Compute a damped pseudo inverse
@@ -103,16 +103,15 @@ s_jstar( const const struct aa_rx_sg_sub *ssg,
 }
 
 AA_API int
-aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
                 const struct aa_dmat *TF_abs,
-                size_t n_x, const double *dx,
-                size_t n_q, double *dq )
+                const struct aa_dvec *dx,
+                struct aa_dvec *dq )
 {
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
-
 
     struct aa_dmat *J, *J_star;
     s_jstar( ssg, opts,
@@ -120,17 +119,12 @@ aa_rx_wk_dx2dq( const const struct aa_rx_sg_sub *ssg,
              &rows, &cols,
              &J, &J_star );
 
-
-    assert(n_x == rows);
-    assert(n_q == cols);
-
-    struct aa_dvec dxd, dqd;
-    aa_dvec_view( &dxd, n_x, (double*)dx, 1 );
-    aa_dvec_view( &dqd, n_q, (double*)dq, 1 );
+    aa_lb_check_size(dx->len,   rows);
+    aa_lb_check_size(dq->len,   cols);
 
     aa_lb_dgemv( CblasNoTrans,
-                 1.0, J_star, &dxd,
-                 0.0, &dqd );
+                 1.0, J_star, dx,
+                 0.0, dq );
 
     aa_mem_region_pop(reg,ptrtop);
 
@@ -142,14 +136,13 @@ AA_API int
 aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
                    const struct aa_dmat *TF_abs,
-                   size_t n_x, const double *dx,
-                   size_t n_q, const double *dq_r, double *dq )
+                   const struct aa_dvec *dx, const struct aa_dvec *dq_r,
+                   struct aa_dvec *dq )
 {
 
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
-
 
     /* struct aa_dmat tfd; */
     /* aa_dmat_view( &tfd, 7, n_tf, (double*)TF_abs, ld_tf ); */
@@ -160,12 +153,23 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
              &rows, &cols,
              &J, &J_star );
 
-    assert(n_x == rows);
-    assert(n_q == cols);
+    aa_lb_check_size(dx->len,   rows);
+    aa_lb_check_size(dq_r->len, cols);
+    aa_lb_check_size(dq->len,   cols);
 
+    // workspace solution
+    aa_lb_dgemv(CblasNoTrans,
+                1, J_star, dx,
+                0, dq );
 
-    aa_la_xlsnp( n_x, n_q, J->data, J_star->data, dx, dq_r, dq );
+    // Nullspace matrix
+    struct aa_dmat *N = aa_dmat_alloc(reg,cols,cols);
+    aa_la_np( rows, cols, J->data, J_star->data, N->data );
 
+    // Nullspace project
+    aa_lb_dgemv(CblasNoTrans,
+                -1, N, dq_r,
+                1, dq );
 
     aa_mem_region_pop(reg,ptrtop);
     return 0;

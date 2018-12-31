@@ -146,10 +146,7 @@ static void kin_solve_sys( const void *vcx,
     //printf("ksolve\n");
 
     const struct aa_rx_sg_sub *ssg = cx->ssg;
-    const struct aa_rx_sg *sg = ssg->scenegraph;
-    size_t n_q = aa_rx_sg_config_count(sg);
-    size_t n_c = aa_rx_sg_sub_config_count(ssg);
-
+    size_t n_qs = aa_rx_sg_sub_config_count(ssg);
 
     struct aa_dmat *TF_abs;
     s_tf( cx, q,  &TF_abs, E_act );
@@ -158,21 +155,22 @@ static void kin_solve_sys( const void *vcx,
     aa_dvec_zero(w_e);
     aa_rx_wk_dx_pos( &cx->opts->wk_opts, E_act, cx->E1, w_e );
 
+    struct aa_dvec v_dq;
+    aa_dvec_view(&v_dq, n_qs, dq, 1);
+
     if( cx->opts->q_ref ) {
-        double dqnull[n_q];
-        for( size_t i = 0; i < n_q; i ++ )  {
+        double dqnull[n_qs];
+        for( size_t i = 0; i < n_qs; i ++ )  {
             dqnull[i] = - cx->opts->dq_dt[i] * ( q[i] - cx->opts->q_ref[i] );
         }
-
+        struct aa_dvec v_dqnull;
+        aa_dvec_view(&v_dqnull, n_qs, dqnull, 1);
         aa_rx_wk_dx2dq_np( ssg, &cx->opts->wk_opts,
-                           TF_abs,
-                           6, w_e->data,
-                           n_c, dqnull, dq );
+                           TF_abs, w_e, &v_dqnull, &v_dq );
     } else {
         aa_rx_wk_dx2dq( ssg, &cx->opts->wk_opts,
                         TF_abs,
-                        6, w_e->data,
-                        n_c, dq );
+                        w_e, &v_dq );
     }
     aa_mem_region_pop(cx->reg, ptrtop);
 

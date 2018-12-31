@@ -110,6 +110,9 @@ AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t inc );
 
 
+#define AA_MAT_DIAG(VEC,MAT)                                    \
+    aa_dvec_view((VEC), (MAT)->cols, (MAT)->data, 1+(MAT)->ld);
+
 /**
  * Region-allocate a vector.
  *
