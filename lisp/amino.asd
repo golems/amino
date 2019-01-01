@@ -64,6 +64,13 @@
                (:file "foreign" :depends-on ("package"))
                (:file "blas" :depends-on ("foreign" "ffi"))
                (:file "libc" :depends-on ("foreign"))
+
+               ;; Matrices
+               (cffi-grovel:grovel-file "mat/mat-grovel" :depends-on ("package"))
+               (:file "mat/mat-macro" :depends-on ("ffi" "mat/mat-grovel"))
+               (:file "mat/mat-lib" :depends-on ("foreign" "mat/mat-macro"))
+               (:file "mat/mat-init" :depends-on ("mat/mat-lib"))
+
                ;; Foreign LA
                (:file "amino-la" :depends-on ("foreign"))
                ;; LA

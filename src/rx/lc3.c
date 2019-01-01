@@ -122,52 +122,49 @@ lc3_constraints (
     // Rest of allocated arrays are local temps
     void *ptrtop = aa_mem_region_ptr(reg);
 
-    double *N     = AA_MEM_REGION_NEW_N(reg, double, n_q*n_q);
-    double *dq_rn = AA_MEM_REGION_NEW_N(reg, double, n_q );
+    struct aa_dmat *N  = aa_dmat_alloc(reg, n_q, n_q);
+    struct aa_dvec *dq_rn  = aa_dvec_alloc(reg, n_q );
 
     assert(TF_abs);
     //aa_rx_sg_sub_jacobian( ssg, TF_abs->cols, TF_abs->data, TF_abs->ld, J, n_x );
     struct aa_dmat *J = aa_rx_sg_sub_jacobian_alloc( ssg, reg, TF_abs );
 
+    struct aa_dmat vJstar = AA_DMAT_INIT( n_q, n_x, A, n_q );
+    struct aa_dvec vAn    = AA_DVEC_INIT( n_q, A+n_q*n_x, 1 );
+    struct aa_dvec vcx    = AA_DVEC_INIT( n_x, c, 1 );
 
     {
-        double *J_star = A; // Reuse A matrix
-
         // Compute a damped pseudo inverse
         if( cx->s2min > 0 ) {
-            aa_la_dzdpinv( n_x, n_q, cx->s2min, J->data, J_star );
+            aa_la_dzdpinv( n_x, n_q, cx->s2min, J->data, vJstar.data );
         } else  {
-            aa_la_dpinv( n_x, n_q, cx->k_dls, J->data, J_star );
+            aa_la_dpinv( n_x, n_q, cx->k_dls, J->data, vJstar.data );
         }
 
         // Compute nullspace projection matrix
-        aa_la_np( n_x, n_q, J->data, J_star, N );
+        aa_la_np( n_x, n_q, J->data, vJstar.data, N->data );
     }
 
     // Fill A
     /*  A = [J_star*dt, N*(dq_a - dq_r) ] */
     cblas_dscal( (int)(n_q*n_x), dt, A, 1 ); // A = J_star * dt
-    for( size_t i = 0; i < n_q; i++) {
-        dq_rn[i] = dq_a->data[i*dq_a->inc] - dq_r->data[i*dq_r->inc];
-    }
-    cblas_dgemv( CblasColMajor, CblasNoTrans,
-                 (int)n_q, (int)n_q,
-                 1, N, (int)n_q,
-                 dq_rn, 1,
-                 0.0, A+n_q*n_x, 1 );
+    // dq_rn = dq_a - dq_r
+    aa_lb_dcopy(dq_a, dq_rn);
+    aa_lb_daxpy( -1, dq_r, dq_rn );
+    aa_lb_dgemv( CblasNoTrans,
+                 1, N, dq_rn,
+                 0, &vAn );
 
     // Fill C
     // actual workspace velocity
-    cblas_dgemv( CblasColMajor, CblasNoTrans,
-                 (int)n_x, (int)n_q,
-                 1.0, AA_MAT_ARGS(J),
-                 AA_VEC_ARGS(dq_a),
-                 0.0, c, 1 );
-
+    aa_lb_dgemv( CblasNoTrans,
+                 1.0, J, dq_a,
+                 0, &vcx );
     // c now holds dx_a
-    for( size_t i = 0; i < n_x; i ++ ) {
-        c[i] = (dx_r->data[i*dx_r->inc] - c[i])/dt;
-    }
+    // c = (c-dx_r)/(-dt)
+    aa_lb_daxpy(-1, dx_r, &vcx);
+    aa_lb_dscal(-1/dt, &vcx);
+
     c[n_x] = 1; // TODO: add weighting parameter to options
 
     // Fill x bounds

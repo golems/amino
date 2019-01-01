@@ -44,14 +44,13 @@
 #define AMINO_MAT_INTERNAL_H
 
 
+AA_API void
+aa_lb_fail_size( size_t a, size_t b );
 
-static void
+static inline void
 aa_lb_check_size( size_t a, size_t b )
 {
-    if( a != b ) {
-        fprintf(stderr, "Mismatched sizes: %lu != %lu\n", a, b);
-        abort();
-        exit(EXIT_FAILURE);
-    }
+    if( a != b )
+        aa_lb_fail_size(a,b);
 }
 #endif /* AMINO_MAT_INTERNAL_H */

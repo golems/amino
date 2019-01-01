@@ -52,7 +52,7 @@
  *
  */
 
-typedef size_t aa_lb_size ;
+typedef size_t aa_lb_size;
 
 /**
  * Descriptor for a vector.
@@ -74,6 +74,17 @@ struct aa_dmat {
 };
 
 
+
+typedef void
+(aa_lb_err_fun)( const char *message );
+
+AA_API void
+aa_lb_err( const char *message );
+
+AA_API void
+aa_lb_set_err( aa_lb_err_fun *fun );
+
+
 /**
  * BLAS arguments for a vector
  */
@@ -89,6 +100,23 @@ struct aa_dmat {
 /**
  * Fill in a vector descriptor.
  *
+ * @param len  Number of elements in vector
+ * @param data Pointer to vector data
+ * @param inc  Increment between sucessive elements
+ */
+static inline struct aa_dvec
+AA_DVEC_INIT( size_t len, double *data, size_t inc )
+{
+    struct aa_dvec vec;
+    vec.len = len;
+    vec.data = data;
+    vec.inc = inc;
+    return vec;
+}
+
+/**
+ * Fill in a vector descriptor.
+ *
  * @param vec  Pointer to descriptor
  * @param len  Number of elements in vector
  * @param data Pointer to vector data
@@ -96,6 +124,7 @@ struct aa_dmat {
  */
 AA_API void
 aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
+
 
 /**
  * Fill in a matrix descriptor.
@@ -107,7 +136,27 @@ aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
  * @param ld    Leading dimension of matrix
  */
 AA_API void
-aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t inc );
+aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t ld );
+
+
+/**
+ * Fill in a matrix descriptor.
+ *
+ * @param rows  Number of rows in matrix
+ * @param cols  Number of colums in matrix
+ * @param data  Pointer to vector data
+ * @param ld    Leading dimension of matrix
+ */
+static inline struct aa_dmat
+AA_DMAT_INIT( size_t rows, size_t cols, double *data, size_t ld )
+{
+    struct aa_dmat mat;
+    mat.rows = rows;
+    mat.cols = cols;
+    mat.data = data;
+    mat.ld = ld;
+    return mat;
+}
 
 
 #define AA_MAT_DIAG(VEC,MAT)                                    \
@@ -237,5 +286,74 @@ aa_lb_dgemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
              double alpha, const struct aa_dmat *A,
              const struct aa_dmat *B,
              double beta, struct aa_dmat *C );
+
+
+
+
+/* LAPACK */
+
+/**
+ * Copies all or part of a two-dimensional matrix A to another
+ * matrix B.
+ *
+ *  @param[in] UPLO
+ *          Specifies the part of the matrix A to be copied to B.
+ *          - = 'U':      Upper triangular part
+ *          - = 'L':      Lower triangular part
+ *          - Otherwise:  All of the matrix A
+ *
+ *  @param[in] A
+ *          dimension (LDA,N)
+ *          The m by n matrix A.  If UPLO = 'U', only the upper triangle
+ *          or trapezoid is accessed; if UPLO = 'L', only the lower
+ *          triangle or trapezoid is accessed.
+ *
+ *  @param[out] B
+ *          dimension (LDB,N)
+ *          On exit, B = A in the locations specified by UPLO.
+ *
+ */
+AA_API void
+aa_lb_dlacpy( const char uplo[1],
+              const struct aa_dmat *A,
+              struct aa_dmat *B );
+
+
+
+/* Matrix functions */
+
+
+/**
+ * Matrix transpose.
+ */
+AA_API void
+aa_dmat_trans( const struct aa_dmat *A, struct aa_dmat *At);
+
+
+/**
+ * Matrix inverse, in-place.
+ */
+AA_API int
+aa_dmat_inv( struct aa_dmat *A);
+
+
+/**
+ * Pseudo-inverse.
+ */
+AA_API int
+aa_dmat_pinv( const struct aa_dmat *A, struct aa_dmat *As);
+
+/**
+ * Damped pseudo-inverse.
+ */
+AA_API int
+aa_dmat_dpinv( double k, const struct aa_dmat *A, struct aa_dmat *As);
+
+/**
+ * Dead-zone damped pseudo-inverse.
+ */
+AA_API int
+aa_dmat_dzdpinv( double s2min, const struct aa_dmat *A, struct aa_dmat *As);
+
 
 #endif /* AMINO_MAT_H */

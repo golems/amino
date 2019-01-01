@@ -12,6 +12,10 @@ aarx_core_SOURCES = \
 	lisp/grovel.lisp \
 	lisp/tf-grovel.lisp \
 	lisp/ffi.lisp \
+	lisp/mat/mat-grovel.lisp \
+	lisp/mat/mat-macro.lisp \
+	lisp/mat/mat-lib.lisp \
+	lisp/mat/mat-init.lisp \
 	lisp/basic-ops.lisp \
 	lisp/foreign.lisp \
 	lisp/blas.lisp \
@@ -88,6 +92,7 @@ aarx.core: $(top_srcdir)/share/make-aarx.lisp $(aarx_core_SOURCES) $(nodist_aarx
 	$(MKDIR_P) lisp/rx/render
 	$(MKDIR_P) lisp/py
 	$(MKDIR_P) lisp/opt
+	$(MKDIR_P) lisp/mat
 	if test "x$(top_srcdir)" != "x$(top_builddir)"; then \
 		for i in $(aarx_core_SOURCES); \
 		do \

@@ -53,6 +53,39 @@
 #include "amino/test.h"
 
 
+static void test_transpose()
+{
+    double X[3*2 + 1] = { 1,2,3, 4,5,6, 7};
+
+    {
+        double Y[3*2] = {0};
+        double x0[] = {1,4, 2,5, 3,6};
+        struct aa_dmat mX = AA_DMAT_INIT(3,2,X,3);
+        struct aa_dmat mY = AA_DMAT_INIT(2,3,Y,2);
+        aa_dmat_trans(&mX,&mY);
+        aveq( "dmat_trans-0", 6, Y, x0, 1e-6 );
+    }
+
+    {
+        double Y[3*3] = {0};
+        double x1[] = {1,4,0, 2,5,0, 3,6,0};
+        struct aa_dmat mX = AA_DMAT_INIT(3,2,X,3);
+        struct aa_dmat mY = AA_DMAT_INIT(2,3,Y,3);
+        aa_dmat_trans(&mX,&mY);
+        aveq( "dmat_trans-1", 6, Y, x1, 1e-6 );
+    }
+
+    {
+        double Y[2*2] = {0};
+        double x2[] = {1,4, 2,5};
+        struct aa_dmat mX = AA_DMAT_INIT(2,2,X,3);
+        struct aa_dmat mY = AA_DMAT_INIT(2,2,Y,2);
+        aa_dmat_trans(&mX,&mY);
+        aveq( "dmat_trans-2", 3, Y, x2, 1e-6 );
+    }
+
+}
+
 int main(void)
 {
 
@@ -73,6 +106,8 @@ int main(void)
 
         aveq( "dgemv", 3,yd,rd,0);
     }
+
+    test_transpose();
 
     printf("mat_test: OK\n");
     return 0;
