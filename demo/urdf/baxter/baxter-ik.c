@@ -81,13 +81,6 @@ int main(int argc, char *argv[])
                              qstart_s, qstart_all );
     }
 
-    // solver options
-    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
-    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
-    aa_rx_ksol_opts_take_seed( ko, n_q, qstart_all, AA_MEM_BORROW );
-
-    const struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
 
     // solver goal
     double qs[n_qs];
@@ -103,10 +96,19 @@ int main(int argc, char *argv[])
         aa_tf_xangle2quat(-.5*M_PI, E1 );
         aa_tf_qutr_mul( E0, E1, E_ref );
     }
+
+    // solver options
+    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
+    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
+    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+    aa_rx_ksol_opts_take_seed( ko, n_q, qstart_all, AA_MEM_BORROW );
+
+    //const struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
+
     aa_tick("Inverse Kinematics: ");
-    int r = aa_rx_ik_jac_solve( ik_cx,
-                                1, E_ref, 7,
-                                n_qs, qs );
+    int r = aa_rx_ik_lopt_solve( ssg, ko,
+                                 1, E_ref, 7,
+                                 n_qs, qs );
 
     aa_tock();
     if( r ) {
@@ -118,6 +120,7 @@ int main(int argc, char *argv[])
     // set all-config joint position
     {
         double q_all[n_q];
+        AA_MEM_ZERO(q_all,n_q);
         aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
                              qs, q_all );
 

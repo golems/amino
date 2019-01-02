@@ -180,6 +180,8 @@ aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
                                 const struct aa_rx_sg_sub *ssg,
                                 double gain );
 
+
+
 /*-- Jacobian IK Solver --*/
 
 AA_API int
@@ -217,6 +219,15 @@ AA_API int aa_rx_ik_jac_solve( const struct aa_rx_ik_jac_cx *context,
 AA_API int aa_rx_ik_jac_fun( void *context,
                              size_t n_tf, const double *TF, size_t ld_TF,
                              size_t n_q, double *q );
+
+
+
+/*-- NLOPT IK Solver --*/
+AA_API int
+aa_rx_ik_lopt_solve(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts,
+                    size_t n_tf, const double *TF, size_t ld_TF,
+                    size_t n_qs, double *q_sol);
+
 
 
 /* AA_API int */

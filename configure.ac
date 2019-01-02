@@ -708,6 +708,32 @@ AH_TEMPLATE([HAVE_CLP],
 AS_IF([test "x$HAVE_CLP" = xyes], [AC_DEFINE([HAVE_CLP])])
 
 
+## NLOPT ##
+AC_LANG([C])
+AC_ARG_WITH([nlopt],
+            [AS_HELP_STRING([--without-nlopt], [Disable support for NLOPT])],
+            [],
+            [with_nlopt=auto])
+# check header
+AS_IF([test "x$with_nlopt" = xauto], [
+  AC_CHECK_HEADERS([nlopt.h], [HAVE_NLOPT=yes], [HAVE_NLOPT=no])
+],[
+  HAVE_NLOPT="$with_nlopt"
+])
+
+# check library
+AS_IF([test "x$HAVE_NLOPT" = xyes], [
+  AC_SEARCH_LIBS([nlopt_create],[nlopt],
+                 [HAVE_NLOPT=yes],
+                 [HAVE_NLOPT=no])
+])
+
+AC_SUBST([HAVE_NLOPT])
+AM_CONDITIONAL([HAVE_NLOPT], [test "x$HAVE_NLOPT" = xyes])
+AH_TEMPLATE([HAVE_NLOPT],
+            [Define presense of NLOPT library])
+AS_IF([test "x$HAVE_NLOPT" = xyes], [AC_DEFINE([HAVE_NLOPT])])
+
 ## CGAL ##
 AC_ARG_WITH([cgal],
             [AS_HELP_STRING([--enable-cgal], [Disable support for CGAL])],
