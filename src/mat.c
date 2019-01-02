@@ -273,9 +273,13 @@ aa_lb_dgemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
     aa_lb_check_size( A->cols, B->rows );
     aa_lb_check_size( B->cols, C->cols );
 
+    assert( A->rows <= A->ld );
+    assert( B->rows <= B->ld );
+    assert( C->rows <= C->ld );
+
     cblas_dgemm( CblasColMajor,
                  transA, transB,
-                 MAT_ROWS(A), MAT_COLS(A), MAT_COLS(B),
+                 MAT_ROWS(A), MAT_COLS(B), MAT_COLS(A),
                  alpha, AA_MAT_ARGS(A),
                  AA_MAT_ARGS(B),
                  beta, AA_MAT_ARGS(C) );

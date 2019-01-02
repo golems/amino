@@ -48,6 +48,7 @@
 #include "amino.h"
 #include "amino/opt/opt.h"
 #include "amino/rx/scene_wk.h"
+#include "amino/rx/scene_sub.h"
 
 struct aa_rx_wk_opts {
     double s2min;   ///< minimum singular value for DLS via SVD
@@ -58,5 +59,60 @@ struct aa_rx_wk_opts {
     enum aa_opt_lp_solver lp_solver; ///< linear program solver
 };
 
+static inline int
+aa_rx_wk_get_js( const struct aa_rx_sg_sub *ssg,
+                 const struct aa_rx_wk_opts * opts,
+                 const struct aa_dmat *TF_abs,
+                 struct aa_dmat *J,
+                 struct aa_dmat *Jstar )
+{
+    int r = -1;
+
+    aa_rx_sg_sub_jacobian(ssg,
+                          TF_abs->cols, TF_abs->data, TF_abs->ld,
+                          J->data, J->ld );
+
+    // Compute a damped pseudo inverse
+    // TODO: Try DGECON to avoid damping when possible without taking the SVD
+    if( opts->s2min > 0 ) {
+        r = aa_dmat_dzdpinv( J, sqrt(opts->s2min), Jstar );
+    } else  if (opts->k_dls > 0) {
+        r = aa_dmat_dpinv( J, opts->k_dls, Jstar );
+    } else {
+        r = aa_dmat_pinv( J, -1, Jstar );
+    }
+
+
+    return r;
+}
+
+static inline int
+aa_rx_wk_get_n( const struct aa_rx_sg_sub *ssg,
+                const struct aa_rx_wk_opts * opts,
+                const struct aa_dmat *J,
+                const struct aa_dmat *Jstar,
+                double alpha,
+                struct aa_dmat *N )
+{
+    /* N = alpha(A^* A - I) */
+
+    (void) ssg;
+    (void) opts;
+
+
+    // N = alpha*A^* A
+    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
+                 alpha, Jstar, J,
+                 0.0, N );
+
+    // N = N - alpha*I
+    for( double *x = N->data, *e = N->data + N->cols*N->ld;
+         x < e; x += N->ld+1 )
+    {
+        *x -= alpha;
+    }
+
+    return 0;
+}
 
 #endif /*AMINO_RX_WK_INTERNAL_H*/

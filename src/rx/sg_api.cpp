@@ -263,7 +263,7 @@ AA_API void aa_rx_sg_tf
 }
 
 AA_API struct aa_dmat *
-aa_rx_sg_tf_abs ( const struct aa_rx_sg *scene_graph,
+aa_rx_sg_get_tf_abs ( const struct aa_rx_sg *scene_graph,
                   struct aa_mem_region *reg,
                   const struct aa_dvec *q )
 {

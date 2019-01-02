@@ -73,35 +73,6 @@ aa_rx_wk_opts_destroy( struct aa_rx_wk_opts * opts)
     free(opts);
 }
 
-static int
-s_jstar( const const struct aa_rx_sg_sub *ssg,
-         const struct aa_rx_wk_opts * opts,
-         const struct aa_dmat *TF_abs,
-         size_t *prows, size_t *pcols,
-         struct aa_dmat **pJ, struct aa_dmat **pJstar
-    )
-{
-    struct aa_mem_region *reg =  aa_mem_region_local_get();
-    size_t rows,cols;
-    aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
-    *prows = rows;
-    *pcols = cols;
-
-    *pJ = aa_rx_sg_sub_jacobian_alloc( ssg, reg, TF_abs );
-    *pJstar = aa_dmat_alloc(reg,cols,rows);
-
-
-    // Compute a damped pseudo inverse
-    // TODO: Try DGECON to avoid damping when possible without taking the SVD
-    if( opts->s2min > 0 ) {
-        aa_la_dzdpinv( rows, cols, opts->s2min, (*pJ)->data, (*pJstar)->data );
-    } else  {
-        aa_la_dpinv( rows, cols, opts->k_dls, (*pJ)->data, (*pJstar)->data );
-    }
-
-    return 0;
-}
-
 AA_API int
 aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
@@ -109,19 +80,19 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_dvec *dx,
                 struct aa_dvec *dq )
 {
-    struct aa_mem_region *reg =  aa_mem_region_local_get();
-    void *ptrtop = aa_mem_region_ptr(reg);
     size_t rows,cols;
-
-    struct aa_dmat *J, *J_star;
-    s_jstar( ssg, opts,
-             TF_abs,
-             &rows, &cols,
-             &J, &J_star );
-
+    aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
     aa_lb_check_size(dx->len,   rows);
     aa_lb_check_size(dq->len,   cols);
 
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+    struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
+    struct aa_dmat *J_star = aa_dmat_alloc(reg,cols,rows);
+    aa_rx_wk_get_js( ssg, opts, TF_abs, J, J_star );
+
+    // workspace solution: dq = J^* dx
     aa_lb_dgemv( CblasNoTrans,
                  1.0, J_star, dx,
                  0.0, dq );
@@ -139,34 +110,27 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
                    const struct aa_dvec *dx, const struct aa_dvec *dq_r,
                    struct aa_dvec *dq )
 {
-
-    struct aa_mem_region *reg =  aa_mem_region_local_get();
-    void *ptrtop = aa_mem_region_ptr(reg);
-    size_t rows,cols;
-
-    /* struct aa_dmat tfd; */
-    /* aa_dmat_view( &tfd, 7, n_tf, (double*)TF_abs, ld_tf ); */
-
-    struct aa_dmat *J, *J_star;
-    s_jstar( ssg, opts,
-             TF_abs,
-             &rows, &cols,
-             &J, &J_star );
-
+    size_t rows, cols;
+    aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
     aa_lb_check_size(dx->len,   rows);
     aa_lb_check_size(dq_r->len, cols);
     aa_lb_check_size(dq->len,   cols);
 
-    // workspace solution
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+    struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
+    struct aa_dmat *J_star = aa_dmat_alloc(reg,cols,rows);
+    struct aa_dmat *N = aa_dmat_alloc(reg,cols,cols);
+    aa_rx_wk_get_js( ssg, opts, TF_abs, J, J_star );
+    aa_rx_wk_get_n( ssg, opts, J, J_star, 1, N );
+
+    // workspace solution: dq = J^* dx
     aa_lb_dgemv(CblasNoTrans,
                 1, J_star, dx,
                 0, dq );
 
-    // Nullspace matrix
-    struct aa_dmat *N = aa_dmat_alloc(reg,cols,cols);
-    aa_la_np( rows, cols, J->data, J_star->data, N->data );
-
-    // Nullspace project
+    // Nullspace projection: dq = dq - N*dq_r
     aa_lb_dgemv(CblasNoTrans,
                 -1, N, dq_r,
                 1, dq );

@@ -45,9 +45,9 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin.h"
-#include "amino/rx/scene_kin_internal.h"
 #include "amino/rx/scene_sub.h"
+#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_kin.h"
 
 #include "amino/math.h"
 
@@ -62,10 +62,8 @@
 struct aa_rx_wk_lc3_cx {
     struct aa_opt_cx *opt_cx;
     const struct aa_rx_sg_sub *ssg;
-    double s2min;
-    double k_dls;
+    struct aa_rx_wk_opts wk_opts;
 };
-
 
 
 static void
@@ -122,28 +120,15 @@ lc3_constraints (
     // Rest of allocated arrays are local temps
     void *ptrtop = aa_mem_region_ptr(reg);
 
-    struct aa_dmat *N  = aa_dmat_alloc(reg, n_q, n_q);
-    struct aa_dvec *dq_rn  = aa_dvec_alloc(reg, n_q );
-
-    assert(TF_abs);
-    //aa_rx_sg_sub_jacobian( ssg, TF_abs->cols, TF_abs->data, TF_abs->ld, J, n_x );
-    struct aa_dmat *J = aa_rx_sg_sub_jacobian_alloc( ssg, reg, TF_abs );
-
+    struct aa_dmat *J = aa_rx_sg_sub_get_jacobian( ssg, reg, TF_abs );
     struct aa_dmat vJstar = AA_DMAT_INIT( n_q, n_x, A, n_q );
+    struct aa_dmat *N  = aa_dmat_alloc(reg, n_q, n_q);
+    aa_rx_wk_get_js( ssg, &cx->wk_opts, TF_abs, J, &vJstar );
+    aa_rx_wk_get_n( ssg, &cx->wk_opts, J, &vJstar, 1, N );
+
+    struct aa_dvec *dq_rn  = aa_dvec_alloc(reg, n_q );
     struct aa_dvec vAn    = AA_DVEC_INIT( n_q, A+n_q*n_x, 1 );
     struct aa_dvec vcx    = AA_DVEC_INIT( n_x, c, 1 );
-
-    {
-        // Compute a damped pseudo inverse
-        if( cx->s2min > 0 ) {
-            aa_la_dzdpinv( n_x, n_q, cx->s2min, J->data, vJstar.data );
-        } else  {
-            aa_la_dpinv( n_x, n_q, cx->k_dls, J->data, vJstar.data );
-        }
-
-        // Compute nullspace projection matrix
-        aa_la_np( n_x, n_q, J->data, vJstar.data, N->data );
-    }
 
     // Fill A
     /*  A = [J_star*dt, N*(dq_a - dq_r) ] */
@@ -236,9 +221,8 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
 
 
     struct aa_rx_wk_lc3_cx *cx = AA_NEW(struct aa_rx_wk_lc3_cx);
-    cx->s2min = opts->s2min;
-    cx->k_dls = opts->k_dls;
     cx->ssg = ssg;
+    memcpy(&cx->wk_opts, opts, sizeof(*opts));
 
     size_t n_x, n_q;
     aa_rx_sg_sub_jacobian_size( ssg, &n_x, &n_q );
@@ -256,10 +240,13 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     aa_rx_sg_center_configs(sg, n_qall, q_all);
     aa_rx_sg_sub_center_configs(ssg, n_q, q_a->data);
 
+    aa_dvec_zero(dq_a);
+    aa_dvec_zero(dq_r);
+    aa_dvec_zero(dx_r);
 
     struct aa_dvec qv;
     aa_dvec_view( &qv, n_qall, q_all, 1 );
-    struct aa_dmat *TF_abs = aa_rx_sg_tf_abs(sg, reg, &qv);
+    struct aa_dmat *TF_abs = aa_rx_sg_get_tf_abs(sg, reg, &qv);
 
     double *A;
     double *b_min, *b_max;
@@ -345,7 +332,7 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
 
     if( 0 == r ) {
         // extract velocity
-        AA_MEM_CPY( dq, dq_a, n_q );
+        aa_lb_dcopy(dq_a, dq);
 
         // WS reference
         cblas_dgemv( CblasColMajor, CblasNoTrans,

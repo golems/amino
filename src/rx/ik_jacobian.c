@@ -96,7 +96,7 @@ static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
         struct aa_dvec qv;
         aa_dvec_view( &qv, n_q, q_all, 1 );
         // TODO: faster TF update
-        *pTF_abs = aa_rx_sg_tf_abs(sg, cx->reg, &qv );
+        *pTF_abs = aa_rx_sg_get_tf_abs(sg, cx->reg, &qv );
     }
 
 

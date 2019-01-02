@@ -84,7 +84,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
     struct aa_dvec qv;
     aa_dvec_view( &qv, m, cx->q, 1 );
-    struct aa_dmat *TF_abs = aa_rx_sg_tf_abs(scenegraph, reg, &qv );
+    struct aa_dmat *TF_abs = aa_rx_sg_get_tf_abs(scenegraph, reg, &qv );
 
     aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
                              n, TF_abs->data, TF_abs->ld );
