@@ -10,7 +10,7 @@ RUN apt-get -y update && \
             doxygen groff \
             sbcl \
             flex povray ffmpeg \
-            coinor-libclp-dev libglpk-dev liblpsolve55-dev \
+            coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev \
             wget git
 
 RUN cd && /root/amino/script/install/install-quicklisp.sh
