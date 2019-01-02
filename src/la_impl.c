@@ -601,6 +601,30 @@ AA_API int AA_NAME(la,eev)
 }
 
 
+AA_API int AA_NAME(la,sysv)
+( const char uplo[1], size_t n, size_t nrhs,
+  AA_TYPE *A, size_t lda,
+  int *ipiv,
+  AA_TYPE *B, size_t ldb )
+{
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    int ni = (int)n;
+    int nrhsi = (int)nrhs;
+    int ldai = (int)lda;
+    int ldbi = (int)ldb;
+    int info;
+
+    LA_WORK( reg, work, lwork,
+             AA_LAPACK_NAME(sysv)( uplo, &ni, &nrhsi,
+                                   A, &ldai,
+                                   ipiv,
+                                   B, &ldbi,
+                                   work, &lwork, &info ) );
+
+    return info;
+}
+
+
 
 int AA_NAME(la,compar)( const void *_a, const void *_b )
 {

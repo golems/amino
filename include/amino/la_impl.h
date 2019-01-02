@@ -473,6 +473,13 @@ AA_API int AA_NAME(la,eev)
   AA_TYPE *Vl, size_t ldvl,
   AA_TYPE *Vr,  size_t ldvr );
 
+AA_API int AA_NAME(la,sysv)
+( const char uplo[1], size_t n, size_t nrhs,
+  AA_TYPE *A, size_t lda,
+  int *ipiv,
+  AA_TYPE *B, size_t ldb );
+
+
 /** Fit a least-squares hyperplane to columns of A.
  *
  * Normalizes data first.

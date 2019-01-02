@@ -167,14 +167,39 @@ aa_dmat_alloc( struct aa_mem_region *reg, size_t rows, size_t cols )
     return r;
 }
 
+AA_API void
+aa_dmat_set( struct aa_dmat *A, double alpha, double beta )
+{
+    int mi   = (int)(A->rows);
+    int ni   = (int)(A->cols);
+    int ldai = (int)(A->ld);
+
+    dlaset_( "G", &mi, &ni,
+             &alpha, &beta,
+             A->data, &ldai );
+
+}
+
+AA_API void
+aa_dvec_set( struct aa_dvec *vec, double alpha )
+{
+    double *end = vec->data + vec->len*vec->inc;
+    for( double *x = vec->data; x < end; x += vec->inc ) {
+        *x = alpha;
+    }
+}
 
 void
 aa_dvec_zero( struct aa_dvec *vec )
 {
-    double *end = vec->data + vec->len*vec->inc;
-    for( double *x = vec->data; x < end; x += vec->inc ) {
-        *x = 0.0;
-    }
+    aa_dvec_set(vec,0);
+}
+
+
+AA_API void
+aa_dmat_zero( struct aa_dmat *mat )
+{
+    aa_dmat_set(mat, 0, 0);
 }
 
 
@@ -279,6 +304,46 @@ aa_lb_dlacpy( const char uplo[1],
 
 /* Matrix Functions */
 
+AA_API double
+aa_dvec_ssd( const struct aa_dvec *x, const struct aa_dvec *y)
+{
+    aa_lb_check_size( x->len, y->len );
+    double a = 0;
+    for( double *px = x->data, *py = y->data, *e = x->data + x->len*x->inc;
+         px < e;
+         px+=x->inc, py+=y->inc )
+    {
+        double d = *px - *py;
+        a +=  d*d;
+    }
+    return a;
+}
+
+AA_API double
+aa_dmat_ssd( const struct aa_dmat *A, const struct aa_dmat *B)
+{
+    aa_lb_check_size( A->rows, B->rows );
+    aa_lb_check_size( A->cols, B->cols );
+    double a = 0;
+    for( double *Ac=A->data, *Bc=B->data, *ec=A->data + A->cols*A->ld;
+         Ac < ec;
+         Ac+=A->ld, Bc+=B->ld )
+    {
+        for( double *Ar=Ac, *Br=Bc, *er=Ac + A->rows;
+             Ar < er;
+             Ar++, Br++ )
+        {
+            double d = *Ar - *Br;
+            a +=  d*d;
+        }
+    }
+    return a;
+}
+
+AA_API double
+aa_dmat_ssd( const struct aa_dmat *x, const struct aa_dmat *y);
+
+
 void
 aa_dmat_trans( const struct aa_dmat *A, struct aa_dmat *B)
 {
@@ -327,56 +392,273 @@ aa_dmat_inv( struct aa_dmat *A )
 }
 
 
-/* int */
-/* aa_dmat_pinv( const struct aa_dmat *A, struct aa_dmat *As ) */
-/* { */
-/*     aa_lb_check_size(A->rows, As->cols); */
-/*     aa_lb_check_size(A->cols, As->rows); */
+int s_svd_helper ( const struct aa_dmat *A,
+                   struct aa_mem_region *reg,
+                   size_t *pkmin, size_t *pkmax,
+                   double **pU, double **pVt, double **pS )
+{
 
-/*     size_t m = A->rows; */
-/*     size_t n = A->cols; */
+    size_t m = A->rows;
+    size_t n = A->cols;
 
-/*     struct aa_mem_region *reg = aa_mem_region_local_get(); */
-/*     struct aa_dmat *Ap = aa_dmat_alloc( reg,n,m); */
+    // find  min/max dimensions
+    if( m < n ) {
+        *pkmin = m;
+        *pkmax = n;
+    } else {
+        *pkmin = n;
+        *pkmax = m;
+    }
 
-/*     // B = AA^T */
-/*     double *B; */
-/*     int ldb; */
-/*     if( m <= n ) { */
-/*         /\* Use A_star as workspace when it's big enough *\/ */
-/*         B = As->data; */
-/*         ldb = (int)(As->ld); */
-/*     } else { */
-/*         B = AA_MEM_REGION_NEW_N( reg, double, m*m ); */
-/*         ldb = (int)m; */
-/*     } */
+    // This method uses the SVD
+    double *W  = (double*)aa_mem_region_alloc( reg, sizeof(double) * (m*m + n*n + *pkmin) );
+    *pU  = W;        // size m*m
+    *pVt = *pU + m*m; // size n*n
+    *pS  = *pVt + n*n; // size min(m,n)
 
-/*     aa_lb_dlacpy( "A", A, Ap ); */
+    // A = U S V^T
+    aa_la_d_svd( m,n,
+                 A->data, A->ld,
+                 *pU, m, *pS, *pVt, n );
 
-/*     // B is symmetric.  Only compute the upper half. */
-/*     cblas_dsyrk( CblasColMajor, CblasUpper, CblasNoTrans, */
-/*                  MAT_ROWS(Ap), MAT_COLS(Ap), */
-/*                  1, AA_MAT_ARGS(Ap), */
-/*                  0, B, ldb ); */
 
-/*     // B += kI */
-/*     /\* for( size_t i = 0; i < m*(size_t)ldb; i += ((size_t)ldb+1) ) *\/ */
-/*     /\*     B[i] += k; *\/ */
+    return 0;
+}
 
-/*     /\* Solve via Cholesky Decomp *\/ */
-/*     /\* B^T (A^*)^T = A    and     B = B^T (Hermitian) *\/ */
 
-/*     aa_cla_dposv( 'U', (int)m, (int)n, */
-/*                   B, ldb, */
-/*                   AA_MAT_ARGS(Ap) ); */
+int
+aa_dmat_pinv( const struct aa_dmat *A, double tol, struct aa_dmat *As )
+{
 
-/*     aa_la_d_transpose( m, n, Ap, m, As, n ); */
+    aa_lb_check_size(A->rows, As->cols);
+    aa_lb_check_size(A->cols, As->rows);
 
-/*     aa_mem_region_pop( reg, Ap ); */
-/* } */
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
 
-/* int */
-/* aa_dmat_dpinv( double k, const struct aa_dmat *A, struct aa_dmat *Ap); */
+    size_t kmin, kmax;
+    double *U, *Vt, *S;
+    s_svd_helper( A, reg,
+                  &kmin, &kmax, &U, &Vt, &S );
 
-/* int */
-/* aa_dmat_dzdpinv( double s2min, const struct aa_dmat *A, struct aa_dmat *Ap); */
+    size_t m = A->rows;
+    const int mi = (int)(A->rows);
+    const int ni = (int)(A->cols);
+
+    if( tol < 0 ) {
+        tol = (double)kmax * S[0] * DBL_EPSILON;
+    }
+
+    // \sum 1/s_i * v_i * u_i^T
+    aa_dmat_zero(As);
+    double *Asd = As->data;
+    for( size_t i = 0; i < kmin && S[i] > tol; i ++ ) {
+        cblas_dger( CblasColMajor, ni, mi, 1/S[i],
+                    Vt + i, ni,
+                    U + m*i, 1,
+                    Asd, ni
+            );
+    }
+
+    aa_mem_region_pop( reg, ptrtop );
+
+    return 0;
+
+    /* struct aa_mem_region *reg = aa_mem_region_local_get(); */
+    /* struct aa_dmat *Ap = aa_dmat_alloc(reg,m,n); */
+
+    /* // B = AA^T */
+    /* double *B; */
+    /* int ldb; */
+    /* if( m <= n ) { */
+    /*     /\* Use A_star as workspace when it's big enough *\/ */
+    /*     B = As->data; */
+    /*     ldb = (int)(As->ld); */
+    /* } else { */
+    /*     B = AA_MEM_REGION_NEW_N( reg, double, m*m ); */
+    /*     ldb = (int)m; */
+    /* } */
+
+    /* aa_lb_dlacpy( "A", A, Ap ); */
+
+    /* // B is symmetric.  Only compute the upper half. */
+    /* cblas_dsyrk( CblasColMajor, CblasUpper, CblasNoTrans, */
+    /*              MAT_ROWS(Ap), MAT_COLS(Ap), */
+    /*              1, AA_MAT_ARGS(Ap), */
+    /*              0, B, ldb ); */
+
+    /* // B += kI */
+    /* /\* for( size_t i = 0; i < m*(size_t)ldb; i += ((size_t)ldb+1) ) *\/ */
+    /* /\*     B[i] += k; *\/ */
+
+    /* /\* Solve via Cholesky Decomp *\/ */
+    /* /\* B^T (A^*)^T = A    and     B = B^T (Hermitian) *\/ */
+
+    /* aa_cla_dposv( 'U', (int)m, (int)n, */
+    /*               B, ldb, */
+    /*               AA_MAT_ARGS(Ap) ); */
+
+    /* aa_dmat_trans( Ap, As ); */
+
+    /* aa_mem_region_pop( reg, Ap ); */
+
+}
+
+int
+aa_dmat_dpinv( const struct aa_dmat *A, double k, struct aa_dmat *As)
+{
+    aa_lb_check_size(A->rows, As->cols);
+    aa_lb_check_size(A->cols, As->rows);
+
+    // TODO: Try DGESV for non-positive-definite matrices
+
+    size_t m = A->rows;
+    size_t n = A->cols;
+
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+    int r = -1;
+
+    /* As = inv(A'*A - k*I) * A' A'*inv(A*A' - k*I) */
+    if( m <= n ) {
+        /*
+         * (A^*) = A^T*inv(A*A^T - k*I)
+         * (A^*) = A^T*inv(B)
+         * (A^*)*B = A^T
+         * B^T (A^*)^T = A    and     B = B^T (Hermitian)
+         *
+         */
+
+        /* Use A_star as workspace for B */
+        double *B = As->data;
+        int ldb = (int)(As->ld);
+
+        /* Ap = A */
+        struct aa_dmat *Ap = aa_dmat_alloc(reg,m,n);
+        aa_lb_dlacpy( "A", A, Ap );
+
+        // B is symmetric.  Only compute the upper half.
+        // B = A * A'
+        cblas_dsyrk( CblasColMajor, CblasUpper, CblasNoTrans,
+                     MAT_ROWS(Ap), MAT_COLS(Ap),
+                     1, AA_MAT_ARGS(Ap),
+                     0, B, ldb );
+
+        /* B += kI */
+        for( double *x = B, *e = B+(int)m*ldb; x < e; x+=ldb+1 )
+            *x += k;
+
+        /* B^T (A^*)^T = A    and     B = B^T (Hermitian) */
+
+        /* Solve via Cholesky (positive definite) */
+        r = aa_cla_dposv( 'U', (int)m, (int)n,
+                           B, ldb,
+                           AA_MAT_ARGS(Ap) );
+
+        /* Solve via LU */
+        /* int *ipiv = AA_MEM_REGION_NEW_N(reg,int,m); */
+        /* r = aa_la_d_sysv( "U", m, n, */
+        /*                   B, (size_t)ldb, */
+        /*                   ipiv, */
+        /*                   Ap->data, Ap->ld ); */
+
+
+        aa_dmat_trans( Ap, As );
+
+    } else {
+
+        /*
+         * (A^*) = inv(A^T*A - k*I) * A^T
+         * (A^*) = inv(B) * A^T
+         * B*(A^*) = A^T
+         */
+
+        /* Use A_star as workspace for B */
+        double *B = AA_MEM_REGION_NEW_N(reg,double,n*n);
+        int ldb = (int)(n);
+
+        /* As = A^T */
+        aa_dmat_trans( A, As );
+
+        // B is symmetric.  Only compute the upper half.
+        // B = A' * A = As * As'
+        cblas_dsyrk( CblasColMajor, CblasUpper, CblasNoTrans,
+                     MAT_ROWS(As), MAT_COLS(As),
+                     1, AA_MAT_ARGS(As),
+                     0, B, ldb );
+
+        /* B += kI */
+        //for( size_t i = 0; i < n*(size_t)ldb; i += ((size_t)ldb+1) )
+        for( double *x = B, *e = B+n*n; x < e; x+=ldb+1 )
+            *x += k;
+
+        /* B * (A^*)^T = A    and     B = B^T (Hermitian) */
+
+        /* Solve via Cholesky (positive definite) */
+        r = aa_cla_dposv( 'U', (int)n, (int)m,
+                           B, ldb,
+                           AA_MAT_ARGS(As) );
+
+        /* Solve via LU */
+        /* int *ipiv = AA_MEM_REGION_NEW_N(reg,int,n); */
+        /* r = aa_la_d_sysv( "U", n, m, */
+        /*                   B, (size_t)ldb, */
+        /*                   ipiv, */
+        /*                   As->data, As->ld ); */
+
+    }
+
+
+    aa_mem_region_pop( reg, ptrtop );
+
+    return r;
+}
+
+int
+aa_dmat_dzdpinv(  const struct aa_dmat *A, double s_min, struct aa_dmat *As)
+{
+
+    aa_lb_check_size(A->rows, As->cols);
+    aa_lb_check_size(A->cols, As->rows);
+
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+    size_t kmin, kmax;
+    double *U, *Vt, *S;
+    s_svd_helper( A, reg,
+                  &kmin, &kmax, &U, &Vt, &S );
+
+    size_t m = A->rows;
+    const int mi = (int)(A->rows);
+    const int ni = (int)(A->cols);
+
+    // \sum s_i/(s_i**2+k) * v_i * u_i^T
+    aa_dmat_zero(As);
+    double *Asd = As->data;
+    size_t i = 0;
+
+    // Undamped parts
+    for( ; i < kmin && S[i] >= s_min; i ++ ) {
+        cblas_dger( CblasColMajor, ni, mi, 1/S[i],
+                    Vt + i, ni,
+                    U + m*i, 1,
+                    Asd, ni
+            );
+    }
+
+    // Damped parts
+    double s2 = s_min*s_min;
+    for( ; i < kmin; i ++ ) {
+        cblas_dger( CblasColMajor, ni, mi, S[i]/s2,
+                    Vt + i, ni,
+                    U + m*i, 1,
+                    Asd, ni
+            );
+    }
+
+    aa_mem_region_pop( reg, ptrtop );
+
+    return 0;
+
+}

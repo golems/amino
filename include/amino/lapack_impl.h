@@ -251,6 +251,15 @@ AA_API void AA_LAPACK_NAME(posv)
   AA_TYPE *B, const int *LDB,
   int *INFO );
 
+
+AA_API void AA_LAPACK_NAME(sysv)
+( const char uplo[1], const int *n, const int *nrhs,
+  AA_TYPE *A, const int *lda,
+  int *ipiv,
+  AA_TYPE *B, const int *ldb,
+  AA_TYPE *work, int *lwork, int *info );
+
+
 /** Compute SVD.
 *
 *

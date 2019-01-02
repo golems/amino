@@ -320,7 +320,16 @@ aa_lb_dlacpy( const char uplo[1],
 
 
 
-/* Matrix functions */
+/* Matrix/Vector Functions */
+
+/**
+ * sum-square-differences
+ */
+AA_API double
+aa_dvec_ssd( const struct aa_dvec *x, const struct aa_dvec *y);
+
+AA_API double
+aa_dmat_ssd( const struct aa_dmat *x, const struct aa_dmat *y);
 
 
 /**
@@ -339,21 +348,24 @@ aa_dmat_inv( struct aa_dmat *A);
 
 /**
  * Pseudo-inverse.
+ *
+ * Singular values less than tol are ignored.  If tol < 0, then a sane
+ * default is used.
  */
 AA_API int
-aa_dmat_pinv( const struct aa_dmat *A, struct aa_dmat *As);
+aa_dmat_pinv( const struct aa_dmat *A, double tol, struct aa_dmat *As);
 
 /**
  * Damped pseudo-inverse.
  */
 AA_API int
-aa_dmat_dpinv( double k, const struct aa_dmat *A, struct aa_dmat *As);
+aa_dmat_dpinv( const struct aa_dmat *A, double k, struct aa_dmat *As);
 
 /**
  * Dead-zone damped pseudo-inverse.
  */
 AA_API int
-aa_dmat_dzdpinv( double s2min, const struct aa_dmat *A, struct aa_dmat *As);
+aa_dmat_dzdpinv(  const struct aa_dmat *A, double s_min, struct aa_dmat *As);
 
 
 #endif /* AMINO_MAT_H */
