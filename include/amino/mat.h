@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2018, Colorado School of Mines
+ * Copyright (c) 2018-2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ndantam@miens.edu>
@@ -201,6 +201,12 @@ aa_dmat_malloc( size_t rows, size_t cols );
  */
 AA_API void
 aa_dvec_zero( struct aa_dvec *vec );
+
+/**
+ * Fill a vector.
+ */
+AA_API void
+aa_dvec_set( struct aa_dvec *vec, double alpha );
 
 /**
  * Zero a matrix.

@@ -2,6 +2,7 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2013, Georgia Tech Research Corporation
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -65,7 +66,40 @@ operator new ( size_t n, aa_mem_region_t *reg )
     return aa_mem_region_alloc( reg, n );
 }
 
+/** Allocate memory for an array out of a memory region
+ *
+ * Do not pass the pointer to delete.
+ */
+inline void *
+operator new[] ( size_t n, aa_mem_region_t *reg )
+{
+    return aa_mem_region_alloc( reg, n );
+}
+
 namespace amino {
+
+class RegionScope {
+    public:
+    RegionScope (struct aa_mem_region *r) :
+        reg_(r),
+        ptr_(aa_mem_region_ptr(reg_))
+        {}
+
+    RegionScope () :
+        reg_(aa_mem_region_local_get()),
+        ptr_(aa_mem_region_ptr(reg_))
+        {}
+
+    ~RegionScope() {
+        aa_mem_region_pop(reg_,ptr_);
+    }
+
+    struct aa_mem_region *reg() {return reg_;}
+private:
+    struct aa_mem_region *reg_;
+    void *ptr_;
+};
+
 
 /**
  * An STL allocator that allocates out of a memory region.

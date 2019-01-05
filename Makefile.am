@@ -464,6 +464,9 @@ noinst_PROGRAMS += mat_test
 mat_test_SOURCES = src/test/mat_test.c
 mat_test_LDADD = libamino.la libtestutil.la
 
+noinst_PROGRAMS += matpp_test
+matpp_test_SOURCES = src/test/matpp_test.cpp
+matpp_test_LDADD = libamino.la libtestutil.la
 
 if USE_FORTRAN
 TESTS += la_test

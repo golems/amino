@@ -180,3 +180,4 @@ amino*.tar.gz
 /demo/build-script/baxter-simple
 /demo/build-script/build
 /mat_test
+/matpp_test
