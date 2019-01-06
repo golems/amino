@@ -89,6 +89,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/mem.hpp           \
 	include/amino/rx.h              \
 	include/amino/mat.h             \
+	include/amino/mat.hpp           \
 	include/amino/tf.hpp            \
 	include/amino/debug.h           \
 	include/amino/test.h            \
