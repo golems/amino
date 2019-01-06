@@ -337,6 +337,9 @@ aa_dvec_ssd( const struct aa_dvec *x, const struct aa_dvec *y);
 AA_API double
 aa_dmat_ssd( const struct aa_dmat *x, const struct aa_dmat *y);
 
+AA_API void
+aa_dmat_scal( struct aa_dmat *x, double alpha );
+
 
 /**
  * Matrix transpose.

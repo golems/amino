@@ -257,6 +257,35 @@ static void test_dzdpinv()
 
 }
 
+static void test_scal()
+{
+    {
+        double d[] = {1,2, 3,4};
+        double d2[] = {2,4, 6,8};
+        struct aa_dmat A = AA_DMAT_INIT(2,2,d,2);
+        struct aa_dmat A2 = AA_DMAT_INIT(2,2,d2,2);
+        aa_dmat_scal(&A,2);
+        admeq( "dmat_scal-0", &A, &A2, 1e-6 );
+    }
+    {
+        double d[] = {1,2,3,0, 4,5,6,0};
+        double d2[] = {2,4,6, 8,10,12 };
+        struct aa_dmat A = AA_DMAT_INIT(3,2,d,4);
+        struct aa_dmat A2 = AA_DMAT_INIT(3,2,d2,3);
+        aa_dmat_scal(&A,2);
+        admeq( "dmat_scal-1", &A, &A2, 1e-6 );
+    }
+    {
+        double d[] =  {1,2,0, 3,4,0, 5,6,0};
+        double d2[] = {2,4, 6,8, 10,12};
+        struct aa_dmat A = AA_DMAT_INIT(2,3,d,3);
+        struct aa_dmat A2 = AA_DMAT_INIT(2,3,d2,2);
+        aa_dmat_scal(&A,2);
+        admeq( "dmat_scal-2", &A, &A2, 1e-6 );
+    }
+}
+
+
 int main(void)
 {
     {
@@ -282,6 +311,8 @@ int main(void)
     test_pinv();
     test_dpinv();
     test_dzdpinv();
+    test_scal();
+
     printf("mat_test: OK\n");
     return 0;
 }

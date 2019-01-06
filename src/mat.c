@@ -344,9 +344,24 @@ aa_dmat_ssd( const struct aa_dmat *A, const struct aa_dmat *B)
     return a;
 }
 
-AA_API double
-aa_dmat_ssd( const struct aa_dmat *x, const struct aa_dmat *y);
+AA_API void
+aa_dmat_scal( struct aa_dmat *x, double alpha )
+{
+    size_t m=x->rows, n=x->cols, ld=x->ld;
+    double *A = x->data;
 
+    if( ld == m ) {
+        cblas_dscal( (int)(m*n), alpha, A, 1 );
+    } else if ( n <= m ) { // fewer columns than rows
+        for( double *e = A+n*ld; A < e; A+=ld ) {
+            cblas_dscal( (int)(m), alpha, A, 1 );
+        }
+    } else { // fewer rows than columns
+        for( double *e = A+m; A < e; A++ ) {
+            cblas_dscal( (int)(n), alpha, A, (int)ld );
+        }
+    }
+}
 
 void
 aa_dmat_trans( const struct aa_dmat *A, struct aa_dmat *B)
