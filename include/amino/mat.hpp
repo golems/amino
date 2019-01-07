@@ -98,6 +98,12 @@ lacpy( const char uplo[1],
     aa_lb_dlacpy(uplo,A,B);
 }
 
+static inline void
+transpose( const struct aa_dmat *A, struct aa_dmat *B )
+{
+    AA_MATPP_PRINT("transpose\n");
+    aa_dmat_trans(A, B);
+}
 
 static inline void
 gemv( CBLAS_TRANSPOSE trans,
@@ -107,6 +113,16 @@ gemv( CBLAS_TRANSPOSE trans,
 {
     AA_MATPP_PRINT("dgemv\n");
     aa_lb_dgemv(trans,alpha,A,x,beta,y);
+}
+
+static inline void
+gemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
+      double alpha, const struct aa_dmat *A,
+      const struct aa_dmat *B,
+      double beta, struct aa_dmat *C )
+{
+    AA_MATPP_PRINT("dgemm\n");
+    aa_lb_dgemm( transA, transB, alpha, A, B, beta, C );
 }
 
 
@@ -236,8 +252,6 @@ public:
     }
 };
 
-
-
 template <typename E>
 class DMatExpScal : public DMatExp< DMatExpScal<E> > {
 public:
@@ -248,9 +262,66 @@ public:
 
     void eval( struct aa_dmat &target ) const {
         MatEval(x,target);
-        aa_dmat_scal( &target, alpha );
+        la::scal( &target, alpha );
     }
 };
+
+class DMatExpMM1 : public DMatExp< DMatExpMM1 > {
+public:
+    double const alpha;
+    CBLAS_TRANSPOSE const transA;
+    CBLAS_TRANSPOSE const transB;
+    struct aa_dmat const &A;
+    struct aa_dmat const &B;
+
+    DMatExpMM1( CBLAS_TRANSPOSE transA_, CBLAS_TRANSPOSE transB_,
+                double alpha_,
+                const struct aa_dmat &A_,
+                const struct aa_dmat &B_ ) :
+        transA(transA_),
+        transB(transB_),
+        alpha(alpha_),
+        A(A_),
+        B(B_)
+        {}
+
+    void eval( struct aa_dmat &target ) const {
+        la::gemm(transA, transB, alpha, &A, &B, 0, &target);
+    }
+};
+
+template <typename E>
+class DMatExpMM2 : public DMatExp< DMatExpMM2<E> > {
+public:
+    double const alpha;
+    CBLAS_TRANSPOSE const transA;
+    CBLAS_TRANSPOSE const transB;
+    struct aa_dmat const &A;
+    struct aa_dmat const &B;
+    double beta;
+    E const &C;
+
+    DMatExpMM2( CBLAS_TRANSPOSE transA_, CBLAS_TRANSPOSE transB_,
+                double alpha_,
+                const struct aa_dmat &A_,
+                const struct aa_dmat &B_,
+                double beta_,
+                E const &C_ ) :
+        transA(transA_),
+        transB(transB_),
+        alpha(alpha_),
+        A(A_),
+        B(B_),
+        beta(beta_),
+        C(C_)
+        {}
+
+    void eval( struct aa_dmat &target ) const {
+        MatEval<E>(C,target);
+        la::gemm(transA, transB, alpha, &A, &B, beta, &target);
+    }
+};
+
 
 class DMatExpTranspose : public DMatExp< DMatExpTranspose > {
 public:
@@ -259,7 +330,7 @@ public:
         x(x_) { }
 
     void eval( struct aa_dmat &target ) const {
-        aa_dmat_trans(&x, &target);
+        la::transpose(&x,&target);
     }
 };
 
@@ -362,6 +433,17 @@ public:
         aa_dmat_view( this, rows_, cols_, data_, rows_ );
     }
 
+    static DMat * alloc(struct aa_mem_region *reg, size_t rows, size_t cols) {
+        return new(reg) DMat( rows, cols,
+                              new(reg) double[rows*cols],
+                              rows);
+    }
+
+    static DMat * alloc_local(size_t rows, size_t cols) {
+        struct aa_mem_region *reg = aa_mem_region_local_get();
+        return alloc(reg,rows,cols);
+    }
+
     DMat & operator*= (double alpha) {
         la::scal(this, alpha);
         return *this;
@@ -457,7 +539,7 @@ operator*( DMatExpScal<E> const &x, double alpha ) {
 
 template <typename E> DMatExpScal< DMatExp<E> >
 operator*(double alpha,  DMatExp<E> const &x ) {
-    return DMatExpScal<E>(alpha,x);
+    return DMatExpScal< DMatExp<E> >(alpha,x);
 }
 
 template <typename E> DMatExpScal< DMatExp<E> >
@@ -465,6 +547,16 @@ operator*( DMatExp<E> const &x, double alpha ) {
     return alpha*x;
 }
 
+
+DMatExpScal< DMatExpTranspose >
+operator*( double alpha, DMatExpTranspose const &At ) {
+    return DMatExpScal< DMatExpTranspose >(alpha,At);
+}
+
+DMatExpScal< DMatExpTranspose >
+operator*( DMatExpTranspose const &At, double alpha ) {
+    return alpha*At;
+}
 
 /* Vector Addition */
 
@@ -593,6 +685,119 @@ operator*( DVecExpMV2<E> const &b, double alpha ) {
     return alpha * b;
 }
 
+
+/* MM */
+
+DMatExpMM1
+operator*( aa_dmat const &A, aa_dmat const &B ) {
+    return DMatExpMM1(CblasNoTrans, CblasNoTrans, 1, A, B);
+}
+
+DMatExpMM1
+operator*( DMatExpTranspose const &A, aa_dmat const &B ) {
+    return DMatExpMM1(CblasTrans, CblasNoTrans, 1, A.x, B);
+}
+
+DMatExpMM1
+operator*( aa_dmat const &A, DMatExpTranspose  const &B ) {
+    return DMatExpMM1(CblasNoTrans, CblasTrans, 1, A, B.x);
+}
+
+DMatExpMM1
+operator*( DMatExpTranspose const &A, DMatExpTranspose const &B ) {
+    return DMatExpMM1(CblasTrans, CblasTrans, 1, A.x, B.x);
+}
+
+
+DMatExpMM1
+operator*( double a, DMatExpMM1 const &C )  {
+    return DMatExpMM1(C.transA, C.transB, a*C.alpha, C.A, C.B);
+}
+
+DMatExpMM1
+operator*( DMatExpMM1 const &C, double a ) {
+    return a*C;
+}
+
+
+
+template<typename E>
+DMatExpMM1
+operator*( DMatExpScal< E > const &A, aa_dmat const &B) {
+    return A.alpha * (A.x*B);
+}
+
+template<typename E>
+DMatExpMM1
+operator*( DMatExpScal< E > const &A, DMatExpTranspose const &B) {
+    return A.alpha * (A.x*B);
+}
+
+template<typename E>
+DMatExpMM1
+operator*( aa_dmat const &A, DMatExpScal< E > const &B) {
+    return B.alpha * (A*B.x);
+}
+
+template<typename E>
+DMatExpMM1
+operator*( DMatExpTranspose const &A, DMatExpScal< E > const &B) {
+    return B.alpha * (A*B.x);
+}
+
+template<typename Ea, typename Eb>
+DMatExpMM1
+operator*( DMatExpScal< Ea > const &A,
+           DMatExpScal< Eb > const &B) {
+    return (A.alpha*B.alpha) * (A.x*B.x);
+}
+
+/* MM2 */
+
+DMatExpMM2< aa_dmat >
+operator+(DMatExpMM1 const &M,  aa_dmat  const &C) {
+    return DMatExpMM2< aa_dmat >( M.transA, M.transB,
+                                     M.alpha, M.A, M.B,
+                                     1, C );
+}
+
+DMatExpMM2< aa_dmat >
+operator+( aa_dmat  const &C, DMatExpMM1 const &M) { return M+C; }
+
+template <typename E> DMatExpMM2< DMatExp<E> >
+operator+(DMatExpMM1 const &M,  DMatExp<E>  const &C) {
+    return DMatExpMM2< DMatExp<E> >( M.transA, M.transB,
+                                     M.alpha, M.A, M.B,
+                                     1, C );
+}
+
+template <typename E> DMatExpMM2< DMatExp<E> >
+operator+(DMatExp<E>  const &C, DMatExpMM1 const &M) { return M+C; }
+
+
+template <typename E> DMatExpMM2< E >
+operator+(DMatExpMM1 const &M,  DMatExpScal<E>  const &C) {
+    return DMatExpMM2< E >( M.transA, M.transB,
+                            M.alpha, M.A, M.B,
+                            C.alpha, C.x );
+}
+
+template <typename E> DMatExpMM2< E >
+operator+( DMatExpScal<E>  const &C, DMatExpMM1 const &M) {
+    return M + C;
+}
+
+template <typename E> DMatExpMM2< E >
+operator*(double alpha, DMatExpMM2<E> const &M ) {
+    return DMatExpMM2< E >( M.transA, M.transB,
+                            alpha*M.alpha, M.A, M.B,
+                            alpha*M.beta, M.C );
+}
+
+template <typename E> DMatExpMM2< E >
+operator*( DMatExpMM2<E> const &M, double alpha ) {
+    return alpha*M;
+}
 
 }
 ;

@@ -348,6 +348,7 @@ static void s_gemv2() {
     DVec y(2,yd);
     DVec yy(2,yyd);
     DVec r(2,rd);
+
     DVec r2(2,rd2);
     DVec r3(2,rd3);
     DVec r4(2,rd4);
@@ -389,6 +390,180 @@ static void s_gemv2() {
     adveq( "gemv2 11", yy, r4, 1e-6 );
 }
 
+static void s_gemm() {
+    double Ad[] = {1,2, 3,4};
+    double Bd[] = {5,6, 7,8};
+    double ABd[] = {23,34, 31,46};
+    double AtBd[] = {17,39, 23,53};
+    double ABtd[] = {26,38, 30,44};
+    double AtBtd[] = {19,43, 22,50};
+
+    DMat A(2,2,Ad);
+    DMat B(2,2,Bd);
+    DMat AB(2,2,ABd);
+    DMat AtB(2,2,AtBd);
+    DMat ABt(2,2,ABtd);
+    DMat AtBt(2,2,AtBtd);
+    DMat &C = *DMat::alloc_local(2,2);
+
+    C = A*B;
+    admeq("gemm 0", C, AB, 1e-6);
+
+    C = A.t()*B;
+    admeq("gemm 1", C, AtB, 1e-6);
+
+    C = A*B.t();
+    admeq("gemm 2", C, ABt, 1e-6);
+
+    C = A.t()*B.t();
+    admeq("gemm 3", C, AtBt, 1e-6);
+
+    {
+        DMat &AtB2 = * DMat::alloc_local(2,2);
+        DMat &AtB4 = * DMat::alloc_local(2,2);
+        AtB2 = 2*AtB;
+        AtB4 = 4*AtB;
+
+        C = 2*(A.t()*B);
+        admeq("gemm atb2 0", C, AtB2, 1e-6);
+
+        C = (A.t()*B)*2;
+        admeq("gemm atb2 1", C, AtB2, 1e-6);
+
+        C = (2*A.t())*B;
+        admeq("gemm atb2 2", C, AtB2, 1e-6);
+
+        C = (A.t()*2)*B;
+        admeq("gemm atb2 3", C, AtB2, 1e-6);
+
+        C = (A.t())*(2*B);
+        admeq("gemm atb2 4", C, AtB2, 1e-6);
+
+        C = (A.t())*(B*2);
+        admeq("gemm atb2 5", C, AtB2, 1e-6);
+
+        C = (2*A.t())*(B*2);
+        admeq("gemm atb4 ", C, AtB4, 1e-6);
+    }
+
+    {
+        DMat &ABt2 = * DMat::alloc_local(2,2);
+        DMat &ABt4 = * DMat::alloc_local(2,2);
+        ABt2 = 2*ABt;
+        ABt4 = 4*ABt;
+
+        C = 2*(A*B.t());
+        admeq("gemm abt2 0", C, ABt2, 1e-6);
+
+        C = (A*B.t())*2;
+        admeq("gemm abt2 1", C, ABt2, 1e-6);
+
+        C = (2*A)*B.t();
+        admeq("gemm abt2 2", C, ABt2, 1e-6);
+
+        C = (A*2)*B.t();
+        admeq("gemm abt2 3", C, ABt2, 1e-6);
+
+        C = A*(2*B.t());
+        admeq("gemm abt2 4", C, ABt2, 1e-6);
+
+        C = A*(B.t()*2);
+        admeq("gemm abt2 5", C, ABt2, 1e-6);
+
+        C = (2*A)*(B.t()*2);
+        admeq("gemm abt4 0", C, ABt4, 1e-6);
+    }
+
+    {
+        DMat &AtBt2 = * DMat::alloc_local(2,2);
+        DMat &AtBt4 = * DMat::alloc_local(2,2);
+        AtBt2 = 2*AtBt;
+        AtBt4 = 4*AtBt;
+
+        C = 2*(A.t()*B.t());
+        admeq("gemm abt2 0", C, AtBt2, 1e-6);
+
+        C = (A.t()*B.t())*2;
+        admeq("gemm abt2 1", C, AtBt2, 1e-6);
+
+        C = (2*A.t())*B.t();
+        admeq("gemm abt2 2", C, AtBt2, 1e-6);
+
+        C = (A.t()*2)*B.t();
+        admeq("gemm abt2 3", C, AtBt2, 1e-6);
+
+        C = A.t()*(2*B.t());
+        admeq("gemm abt2 4", C, AtBt2, 1e-6);
+
+        C = A.t()*(B.t()*2);
+        admeq("gemm abt2 5", C, AtBt2, 1e-6);
+
+        C = (2*A.t())*(B.t()*2);
+        admeq("gemm abt4 0", C, AtBt4, 1e-6);
+    }
+}
+
+
+static void s_gemm2()
+{
+    double Ad[] = {1,2, 3,4};
+    double Bd[] = {11,13, 17,23};
+    double Cd[] = {5,6, 7,8};
+    double Dd[] = {50,60, 70,80};
+    DMat A(2,2,Ad);
+    DMat B(2,2,Bd);
+    DMat C(2,2,Cd);
+    DMat D(2,2,Dd);
+
+    double ABpCd[] = {55, 80, 93, 134};
+    DMat ABpC(2,2,ABpCd);
+
+    DMat &R = *DMat::alloc_local(2,2);
+
+    R = A*B + C;
+    admeq("gemm 2 0", R, ABpC, 1e-6);
+
+    R = C + A*B ;
+    admeq("gemm 2 0", R, ABpC, 1e-6);
+
+    {
+        double ABpCtd[] = {55,81, 92, 134};
+        DMat ABpCt(2,2,ABpCtd);
+
+
+        R = A*B + C.t();
+        admeq("gemm 2e 0", R, ABpCt, 1e-6);
+
+        R = C.t() + A*B;
+        admeq("gemm 2e 1", R, ABpCt, 1e-6);
+    }
+
+    {
+        double ABp2Ctd[] = {60,88, 98, 142};
+        DMat ABp2Ct(2,2,ABp2Ctd);
+        R = A*B + 2*C.t();
+        admeq("gemm 2e 2", R, ABp2Ct, 1e-6);
+
+        R = C.t()*2 + A*B;
+        admeq("gemm 2e 3", R, ABp2Ct, 1e-6);
+    }
+
+    {
+        DMat &E = *DMat::alloc_local(2,2);
+        E = 2*ABpC;
+
+        R = 2*A*B + 2*C; //+ C*2;
+        admeq("gemm 22 0", R, E, 1e-6);
+
+        R = 2*(A*B + C);
+        admeq("gemm 22 1", R, E, 1e-6);
+
+        R = (A*B + C)*2;
+        admeq("gemm 22 2", R, E, 1e-6);
+    }
+}
+
+
 int main(void)
 {
 
@@ -400,6 +575,9 @@ int main(void)
 
     s_gemv();
     s_gemv2();
+
+    s_gemm();
+    s_gemm2();
 
     printf("MATPP: OK\n");
     return 0;
