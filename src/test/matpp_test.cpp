@@ -48,7 +48,8 @@
 #include <cblas.h>
 
 #include "amino.h"
-#include "amino/mem.hpp"
+
+//#define AA_MATPP_TRACE
 #include "amino/mat.hpp"
 
 #include "amino/test.h"
@@ -60,6 +61,12 @@ static inline void
 admeq( const char *name, const DMat &A, const DMat &B, double tol)
 {
     aafeq( name, DMat::ssd(A,B), 0, tol );
+}
+
+static inline void
+adveq( const char *name, const DVec &A, const DVec &B, double tol)
+{
+    aafeq( name, DVec::ssd(A,B), 0, tol );
 }
 
 
@@ -274,6 +281,113 @@ static void s_inv()
     admeq( "dmat_inv", A, Ai, 1e-6 );
 }
 
+static void s_gemv()
+{
+    double Ad[] = {1,2, 3,4};
+    double xd[] = {1,2};
+    double yd1[] = {7,10};
+    double yd2[] = {14,20};
+    double yd4[] = {28,40};
+    double yds[2] = {0,0};
+
+    double ydt1[] = {5,11};
+    double ydt2[] = {10,22};
+
+    DMat A(2,2,Ad);
+    DVec x(2,xd);
+    DVec y1(2,yd1);
+    DVec y2(2,yd2);
+    DVec y4(2,yd4);
+    DVec yt1(2,ydt1);
+    DVec yt2(2,ydt2);
+    DVec ys(2,yds);
+
+    ys = A*x;
+    adveq( "gemv 0", ys, y1, 1e-6 );
+
+    ys = (2*A)*x;
+    adveq( "gemv 1", ys, y2, 1e-6 );
+
+    ys = A*(2*x);
+    adveq( "gemv 2", ys, y2, 1e-6 );
+
+    ys = (2*A)*(2*x);
+    adveq( "gemv 3", ys, y4, 1e-6 );
+
+    ys = (2*A*2)*(x);
+    adveq( "gemv 4", ys, y4, 1e-6 );
+
+    ys = A.t()*x;
+    adveq( "gemv 5", ys, yt1, 1e-6 );
+
+    ys = 2*(A.t()*x);
+    adveq( "gemv 6", ys, yt2, 1e-6 );
+
+    ys = (A.t()*x)*2;
+    adveq( "gemv 7", ys, yt2, 1e-6 );
+
+    ys = A.t()*(x*2);
+    adveq( "gemv 8", ys, yt2, 1e-6 );
+
+}
+
+static void s_gemv2() {
+    double Ad[] = {1,2, 3,4};
+    double xd[] = {1,2};
+    double yd[] = {3,9};
+
+    double yyd[2] = {};
+
+    double rd[2] = {10,19};
+    double rd2[2] = {13,28};
+    double rd3[2] = {17,29};
+    double rd4[4] = {20,38};
+
+    DMat A(2,2,Ad);
+    DVec x(2,xd);
+    DVec y(2,yd);
+    DVec yy(2,yyd);
+    DVec r(2,rd);
+    DVec r2(2,rd2);
+    DVec r3(2,rd3);
+    DVec r4(2,rd4);
+
+    yy = A*x + y;
+    adveq( "gemv2 0", yy, r, 1e-6 );
+
+    yy = y + A*x;
+    adveq( "gemv2 1", yy, r, 1e-6 );
+
+    yy =  A*x + (y+y);
+    adveq( "gemv2 2", yy, r2, 1e-6 );
+
+    yy = (y+y) + A*x;
+    adveq( "gemv2 3", yy, r2, 1e-6 );
+
+    yy =  A*x + 2*y;
+    adveq( "gemv2 4", yy, r2, 1e-6 );
+
+    yy = 2*y + A*x;
+    adveq( "gemv2 5", yy, r2, 1e-6 );
+
+    yy =  2*A*x + y;
+    adveq( "gemv2 6", yy, r3, 1e-6 );
+
+    yy = y + 2*A*x;
+    adveq( "gemv2 7", yy, r3, 1e-6 );
+
+    yy =  2*A*x + 2*y;
+    adveq( "gemv2 8", yy, r4, 1e-6 );
+
+    yy = 2*y + 2*A*x;
+    adveq( "gemv2 9", yy, r4, 1e-6 );
+
+    yy =  2*(A*x + y);
+    adveq( "gemv2 10", yy, r4, 1e-6 );
+
+    yy = (y + A*x)*2;
+    adveq( "gemv2 11", yy, r4, 1e-6 );
+}
 
 int main(void)
 {
@@ -283,6 +397,9 @@ int main(void)
     s_mscal();
     s_transpose();
     s_inv();
+
+    s_gemv();
+    s_gemv2();
 
     printf("MATPP: OK\n");
     return 0;

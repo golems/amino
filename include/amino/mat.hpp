@@ -49,9 +49,68 @@
  * Don't use this stuff yet.  It's probably awful.
  */
 
+#ifdef AA_MATPP_TRACE
+#define AA_MATPP_PRINT(thing) printf(thing)
+#else
+#define AA_MATPP_PRINT(thing)
+#endif
 
 namespace amino {
 
+/************/
+/* WRAPPERS */
+/************/
+
+namespace la {
+
+static inline void
+scal( struct aa_dvec *x, double alpha ) {
+    AA_MATPP_PRINT("dscal\n");
+    aa_lb_dscal(alpha, x);
+}
+
+static inline void
+scal( struct aa_dmat *x, double alpha ) {
+    AA_MATPP_PRINT("dscal\n");
+    aa_dmat_scal(x,alpha);
+}
+
+static inline void
+copy( const struct aa_dvec *x, struct aa_dvec *y )
+{
+    AA_MATPP_PRINT("dcopy\n");
+    aa_lb_dcopy( x, y );
+}
+
+static inline void
+axpy( double a, const struct aa_dvec *x, struct aa_dvec *y )
+{
+    AA_MATPP_PRINT("daxpy\n");
+    aa_lb_daxpy(a,x,y);
+}
+
+static inline void
+lacpy( const char uplo[1],
+       const struct aa_dmat *A,
+       struct aa_dmat *B )
+{
+    AA_MATPP_PRINT("dlacpy\n");
+    aa_lb_dlacpy(uplo,A,B);
+}
+
+
+static inline void
+gemv( CBLAS_TRANSPOSE trans,
+      double alpha, const struct aa_dmat *A,
+      const struct aa_dvec *x,
+      double beta, struct aa_dvec *y )
+{
+    AA_MATPP_PRINT("dgemv\n");
+    aa_lb_dgemv(trans,alpha,A,x,beta,y);
+}
+
+
+}
 
 /************************/
 /* EXPRESSION TEMPLATES */
@@ -59,7 +118,7 @@ namespace amino {
 
 template <typename E>
 class DVecExp {
-  public:
+public:
     void eval(struct aa_dvec &target) const {
         static_cast<E const&>(*this).eval(target);
     }
@@ -67,7 +126,7 @@ class DVecExp {
 
 template <typename E>
 class DMatExp {
-  public:
+public:
     void eval(struct aa_dmat &target) const {
         static_cast<E const&>(*this).eval(target);
     }
@@ -81,7 +140,7 @@ void VecEval( E const &e, struct aa_dvec &target) {
 
 template <>
 void VecEval(aa_dvec const &e, struct aa_dvec &target) {
-    aa_lb_dcopy( &e, &target );
+    la::copy( &e, &target );
 }
 
 template <typename E>
@@ -91,7 +150,7 @@ void MatEval(E const &e, struct aa_dmat &target) {
 
 template <>
 void MatEval(aa_dmat const &e, struct aa_dmat &target) {
-    aa_lb_dlacpy("A", &e, &target);
+    la::lacpy("A", &e, &target);
 }
 
 
@@ -106,7 +165,7 @@ public:
 
     void eval( struct aa_dvec &target ) const {
         VecEval(x,target);
-        aa_lb_dscal( alpha, &target );
+        la::scal( &target, alpha );
     }
 };
 
@@ -122,9 +181,62 @@ public:
 
     void eval( struct aa_dvec &target ) const {
         VecEval(y,target);
-        aa_lb_daxpy(alpha,&x,&target);
+        la::axpy(alpha,&x,&target);
     }
 };
+
+class DVecExpMV1 : public DVecExp< DVecExpMV1 > {
+public:
+    double const alpha;
+    CBLAS_TRANSPOSE const trans;
+    struct aa_dmat const &A;
+    struct aa_dvec const &x;
+
+    DVecExpMV1( CBLAS_TRANSPOSE trans_,
+                double alpha_, const struct aa_dmat &A_,
+                const struct aa_dvec &x_ ) :
+        trans(trans_),
+        alpha(alpha_),
+        A(A_),
+        x(x_)
+        {}
+
+    void eval( struct aa_dvec &target ) const {
+        la::gemv(trans, alpha, &A, &x, 0, &target);
+    }
+};
+
+template <typename E>
+class DVecExpMV2 : public DVecExp< DVecExpMV2<E> > {
+public:
+    double const alpha;
+    CBLAS_TRANSPOSE const trans;
+    struct aa_dmat const &A;
+    struct aa_dvec const &x;
+    double const beta;
+    E const &y;
+
+    DVecExpMV2( CBLAS_TRANSPOSE trans_,
+                double alpha_, const struct aa_dmat &A_,
+                const struct aa_dvec &x_,
+                double beta_,
+                E const &y_) :
+        trans(trans_),
+        alpha(alpha_),
+        A(A_),
+        x(x_),
+        beta(beta_),
+        y(y_)
+        {}
+
+
+    void eval( struct aa_dvec &target ) const {
+        VecEval<E>(y,target);
+        la::gemv(trans, alpha, &A, &x, beta, &target);
+    }
+};
+
+
 
 template <typename E>
 class DMatExpScal : public DMatExp< DMatExpScal<E> > {
@@ -140,7 +252,7 @@ public:
     }
 };
 
-class DMatExpTranspose {
+class DMatExpTranspose : public DMatExp< DMatExpTranspose > {
 public:
     struct aa_dmat const &x;
     DMatExpTranspose(const aa_dmat & x_) :
@@ -151,14 +263,14 @@ public:
     }
 };
 
-class DMatExpInverse {
+class DMatExpInverse : public DMatExp< DMatExpInverse > {
 public:
     struct aa_dmat const &x;
     DMatExpInverse(const aa_dmat & x_) :
         x(x_) { }
 
     void eval( struct aa_dmat &target ) const {
-        aa_lb_dlacpy("A", &x, &target);
+        la::lacpy("A", &x, &target);
         aa_dmat_inv(&target);
     }
 };
@@ -187,7 +299,7 @@ public:
     }
 
     void eval( struct aa_dvec &target ) const {
-        aa_lb_dcopy( this, &target );
+        la::copy( this, &target );
     }
 
     template <typename E>
@@ -212,10 +324,28 @@ public:
     }
 
     DVec & operator*= (double alpha) {
-        aa_lb_dscal(alpha,this);
+        la::scal(this, alpha);
         return *this;
     }
 
+    DVec & operator/= (double alpha) {
+        la::scal(this, 1/alpha);
+        return *this;
+    }
+
+    DVec & operator+= (aa_dvec const &x) {
+        la::axpy(1,&x,this);
+        return *this;
+    }
+
+    DVec & operator-= (aa_dvec const &x) {
+        la::axpy(-1,&x,this);
+        return *this;
+    }
+
+    static double ssd(const DVec &x, const DVec &y ) {
+        return aa_dvec_ssd(&x,&y);
+    }
 
 };
 
@@ -233,12 +363,12 @@ public:
     }
 
     DMat & operator*= (double alpha) {
-        aa_dmat_scal(this, alpha);
+        la::scal(this, alpha);
         return *this;
     }
 
     void eval( struct aa_dmat &target ) const {
-        aa_lb_dlacpy("A", this, &target);
+        la::lacpy("A", this, &target);
     }
 
     template <typename Exp>
@@ -250,6 +380,10 @@ public:
 
     DMatExpTranspose transpose() const {
         return DMatExpTranspose(*this);
+    }
+
+    DMatExpTranspose t() const {
+        return this->transpose();
     }
 
     DMatExpInverse inverse() const {
@@ -267,7 +401,6 @@ public:
 
 
 };
-
 
 /***************/
 /* EXPRESSIONS */
@@ -361,13 +494,108 @@ operator+( DVecExpScal<struct aa_dvec> const &a,  DVecExp<E>  const &b ) {
     return DVecExpAxpy< DVecExp<E> >(a.alpha,a.x,b);
 }
 
-template <typename E> DVecExpAxpy<E>
-operator+(E const &b, DVecExpScal<struct aa_dvec>  const &a) {
-    return DVecExpAxpy< E >(a.alpha,a.x,b);
+template <typename E> DVecExpAxpy< DVecExp<E> >
+operator+( DVecExp<E> const &b, DVecExpScal<struct aa_dvec>  const &a) {
+    return DVecExpAxpy<  DVecExp<E> >(a.alpha,a.x,b);
+}
+
+DVecExpAxpy< DVecExpScal< aa_dvec > >
+operator+( DVecExpScal< aa_dvec > const &b, DVecExpScal<aa_dvec>  const &a) {
+    return DVecExpAxpy<  DVecExpScal<aa_dvec> >(a.alpha,a.x,b);
 }
 
 
-};
+/* Matrix-Vector Multiplication */
+
+DVecExpMV1
+operator*(aa_dmat const &A, aa_dvec const &x) {
+    return DVecExpMV1(CblasNoTrans, 1, A, x);
+}
+
+DVecExpMV1
+operator*(double alpha, DVecExpMV1 const &y) {
+    return DVecExpMV1(y.trans, alpha*y.alpha, y.A, y.x);
+}
+
+DVecExpMV1
+operator*(DVecExpMV1 const &y, double alpha) {
+    return alpha*y;
+}
+
+DVecExpMV1
+operator*(DMatExpTranspose const &A, aa_dvec const &x) {
+    return DVecExpMV1(CblasTrans, 1, A.x, x);
+}
+
+DVecExpMV1
+operator*(DMatExpTranspose const &A, DVecExpScal<aa_dvec> const &x) {
+    return x.alpha * (A*x.x);
+}
+
+DVecExpMV1
+operator*(DMatExpScal<aa_dmat> const &A, aa_dvec const &x) {
+    return A.alpha * (A.x*x);
+}
+
+DVecExpMV1
+operator*(aa_dmat const &A, DVecExpScal<aa_dvec> const &x) {
+    return x.alpha*(A*x.x);
+}
+
+DVecExpMV1
+operator*(DMatExpScal<aa_dmat> const &A, DVecExpScal<aa_dvec> const &x) {
+    return (A.alpha*x.alpha)*(A.x*x.x);
+}
+
+/* MV and addition */
+
+template <typename E>
+DVecExpMV2< DVecExp<E> >
+operator+(DVecExpMV1 const &b,  DVecExp<E>  const &y) {
+    return DVecExpMV2< DVecExp<E> >( b.trans, b.alpha, b.A, b.x, 1, y);
+}
+
+template <typename E>
+DVecExpMV2< DVecExp<E> >
+operator+( DVecExp<E>  const &y, DVecExpMV1 const &b ) {
+    return b+y;
+}
+
+
+DVecExpMV2<aa_dvec>
+operator+(DVecExpMV1 const &b,  aa_dvec  const &y) {
+    return DVecExpMV2< aa_dvec >( b.trans, b.alpha, b.A, b.x, 1, y);
+}
+
+DVecExpMV2<aa_dvec>
+operator+( aa_dvec  const &y, DVecExpMV1 const &b ) {
+    return b+y;
+}
+
+template <typename E> DVecExpMV2<E>
+operator+(DVecExpMV1 const &b, DVecExpScal<E> const &y) {
+    return DVecExpMV2<E>( b.trans, b.alpha, b.A, b.x, y.alpha, y.x);
+}
+
+template <typename E> DVecExpMV2<E>
+operator+( DVecExpScal<E> const &y, DVecExpMV1 const &b) {
+    return b+y;
+}
+
+template <typename E> DVecExpMV2<E>
+operator*( double alpha, DVecExpMV2<E> const &b) {
+    return DVecExpMV2<E>( b.trans, alpha*b.alpha, b.A, b.x,
+                          alpha*b.beta, b.y);
+}
+
+template <typename E> DVecExpMV2<E>
+operator*( DVecExpMV2<E> const &b, double alpha ) {
+    return alpha * b;
+}
+
+
+}
+;
 
 
 #endif //AMINO_MAT_HPP
