@@ -181,3 +181,4 @@ amino*.tar.gz
 /demo/build-script/build
 /mat_test
 /matpp_test
+/demo/urdf/baxter/baxter-wksp-pp

@@ -81,50 +81,64 @@ static void s_scal()
 
     {
         *Bv = Av;
-        assert(2 == Bv->len);
-        assert(2 == Av.len);
-        aveq( "DVec =", Bv->len, Bv->data, A, 0);
+        assert(2 == Bv->len());
+        assert(2 == Av.len());
+        aveq( "DVec =", Bv->len(), Bv->data(), A, 0);
+
+
     }
+
+
 
     {
         double A2[2] = {2, 4};
         double A4[2] = {4, 8};
 
         *Bv = Av;
-        aveq( "DVec = ", Bv->len, Bv->data, A, 0);
+        aveq( "DVec = ", Bv->len(), Bv->data(), A, 0);
         *Bv *= 2;
-        aveq( "DVec *= double", Bv->len, Bv->data, A2, 0);
+        aveq( "DVec *= double", Bv->len(), Bv->data(), A2, 0);
 
         *Bv = 2*Av;
-        aveq( "DVec = dscal 0", Bv->len, Bv->data, A2, 0);
+        aveq( "DVec = dscal 0", Bv->len(), Bv->data(), A2, 0);
 
         *Bv = (2*Av)*2;
-        aveq( "DVec = dscal 1", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 1", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = 2*(Av*2);
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = 2*(Av+Av);
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = (Av+Av)*2;
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = 2*(Av+Av);
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = 2*Av+(Av+Av);
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = (Av+Av)+2*Av;
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = Av+2*Av+Av;
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
         *Bv = Av*2 + 2*Av;
-        aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
 
+        {
+            struct aa_dvec Avv;
+            aa_dvec_view(&Avv, 2,A,1);
+
+            *Bv = 2*Avv;
+            aveq( "DVec *= double", Bv->len(), Bv->data(), A2, 0);
+
+            //*Bv += 2*Avv;
+            //aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
+    }
     }
 
 }
@@ -142,23 +156,23 @@ static void s_axpy()
     {
         double R[] = {2,4};
         *Bv = Av + Av;
-        aveq( "DVec  axpy", Bv->len, Bv->data, R, 0);
+        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
     }
 
     {
         double R[] = {3,6};
         *Bv = (Av + Av) + Av;
-        aveq( "DVec  axpy", Bv->len, Bv->data, R, 0);
+        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
 
         *Bv = Av + (Av + Av);
-        aveq( "DVec  axpy", Bv->len, Bv->data, R, 0);
+        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
 
 
         *Bv = 2*Av + Av;
-        aveq( "DVec  axpy", Bv->len, Bv->data, R, 0);
+        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
 
         *Bv = Av + 2*Av;
-        aveq( "DVec  axpy", Bv->len, Bv->data, R, 0);
+        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
     }
 
 }

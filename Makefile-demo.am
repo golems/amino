@@ -133,6 +133,11 @@ demo_urdf_baxter_baxter_wksp_SOURCES = demo/urdf/baxter/baxter-wksp.c
 demo_urdf_baxter_baxter_wksp_CFLAGS = $(DEMO_CFLAGS)
 demo_urdf_baxter_baxter_wksp_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
 
+noinst_PROGRAMS += demo/urdf/baxter/baxter-wksp-pp
+demo_urdf_baxter_baxter_wksp_pp_SOURCES = demo/urdf/baxter/baxter-wksp-pp.cpp
+demo_urdf_baxter_baxter_wksp_pp_CXXFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_wksp_pp_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
 noinst_PROGRAMS += demo/urdf/baxter/baxter-collision
 demo_urdf_baxter_baxter_collision_SOURCES = demo/urdf/baxter/baxter-collision.c
 demo_urdf_baxter_baxter_collision_CFLAGS = $(DEMO_CFLAGS)

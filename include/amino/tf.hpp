@@ -805,6 +805,27 @@ struct QuatTran : aa_tf_qv {
     {}
 
     /**
+     * Construct from a principal angle and a vector.
+     */
+    QuatTran(const struct XAngle &_r, const struct aa_tf_vec3 &_v) :
+        aa_tf_qv(from_qv(Quat(_r).data, _v.data))
+    {}
+
+    /**
+     * Construct from a principal angle and a vector.
+     */
+    QuatTran(const struct YAngle &_r, const struct aa_tf_vec3 &_v) :
+        aa_tf_qv(from_qv(Quat(_r).data, _v.data))
+    {}
+
+    /**
+     * Construct from a principal angle and a vector.
+     */
+    QuatTran(const struct ZAngle &_r, const struct aa_tf_vec3 &_v) :
+        aa_tf_qv(from_qv(Quat(_r).data, _v.data))
+    {}
+
+    /**
      * Construct from a dual quaternion.
      */
     QuatTran(const struct aa_tf_duqu *S) :  aa_tf_qv(from_duqu(S->data))  {}

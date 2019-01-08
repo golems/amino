@@ -369,8 +369,16 @@ public:
         return alloc(reg,len);
     }
 
+    size_t   len()  const { return aa_dvec::len; }
+    double * data() const { return aa_dvec::data; }
+    size_t   inc()  const { return aa_dvec::inc; }
+
     void eval( struct aa_dvec &target ) const {
         la::copy( this, &target );
+    }
+
+    double &operator[](size_t i) {
+        return data()[i*inc()];
     }
 
     template <typename E>
@@ -414,6 +422,16 @@ public:
         return *this;
     }
 
+    DVec & operator+= (DVecExpScal<aa_dvec> const &x) {
+        la::axpy(x.alpha,&x.x,this);
+        return *this;
+    }
+
+    DVec & operator-= (DVecExpScal<aa_dvec> const &x) {
+        la::axpy(-x.alpha,&x.x,this);
+        return *this;
+    }
+
     static double ssd(const DVec &x, const DVec &y ) {
         return aa_dvec_ssd(&x,&y);
     }
@@ -442,6 +460,28 @@ public:
     static DMat * alloc_local(size_t rows, size_t cols) {
         struct aa_mem_region *reg = aa_mem_region_local_get();
         return alloc(reg,rows,cols);
+    }
+
+
+    size_t rows() const { return aa_dmat::rows; }
+    size_t cols() const { return aa_dmat::rows; }
+    double * data() const { return aa_dmat::data; }
+    size_t ld()   const { return aa_dmat::ld; }
+
+    static DVec row_vec(struct aa_dmat *A, size_t j) {
+        return DVec( A->cols, A->data+j, A->ld );
+    }
+
+    static DVec col_vec(struct aa_dmat *A, size_t i) {
+        return DVec( A->rows, A->data + i*A->ld, 1 );
+    }
+
+    DVec row_vec(size_t j) {
+        return DMat::row_vec(this, j);
+    }
+
+    DVec col_vec(size_t i) {
+        return DMat::col_vec(this, i);
     }
 
     DMat & operator*= (double alpha) {
