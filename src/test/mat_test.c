@@ -251,7 +251,7 @@ static void test_dzdpinv()
 
         int r = aa_dmat_dzdpinv( &mA, .001, &mAs );
         //printf("r0: %d\n", r);
-        aveq( "la_dzdpinv-2", 6, A_star, R, .01 );
+
         assert(0 == r );
     }
 
@@ -284,6 +284,20 @@ static void test_scal()
         admeq( "dmat_scal-2", &A, &A2, 1e-6 );
     }
 }
+static void
+test_inc()
+{
+    double xd[] = {1,2,3};
+    double yd[] = {2,3,4};
+
+    struct aa_dvec x = AA_DVEC_INIT(2,xd,1);
+    struct aa_dvec y = AA_DVEC_INIT(2,yd,1);
+    aa_lb_dinc(1,&x);
+
+
+    aveq( "dinc", 3,xd,yd,0);
+
+}
 
 
 int main(void)
@@ -312,6 +326,7 @@ int main(void)
     test_dpinv();
     test_dzdpinv();
     test_scal();
+    test_inc();
 
     printf("mat_test: OK\n");
     return 0;

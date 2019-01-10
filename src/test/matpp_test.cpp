@@ -577,6 +577,34 @@ static void s_gemm2()
     }
 }
 
+static void s_slice()
+{
+    double Ad[] = {1,2, 3,4};
+
+    double r0d[] = {1,3};
+    double r1d[] = {2,4};
+    double c0d[] = {1,2};
+    double c1d[] = {3,4};
+
+    DMat A(2,2,Ad);
+    DVec vr0(2,r0d);
+    DVec vr1(2,r1d);
+    DVec vc0(2,c0d);
+    DVec vc1(2,c1d);
+
+    DVec rc0 = A.col_vec(0);
+    adveq("slice", rc0, vc0, 0);
+
+    DVec rc1 = A.col_vec(1);
+    adveq("slice", rc1, vc1, 0);
+
+    DVec rr0 = A.row_vec(0);
+    adveq("slice", rr0, vr0, 0);
+
+    DVec rr1 = A.row_vec(1);
+    adveq("slice", rr1, vr1, 0);
+
+}
 
 int main(void)
 {
@@ -592,6 +620,8 @@ int main(void)
 
     s_gemm();
     s_gemm2();
+
+    s_slice();
 
     printf("MATPP: OK\n");
     return 0;

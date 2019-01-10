@@ -138,6 +138,21 @@ aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
 AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t ld );
 
+AA_API void
+aa_dvec_slice( const struct aa_dvec *src,
+               size_t start,
+               size_t stop,
+               size_t step,
+               struct aa_dvec *dst );
+
+
+
+AA_API void
+aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst );
+
+AA_API void
+aa_dmat_col_vec( const struct aa_dmat *src, size_t col, struct aa_dvec *dst );
+
 
 /**
  * Fill in a matrix descriptor.
@@ -231,6 +246,14 @@ aa_lb_dswap( struct aa_dvec *x, struct aa_dvec *y );
  */
 AA_API void
 aa_lb_dscal( double alpha, struct aa_dvec *x );
+
+/**
+ * Increment x by alpha.
+ *
+ * \f[ \mathbf{x} \leftarrow \alpha + \mathbf{x} \f]
+ */
+AA_API void
+aa_lb_dinc( double alpha, struct aa_dvec *x );
 
 /**
  * Copy x to y.

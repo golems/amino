@@ -360,6 +360,9 @@ public:
         aa_dvec_view(this, len_, data_, 1 );
     }
 
+    DVec(aa_dvec *v) : aa_dvec(*v) { }
+    DVec(aa_dvec &v) : aa_dvec(v) { }
+
     static DVec * alloc(struct aa_mem_region *reg, size_t len) {
         return new(reg) DVec( len, new(reg) double[len] );
     }
@@ -469,11 +472,15 @@ public:
     size_t ld()   const { return aa_dmat::ld; }
 
     static DVec row_vec(struct aa_dmat *A, size_t j) {
-        return DVec( A->cols, A->data+j, A->ld );
+        aa_dvec v;
+        aa_dmat_row_vec(A,j,&v);
+        return DVec(v);
     }
 
     static DVec col_vec(struct aa_dmat *A, size_t i) {
-        return DVec( A->rows, A->data + i*A->ld, 1 );
+        aa_dvec v;
+        aa_dmat_col_vec(A,i,&v);
+        return DVec(v);
     }
 
     DVec row_vec(size_t j) {

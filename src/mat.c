@@ -99,6 +99,45 @@ aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc )
     *vec = AA_DVEC_INIT(len,data,inc);
 }
 
+
+AA_API void
+aa_dvec_slice( const struct aa_dvec *src,
+               size_t start,
+               size_t stop,
+               size_t step,
+               struct aa_dvec *dst )
+{
+    if( stop > src->len || stop < start ) {
+        aa_lb_err("Slice out-of-bounds\n");
+    }
+
+    dst->len = (stop - start) / step;
+    dst->data = src->data + src->inc*start;
+    dst->inc = src->inc*step;
+}
+
+AA_API void
+aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst )
+{
+    if( row >= src->rows ) {
+        aa_lb_err("Row vector out-of-bounds\n");
+    }
+    dst->len = src->cols;
+    dst->data = src->data + row;
+    dst->inc = src->ld;
+}
+
+AA_API void
+aa_dmat_col_vec( const struct aa_dmat *src, size_t col, struct aa_dvec *dst )
+{
+    if( col >= src->cols ) {
+        aa_lb_err("Row vector out-of-bounds\n");
+    }
+    dst->len = src->rows;
+    dst->data = src->data + col*src->ld;
+    dst->inc = 1;
+}
+
 AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t ld )
 {
@@ -215,6 +254,15 @@ AA_API void
 aa_lb_dscal( double a, struct aa_dvec *x )
 {
     cblas_dscal( VEC_LEN(x), a, AA_VEC_ARGS(x) );
+}
+
+AA_API void
+aa_lb_dinc( double alpha, struct aa_dvec *x )
+{
+    double *end = x->data + x->len*x->inc;
+    for( double *y = x->data; y < end; y += x->inc ) {
+        *y += alpha;
+    }
 }
 
 AA_API void
