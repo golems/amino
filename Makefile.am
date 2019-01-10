@@ -563,6 +563,13 @@ endif # HAVE_CLP
 
 test_lpsolve_LDADD += libamino.la libtestutil.la
 
+
+
+## NLOPT
+if HAVE_NLOPT
+libamino_la_SOURCES += src/rx/ik_nlopt.c
+endif
+
 if HAVE_CGAL
 
 lib_LTLIBRARIES += libamino-opt-cgal.la

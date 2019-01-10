@@ -12,7 +12,7 @@ RUN /root/amino/script/install/apt-retry.sh \
         doxygen groff \
         sbcl \
         flex povray libav-tools \
-        coinor-libclp-dev libglpk-dev liblpsolve55-dev \
+        coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev \
         wget git \
         ;
 
