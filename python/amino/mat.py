@@ -284,8 +284,13 @@ class DMat(ctypes.Structure):
         libamino.aa_dmat_col_vec(self,j,v)
         return v
 
+    def transpose(self):
+        At = DMat.create(self.cols(),self.rows())
+        libamino.aa_dmat_trans(self,At)
+        return At
+
     @staticmethod
-    def row_matrix( *args ):
+    def row_matrix(args):
         m = len(args)
         n = len(args[0]) if m > 0 else 0
         A = DMat.create(m,n)
@@ -294,7 +299,7 @@ class DMat(ctypes.Structure):
         return A
 
     @staticmethod
-    def col_matrix( *args ):
+    def col_matrix(args):
         n = len(args)
         m = len(args[0]) if n > 0 else 0
         A = DMat.create(m,n)
@@ -304,6 +309,17 @@ class DMat(ctypes.Structure):
 
     def ssd(self,other):
         return libamino.aa_dmat_ssd(self,other)
+
+    def gemm(self,transA,transB,alpha,A,B,beta):
+        C = self
+        if A.rows() != C.rows():
+            raise IndexError()
+        if A.cols() != B.rows():
+            raise IndexError()
+        if B.cols() != C.cols():
+            raise IndexError()
+        libamino.aa_lb_dgemm(transA,transB,alpha,A,B,beta,C)
+        return C
 
     def _check_row(self, i):
         if( i < 0 or i >= self._rows ):
@@ -332,6 +348,10 @@ class DMat(ctypes.Structure):
             return y
         elif isinstance(other,list) :
             return self * DVec(other)
+        elif isinstance(other,DMat) :
+            A,B = self,other
+            C = DMat.create(A.rows(), B.cols())
+            return C.gemm(CblasNoTrans,CblasNoTrans,1,A,B,1)
         else:
             raise TypeError('Cannot multiply matrix with %s'%type(other))
 
@@ -392,5 +412,13 @@ libamino.aa_lb_dgemv.argtypes = [ ctypes.c_int,
                                   ctypes.c_double, ctypes.POINTER(DVec) ]
 
 
+## Blas 3
+libamino.aa_lb_dgemm.argtypes = [ ctypes.c_int, ctypes.c_int,
+                                  ctypes.c_double, ctypes.POINTER(DMat), ctypes.POINTER(DMat),
+                                  ctypes.c_double, ctypes.POINTER(DMat) ]
+
+## Matrix functions
 libamino.aa_dmat_ssd.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]
 libamino.aa_dmat_ssd.restype = ctypes.c_double
+
+libamino.aa_dmat_trans.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]

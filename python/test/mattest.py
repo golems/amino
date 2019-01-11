@@ -145,37 +145,72 @@ class TestMat(unittest.TestCase):
         self.assertEqual(A.row_vec(1)[1], 4)
 
     def test_rowmatrix(self):
-        A = DMat.row_matrix( [1,2], [3,4] )
+        A = DMat.row_matrix( [ [1,2], [3,4] ] )
         self.assertEqual(A[0,0], 1)
         self.assertEqual(A[0,1], 2)
         self.assertEqual(A[1,0], 3)
         self.assertEqual(A[1,1], 4)
 
-        B = DMat.col_matrix( [1,3], [2,4] )
+        B = DMat.col_matrix( [ [1,3], [2,4] ] )
         self.assertEqual(A.ssd(B), 0)
         B[0,0] = B[0,0]+1
         self.assertEqual(A.ssd(B), 1)
 
     def test_colmatrix(self):
-        A = DMat.col_matrix( [1,2], [3,4] )
+        A = DMat.col_matrix( [ [1,2], [3,4] ] )
         self.assertEqual(A[0,0], 1)
         self.assertEqual(A[1,0], 2)
         self.assertEqual(A[0,1], 3)
         self.assertEqual(A[1,1], 4)
 
-        B = DMat.row_matrix( [1,3], [2,4] )
+        B = DMat.row_matrix([ [1,3], [2,4] ])
         self.assertEqual(A.ssd(B), 0)
         B[0,0] = B[0,0]+1
         self.assertEqual(A.ssd(B), 1)
 
+    def test_transpose(self):
+        cols = [ [1,2], [3,4], [5,6] ]
+        A = DMat.col_matrix(cols)
+        At = A.transpose()
+
+        self.assertEqual(At.row_vec(0).ssd(cols[0]), 0)
+        self.assertEqual(At.row_vec(1).ssd(cols[1]), 0)
+        self.assertEqual(At.row_vec(2).ssd(cols[2]), 0)
+
+        Atx = DMat.row_matrix(cols)
+        self.assertEqual(At.ssd(Atx), 0)
+
+
 class TestGemv(unittest.TestCase):
     def test_gemv(self):
-        A = DMat.col_matrix( [1,2], [3,4] )
+        A = DMat.col_matrix( [ [1,2], [3,4] ] )
         y = A * DVec([5,6])
         self.assertEqual(y.ssd([23,34]), 0)
 
         y = A * [1,2]
         self.assertEqual(y.ssd([7,10]), 0)
+
+class TestGemm(unittest.TestCase):
+    def test_gemm2x2(self):
+        A = DMat.col_matrix( [[1,2], [3,4]] )
+        B = DMat.col_matrix( [[5,6], [7,8]] )
+        AB = DMat.col_matrix
+
+        y = A * DVec([5,6])
+        self.assertEqual(y.ssd([23,34]), 0)
+
+
+    def test_gemm2x3(self):
+        A = DMat.row_matrix( [[1,2], [3,4], [5,6]] )
+        B = DMat.row_matrix( [[7,8,9], [10,11,12]] )
+
+        AB =  DMat.row_matrix( [[27,  30,  33],
+                                [61,  68,  75],
+                                [95, 106, 117]] )
+        self.assertEqual(AB.ssd(A*B), 0)
+
+        BA = DMat.row_matrix( [[76, 100], [103, 136]] )
+        self.assertEqual(BA.ssd(B*A), 0)
 
 if __name__ == '__main__':
     unittest.main()
