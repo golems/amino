@@ -39,6 +39,10 @@ from amino import *
 import math
 
 class TestVec0(unittest.TestCase):
+    def test_create(self):
+        v = DVec.create(2)
+        self.assertEqual(len(v),2)
+
 
     def test_copy_from(self):
         v = DVec.create(2)
@@ -56,6 +60,7 @@ class TestVec0(unittest.TestCase):
         v.copy_to(ll)
         self.assertEqual(ll[0], lst[0])
         self.assertEqual(ll[1], lst[1])
+
 
     def test_getsetitem(self):
         v = DVec.create(3)
@@ -87,39 +92,40 @@ class TestVec0(unittest.TestCase):
 
     def test_scal(self):
         v = DVec([3,5,7])
-        self.assertEqual((v*2).ssd([6,10,14]), 0)
-        self.assertEqual((2*v).ssd([6,10,14]), 0)
+        self.assertEqual((v*2), [6,10,14] )
+        self.assertEqual((2*v), [6,10,14] )
 
     def test_sadd(self):
         v = DVec([3,5,7])
-        self.assertEqual((v+2).ssd([5,7,9]), 0)
-        self.assertEqual((2+v).ssd([5,7,9]), 0)
+        self.assertEqual((v+2), [5,7,9])
+        self.assertEqual((2+v), [5,7,9])
 
     def test_neg(self):
         v = DVec([3,5,7])
-        self.assertEqual((-v).ssd([-3,-5,-7]), 0)
+        self.assertEqual((-v), [-3,-5,-7])
 
     def test_subb(self):
         v = DVec([3,5,7])
-        self.assertEqual((v-2).ssd([1,3,5]), 0)
-        self.assertEqual((2-v).ssd([-1,-3,-5]), 0)
+        self.assertEqual((v-2), [1,3,5])
+        self.assertEqual((2-v), [-1,-3,-5])
 
     def test_vadd(self):
         v = DVec([3,5,7])
-        self.assertEqual( (v + [1,2,3]).ssd( [4,7,10] ), 0 )
-        self.assertEqual( ([1,2,3] + v).ssd( [4,7,10] ), 0 )
+        self.assertEqual( (v + [1,2,3]), [4,7,10] )
+        self.assertEqual( ([1,2,3] + v), [4,7,10] )
 
     def test_vsub(self):
         v = DVec([3,5,7])
-        self.assertEqual( (v - [1,2,3]).ssd( [2,3,4] ), 0 )
-        self.assertEqual( ([1,2,3] - v).ssd( [-2,-3,-4] ), 0 )
+        self.assertEqual( (v - [1,2,3]), [2,3,4] )
+        self.assertEqual( ([1,2,3] - v), [-2,-3,-4] )
 
     def test_set(self):
         v = DVec([3,5,7])
         v.set(1)
-        self.assertEqual( v.ssd([1,1,1]), 0)
+        self.assertEqual( v, [1,1,1])
         v.zero()
-        self.assertEqual( v.ssd([0,0,0]), 0)
+        self.assertEqual(v, [0,0,0])
+        self.assertNotEqual(v, [0,0,1])
 
     #def test_getsetitem(self):
 

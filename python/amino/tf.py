@@ -36,20 +36,8 @@ from lib import libamino
 
 from math import sqrt
 
+from mixin import VecMixin
 
-class VecMixin(object):
-    def __eq__(self,other):
-        return (0 == self.ssd(other))
-    def __ne__(self,other):
-        return (0 != self.ssd(other))
-
-    def _copy_elts(self,v):
-        if( len(v) != len(self) ):
-            raise IndexError()
-        self.x = v[0]
-        self.y = v[1]
-        self.z = v[2]
-        return self
 
 ########
 ## TF ##
@@ -170,12 +158,7 @@ class Quat(ctypes.Structure,VecMixin):
             self.z = v.z
             self.w = 0
         elif isinstance(v, list) or isinstance(v,tuple):
-            if( len(v) != 4 ):
-                raise IndexError(key)
-            self.x = v[0]
-            self.y = v[1]
-            self.z = v[2]
-            self.w = v[3]
+            self._copy_elts(v)
         else:
             raise Exception('Invalid argument')
         return self
@@ -191,9 +174,6 @@ class Quat(ctypes.Structure,VecMixin):
 
     def nrm2(self):
         return libamino.aa_tf_qnorm(self)
-
-    def __radd__(self,other):
-        return self + other
 
     def __add__(self,other):
         h = Quat(None)
@@ -254,7 +234,7 @@ class Quat(ctypes.Structure,VecMixin):
         elif key == 2:
             self.z = item
         elif key == 3:
-            self.z = item
+            self.w = item
         else:
             raise IndexError(key)
 
@@ -458,3 +438,5 @@ libamino.aa_tf_qinv.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat) ]
 libamino.aa_tf_qconj.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat) ]
 libamino.aa_tf_qexp.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat) ]
 libamino.aa_tf_qln.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat) ]
+
+libamino.aa_tf_qrot.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Vec3), ctypes.POINTER(Vec3)]

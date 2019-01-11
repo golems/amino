@@ -157,26 +157,26 @@ class TestQuat(unittest.TestCase):
 
     def test_exp(self):
         a = Quat([3,5,7,11])
-        e = [6096.087976319468,
-             10160.146627199112,
-             14224.205278078758,
-             -56940.26661544057]
-        l = [0.22777632879620358,
-             0.37962721466033933,
-             0.5314781005244751,
-             2.659059996922108]
+        e = Quat([6096.087976319468,
+                  10160.146627199112,
+                  14224.205278078758,
+                  -56940.26661544057])
+        l = Quat([0.22777632879620358,
+                  0.37962721466033933,
+                  0.5314781005244751,
+                  2.659059996922108])
 
-        self.assertTrue( a.exp().ssd(e) < 1e-3 )
-        self.assertTrue( a.ln().ssd(l) < 1e-3 )
+        self.assertTrue( a.exp().isclose(e) )
+        self.assertTrue( a.ln().isclose(l) )
 
     def test_primary(self):
         v = 1
-        x = [0.479425538604203, 0.0, 0.0, 0.8775825618903728]
-        y = [0.0, 0.479425538604203, 0.0, 0.8775825618903728]
-        z = [0.0, 0.0, 0.479425538604203, 0.8775825618903728]
-        self.assertTrue( Quat(XAngle(v)).ssd(x) < 1e-3 )
-        self.assertTrue( Quat(YAngle(v)).ssd(y) < 1e-3 )
-        self.assertTrue( Quat(ZAngle(v)).ssd(z) < 1e-3 )
+        x = Quat([0.479425538604203, 0.0, 0.0, 0.8775825618903728])
+        y = Quat([0.0, 0.479425538604203, 0.0, 0.8775825618903728])
+        z = Quat([0.0, 0.0, 0.479425538604203, 0.8775825618903728])
+        self.assertTrue( Quat(XAngle(v)).isclose(x) )
+        self.assertTrue( Quat(YAngle(v)).isclose(y) )
+        self.assertTrue( Quat(ZAngle(v)).isclose(z) )
 
 if __name__ == '__main__':
     unittest.main()

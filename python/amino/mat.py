@@ -33,17 +33,19 @@ import ctypes
 
 from lib import libamino
 
+from mixin import VecMixin
+
 CblasNoTrans   = 111
 CblasTrans     = 112
 CblasConjTrans = 113
 
-class DVec(ctypes.Structure):
+class DVec(ctypes.Structure,VecMixin):
     _fields_ = [ ("_size", ctypes.c_size_t),
                  ("_data", ctypes.POINTER(ctypes.c_double)),
                  ("_inc", ctypes.c_size_t) ]
 
     def __init__(self,arg):
-        if( arg == None ):
+        if( arg is None ):
             pass
         elif isinstance(arg,list) or isinstance(arg,DVec):
             l = len(arg)
@@ -63,7 +65,7 @@ class DVec(ctypes.Structure):
         if( stop > self._size or stop < start or start < 0 ):
             raise IndexError();
         x = DVec(None)
-        if step == None:
+        if step is None:
             step = 1
         libamino.aa_dvec_slice(self,start,stop,step,x)
         return x
@@ -150,9 +152,6 @@ class DVec(ctypes.Structure):
     def nrm2(self):
         return libamino.aa_lb_dnrm2(self)
 
-    def __len__(self):
-        return 3
-
     def __getitem__(self, key):
         if 0 <= key and key < len(self):
             return self._data[ key * self._inc ]
@@ -170,7 +169,6 @@ class DVec(ctypes.Structure):
     def __len__(self):
         return self._size
 
-
     def _mulop(self,other):
         tp = type(other)
         if tp == int or tp == float:
@@ -184,7 +182,6 @@ class DVec(ctypes.Structure):
     def __rmul__(self,other):
         return self._mulop(other)
 
-
     def _addop(self,other):
         if isinstance(other,DVec) or isinstance(other,list):
             return DVec(other).axpy(1,self)
@@ -194,9 +191,6 @@ class DVec(ctypes.Structure):
             raise Exception('Invalid argument')
 
     def __add__(self,other):
-        return self._addop(other)
-
-    def __radd__(self,other):
         return self._addop(other)
 
     def __sub__(self,other):
@@ -236,7 +230,7 @@ class DMat(ctypes.Structure):
                  ("_ld", ctypes.c_size_t) ]
 
     def __init__(self,arg=None):
-        if arg == None:
+        if arg is None:
             pass
         elif isinstance(arg,tuple):
             rows,cols = arg
@@ -247,7 +241,7 @@ class DMat(ctypes.Structure):
     def _allocate(self,rows,cols,ld=None):
         self._rows = rows
         self._cols = cols
-        if ld == None:
+        if ld is None:
             self._ld = rows
         else:
             self._ld = ld
