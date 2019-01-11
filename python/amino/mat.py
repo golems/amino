@@ -49,11 +49,6 @@ class DVec(ctypes.Structure):
             l = len(arg)
             self._allocate(l)
             self.copy_from(arg)
-            # for i in range(0,len(self)):
-            #     self._data[i] = arg[i]
-        # elif isinstance(arg,DVec):
-        #     self._allocate(arg._size)
-        #     libamino.aa_lb_dcopy(arg,self)
         elif type(arg) == int :
             self._allocate(arg)
         else:

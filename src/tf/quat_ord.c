@@ -66,6 +66,28 @@ aa_tf_qdot( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )
     return AA_TF_QDOT(a,b);
 }
 
+double
+aa_tf_vssd( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
+{
+    double c = 0;
+    FOR_VEC(i) {
+        double d = a[i] - b[i];
+        c += (d*d);
+    }
+    return sqrt(c);
+}
+
+double
+aa_tf_qssd( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )
+{
+    double c = 0;
+    FOR_QUAT(i) {
+        double d = a[i] - b[i];
+        c += (d*d);
+    }
+    return sqrt(c);
+}
+
 AA_API double
 aa_tf_vdot( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
 {
@@ -82,6 +104,12 @@ AA_API double
 aa_tf_qnorm( const double q[AA_RESTRICT 4] )
 {
     return sqrt( aa_tf_qdot(q,q) );
+}
+
+double
+aa_tf_vnorm( const double a[AA_RESTRICT 3] )
+{
+    return sqrt( aa_tf_vdot(a,a) );
 }
 
 AA_API double

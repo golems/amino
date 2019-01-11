@@ -34,6 +34,7 @@
 import ctypes
 from lib import libamino
 
+from math import sqrt
 
 ########
 ## TF ##
@@ -47,13 +48,33 @@ class Vec3(ctypes.Structure):
     def __init__(self,v):
         if v is None:
             pass
-        elif isinstance(v,tuple) or isinstance(v,list):
-            self.x = v[0]
-            self.y = v[1]
-            self.z = v[2]
         else:
-            raise Exception('Invalid argument')
+            self.copy_from(v)
 
+    @staticmethod
+    def ensure(thing):
+        if( isinstance(thing,Vec3) ):
+            return thing
+        else:
+            return Vec3(thing)
+
+    def copy_from(self,v):
+        if( len(v) != 3 ):
+            raise IndexError()
+        self.x = v[0]
+        self.y = v[1]
+        self.z = v[2]
+
+    def ssd(self,other):
+        return libamino.aa_tf_vssd(self, Vec3.ensure(other))
+
+    def nrm2(self):
+        return libamino.aa_tf_vnorm(self)
+
+    def __eq__(self,other):
+        return (0 == self.ssd(other))
+    def __ne__(self,other):
+        return (0 != self.ssd(other))
 
     def __getitem__(self, key):
         if key == 0:
@@ -74,6 +95,14 @@ class Vec3(ctypes.Structure):
             self.z = item
         else:
             raise IndexError(key)
+
+    def cross(self,other):
+        r = Vec3(None)
+        libamino.aa_tf_cross(self,Vec3.ensure(other),r)
+        return r
+
+    def dot(self,other):
+        return libamino.aa_tf_vdot(self,Vec3.ensure(other))
 
     def __len__(self):
         return 3
@@ -100,12 +129,11 @@ class Quat(ctypes.Structure):
     def __init__(self, v):
         if v is None:
             pass
-        elif isinstance(v, list) or isinstance(v,tuple):
-            self.x = v[0]
-            self.y = v[1]
-            self.z = v[2]
-            self.w = v[3]
-        elif isinstance(v, Quat):
+        else:
+            self.conv(v)
+
+    def conv_from(self,v):
+        if isinstance(v, Quat):
             self.x = v.x
             self.y = v.y
             self.z = v.z
@@ -118,14 +146,40 @@ class Quat(ctypes.Structure):
             libamino.aa_tf_zangle2quat(v.value,self)
         elif isinstance(v, RotMat):
             libamino.aa_tf_rotmat2quat(v,self)
+        elif type(v) == int or type(v) == float:
+            self.x = 0
+            self.y = 0
+            self.z = 0
+            self.w = v
+        elif isinstance(v, Vec3):
+            self.x = v.x
+            self.y = v.y
+            self.z = v.z
+            self.w = 0
+        elif isinstance(v, list) or isinstance(v,tuple):
+            if( len(v) != 4 ):
+                raise IndexError(key)
+            self.x = v[0]
+            self.y = v[1]
+            self.z = v[2]
+            self.w = v[3]
         else:
             raise Exception('Invalid argument')
+        return self
 
     def vector(self):
         return Vec3(self.x,self.y,self.z)
 
     def scalar(self):
         return self.w
+
+    def ssd(self,other):
+        if( len(other) != 4 ):
+            raise IndexError()
+        return sqrt( (self.x - other[0])**2 +
+                     (self.y - other[1])**2 +
+                     (self.z - other[2])**2 +
+                     (self.w - other[3])**2 )
 
     def __add__(self,other):
         h = Quat(None)
@@ -141,6 +195,33 @@ class Quat(ctypes.Structure):
         h = Quat(None)
         libamino.aa_tf_qmul(self,other,h)
         return h
+
+    def __getitem__(self, key):
+        if key == 0:
+            return self.x
+        elif key == 1:
+            return self.y
+        elif key == 2:
+            return self.z
+        elif key == 3:
+            return self.w
+        else:
+            raise IndexError(key)
+
+    def __setitem__(self, key, item):
+        if key == 0:
+            self.x = item
+        elif key == 1:
+            self.y = item
+        elif key == 2:
+            self.z = item
+        elif key == 3:
+            self.z = item
+        else:
+            raise IndexError(key)
+
+    def __len__(self):
+        return 4
 
     def conj(self):
         h = Quat(None)
@@ -305,6 +386,19 @@ libamino.aa_tf_duqu_trans.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(
 
 libamino.aa_tf_duqu_trans.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(Vec3) ]
 
+
+# vector functions
+libamino.aa_tf_vssd.argtypes = [ ctypes.POINTER(Vec3), ctypes.POINTER(Vec3)]
+libamino.aa_tf_vssd.restype = ctypes.c_double
+
+libamino.aa_tf_vdot.argtypes = [ ctypes.POINTER(Vec3), ctypes.POINTER(Vec3)]
+libamino.aa_tf_vdot.restype = ctypes.c_double
+
+libamino.aa_tf_vnorm.argtypes = [ ctypes.POINTER(Vec3) ]
+libamino.aa_tf_vnorm.restype = ctypes.c_double
+
+libamino.aa_tf_cross.argtypes = [ ctypes.POINTER(Vec3), ctypes.POINTER(Vec3),
+                                   ctypes.POINTER(Vec3) ]
 
 # quaternion functions
 libamino.aa_tf_qmul.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat), ctypes.POINTER(Quat) ]

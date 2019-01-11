@@ -66,6 +66,8 @@ class TestVec0(unittest.TestCase):
         self.assertEqual(v[1], 5.0)
         self.assertEqual(v[2], 7.0)
 
+        self.assertRaises( IndexError, lambda : v[3] )
+
     def test_nrm2(self):
         l = [1,2,3]
         x = DVec(l)

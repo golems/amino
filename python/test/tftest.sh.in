@@ -1,0 +1,7 @@
+#!/bin/sh
+
+
+export PYTHONPATH=@abs_top_srcdir@/python:$PYTHONPATH
+export LD_LIBRARY_PATH="`pwd`/.libs:$LD_LIBRARY_PATH"
+
+@abs_top_srcdir@/python/test/tftest.py

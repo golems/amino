@@ -502,6 +502,7 @@ la_ctest_LDADD = libamino.la libtestutil.la
 
 
 TESTS += python/test/mattest.sh
+TESTS += python/test/tftest.sh
 
 if HAVE_FCL
 

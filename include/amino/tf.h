@@ -945,6 +945,17 @@ AA_API void aa_tf_vnormalize( double v[AA_RESTRICT 3] );
  */
 AA_API void aa_tf_vnormalizef( float v[AA_RESTRICT 3] );
 
+/**
+ * Sum-square-differences of two vectors
+ */
+double
+aa_tf_vssd( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] );
+
+/**
+ * Norm of vector
+ */
+double
+aa_tf_vnorm( const double a[AA_RESTRICT 3] );
 
 /***************/
 /* Quaternions */
@@ -958,6 +969,12 @@ AA_TF_QDOT( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] )
 {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
 }
+
+/**
+ * Sum-square-differences of two quaternions
+ */
+double
+aa_tf_qssd( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] );
 
 /**
  * Quaternion dot product.
