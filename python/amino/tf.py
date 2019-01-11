@@ -30,6 +30,11 @@
 #   SUCH DAMAGE.
 
 
+##
+## @file tf.py Rotations and Transformations
+##
+
+
 
 import ctypes
 from lib import libamino
@@ -39,35 +44,38 @@ from math import sqrt
 from mixin import VecMixin
 
 
-########
-## TF ##
-########
-
 class Vec3(ctypes.Structure,VecMixin):
+    """Class for length-3 vectors"""
+
     _fields_ = [ ("x", ctypes.c_double),
                  ("y", ctypes.c_double),
                  ("z", ctypes.c_double) ]
 
     def __init__(self,v):
+        """Construct a Vec3 object
+
+        * If v is None, the object is unitialized.
+        * If v is a list, the list elements are copied to the object.
+        """
         if v is None:
             pass
         else:
-            self.copy_from(v)
+            self._copy_elts(v)
 
     @staticmethod
     def ensure(thing):
+        """Ensure thing is a Vec3.  If it's not, convert it."""
         if( isinstance(thing,Vec3) ):
             return thing
         else:
             return Vec3(thing)
 
-    def copy_from(self,v):
-        return self._copy_elts(v)
-
     def ssd(self,other):
+        """Sum-square-differences of self and other."""
         return libamino.aa_tf_vssd(self, Vec3.ensure(other))
 
     def nrm2(self):
+        """2-norm (Euclidean) of self"""
         return libamino.aa_tf_vnorm(self)
 
     def __getitem__(self, key):
@@ -91,60 +99,81 @@ class Vec3(ctypes.Structure,VecMixin):
             raise IndexError(key)
 
     def cross(self,other):
+        """Compute the cross product"""
         r = Vec3(None)
         libamino.aa_tf_cross(self,Vec3.ensure(other),r)
         return r
 
     def dot(self,other):
+        """Compute the dot product"""
         return libamino.aa_tf_vdot(self,Vec3.ensure(other))
 
     def __len__(self):
+        """Returns 3"""
         return 3
 
     def __str__(self):
         return 'Vec3(%f, %f, %f)' % (self.x, self.y, self.z)
 
     def to_quat(self,h):
+        """Convert to a quaternion and copy to h.
+
+        This functions sets the vector (xyz) part of h.  The scalar
+        part (w) of h will be zero
+
+        """
         h.x = self.x
         h.y = self.y
         h.z = self.z
         h.w = self.w
 
 class XAngle(ctypes.Structure):
+    """Class for rotation about the X axis"""
     _fields_ = [ ("value", ctypes.c_double) ]
 
     def to_quat(self,h):
-            libamino.aa_tf_xangle2quat(self.value, h)
-    def to_rotmat(self,h):
-            libamino.aa_tf_xangle2rotmat(self.value, h)
+        """Convert to a quaternion and store in h"""
+        libamino.aa_tf_xangle2quat(self.value, h)
+    def to_rotmat(self,r):
+        """Convert to a rotation matrix and store in r"""
+        libamino.aa_tf_xangle2rotmat(self.value, r)
 
     def to_eulerzyx(self,e):
+        """Convert to an Euler XYZ"""
         e.x = self.value
         e.y = 0
         e.z = 0
 
 class YAngle(ctypes.Structure):
+    """Class for rotation about the Y axis"""
     _fields_ = [ ("value", ctypes.c_double) ]
 
     def to_quat(self,h):
-            libamino.aa_tf_yangle2quat(self.value, h)
-    def to_rotmat(self,h):
-            libamino.aa_tf_yangle2rotmat(self.value, h)
+        """Convert to a quaternion and store in h"""
+        libamino.aa_tf_yangle2quat(self.value, h)
+    def to_rotmat(self,r):
+        """Convert to a rotation matrix and store in r"""
+        libamino.aa_tf_yangle2rotmat(self.value, r)
 
     def to_eulerzyx(self,e):
+        """Convert to an Euler XYZ and store in e"""
         e.x = 0
         e.y = self.value
         e.z = 0
 
 class ZAngle(ctypes.Structure):
+    """Class for rotation about the Z axis"""
     _fields_ = [ ("value", ctypes.c_double) ]
 
     def to_quat(self,h):
-            libamino.aa_tf_zangle2quat(self.value, h)
-    def to_rotmat(self,h):
-            libamino.aa_tf_zangle2rotmat(self.value, h)
+        """Convert to a quaternion and store in h"""
+        libamino.aa_tf_zangle2quat(self.value, h)
+    def to_rotmat(self,r):
+        """Convert to a rotation matrix and store in r"""
+        libamino.aa_tf_zangle2rotmat(self.value, r)
 
     def to_eulerzyx(self,e):
+        """Convert to an Euler XYZ and store in e"""
         e.x = 0
         e.y = 0
         e.z = self.value
@@ -166,11 +195,16 @@ class EulerZYX(ctypes.Structure):
             v.to_eulerzyx(self)
 
     def to_quat(self,h):
+        """Convert to a quaternion"""
         libamino.aa_tf_eulerzyx2quat(self.x,self.y,self.z,h)
-    def to_rotmat(self,h):
-        libamino.aa_tf_eulerzyx2rotmat(self.x,self.y,self.z,h)
+    def to_rotmat(self,r):
+        """Convert to a rotation matrix and store in r"""
+        libamino.aa_tf_eulerzyx2rotmat(self.x,self.y,self.z,r)
 
 def EulerRPY(v):
+    """Construct a Roll-Pitch-Yaw Euler angler.
+
+    The actual object returned is an EulerZYX"""
         if isinstance(v, list) or isinstance(v,tuple):
             if( 3 != len(v) ):
                 raise IndexError()
@@ -180,12 +214,23 @@ def EulerRPY(v):
             return EulerZYX(v)
 
 class Quat(ctypes.Structure,VecMixin):
+    """Class for quaternions"""
     _fields_ = [ ("x", ctypes.c_double),
                  ("y", ctypes.c_double),
                  ("z", ctypes.c_double),
                  ("w", ctypes.c_double), ]
 
     def __init__(self, v):
+        """Construct a Quat object
+
+        * If v is None, the object is unitialized.
+        * If v is a list, the list elements are copied to the object.
+        * If v is an int or float, the scalar (w) of the object is set
+          and the vector (xyz) is zero
+        * If v is a Vec3, the vector (xyz) of the object is set
+          and the scalar (w) is zero
+        * Else v is converted to a Quat
+        """
         if v is None:
             pass
         elif type(v) == int or type(v) == float:
@@ -204,6 +249,7 @@ class Quat(ctypes.Structure,VecMixin):
 
     @staticmethod
     def ensure(thing):
+        """Ensure thing is a Quat.  If it's not, convert it."""
         if( isinstance(thing,Quat) ):
             return thing
         else:
@@ -211,32 +257,40 @@ class Quat(ctypes.Structure,VecMixin):
 
 
     def to_quat(self, h):
+        """Convert (copy) to a quaternion"""
             h.x = self.x
             h.y = self.y
             h.z = self.z
             h.w = self.w
 
     def to_rotmat(self, r):
+        """Convert to a rotation matrix and store in r"""
             libamino.aa_tf_quat2rotmat(self,r)
 
     def vector(self):
+        """Return the vector (xyz) part"""
         return Vec3(self.x,self.y,self.z)
 
     def scalar(self):
+        """Return the scalar (w) part"""
         return self.w
 
     def ssd(self,other):
+        """Sum-square-differences of self and other."""
         return libamino.aa_tf_qssd(self, Quat.ensure(other))
 
     def nrm2(self):
+        """2-norm (Euclidean) of self"""
         return libamino.aa_tf_qnorm(self)
 
     def __add__(self,other):
+        """Add quaternion and another object"""
         h = Quat(None)
         libamino.aa_tf_qadd(self,Quat.ensure(other),h)
         return h
 
     def __sub__(self,other):
+        """Subtract quaternion and another object"""
         h = Quat(None)
         libamino.aa_tf_qsub(self,Quat.ensure(other),h)
         return h
@@ -247,10 +301,12 @@ class Quat(ctypes.Structure,VecMixin):
         return h
 
     def scal(self,alpha):
+        """Scale this object by alpha (in-place)"""
         libamino.aa_tf_qscal(self,alpha)
         return self
 
     def normalize(self):
+        """Normalize this object, i.e., divide by the magnitude."""
         libamino.aa_tf_qnormalize(self)
         return self
 
@@ -263,6 +319,7 @@ class Quat(ctypes.Structure,VecMixin):
             return h
 
     def __mul__(self,other):
+        """Multiple quaternion and another object"""
         if type(other) == int or type(other) == float:
             return Quat(self).scal(other)
         else:
@@ -298,42 +355,52 @@ class Quat(ctypes.Structure,VecMixin):
         return 4
 
     def conj(self):
+        """Return the conjugate"""
         h = Quat(None)
         libamino.aa_tf_qconj(self,h)
         return h
 
     def __invert__(self):
+        """Return the inverse"""
         h = Quat(None)
         libamino.aa_tf_qinv(self,h)
         return h
 
     def exp(self):
+        """Return the exponential"""
         h = Quat(None)
         libamino.aa_tf_qexp(self,h)
         return h
 
     def ln(self):
+        """Return the natural logarithm"""
         h = Quat(None)
         libamino.aa_tf_qln(self,h)
         return h
 
     def rotate(self,p):
+        """Rotate a point by this quaternion"""
         q = Vec3(None)
         libamino.aa_tf_qrot(self,Vec3.ensure(p),q)
         return q
-
-
 
     def __str__(self):
         return 'Quat(%f, %f, %f, %f)' % (self.x, self.y, self.z, self.w)
 
 
 class RotMat(ctypes.Structure):
+    """Class for rotation matrices"""
     _fields_ = [ ("cx", Vec3),
                  ("cy", Vec3),
                  ("cz", Vec3) ]
 
     def __init__(self, v):
+        """Construct a Quat object
+
+        * If v is None, the object is unitialized.
+        * If v is 1, the object is the identity rotation matrix.
+        * Else v is converted to a rotation matrix.
+        """
         if v is None:
             pass
         elif 1 == v:
@@ -344,30 +411,36 @@ class RotMat(ctypes.Structure):
             v.to_rotmat(self)
 
     def rotate(self,p):
+        """Rotate a point."""
         q = Vec3(None)
         libamino.aa_tf_rotmat_rot(self,Vec3.ensure(p),q)
         return q
 
 
     def __mul__(self,other):
+        """Chain two matrices"""
         r = RotMat(None)
         libamino.aa_tf_rotmat_mul(self,other,r)
         return r
 
     def to_quat(self,h):
+        """Convert to a quaternion and store in h"""
         libamino.aa_tf_rotmat2quat(self,h)
     def to_rotmat(self,r):
+        """Convert (copy) to a rotation matrix and store in r"""
         self.cx = r.cx
         self.cy = r.cy
         self.cz = r.cz
 
     def __invert__(self):
+        """Return the inverse"""
         r = RotMat(None)
         libamino.aa_tf_rotmat_inv2(self,r)
         return r
 
 
 class TfMat(ctypes.Structure):
+    """Class for transformation matrices"""
     _fields_ = [ ("R", RotMat),
                  ("v", Vec3) ]
 
@@ -379,12 +452,15 @@ class TfMat(ctypes.Structure):
             raise Exception('Invalid argument')
 
     def rotation(self):
+        """Return the rotation part"""
         return self.R
 
     def translation(self):
+        """Return the translation part"""
         return self.v
 
 class DualQuat(ctypes.Structure):
+    """Class for Dual Number Quaternions"""
     _fields_ = [ ("real", Quat),
                  ("dual", Quat) ]
 
@@ -410,14 +486,17 @@ class DualQuat(ctypes.Structure):
 
 
     def rotation(self):
+        """Convert to a rotation matrix and store in r"""
         return self.real
 
     def translation(self):
+        """Return the translation"""
         v = Vec3(None)
         libamino.aa_tf_duqu_trans(self,v)
         return v
 
 class QuatTrans(ctypes.Structure):
+    """Class for Quaternion-Translation"""
     _fields_ = [ ("quat", Quat),
                  ("trans", Vec3) ]
 
@@ -442,15 +521,17 @@ class QuatTrans(ctypes.Structure):
         return 'QuatTrans(%s, %s)' % (self.quat, self.trans)
 
     def rotation(self):
+        """Return the rotation part"""
         return self.quat
 
     def translation(self):
+        """Return the translation part"""
         return self.trans
 
 
-###################
-## LIBRARY CALLS ##
-###################
+#---------------#
+# LIBRARY CALLS #
+#---------------#
 
 libamino.aa_tf_xangle2quat.argtypes = [ctypes.c_double, ctypes.POINTER(Quat)]
 libamino.aa_tf_yangle2quat.argtypes = [ctypes.c_double, ctypes.POINTER(Quat)]

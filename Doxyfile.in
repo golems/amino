@@ -799,7 +799,8 @@ INPUT                  = include \
                          lisp-amino.md \
                          lisp-rx.md \
                          aminopy.md \
-                         doc/md/mainpage.md
+                         doc/md/mainpage.md \
+                         python/amino
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -827,6 +828,7 @@ INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.h \
                          *.hpp \
                          *.c \
+                         *.py \
                          *.md
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should

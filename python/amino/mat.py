@@ -29,6 +29,12 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
+
+##
+## @file mat.py Vectors and Matrices
+##
+
+
 import ctypes
 
 from lib import libamino
@@ -362,9 +368,9 @@ class DMat(ctypes.Structure):
         s += ")"
         return s
 
-###################
-## LIBRARY CALLS ##
-###################
+#---------------#
+# LIBRARY CALLS #
+#---------------#
 
 ## Blas 1
 libamino.aa_lb_daxpy.argtypes = [ctypes.c_double, ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
@@ -390,7 +396,7 @@ libamino.aa_dvec_slice.argtypes = [ ctypes.POINTER(DVec),
 libamino.aa_dvec_ssd.argtypes = [ctypes.POINTER(DVec),ctypes.POINTER(DVec)]
 libamino.aa_dvec_ssd.restype = ctypes.c_double
 
-## Blas 2
+# Blas 2
 libamino.aa_dmat_row_vec.argtypes = [ ctypes.POINTER(DMat), ctypes.c_size_t,
                                       ctypes.POINTER(DVec) ]
 libamino.aa_dmat_col_vec.argtypes = [ ctypes.POINTER(DMat), ctypes.c_size_t,
@@ -401,12 +407,12 @@ libamino.aa_lb_dgemv.argtypes = [ ctypes.c_int,
                                   ctypes.c_double, ctypes.POINTER(DVec) ]
 
 
-## Blas 3
+# Blas 3
 libamino.aa_lb_dgemm.argtypes = [ ctypes.c_int, ctypes.c_int,
                                   ctypes.c_double, ctypes.POINTER(DMat), ctypes.POINTER(DMat),
                                   ctypes.c_double, ctypes.POINTER(DMat) ]
 
-## Matrix functions
+# Matrix functions
 libamino.aa_dmat_ssd.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]
 libamino.aa_dmat_ssd.restype = ctypes.c_double
 

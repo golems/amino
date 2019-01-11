@@ -29,6 +29,10 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
+##
+## @file __init__.py Package init file
+##
+
 import ctypes
 
 from lib import libamino
