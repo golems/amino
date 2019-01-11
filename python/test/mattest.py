@@ -36,7 +36,26 @@ import unittest
 
 from amino import *
 
+import math
+
 class TestVec0(unittest.TestCase):
+
+    def test_copy_from(self):
+        v = DVec.create(2)
+        lst = [11,17]
+        v.copy_from(lst)
+        self.assertEqual(v[0], lst[0])
+        self.assertEqual(v[1], lst[1])
+
+    def test_copy_to(self):
+        lst = [11,17]
+        v = DVec(lst)
+        self.assertEqual(v[0], lst[0])
+        self.assertEqual(v[1], lst[1])
+        ll = [0,0]
+        v.copy_to(ll)
+        self.assertEqual(ll[0], lst[0])
+        self.assertEqual(ll[1], lst[1])
 
     def test_getsetitem(self):
         v = DVec.create(3)
@@ -46,6 +65,13 @@ class TestVec0(unittest.TestCase):
         self.assertEqual(v[0], 3.0)
         self.assertEqual(v[1], 5.0)
         self.assertEqual(v[2], 7.0)
+
+    def test_nrm2(self):
+        l = [1,2,3]
+        x = DVec(l)
+        self.assertTrue( abs(x.nrm2() -
+                             math.sqrt(l[0]**2 + l[1]**2 + l[2]**2))
+                         < 1e-6 )
 
     def test_ssd(self):
         v = DVec([3,5,7])
@@ -95,6 +121,61 @@ class TestVec0(unittest.TestCase):
 
     #def test_getsetitem(self):
 
+class TestMat(unittest.TestCase):
+    def test_getsetitem(self):
+        A = DMat.create(2,2 )
+        A[0,0] = 1
+        A[1,0] = 2
+        A[0,1] = 3
+        A[1,1] = 4
+
+        self.assertEqual(A[0,0], 1)
+        self.assertEqual(A[1,0], 2)
+        self.assertEqual(A[0,1], 3)
+        self.assertEqual(A[1,1], 4)
+
+        self.assertEqual(A.col_vec(0)[0], 1)
+        self.assertEqual(A.col_vec(0)[1], 2)
+        self.assertEqual(A.col_vec(1)[0], 3)
+        self.assertEqual(A.col_vec(1)[1], 4)
+
+        self.assertEqual(A.row_vec(0)[0], 1)
+        self.assertEqual(A.row_vec(0)[1], 3)
+        self.assertEqual(A.row_vec(1)[0], 2)
+        self.assertEqual(A.row_vec(1)[1], 4)
+
+    def test_rowmatrix(self):
+        A = DMat.row_matrix( [1,2], [3,4] )
+        self.assertEqual(A[0,0], 1)
+        self.assertEqual(A[0,1], 2)
+        self.assertEqual(A[1,0], 3)
+        self.assertEqual(A[1,1], 4)
+
+        B = DMat.col_matrix( [1,3], [2,4] )
+        self.assertEqual(A.ssd(B), 0)
+        B[0,0] = B[0,0]+1
+        self.assertEqual(A.ssd(B), 1)
+
+    def test_colmatrix(self):
+        A = DMat.col_matrix( [1,2], [3,4] )
+        self.assertEqual(A[0,0], 1)
+        self.assertEqual(A[1,0], 2)
+        self.assertEqual(A[0,1], 3)
+        self.assertEqual(A[1,1], 4)
+
+        B = DMat.row_matrix( [1,3], [2,4] )
+        self.assertEqual(A.ssd(B), 0)
+        B[0,0] = B[0,0]+1
+        self.assertEqual(A.ssd(B), 1)
+
+class TestGemv(unittest.TestCase):
+    def test_gemv(self):
+        A = DMat.col_matrix( [1,2], [3,4] )
+        y = A * DVec([5,6])
+        self.assertEqual(y.ssd([23,34]), 0)
+
+        y = A * [1,2]
+        self.assertEqual(y.ssd([7,10]), 0)
 
 if __name__ == '__main__':
     unittest.main()

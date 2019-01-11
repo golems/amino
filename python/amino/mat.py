@@ -45,13 +45,15 @@ class DVec(ctypes.Structure):
     def __init__(self,arg):
         if( arg == None ):
             pass
-        elif isinstance(arg,list):
-            self._allocate(len(arg))
-            for i in range(0,len(self)):
-                self._data[i] = arg[i]
-        elif isinstance(arg,DVec):
-            self._allocate(arg._size)
-            libamino.aa_lb_dcopy(arg,self)
+        elif isinstance(arg,list) or isinstance(arg,DVec):
+            l = len(arg)
+            self._allocate(l)
+            self.copy_from(arg)
+            # for i in range(0,len(self)):
+            #     self._data[i] = arg[i]
+        # elif isinstance(arg,DVec):
+        #     self._allocate(arg._size)
+        #     libamino.aa_lb_dcopy(arg,self)
         elif type(arg) == int :
             self._allocate(arg)
         else:
@@ -84,6 +86,27 @@ class DVec(ctypes.Structure):
         x._allocate(size)
         return x
 
+    def copy_from(self,thing):
+        ls = len(self)
+        if( ls != len(thing) ):
+            raise IndexError()
+        elif isinstance(thing,DVec):
+            libamino.aa_lb_dcopy(thing,self)
+        else:
+            for i in range(0,ls):
+                self[i] = thing[i]
+        return thing
+
+    def copy_to(self,thing):
+        ls = len(self)
+        if( ls != len(thing) ):
+            raise IndexError()
+        elif isinstance(thing,DVec):
+            libamino.aa_lb_dcopy(self,thing)
+        else:
+            for i in range(0,ls):
+                thing[i] = self[i]
+        return thing
 
     def _allocate(self,size):
         d = (ctypes.c_double * size)()
@@ -129,6 +152,8 @@ class DVec(ctypes.Structure):
     def ssd(self,other):
         return libamino.aa_dvec_ssd(self,DVec.ensure(other))
 
+    def nrm2(self):
+        return libamino.aa_lb_dnrm2(self)
 
     def __len__(self):
         return 3
@@ -234,6 +259,12 @@ class DMat(ctypes.Structure):
         d = (ctypes.c_double * (rows*cols))()
         self._data = ctypes.cast(d, ctypes.POINTER(ctypes.c_double))
 
+    @staticmethod
+    def create(rows,cols):
+        x = DMat(None)
+        x._allocate(rows,cols)
+        return x
+
     def rows(self):
         return self._rows
     def cols(self):
@@ -253,6 +284,26 @@ class DMat(ctypes.Structure):
         libamino.aa_dmat_col_vec(self,j,v)
         return v
 
+    @staticmethod
+    def row_matrix( *args ):
+        m = len(args)
+        n = len(args[0]) if m > 0 else 0
+        A = DMat.create(m,n)
+        for i in range(0,m):
+            A.row_vec(i).copy_from(args[i])
+        return A
+
+    @staticmethod
+    def col_matrix( *args ):
+        n = len(args)
+        m = len(args[0]) if n > 0 else 0
+        A = DMat.create(m,n)
+        for j in range(0,n):
+            A.col_vec(j).copy_from(args[j])
+        return A
+
+    def ssd(self,other):
+        return libamino.aa_dmat_ssd(self,other)
 
     def _check_row(self, i):
         if( i < 0 or i >= self._rows ):
@@ -279,7 +330,28 @@ class DMat(ctypes.Structure):
             y = DVec.create(self.cols())
             y.gemv(CblasNoTrans,1,self,other,0)
             return y
+        elif isinstance(other,list) :
+            return self * DVec(other)
+        else:
+            raise TypeError('Cannot multiply matrix with %s'%type(other))
 
+    def __str__(self):
+        m = self.rows()
+        n = self.cols()
+        s = "DMat.row_matrix("
+        for i in range(0,m):
+            if i == 0:
+                s += "["
+            else:
+                s += ",\n                ["
+            for j in range(0,n):
+                if j == 0:
+                    s += "%f" % self[i,j]
+                else:
+                    s += ", %f" % self[i,j]
+            s += "]"
+        s += ")"
+        return s
 
 ###################
 ## LIBRARY CALLS ##
@@ -294,7 +366,7 @@ libamino.aa_lb_dinc.argtypes = [ctypes.c_double, ctypes.POINTER(DVec)]
 libamino.aa_lb_ddot.argtypes = [ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
 libamino.aa_lb_ddot.restype = ctypes.c_double
 
-libamino.aa_lb_dnrm2.argtypes = [ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
+libamino.aa_lb_dnrm2.argtypes = [ctypes.POINTER(DVec)]
 libamino.aa_lb_dnrm2.restype = ctypes.c_double
 
 libamino.aa_dvec_set.argtypes = [ctypes.POINTER(DVec), ctypes.c_double]
@@ -318,3 +390,7 @@ libamino.aa_dmat_col_vec.argtypes = [ ctypes.POINTER(DMat), ctypes.c_size_t,
 libamino.aa_lb_dgemv.argtypes = [ ctypes.c_int,
                                   ctypes.c_double, ctypes.POINTER(DMat), ctypes.POINTER(DVec),
                                   ctypes.c_double, ctypes.POINTER(DVec) ]
+
+
+libamino.aa_dmat_ssd.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]
+libamino.aa_dmat_ssd.restype = ctypes.c_double

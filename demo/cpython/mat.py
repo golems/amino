@@ -2,24 +2,49 @@
 
 from amino import *
 
+# v = DVec.create(2)
+# v.copy_from([1,2])
 
-A = DMat( (2,2) )
-A[0,0] = 1
-A[1,0] = 2
-A[0,1] = 3
-A[1,1] = 4
+# print v
 
-x = DVec( [1,2] )
+print "Row"
+A = DMat.row_matrix( [1,2],
+                     [3,4] )
 
-y = A*x
+print A.col_vec(0)
+print A.col_vec(1)
+print A[0,0]
+print A[1,0]
+print A[0,1]
+print A[1,1]
+
+print A
+
+print "Col"
+A = DMat.col_matrix( [1,2],
+                     [3,4] )
+print A.col_vec(0)
+print A.col_vec(1)
+print A[0,0]
+print A[1,0]
+print A[0,1]
+print A[1,1]
+
+print A
+
+# A = DMat( (2,2) )
+# A[0,0] = 1
+# A[1,0] = 2
+# A[0,1] = 3
+# A[1,1] = 4
+
+# x = DVec( [1,2] )
+
+# y = A*x
 
 
-print y
+# print y
 
-# print m[0,0]
-# print m[1,0]
-# print m[0,1]
-# print m[1,1]
 
 # print "c0: " + str(m.col_vec(0))
 # print "c1: " + str(m.col_vec(1))
