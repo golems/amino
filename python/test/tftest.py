@@ -155,6 +155,18 @@ class TestQuat(unittest.TestCase):
         self.assertEqual( a*2, a2 )
         self.assertEqual( 2*a, a2 )
 
+    def test_inv(self):
+        a = Quat([3,5,7,11])
+        b = ~a
+        be = Quat([-0.014705882352941176, -0.024509803921568627,
+                   -0.03431372549019608, 0.05392156862745098])
+        self.assertTrue( b.isclose(be) )
+        self.assertTrue( a.isclose(~b) )
+
+        hi = Quat.identity()
+        self.assertTrue( (a*b).isclose(hi) )
+        self.assertTrue( (b*a).isclose(hi) )
+
     def test_exp(self):
         a = Quat([3,5,7,11])
         e = Quat([6096.087976319468,
@@ -177,6 +189,57 @@ class TestQuat(unittest.TestCase):
         self.assertTrue( Quat(XAngle(v)).isclose(x) )
         self.assertTrue( Quat(YAngle(v)).isclose(y) )
         self.assertTrue( Quat(ZAngle(v)).isclose(z) )
+
+    def test_euler(self):
+        h = Quat(EulerRPY([1,2,3]))
+        he = Quat([-0.7182870182434113, 0.31062245106570396,
+                   0.44443511344300074, 0.4359528440735657])
+
+        self.assertTrue( h.isclose(he) )
+
+
+class TestRotMat(unittest.TestCase):
+    def cmprot(self,R,h,v):
+        Rv = R.rotate(v)
+        hv = h.rotate(v)
+        self.assertTrue( Rv.isclose( hv ) )
+
+        Rvi = (~R).rotate(Rv)
+        hvi = (~h).rotate(hv)
+
+        self.assertTrue( Rvi.isclose(v) )
+        self.assertTrue( hvi.isclose(v) )
+        self.assertTrue( hvi.isclose(Rvi) )
+
+    def cmprq(self,thing,v):
+        self.cmprot(RotMat(thing), Quat(thing), v)
+
+    def cmp2(self,thing1,thing2,v):
+        r1 = RotMat(thing1)
+        h1 = Quat(thing1)
+        r2 = RotMat(thing2)
+        h2 = Quat(thing2)
+
+        self.cmprot(r1*r2, h1*h2, v)
+
+        R = r1*RotMat(h2)
+        h = h1*Quat(r2)
+        self.cmprot(R,h,v)
+
+    def test_princ(self):
+        v = Vec3([1,2,3])
+        self.cmprq(XAngle(1),v)
+        self.cmprq(YAngle(1),v)
+        self.cmprq(ZAngle(1),v)
+
+    def test_euler(self):
+        v = Vec3([1,2,3])
+        self.cmprq(EulerRPY([1,2,3]), v)
+
+    def test_princ2(self):
+        v = Vec3([1,2,3])
+        self.cmp2(XAngle(1), YAngle(2), v)
+        self.cmp2(ZAngle(1), XAngle(2), v)
 
 if __name__ == '__main__':
     unittest.main()

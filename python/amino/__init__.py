@@ -33,6 +33,6 @@ import ctypes
 
 from lib import libamino
 
-from tf import Vec3, Quat, XAngle, YAngle, ZAngle, RotMat, TfMat, DualQuat, QuatTrans
+from tf import Vec3, Quat, XAngle, YAngle, ZAngle, RotMat, TfMat, DualQuat, QuatTrans, EulerRPY
 
 from mat import DVec, DMat

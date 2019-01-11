@@ -104,15 +104,80 @@ class Vec3(ctypes.Structure,VecMixin):
     def __str__(self):
         return 'Vec3(%f, %f, %f)' % (self.x, self.y, self.z)
 
+    def to_quat(self,h):
+        h.x = self.x
+        h.y = self.y
+        h.z = self.z
+        h.w = self.w
 
 class XAngle(ctypes.Structure):
     _fields_ = [ ("value", ctypes.c_double) ]
 
+    def to_quat(self,h):
+            libamino.aa_tf_xangle2quat(self.value, h)
+    def to_rotmat(self,h):
+            libamino.aa_tf_xangle2rotmat(self.value, h)
+
+    def to_eulerzyx(self,e):
+        e.x = self.value
+        e.y = 0
+        e.z = 0
+
 class YAngle(ctypes.Structure):
     _fields_ = [ ("value", ctypes.c_double) ]
 
+    def to_quat(self,h):
+            libamino.aa_tf_yangle2quat(self.value, h)
+    def to_rotmat(self,h):
+            libamino.aa_tf_yangle2rotmat(self.value, h)
+
+    def to_eulerzyx(self,e):
+        e.x = 0
+        e.y = self.value
+        e.z = 0
+
 class ZAngle(ctypes.Structure):
     _fields_ = [ ("value", ctypes.c_double) ]
+
+    def to_quat(self,h):
+            libamino.aa_tf_zangle2quat(self.value, h)
+    def to_rotmat(self,h):
+            libamino.aa_tf_zangle2rotmat(self.value, h)
+
+    def to_eulerzyx(self,e):
+        e.x = 0
+        e.y = 0
+        e.z = self.value
+
+class EulerZYX(ctypes.Structure):
+    _fields_ = [ ("z", ctypes.c_double),
+                 ("y", ctypes.c_double),
+                 ("x", ctypes.c_double) ]
+    def __init__(self, v):
+        if v is None:
+            pass
+        elif isinstance(v, list) or isinstance(v,tuple):
+            if( 3 != len(v) ):
+                raise IndexError()
+            self.x = v[0]
+            self.y = v[1]
+            self.z = v[2]
+        else:
+            v.to_eulerzyx(self)
+
+    def to_quat(self,h):
+        libamino.aa_tf_eulerzyx2quat(self.x,self.y,self.z,h)
+    def to_rotmat(self,h):
+        libamino.aa_tf_eulerzyx2rotmat(self.x,self.y,self.z,h)
+
+def EulerRPY(v):
+        if isinstance(v, list) or isinstance(v,tuple):
+            if( 3 != len(v) ):
+                raise IndexError()
+            else:
+                return EulerZYX( [v[2], v[1], v[0]] )
+        else:
+            return EulerZYX(v)
 
 class Quat(ctypes.Structure,VecMixin):
     _fields_ = [ ("x", ctypes.c_double),
@@ -123,8 +188,19 @@ class Quat(ctypes.Structure,VecMixin):
     def __init__(self, v):
         if v is None:
             pass
+        elif type(v) == int or type(v) == float:
+            self.x = 0
+            self.y = 0
+            self.z = 0
+            self.w = v
+        elif isinstance(v, list) or isinstance(v,tuple):
+            self._copy_elts(v)
         else:
-            self.conv_from(v)
+            v.to_quat(self)
+
+    @staticmethod
+    def identity():
+        return Quat(1)
 
     @staticmethod
     def ensure(thing):
@@ -133,35 +209,15 @@ class Quat(ctypes.Structure,VecMixin):
         else:
             return Quat(thing)
 
-    def conv_from(self,v):
-        if isinstance(v, Quat):
-            self.x = v.x
-            self.y = v.y
-            self.z = v.z
-            self.w = v.w
-        elif isinstance(v, XAngle):
-            libamino.aa_tf_xangle2quat(v.value,self)
-        elif isinstance(v, YAngle):
-            libamino.aa_tf_yangle2quat(v.value,self)
-        elif isinstance(v, ZAngle):
-            libamino.aa_tf_zangle2quat(v.value,self)
-        elif isinstance(v, RotMat):
-            libamino.aa_tf_rotmat2quat(v,self)
-        elif type(v) == int or type(v) == float:
-            self.x = 0
-            self.y = 0
-            self.z = 0
-            self.w = v
-        elif isinstance(v, Vec3):
-            self.x = v.x
-            self.y = v.y
-            self.z = v.z
-            self.w = 0
-        elif isinstance(v, list) or isinstance(v,tuple):
-            self._copy_elts(v)
-        else:
-            raise Exception('Invalid argument')
-        return self
+
+    def to_quat(self, h):
+            h.x = self.x
+            h.y = self.y
+            h.z = self.z
+            h.w = self.w
+
+    def to_rotmat(self, r):
+            libamino.aa_tf_quat2rotmat(self,r)
 
     def vector(self):
         return Vec3(self.x,self.y,self.z)
@@ -246,7 +302,7 @@ class Quat(ctypes.Structure,VecMixin):
         libamino.aa_tf_qconj(self,h)
         return h
 
-    def inv(self):
+    def __invert__(self):
         h = Quat(None)
         libamino.aa_tf_qinv(self,h)
         return h
@@ -261,6 +317,13 @@ class Quat(ctypes.Structure,VecMixin):
         libamino.aa_tf_qln(self,h)
         return h
 
+    def rotate(self,p):
+        q = Vec3(None)
+        libamino.aa_tf_qrot(self,Vec3.ensure(p),q)
+        return q
+
+
+
     def __str__(self):
         return 'Quat(%f, %f, %f, %f)' % (self.x, self.y, self.z, self.w)
 
@@ -273,24 +336,36 @@ class RotMat(ctypes.Structure):
     def __init__(self, v):
         if v is None:
             pass
-        elif isinstance(v, Quat):
-            libamino.aa_tf_quat2rotmat(v,self)
-        elif isinstance(v, RotMat):
-            self.cx = v.cx
-            self.cy = v.cy
-            self.cz = v.cz
-        elif isinstance(v, XAngle):
-            libamino.aa_tf_xangle2rotmat(v.value,self)
-        elif isinstance(v, YAngle):
-            libamino.aa_tf_yangle2rotmat(v.value,self)
-        elif isinstance(v, ZAngle):
-            libamino.aa_tf_zangle2rotmat(v.value,self)
         elif 1 == v:
             self.cx = Vec3(1,0,0)
             self.cy = Vec3(0,1,0)
             self.cz = Vec3(0,0,1)
         else:
-            raise Exception('Invalid argument')
+            v.to_rotmat(self)
+
+    def rotate(self,p):
+        q = Vec3(None)
+        libamino.aa_tf_rotmat_rot(self,Vec3.ensure(p),q)
+        return q
+
+
+    def __mul__(self,other):
+        r = RotMat(None)
+        libamino.aa_tf_rotmat_mul(self,other,r)
+        return r
+
+    def to_quat(self,h):
+        libamino.aa_tf_rotmat2quat(self,h)
+    def to_rotmat(self,r):
+        self.cx = r.cx
+        self.cy = r.cy
+        self.cz = r.cz
+
+    def __invert__(self):
+        r = RotMat(None)
+        libamino.aa_tf_rotmat_inv2(self,r)
+        return r
+
 
 class TfMat(ctypes.Structure):
     _fields_ = [ ("R", RotMat),
@@ -332,6 +407,7 @@ class DualQuat(ctypes.Structure):
 
     def __str__(self):
         return 'DualQuat(%s, %s)' % (self.real, self.dual)
+
 
     def rotation(self):
         return self.real
@@ -384,8 +460,17 @@ libamino.aa_tf_xangle2rotmat.argtypes = [ctypes.c_double, ctypes.POINTER(RotMat)
 libamino.aa_tf_yangle2rotmat.argtypes = [ctypes.c_double, ctypes.POINTER(RotMat)]
 libamino.aa_tf_zangle2rotmat.argtypes = [ctypes.c_double, ctypes.POINTER(RotMat)]
 
+libamino.aa_tf_eulerzyx2rotmat.argtypes = [ ctypes.c_double, ctypes.c_double, ctypes.c_double,
+                                            ctypes.POINTER(RotMat) ]
+
+libamino.aa_tf_eulerzyx2quat.argtypes = [ ctypes.c_double, ctypes.c_double, ctypes.c_double,
+                                          ctypes.POINTER(Quat) ]
+
+
 libamino.aa_tf_quat2rotmat.argtypes = [ctypes.POINTER(Quat), ctypes.POINTER(RotMat)]
 libamino.aa_tf_rotmat2quat.argtypes = [ctypes.POINTER(RotMat), ctypes.POINTER(Quat)]
+
+
 
 libamino.aa_tf_qv2duqu.argtypes = [ ctypes.POINTER(Quat),
                                     ctypes.POINTER(Vec3),
@@ -440,3 +525,13 @@ libamino.aa_tf_qexp.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat) ]
 libamino.aa_tf_qln.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat) ]
 
 libamino.aa_tf_qrot.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Vec3), ctypes.POINTER(Vec3)]
+
+
+# rotation matrix
+
+libamino.aa_tf_rotmat_rot.argtypes = [ctypes.POINTER(RotMat), ctypes.POINTER(Vec3),
+                                      ctypes.POINTER(Vec3)]
+
+libamino.aa_tf_rotmat_mul.argtypes = [ctypes.POINTER(RotMat), ctypes.POINTER(RotMat), ctypes.POINTER(RotMat)]
+
+libamino.aa_tf_rotmat_inv2.argtypes = [ ctypes.POINTER(RotMat), ctypes.POINTER(RotMat) ]
