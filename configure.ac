@@ -904,6 +904,8 @@ CONFIG_SCRIPT([demo/urdf/schunk/lwa4d-view])
 CONFIG_SCRIPT([demo/urdf/baxter/baxter-view])
 CONFIG_SCRIPT([demo/urdf/fetch/fetch-view])
 
+CONFIG_SCRIPT([python/test/mattest.sh])
+
 CONFIG_SCRIPT([aarxc])
 
 AC_OUTPUT

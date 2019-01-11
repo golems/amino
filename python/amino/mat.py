@@ -99,13 +99,19 @@ class DVec(ctypes.Structure):
         libamino.aa_lb_dscal(alpha,self)
         return self
 
+    def negate(self):
+        self.scal(-1)
+        return self
+
+    def __neg__(self):
+        return DVec(self).negate()
 
     def zero(self):
         libamino.aa_dvec_zero(self)
         return self
 
     def set(self,alpha):
-        libamino.aa_dvec_set(self,42.0)
+        libamino.aa_dvec_set(self,alpha)
         return self
 
     def increment(self,alpha):
@@ -120,7 +126,8 @@ class DVec(ctypes.Structure):
         libamino.aa_lb_dgemv(trans,alpha,A,x,beta,self)
         return self
 
-
+    def ssd(self,other):
+        return libamino.aa_dvec_ssd(self,DVec.ensure(other))
 
 
     def __len__(self):
@@ -143,16 +150,22 @@ class DVec(ctypes.Structure):
     def __len__(self):
         return self._size
 
-    def __mul__(self,other):
+
+    def _mulop(self,other):
         tp = type(other)
         if tp == int or tp == float:
             return DVec(self).scal(other)
         else:
             raise Exception('Invalid argument')
 
+    def __mul__(self,other):
+        return self._mulop(other)
+
+    def __rmul__(self,other):
+        return self._mulop(other)
 
 
-    def __add__(self,other):
+    def _addop(self,other):
         if isinstance(other,DVec) or isinstance(other,list):
             return DVec(other).axpy(1,self)
         elif type(other) == int or type(other) == float:
@@ -160,11 +173,27 @@ class DVec(ctypes.Structure):
         else:
             raise Exception('Invalid argument')
 
+    def __add__(self,other):
+        return self._addop(other)
+
+    def __radd__(self,other):
+        return self._addop(other)
+
     def __sub__(self,other):
-        if isinstance(other,DVec) or isinstance(other,list):
-            return DVec(other).axpy(-1,self)
+        if isinstance(other,DVec):
+            return DVec(self).axpy(-1,other)
+        elif isinstance(other,list):
+            return self - DVec(other)
         elif type(other) == int or type(other) == float:
             return DVec(self).increment(-other)
+        else:
+            raise Exception('Invalid argument')
+
+    def __rsub__(self,other):
+        if type(other) == int or type(other) == float:
+            return (-self).increment(other)
+        elif isinstance(other,list):
+            return DVec(other).axpy(-1,self)
         else:
             raise Exception('Invalid argument')
 
@@ -277,6 +306,8 @@ libamino.aa_dvec_slice.argtypes = [ ctypes.POINTER(DVec),
                                     ctypes.c_size_t, ctypes.c_size_t, ctypes.c_size_t,
                                     ctypes.POINTER(DVec) ]
 
+libamino.aa_dvec_ssd.argtypes = [ctypes.POINTER(DVec),ctypes.POINTER(DVec)]
+libamino.aa_dvec_ssd.restype = ctypes.c_double
 
 ## Blas 2
 libamino.aa_dmat_row_vec.argtypes = [ ctypes.POINTER(DMat), ctypes.c_size_t,

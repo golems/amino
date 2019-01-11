@@ -290,8 +290,8 @@ test_inc()
     double xd[] = {1,2,3};
     double yd[] = {2,3,4};
 
-    struct aa_dvec x = AA_DVEC_INIT(2,xd,1);
-    struct aa_dvec y = AA_DVEC_INIT(2,yd,1);
+    struct aa_dvec x = AA_DVEC_INIT(3,xd,1);
+    struct aa_dvec y = AA_DVEC_INIT(3,yd,1);
     aa_lb_dinc(1,&x);
 
 

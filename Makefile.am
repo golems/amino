@@ -461,10 +461,12 @@ ct_traj_LDADD = libamino.la libtestutil.la
 ct_traj_LDFLAGS = -no-install
 
 
+TESTS += mat_test
 noinst_PROGRAMS += mat_test
 mat_test_SOURCES = src/test/mat_test.c
 mat_test_LDADD = libamino.la libtestutil.la
 
+TESTS += matpp_test
 noinst_PROGRAMS += matpp_test
 matpp_test_SOURCES = src/test/matpp_test.cpp
 matpp_test_LDADD = libamino.la libtestutil.la
@@ -498,6 +500,8 @@ noinst_PROGRAMS += la_ctest
 la_ctest_SOURCES = src/test/la_ctest.c
 la_ctest_LDADD = libamino.la libtestutil.la
 
+
+TESTS += python/test/mattest.sh
 
 if HAVE_FCL
 

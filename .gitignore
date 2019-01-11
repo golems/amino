@@ -183,3 +183,8 @@ amino*.tar.gz
 /mat_test
 /matpp_test
 /demo/urdf/baxter/baxter-wksp-pp
+/python/test/mattest.py.log
+/python/test/mattest.py.trs
+/python/test/mattest.sh
+/python/test/mattest.sh.log
+/python/test/mattest.sh.trs
