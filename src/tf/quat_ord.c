@@ -134,6 +134,12 @@ aa_tf_vnormalizef( float v[AA_RESTRICT 3] )
 }
 
 AA_API void
+aa_tf_qscal( double q[AA_RESTRICT 4], double alpha )
+{
+    FOR_QUAT(i) q[i] *= alpha;
+}
+
+AA_API void
 aa_tf_qnormalize( double q[AA_RESTRICT 4] )
 {
     double n = aa_tf_qnorm(q);

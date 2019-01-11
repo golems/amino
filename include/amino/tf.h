@@ -987,6 +987,13 @@ aa_tf_qdot( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4] );
  */
 AA_API void aa_tf_qnormalize( double q[AA_RESTRICT 4] );
 
+/**
+ * Scale a quaternion.
+ * @f[ \bf{q} \leftarrow \alpha {\bf q} @f]
+ */
+AA_API void
+aa_tf_qscal( double q[AA_RESTRICT 4], double alpha );
+
 
 /** Return norm of the quaternion */
 AA_API double aa_tf_qnorm( const double q[AA_RESTRICT 4] );
