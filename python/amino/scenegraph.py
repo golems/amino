@@ -101,6 +101,7 @@ class SceneGraph:
 
     def init(self):
         libamino.aa_rx_sg_init(self.ptr)
+        return self
 
     def add_frame_fixed(self,parent,name,tf):
         if(isinstance(tf,tuple)):
@@ -118,6 +119,10 @@ class SceneGraph:
         else:
             raise Exception()
 
+    def load(self, filename, name, root=""):
+        r = libamino.aa_rx_dl_sg_at(filename,name,self.ptr,root)
+        return self
+
 
 
 libamino.aa_rx_sg_create.argtypes = []
@@ -125,6 +130,9 @@ libamino.aa_rx_sg_create.restype = ctypes.POINTER(sg)
 libamino.aa_rx_sg_destroy.argtypes = [ctypes.POINTER(sg) ]
 libamino.aa_rx_sg_init.argtypes = [ctypes.POINTER(sg) ]
 
+libamino.aa_rx_dl_sg_at.argtypes = [ ctypes.c_char_p, ctypes.c_char_p,
+                                    ctypes.POINTER(sg), ctypes.c_char_p]
+libamino.aa_rx_dl_sg_at.restype = ctypes.POINTER(sg)
 
 
 libamino.aa_rx_sg_add_frame_fixed.argtypes = [ctypes.POINTER(sg),

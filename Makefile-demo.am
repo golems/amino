@@ -110,7 +110,7 @@ demo_urdf_baxter_libbaxter_demo_la_CFLAGS = $(DEMO_CFLAGS)
 
 lib_LTLIBRARIES += demo/urdf/baxter/libamino_baxter.la
 demo_urdf_baxter_libamino_baxter_la_SOURCES =
-demo_urdf_baxter_libamino_baxter_la_LIBADD = demo/urdf/baxter/libbaxter.la
+demo_urdf_baxter_libamino_baxter_la_LIBADD = demo/urdf/baxter/libbaxter.la libamino.la
 demo_urdf_baxter_libamino_baxter_la_LDFLAGS = -avoid-version -module -shared -export-dynamic
 
 noinst_PROGRAMS += demo/urdf/baxter/baxter-simple
