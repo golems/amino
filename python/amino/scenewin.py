@@ -29,14 +29,58 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
+
 ##
-## @file __init__.py Package init file
+## @file scenegraph.py Scene Graphs
 ##
+
+
 
 import ctypes
-
 from lib import libamino
-from tf import Vec3, Quat, XAngle, YAngle, ZAngle, RotMat, TfMat, DualQuat, QuatTrans, EulerRPY
-from mat import DVec, DMat
-from scenegraph import GeomOpt, Geom, SceneGraph
-from scenewin import SceneWin
+from tf import Vec3,Quat
+from scenegraph import *
+
+libaminogl = ctypes.CDLL("libamino-gl.so")
+
+
+class win(ctypes.Structure):
+    """Opaque type for scene window"""
+    pass
+
+class SceneWin(object):
+    __slots__ = ['ptr', 'scenegraph']
+
+    def __init__(self, title="PyAmino", width=800,height=600):
+        self.ptr = libaminogl.aa_rx_win_default_create(title,width,height)
+
+    def __del__(self):
+        libaminogl.aa_rx_win_destroy( self.ptr )
+
+    def start( self, async=False ):
+        if( async ):
+            libaminogl.aa_rx_win_run_async()
+        else:
+            libaminogl.aa_rx_win_run()
+
+    def set_scenegraph(self, scenegraph):
+        self.scenegraph = scenegraph
+        libaminogl.aa_rx_win_set_sg(self.ptr,scenegraph.ptr)
+
+    def stop(self):
+        libaminogl.aa_rx_win_run_async()
+        pass
+
+
+libaminogl.aa_gl_init.argtypes = []
+
+libaminogl.aa_rx_win_default_create.argtypes = [ ctypes.c_char_p, ctypes.c_int, ctypes.c_int ]
+libaminogl.aa_rx_win_default_create.restype = ctypes.POINTER(win)
+
+libaminogl.aa_rx_win_destroy.argtypes = [ctypes.POINTER(win)]
+
+libaminogl.aa_rx_win_run.argtypes = [ ]
+libaminogl.aa_rx_win_run_async.argtypes = [ ]
+libaminogl.aa_rx_win_stop.argtypes = [ ctypes.POINTER(win) ]
+
+libaminogl.aa_rx_win_set_sg.argtypes = [ ctypes.POINTER(win), ctypes.POINTER(sg) ]

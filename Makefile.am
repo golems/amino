@@ -397,7 +397,7 @@ libamino_gl_la_SOURCES = src/amino_gl.c
 
 libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
-libamino_gl_la_LIBADD = $(GL_LIBS) $(SDL2_LIBS)
+libamino_gl_la_LIBADD = $(GL_LIBS) $(SDL2_LIBS) libamino.la
 
 
 # SDL

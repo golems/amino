@@ -29,14 +29,29 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
-##
-## @file __init__.py Package init file
-##
 
-import ctypes
+# Object must provide .ssd(other), .nrm2(), .__setitem__()
 
-from lib import libamino
-from tf import Vec3, Quat, XAngle, YAngle, ZAngle, RotMat, TfMat, DualQuat, QuatTrans, EulerRPY
-from mat import DVec, DMat
-from scenegraph import GeomOpt, Geom, SceneGraph
-from scenewin import SceneWin
+class VecMixin(object):
+    def __eq__(self,other):
+        return (0 == self.ssd(other))
+    def __ne__(self,other):
+        return (0 != self.ssd(other))
+
+    def isclose(self, b, rel_tol=1e-09, abs_tol=0.0):
+        a = self
+        na = a.nrm2()
+        nb = b.nrm2()
+        d = a.ssd(b)
+        return d <= max(rel_tol * max(na, nb), abs_tol)
+
+    def _copy_elts(self,v):
+        n = len(self)
+        if( n != len(v) ):
+            raise IndexError()
+        for i in range(0,n):
+            self[i] = v[i]
+        return self
+
+    def __radd__(self,other):
+        return self + other

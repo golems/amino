@@ -70,6 +70,10 @@ class Vec3(ctypes.Structure,VecMixin):
         else:
             return Vec3(thing)
 
+    @staticmethod
+    def identity():
+        return Vec3([0,0,0])
+
     def ssd(self,other):
         """Sum-square-differences of self and other."""
         return libamino.aa_tf_vssd(self, Vec3.ensure(other))
@@ -204,14 +208,17 @@ class EulerZYX(ctypes.Structure):
 def EulerRPY(v):
     """Construct a Roll-Pitch-Yaw Euler angler.
 
-    The actual object returned is an EulerZYX"""
-        if isinstance(v, list) or isinstance(v,tuple):
-            if( 3 != len(v) ):
-                raise IndexError()
-            else:
-                return EulerZYX( [v[2], v[1], v[0]] )
+    The actual object returned is an EulerZYX
+
+    """
+
+    if isinstance(v, list) or isinstance(v,tuple):
+        if( 3 != len(v) ):
+            raise IndexError()
         else:
-            return EulerZYX(v)
+            return EulerZYX( [v[2], v[1], v[0]] )
+    else:
+        return EulerZYX(v)
 
 class Quat(ctypes.Structure,VecMixin):
     """Class for quaternions"""
@@ -258,14 +265,14 @@ class Quat(ctypes.Structure,VecMixin):
 
     def to_quat(self, h):
         """Convert (copy) to a quaternion"""
-            h.x = self.x
-            h.y = self.y
-            h.z = self.z
-            h.w = self.w
+        h.x = self.x
+        h.y = self.y
+        h.z = self.z
+        h.w = self.w
 
     def to_rotmat(self, r):
         """Convert to a rotation matrix and store in r"""
-            libamino.aa_tf_quat2rotmat(self,r)
+        libamino.aa_tf_quat2rotmat(self,r)
 
     def vector(self):
         """Return the vector (xyz) part"""
@@ -516,6 +523,10 @@ class QuatTrans(ctypes.Structure):
             self.trans = Vec3(v[1])
         else:
             raise Exception('Invalid argument')
+
+    @staticmethod
+    def identity():
+        return QuatTrans( (Quat.identity(), Vec3.identity()) )
 
     def __str__(self):
         return 'QuatTrans(%s, %s)' % (self.quat, self.trans)
