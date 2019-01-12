@@ -41,8 +41,7 @@ from lib import libamino
 
 from math import sqrt
 
-from mixin import VecMixin
-
+from mixin import VecMixin, CopyEltsMixin
 
 class Vec3(ctypes.Structure,VecMixin):
     """Class for length-3 vectors"""
@@ -57,10 +56,12 @@ class Vec3(ctypes.Structure,VecMixin):
         * If v is None, the object is unitialized.
         * If v is a list, the list elements are copied to the object.
         """
-        if v is None:
-            pass
-        else:
-            self._copy_elts(v)
+        if v is not None:
+            self.copy_from(v)
+
+    def copy_from(self,other):
+        self._copy_elts(other)
+        return self
 
     @staticmethod
     def ensure(thing):
@@ -238,9 +239,11 @@ class Quat(ctypes.Structure,VecMixin):
           and the scalar (w) is zero
         * Else v is converted to a Quat
         """
-        if v is None:
-            pass
-        elif type(v) == int or type(v) == float:
+        if v is not None:
+            self.conv_from(v)
+
+    def conv_from(self,v):
+        if type(v) == int or type(v) == float:
             self.x = 0
             self.y = 0
             self.z = 0
@@ -249,6 +252,7 @@ class Quat(ctypes.Structure,VecMixin):
             self._copy_elts(v)
         else:
             v.to_quat(self)
+        return self
 
     @staticmethod
     def identity():
@@ -408,9 +412,11 @@ class RotMat(ctypes.Structure):
         * If v is 1, the object is the identity rotation matrix.
         * Else v is converted to a rotation matrix.
         """
-        if v is None:
-            pass
-        elif 1 == v:
+        if v is not None:
+            self.conv_from(v)
+
+    def conv_from(self,v):
+        if 1 == v:
             self.cx = Vec3(1,0,0)
             self.cy = Vec3(0,1,0)
             self.cz = Vec3(0,0,1)
@@ -435,9 +441,9 @@ class RotMat(ctypes.Structure):
         libamino.aa_tf_rotmat2quat(self,h)
     def to_rotmat(self,r):
         """Convert (copy) to a rotation matrix and store in r"""
-        self.cx = r.cx
-        self.cy = r.cy
-        self.cz = r.cz
+        r.cx = self.cx
+        r.cy = self.cy
+        r.cz = self.cz
 
     def __invert__(self):
         """Return the inverse"""
@@ -451,12 +457,35 @@ class TfMat(ctypes.Structure):
     _fields_ = [ ("R", RotMat),
                  ("v", Vec3) ]
 
-    def __init__(self, v):
-        if isinstance(v,tuple):
-            self.R = RotMat(v[0])
-            self.v = Vec3(v[1])
+    def __init__(self, arg):
+        if arg is not None:
+            self.conv_from(arg)
+
+    def conv_from(self,arg):
+        if isinstance(arg,tuple):
+            R,v = arg
+            self.R.conv_from(R)
+            self.v.copy_from(v)
         else:
-            raise Exception('Invalid argument')
+            self.conv_from( (arg.rotation(), arg.translation()) )
+
+    def __mul__(self,other):
+        """Chain two TF matrices"""
+        r = TfMat(None)
+        libamino.aa_tf_tfmat_mul(self,other,r)
+        return r
+
+    def __invert__(self):
+        """Return the inverse"""
+        h = TfMat(None)
+        libamino.aa_tf_tfmat_inv2(self,h)
+        return h
+
+    def transform(self,p):
+        """Chain two TF matrices"""
+        q = Vec3(None)
+        libamino.aa_tf_tfmat_tf(self,Vec3.ensure(p),q)
+        return q
 
     def rotation(self):
         """Return the rotation part"""
@@ -466,31 +495,86 @@ class TfMat(ctypes.Structure):
         """Return the translation part"""
         return self.v
 
-class DualQuat(ctypes.Structure):
+class DualQuat(ctypes.Structure,CopyEltsMixin):
     """Class for Dual Number Quaternions"""
     _fields_ = [ ("real", Quat),
                  ("dual", Quat) ]
 
-    def __init__(self, v):
-        if v is None:
-            pass
-        elif isinstance(v, list):
-            self.real.x = v[0]
-            self.real.y = v[1]
-            self.real.z = v[2]
-            self.real.w = v[3]
-            self.dual.x = v[4]
-            self.dual.y = v[5]
-            self.dual.z = v[6]
-            self.dual.w = v[7]
-        elif isinstance(v,tuple):
-            libamino.aa_tf_qv2duqu(Quat(v[0]),Vec3(v[1]),self)
+
+    def __init__(self, arg):
+        if arg is not None:
+            self.conv_from(arg)
+
+    def conv_from(self,arg):
+        if isinstance(arg,tuple):
+            h,v = arg
+            libamino.aa_tf_qv2duqu(Quat.ensure(h), Vec3.ensure(v),
+                                   self)
+        elif isinstance(arg, list):
+            self._copy_elts(arg)
         else:
-            raise Exception('Invalid argument')
+            self.conv_from( (arg.rotation(),arg.translation()) )
+
+    def __mul__(self,other):
+        """Chain two Dual Quaternions"""
+        r = DualQuat(None)
+        libamino.aa_tf_duqu_mul(self,other,r)
+        return r
+
+    def conj(self):
+        """Return the conjugate"""
+        h = DualQuat(None)
+        libamino.aa_tf_duqu_conj(self,h)
+        return h
+
+    def transform(self,p):
+        """Chain two TF matrices"""
+        q = Vec3(None)
+        libamino.aa_tf_duqu_tf(self,Vec3.ensure(p),q)
+        return q
 
     def __str__(self):
         return 'DualQuat(%s, %s)' % (self.real, self.dual)
 
+    def __getitem__(self, key):
+        if key == 0:
+            return self.real.x
+        elif key == 1:
+            return self.real.y
+        elif key == 2:
+            return self.real.z
+        elif key == 3:
+            return self.real.w
+        elif key == 4:
+            return self.dual.x
+        elif key == 5:
+            return self.dual.y
+        elif key == 6:
+            return self.dual.z
+        elif key == 7:
+            return self.dual.w
+        else:
+            raise IndexError(key)
+
+    def __setitem__(self, key, item):
+        if key == 0:
+            self.real.x = item
+        elif key == 1:
+            self.real.y = item
+        elif key == 2:
+            self.real.z = item
+        elif key == 3:
+            self.real.w = item
+        elif key == 4:
+            self.dual.x = item
+        elif key == 5:
+            self.dual.y = item
+        elif key == 6:
+            self.dual.z = item
+        elif key == 7:
+            self.dual.w = item
+        else:
+            raise IndexError(key)
 
     def rotation(self):
         """Convert to a rotation matrix and store in r"""
@@ -502,34 +586,89 @@ class DualQuat(ctypes.Structure):
         libamino.aa_tf_duqu_trans(self,v)
         return v
 
-class QuatTrans(ctypes.Structure):
+class QuatTrans(ctypes.Structure,CopyEltsMixin):
     """Class for Quaternion-Translation"""
     _fields_ = [ ("quat", Quat),
                  ("trans", Vec3) ]
 
-    def __init__(self, v):
-        if v is None:
-            pass
-        elif isinstance(v, list):
-            self.quat.x = v[0]
-            self.quat.y = v[1]
-            self.quat.z = v[2]
-            self.quat.w = v[3]
-            self.trans.x = v[4]
-            self.trans.y = v[5]
-            self.trans.z = v[6]
-        elif isinstance(v,tuple):
-            self.quat = Quat(v[0])
-            self.trans = Vec3(v[1])
+    def __init__(self, arg):
+        if arg is not None:
+            self.conv_from(arg)
+
+    def conv_from(self,arg):
+        if isinstance(arg,tuple):
+            R,v = arg
+            self.quat.conv_from(R)
+            self.trans.copy_from(v)
+        elif isinstance(arg, list):
+            self._copy_elts(arg)
         else:
-            raise Exception('Invalid argument')
+            self.conv_from( (arg.rotation(),arg.translation()) )
 
     @staticmethod
     def identity():
         return QuatTrans( (Quat.identity(), Vec3.identity()) )
 
+    def __mul__(self,other):
+        """Chain two Dual Quaternions"""
+        r = QuatTrans(None)
+        libamino.aa_tf_qutr_mul(self,other,r)
+        return r
+
+    def conj(self):
+        """Return the conjugate"""
+        h = QuatTrans(None)
+        libamino.aa_tf_qutr_conj(self,h)
+        return h
+
+    def __invert__(self):
+        """Return the inverse (same as conjugate)"""
+        return self.conj()
+
+    def transform(self,p):
+        """Chain two Quaternion-translations"""
+        q = Vec3(None)
+        libamino.aa_tf_qutr_tf(self,Vec3.ensure(p),q)
+        return q
+
     def __str__(self):
         return 'QuatTrans(%s, %s)' % (self.quat, self.trans)
+
+    def __getitem__(self, key):
+        if key == 0:
+            return self.quat.x
+        elif key == 1:
+            return self.quat.y
+        elif key == 2:
+            return self.quat.z
+        elif key == 3:
+            return self.quat.w
+        elif key == 4:
+            return self.trans.x
+        elif key == 5:
+            return self.trans.y
+        elif key == 6:
+            return self.trans.z
+        else:
+            raise IndexError(key)
+
+    def __setitem__(self, key, item):
+        if key == 0:
+            self.quat.x = item
+        elif key == 1:
+            self.quat.y = item
+        elif key == 2:
+            self.quat.z = item
+        elif key == 3:
+            self.quat.w = item
+        elif key == 4:
+            self.trans.x = item
+        elif key == 5:
+            self.trans.y = item
+        elif key == 6:
+            self.trans.z = item
+        else:
+            raise IndexError(key)
 
     def rotation(self):
         """Return the rotation part"""
@@ -627,3 +766,28 @@ libamino.aa_tf_rotmat_rot.argtypes = [ctypes.POINTER(RotMat), ctypes.POINTER(Vec
 libamino.aa_tf_rotmat_mul.argtypes = [ctypes.POINTER(RotMat), ctypes.POINTER(RotMat), ctypes.POINTER(RotMat)]
 
 libamino.aa_tf_rotmat_inv2.argtypes = [ ctypes.POINTER(RotMat), ctypes.POINTER(RotMat) ]
+
+# Transforms
+libamino.aa_tf_tfmat_tf.argtypes = [ ctypes.POINTER(TfMat),
+                                     ctypes.POINTER(Vec3),
+                                     ctypes.POINTER(Vec3) ]
+
+libamino.aa_tf_qutr_tf.argtypes = [ ctypes.POINTER(QuatTrans),
+                                     ctypes.POINTER(Vec3),
+                                     ctypes.POINTER(Vec3) ]
+
+libamino.aa_tf_duqu_tf.argtypes = [ ctypes.POINTER(DualQuat),
+                                    ctypes.POINTER(Vec3),
+                                    ctypes.POINTER(Vec3) ]
+
+libamino.aa_tf_tfmat_mul.argtypes = [ ctypes.POINTER(TfMat), ctypes.POINTER(TfMat), ctypes.POINTER(TfMat) ]
+
+libamino.aa_tf_duqu_mul.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(DualQuat), ctypes.POINTER(DualQuat) ]
+
+libamino.aa_tf_qutr_mul.argtypes = [ ctypes.POINTER(QuatTrans), ctypes.POINTER(QuatTrans), ctypes.POINTER(QuatTrans) ]
+
+libamino.aa_tf_tfmat_inv2.argtypes = [ ctypes.POINTER(TfMat), ctypes.POINTER(TfMat)]
+
+libamino.aa_tf_duqu_conj.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(DualQuat)]
+
+libamino.aa_tf_qutr_conj.argtypes = [ ctypes.POINTER(QuatTrans), ctypes.POINTER(QuatTrans)]

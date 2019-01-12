@@ -55,3 +55,13 @@ class VecMixin(object):
 
     def __radd__(self,other):
         return self + other
+
+
+class CopyEltsMixin(object):
+    def _copy_elts(self,v):
+        n = len(self)
+        if( n != len(v) ):
+            raise IndexError()
+        for i in range(0,n):
+            self[i] = v[i]
+        return self

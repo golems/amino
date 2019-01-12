@@ -211,6 +211,12 @@ class TestRotMat(unittest.TestCase):
         self.assertTrue( hvi.isclose(v) )
         self.assertTrue( hvi.isclose(Rvi) )
 
+        self.assertTrue( RotMat(R).rotate(v).isclose(Rv) )
+        self.assertTrue( RotMat(h).rotate(v).isclose(Rv) )
+
+        self.assertTrue( Quat(R).rotate(v).isclose(Rv) )
+        self.assertTrue( Quat(h).rotate(v).isclose(Rv) )
+
     def cmprq(self,thing,v):
         self.cmprot(RotMat(thing), Quat(thing), v)
 
@@ -240,6 +246,53 @@ class TestRotMat(unittest.TestCase):
         v = Vec3([1,2,3])
         self.cmp2(XAngle(1), YAngle(2), v)
         self.cmp2(ZAngle(1), XAngle(2), v)
+
+
+class TestTf(unittest.TestCase):
+    def cmptfs(self,T,S,E,p):
+        p = Vec3.ensure(p)
+        q = T.transform(p)
+
+        self.assertTrue(q.isclose( S.transform(p) ) )
+        self.assertTrue(q.isclose( E.transform(p) ) )
+
+        self.assertTrue( (~T).transform(q).isclose(p) )
+        self.assertTrue( (~E).transform(q).isclose(p) )
+        self.assertTrue( E.conj().transform(q).isclose(p) )
+        self.assertTrue( S.conj().transform(q).isclose(p) )
+
+        self.assertTrue( TfMat(T).transform(p).isclose(q) )
+        self.assertTrue( TfMat(S).transform(p).isclose(q) )
+        self.assertTrue( TfMat(E).transform(p).isclose(q) )
+
+        self.assertTrue( DualQuat(T).transform(p).isclose(q) )
+        self.assertTrue( DualQuat(S).transform(p).isclose(q) )
+        self.assertTrue( DualQuat(E).transform(p).isclose(q) )
+
+        self.assertTrue( QuatTrans(T).transform(p).isclose(q) )
+        self.assertTrue( QuatTrans(S).transform(p).isclose(q) )
+        self.assertTrue( QuatTrans(E).transform(p).isclose(q) )
+
+
+    def cmptf(self,rot,trans,p):
+        self.cmptfs( TfMat((rot,trans)),
+                     DualQuat((rot,trans)),
+                     QuatTrans((rot,trans)), p )
+
+    def cmpmul(self,tf1,tf2,p):
+        self.cmptfs( TfMat(tf1) * TfMat(tf2),
+                     DualQuat(tf1) * DualQuat(tf2),
+                     QuatTrans(tf1) * QuatTrans(tf2), p )
+
+
+    def test_principal(self):
+        self.cmptf(XAngle(.25), [1,2,3], [3,7,11] )
+        self.cmptf(YAngle(.5), [1,2,3], [3,7,11] )
+        self.cmptf(ZAngle(1), [1,2,3], [3,7,11] )
+
+    def test_mul(self):
+        self.cmpmul((XAngle(.25), [1,2,3]), (YAngle(.5), [1,2,3]), [3,7,11] )
+
 
 if __name__ == '__main__':
     unittest.main()

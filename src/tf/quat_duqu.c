@@ -271,6 +271,13 @@ AA_API void
 aa_tf_tf_duqu( const double S[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
                double p1[AA_RESTRICT 3] )
 {
+    aa_tf_duqu_tf(S,p0,p1);
+}
+
+AA_API void
+aa_tf_duqu_tf( const double S[AA_RESTRICT 8], const double p0[AA_RESTRICT 3],
+               double p1[AA_RESTRICT 3]  )
+{
     double x[4];
     const double *r = S+AA_TF_DUQU_REAL;
     const double *d = S+AA_TF_DUQU_DUAL;
