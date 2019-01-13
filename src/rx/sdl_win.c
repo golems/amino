@@ -489,10 +489,24 @@ aa_rx_win_set_config( struct aa_rx_win * win,
                       size_t n,
                       const double *q )
 {
+    struct aa_dvec qw = AA_DVEC_INIT(n,(double*)q,1);
+    aa_rx_win_set_bconfig( win, &qw );
+}
+
+AA_API void
+aa_rx_win_set_bconfig( struct aa_rx_win * win,
+                       const struct aa_dvec *q )
+{
+
     aa_rx_win_lock(win);
     aa_checked_free(win->q);
-    win->n_q = n;
-    win->q = AA_MEM_DUP(double, q, n );
+
+    win->n_q = q->len;
+    win->q = AA_NEW_AR(double,q->len);
+    struct aa_dvec qw = AA_DVEC_INIT(win->n_q, win->q, 1);
+    aa_lb_dcopy(q,&qw);
+
+
     aa_rx_win_unlock(win);
 }
 

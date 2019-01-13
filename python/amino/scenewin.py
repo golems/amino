@@ -51,8 +51,13 @@ class win(ctypes.Structure):
 class SceneWin(object):
     __slots__ = ['ptr', 'scenegraph']
 
-    def __init__(self, title="PyAmino", width=800,height=600):
+    def __init__(self, title="PyAmino", width=800, height=600,
+                 start=True, async=True, scenegraph=None):
         self.ptr = libaminogl.aa_rx_win_default_create(title,width,height)
+        if scenegraph:
+            self.set_scenegraph(scenegraph)
+        if start:
+            self.start(async)
 
     def __del__(self):
         libaminogl.aa_rx_win_destroy( self.ptr )
@@ -67,6 +72,14 @@ class SceneWin(object):
         self.scenegraph = scenegraph
         libaminogl.aa_rx_win_set_sg(self.ptr,scenegraph.ptr)
 
+    def set_config(self,config):
+        if isinstance(config,dict):
+            self.set_config( self.scenegraph.config_vector(config) )
+        elif len(config) != self.scenegraph.config_count():
+            raise IndexError()
+        else:
+            libaminogl.aa_rx_win_set_bconfig(self.ptr,DVec.ensure(config))
+
     def stop(self):
         libaminogl.aa_rx_win_run_async()
         pass
@@ -78,6 +91,8 @@ libaminogl.aa_rx_win_default_create.argtypes = [ ctypes.c_char_p, ctypes.c_int, 
 libaminogl.aa_rx_win_default_create.restype = ctypes.POINTER(win)
 
 libaminogl.aa_rx_win_destroy.argtypes = [ctypes.POINTER(win)]
+
+libaminogl.aa_rx_win_set_bconfig.argtypes = [ctypes.POINTER(win), ctypes.POINTER(DVec)]
 
 libaminogl.aa_rx_win_run.argtypes = [ ]
 libaminogl.aa_rx_win_run_async.argtypes = [ ]

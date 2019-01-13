@@ -40,6 +40,8 @@
 
 #include <SDL.h>
 
+
+
 struct aa_rx_sg_sub;
 
 /**
@@ -159,6 +161,15 @@ aa_rx_win_set_config( struct aa_rx_win * win,
                       size_t n,
                       const double *q );
 
+/**
+ * Set the configuration vector (block-vector version) for the window.
+ *
+ * This configuration is used by the default rendering function.
+ * Custom rendering functions may not need to set the configuration with this function.
+ */
+AA_API void
+aa_rx_win_set_bconfig( struct aa_rx_win * win,
+                       const struct aa_dvec *q );
 
 /**
  * Set the window's display function

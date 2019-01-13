@@ -39,6 +39,7 @@
 import ctypes
 from lib import libamino
 from tf import Vec3,Quat
+from mat import DVec
 
 
 FRAME_ROOT=-1
@@ -99,10 +100,6 @@ class SceneGraph:
     def __del__(self):
         libamino.aa_rx_sg_destroy(self.ptr)
 
-    def init(self):
-        libamino.aa_rx_sg_init(self.ptr)
-        return self
-
     def add_frame_fixed(self,parent,name,tf):
         if(isinstance(tf,tuple)):
             h,v = tf
@@ -123,12 +120,46 @@ class SceneGraph:
         r = libamino.aa_rx_dl_sg_at(filename,name,self.ptr,root)
         return self
 
+    def init(self):
+        libamino.aa_rx_sg_init(self.ptr)
+        return self
+
+    def config_count(self):
+        return libamino.aa_rx_sg_config_count(self.ptr)
+
+    def frame_count(self):
+        return libamino.aa_rx_sg_frame_count(self.ptr)
+
+    def config_id(self,name):
+        return libamino.aa_rx_sg_config_id(self.ptr,name)
+
+    def frame_id(self,name):
+        return libamino.aa_rx_sg_frame_id(self.ptr,name)
+
+    def config_vector(self, config_dict):
+        v = DVec.create(self.config_count())
+        v.set(0)
+        for key in config_dict:
+            v[ self.config_id(key) ] = config_dict[key]
+        return v
 
 
 libamino.aa_rx_sg_create.argtypes = []
 libamino.aa_rx_sg_create.restype = ctypes.POINTER(sg)
 libamino.aa_rx_sg_destroy.argtypes = [ctypes.POINTER(sg) ]
 libamino.aa_rx_sg_init.argtypes = [ctypes.POINTER(sg) ]
+
+libamino.aa_rx_sg_config_count.argtypes = [ctypes.POINTER(sg) ]
+libamino.aa_rx_sg_config_count.restype = ctypes.c_size_t
+
+libamino.aa_rx_sg_frame_count.argtypes = [ctypes.POINTER(sg) ]
+libamino.aa_rx_sg_frame_count.restype = ctypes.c_size_t
+
+libamino.aa_rx_sg_config_id.argtypes = [ctypes.POINTER(sg), ctypes.c_char_p ]
+libamino.aa_rx_sg_config_id.restype = ctypes.c_int
+
+libamino.aa_rx_sg_frame_id.argtypes = [ctypes.POINTER(sg), ctypes.c_char_p ]
+libamino.aa_rx_sg_frame_id.restype = ctypes.c_int
 
 libamino.aa_rx_dl_sg_at.argtypes = [ ctypes.c_char_p, ctypes.c_char_p,
                                     ctypes.POINTER(sg), ctypes.c_char_p]

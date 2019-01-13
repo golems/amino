@@ -32,10 +32,16 @@
 #   SUCH DAMAGE.
 
 from amino import *
+from math import pi
 
 sg = SceneGraph().load(".libs/libamino_baxter.so", "baxter")
 sg.init()
 
-win = SceneWin()
-win.set_scenegraph(sg)
+win = SceneWin(scenegraph=sg,start=False)
+
+win.set_config( {'right_s0': .05*pi,
+                 'right_s1': -.25*pi,
+                 'right_e1': .25*pi,
+                 'right_w1': .25*pi } )
+
 win.start(async=False)
