@@ -299,6 +299,16 @@ test_inc()
 
 }
 
+static void test_nrm2()
+{
+    double Ad[] = {1,2,3,1024,   4,5,6,2048 };
+    struct aa_dmat A = AA_DMAT_INIT( 3, 2, Ad, 4 );
+    aafeq( "mat-nrm2", aa_dmat_nrm2(&A),
+           sqrt(1*1 + 2*2 + 3*3 + 4*4 + 5*5 + 6*6),
+           1e-6 );
+
+}
+
 
 int main(void)
 {
@@ -327,6 +337,7 @@ int main(void)
     test_dzdpinv();
     test_scal();
     test_inc();
+    test_nrm2();
 
     printf("mat_test: OK\n");
     return 0;

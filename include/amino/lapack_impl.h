@@ -1027,6 +1027,36 @@ AA_API void AA_LAPACK_NAME(lascl)
   const int *M, const int *N, AA_TYPE *A, const int *LDA,
   int *INFO );
 
+
+/**
+ * returns the value of the 1-norm, Frobenius norm, infinity-norm, or
+ * the largest absolute value of any element of a general rectangular
+ * matrix.
+ *
+ * @param[in] NORM Specifies the value to be returned in DLANGE as
+ *                 described above.
+ *
+ * @param[in] M The number of rows of the matrix A.  M >= 0.  When M =
+ *              0, DLANGE is set to zero.
+ *
+ * @param[in] N The number of columns of the matrix A.  N
+ *            >= 0.  When N = 0, DLANGE is set to zero.
+ *
+ * @param[in] A The m by n matrix A.
+ *
+ * @param[in] LDA The leading dimension of the array A.  LDA >=
+ *            max(M,1).
+ *
+ * @param[out] WORK WORK is DOUBLE PRECISION array, dimension
+ *          (MAX(1,LWORK)), where LWORK >= M when NORM = 'I';
+ *          otherwise, WORK is not referenced.
+ *
+ */
+AA_API double AA_LAPACK_NAME(lange)
+( const char TYPE[1],
+  const int *M, const int *N, AA_TYPE *A, const int *LDA,
+  AA_TYPE *work );
+
 /**
 *
 * initializes an m-by-n matrix A to BETA on the diagonal and

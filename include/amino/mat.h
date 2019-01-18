@@ -352,16 +352,29 @@ aa_lb_dlacpy( const char uplo[1],
 /* Matrix/Vector Functions */
 
 /**
- * sum-square-differences
+ * sum-square-differences of two vectors
  */
 AA_API double
 aa_dvec_ssd( const struct aa_dvec *x, const struct aa_dvec *y);
 
+
+/**
+ * sum-square-differences of two matrices
+ */
 AA_API double
 aa_dmat_ssd( const struct aa_dmat *x, const struct aa_dmat *y);
 
+/**
+ * Scale the matrix A by alpha
+ */
 AA_API void
-aa_dmat_scal( struct aa_dmat *x, double alpha );
+aa_dmat_scal( struct aa_dmat *A, double alpha );
+
+/**
+ * Euclidean Norm
+ */
+AA_API double
+aa_dmat_nrm2( const struct aa_dmat *x );
 
 
 /**
