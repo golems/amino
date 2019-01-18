@@ -199,6 +199,26 @@ class DVec(ctypes.Structure,VecMixin):
     def __add__(self,other):
         return self._addop(other)
 
+    def __iadd__(self,other):
+        if isinstance(other,DVec):
+            return self.axpy(1,other)
+        if isinstance(other,list):
+            return self.axpy(1,DVec(other))
+        elif type(other) == int or type(other) == float:
+            return self.increment(other)
+        else:
+            raise Exception('Invalid argument')
+
+    def __isub(self,other):
+        if isinstance(other,DVec):
+            return self.axpy(-1,other)
+        if isinstance(other,list):
+            return self.axpy(-1,DVec(other))
+        elif type(other) == int or type(other) == float:
+            return self.increment(-other)
+        else:
+            raise Exception('Invalid argument')
+
     def __sub__(self,other):
         if isinstance(other,DVec):
             return DVec(self).axpy(-1,other)
@@ -264,6 +284,10 @@ class DMat(ctypes.Structure,SSDEqMixin):
         return self._rows
     def cols(self):
         return self._cols
+    def ld(self):
+        return self._ld
+    def data(self):
+        return self._data
     def __len__(self):
         return self.rows()*self.cols()
 
@@ -346,7 +370,7 @@ class DMat(ctypes.Structure,SSDEqMixin):
 
     def __mul__(self, other):
         if isinstance(other,DVec) :
-            y = DVec.create(self.cols())
+            y = DVec.create(self.rows())
             y.gemv(CblasNoTrans,1,self,other,0)
             return y
         elif isinstance(other,list) :

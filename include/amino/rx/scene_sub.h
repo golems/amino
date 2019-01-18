@@ -140,6 +140,22 @@ aa_rx_sg_sub_config_set(
 
 
 /**
+ * Fill a full configuration vector with values from the subset vector.
+ */
+AA_API void
+aa_rx_sg_sub_config_scatter( const struct aa_rx_sg_sub *ssg,
+                             const struct aa_dvec *config_subset,
+                             struct aa_dvec *config_all );
+
+/**
+ * Fill a subset configuration vector with values from the full vector.
+ */
+AA_API void
+aa_rx_sg_sub_config_gather( const struct aa_rx_sg_sub *ssg,
+                            const struct aa_dvec *config_all,
+                            struct aa_dvec *config_subset );
+
+/**
  * Create a sub-scenegraph for the kinematic chain starting at root and ending a tip.
  */
 AA_API struct aa_rx_sg_sub *

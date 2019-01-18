@@ -229,6 +229,38 @@ aa_rx_sg_sub_config_set(
 
 }
 
+AA_API void
+aa_rx_sg_sub_config_scatter( const struct aa_rx_sg_sub *ssg,
+                             const struct aa_dvec *config_subset,
+                             struct aa_dvec *config_all )
+{
+    if( config_subset->len != ssg->config_count ||
+        config_all->len != aa_rx_sg_config_count(ssg->scenegraph)
+       ) { aa_lb_err("Mismatched config vector sizes\n"); }
+
+    int inc = (int)config_all->inc;
+    for( size_t i = 0, j=0; i < ssg->config_count; i ++, j+=config_subset->inc ) {
+        int k =  (int)(ssg->configs[i]) * inc;
+        config_all->data[k] = config_subset->data[j];
+    }
+}
+
+
+AA_API void
+aa_rx_sg_sub_config_gather( const struct aa_rx_sg_sub *ssg,
+                            const struct aa_dvec *config_all,
+                            struct aa_dvec *config_subset )
+{
+    if( config_subset->len != ssg->config_count ||
+        config_all->len != aa_rx_sg_config_count(ssg->scenegraph)
+       ) { aa_lb_err("Mismatched config vector sizes\n"); }
+
+    int inc = (int)config_all->inc;
+    for( size_t i = 0, j=0; i < ssg->config_count; i ++, j+=config_subset->inc ) {
+        int k =  (int)(ssg->configs[i]) * inc;
+        config_subset->data[j] = config_all->data[k];
+    }
+}
 
 
 AA_API void

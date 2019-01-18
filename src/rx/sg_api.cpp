@@ -262,6 +262,32 @@ AA_API void aa_rx_sg_tf
 
 }
 
+
+AA_API void
+aa_rx_sg_fill_tf_abs( const struct aa_rx_sg *scene_graph,
+                      const struct aa_dvec *q,
+                      struct aa_dmat *TF_abs )
+{
+    size_t n_f = aa_rx_sg_frame_count(scene_graph);
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    struct aa_dmat *TF_rel = aa_dmat_alloc(reg, 7, n_f);
+    struct aa_dvec *qp;
+    if( 1 != q->inc ) {
+        qp = aa_dvec_alloc(reg,q->len);
+        aa_lb_dcopy(q,qp);
+    } else {
+        qp = (struct aa_dvec*)q;
+    }
+
+    aa_rx_sg_tf( scene_graph,
+                 qp->len, qp->data,
+                 n_f,
+                 TF_rel->data, TF_rel->ld,
+                 TF_abs->data, TF_abs->ld );
+
+    aa_mem_region_pop(reg,TF_rel);
+}
+
 AA_API struct aa_dmat *
 aa_rx_sg_get_tf_abs ( const struct aa_rx_sg *scene_graph,
                   struct aa_mem_region *reg,
@@ -269,14 +295,7 @@ aa_rx_sg_get_tf_abs ( const struct aa_rx_sg *scene_graph,
 {
     size_t n_f = aa_rx_sg_frame_count(scene_graph);
     struct aa_dmat *TF_abs = aa_dmat_alloc(reg, 7, n_f);
-    struct aa_dmat *TF_rel = aa_dmat_alloc(reg, 7, n_f);
-    assert( 1 == q->inc );
-    aa_rx_sg_tf( scene_graph,
-                 q->len, q->data,
-                 n_f,
-                 TF_rel->data, TF_rel->ld,
-                 TF_abs->data, TF_abs->ld );
-    aa_mem_region_pop(reg,TF_rel);
+    aa_rx_sg_fill_tf_abs(scene_graph,q,TF_abs);
     return TF_abs;
 }
 

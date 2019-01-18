@@ -217,6 +217,7 @@ aa_rx_sg_config_set(
     double *config_all
     );
 
+
 /**
  *  Return the index of a frame in the scene graph
  *
@@ -480,6 +481,11 @@ AA_API struct aa_dmat *
 aa_rx_sg_get_tf_abs( const struct aa_rx_sg *scene_graph,
                          struct aa_mem_region *reg,
                          const struct aa_dvec *q );
+
+AA_API void
+aa_rx_sg_fill_tf_abs( const struct aa_rx_sg *scene_graph,
+                      const struct aa_dvec *q,
+                      struct aa_dmat *tf_abs );
 
 /**
  *  Compute transforms for the scene graph as matrices.
