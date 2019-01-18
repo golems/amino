@@ -39,7 +39,7 @@ import ctypes
 
 from lib import libamino
 
-from mixin import VecMixin
+from mixin import VecMixin,SSDEqMixin
 
 CblasNoTrans   = 111
 CblasTrans     = 112
@@ -229,7 +229,7 @@ class DVec(ctypes.Structure,VecMixin):
         s += "])"
         return s
 
-class DMat(ctypes.Structure):
+class DMat(ctypes.Structure,SSDEqMixin):
     _fields_ = [ ("_rows", ctypes.c_size_t),
                  ("_cols", ctypes.c_size_t),
                  ("_data", ctypes.POINTER(ctypes.c_double)),
@@ -305,6 +305,9 @@ class DMat(ctypes.Structure):
     def ssd(self,other):
         return libamino.aa_dmat_ssd(self,other)
 
+    def nrm2(self):
+        return libamino.aa_dmat_nrm2(self)
+
     def gemm(self,transA,transB,alpha,A,B,beta):
         C = self
         if A.rows() != C.rows():
@@ -315,6 +318,11 @@ class DMat(ctypes.Structure):
             raise IndexError()
         libamino.aa_lb_dgemm(transA,transB,alpha,A,B,beta,C)
         return C
+
+    def pinv(self, tol):
+        M = DMat.create( self.cols(), self.rows() )
+        libamino.aa_dmat_pinv(self,tol,M)
+        return M
 
     def _check_row(self, i):
         if( i < 0 or i >= self._rows ):
@@ -416,4 +424,11 @@ libamino.aa_lb_dgemm.argtypes = [ ctypes.c_int, ctypes.c_int,
 libamino.aa_dmat_ssd.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]
 libamino.aa_dmat_ssd.restype = ctypes.c_double
 
+libamino.aa_dmat_nrm2.argtypes = [ctypes.POINTER(DMat)]
+libamino.aa_dmat_nrm2.restype = ctypes.c_double
+
 libamino.aa_dmat_trans.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]
+
+libamino.aa_dmat_pinv.argtypes = [ctypes.POINTER(DMat),
+                                  ctypes.c_double,
+                                  ctypes.POINTER(DMat)]

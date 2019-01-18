@@ -220,5 +220,13 @@ class TestGemm(unittest.TestCase):
         BA = DMat.row_matrix( [[76, 100], [103, 136]] )
         self.assertEqual(BA.ssd(B*A), 0)
 
+
+
+class TestPinv(unittest.TestCase):
+    def test_pinv(self):
+        A = DMat.col_matrix( [[1,2], [3,4]] )
+        Ai = DMat.col_matrix([[-2,1], [1.5,-.5]])
+        self.assertTrue( A.pinv(0).isclose(Ai) )
+
 if __name__ == '__main__':
     unittest.main()

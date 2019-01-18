@@ -32,6 +32,28 @@
 
 # Object must provide .ssd(other), .nrm2(), .__setitem__()
 
+class SSDEqMixin(object):
+    def __eq__(self,other):
+        return (0 == self.ssd(other))
+    def __ne__(self,other):
+        return (0 != self.ssd(other))
+
+    def isclose(self, b, rel_tol=1e-09, abs_tol=0.0):
+        a = self
+        na = a.nrm2()
+        nb = b.nrm2()
+        d = a.ssd(b)
+        return d <= max(rel_tol * max(na, nb), abs_tol)
+
+class CopyEltsMixin(object):
+    def _copy_elts(self,v):
+        n = len(self)
+        if( n != len(v) ):
+            raise IndexError()
+        for i in range(0,n):
+            self[i] = v[i]
+        return self
+
 class VecMixin(object):
     def __eq__(self,other):
         return (0 == self.ssd(other))
@@ -55,13 +77,3 @@ class VecMixin(object):
 
     def __radd__(self,other):
         return self + other
-
-
-class CopyEltsMixin(object):
-    def _copy_elts(self,v):
-        n = len(self)
-        if( n != len(v) ):
-            raise IndexError()
-        for i in range(0,n):
-            self[i] = v[i]
-        return self
