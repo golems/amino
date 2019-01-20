@@ -801,6 +801,23 @@ dnl AC_MSG_RESULT(["$SBCL_HOME"])
 dnl AC_SUBST([SBCL_HOME])
 dnl ])
 
+## PYTHON ##
+
+
+AC_ARG_WITH([python],
+            [AS_HELP_STRING([--with-python],
+                            [Enable/disable python suport])],
+            [],
+            [with_python="auto"])
+
+AS_IF([test "x$with_python" != xno], [
+  AM_PATH_PYTHON([2.7],
+                 ,
+                 AS_IF([test "x$with_python" = xyes],
+                       [AC_MSG_ERROR([No python detected])]))
+])
+
+AM_CONDITIONAL([HAVE_PYTHON], [test "x$PYTHON" != x])
 
 ###########
 ## Demos ##

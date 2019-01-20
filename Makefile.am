@@ -6,6 +6,12 @@ lib_LTLIBRARIES =
 EXTRA_DIST =
 CLEAN_LOCAL_FILES =
 dist_bin_SCRIPTS =
+TESTS =
+
+INSTALL_EXEC_LOCAL =
+ALL_LOCAL =
+UNINSTALL_LOCAL =
+CLEAN_LOCAL =
 
 DIST_SUBDIRS = submodules/sycamore submodules/cl-ntdoc .
 
@@ -333,9 +339,9 @@ src/wavefront/mtl.c: src/wavefront/mtl.l
 ###########
 lisp_LISP = share/robray-mode.el
 
-###########
-## VIM   ##
-###########
+#########
+## VIM ##
+#########
 vimdir         = $(pkgdatadir)/vim
 vimsyntaxdir   = $(vimdir)/syntax
 vimftdetectdir = $(vimdir)/ftdetect
@@ -343,7 +349,67 @@ vimftdetectdir = $(vimdir)/ftdetect
 dist_vimsyntax_DATA = share/vim/syntax/robray.vim
 dist_vimftdetect_DATA = share/vim/ftdetect/robray.vim
 
+############
+## PYTHON ##
+############
+
+if HAVE_PYTHON
+
+TESTS += python/test/mattest.sh
+TESTS += python/test/tftest.sh
+
+ALL_LOCAL += all-python
+all-python:
+	cd "$(srcdir)/python" && $(PYTHON) setup.py build \
+		--build-base $(shell readlink -f $(builddir))/python/build \
+		--verbose
+
+INSTALL_EXEC_LOCAL += install-exec-python
+install-exec-python:
+	cd "$(srcdir)/python" && $(PYTHON) setup.py build \
+		--build-base $(shell readlink -f $(builddir))/python/build \
+		install \
+		--prefix "$(DESTDIR)$(prefix)" \
+		--record "$(DESTDIR)$(pkgpythondir)/install_files.txt" \
+		--verbose
+
+UNINSTALL_LOCAL += uninstall-python
+uninstall-python:
+	if test -f "$(DESTDIR)$(pkgpythondir)/install_files.txt" ; then \
+		cat "$(DESTDIR)$(pkgpythondir)/install_files.txt" | \
+			xargs rm -rf; \
+		rm "$(DESTDIR)$(pkgpythondir)/install_files.txt"; \
+		rmdir  "$(DESTDIR)$(pkgpythondir)"; \
+	fi
+
+CLEAN_LOCAL += clean-python
+clean-python:
+	-rm -rf "$(builddir)/python/build"
+
+endif
+
+# package
+EXTRA_DIST += \
+	python/setup.py \
+	python/amino/mat.py \
+	python/amino/tf.py \
+	python/amino/mixin.py \
+	python/amino/scenegraph.py \
+	python/amino/scenewin.py \
+	python/amino/lib.py \
+	python/amino/__init__.py
+
+
+# tests
+EXTRA_DIST += \
+	python/test/tftest.py \
+	python/test/mattest.py
+
+
+##########
 ## JAVA ##
+##########
+
 JSOURCES =                                        \
 	$(top_srcdir)/java/Lib.java
 
@@ -434,7 +500,7 @@ noinst_PROGRAMS += memregion
 memregion_SOURCES = src/test/memregion.c
 memregion_LDADD = libamino.la libtestutil.la
 
-TESTS = aa_test
+TESTS += aa_test
 noinst_PROGRAMS += aa_test
 aa_test_SOURCES = src/test/aa_test.c
 aa_test_LDADD = libamino.la libtestutil.la
@@ -501,8 +567,6 @@ la_ctest_SOURCES = src/test/la_ctest.c
 la_ctest_LDADD = libamino.la libtestutil.la
 
 
-TESTS += python/test/mattest.sh
-TESTS += python/test/tftest.sh
 
 if HAVE_FCL
 
@@ -616,7 +680,7 @@ tf_mod.f90: src/tff.F90 # src/mac/aa_tf_euler.f90
 
 EXTRA_DX = clapack_doc.c lapack_doc.c la_doc.c la_mod.f90
 
-clean-local:
+clean-local: $(CLEAN_LOCAL)
 	-rm -rf debian/tmp                  \
 		$(CLEAN_LOCAL_FILES)        \
 		debian/files                \
@@ -644,6 +708,14 @@ distclean-local:
 	if test "x$(top_srcdir)" != "x$(top_builddir)"; then \
 		rm -rf $(top_builddir)/lisp; \
 	fi
+
+
+install-exec-local: $(INSTALL_EXEC_LOCAL)
+
+uninstall-local: $(UNINSTALL_LOCAL)
+
+all-local: $(ALL_LOCAL)
+
 sync-doc:
 	rsync -r doc/manual/ code.golems.org:/srv/www/amino
 

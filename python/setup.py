@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#
+
 #  Copyright (c) 2019, Colorado School of Mines
 #  All rights reserved.
 #
@@ -31,17 +31,16 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
-from amino import *
-from math import pi
 
-sg = SceneGraph().load(".libs/libamino_baxter.so", "baxter")
-sg.init()
+from distutils.core import setup
 
-win = SceneWin(scenegraph=sg,start=False)
-
-win.set_config( {'right_s0': .05*pi,
-                 'right_s1': -.25*pi,
-                 'right_e1': .25*pi,
-                 'right_w1': .25*pi } )
-
-win.start(async=False)
+setup(name='amino',
+      version='0.0',
+      description='Amino Library',
+      author='Neil T. Dantam',
+      author_email='ndantam@mines.edu',
+      url='http://amino.dyalab.org',
+      license='BSD',
+      packages=['amino'],
+      package_dir={'amino': 'amino'}
+     )

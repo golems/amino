@@ -191,3 +191,4 @@ amino*.tar.gz
 /python/test/tftest.sh
 /python/test/tftest.sh.log
 /python/test/tftest.sh.trs
+python/build
