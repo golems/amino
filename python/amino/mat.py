@@ -193,6 +193,10 @@ class DVec(ctypes.Structure,VecMixin):
         """Number of elements in self"""
         return self._size
 
+    def inc(self):
+        """Increment between elements in self"""
+        return self._inc
+
     def __iadd__(self,other):
         """Add a scalar or vector to self"""
         if isinstance(other,DVec):

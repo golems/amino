@@ -192,3 +192,9 @@ amino*.tar.gz
 /python/test/tftest.sh.log
 /python/test/tftest.sh.trs
 python/build
+/demo/tutorial/CMakeCache.txt
+/demo/tutorial/Makefile
+/demo/tutorial/Makefile.not
+/demo/tutorial/baxter-model.c
+/demo/tutorial/baxter-model.c.h
+/demo/tutorial/cmake_install.cmake
