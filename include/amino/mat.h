@@ -412,5 +412,11 @@ aa_dmat_dpinv( const struct aa_dmat *A, double k, struct aa_dmat *As);
 AA_API int
 aa_dmat_dzdpinv(  const struct aa_dmat *A, double s_min, struct aa_dmat *As);
 
+/**
+ * Copy a matrix
+ */
+AA_API void
+aa_dmat_copy(  const struct aa_dmat *A, struct aa_dmat *B);
+
 
 #endif /* AMINO_MAT_H */

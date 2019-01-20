@@ -261,8 +261,17 @@ class DMat(ctypes.Structure,SSDEqMixin):
         elif isinstance(arg,tuple):
             rows,cols = arg
             self._allocate(rows,cols)
+        elif isinstance(arg,DMat):
+            self._allocate(arg.rows(),arg.cols())
+            self.copy_from(arg)
         else:
             raise Exception('Invalid argument')
+
+    def copy_from(self,other):
+        if self.rows() != other.rows() or self.cols() != other.cols():
+            raise IndexError()
+        if isinstance(other,DMat):
+            libamino.aa_dmat_copy(other,self)
 
     def _allocate(self,rows,cols,ld=None):
         self._rows = rows
@@ -346,6 +355,11 @@ class DMat(ctypes.Structure,SSDEqMixin):
     def pinv(self, tol):
         M = DMat.create( self.cols(), self.rows() )
         libamino.aa_dmat_pinv(self,tol,M)
+        return M
+
+    def inv(self):
+        M = DMat(self)
+        libamino.aa_dmat_inv(M)
         return M
 
     def _check_row(self, i):
@@ -456,3 +470,6 @@ libamino.aa_dmat_trans.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]
 libamino.aa_dmat_pinv.argtypes = [ctypes.POINTER(DMat),
                                   ctypes.c_double,
                                   ctypes.POINTER(DMat)]
+libamino.aa_dmat_inv.argtypes = [ctypes.POINTER(DMat)]
+
+libamino.aa_dmat_copy.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]

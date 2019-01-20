@@ -353,6 +353,12 @@ aa_lb_dlacpy( const char uplo[1],
             B->data, &ldbi);
 }
 
+AA_API void
+aa_dmat_copy(  const struct aa_dmat *A, struct aa_dmat *B)
+{
+    aa_lb_dlacpy("G",A,B);
+}
+
 
 /* Matrix Functions */
 

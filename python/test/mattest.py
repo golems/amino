@@ -222,11 +222,16 @@ class TestGemm(unittest.TestCase):
 
 
 
-class TestPinv(unittest.TestCase):
+class TestIinv(unittest.TestCase):
     def test_pinv(self):
         A = DMat.col_matrix( [[1,2], [3,4]] )
         Ai = DMat.col_matrix([[-2,1], [1.5,-.5]])
         self.assertTrue( A.pinv(0).isclose(Ai) )
+
+    def test_inv(self):
+        A = DMat.col_matrix( [[1,2], [3,4]] )
+        Ai = DMat.col_matrix([[-2,1], [1.5,-.5]])
+        self.assertTrue( A.inv().isclose(Ai) )
 
 if __name__ == '__main__':
     unittest.main()
