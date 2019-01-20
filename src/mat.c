@@ -110,11 +110,11 @@ aa_dvec_slice( const struct aa_dvec *src,
     if( stop > src->len || stop < start ) {
         aa_lb_err("Slice out-of-bounds\n");
     }
-
-    dst->len = (stop - start) / step;
-    dst->data = src->data + src->inc*start;
-    dst->inc = src->inc*step;
+    *dst = AA_DVEC_INIT( (stop - start) / step,
+                         src->data + src->inc*start,
+                         src->inc*step );
 }
+
 
 AA_API void
 aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst )
@@ -122,9 +122,7 @@ aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst )
     if( row >= src->rows ) {
         aa_lb_err("Row vector out-of-bounds\n");
     }
-    dst->len = src->cols;
-    dst->data = src->data + row;
-    dst->inc = src->ld;
+    aa_dvec_view(dst,src->cols, src->data + row, src->ld);
 }
 
 AA_API void
@@ -133,16 +131,44 @@ aa_dmat_col_vec( const struct aa_dmat *src, size_t col, struct aa_dvec *dst )
     if( col >= src->cols ) {
         aa_lb_err("Row vector out-of-bounds\n");
     }
-    dst->len = src->rows;
-    dst->data = src->data + col*src->ld;
-    dst->inc = 1;
+    aa_dvec_view(dst, src->rows, src->data + col*src->ld, 1);
 }
 
 AA_API void
-aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t ld )
+aa_dmat_diag_vec( const struct aa_dmat *src, struct aa_dvec *dst )
+{
+    aa_dvec_view(dst, AA_MIN(src->rows, src->cols), src->data, src->ld + 1);
+}
+
+AA_API void
+aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols,
+              double *data, size_t ld )
 {
     *mat = AA_DMAT_INIT(rows,cols,data,ld);
 }
+
+AA_API void
+aa_dmat_block( const struct aa_dmat *src,
+               size_t row_start, size_t col_start,
+               size_t row_end, size_t col_end,
+               struct aa_dmat *dst )
+{
+    size_t m = src->rows, n = src->cols;
+    if( row_start >= row_end ||
+        row_start >= m ||
+        row_end > m ||
+        col_start >= col_end ||
+        col_start >= n ||
+        col_end > n )
+    {
+        aa_lb_err("Block out-of-bounds\n");
+    }
+
+    aa_dmat_view( dst,
+                  row_end - row_start, col_end - col_start,
+                  src->data + col_start*src->ld + row_start, src->ld );
+}
+
 
 AA_API struct aa_dvec *
 aa_dvec_malloc( size_t len ) {
@@ -157,7 +183,7 @@ aa_dvec_malloc( size_t len ) {
     char *ptr = (char*)malloc( size );
 
     r = (struct aa_dvec*)ptr;
-    aa_dvec_view( r, len, (double*)(ptr+off), 1 );
+    aa_dvec_view(r, len, (double*)(ptr+off), 1);
     return r;
 }
 
@@ -170,7 +196,7 @@ aa_dvec_alloc( struct aa_mem_region *reg, size_t len ) {
     char *ptr = (char*)aa_mem_region_alloc(reg, s_desc + pad + len * s_elem );
 
     r = (struct aa_dvec*)ptr;
-    aa_dvec_view( r, len, (double*)(ptr+s_desc+pad), 1 );
+    aa_dvec_view(r, len, (double*)(ptr+s_desc+pad), 1);
     return r;
 }
 
@@ -184,7 +210,7 @@ aa_dmat_malloc( size_t rows, size_t cols )
     char *ptr = (char*)malloc( s_desc + pad + rows*cols * s_elem );
 
     r = (struct aa_dmat*)ptr;
-    aa_dmat_view( r, rows, cols, (double*)(ptr+s_desc+pad), rows );
+    aa_dmat_view(r, rows, cols, (double*)(ptr+s_desc+pad), rows);
 
     return r;
 }
@@ -362,38 +388,40 @@ aa_dmat_copy(  const struct aa_dmat *A, struct aa_dmat *B)
 
 /* Matrix Functions */
 
+static double s_ssd( size_t n,
+                     double a,
+                     double *x, size_t incx,
+                     double *y, size_t incy )
+{
+    for( double *e = x + n*incx; x < e; x += incx, y+=incy ) {
+        double d = *x - *y;
+        a += d*d;
+    }
+    return a;
+}
+
+
 AA_API double
 aa_dvec_ssd( const struct aa_dvec *x, const struct aa_dvec *y)
 {
     aa_lb_check_size( x->len, y->len );
-    double a = 0;
-    for( double *px = x->data, *py = y->data, *e = x->data + x->len*x->inc;
-         px < e;
-         px+=x->inc, py+=y->inc )
-    {
-        double d = *px - *py;
-        a +=  d*d;
-    }
-    return a;
+    return s_ssd( x->len, 0,
+                  x->data, x->inc,
+                  y->data, y->inc );
 }
 
 AA_API double
 aa_dmat_ssd( const struct aa_dmat *A, const struct aa_dmat *B)
 {
-    aa_lb_check_size( A->rows, B->rows );
-    aa_lb_check_size( A->cols, B->cols );
+    size_t m = A->rows, n = A->cols;
+    aa_lb_check_size( m, B->rows );
+    aa_lb_check_size( n, B->cols );
     double a = 0;
-    for( double *Ac=A->data, *Bc=B->data, *ec=A->data + A->cols*A->ld;
+    for( double *Ac=A->data, *Bc=B->data, *ec=A->data + n*A->ld;
          Ac < ec;
          Ac+=A->ld, Bc+=B->ld )
     {
-        for( double *Ar=Ac, *Br=Bc, *er=Ac + A->rows;
-             Ar < er;
-             Ar++, Br++ )
-        {
-            double d = *Ar - *Br;
-            a +=  d*d;
-        }
+        a = s_ssd( m, a, Ac, 1, Bc, 1 );
     }
     return a;
 }
@@ -401,7 +429,7 @@ aa_dmat_ssd( const struct aa_dmat *A, const struct aa_dmat *B)
 AA_API double
 aa_dmat_nrm2( const struct aa_dmat *A )
 {
-    size_t m = A->rows, n = A->cols, ld=A->ld;
+    int m=(int)A->rows, n=(int)A->cols, ld=(int)A->ld;
     return dlange_("F", &m, &n, A->data, &ld, NULL );
 }
 
@@ -415,7 +443,6 @@ aa_dmat_scal( struct aa_dmat *x, double alpha )
             &cfrom, &alpha,
             &m, &n, x->data, &ld,
             &info);
-
 }
 
 void

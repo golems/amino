@@ -125,7 +125,6 @@ AA_DVEC_INIT( size_t len, double *data, size_t inc )
 AA_API void
 aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
 
-
 /**
  * Fill in a matrix descriptor.
  *
@@ -138,6 +137,9 @@ aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
 AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t ld );
 
+/**
+ * View a slice of a vector.
+ */
 AA_API void
 aa_dvec_slice( const struct aa_dvec *src,
                size_t start,
@@ -146,12 +148,32 @@ aa_dvec_slice( const struct aa_dvec *src,
                struct aa_dvec *dst );
 
 
+/**
+ * View a block of a matrix.
+ */
+AA_API void
+aa_dmat_block( const struct aa_dmat *src,
+               size_t row_start, size_t col_start,
+               size_t row_end, size_t col_end,
+               struct aa_dmat *dst );
 
+/**
+ * View a row of a matrix as a vector.
+ */
 AA_API void
 aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst );
 
+/**
+ * View a column of a matrix as a vector.
+ */
 AA_API void
 aa_dmat_col_vec( const struct aa_dmat *src, size_t col, struct aa_dvec *dst );
+
+/**
+ * View the diagonal of a matrix as a vector.
+ */
+AA_API void
+aa_dmat_diag_vec( const struct aa_dmat *src, struct aa_dvec *dst );
 
 
 /**

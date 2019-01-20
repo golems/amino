@@ -91,9 +91,20 @@ class TestVec0(unittest.TestCase):
         self.assertEqual(v.ssd([1,5,7]), 4)
 
     def test_scal(self):
-        v = DVec([3,5,7])
+        l = [3,5,7]
+        v = DVec(l)
         self.assertEqual((v*2), [6,10,14] )
         self.assertEqual((2*v), [6,10,14] )
+
+        v *= 2
+        self.assertEqual(v, [6,10,14])
+
+        v /= 2
+        self.assertEqual(v, l)
+
+        y = (2*v) / 2
+        self.assertEqual(v, l)
+        self.assertEqual(y, l)
 
     def test_sadd(self):
         v = DVec([3,5,7])
@@ -151,6 +162,36 @@ class TestMat(unittest.TestCase):
         self.assertEqual(A.row_vec(0)[1], 3)
         self.assertEqual(A.row_vec(1)[0], 2)
         self.assertEqual(A.row_vec(1)[1], 4)
+
+    def test_block(self):
+        X = [ [1,2], [3,4], [5,6] ]
+        A = DMat.row_matrix( X )
+        B = DMat.col_matrix( X )
+        At = A.transpose()
+        Bt = B.transpose()
+
+        for i in range(3):
+            self.assertEqual(A.row_vec(i), X[i] )
+            self.assertEqual(B.col_vec(i), X[i] )
+            self.assertEqual(Bt.row_vec(i), X[i] )
+            self.assertEqual(At.col_vec(i), X[i] )
+
+
+        self.assertEqual(A.diag_vec(), [1,4])
+        self.assertEqual(B.diag_vec(), [1,4])
+
+        self.assertEqual( A.block(0,0, 2,2),
+                          DMat.row_matrix([[1,2], [3,4]]) )
+
+        self.assertEqual( B.block(0,1, 2,3),
+                          DMat.col_matrix([[3,4], [5,6]]) )
+
+        self.assertEqual( B.block(1,0, 2,3),
+                          DMat.row_matrix([[2,4,6]]) )
+
+        self.assertEqual( A[0:2,0:2], DMat.row_matrix([[1,2], [3,4]]) )
+
+        self.assertEqual( B[1:2,0:3], DMat.row_matrix([[2,4,6]]) )
 
     def test_rowmatrix(self):
         A = DMat.row_matrix( [ [1,2], [3,4] ] )

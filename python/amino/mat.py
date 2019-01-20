@@ -51,6 +51,12 @@ class DVec(ctypes.Structure,VecMixin):
                  ("_inc", ctypes.c_size_t) ]
 
     def __init__(self,arg):
+        """Construct a vector.
+
+        If arg is None -- Create an unitialized DVec
+        If arg is a list -- Fill the DVec with list contents
+        If arg is an int -- Create a DVec of that size
+        """
         if( arg is None ):
             pass
         elif isinstance(arg,list) or isinstance(arg,DVec):
@@ -78,6 +84,7 @@ class DVec(ctypes.Structure,VecMixin):
 
     @staticmethod
     def ensure(thing):
+        """If thing is not a DVec, construct a DVec containging thing."""
         if( isinstance(thing,DVec) ):
             return thing
         else:
@@ -85,11 +92,13 @@ class DVec(ctypes.Structure,VecMixin):
 
     @staticmethod
     def create(size):
+        """Create a DVec of length size"""
         x = DVec(None)
         x._allocate(size)
         return x
 
     def copy_from(self,thing):
+        """Copy the contents of thing into self"""
         ls = len(self)
         if( ls != len(thing) ):
             raise IndexError()
@@ -101,6 +110,7 @@ class DVec(ctypes.Structure,VecMixin):
         return thing
 
     def copy_to(self,thing):
+        """Copy self to thing."""
         ls = len(self)
         if( ls != len(thing) ):
             raise IndexError()
@@ -118,33 +128,36 @@ class DVec(ctypes.Structure,VecMixin):
                     1)
 
     def axpy(self,alpha,x):
+        """self = alpha*x, where alpha is a scalar and x is a DVec"""
         libamino.aa_lb_daxpy(alpha,x,self)
         return self
 
-    def scal(self,alpha):
-        libamino.aa_lb_dscal(alpha,self)
-        return self
-
-    def negate(self):
-        self.scal(-1)
-        return self
-
-    def __neg__(self):
-        return DVec(self).negate()
 
     def zero(self):
+        """Fill self with zeros"""
         libamino.aa_dvec_zero(self)
         return self
 
     def set(self,alpha):
+        """Set all elements of self to scalar alpha"""
         libamino.aa_dvec_set(self,alpha)
         return self
 
     def increment(self,alpha):
+        """self = self + alpha, for scalar alpha"""
         libamino.aa_lb_dinc(alpha,self)
         return self
 
     def gemv(self,trans,alpha,A,x,beta):
+        """General matrix-vector multiply.
+
+        self = alpha*A*x + beta*self
+
+        alpha -- a scalar
+        A -- a matrix
+        x -- a vector
+        beta -- a scalar
+        """
         if  A.rows() != len(self):
             raise IndexError()
         if  A.cols() != len(x):
@@ -153,63 +166,54 @@ class DVec(ctypes.Structure,VecMixin):
         return self
 
     def ssd(self,other):
+        """Sum of square differences"""
         return libamino.aa_dvec_ssd(self,DVec.ensure(other))
 
     def nrm2(self):
+        """Euclidean norm of self"""
         return libamino.aa_lb_dnrm2(self)
 
     def __getitem__(self, key):
-        if 0 <= key and key < len(self):
-            return self._data[ key * self._inc ]
-        elif isinstance(key,slice):
+        """Return an item or slice of self"""
+        if isinstance(key,slice):
             return self._slice(key.start,key.stop,key.step)
+        elif 0 <= key and key < len(self):
+            return self._data[ key * self._inc ]
         else:
             raise IndexError(key)
 
     def __setitem__(self, key, item):
+        """Set an item of self"""
         if 0 <= key and key < len(self):
             self._data[ key * self._inc ] = item
         else:
             raise IndexError(key)
 
     def __len__(self):
+        """Number of elements in self"""
         return self._size
 
-    def _mulop(self,other):
-        tp = type(other)
-        if tp == int or tp == float:
-            return DVec(self).scal(other)
-        else:
-            raise Exception('Invalid argument')
-
-    def __mul__(self,other):
-        return self._mulop(other)
-
-    def __rmul__(self,other):
-        return self._mulop(other)
-
-    def _addop(self,other):
-        if isinstance(other,DVec) or isinstance(other,list):
-            return DVec(other).axpy(1,self)
-        elif type(other) == int or type(other) == float:
-            return DVec(self).increment(other)
-        else:
-            raise Exception('Invalid argument')
-
-    def __add__(self,other):
-        return self._addop(other)
-
     def __iadd__(self,other):
+        """Add a scalar or vector to self"""
         if isinstance(other,DVec):
             return self.axpy(1,other)
-        if isinstance(other,list):
+        elif isinstance(other,list):
             return self.axpy(1,DVec(other))
         elif type(other) == int or type(other) == float:
             return self.increment(other)
         else:
             raise Exception('Invalid argument')
 
+    def __add__(self,other):
+        """Add a scalar or vector to self"""
+        return DVec(self).__iadd__(other)
+
+    def __radd__(self,other):
+        """Add a scalar or vector to self"""
+        return DVec(self).__iadd__(other)
+
     def __isub(self,other):
+        """Subtract a scalar or vector from self"""
         if isinstance(other,DVec):
             return self.axpy(-1,other)
         if isinstance(other,list):
@@ -220,6 +224,7 @@ class DVec(ctypes.Structure,VecMixin):
             raise Exception('Invalid argument')
 
     def __sub__(self,other):
+        """Subtract a scalar or vector from self"""
         if isinstance(other,DVec):
             return DVec(self).axpy(-1,other)
         elif isinstance(other,list):
@@ -230,12 +235,38 @@ class DVec(ctypes.Structure,VecMixin):
             raise Exception('Invalid argument')
 
     def __rsub__(self,other):
+        """Subtract a self from a scalar or vector"""
         if type(other) == int or type(other) == float:
             return (-self).increment(other)
         elif isinstance(other,list):
             return DVec(other).axpy(-1,self)
         else:
             raise Exception('Invalid argument')
+
+    def __imul__(self,other):
+        """Multiply self by a scalar"""
+        libamino.aa_lb_dscal(other,self)
+        return self
+
+    def __neg__(self):
+        """Negate self"""
+        return DVec(self).__imul__(-1)
+
+    def __mul__(self,other):
+        """Multiply self by a scalar"""
+        return DVec(self).__imul__(other)
+
+    def __rmul__(self,other):
+        """Multiply self by a scalar"""
+        return DVec(self).__imul__(other)
+
+    def __idiv__(self,other):
+        """Divide self by a scalar"""
+        return self.__imul__( 1.0 / other )
+
+    def __div__(self,other):
+        """Divide self by a scalar"""
+        return DVec(self).__idiv__(other)
 
     def __str__(self):
         s = "DVec(["
@@ -312,6 +343,18 @@ class DMat(ctypes.Structure,SSDEqMixin):
         libamino.aa_dmat_col_vec(self,j,v)
         return v
 
+    def diag_vec(self):
+        v = DVec(None)
+        libamino.aa_dmat_diag_vec(self,v)
+        return v
+
+    def block(self,row_start,col_start,row_end,col_end):
+        M = DMat(None)
+        libamino.aa_dmat_block(self,row_start,col_start,
+                               row_end,col_end,
+                               M)
+        return M
+
     def transpose(self):
         At = DMat.create(self.cols(),self.rows())
         libamino.aa_dmat_trans(self,At)
@@ -374,8 +417,15 @@ class DMat(ctypes.Structure,SSDEqMixin):
 
     def __getitem__(self, key):
         i,j = key
-        self._check_index(i,j)
-        return self._data[ i + j*self._ld]
+        if isinstance(i,slice) and isinstance(j,slice):
+            if not ( (i.step is None) or i.step == 0 ):
+                raise IndexError()
+            if not ( (j.step is None) or j.step == 0 ):
+                raise IndexError()
+            return self.block(i.start,j.start,i.stop,j.stop)
+        else:
+            self._check_index(i,j)
+            return self._data[ i + j*self._ld]
 
     def __setitem__(self, key, item):
         i,j = key
@@ -447,6 +497,12 @@ libamino.aa_dmat_row_vec.argtypes = [ ctypes.POINTER(DMat), ctypes.c_size_t,
                                       ctypes.POINTER(DVec) ]
 libamino.aa_dmat_col_vec.argtypes = [ ctypes.POINTER(DMat), ctypes.c_size_t,
                                       ctypes.POINTER(DVec) ]
+libamino.aa_dmat_diag_vec.argtypes = [ ctypes.POINTER(DMat), ctypes.POINTER(DVec) ]
+
+libamino.aa_dmat_block.argtypes = [ ctypes.POINTER(DMat),
+                                    ctypes.c_size_t, ctypes.c_size_t,
+                                    ctypes.c_size_t, ctypes.c_size_t,
+                                    ctypes.POINTER(DMat) ]
 
 libamino.aa_lb_dgemv.argtypes = [ ctypes.c_int,
                                   ctypes.c_double, ctypes.POINTER(DMat), ctypes.POINTER(DVec),
