@@ -284,6 +284,52 @@ static void test_scal()
         admeq( "dmat_scal-2", &A, &A2, 1e-6 );
     }
 }
+
+static void test_mat_inc()
+{
+    {
+        double d[] = {1,2, 3,4};
+        double d2[] = {2,3, 4,5};
+        struct aa_dmat A = AA_DMAT_INIT(2,2,d,2);
+        struct aa_dmat A2 = AA_DMAT_INIT(2,2,d2,2);
+        aa_dmat_inc(&A,1);
+        admeq( "dmat_inc-0", &A, &A2, 1e-6 );
+    }
+    {
+        double d[] = {1,2,3,0, 4,5,6,0};
+        double d2[] = {2,3,4, 5,6,7 };
+        struct aa_dmat A = AA_DMAT_INIT(3,2,d,4);
+        struct aa_dmat A2 = AA_DMAT_INIT(3,2,d2,3);
+        aa_dmat_inc(&A,1);
+        admeq( "dmat_inc-1", &A, &A2, 1e-6 );
+    }
+}
+
+static void test_mat_axpy()
+{
+    {
+        double d[] = {1,2, 3,4};
+        double e[] = {4,5, 6,7};
+        double d2[] = {9,12, 15,18};
+        struct aa_dmat A = AA_DMAT_INIT(2,2,d,2);
+        struct aa_dmat B = AA_DMAT_INIT(2,2,e,2);
+        struct aa_dmat A2 = AA_DMAT_INIT(2,2,d2,2);
+        aa_dmat_axpy(2,&B,&A);
+        admeq( "dmat_axpy-0", &A, &A2, 1e-6 );
+    }
+    {
+        double d[] = {1,2,3,0, 4,5,6,0};
+        double e[] = {7,8,9, 10,11,12};
+        double d2[] = {15,18,21, 24,27,30 };
+        struct aa_dmat A = AA_DMAT_INIT(3,2,d,4);
+        struct aa_dmat B = AA_DMAT_INIT(3,2,e,3);
+        struct aa_dmat A2 = AA_DMAT_INIT(3,2,d2,3);
+        aa_dmat_axpy(2, &B, &A);
+        admeq( "dmat_axpy-1", &A, &A2, 1e-6 );
+    }
+}
+
+
 static void
 test_inc()
 {
@@ -295,7 +341,7 @@ test_inc()
     aa_lb_dinc(1,&x);
 
 
-    aveq( "dinc", 3,xd,yd,0);
+    adveq( "dinc", &x,&y,0);
 
 }
 
@@ -336,6 +382,10 @@ int main(void)
     test_dpinv();
     test_dzdpinv();
     test_scal();
+
+    test_mat_inc();
+    test_mat_axpy();
+
     test_inc();
     test_nrm2();
 

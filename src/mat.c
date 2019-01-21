@@ -282,13 +282,16 @@ aa_lb_dscal( double a, struct aa_dvec *x )
     cblas_dscal( VEC_LEN(x), a, AA_VEC_ARGS(x) );
 }
 
+static void s_inc( size_t n, double alpha, double *x, size_t inc ) {
+    for( double *end = x + n*inc; x < end; x += inc ) {
+        *x += alpha;
+    }
+}
+
 AA_API void
 aa_lb_dinc( double alpha, struct aa_dvec *x )
 {
-    double *end = x->data + x->len*x->inc;
-    for( double *y = x->data; y < end; y += x->inc ) {
-        *y += alpha;
-    }
+    s_inc( x->len, alpha, x->data, x->inc );
 }
 
 AA_API void
@@ -443,6 +446,42 @@ aa_dmat_scal( struct aa_dmat *x, double alpha )
             &cfrom, &alpha,
             &m, &n, x->data, &ld,
             &info);
+}
+
+AA_API void
+aa_dmat_inc( struct aa_dmat *A, double alpha )
+{
+    size_t m=A->rows, n=A->cols, ld=A->ld;
+    double *x = A->data;
+
+    if( m == n ) {
+        s_inc(m*n, alpha, x, 1);
+    } else {
+        for( double *e = x + n*ld; x < e; x+=ld ) {
+            s_inc(m, alpha, x, 1);
+        }
+    }
+
+}
+
+AA_API void
+aa_dmat_axpy( double alpha, const struct aa_dmat *X, struct aa_dmat *Y)
+{
+    size_t m=X->rows, n=X->cols, ldX=X->ld, ldY=Y->ld;
+    double *x=X->data, *y=Y->data;
+
+    aa_lb_check_size(m, Y->rows);
+    aa_lb_check_size(n, Y->cols);
+
+
+    if( m == ldX && m == ldY ) {
+        cblas_daxpy( (int)(m*n), alpha, x,1, y,1 );
+    } else {
+        int mi = (int)m;
+        for( double *e = x + n*ldX; x < e; x+=ldX, y+=ldY ) {
+            cblas_daxpy( mi, alpha, x,1, y,1 );
+        }
+    }
 }
 
 void

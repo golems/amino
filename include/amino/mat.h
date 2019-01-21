@@ -381,6 +381,12 @@ aa_dvec_ssd( const struct aa_dvec *x, const struct aa_dvec *y);
 
 
 /**
+ * Y += alpha * X
+ */
+AA_API void
+aa_dmat_axpy( double alpha, const struct aa_dmat *X, struct aa_dmat *Y);
+
+/**
  * sum-square-differences of two matrices
  */
 AA_API double
@@ -391,6 +397,12 @@ aa_dmat_ssd( const struct aa_dmat *x, const struct aa_dmat *y);
  */
 AA_API void
 aa_dmat_scal( struct aa_dmat *A, double alpha );
+
+/**
+ * Increment the matrix A by alpha
+ */
+AA_API void
+aa_dmat_inc( struct aa_dmat *A, double alpha );
 
 /**
  * Euclidean Norm

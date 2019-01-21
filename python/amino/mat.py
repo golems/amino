@@ -232,7 +232,7 @@ class DVec(ctypes.Structure,VecMixin):
         if isinstance(other,DVec):
             return DVec(self).axpy(-1,other)
         elif isinstance(other,list):
-            return self - DVec(other)
+            return self.__sub__(DVec(other))
         elif type(other) == int or type(other) == float:
             return DVec(self).increment(-other)
         else:
@@ -241,7 +241,7 @@ class DVec(ctypes.Structure,VecMixin):
     def __rsub__(self,other):
         """Subtract a self from a scalar or vector"""
         if type(other) == int or type(other) == float:
-            return (-self).increment(other)
+            return self.__neg__().increment(other)
         elif isinstance(other,list):
             return DVec(other).axpy(-1,self)
         else:
@@ -360,9 +360,14 @@ class DMat(ctypes.Structure,SSDEqMixin):
         return M
 
     def transpose(self):
+        """Return the tranpose of the matrix"""
         At = DMat.create(self.cols(),self.rows())
         libamino.aa_dmat_trans(self,At)
         return At
+
+    def t(self):
+        """Synonym for self.transpose()"""
+        return self.transpose()
 
     @staticmethod
     def row_matrix(args):
@@ -399,7 +404,7 @@ class DMat(ctypes.Structure,SSDEqMixin):
         libamino.aa_lb_dgemm(transA,transB,alpha,A,B,beta,C)
         return C
 
-    def pinv(self, tol):
+    def pinv(self, tol=-1):
         M = DMat.create( self.cols(), self.rows() )
         libamino.aa_dmat_pinv(self,tol,M)
         return M
@@ -436,8 +441,21 @@ class DMat(ctypes.Structure,SSDEqMixin):
         self._check_index(i,j)
         self._data[ i + j*self._ld] = item
 
+    def __imul__(self, other):
+        if isinstance(other,int) or isinstance(other,float):
+            libamino.aa_dmat_scal(self,other)
+            return self
+        else:
+            raise TypeError('Cannot cale matrix with %s'%type(other))
+
+    def __neg__(self):
+        """Negate self"""
+        return DMat(self).__imul__(-1)
+
     def __mul__(self, other):
-        if isinstance(other,DVec) :
+        if isinstance(other,int) or isinstance(other,float):
+            return DMat(self).__imul__(other)
+        elif isinstance(other,DVec) :
             y = DVec.create(self.rows())
             y.gemv(CblasNoTrans,1,self,other,0)
             return y
@@ -449,6 +467,64 @@ class DMat(ctypes.Structure,SSDEqMixin):
             return C.gemm(CblasNoTrans,CblasNoTrans,1,A,B,1)
         else:
             raise TypeError('Cannot multiply matrix with %s'%type(other))
+
+    def __rmul__(self, other):
+        if isinstance(other,int) or isinstance(other,float):
+            return DMat(self).__imul__(other)
+        else:
+            raise TypeError('Cannot multiply matrix with %s'%type(other))
+
+    def __idiv__(self,other):
+        """Divide self by a scalar"""
+        return self.__imul__( 1.0 / other )
+
+    def __div__(self,other):
+        """Divide self by a scalar"""
+        return DMat(self).__idiv__(other)
+
+    def __iadd__(self, other):
+        if isinstance(other,int) or isinstance(other,float):
+            libamino.aa_dmat_inc(self,other)
+            return self
+        if isinstance(other,DMat):
+            libamino.aa_dmat_axpy(1,other,self)
+            return self
+        else:
+            raise TypeError('Cannot increment matrix with %s'%type(other))
+
+    def __add__(self, other):
+        if isinstance(other,int) or isinstance(other,float) or isinstance(other,DMat):
+            return DMat(self).__iadd__(other)
+        else:
+            raise TypeError('Cannot add matrix add %s'%type(other))
+
+    def __radd__(self, other):
+        if isinstance(other,int) or isinstance(other,float):
+            return DMat(self).__iadd__(other)
+        else:
+            raise TypeError('Cannot add matrix add %s'%type(other))
+
+    def __isub__(self, other):
+        if isinstance(other,int) or isinstance(other,float):
+            libamino.aa_dmat_inc(self,-other)
+            return self
+        if isinstance(other,DMat):
+            libamino.aa_dmat_axpy(-1,other,self)
+            return self
+        else:
+            raise TypeError('Cannot increment matrix with %s'%type(other))
+
+    def __sub__(self, other):
+        if isinstance(other,int) or isinstance(other,float) or isinstance(other,DMat):
+            return DMat(self).__isub__(other)
+        else:
+            raise TypeError('Cannot subtract matrix with %s'%type(other))
+
+    def __rsub__(self, other):
+        if isinstance(other,int) or isinstance(other,float):
+            return self.__neg__().__iadd__(other)
+        else:
+            raise TypeError('Cannot subtract matrix with %s'%type(other))
 
     def __str__(self):
         m = self.rows()
@@ -521,6 +597,10 @@ libamino.aa_lb_dgemm.argtypes = [ ctypes.c_int, ctypes.c_int,
 # Matrix functions
 libamino.aa_dmat_ssd.argtypes = [ctypes.POINTER(DMat),ctypes.POINTER(DMat)]
 libamino.aa_dmat_ssd.restype = ctypes.c_double
+
+libamino.aa_dmat_scal.argtypes = [ctypes.POINTER(DMat),ctypes.c_double]
+libamino.aa_dmat_inc.argtypes = [ctypes.POINTER(DMat),ctypes.c_double]
+libamino.aa_dmat_axpy.argtypes = [ ctypes.c_double, ctypes.POINTER(DMat), ctypes.POINTER(DMat)]
 
 libamino.aa_dmat_nrm2.argtypes = [ctypes.POINTER(DMat)]
 libamino.aa_dmat_nrm2.restype = ctypes.c_double

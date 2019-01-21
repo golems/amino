@@ -229,6 +229,27 @@ class TestMat(unittest.TestCase):
         Atx = DMat.row_matrix(cols)
         self.assertEqual(At.ssd(Atx), 0)
 
+    def test_mscal(self):
+        A = DMat.col_matrix([[1,2],[3,4]])
+        A2 = DMat.col_matrix([[2,4],[6,8]])
+
+        self.assertEqual(A*2,A2)
+        self.assertEqual(2*A,A2)
+
+        self.assertEqual(A*2,A2)
+        self.assertEqual(A/0.5, A2)
+
+    def test_sadd(self):
+        A = DMat.col_matrix([[1,2],[3,4]])
+        Ap = DMat.col_matrix([[2,3],[4,5]])
+        Am = DMat.col_matrix([[0,1],[2,3]])
+        mA = DMat.col_matrix([[0,-1],[-2,-3]])
+
+        self.assertEqual(A+1,Ap)
+        self.assertEqual(1+A,Ap)
+
+        self.assertEqual(A-1,Am)
+        self.assertEqual(1-A,mA)
 
 class TestGemv(unittest.TestCase):
     def test_gemv(self):
