@@ -1,5 +1,5 @@
-Vector and Matrix Programming {#tutorial_la}
-=============================
+Linear Algebra {#tutorial_la}
+==============
 
 [TOC]
 
