@@ -797,6 +797,7 @@ INPUT                  = @top_srcdir@/include \
                          @top_srcdir@/doc/md/scenecompiler.md \
                          @top_srcdir@/doc/md/scenefile.md \
                          @top_srcdir@/doc/md/tutorial.md \
+                         @top_srcdir@/doc/md/tutorial/la.md \
                          lisp-amino.md \
                          lisp-rx.md \
                          aminopy.md \

@@ -9,9 +9,12 @@
 
     <tab type="user" visible="yes" title="Download" url="@ref download"/>
 
+    <tab type="usergroup" visible="yes" title="Tutorial" url="@ref tutorial">
+      <tab type="user" visible="yes" title="Linear Algebra" url="@ref tutorial_la"/>
+    </tab>
+
     <tab type="usergroup" visible="yes" title="Documentation">
       <tab type="user" visible="yes" title="Installation" url="@ref installation"/>
-      <tab type="user" visible="yes" title="Tutorial" url="@ref tutorial"/>
       <tab type="user" visible="yes" title="Viewer GUI" url="@ref viewer"/>
       <tab type="user" visible="yes"
            title="Scene Compiler" url="@ref scenecompiler"/>
