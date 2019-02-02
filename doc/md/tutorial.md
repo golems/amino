@@ -638,22 +638,60 @@ However, we can use the
 
 The pseudoinverse finds the **least squares** solution.
 
-In the underdetermined case, we are minimizing the sum of squares of
-\f$\mathbf{x}\f$:
+In the underdetermined case, we are minimizing the sum of squares
+(i.e., the Euclidean norm) of the vector \f$\mathbf{x}\f$:
 
-* **Given:** Underdetermined system \f$\mathbf{A}\mathbf{x} = \mathbf{b}\f$
+* **Given:** Underdetermined system \f$\mathbf{A}\mathbf{x} =
+  \mathbf{b}\f$, i.e., \f$\mathbf{A}\f$ has more columns (unknowns)
+  than rows (equations).
 * **Find:** Vector \f$\mathbf{x}\f$, such that:
   * *minimize:*  \f$\Vert\mathbf{x}\Vert\f$
   * *subject to:*  \f$\mathbf{A} \mathbf{x} = \mathbf{b}\f$
 * **Solution:** \f$ \mathbf{x} = \mathbf{A}^+ \mathbf{b} \f$
 
 
-In the overdetermined case, we are minimizing the sum of squares error
-\f$\mathbf{x}\f$:
+In the overdetermined case, we are minimizing the sum of squares
+of the *error*:
 
-* **Given:** Overdetermined system \f$\mathbf{A}\mathbf{x} = \mathbf{b}\f$
+* **Given:** Overdetermined system \f$\mathbf{A}\mathbf{x} =
+  \mathbf{b}\f$, , i.e., \f$\mathbf{A}\f$ has more rows (equations)
+  than columns (unknowns).
 * **Find:** Vector \f$\mathbf{z}\f$, such that:
   * *minimize:*  \f$\Vert\mathbf{A} \mathbf{z} - \mathbf{b}\Vert\f$
 * **Solution:** \f$ \mathbf{x} = \mathbf{A}^+ \mathbf{b} \f$
 
 ### Example Code
+
+1. Create a matrix and vector for a system of equations,
+   \f$\mathbf{A}\mathbf{x} = \mathbf{b}\f$, with two equations and two
+   unknowns:
+
+        A = DMat.row_matrix([[1,2],[3,4]])
+        b = [5,6]
+
+2. Invert the (square) matrix to solve the system:
+
+        x = A.inv() * b
+        print x
+
+3. Create a matrix and vector for an *over-determined* system:
+
+        A = DMat.row_matrix([[1,2],[3,4],[5,6]])
+        b = [7,8,9]
+
+4. Pseudo-invert the (non-square) matrix to find the least-squares
+   solution:
+
+        x = A.pinv()*b
+        print x
+
+5. Create a matrix and vector for an *under-determined* system:
+
+        A = DMat.row_matrix([[1,2,3],[4,5,6]])
+        b = [7,8]
+
+6. Pseudo-invert the (non-square) matrix to find the least-squares
+   solution:
+
+        x = A.pinv()*b
+        print x
