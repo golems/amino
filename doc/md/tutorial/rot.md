@@ -55,6 +55,10 @@ rearrange the terms into the Taylor series for \f$\sin\f$ and
     \end{array}
 \f]
 
+We can see Euler's formula illustrated in the complex plane:
+
+![Complex Plane](cplane.svg)
+
 Though Euler's formula is (at the least) a "neat trick," the
 advantages of representing angles in the plane using imaginary numbers
 and exponentials may be less certain.  In the plane, all angles are

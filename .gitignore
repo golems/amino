@@ -198,3 +198,6 @@ python/build
 /demo/tutorial/baxter-model.c
 /demo/tutorial/baxter-model.c.h
 /demo/tutorial/cmake_install.cmake
+/doc/md/tutorial/fig/*.aux
+/doc/md/tutorial/fig/*.log
+/doc/md/tutorial/fig/auto
