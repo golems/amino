@@ -1,0 +1,62 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+
+\def\axisr{.05}
+\begin{tikzpicture}[scale=3,font=\Large,
+  aa/.style={
+      axis,
+      primarycolor,
+      very thick,
+      ->
+    },
+    ang/.style={
+      angle,Accentcolor,thick
+    }
+  ]
+    \begin{scope}
+      [ yslant=-.5]
+
+      \draw[->,ang] (\axisr,-\axisr,.50) arc  (0:300:2*\axisr) ;
+
+      \begin{scope}[yslant=1]
+        \draw[ang,->] (.5,-0.4,-\axisr) arc  (0:330:2*\axisr) ;
+      \end{scope}
+
+
+      \begin{scope}[ xslant=1 ]
+        \draw[->,ang] (0,.50,.50) arc  (0:300:2*\axisr) ;
+      \end{scope}
+
+      \draw[aa] (0,0,0) -- (.90,0,0) node[anchor=north east]{$\unitvec{x}$};
+      \draw[aa] (0,0,0) -- (0,1,0) node[anchor=north west]{$\unitvec{y}$};
+      \draw[aa] (0,0,0) -- (0,0,2)
+      node[anchor=south]{$\unitvec{z}$};
+
+      \draw[ang] (\axisr,-\axisr,.50) arc  (0:90:2*\axisr) ;
+
+      \begin{scope}[yslant=1]
+        \draw[ang] (.5,-0.4,-\axisr) arc  (0:180:2*\axisr) ;
+      \end{scope}
+
+      % \begin{scope}[ xslant=.5 ]
+      %   \draw[angle] (0,.5,.30) arc  (0:300:2*\axisr) ;
+      % \end{scope}
+
+
+    \end{scope}
+
+
+\end{tikzpicture}
+
+
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

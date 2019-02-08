@@ -787,17 +787,26 @@ doxygen: doc/md/copying.md doc/md/mainpage.md lisp-rx.md lisp-amino.md
 
 doc/manual: doxygen
 
-doc: doxygen doc/manual/cplane.svg
+MANUAL_SVGS = \
+	doc/manual/planerot.svg \
+	doc/manual/spacerot.svg \
+	doc/manual/axang.svg \
+	doc/manual/qplane.svg \
+	doc/manual/cplane.svg
+
+doc: doxygen $(MANUAL_SVGS)
 	$(MKDIR_P) doc/manual/doc
 	cp $(top_srcdir)/doc/logo-medium.png doc/manual/doc
 
 doc/md/tutorial/fig/%.pdf: doc/md/tutorial/fig/%.tex
 	$(MKDIR_P) $(dir $@)
-	pdflatex  -output-directory $(dir $@) $<
+	TEXINPUTS="$(dir $<):$(TEXINPUTS)" pdflatex  -output-directory $(dir $@) $<
 
 doc/manual/%.svg: doc/md/tutorial/fig/%.pdf
 	$(MKDIR_P) $(dir $@)
 	pdftocairo -svg $< $@
+
+
 else
 
 doc/manual:

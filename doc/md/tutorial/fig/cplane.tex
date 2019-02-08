@@ -1,78 +1,6 @@
 \documentclass[]{standalone}
 
-\usepackage{tikz}
-\usetikzlibrary{decorations.pathreplacing}
-\usetikzlibrary{decorations.pathmorphing}
-\usetikzlibrary{positioning,calc}
-\usetikzlibrary{patterns}
-\usetikzlibrary{chains}
-\usetikzlibrary{shapes}
-
-\definecolor{minesprimary}{RGB}{33,49,77}
-\definecolor{minesaccenta}{RGB}{146,162,189}
-\definecolor{minesaccentb}{RGB}{210,73,42}
-\definecolor{primarycolor}{RGB}{33,49,77}   % dark blue
-\definecolor{accentcolor}{RGB}{146,162,189} % light blue
-\definecolor{lightcolor}{RGB}{146,162,189} % light blue
-\definecolor{angrycolor}{RGB}{210,73,42}    % orange
-\definecolor{Accentcolor}{RGB}{210,73,42}    % orange
-\definecolor{bgfillcolor}{RGB}{206,213,221} % bluish grayish
-\definecolor{metallic}{RGB}{139,141,142} % bluish grayish
-
-\tikzset{
-  axis/.style = {
-    color=accentcolor,
-    <->,
-    >=latex
-  },
-  ucirc/.style={
-    color=metallic,
-    dashed
-  },
-  edge/.style = {
-    color=primarycolor,
-    very thick
-  },
-  length/.style = {
-    fbdann,
-  },
-  angle/.style = {
-    color=accentcolor
-  },
-  fbdaxis/.style = {%
-    ->,color=gray
-  },
-  fbdann/.style = {
-    color=angrycolor
-  },
-  fbdforce/.style = {
-    ->,>=latex,very thick
-  },
-  fbd:lblfill/.style={
-    rounded corners=.25em,
-    fill=white,
-    opacity=1,
-    text opacity=1
-  },
-  fbd:lbl/.style={
-    fbdann,
-    fbd:lblfill,
-    inner sep=.1em,
-  },
-  fbd:dim/.style={
-    color=angrycolor,<->,>=latex
-  },
-  fbd:dir/.style={
-    color=angrycolor,->,>=latex
-  },
-  fbd:dimex/.style={
-    densely dotted,fbdann
-  }
-}
-
-\usepackage{amssymb}
-\usepackage{amsmath}
-\usepackage{amsfonts}
+\usepackage{rotfig}
 
 \begin{document}
 
@@ -100,10 +28,6 @@
 
 
 \end{document}
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: t
-%%% End:
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: t

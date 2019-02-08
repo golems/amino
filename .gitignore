@@ -201,3 +201,4 @@ python/build
 /doc/md/tutorial/fig/*.aux
 /doc/md/tutorial/fig/*.log
 /doc/md/tutorial/fig/auto
+/doc/md/tutorial/fig/*.pdf

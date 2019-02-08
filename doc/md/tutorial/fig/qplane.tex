@@ -1,0 +1,72 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+
+\begin{tikzpicture}[scale=3,font=\Large,
+  lbl/.style={
+    fbd:lbl,opacity=1%,font=\large
+  }
+  ]
+
+  \draw[axis,accentcolor] (-1.15,0) -- (1.15,0) node[right] {$\mathbb{R}$};
+  \draw[axis,accentcolor] (0,-1.15) -- (0,1.15) node[above] {$\mathbb{I}$};
+
+
+  \node[] at (-1.25,0) (spacing) {$ $};
+
+  \node[coordinate] at (.71,.71) (p) {};
+
+  \draw[draw=primarycolor,very thick,sloped,->,>=stealth] (0,0) -- node[above]
+  {$\normtwo{\sequat}$} (45:.94);
+
+  %\draw[fill=accentcolor] (p) circle (1.5pt);
+
+  % \shade [ball color=primarycolor,
+  % % drop shadow={color=black,opacity=.25},
+  %  blur shadow={shadow blur steps=10},
+  %  shadow xshift=.25ex,
+  %  shadow yshift=-.25ex
+  % ] (p) circle (.07);
+  \draw[draw=metallic,dashed] (0,0) circle (1);
+
+  \draw[fbd:dimex] (.71,-.25) -- (.71,.71);
+  \draw[fbd:dimex] (.71,.71) -- +(.25,0);
+
+  \draw[fbd:dim] (0,-.15) --
+  node[lbl,below,yshift=-1.25]{$w = \normtwo{\sequat}
+    \cos \sequangle$} (.71,-.15);
+  \draw[fbd:dim] (.86,0) --
+  node[lbl,opacity=1,xshift=1em]
+  {$\normtwo{v} = \normtwo{\sequat} \sin \sequangle$}
+  (.86,.71);
+
+
+  \draw[->,>=latex,angle,fbdann] (.25,0) arc  (0:45:.25) ;
+  \node[lbl] at (.35,.15){$\sequangle$};
+
+  \node[above right of=p,accentcolor,node
+  distance=4em,yshift=-2em,inner sep=.1em,
+  font=\Large]
+  (lbl) {$\sequat$};
+  \draw[accentcolor]  (lbl) -- (p);
+
+  \shade [ball color=primarycolor,
+  % drop shadow={color=black,opacity=.25},
+  % blur shadow={shadow blur steps=10},
+  % shadow xshift=.25ex,
+  % shadow yshift=-.25ex
+  ] (p) circle (.07);
+
+\end{tikzpicture}
+
+
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
