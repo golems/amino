@@ -9,6 +9,8 @@ Rotations {#tutorial_rot}
 \newcommand{\jelt}[0]{\unitvec{\jmath}}
 \newcommand{\kelt}[0]{\unitvec{k}}
 \newcommand{\quat}[1]{\mathcal{#1}}
+\newcommand{\qmul}[0]{\otimes}
+\newcommand{\dotprod}{\boldsymbol{\cdot}}
 \f]
 
 Complex Numbers {#tutorial_rot_c}
@@ -60,6 +62,41 @@ We can see Euler's formula illustrated in the complex plane:
 
 ![Complex Plane](cplane.svg)
 
+
+We can apply Euler's formula to rotation points in the plane by
+viewing the point in polar coordinates.
+
+\f[
+    x_1 + y_1 \ielt = r \left(\cos \theta_1 + \ielt \sin \theta_1
+    \right) =
+    r e^{\theta_1\ielt}
+\f]
+
+where \f$r = \sqrt{{x_1}^2 + {y_1}^2}\f$ and \f$\theta_1 = \tan^{-1}
+\frac{y_1}{x_1}\f$.
+
+To rotate the polar coordinate point, we need only add the rotation
+angle to the polar coordinate angle:
+
+![Complex Plane](eulerrot.svg)
+
+Addition of the polar coordinate angle and rotation angle corresponds
+to multiplication of the exponential coordinates:
+
+\f[
+    x_2 + \ielt y_2
+    =
+    r\left(\cos \left(\theta_1 + \theta_r\right)
+           +
+           \ielt \sin \left(\theta_1 + \theta_r\right)
+      \right)
+    =
+    re^{\left(\theta_1+ \theta_r\right)\ielt}
+    =
+    re^{\theta_1\ielt} e^{\theta_r\ielt}
+\f]
+
+
 Though Euler's formula is (at the least) a "neat trick," the
 advantages of representing angles in the plane using imaginary numbers
 and exponentials may be less certain.  In the plane, all angles are
@@ -92,6 +129,9 @@ Quaternions and Rotation Matrices.
 Quaternions {#tutorial_rot_quat}
 ===========
 
+Representation
+--------------
+
 Quaternions offer a particularly compact and efficient representation
 for rotations.  The quaternions generalize complex numbers to three
 dimensions.  Whereas in the plane we needed one imaginary unit to
@@ -112,7 +152,8 @@ The four elements of the quaternion are the imaginary unit factors
     \overbrace{x \ielt + y \jelt + z \kelt}^{\textrm{vector}}
     +
     \overbrace{w}^{\textrm{scalar}}
-    = v \unitvec{u} + w
+    = \vec{v} + w
+    = |v| \unitvec{u} + w
 \f]
 
 Computationally, we may represent the quaternion as an array of four
@@ -128,11 +169,101 @@ struct) will have the same memory layout.
         double w;
     };
 
+Multiplication
+--------------
+
+From the quaternion axiom, we can derive the products of pairs of
+quaternion elements.  For example, the derivation of
+\f$\ielt\jelt\f$:
+
+\f[
+    \left\lgroup \ielt\jelt\kelt=-1 \right\rgroup
+    \rightarrow \left\lgroup \ielt\jelt\kelt^2=-\kelt \right\rgroup
+    \rightarrow \left\lgroup -\ielt\jelt=-\kelt \right\rgroup
+    \rightarrow \left\lgroup \ielt\jelt=\kelt \right\rgroup
+\f]
+
+Following a similar derivation for the other products, we obtain the
+following relations:
+
+\f[
+    \begin{array}
+    \ielt\jelt &=& -\jelt\ielt &=& \kelt \\
+    \jelt\kelt &=& -\kelt\jelt &=& \ielt \\
+    \kelt\ielt &=& -\ielt\kelt &=& \jelt
+    \end{array}
+\f]
+
+(An informed reader may notice that multiplication of quaternion units
+corresponds to cross products of the standard basis vectors.  In fact,
+the vector cross product is itself based on quaternion
+multiplication!)
+
+From the quaternion unit products, we can expand and simplify the
+multiplication of two quaternions:
+
+\f[
+  \begin{array}
+  \quat{a} \qmul \quat{b}
+  & = &
+  (a_w + a_x\ielt + a_y \jelt + a_z \kelt) \qmul
+    (b_w + b_x\ielt + b_y \jelt + b_z \kelt) \\
+  & = &
+    \phantom{+\ }(a_wb_w
+    - a_xb_x
+    - a_yb_y
+    - a_zb_z)\\
+    & & +\ (
+     a_w b_x
+     + a_xb_w
+     + a_yb_z
+     - a_zb_y
+    ) \ielt\\
+    & & +\ (
+     a_wb_y
+     - a_xb_z
+     + a_yb_w
+     + a_zb_x
+    )\jelt\\
+    & & +\ (
+    a_wb_z
+    + a_xb_y
+    - a_y b_x
+    + a_zb_w
+    )\kelt
+  \end{array}
+\f]
+
+A single quaternion multiply actually performs both a cross product
+and dot product.  We can restate the quaternion multiply as:
+
+\f[
+\begin{array}
+  \quat{a} \qmul \quat{b}
+   & = &
+  (a_w + \vec{a}_v) \qmul
+    (b_w + \vec{b}_v) \\
+   & = &
+    \underbrace{\left(
+        \vec{a}_v \times \vec{b}_v + a_w\vec{b}_v +
+        b_w\vec{a}_v
+    \right)}_{\textrm{vector}}
+    +
+    \underbrace{
+    \left(
+        a_w b_w - \vec{a}_v \dotprod \vec{b}_v
+    \right)
+    }_{\textrm{scalar}}
+\end{array}
+\f]
+
+Rotations
+---------
 
 We construct a quaternion representing a rotation analogously to the
-planar, complex number case. For quaternions, the imaginary is now
-constructed from the axis of rotation. We must also scale the angle by
-one half.
+planar, complex number case. For quaternions, the imaginary part is
+now constructed from the axis of rotation. We must also scale the
+angle by one half.
 
 \f[
     h = \unitvec{u} \sin \frac{\theta}{2} + \cos \theta
@@ -146,8 +277,24 @@ vector (imaginary) part as the other plane axis:
 
 ![Quaternion Complex Plane](qplane.svg)
 
+
 Rotation Matrices {#tutorial_rot_rotmat}
 =================
+
+The matrix representation of rotations is especially efficient for
+rotating points, thought not as compact or efficient for chaining as
+quaternions.  The planar (2D) rotation matrix is constructed as:
+
+
+\f[
+    R(\theta) =
+    \begin{bmatrix}
+    \cos \theta & -\sin \theta \\
+    \sin \theta & \cos \theta
+    \end{bmatrix}
+\f]
+
+![Quaternion Complex Plane](rotmat2d.svg)
 
 
 Additional Representations {#tutorial_rot_hm}

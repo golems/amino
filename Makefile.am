@@ -792,6 +792,8 @@ MANUAL_SVGS = \
 	doc/manual/spacerot.svg \
 	doc/manual/axang.svg \
 	doc/manual/qplane.svg \
+	doc/manual/rotmat2d.svg \
+	doc/manual/eulerrot.svg \
 	doc/manual/cplane.svg
 
 doc: doxygen $(MANUAL_SVGS)

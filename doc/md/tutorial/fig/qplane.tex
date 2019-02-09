@@ -19,8 +19,10 @@
 
   \node[coordinate] at (.71,.71) (p) {};
 
-  \draw[draw=primarycolor,very thick,sloped,->,>=stealth] (0,0) -- node[above]
-  {$\normtwo{\sequat}$} (45:.94);
+  \draw[draw=primarycolor,very thick,sloped,->,>=stealth] (0,0)
+  --
+  %node[above] {$\normtwo{\sequat}$}
+  (45:.94);
 
   %\draw[fill=accentcolor] (p) circle (1.5pt);
 
@@ -36,11 +38,11 @@
   \draw[fbd:dimex] (.71,.71) -- +(.25,0);
 
   \draw[fbd:dim] (0,-.15) --
-  node[lbl,below,yshift=-1.25]{$w = \normtwo{\sequat}
-    \cos \sequangle$} (.71,-.15);
+  node[lbl,below,yshift=-1.25]{$w = \cos \sequangle$} (.71,-.15);
+
   \draw[fbd:dim] (.86,0) --
   node[lbl,opacity=1,xshift=1em]
-  {$\normtwo{v} = \normtwo{\sequat} \sin \sequangle$}
+  {$\normtwo{v} =  \sin \sequangle$}
   (.86,.71);
 
 
