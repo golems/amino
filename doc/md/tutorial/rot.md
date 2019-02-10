@@ -4,6 +4,8 @@ Rotations {#tutorial_rot}
 [TOC]
 
 \f[
+\newcommand{\normtwo}[1]{\left| #1 \right|}
+\newcommand{\MAT}[1]{\boldsymbol{#1}}
 \newcommand{\unitvec}[1]{\boldsymbol{\hat{#1}}}
 \newcommand{\ielt}[0]{\unitvec{\imath}}
 \newcommand{\jelt}[0]{\unitvec{\jmath}}
@@ -63,8 +65,8 @@ We can see Euler's formula illustrated in the complex plane:
 ![Complex Plane](cplane.svg)
 
 
-We can apply Euler's formula to rotation points in the plane by
-viewing the point in polar coordinates.
+We can apply Euler's formula to rotate points in the plane by viewing
+the point in polar coordinates.
 
 \f[
     x_1 + y_1 \ielt = r \left(\cos \theta_1 + \ielt \sin \theta_1
@@ -266,7 +268,7 @@ now constructed from the axis of rotation. We must also scale the
 angle by one half.
 
 \f[
-    h = \unitvec{u} \sin \frac{\theta}{2} + \cos \theta
+    e^{\theta \unitvec{u}} = \unitvec{u} \sin \frac{\theta}{2} + \cos \theta
 \f]
 
 While it is more challenging to directly visualize a four element
@@ -283,7 +285,13 @@ Rotation Matrices {#tutorial_rot_rotmat}
 
 The matrix representation of rotations is especially efficient for
 rotating points, thought not as compact or efficient for chaining as
-quaternions.  The planar (2D) rotation matrix is constructed as:
+quaternions.
+
+
+2D (Planar) Rotations
+---------------------
+
+The planar (2D) rotation matrix is constructed as:
 
 
 \f[
@@ -294,8 +302,98 @@ quaternions.  The planar (2D) rotation matrix is constructed as:
     \end{bmatrix}
 \f]
 
+Rotation matrices offer a direct, visual interpretation.  The columns
+of the rotation matrix are the principal axes of the child (rotated)
+coordinate frame in the parent (non-rotated) frame:
+
 ![Quaternion Complex Plane](rotmat2d.svg)
 
+Planar rotation using a rotation matrix corresponds to rotation using
+Euler's formula.  While Euler's formula essentially operates on polar
+coordinates, rotation matrices operate on rectangular coordinates.
+
+\f[
+    \begin{bmatrix}
+    x_1 \\ y_1
+    \end{bmatrix}
+    =
+    r
+    \begin{bmatrix}
+    \cos \theta_1\\
+    \sin \theta_1\\
+    \end{bmatrix}
+\f]
+![Complex Plane](eulerrot.svg)
+
+Then we ran can derive the rotation operation through some
+trigonometric identities and factoring:
+
+\f[
+    \begin{bmatrix}
+    x_2 \\ y_2
+    \end{bmatrix}
+    =
+    r
+    \begin{bmatrix}
+    \cos \left( \theta_1 + \theta_r \right) \\
+    \sin  \left(\theta_1 + \theta_r \right) \\
+    \end{bmatrix}
+    =
+    r
+    \begin{bmatrix}
+    \cos \theta_1 \cos \theta_r - \sin \theta_1 \sin \theta_r \\
+    \cos \theta_1 \sin \theta_r + \sin \theta_1 \cos \theta_r
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+     \cos \theta_r & -  \sin \theta_r \\
+     \sin \theta_r &   \cos \theta_r
+    \end{bmatrix}
+    \begin{bmatrix}
+    x_1 \\ y_1
+    \end{bmatrix}
+
+\f]
+
+
+3D Rotations
+------------
+
+In 3 dimensions, we construct rotation matrix as:
+
+\f[
+    \MAT{R}
+    =
+    e^{[\theta \unitvec{u}]} = \MAT{I} +
+    \left({\sin{\theta}}\right) [\unitvec{u}]
+    +
+    \left({1 - \cos{\theta}}\right) [\unitvec{u}]^2,
+    \quad{\rm where}\quad
+    [\unitvec{u}]
+    = \begin{bmatrix}
+        0 & -u_z & u_y \\
+        u_z & 0 & -u_x \\
+        -u_y & u_x & 0 \\
+    \end{bmatrix}
+    \; .
+\f]
+
+3D rotation matrices again offer the visual interpretation: the columns
+of the rotation matrix are the principal axes of the child (rotated)
+coordinate frame in the parent (non-rotated) frame.
+
+Rotation is analgous to the 2D case:
+
+\f[
+    \begin{bmatrix}
+    x_2 \\ y_2 \\ z_2
+    \end{bmatrix}
+    =
+    \MAT{R}
+    \begin{bmatrix}
+    x_1 \\ y_1 \\ z_1
+    \end{bmatrix}
+\f]
 
 Additional Representations {#tutorial_rot_hm}
 ==========================

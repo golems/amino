@@ -1,0 +1,65 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+
+\def\axisr{.05}
+\begin{tikzpicture}[scale=3,
+  font=\Large,
+  % aa/.style={
+  %     axis,
+  %     primarycolor,
+  %     very thick,
+  %     ->
+  %   },
+  %   ang/.style={
+  %     angle,Accentcolor,thick
+  %   }
+  lbl:ang/.style={
+    angle,->,>=latex
+  }
+  ]
+
+    % axes
+    \draw[axis] (-1.15,0) -- (1.15,0) node[right] {$\unitvec{x}$};
+    \draw[axis] (0,-.25) -- (0,1.15) node[above] {$\unitvec{y}$};
+
+    \draw[edge] (0,0) -- node[above] {$r$} (.71,.71);
+    \draw[edge,color=accentcolor] (0,0) -- node[above] {$r$} (-.71,.71);
+
+    \draw[fill=accentcolor,draw=accentcolor] (-.71,.71) circle (.03);
+    \draw[fill=black] (.71,.71) circle (.03);
+
+
+    \draw[<->,length] (0,-.15) -- node[fbd:lbl]{$x_1$} (.71,-.15);
+    \draw[<->,length] (.86,0) -- node[fbd:lbl]{$y_1$} (.86,.71);
+    \draw[dotted] (.71,-.25) -- (.71,.71);
+    \draw[dotted] (.71,.71) -- +(.25,0);
+
+    \draw[<->,length] (0,-.15) -- node[fbd:lbl]{$x_2$} (-.71,-.15);
+    \draw[<->,length] (-.86,0) -- node[fbd:lbl]{$y_2$} (-.86,.71);
+    \draw[dotted] (-.71,-.25) -- (-.71,.71);
+    \draw[dotted] (-.71,.71) -- +(-.25,0);
+
+    \draw[lbl:ang] (.15,0) arc  (0:45:.15) ;
+    \node[angle] at (.35,.15){$\theta_1$};
+
+    \begin{scope}[rotate=45]
+      \draw[lbl:ang] (.20,0) arc  (0:90:.20) ;
+      \node[angle] at (.23,.23){$\theta_r$};
+
+    \end{scope}
+
+
+\end{tikzpicture}
+
+
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

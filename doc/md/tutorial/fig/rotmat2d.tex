@@ -1,0 +1,88 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+
+\def\axisr{.05}
+
+\def\x{.866}
+\def\y{.5}
+\def\th{30}
+
+\begin{tikzpicture}[scale=3,font=\Large,
+  aa/.style={
+      axis,
+      primarycolor,
+      very thick,
+      ->
+    },
+    ang/.style={
+      angle,Accentcolor,thick
+    },
+    lbl/.style={
+      fill=white,
+      fill opacity=.75,
+      text=Accentcolor,
+      rounded corners=.25em,
+      inner sep=.1em
+    },
+    vv/.style={
+      ->,Accentcolor,>=latex
+    }
+  ]
+
+
+  \draw[axis] (-1.15,0) -- (1.15,0) node[right] {$\unitvec{x}$};
+  \draw[axis] (0,-1.15) -- (0,1.15) node[above] {$\unitvec{y}$};
+  \draw[ucirc] (0,0) circle (1);
+  %\draw[axis,->] (0,0,0) -- (0,0,2) node[anchor=south]{$\unitvec{z}$};
+
+  %\draw[->,ang] (\axisr,-\axisr,.250) arc  (0:300:2*\axisr) ;
+
+  % \draw[aa] (0,0,0) -- (1,0,0) node[anchor=north east]{$\unitvec{x}$};
+  % \draw[aa] (0,0,0) -- (0,1,0) node[anchor=north west]{$\unitvec{y}$};
+
+  \draw[aa] (0,0) -- (\x,\y) node[anchor=south west]{$\unitvec{x}'$};
+
+  \draw[aa] (0,0) -- (-\y,\x) node[anchor=south east]{$\unitvec{y}'$};
+
+  \draw (.866,0) edge[Accentcolor,dotted] ++(0,-.25);
+
+
+  \draw
+  (\x,0) edge[vv]
+  node[lbl] {$\sin \theta$}
+  (\x,\y)
+  (0,-.125) edge[vv]
+  node[lbl] {$\cos \theta$}
+  (\x,-.125)
+  ;
+
+  \draw
+  (0,0) edge[vv]
+  node[lbl,above] {$-\sin \theta$}
+  (-\y,0)
+  (-\y,0) edge[vv]
+  node[lbl] {$\cos \theta$}
+  (-\y,\x)
+  ;
+
+  \draw[->,>=latex,angle,fbdann] (.45,0) arc  (0:\th:.45) ;
+  \node[lbl] at (.55,.15){$\theta$};
+
+  % \draw[->,>=latex,angle,fbdann] (.25,0) arc  (0:45:.25) ;
+  % \node[lbl] at (.35,.15){$\sequangle$};
+
+
+\end{tikzpicture}
+
+
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
