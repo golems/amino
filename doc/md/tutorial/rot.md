@@ -107,8 +107,8 @@ angles.  However, when we move the 3D rotations---where we can rotate
 about arbitrary axes---then we can no longer merely sum angles and the
 benefits of the exponential formulation are more definitive.
 
-Axis-Angle {#tutorial_rot_aa}
-==========
+Euler Angles  {#tutorial_rot_euler}
+============
 
 In the plane, all rotations are about the axis orthogonal to the
 plane.  For example, in the XY plane, all rotations are about the Z
@@ -116,6 +116,23 @@ axis: ![Planar Rotation](planerot.svg)
 
 When we rotate in 3D, there are now three axes we can rotate about
 (all at the same time!): ![3D Rotation](spacerot.svg)
+
+Thus, one seemingly obvious representation of 3D rotations is to use
+three angles for three different axes.  However, using angles in 3D is
+problematic.  First, we must adopt a specific convention: what are the
+axes and order we use, and do we keep axes fixed or do axes vary with
+each successive rotation? (There are 24 different combinations of axis
+order and fixed/varying axes!)  Second, we can no longer chain
+rotations by adding angles, since axes will change as we rotate.
+Finally, singularities are possible when aligned axes remove a degree
+of freedom ("gimbal lock").
+
+Thus, while Euler angles may be easy to visualize, they are a poor
+choice for computation.
+
+Axis-Angle {#tutorial_rot_aa}
+==========
+
 
 A visually-meaningful representation of 3D rotation is *Axis-Angle*
 form, given by the unit axis \f$\unitvec{u}\f$ about which we rotate
@@ -125,7 +142,8 @@ and the angle \f$\theta\f$ by which we rotate:
 While the axis-angle form is easy enough to visualize, it is not
 especially efficient for computation, for example, if we want to chain
 to successive rotations.  For efficient computation, we move on to the
-Quaternions and Rotation Matrices.
+Quaternions and Rotation Matrices, both of which we can construct from
+the axis-angle form.
 
 
 Quaternions {#tutorial_rot_quat}
@@ -378,7 +396,7 @@ In 3 dimensions, we construct rotation matrix as:
     \; .
 \f]
 
-3D rotation matrices again offer the visual interpretation: the columns
+3D rotation matrices again offer a visual interpretation: the columns
 of the rotation matrix are the principal axes of the child (rotated)
 coordinate frame in the parent (non-rotated) frame.
 
@@ -394,12 +412,3 @@ Rotation is analgous to the 2D case:
     x_1 \\ y_1 \\ z_1
     \end{bmatrix}
 \f]
-
-Additional Representations {#tutorial_rot_hm}
-==========================
-
-Euler Angles  {#tutorial_rot_hm_euler}
-------------
-
-Denavit-Hartenberg Parameters {#tutorial_rot_hm_dh}
------------------------------
