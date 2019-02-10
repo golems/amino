@@ -159,6 +159,32 @@ aa_tf_zangle2quat( double theta, double _q[AA_RESTRICT 4] )
     q->w = cos(theta/2);
 }
 
+AA_API void aa_tf_xangle2axang( double theta, double _a[AA_RESTRICT 4] )
+{
+    aa_tf_axang_t *a = (aa_tf_axang_t *)_a;
+    a->axis.x = 1;
+    a->axis.y = 0;
+    a->axis.z = 0;
+    a->angle = theta;
+}
+
+AA_API void aa_tf_yangle2axang( double theta, double _a[AA_RESTRICT 4] )
+{
+    aa_tf_axang_t *a = (aa_tf_axang_t *)_a;
+    a->axis.x = 0;
+    a->axis.y = 1;
+    a->axis.z = 0;
+    a->angle = theta;
+}
+AA_API void aa_tf_zangle2axang( double theta, double _a[AA_RESTRICT 4] )
+{
+    aa_tf_axang_t *a = (aa_tf_axang_t *)_a;
+    a->axis.x = 0;
+    a->axis.y = 0;
+    a->axis.z = 1;
+    a->angle = theta;
+}
+
 AA_API void
 aa_tf_rotvec2quat( const double a[AA_RESTRICT 3], double _q[AA_RESTRICT 4] )
 {

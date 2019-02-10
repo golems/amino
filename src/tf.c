@@ -125,13 +125,45 @@ void aa_tf_qsub( const double a[restrict 4], const double b[restrict 4],
 /* } */
 
 void aa_tf_axang_make( double x, double y, double z, double theta,
-                       double axang[restrict 4] ) {
-    double n = sqrt(x*x + y*y + z*z);
-    // FIXME: zeros
-    axang[0] = x/n;
-    axang[1] = y/n;
-    axang[2] = z/n;
-    axang[3] = aa_ang_norm_pi(theta);
+                       double _a[restrict 4] )
+{
+    aa_tf_axang_t *a = (aa_tf_axang_t *)_a;
+    a->axis.x = x;
+    a->axis.y = y;
+    a->axis.z = z;
+    a->angle = theta;
+    aa_tf_axang_normalize(_a);
+}
+
+AA_API void aa_tf_axang_normalize( double _a[AA_RESTRICT 4] )
+{
+    aa_tf_axang_t *a = (aa_tf_axang_t *)_a;
+    double *v = a->axis.data;
+    a->angle = aa_ang_norm_pi(a->angle);
+    double n = sqrt( aa_tf_vdot(v,v) );
+    if( a->angle < 0 ) {
+        n *= -1;
+        a->angle *= -1;
+    }
+    FOR_VEC(i) v[i] /= n;
+}
+
+AA_API void aa_tf_axang_rot( const double _a[AA_RESTRICT 4],
+                             const double v[AA_RESTRICT 3],
+                             double q[AA_RESTRICT 3] )
+{
+    aa_tf_axang_t *a = (aa_tf_axang_t *)_a;
+    double *k = a->axis.data;
+    double theta = a->angle;
+
+    double c = cos(theta);
+    double s = sin(theta);
+
+    double kv[3];
+    aa_tf_cross(k,v,kv);
+    double y = aa_tf_vdot(k,v)*(1-c);
+
+    FOR_VEC(i) q[i] = v[i]*c + kv[i]*s + k[i]*y;
 }
 
 void aa_tf_axang_permute2( const double aa[restrict 4],

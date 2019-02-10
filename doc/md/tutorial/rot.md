@@ -412,3 +412,68 @@ Rotation is analgous to the 2D case:
     x_1 \\ y_1 \\ z_1
     \end{bmatrix}
 \f]
+
+
+Example Code {#tutorial_rot_code}
+============
+
+1. Import the package:
+
+        from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat
+        from math import pi
+
+2. Specify a rotation of pi/2 radians about the x axis:
+
+        ax = XAngle(pi/2)
+        print ax
+
+3. Convert the rotation to axis-angle, quaternion, and rotation matrix
+   forms:
+
+        Ax = AxAng(ax)
+        qx = Quat(ax)
+        Rx = RotMat(ax)
+        print Ax
+        print qx
+        print Rx
+
+4. Rotate a point using each of the axis-angle, quaternion, and
+   rotation matrix forms:
+
+        p = [1,2,3]
+        pa = Ax.rotate(p)
+        pq = qx.rotate(p)
+        pR = Rx.rotate(p)
+        print pa
+        print pq
+        print pR
+
+5. Invert the rotations:
+
+        qxi = ~qx
+        Rxi = ~Rx
+        Axi = ~Ax
+        print Axi
+        print qxi
+        print Rxi
+
+6. Rotate by the inverse to get back the original point:
+
+        print Axi.rotate(pa)
+        print qxi.rotate(pq)
+        print Rxi.rotate(pR)
+
+7. Specify another rotation and chain:
+
+        ay = YAngle(pi/2)
+        qxy = qx * ay
+        Rxy = Rx * ay
+        print qxy
+        print Rxy
+
+8. Rotate by the chained forms:
+
+        pq = qxy.rotate(p)
+        pR = Rxy.rotate(p)
+        print pq
+        print pR

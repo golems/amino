@@ -748,6 +748,9 @@ static void theta2quat() {
     double qx[4], qy[4], qz[4];
     double Rx[9], Ry[9], Rz[9];
     double qRx[4], qRy[4], qRz[4];
+    double ax[4], ay[4], az[4];
+    double qax[4], qay[4], qaz[4];
+
     aa_tf_xangle2rotmat( theta, Rx );
     aa_tf_yangle2rotmat( theta, Ry );
     aa_tf_zangle2rotmat( theta, Rz );
@@ -756,9 +759,17 @@ static void theta2quat() {
     aa_tf_yangle2quat( theta, qy );
     aa_tf_zangle2quat( theta, qz );
 
+    aa_tf_xangle2axang( theta, ax );
+    aa_tf_yangle2axang( theta, ay );
+    aa_tf_zangle2axang( theta, az );
+
     aa_tf_rotmat2quat( Rx, qRx );
     aa_tf_rotmat2quat( Ry, qRy );
     aa_tf_rotmat2quat( Rz, qRz );
+
+    aa_tf_axang2quat( ax, qax );
+    aa_tf_axang2quat( ay, qay );
+    aa_tf_axang2quat( az, qaz );
 
     aa_tf_qminimize( qx );
     aa_tf_qminimize( qRx );
@@ -770,6 +781,10 @@ static void theta2quat() {
     aveq("xangle2quat", 4, qx, qRx, 1e-6 );
     aveq("yangle2quat", 4, qy, qRy, 1e-6 );
     aveq("xangle2quat", 4, qz, qRz, 1e-6 );
+
+    aveq("xangle2quat", 4, qx, qax, 1e-6 );
+    aveq("yangle2quat", 4, qy, qay, 1e-6 );
+    aveq("xangle2quat", 4, qz, qaz, 1e-6 );
 }
 
 
@@ -1053,6 +1068,20 @@ void normalize(const double *Rp, const double *qp) {
     aveq( "normalize", 4, q, Rq, 1e-7 );
 }
 
+void rotate(double q[4], double R[9], double p[3] )
+{
+    double aa[4];
+    aa_tf_quat2axang(q, aa);
+
+    double pq[3], Rq[3], aq[3];
+    aa_tf_qrot(q,p,pq);
+    aa_tf_rotmat_rot(R,p,Rq);
+    aa_tf_axang_rot(aa,p,aq);
+
+    aveq( "rotate quat-rotmat", 3, pq, Rq, 1e-9 );
+    aveq( "rotate quat-axang",  3, pq, aq, 1e-9 );
+}
+
 int main( void ) {
     // init
     time_t seed = time(NULL);
@@ -1073,6 +1102,7 @@ int main( void ) {
         }
         //printf("%d\n",i);
         /* Run Tests */
+        rotate(E[0], T[0], dx[0] );
         rotvec(E[0]);
         euler(dx[0]);
         euler1(dx[0]);

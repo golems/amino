@@ -247,6 +247,29 @@ class TestRotMat(unittest.TestCase):
         self.cmp2(XAngle(1), YAngle(2), v)
         self.cmp2(ZAngle(1), XAngle(2), v)
 
+class TestAxAng(unittest.TestCase):
+    def test_princ(self):
+        a = 0.42
+        ax = AxAng(XAngle(a))
+        ay = AxAng(YAngle(a))
+        az = AxAng(ZAngle(a))
+
+        qx = Quat(XAngle(a))
+        qy = Quat(YAngle(a))
+        qz = Quat(ZAngle(a))
+
+        self.assertTrue( qx.isclose(Quat(ax)) )
+        self.assertTrue( qy.isclose(Quat(ay)) )
+        self.assertTrue( qz.isclose(Quat(az)) )
+
+    def test_conv(self):
+        aa = AxAng([1,2,3,4])
+        q = Quat(aa)
+        R = RotMat(aa)
+        qR = Quat(R)
+        q.minimize()
+        qR.minimize()
+        self.assertTrue( q.isclose(qR) )
 
 class TestTf(unittest.TestCase):
     def cmptfs(self,T,S,E,p):

@@ -1347,6 +1347,12 @@ AA_API void aa_tf_rotvec_permute( const double rv[AA_RESTRICT 3], int k,
 AA_API void aa_tf_rotvec_near( const double rv[AA_RESTRICT 3],
                                const double rv_near[AA_RESTRICT 3],
                                double rv_p[AA_RESTRICT 3] );
+/**
+ * Rotate a point
+ */
+AA_API void aa_tf_axang_rot( const double axang[AA_RESTRICT 4],
+                             const double p[AA_RESTRICT 3],
+                             double q[AA_RESTRICT 3] );
 
 /**************/
 /* Quat-Trans */
@@ -1599,6 +1605,16 @@ AA_API void aa_tf_xangle2rotmat( double theta_x, double R[AA_RESTRICT 9] );
 AA_API void aa_tf_yangle2rotmat( double theta_y, double R[AA_RESTRICT 9] );
 /** Angle about z axis */
 AA_API void aa_tf_zangle2rotmat( double theta_z, double R[AA_RESTRICT 9] );
+
+/** Angle about x axis */
+AA_API void aa_tf_xangle2axang( double theta_x, double axang[AA_RESTRICT 4] );
+/** Angle about y axis */
+AA_API void aa_tf_yangle2axang( double theta_y, double axang[AA_RESTRICT 4] );
+/** Angle about z axis */
+AA_API void aa_tf_zangle2axang( double theta_z, double axang[AA_RESTRICT 4] );
+
+/** Normalize the axis */
+AA_API void aa_tf_axang_normalize( double axang[AA_RESTRICT 4] );
 
 /**
  * Find the camera frame, looking in negative z direction.

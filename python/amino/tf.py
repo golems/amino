@@ -142,12 +142,18 @@ class XAngle(ctypes.Structure):
     def to_rotmat(self,r):
         """Convert to a rotation matrix and store in r"""
         libamino.aa_tf_xangle2rotmat(self.value, r)
+    def to_axang(self,a):
+        """Convert to an axis-angle and store in a"""
+        libamino.aa_tf_xangle2axang(self.value, a)
 
     def to_eulerzyx(self,e):
         """Convert to an Euler XYZ"""
         e.x = self.value
         e.y = 0
         e.z = 0
+
+    def __str__(self):
+        return 'XAngle(%f)' % (self.value)
 
 class YAngle(ctypes.Structure):
     """Class for rotation about the Y axis"""
@@ -159,12 +165,18 @@ class YAngle(ctypes.Structure):
     def to_rotmat(self,r):
         """Convert to a rotation matrix and store in r"""
         libamino.aa_tf_yangle2rotmat(self.value, r)
+    def to_axang(self,a):
+        """Convert to an axis-angle and store in a"""
+        libamino.aa_tf_yangle2axang(self.value, a)
 
     def to_eulerzyx(self,e):
         """Convert to an Euler XYZ and store in e"""
         e.x = 0
         e.y = self.value
         e.z = 0
+
+    def __str__(self):
+        return 'YAngle(%f)' % (self.value)
 
 class ZAngle(ctypes.Structure):
     """Class for rotation about the Z axis"""
@@ -176,12 +188,18 @@ class ZAngle(ctypes.Structure):
     def to_rotmat(self,r):
         """Convert to a rotation matrix and store in r"""
         libamino.aa_tf_zangle2rotmat(self.value, r)
+    def to_axang(self,a):
+        """Convert to an axis-angle and store in a"""
+        libamino.aa_tf_zangle2axang(self.value, a)
 
     def to_eulerzyx(self,e):
         """Convert to an Euler XYZ and store in e"""
         e.x = 0
         e.y = 0
         e.z = self.value
+
+    def __str__(self):
+        return 'ZAngle(%f)' % (self.value)
 
 class EulerZYX(ctypes.Structure):
     _fields_ = [ ("z", ctypes.c_double),
@@ -220,6 +238,58 @@ def EulerRPY(v):
             return EulerZYX( [v[2], v[1], v[0]] )
     else:
         return EulerZYX(v)
+
+class AxAng(ctypes.Structure):
+    _fields_ = [ ("axis", Vec3),
+                 ("angle", ctypes.c_double) ]
+    def __init__(self, v):
+        if v is not None:
+            self.conv_from(v)
+
+    def conv_from(self,v):
+        if isinstance(v, list):
+            if( 4 != len(v) ):
+                raise IndexError()
+            libamino.aa_tf_axang_make(v[0], v[1], v[2], v[3], self)
+            # self.axis.x = v[0]
+            # self.axis.y = v[1]
+            # self.axis.z = v[2]
+            # self.angle  = v[3]
+        else:
+            v.to_axang(self)
+
+    def normalize(self):
+        libamino.aa_tf_axang_normalize(self)
+        return self
+
+    def to_quat(self,h):
+        """Convert to a quaternion"""
+        libamino.aa_tf_axang2quat(self,h)
+    def to_rotmat(self,r):
+        """Convert to a rotation matrix and store in r"""
+        libamino.aa_tf_axang2rotmat(self,r)
+    def to_axang(self,a):
+        """Convert to an axis-angle and store in a"""
+        a.axis.copy_from(self.axis)
+        a.angle = self.angle
+
+    def __invert__(self):
+        """Return the inverse"""
+        a = AxAng(None)
+        a.axis = self.axis
+        a.angle = -self.angle
+        return a
+
+    def rotate(self,p):
+        """Rotate a point by self"""
+        q = Vec3(None)
+        libamino.aa_tf_axang_rot(self,Vec3.ensure(p),q)
+        return q
+
+    def __str__(self):
+        axis = self.axis
+        angle = self.angle
+        return 'AxAng(%f, %f, %f, %f)' % (axis.x, axis.y, axis.z, angle)
 
 class Quat(ctypes.Structure,VecMixin):
     """Class for quaternions"""
@@ -278,6 +348,10 @@ class Quat(ctypes.Structure,VecMixin):
         """Convert to a rotation matrix and store in r"""
         libamino.aa_tf_quat2rotmat(self,r)
 
+    def to_axang(self,a):
+        """Convert to an axis-angle and store in a"""
+        libamino.aa_tf_quat2axang(self, a)
+
     def vector(self):
         """Return the vector (xyz) part"""
         return Vec3(self.x,self.y,self.z)
@@ -319,6 +393,10 @@ class Quat(ctypes.Structure,VecMixin):
     def normalize(self):
         """Normalize this object, i.e., divide by the magnitude."""
         libamino.aa_tf_qnormalize(self)
+        return self
+
+    def minimize(self):
+        libamino.aa_tf_qminimize(self)
         return self
 
     def __rmul__(self,other):
@@ -429,11 +507,18 @@ class RotMat(ctypes.Structure):
         libamino.aa_tf_rotmat_rot(self,Vec3.ensure(p),q)
         return q
 
+    @staticmethod
+    def ensure(thing):
+        """Ensure thing is a RotMat.  If it's not, convert it."""
+        if( isinstance(thing,RotMat) ):
+            return thing
+        else:
+            return RotMat(thing)
 
     def __mul__(self,other):
         """Chain two matrices"""
         r = RotMat(None)
-        libamino.aa_tf_rotmat_mul(self,other,r)
+        libamino.aa_tf_rotmat_mul(self,RotMat.ensure(other),r)
         return r
 
     def to_quat(self,h):
@@ -444,6 +529,9 @@ class RotMat(ctypes.Structure):
         r.cx = self.cx
         r.cy = self.cy
         r.cz = self.cz
+    def to_axang(self,a):
+        """Convert to an axis-angle and store in a"""
+        libamino.aa_tf_rotmat2axang(self, a)
 
     def __invert__(self):
         """Return the inverse"""
@@ -451,6 +539,59 @@ class RotMat(ctypes.Structure):
         libamino.aa_tf_rotmat_inv2(self,r)
         return r
 
+    def __getitem__(self, key):
+        i,j = key
+        if j == 0:
+            return self.cx[i]
+        elif j == 1:
+            return self.cy[i]
+        elif j == 2:
+            return self.cz[i]
+        else:
+            raise IndexError(key)
+
+    def __setitem__(self, key, item):
+        i,j = key
+        if j == 0:
+            self.cx[i] = item
+        elif j == 1:
+            self.cy[i] = item
+        elif j == 2:
+            self.cz[i] = item
+        else:
+            raise IndexError(key)
+
+
+
+    @staticmethod
+    def row_matrix(args):
+        m = len(args)
+        A = RotMat(None)
+        if m != 3:
+            raise  IndexError()
+        for i in range(0,m):
+            n = len(args[i])
+            if n != 3:
+                raise  IndexError()
+
+            A.row_vec(i).copy_from(args[i])
+        return A
+
+    def __str__(self):
+        s = "RotMat.row_matrix(["
+        for i in range(0,3):
+            if i == 0:
+                s += "["
+            else:
+                s += ",\n                   ["
+            for j in range(0,3):
+                if j == 0:
+                    s += "%f" % self[i,j]
+                else:
+                    s += ", %f" % self[i,j]
+            s += "]"
+        s += "])"
+        return s
 
 class TfMat(ctypes.Structure):
     """Class for transformation matrices"""
@@ -691,6 +832,10 @@ libamino.aa_tf_xangle2rotmat.argtypes = [ctypes.c_double, ctypes.POINTER(RotMat)
 libamino.aa_tf_yangle2rotmat.argtypes = [ctypes.c_double, ctypes.POINTER(RotMat)]
 libamino.aa_tf_zangle2rotmat.argtypes = [ctypes.c_double, ctypes.POINTER(RotMat)]
 
+libamino.aa_tf_xangle2axang.argtypes = [ctypes.c_double, ctypes.POINTER(AxAng)]
+libamino.aa_tf_yangle2axang.argtypes = [ctypes.c_double, ctypes.POINTER(AxAng)]
+libamino.aa_tf_zangle2axang.argtypes = [ctypes.c_double, ctypes.POINTER(AxAng)]
+
 libamino.aa_tf_eulerzyx2rotmat.argtypes = [ ctypes.c_double, ctypes.c_double, ctypes.c_double,
                                             ctypes.POINTER(RotMat) ]
 
@@ -701,7 +846,11 @@ libamino.aa_tf_eulerzyx2quat.argtypes = [ ctypes.c_double, ctypes.c_double, ctyp
 libamino.aa_tf_quat2rotmat.argtypes = [ctypes.POINTER(Quat), ctypes.POINTER(RotMat)]
 libamino.aa_tf_rotmat2quat.argtypes = [ctypes.POINTER(RotMat), ctypes.POINTER(Quat)]
 
+libamino.aa_tf_axang2quat.argtypes = [ ctypes.POINTER(AxAng), ctypes.POINTER(Quat) ]
+libamino.aa_tf_quat2axang.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(AxAng) ]
 
+libamino.aa_tf_axang2rotmat.argtypes = [ ctypes.POINTER(AxAng), ctypes.POINTER(RotMat) ]
+libamino.aa_tf_rotmat2axang.argtypes = [ ctypes.POINTER(RotMat), ctypes.POINTER(AxAng) ]
 
 libamino.aa_tf_qv2duqu.argtypes = [ ctypes.POINTER(Quat),
                                     ctypes.POINTER(Vec3),
@@ -719,6 +868,14 @@ libamino.aa_tf_duqu_trans.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(
 
 libamino.aa_tf_duqu_trans.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(Vec3) ]
 
+# axang
+libamino.aa_tf_axang_make.argtypes = [ ctypes.c_double, ctypes.c_double,
+                                       ctypes.c_double, ctypes.c_double,
+                                       ctypes.POINTER(AxAng) ]
+
+libamino.aa_tf_axang_normalize.argtypes = [ ctypes.POINTER(AxAng) ]
+
+libamino.aa_tf_axang_rot.argtypes = [ ctypes.POINTER(AxAng), ctypes.POINTER(Vec3), ctypes.POINTER(Vec3)]
 
 # vector functions
 libamino.aa_tf_vssd.argtypes = [ ctypes.POINTER(Vec3), ctypes.POINTER(Vec3)]
@@ -739,6 +896,7 @@ libamino.aa_tf_cross.argtypes = [ ctypes.POINTER(Vec3), ctypes.POINTER(Vec3),
 libamino.aa_tf_qssd.argtypes = [ ctypes.POINTER(Quat), ctypes.POINTER(Quat)]
 libamino.aa_tf_qssd.restype = ctypes.c_double
 
+libamino.aa_tf_qminimize.argtypes = [ ctypes.POINTER(Quat) ]
 
 libamino.aa_tf_qnorm.argtypes = [ ctypes.POINTER(Quat) ]
 libamino.aa_tf_qnorm.restype = ctypes.c_double
