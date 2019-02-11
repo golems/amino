@@ -1,0 +1,88 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+\def\px{1.5}
+\def\py{1.5}
+
+
+%% (transform (tf* (z-angle (degrees 30)) (vec3* 3 2 0)) (vec3* 1.5 1.5 0))
+
+\def\thetab{30}
+\def\xb{3}
+\def\yb{2}
+\def\pxa{3.549}
+\def\pya{4.049}
+
+\def\thetac{-60}
+\def\xc{2.75}
+\def\yc{-2.75}
+
+
+\begin{tikzpicture}[scale=1,font=\Large]
+
+    \xyaxes{a}{3.}{$\unitvec{x}_a$}{$\unitvec{y}_a$}
+
+    \begin{scope}[
+      shift={(\xb,\yb)},
+      rotate=\thetab,
+      ]
+      \xyaxes{b}{3}{$\unitvec{x}_b$}{$\unitvec{y}_b$}
+
+
+      \begin{scope}[
+        shift={(\xc,\yc)},
+        rotate=\thetac,
+        ]
+
+        \xyaxes{c}{3}{$\unitvec{x}_c$}{$\unitvec{y}_c$}
+
+        \node[circle,
+        fill=black,
+        inner sep=0,
+        minimum width=.5em
+        ]
+        at (\px,\py) (p)
+        {};
+        \node[above right of=p,node distance=1em] {$p$};
+        \ndiml{p}{\px,0}{$\mytf{y}{c}{p}$};
+        \ndiml{p}{0,\py}{$\mytf{x}{c}{p}$};
+
+        \draw[<->,fbdann,>=stealth] (1,0) arc  (0:-\thetac:1) ;
+      \end{scope}
+
+      \ndiml{0,\yc}{c}{$\mytf{x}{b}{c}$};
+      \ndiml{\xc,0}{c}{$\mytf{y}{b}{c}$};
+
+      \draw[metallic,dotted]
+      (b) edge ++(0,-3);
+
+      \draw[<->,fbdann,>=stealth] (1,0) arc  (0:-\thetab:1) ;
+
+
+      \draw[dotted] (c) edge ++(1,0) ;
+
+      \node[fbdann,anchor=west] at
+      ($(c)+(-.5,-.75)$)
+      {$\mytf{\theta}{b}{c}$, $\mytf{\unitvec{u}}{b}{c}$};
+
+    \end{scope}
+
+    \draw[dotted] (b) edge ++(2,0) ;
+    \node[fbdann,anchor=west] at ($(b)+(1,.25)$)
+    {$\mytf{\theta}{a}{b}$, $\mytf{\unitvec{u}}{a}{b}$};
+
+    \ndiml{0,\yb}{b}{$\mytf{x}{a}{b}$};
+    \ndiml{\xb,0}{b}{$\mytf{y}{a}{b}$};
+
+
+\end{tikzpicture}
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

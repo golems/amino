@@ -1,5 +1,5 @@
-Rotations {#tutorial_rot}
-=========
+Rotation {#tutorial_rot}
+========
 
 [TOC]
 

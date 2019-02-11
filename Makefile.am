@@ -794,6 +794,11 @@ MANUAL_SVGS = \
 	doc/manual/qplane.svg \
 	doc/manual/rotmat2d.svg \
 	doc/manual/eulerrot.svg \
+	doc/manual/localframe.svg \
+	doc/manual/localpoint.svg \
+	doc/manual/tfpoint.svg \
+	doc/manual/tfchain.svg \
+	doc/manual/robotframe.svg \
 	doc/manual/cplane.svg
 
 doc: doxygen $(MANUAL_SVGS)

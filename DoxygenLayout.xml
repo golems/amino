@@ -11,7 +11,8 @@
 
     <tab type="usergroup" visible="yes" title="Tutorial" url="@ref tutorial">
       <tab type="user" visible="yes" title="Linear Algebra" url="@ref tutorial_la"/>
-      <tab type="user" visible="yes" title="Rotations" url="@ref tutorial_rot"/>
+      <tab type="user" visible="yes" title="Rotation" url="@ref tutorial_rot"/>
+      <tab type="user" visible="yes" title="Transformation" url="@ref tutorial_tf"/>
     </tab>
 
     <tab type="usergroup" visible="yes" title="Documentation">

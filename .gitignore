@@ -202,3 +202,5 @@ python/build
 /doc/md/tutorial/fig/*.log
 /doc/md/tutorial/fig/auto
 /doc/md/tutorial/fig/*.pdf
+/doc/md/tutorial/fig/localframe.fdb_latexmk
+/doc/md/tutorial/fig/localframe.fls

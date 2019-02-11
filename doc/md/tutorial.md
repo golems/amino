@@ -3,4 +3,5 @@ Tutorial {#tutorial}
 
 
 * [Linear Algebra](@ref tutorial_la)
-* [Rotations](@ref tutorial_rot)
+* [Rotation](@ref tutorial_rot)
+* [Transformation](@ref tutorial_tf)

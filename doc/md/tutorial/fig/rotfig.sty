@@ -71,7 +71,14 @@
   },
   fbd:dimex/.style={
     densely dotted,fbdann
-  }
+  },
+  rewrite/.style = {%
+    ->,very thick,color=lightcolor,decorate,%
+    decoration={snake,
+      post=lineto,post length=.5em,
+      pre=lineto,pre length=.5em
+    }
+  },
 }
 
 \newcommand{\unitvec}[1]{\boldsymbol{\hat{#1}}}
@@ -82,3 +89,130 @@
 \newcommand{\normtwo}[1]{\left\vert #1 \right\vert}
 
 \newcommand{\sequangle}{\phi}
+\newcommand{\mytf}[3]{{^{#2}\!}{#1}_{#3}}
+\newcommand{\duqu}[1]{{{#1}}}
+\newcommand{\tf}[3]{\mytf{\duqu{#1}}{#2}{#3}}
+\newcommand{\quatsym}{\quat{h}}
+\newcommand{\qconj}[1]{#1^*}
+
+\newcommand{\ndiml}[3]{%
+  \draw[<->,>=latex,fbdann] (#1) -- node[fill=white] {#3} (#2);
+}
+
+\newcommand{\xyaxes}[4] {%
+  \draw[axis,->,thick] (0,0) -- (#2,0) node[below right] {#3};%
+  \draw[axis,->,thick] (0,0) -- (0,#2) node[above left] {#4};%
+  %\draw[fill=metallic,metallic] (0,0) circle (.25em);
+  \draw[accentcolor] (0,0)  node[below left] {#1};
+
+  \node[fill=accentcolor,
+  accentcolor,
+  draw=accentcolor,
+  circle,
+  inner sep=0,
+  minimum
+  width=.5em] (#1) {};
+
+  %\draw (0,0) circle[metallic] (.25em) node[below left] {#1};
+}
+
+
+
+
+
+
+\newcommand{\nvar}[2]{%
+    \newlength{#1}
+    \setlength{#1}{#2}
+}
+
+\nvar{\dg}{0.3cm}
+\def\dw{0.25}
+\def\dh{0.5}
+\nvar{\ddx}{1.5cm}
+\nvar{\ddth}{1.0cm}
+
+\newcommand{\linkpair}[3][]{%
+  \draw [double distance=1.5mm, very thick,#1]
+  #2 -- #3
+}
+
+\newcommand{\link}{%
+  % \draw [double distance=1.5mm, very thick] (0,0)--
+  \linkpair{(0,0)}{}
+}
+
+
+\newcommand{\xlinkfill}[1]{
+  \draw[fill=white,draw=none]
+  (0,-.75mm) rectangle (#1,.75mm)
+  ;
+}
+
+\newcommand{\xlink}[1]{
+  \draw [very thick]
+  (0,.75mm) edge ++(#1,0)
+  (0,-.75mm) edge ++(#1,0)
+  ;
+}
+
+
+\newcommand{\fbdpin}[2]{%
+  \draw[rounded corners=8pt] (-#1,-#2)-- (-#1, 0) --
+  (0,#2)--(#1,0)--(#1,-#2);
+}
+
+\newcommand{\grip}{%
+  \draw[ultra thick](0cm,\dg)--(0cm,-\dg);
+   \fill (0cm, 0.5\dg)+(0cm,3.0pt) -- +(1\dg,0cm) -- +(0pt,0pt);
+   \fill (0cm, -0.5\dg)+(0cm,0pt) -- +(1\dg,0cm) -- +(0pt,-3pt);
+}
+
+
+\newcommand{\robotbase}{%
+  \fbdpin{\dw}{\dh}
+  \begin{scope}[shift={(0,-\dh)}]
+    \fbdground{1}{.25}
+  \end{scope}
+}
+
+\newcommand{\joint}[1]{%
+  \filldraw [fill=metallic] (0,0) circle (5pt);
+  \fill[black] circle (2pt);
+  %\draw (-45:5pt) edge[thick] ++(5pt,5pt);
+  \node[coordinate] (#1) {};
+}
+
+\newcommand{\fbdground}[2] {%
+  \draw (-#1/2,0)-- (#1/2,0); % line
+  \fill[pattern=north east lines,name=ground] (-#1/2,0) rectangle (#1/2,-#2); % hashes
+}
+
+\newcommand{\robotbasex}{%
+  \begin{scope}[shift={(0,-\dh)}]
+    \fbdground{1}{.25}
+  \end{scope}
+  \link(-90:\dh);
+}
+
+\newcommand{\jointx}[1]{%
+  \draw[fill=black] (-.2em,-.5em) rectangle (.2em,.5em);
+  \draw[fill=white,draw=white] (-.05em,-.5em) rectangle (.05em,.5em);
+  % \draw (0,0)
+  % node[cylinder,
+  % rotate,
+  % draw=black,
+  % thick,
+  % %aspect=0.7,
+  % %anchor=north,
+  % minimum height=1em,minimum width=1em,
+  % shape border rotate=90,
+  % cylinder uses custom fill,
+  % cylinder body fill=blue!30,
+  % cylinder end  fill=blue!10,
+  % %opacity=.4,
+  % %anchor=north
+  % ]
+  %  {};
+   \node[coordinate] (#1) {};
+}

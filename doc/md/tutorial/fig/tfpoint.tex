@@ -1,0 +1,163 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+\def\px{1.5}
+\def\py{1.5}
+
+
+%% (transform (tf* (z-angle (degrees 30)) (vec3* 3 2 0)) (vec3* 1.5 1.5 0))
+
+\def\thetab{30}
+\def\xb{3}
+\def\yb{2}
+\def\pxa{3.549}
+\def\pya{4.049}
+
+\def\thetac{-60}
+\def\xc{2.75}
+\def\yc{-2.75}
+
+
+\begin{tikzpicture}[scale=1,font=\Large]
+
+
+    \begin{scope}
+      \xyaxes{a,b}{2}
+      {$\unitvec{x}_a$,$\unitvec{x}_b$}
+      {$\unitvec{y}_a$,$\unitvec{y}_b$}
+
+
+      \node[circle,
+      fill=black,
+      inner sep=0,
+      minimum width=.5em
+      ]
+      at (\px,\py) (p)
+      {};
+      \node[above of=p,node distance=1em] {$p$};
+    \end{scope}
+
+    \begin{scope}[xshift=16em]
+      \xyaxes{a,b}{2}
+      {$\unitvec{x}_a$}
+      {$\unitvec{y}_a$}
+
+      \node[circle,
+      fill=black,
+      opacity=.25,
+      inner sep=0,
+      minimum width=.5em
+      ]
+      at (\px,\py) (p0)
+      {};
+
+      \begin{scope}[rotate=\thetab]
+
+        \node[circle,
+        fill=black,
+        inner sep=0,
+        minimum width=.5em
+        ]
+        at (\px,\py) (p)
+        {};
+        \node[above of=p,node distance=1em] {$p$};
+
+        \xyaxes{}{2}
+        {$\unitvec{x}_b$}
+        {$\unitvec{y}_b$}
+      \end{scope}
+
+      %\draw[->,fbdann,>=stealth] (p0) edge[bend right=\thetab]  (p);
+      %\draw[->,fbdann,>=stealth] (\px,\py) arc arc (120:150:2);
+
+      \draw[->,fbdann,>=stealth,ultra thick] (\px,\py) arc  (30:90:1*1.061) ;
+      \node[fbdann] at ($(\px,\py)+(-0em,1.5em)$) {$\tf{\quatsym}{a}{b}$};
+    \end{scope}
+
+
+    \draw
+    (2.5,1) edge[rewrite]
+    node[above] {$\tf{\quatsym}{a}{b} (\mytf{p}{b}{}) \qconj{\tf{\quatsym}{a}{b}}$}
+    node[below] {rotate}
+    ($(16em,1)-(3em,0)$);
+
+
+
+    \begin{scope}[xshift=32em]
+      \xyaxes{a}{2}
+      {$\unitvec{x}_a$}
+      {$\unitvec{y}_a$}
+
+      \node[circle,
+      fill=black,
+      opacity=.25,
+      inner sep=0,
+      minimum width=.5em
+      ]
+      at (\px,\py) (p0)
+      {};
+
+      \begin{scope}[
+        rotate=\thetab,
+        ]
+        \node[circle,
+        fill=black,
+        opacity=.25,
+        inner sep=0,
+        minimum width=.5em
+        ]
+        at (\px,\py) (p1)
+        {};
+      \end{scope}
+
+      \begin{scope}[
+        shift={(\xb,\yb)},
+        rotate=\thetab,
+        ]
+
+        \node[circle,
+        fill=black,
+        inner sep=0,
+        minimum width=.5em
+        ]
+        at (\px,\py) (p)
+        {};
+        \node[above of=p,node distance=1em] {$p$};
+
+        \xyaxes{}{2}
+        {$\unitvec{x}_b$}
+        {$\unitvec{y}_b$}
+      \end{scope}
+
+      %\draw[->,fbdann,>=stealth] (p0) edge[bend right=\thetab]  (p);
+      %\draw[->,fbdann,>=stealth] (\px,\py) arc arc (120:150:2);
+
+      \draw[->,fbdann,>=stealth,ultra thick,accentcolor] (\px,\py) arc  (30:90:1*1.061) ;
+
+      \draw[->,fbdann,>=stealth,ultra thick]
+      (p1)
+      -- node[above] {$\mytf{x}{a}{b}$}
+      ++(\xb,0)
+      -- node[right] {$\mytf{y}{a}{b}$}
+      ++(0,\yb)
+      ;
+
+    \end{scope}
+    \draw
+    ($(16em,0)+(2.5,1)$) edge[rewrite]
+    node[above] {$\tf{\quatsym}{a}{b} (\mytf{p}{b}{}) \qconj{\tf{\quatsym}{a}{b}} +
+      \mytf{v}{a}{b}$}
+    node[below] {translate}
+    ($(32em,1)-(3em,0)$);
+
+\end{tikzpicture}
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

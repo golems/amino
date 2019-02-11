@@ -789,16 +789,8 @@ INPUT                  = @top_srcdir@/include \
                          lapack_doc.c \
                          la_doc.c \
                          doc/md/copying.md \
-                         @top_srcdir@/doc/md/download.md \
-                         @top_srcdir@/doc/md/acknowledgments.md \
-                         @top_srcdir@/doc/md/faq.md \
-                         @top_srcdir@/doc/md/gui.md \
-                         @top_srcdir@/doc/md/Installation.md \
-                         @top_srcdir@/doc/md/scenecompiler.md \
-                         @top_srcdir@/doc/md/scenefile.md \
-                         @top_srcdir@/doc/md/tutorial.md \
-                         @top_srcdir@/doc/md/tutorial/la.md \
-                         @top_srcdir@/doc/md/tutorial/rot.md \
+                         @top_srcdir@/doc/md/ \
+                         @top_srcdir@/doc/md/tutorial/ \
                          lisp-amino.md \
                          lisp-rx.md \
                          aminopy.md \
