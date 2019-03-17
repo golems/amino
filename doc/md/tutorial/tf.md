@@ -14,6 +14,10 @@ Transformation {#tutorial_tf}
 \newcommand{\qmul}[0]{\otimes}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
 \newcommand{\mytf}[3]{{^{#2}\!}{#1}_{#3}}
+\newcommand{\pttf}[2]{{^{#2}\!}{#1}}
+\newcommand{\qconj}[1]{{#1}^*}
+\newcommand\overcmt[2]{\overbrace{{#1}}^{#2}}
+\newcommand\undercmt[2]{\underbrace{{#1}}_{#2}}
 \f]
 
 Euclidean Transformation {#tutorial_tf_euclidean}
@@ -54,12 +58,81 @@ example, we can represent point p below in either frame a or frame b:
 Transforming a Point
 --------------------
 
+To transform a point from frame b to frame a, we first rotate the
+point and then add the translation.
+
+\f[
+      \mytf{p}{a}{} =
+        (\mytf{\quat{h}}{a}{b}) \qmul (\mytf{p}{b}{}) \qmul
+        {(\mytf{\quat{h}}{a}{b})}^*
+      \
+      +
+        \mytf{v}{a}{b}
+\f]
+
 ![Transforming a Point](tfpoint.svg)
+
 
 Chaining Transforms
 -------------------
 
+We can chain the transforms from a to b and from b to c, giving a
+single transform from a to consider.  Consider transforming a point in
+c first to b and then to a.
+
 ![Transforming a Point](tfchain.svg)
+
+\f[
+\mytf{p}{a}{}
+      =
+      \left( \mytf{\quat{h}}{a}{b}\right)
+      \qmul
+      \overcmt{
+      \left(
+        \left( \mytf{\quat{h}}{b}{c}) \qmul (\mytf{p}{c}{} \right)
+        \qmul
+        \qconj{\left(\mytf{\quat{h}}{b}{c}\right)}
+        +
+        \mytf{v}{b}{c}
+      \right)
+      }{\mytf{p}{b}{}}
+      \qmul
+      \qconj{\left(\mytf{\quat{h}}{a}{b}\right)}
+      +
+      \mytf{v}{a}{b}
+\f]
+
+\f[
+      \pttf{p}{a}
+      =
+      \undercmt{
+        \left(\mytf{\quat{h}}{a}{b}\right)
+        \qmul
+        \left( \mytf{\quat{h}}{b}{c}\right)
+      }{\mytf{\quat{h}}{a}{c}}
+      \qmul
+      \left(\mytf{p}{c}{} \right)
+      \qmul
+      \qconj{
+        \undercmt{
+          \left(\mytf{\quat{h}}{a}{b}
+            \qmul
+            \mytf{\quat{h}}{b}{c}\right)
+        }{\mytf{\quat{h}}{a}{c}}
+      }
+      +
+      \undercmt{
+        \left(\mytf{\quat{h}}{a}{b}\right)
+        \qmul
+        \mytf{v}{b}{c}
+        \qmul
+        \qconj{\left(\mytf{\quat{h}}{a}{b}\right)}
+        +
+        \mytf{v}{a}{b}
+      }{
+        \mytf{v}{a}{c}
+      }
+\f]
 
 Dual Number Quaternions {#tutorial_tf_duqu}
 =======================
