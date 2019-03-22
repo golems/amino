@@ -18,6 +18,9 @@ Transformation {#tutorial_tf}
 \newcommand{\qconj}[1]{{#1}^*}
 \newcommand\overcmt[2]{\overbrace{{#1}}^{#2}}
 \newcommand\undercmt[2]{\underbrace{{#1}}_{#2}}
+\newcommand{\dualmark}[1]{\tilde{#1}}
+\newcommand{\dualelt}[0]{\epsilon}
+\require{cancel}
 \f]
 
 Euclidean Transformation {#tutorial_tf_euclidean}
@@ -136,6 +139,60 @@ c first to b and then to a.
 
 Dual Number Quaternions {#tutorial_tf_duqu}
 =======================
+
+Dual quaternions are an extension of the ordinary quaternions that is
+capable of representing both rotation and translation.  A dual
+quaternion is a quaternion of **dual numbers**.  Dual numbers are
+constructed using the dual element ε, where:
+
+\f[
+    \dualelt^2 = 0
+    \quad{\rm and}\quad
+    \dualelt \neq 0
+\f]
+
+A dual numbers thus has two coefficients, a real part and a dual part:
+
+\f[
+    \dualmark{n} = r + d \dualelt
+\f]
+
+Multiplication of dual numbers cancels the product of the dual parts:
+
+\f[
+    (a_r + a_d \dualelt) * (b_r + b_d \dualelt)
+    \quad = \quad
+    a_r b_r + a_r b_d \dualelt + b_r a_d \dualelt + \cancelto{0}{a_d b_d \dualelt^2}
+    \quad = \quad
+    a_r b_r + (a_r b_d + b_r a_d) \dualelt
+\f]
+
+A dual number quaternion combines the quaternion units and the dual
+element:
+
+
+![Dual Quaternion Coefficients](duqu.svg)
+
+<!-- Dual numbers yield interesting properties.  In particular, the Taylor -->
+<!-- series for any dual number, evaluated at the real part, consists of -->
+<!-- only two terms; all higher order terms contain and \f$\dualelt^2\f$ -->
+<!-- and cancel to zero.  Consequently, we can evaluate any dual function, -->
+<!-- such as sine, cosine, exponential, and logarithm, in terms of the real -->
+<!-- function and its derivative. -->
+
+<!-- \f[ -->
+<!-- f(a + b \dualelt) -->
+<!-- \quad=\quad -->
+<!-- f(a) -->
+<!-- + \frac{f'(a)}{1!}(b\dualelt) -->
+<!-- + \cancelto{0}{\frac{f''(a)}{2!}(b\dualelt)^2} -->
+<!-- + \cancelto{0}{\frac{f'''(a)}{3!}b\dualelt)^3} -->
+<!-- + \cancelto{0}{\ldots} -->
+<!-- \quad=\quad -->
+<!-- f(a) + f'(a)b\dualelt -->
+<!-- \f] -->
+
+
 
 Transformation Matrices {#tutorial_tf_mat}
 =======================

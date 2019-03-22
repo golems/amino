@@ -788,6 +788,7 @@ doxygen: doc/md/copying.md doc/md/mainpage.md lisp-rx.md lisp-amino.md
 doc/manual: doxygen
 
 MANUAL_SVGS = \
+	doc/manual/duqu.svg \
 	doc/manual/planerot.svg \
 	doc/manual/spacerot.svg \
 	doc/manual/axang.svg \
