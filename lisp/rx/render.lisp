@@ -12,7 +12,8 @@
     (when (and options
                ;; Don't clobber mesh texture
                ;; TODO: there's probably a better way to do this
-               (not (scene-mesh-p shape)))
+               (or (not (scene-mesh-p shape))
+                   (draw-option options :override-texture)))
       (push (pov-alist-texture options)
             modifiers))
     (when (draw-option options :no-shadow)

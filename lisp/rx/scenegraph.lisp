@@ -77,6 +77,7 @@
     (:visual . t)
     (:collision . t)
     (:scale . 1)
+    (:override-texture . nil)
     (:type . nil))
   "Association list of default drawing options for geometry.")
 
@@ -108,6 +109,7 @@
                                (reflection nil reflection-supplied)
                                (ambient nil ambient-supplied)
                                (crand nil crand-supplied)
+                               (override-texture nil override-texture-supplied)
                                ;; collision vs. visual
                                (visual nil visual-supplied)
                                (type nil type-supplied)
@@ -126,6 +128,7 @@
   (push-option :reflection reflection reflection-supplied options)
   (push-option :ambient ambient ambient-supplied options)
   (push-option :crand crand crand-supplied options)
+  (push-option :override-texture override-texture override-texture-supplied options)
 
   (push-option :visual visual visual-supplied options)
   (push-option :collision collision collision-supplied options)
@@ -141,6 +144,9 @@
 
 Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
   (append new-options base-options))
+
+(defmacro push-draw-option (name value place)
+  `(push (cons ,name ,value) ,place))
 
 (defstruct scene-geometry
   "Container for geometry attached to scene frames."
