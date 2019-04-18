@@ -175,10 +175,10 @@
   (obj :pointer))
 
 (defun win-run (&key synchronous)
-  (if synchronous
-      (sb-int:with-float-traps-masked (:divide-by-zero :overflow  :invalid :inexact)
-        (aa-rx-win-run))
-      (aa-rx-win-run-async)))
+  (sb-int:with-float-traps-masked (:divide-by-zero :overflow :underflow :invalid :inexact)
+    (if synchronous
+        (aa-rx-win-run)
+        (aa-rx-win-run-async))))
 
 (defun win-destroy (&optional (window (window)))
   (assert window)
