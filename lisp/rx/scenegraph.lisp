@@ -180,6 +180,13 @@ Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
                        :collision (draw-option options :collision)
                        :visual (draw-option options :visual)))
 
+(defun modify-scene-geometry (geom options)
+  (%rx-scene-geometry (aa-rx-geom-modify-opt (scene-geometry-c-geom geom)
+                                             (alist-rx-geom-opt options))
+                      options))
+
+
+
 (defun scene-geometry-box (options dimension)
   "Create geometry for a box.
 
@@ -839,6 +846,7 @@ Throws an error if scene graph is invalid."
   (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
 (defun prefix-scene-graph (prefix scene-graph &key
+                                                draw-options
                                                 root
                                                 tf
                                                 (prefix-parents t))
@@ -863,6 +871,25 @@ Throws an error if scene graph is invalid."
         (when (scene-frame-joint-p frame)
           (setf (scene-frame-joint-configuration-name frame)
                 (rope prefix (scene-frame-joint-configuration-name frame))))
+        ;; draw-options
+        (when draw-options
+          ;(print (scene-frame-geometry frame))
+          (print (map 'list
+                      (lambda (g)
+                        (modify-scene-geometry
+                         g
+                         (merge-draw-options draw-options
+                                             (scene-geometry-options g))))
+                      (scene-frame-geometry frame)))
+          (setf (scene-frame-geometry frame)
+                (map 'list
+                     (lambda (g)
+                       (modify-scene-geometry
+                        g
+                        (merge-draw-options draw-options
+                                            (scene-geometry-options g))))
+                     (scene-frame-geometry frame)))
+          )
         (push frame frames)))))
 
 (defun scene-graph-joints (scene-graph)

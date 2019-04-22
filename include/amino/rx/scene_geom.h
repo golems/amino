@@ -208,6 +208,12 @@ AA_API struct aa_rx_geom *
 aa_rx_geom_copy( struct aa_rx_geom *src );
 
 /**
+ * Copy and modify options of a geometry struct
+ */
+AA_API struct aa_rx_geom *
+aa_rx_geom_modify_opt( struct aa_rx_geom *src, struct aa_rx_geom_opt *opt );
+
+/**
  * Destroy a geometry struct
  */
 AA_API void

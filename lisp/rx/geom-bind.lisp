@@ -166,6 +166,10 @@
 (cffi:defcfun aa-rx-geom-copy :pointer
   (value rx-geom-t))
 
+(cffi:defcfun aa-rx-geom-modify-opt rx-geom-t
+  (value rx-geom-t)
+  (opt rx-geom-opt-t))
+
 (cffi:defcfun aa-rx-geom-box rx-geom-t
   (opt rx-geom-opt-t)
   (dimension amino::vector-3-t))
