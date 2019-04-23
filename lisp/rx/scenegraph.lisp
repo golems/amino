@@ -77,6 +77,7 @@
     (:visual . t)
     (:collision . t)
     (:scale . 1)
+    (:override-texture . nil)
     (:type . nil))
   "Association list of default drawing options for geometry.")
 
@@ -108,6 +109,7 @@
                                (reflection nil reflection-supplied)
                                (ambient nil ambient-supplied)
                                (crand nil crand-supplied)
+                               (override-texture nil override-texture-supplied)
                                ;; collision vs. visual
                                (visual nil visual-supplied)
                                (type nil type-supplied)
@@ -126,6 +128,7 @@
   (push-option :reflection reflection reflection-supplied options)
   (push-option :ambient ambient ambient-supplied options)
   (push-option :crand crand crand-supplied options)
+  (push-option :override-texture override-texture override-texture-supplied options)
 
   (push-option :visual visual visual-supplied options)
   (push-option :collision collision collision-supplied options)
@@ -141,6 +144,9 @@
 
 Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
   (append new-options base-options))
+
+(defmacro push-draw-option (name value place)
+  `(push (cons ,name ,value) ,place))
 
 (defstruct scene-geometry
   "Container for geometry attached to scene frames."
@@ -173,6 +179,13 @@ Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
                                  (rope (tree-set #'rope-compare-fast type))))
                        :collision (draw-option options :collision)
                        :visual (draw-option options :visual)))
+
+(defun modify-scene-geometry (geom options)
+  (%rx-scene-geometry (aa-rx-geom-modify-opt (scene-geometry-c-geom geom)
+                                             (alist-rx-geom-opt options))
+                      options))
+
+
 
 (defun scene-geometry-box (options dimension)
   "Create geometry for a box.
@@ -833,6 +846,7 @@ Throws an error if scene graph is invalid."
   (fold-tree-set function initial-value (scene-graph-frames scene-graph)))
 
 (defun prefix-scene-graph (prefix scene-graph &key
+                                                draw-options
                                                 root
                                                 tf
                                                 (prefix-parents t))
@@ -857,6 +871,25 @@ Throws an error if scene graph is invalid."
         (when (scene-frame-joint-p frame)
           (setf (scene-frame-joint-configuration-name frame)
                 (rope prefix (scene-frame-joint-configuration-name frame))))
+        ;; draw-options
+        (when draw-options
+          ;(print (scene-frame-geometry frame))
+          (print (map 'list
+                      (lambda (g)
+                        (modify-scene-geometry
+                         g
+                         (merge-draw-options draw-options
+                                             (scene-geometry-options g))))
+                      (scene-frame-geometry frame)))
+          (setf (scene-frame-geometry frame)
+                (map 'list
+                     (lambda (g)
+                       (modify-scene-geometry
+                        g
+                        (merge-draw-options draw-options
+                                            (scene-geometry-options g))))
+                     (scene-frame-geometry frame)))
+          )
         (push frame frames)))))
 
 (defun scene-graph-joints (scene-graph)

@@ -104,6 +104,7 @@
       )))
 
 (defun scene-graph-resolve-mesh! (scene-graph &key
+                                                override-texture
                                                 reload
                                                 (mesh-up-axis "Z")
                                                 (mesh-forward-axis "Y"))
@@ -135,12 +136,16 @@
         (when (scene-mesh-p shape)
           (let ((data  (gethash (scene-mesh-source-file shape) mesh-hash)))
             (setf (scene-mesh-data shape) data
-                  (scene-mesh-name shape) (mesh-data-name data)))))))
+                  (scene-mesh-name shape) (mesh-data-name data)))
+          (when override-texture
+            (push-draw-option :override-texture t
+                              (scene-geometry-options geometry)))))))
   scene-graph)
 
 (defun scene-graph-resolve! (scene-graph &key
                                            filename
                                            reload
+                                           override-texture
                                            (emit-povray t)
                                            (bind-c-geom t)
                                            (compile t)
@@ -149,6 +154,7 @@
   (let ((scene-graph (scene-graph scene-graph)))
     ;; Resolve Meshes
     (scene-graph-resolve-mesh! scene-graph
+                               :override-texture override-texture
                                :reload reload
                                :mesh-up-axis mesh-up-axis
                                :mesh-forward-axis mesh-forward-axis)
@@ -168,6 +174,7 @@
                         &key
                           type
                           reload
+                          override-texture
                           (bind-c-geom t)
                           (emit-povray t)
                           (compile t)
@@ -190,6 +197,7 @@
             )))
     (scene-graph-resolve! scene-graph
                           :filename truename
+                          :override-texture override-texture
                           :reload reload
                           :bind-c-geom bind-c-geom
                           :emit-povray emit-povray

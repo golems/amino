@@ -179,6 +179,66 @@ aa_rx_geom_copy( struct aa_rx_geom *src )
     return src;
 }
 
+struct aa_rx_geom *
+aa_rx_geom_modify_opt( struct aa_rx_geom *src, struct aa_rx_geom_opt *opt )
+{
+    struct aa_rx_geom *result = NULL;
+
+    enum aa_rx_geom_shape shape_type;
+    void *vshape = aa_rx_geom_shape(src,&shape_type);
+
+    switch(src->type) {
+    case AA_RX_NOSHAPE:
+        fprintf(stderr, "Error, geom has no shape type\n");
+        break;
+    case AA_RX_MESH: {
+        struct aa_rx_mesh *shape = (struct aa_rx_mesh *)vshape;
+        result = aa_rx_geom_mesh( opt, shape );
+    }
+        break;
+    case AA_RX_BOX: {
+        struct aa_rx_shape_box *shape = (struct aa_rx_shape_box *)vshape;
+        result = aa_rx_geom_box( opt, shape->dimension );
+    }
+        break;
+    case AA_RX_SPHERE: {
+        struct aa_rx_shape_sphere *shape = (struct aa_rx_shape_sphere *)vshape;
+        result = aa_rx_geom_sphere( opt, shape->radius );
+    }
+        break;
+    case AA_RX_CYLINDER: {
+        struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)vshape;
+        result = aa_rx_geom_cylinder( opt, shape->height, shape->radius );
+    }
+        break;
+    case AA_RX_CONE: {
+        struct aa_rx_shape_cone *shape = (struct aa_rx_shape_cone *)vshape;
+        result = aa_rx_geom_cone( opt, shape->height,
+                                  shape->start_radius, shape->end_radius );
+    }
+        break;
+    case AA_RX_GRID: {
+        struct aa_rx_shape_grid *shape = (struct aa_rx_shape_grid *)vshape;
+        result = aa_rx_geom_grid( opt, shape->dimension,
+                                  shape->delta, shape->width );
+    }
+        break;
+    case AA_RX_TORUS: {
+        struct aa_rx_shape_torus *shape = (struct aa_rx_shape_torus *)vshape;
+        result = aa_rx_geom_torus( opt, shape->angle,
+                                   shape->major_radius, shape->minor_radius );
+    }
+        break;
+    }
+
+    if( NULL == result ) {
+        fprintf(stderr, "Error, unhandled shape type\n");
+        abort();
+    }
+
+    return result;
+}
+
 void
 aa_rx_geom_destroy( struct aa_rx_geom *geom )
 {
