@@ -96,6 +96,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/rx.h              \
 	include/amino/mat.h             \
 	include/amino/mat.hpp           \
+	include/amino/diffeq.h          \
 	include/amino/tf.hpp            \
 	include/amino/debug.h           \
 	include/amino/test.h            \
@@ -196,6 +197,7 @@ libamino_la_SOURCES =                  \
 	src/tf.c                       \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
+	src/diffeq.c                   \
 	src/tf/conv.c                  \
 	src/mac/euler_f2c.c            \
 	src/rx/errstr.c                \

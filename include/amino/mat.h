@@ -216,6 +216,15 @@ AA_DMAT_INIT( size_t rows, size_t cols, double *data, size_t ld )
 AA_API struct aa_dvec *
 aa_dvec_alloc( struct aa_mem_region *reg, size_t len );
 
+
+/**
+ * Duplicate vector out of region
+ *
+ * When finished, pop the descriptor.
+ */
+AA_API struct aa_dvec *
+aa_dvec_dup( struct aa_mem_region *reg, const struct aa_dvec *src);
+
 /**
  * Region-allocate a matrix.
  *

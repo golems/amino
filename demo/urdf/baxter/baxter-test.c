@@ -43,6 +43,7 @@
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_wk.h"
+#include "amino/diffeq.h"
 
 
 
@@ -58,7 +59,40 @@ struct display_cx {
 };
 
 
+struct vec_field_fk_cx {
+    const struct aa_rx_sg_sub *ssg;
+    struct aa_dvec *q_all;
+};
+
+void de_vec_field_fk( void *vcx, const struct aa_dvec *q_sub,
+                      struct aa_dvec *S_ee )
+{
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+
+
+    struct vec_field_fk_cx *cx = (struct vec_field_fk_cx*) vcx;
+    const struct aa_rx_sg *scenegraph = aa_rx_sg_sub_sg(cx->ssg);
+    struct aa_dvec *q_all = aa_dvec_dup(reg, cx->q_all);
+
+    aa_rx_sg_config_set( scenegraph, q_all->len, q_sub->len,
+                         aa_rx_sg_sub_configs(cx->ssg),
+                         q_sub->data, q_all->data );
+
+    struct aa_dmat *TF_abs = aa_rx_sg_get_tf_abs(scenegraph, reg, q_all );
+
+    double *E_act =  TF_abs->data + TF_abs->ld*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
+    double S[8]; aa_tf_qutr2duqu(E_act,S);
+    struct aa_dvec Sv = AA_DVEC_INIT(8,S,1);
+    aa_lb_dcopy(&Sv, S_ee);
+
+    aa_mem_region_pop(reg,ptrtop);
+}
+
 int check( const struct aa_rx_sg_sub *ssg,
+           struct aa_dvec *q_all,
+           struct aa_dvec *q_sub,
            struct aa_dmat *TF_abs,
            struct aa_dvec *dx_r,
            struct aa_dvec *dq_u )
@@ -67,18 +101,17 @@ int check( const struct aa_rx_sg_sub *ssg,
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
 
+    /* Check computed command velocity */
     struct aa_dmat *J = aa_rx_sg_sub_get_jacobian( ssg, reg, TF_abs );
     size_t m = J->rows, n = J->cols;
     struct aa_dvec *dx_check = aa_dvec_alloc(reg, m);
-
     aa_lb_dgemv( CblasNoTrans, 1, J, dq_u, 0, dx_check );
     printf("ssd(dx): %f\n", aa_dvec_ssd( dx_r, dx_check ) );
 
-
+    /* Check duqu derivative Jacobian */
     double *E_act =  TF_abs->data + TF_abs->ld*(size_t)aa_rx_sg_sub_frame_ee(ssg);
     double S[8]; aa_tf_qutr2duqu(E_act,S);
     struct aa_dmat *JS = aa_dmat_alloc(reg,8,n);
-    /* jacobian_duqu( S, J, JS ); */
     aa_tf_duqu_jacobian_vel2diff(S, J, JS);
 
     struct aa_dvec *dSx = aa_dvec_alloc(reg,8);
@@ -86,6 +119,14 @@ int check( const struct aa_rx_sg_sub *ssg,
     aa_tf_duqu_vel2diff(S, dx_check->data, dSx->data);
     aa_lb_dgemv( CblasNoTrans, 1, JS, dq_u, 0, dSJ );
     printf("ssd(dS): %f\n", aa_dvec_ssd( dSx, dSJ ) );
+
+    /* Check finite difference Jacobian */
+    struct vec_field_fk_cx fkcx;
+    fkcx.ssg = ssg;
+    fkcx.q_all = q_all;
+    struct aa_dmat *JSfd = aa_dmat_alloc(reg,8,n);
+    aa_de_jac_fd(de_vec_field_fk, &fkcx, q_sub, 1e-6, JSfd);
+    printf("ssd(JS / FD): %f\n", aa_dmat_ssd( JS, JSfd ) );
 
     aa_mem_region_pop(reg,ptrtop);
     return 0;
@@ -194,7 +235,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
         //aa_tock();
     }
 
-    check( cx->ssg, TF_abs, dx_r, dq_subset );
+    check( cx->ssg, &qv, q_subset, TF_abs, dx_r, dq_subset );
 
     // integrate
     aa_lb_dcopy(dq_subset, cx->dq_subset);
