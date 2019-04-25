@@ -138,6 +138,15 @@ AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t ld );
 
 /**
+ * View a block of a matrix.
+ */
+AA_API void
+aa_dmat_view_block( struct aa_dmat *dst,
+                    const struct aa_dmat *src,
+                    size_t row_start, size_t col_start,
+                    size_t rows, size_t cols );
+
+/**
  * View a slice of a vector.
  */
 AA_API void
@@ -244,6 +253,16 @@ aa_dvec_zero( struct aa_dvec *vec );
  */
 AA_API void
 aa_dvec_set( struct aa_dvec *vec, double alpha );
+
+/**
+ * Fill a matrix diagonal and off-diagonal elements.
+ *
+ * @param[in] A        The matrix to fill
+ * @param[in] alpha    off-diagonal entries of A
+ * @param[in] beta     diagonal entries of A
+ */
+AA_API void
+aa_dmat_set( struct aa_dmat *A, double alpha, double beta );
 
 /**
  * Zero a matrix.

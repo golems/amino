@@ -609,3 +609,46 @@ void aa_tf_proj_orth( const double a[AA_RESTRICT 3],
 /*     aa_tf_qminimize(qrel); */
 /*     return  aa_tf_qangle(qrel); */
 /* } */
+
+
+
+static void aa_tf_cross_matrix_l( const double v[3], double *M, size_t ld )
+{
+    AA_MATREF(M, ld, 0, 0) =   0;
+    AA_MATREF(M, ld, 1, 0) =   v[2];
+    AA_MATREF(M, ld, 2, 0) =  -v[1];
+
+    AA_MATREF(M, ld, 0, 1) =  -v[2];
+    AA_MATREF(M, ld, 1, 1) =   0;
+    AA_MATREF(M, ld, 2, 1) =   v[0];
+
+    AA_MATREF(M, ld, 0, 2) =   v[1];
+    AA_MATREF(M, ld, 1, 2) =  -v[0];
+    AA_MATREF(M, ld, 2, 2) =   0;
+}
+
+static void aa_tf_cross_matrix_r( const double v[3], double *M, size_t ld ){
+
+    AA_MATREF(M, ld, 0, 0) =   0;
+    AA_MATREF(M, ld, 1, 0) =  -v[2];
+    AA_MATREF(M, ld, 2, 0) =   v[1];
+
+    AA_MATREF(M, ld, 0, 1) =   v[2];
+    AA_MATREF(M, ld, 1, 1) =   0;
+    AA_MATREF(M, ld, 2, 1) =  -v[0];
+
+    AA_MATREF(M, ld, 0, 2) =  -v[1];
+    AA_MATREF(M, ld, 1, 2) =   v[0];
+    AA_MATREF(M, ld, 2, 2) =   0;
+}
+
+
+AA_API void aa_tf_cross_mat_l( const double v[3], struct aa_dmat *M )
+{
+    aa_tf_cross_matrix_l(v, M->data, M->ld);
+}
+
+AA_API void aa_tf_cross_mat_r( const double v[3], struct aa_dmat *M )
+{
+    aa_tf_cross_matrix_r(v, M->data, M->ld);
+}

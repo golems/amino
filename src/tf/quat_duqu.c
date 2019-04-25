@@ -3,6 +3,7 @@
 /*
  * Copyright (c) 2014, Georgia Tech Research Corporation
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -66,6 +67,17 @@ aa_tf_duqu_matrix_r( const double S[AA_RESTRICT 8], double *AA_RESTRICT M, size_
     FOR_QUAT(i) AA_MEM_CPY( &AA_MATREF(M,ldm,d,d+i), &AA_MATREF(M,ldm,r,r+i), 4);
 }
 
+AA_API void aa_tf_duqu_mat_l( const double *q, struct aa_dmat *M )
+{
+    aa_tf_duqu_matrix_l( q, M->data, M->ld );
+}
+
+AA_API void aa_tf_duqu_mat_r( const double *q, struct aa_dmat *M )
+{
+    aa_tf_duqu_matrix_r( q, M->data, M->ld );
+}
+
+
 AA_API void
 aa_tf_duqu_mul( const double _a[AA_RESTRICT 8], const double _b[AA_RESTRICT 8],
                 double _c[AA_RESTRICT 8] )
@@ -80,6 +92,15 @@ aa_tf_duqu_mul( const double _a[AA_RESTRICT 8], const double _b[AA_RESTRICT 8],
     aa_tf_qmul(A->real.data, B->real.data, C->real.data);
     aa_tf_qmul(A->real.data, B->dual.data, C->dual.data);
     aa_tf_qmul_a(A->dual.data, B->real.data, C->dual.data);
+}
+
+
+AA_API void aa_tf_duqu_smul( double alpha, const double x[AA_RESTRICT 8],
+                             double y[AA_RESTRICT 8] )
+{
+    for(size_t i = 0; i < 8; i ++ ) {
+        y[i] = x[i] * alpha;
+    }
 }
 
 AA_API void aa_tf_duqu_add( const double a[AA_RESTRICT 8], const double b[AA_RESTRICT 8],
@@ -403,6 +424,69 @@ AA_API void aa_tf_xyz2duqu (
 
 }
 
+AA_API void
+aa_tf_duqu_jacobian_vel2diff(const double S[8], const struct aa_dmat *Jvel,
+                             struct aa_dmat *Js )
+{
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+    // SR := 0.5 * [S]^R
+    struct aa_dmat *SR = aa_dmat_alloc(reg,8,8);
+    double Sh[8]; aa_tf_duqu_smul(0.5,S,Sh);
+    aa_tf_duqu_mat_r(Sh, SR);
+
+    struct aa_dmat *VM = aa_dmat_alloc(reg,8,8);
+    struct aa_dmat Vb;
+    aa_dmat_zero(VM);
+    {
+        aa_dmat_view_block(&Vb, VM,
+                           AA_TF_DUQU_DUAL_XYZ, AA_TF_DUQU_REAL_XYZ,
+                           3, 3 );
+        double v[3]; aa_tf_duqu_trans(S,v);
+        aa_tf_cross_mat_l(v, &Vb);
+    }
+
+    // SR := SR * VM, VM is unit lower triangular
+    // TODO: save a few multiplies by manually handling upper/lower blocks
+    cblas_dtrmm( CblasColMajor, CblasRight, CblasLower, CblasNoTrans, CblasUnit,
+                 8, 8, 1,
+                 VM->data, 8,
+                 SR->data, 8 );
+    aa_mem_region_pop(reg,VM);
+
+
+    // Expand velocity Jacobian with zeros for scalar (w) rows
+    size_t n = Jvel->cols;
+    struct aa_dmat *JE = aa_dmat_alloc(reg,8,n);
+    {
+        // copy vector rows
+        struct aa_dmat Jm, JEm;
+        aa_dmat_view_block( &Jm, Jvel, AA_TF_DX_W, 0, 3, n );
+        aa_dmat_view_block( &JEm, JE, AA_TF_DUQU_REAL_XYZ, 0, 3, n );
+        aa_dmat_copy(&Jm, &JEm);
+
+        aa_dmat_view_block( &Jm, Jvel, AA_TF_DX_V, 0, 3, n );
+        aa_dmat_view_block( &JEm, JE, AA_TF_DUQU_DUAL_XYZ, 0, 3, n );
+        aa_dmat_copy(&Jm, &JEm);
+    }
+
+    {
+        // zero vector rows
+        struct aa_dvec JEw;
+        aa_dmat_row_vec(JE, AA_TF_DUQU_REAL_W, &JEw );
+        aa_dvec_zero(&JEw);
+        aa_dmat_row_vec(JE, AA_TF_DUQU_DUAL_W, &JEw );
+        aa_dvec_zero(&JEw);
+    }
+
+
+    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
+                 1, SR, JE,
+                 0, Js );
+
+    aa_mem_region_pop(reg,ptrtop);
+}
 
 void
 aa_tf_duqu2pure( const double S[AA_RESTRICT 8],

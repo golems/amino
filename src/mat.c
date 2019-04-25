@@ -148,6 +148,18 @@ aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols,
 }
 
 AA_API void
+aa_dmat_view_block(  struct aa_dmat *dst,
+                     const struct aa_dmat *src,
+                     size_t row_start, size_t col_start,
+                     size_t rows, size_t cols )
+{
+    aa_dmat_block( src,
+                   row_start, col_start,
+                   row_start + rows, col_start + cols,
+                   dst );
+}
+
+AA_API void
 aa_dmat_block( const struct aa_dmat *src,
                size_t row_start, size_t col_start,
                size_t row_end, size_t col_end,

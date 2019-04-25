@@ -48,6 +48,8 @@
 #ifndef AMINO_TF_H
 #define AMINO_TF_H
 
+#include "mat.h"
+
 /**
  * @file tf.h
  *
@@ -927,6 +929,19 @@ AA_TF_CROSSF( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3], float 
 AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
                          double c[AA_RESTRICT 3] ) ;
 
+/**
+ * Construct matrix for left cross product
+ * v*a = M*a
+ */
+AA_API void aa_tf_cross_mat_l( const double v[3], struct aa_dmat *M );
+
+/**
+ * Construct matrix for right cross product
+ * a*v = M*a
+ */
+AA_API void aa_tf_cross_mat_r( const double v[3], struct aa_dmat *M );
+
+
 
 /**
  * Vector cross product
@@ -1677,8 +1692,8 @@ AA_API void aa_tf_duqu_sub( const double d1[AA_RESTRICT 8], const double d2[AA_R
                             double d3[AA_RESTRICT 8] );
 
 /** Dual quaternion scalar multiplication */
-AA_API void aa_tf_duqu_smul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
-                             double d3[AA_RESTRICT 8] );
+AA_API void aa_tf_duqu_smul( double alpha, const double x[AA_RESTRICT 8],
+                             double y[AA_RESTRICT 8] );
 
 /** Dual quaternion multiplication */
 AA_API void aa_tf_duqu_mul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
@@ -1693,6 +1708,16 @@ AA_API void aa_tf_duqu_matrix_l( const double *q, double *M, size_t ldm );
  * p*q = M*p
  */
 AA_API void aa_tf_duqu_matrix_r( const double *q, double *M, size_t ldm );
+
+/** Construct matrix for left dual quaternion multiply
+ * q*p = M*p
+ */
+AA_API void aa_tf_duqu_mat_l( const double *q, struct aa_dmat *M );
+
+/** Construct matrix for right dual quaternion multiply
+ * p*q = M*p
+ */
+AA_API void aa_tf_duqu_mat_r( const double *q, struct aa_dmat *M );
 
 /** Dual quaternion multiply conjugate of d1 by d2 */
 AA_API void aa_tf_duqu_cmul( const double d1[AA_RESTRICT 8], const double d2[AA_RESTRICT 8],
@@ -1816,6 +1841,31 @@ AA_API void aa_tf_duqu_svel( const double d0[AA_RESTRICT 8], const double dx[AA_
 AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA_RESTRICT 8],
                               double dt, double d1[AA_RESTRICT 6] ) ;
 
+
+/**
+ * Convert a velocity Jacobian to a dual quaternion derivative Jacobian.
+ *
+ * The velocity Jacobian Jvel relates velocities to configurations:
+ * \f[
+ *   \begin{bmatrix}\omega \\ \dot v\end{bmatrix}
+ *   =
+ *   \mathbf{J}_{\rm vel} \dot{\phi}
+ * \f]
+ *
+ * The derivative Jacobian Js relates the dual quaternion derivative to configurations:
+ * \f[
+ *   \dot{S}
+ *   =
+ *   \mathbf{J}_S \dot{\phi}
+ * \f]
+ *
+ * @param The pose as a dual quaternion
+ * @param The velocity Jacobian
+ * @param The dual quaternion derivative Jacobian
+ */
+AA_API void
+aa_tf_duqu_jacobian_vel2diff(const double S[8], const struct aa_dmat *Jvel,
+                             struct aa_dmat *Js );
 
 /** Convert a pure dual quaternion to conventional dual quaternion.
 */

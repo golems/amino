@@ -158,6 +158,11 @@ demo_urdf_baxter_baxter_ompl_sequence_SOURCES = demo/urdf/baxter/baxter-ompl-seq
 demo_urdf_baxter_baxter_ompl_sequence_CFLAGS = $(DEMO_CFLAGS)
 demo_urdf_baxter_baxter_ompl_sequence_LDADD = demo/urdf/baxter/libbaxter_demo.la $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
 
+noinst_PROGRAMS += demo/urdf/baxter/baxter-test
+demo_urdf_baxter_baxter_test_SOURCES = demo/urdf/baxter/baxter-test.c
+demo_urdf_baxter_baxter_test_CFLAGS = $(DEMO_CFLAGS)
+demo_urdf_baxter_baxter_test_LDADD = demo/urdf/baxter/libbaxter_demo.la $(PLANNING_LIBS) $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+
 endif # BUILD_DEMO_BAXTER
 
 

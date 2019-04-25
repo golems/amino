@@ -204,3 +204,4 @@ python/build
 /doc/md/tutorial/fig/*.pdf
 /doc/md/tutorial/fig/localframe.fdb_latexmk
 /doc/md/tutorial/fig/localframe.fls
+/demo/urdf/baxter/baxter-test

@@ -1082,6 +1082,23 @@ void rotate(double q[4], double R[9], double p[3] )
     aveq( "rotate quat-axang",  3, pq, aq, 1e-9 );
 }
 
+
+void cross(double a[3], double b[3] )
+{
+    double c[3], Mr[9], d[3];
+    struct aa_dmat M;
+    aa_dmat_view(&M,3,3,Mr,3);
+    aa_tf_cross(a,b,c);
+
+    aa_tf_cross_mat_l(a,&M);
+    aa_tf_rotmat_rot(M.data,b,d);
+    aveq( "cross-left",  3, c, d, 1e-9 );
+
+    aa_tf_cross_mat_r(b,&M);
+    aa_tf_rotmat_rot(M.data,a,d);
+    aveq( "cross-right",  3, c, d, 1e-9 );
+}
+
 int main( void ) {
     // init
     time_t seed = time(NULL);
@@ -1122,6 +1139,7 @@ int main( void ) {
         tf_conj(E, S);
         qdiff(E,dx);
         normalize(T[0], E[0] );
+        cross( E[0]+AA_TF_QUTR_T, E[1]+AA_TF_QUTR_T );
     }
 
 
