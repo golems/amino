@@ -375,3 +375,148 @@ aa_tf_qutr_mzlook( const double eye[AA_RESTRICT 3],
     aa_tf_qv_mzlook( eye, target, up,
                      E+AA_TF_QUTR_Q, E+AA_TF_QUTR_T );
 }
+
+AA_API void
+aa_tf_dhprox2tfmat( double alpha, double a, double d, double phi,
+                    double T[AA_RESTRICT 12])
+{
+    double sp = sin(phi);
+    double cp = cos(phi);
+    double sa = sin(alpha);
+    double ca = cos(alpha);
+
+    T[0] = cp;
+    T[1] = sp*ca;
+    T[2] = sp*sa;
+
+    T[3] = -sp;
+    T[4] = cp*ca;
+    T[5] = cp*sa;
+
+    T[6] = 0;
+    T[7] = -sa;
+    T[8] = ca;
+
+    T[9] = a;
+    T[10] = -d*sa;
+    T[11] = d*ca;
+}
+
+AA_API void
+aa_tf_dhprox2duqu( double alpha, double a, double d, double phi,
+                   double S[AA_RESTRICT 8])
+{
+    double v[3];
+    double *H = S+AA_TF_DUQU_REAL;
+    double *D = S+AA_TF_DUQU_DUAL;
+
+    aa_tf_dhprox2qv(alpha, a, d, phi, H, v);
+
+    FOR_VEC(i) v[i] *= 0.5;
+    aa_tf_qmul_vq(v, H, D);
+}
+
+AA_API void
+aa_tf_dhprox2qutr( double alpha, double a, double d, double phi,
+                   double E[AA_RESTRICT 7])
+{
+    aa_tf_dhprox2qv( alpha, a, d, phi,
+                     E+AA_TF_QUTR_Q,
+                     E+AA_TF_QUTR_T );
+}
+
+AA_API void
+aa_tf_dhprox2qv( double alpha, double a, double d, double phi,
+                 double q[AA_RESTRICT 4], double v[3])
+{
+    double sp = sin(phi/2);
+    double cp = cos(phi/2);
+    double sa = sin(alpha/2);
+    double ca = cos(alpha/2);
+
+    q[AA_TF_QUAT_X] = sa*cp;
+    q[AA_TF_QUAT_Y] = -sa*sp;
+    q[AA_TF_QUAT_Z] = ca*sp;
+    q[AA_TF_QUAT_W] = ca*cp;
+
+    // double angle formulas
+    double sa2 = 2*sa*ca;
+    double ca2 = ca*ca-sa*sa;
+
+    v[0] = a;
+    v[1] = -d*sa2;
+    v[2] = d*ca2;
+}
+
+AA_API void
+aa_tf_dhdist2tfmat( double alpha, double a, double d, double phi,
+                    double T[AA_RESTRICT 12])
+{
+
+    double sp = sin(phi);
+    double cp = cos(phi);
+    double sa = sin(alpha);
+    double ca = cos(alpha);
+
+    T[0] = cp;
+    T[1] = sp;
+    T[2] = 0;
+
+    T[3] = -sp*ca;
+    T[4] = cp*ca;
+    T[5] = sa;
+
+    T[6] = sp*sa;
+    T[7] = -cp*sa;
+    T[8] = ca;
+
+    T[9] =  a*cp;
+    T[10] = a*sp;
+    T[11] = d;
+}
+
+AA_API void
+aa_tf_dhdist2duqu( double alpha, double a, double d, double phi,
+                   double S[AA_RESTRICT 8])
+{
+    double v[3];
+    double *H = S+AA_TF_DUQU_REAL;
+    double *D = S+AA_TF_DUQU_DUAL;
+
+    aa_tf_dhdist2qv(alpha, a, d, phi, H, v);
+
+    FOR_VEC(i) v[i] *= 0.5;
+    aa_tf_qmul_vq(v, H, D);
+}
+
+AA_API void
+aa_tf_dhdist2qutr( double alpha, double a, double d, double phi,
+                   double E[AA_RESTRICT 7])
+{
+    aa_tf_dhdist2qv( alpha, a, d, phi,
+                     E+AA_TF_QUTR_Q,
+                     E+AA_TF_QUTR_T );
+}
+
+AA_API void
+aa_tf_dhdist2qv( double alpha, double a, double d, double phi,
+                 double q[AA_RESTRICT 4], double v[3])
+{
+    double sp = sin(phi/2);
+    double cp = cos(phi/2);
+    double sa = sin(alpha/2);
+    double ca = cos(alpha/2);
+
+    q[AA_TF_QUAT_X] = sa*cp;
+    q[AA_TF_QUAT_Y] = sa*sp;
+    q[AA_TF_QUAT_Z] = ca*sp;
+    q[AA_TF_QUAT_W] = ca*cp;
+
+    // double angle formulas
+    double sp2 = 2*sp*cp;
+    double cp2 = cp*cp-sp*sp;
+
+    v[0] = a*cp2;
+    v[1] = a*sp2;
+    v[2] = d;
+}

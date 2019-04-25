@@ -49,6 +49,13 @@
 #include <inttypes.h>
 #include <sys/resource.h>
 
+static void rand_dh( double dh[4] ) {
+    dh[0] = aa_frand_minmax(-M_PI, M_PI);
+    dh[1] = aa_frand_minmax(-1, 1);
+    dh[2] = aa_frand_minmax(-1, 1);
+    dh[3] = aa_frand_minmax(-M_PI, M_PI);
+}
+
 static void rand_tf( double _E[7], double S[8],  double T[12] ) {
     double tmp[7];
     double *E = _E ? _E : tmp;
@@ -1099,6 +1106,39 @@ void cross(double a[3], double b[3] )
     aveq( "cross-right",  3, c, d, 1e-9 );
 }
 
+void dhparam()
+{
+    double dh[4];
+    rand_dh(dh);
+
+    double T[12], E[7], S[8], ET[7], ES[7];
+
+    aa_tf_dhprox2tfmat(dh[0], dh[1], dh[2], dh[3], T);
+    aa_tf_dhprox2qutr(dh[0], dh[1], dh[2], dh[3], E);
+    aa_tf_dhprox2duqu(dh[0], dh[1], dh[2], dh[3], S);
+    aa_tf_tfmat2qutr( T, ET );
+    aa_tf_duqu2qutr( S, ES );
+    aa_tf_qminimize(E + AA_TF_QUTR_Q);
+    aa_tf_qminimize(ES + AA_TF_QUTR_Q);
+    aa_tf_qminimize(ET + AA_TF_QUTR_Q);
+
+    aveq( "dhprox tfmat qutr", 7, ET, E, 1e-5 );
+    aveq( "dhprox tfmat duqu", 7, ET, ES, 1e-5 );
+
+    aa_tf_dhdist2tfmat(dh[0], dh[1], dh[2], dh[3], T);
+    aa_tf_dhdist2qutr(dh[0], dh[1], dh[2], dh[3], E);
+    aa_tf_dhdist2duqu(dh[0], dh[1], dh[2], dh[3], S);
+    aa_tf_tfmat2qutr( T, ET );
+    aa_tf_duqu2qutr( S, ES );
+    aa_tf_qminimize(E + AA_TF_QUTR_Q);
+    aa_tf_qminimize(ES + AA_TF_QUTR_Q);
+    aa_tf_qminimize(ET + AA_TF_QUTR_Q);
+
+    aveq( "dhdist tfmat qutr", 7, ET, E, 1e-5 );
+    aveq( "dhdist tfmat duqu", 7, ET, ES, 1e-5 );
+
+}
+
 int main( void ) {
     // init
     time_t seed = time(NULL);
@@ -1140,6 +1180,8 @@ int main( void ) {
         qdiff(E,dx);
         normalize(T[0], E[0] );
         cross( E[0]+AA_TF_QUTR_T, E[1]+AA_TF_QUTR_T );
+
+        dhparam();
     }
 
 

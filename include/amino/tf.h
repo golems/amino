@@ -1881,6 +1881,41 @@ aa_tf_pure2duqu( const double v[AA_RESTRICT 6],
 
 
 
+
+/* DH Parameter Conversions
+ *
+ * Conventions:
+ *  - Proximal: Craig and Lynch & Park
+ *  - Distal: Murray, Li, & Sastry
+ */
+
+
+AA_API void
+aa_tf_dhprox2tfmat( double alpha, double a, double d, double phi,
+                    double T[AA_RESTRICT 12]);
+AA_API void
+aa_tf_dhprox2duqu( double alpha, double a, double d, double phi,
+                   double S[AA_RESTRICT 8]);
+AA_API void
+aa_tf_dhprox2qutr( double alpha, double a, double d, double phi,
+                   double E[AA_RESTRICT 7]);
+AA_API void
+aa_tf_dhprox2qv( double alpha, double a, double d, double phi,
+                 double q[AA_RESTRICT 4], double v[3]);
+
+AA_API void
+aa_tf_dhdist2tfmat( double alpha, double a, double d, double phi,
+                    double T[AA_RESTRICT 12]);
+AA_API void
+aa_tf_dhdist2duqu( double alpha, double a, double d, double phi,
+                   double S[AA_RESTRICT 8]);
+AA_API void
+aa_tf_dhdist2qutr( double alpha, double a, double d, double phi,
+                   double E[AA_RESTRICT 7]);
+AA_API void
+aa_tf_dhdist2qv( double alpha, double a, double d, double phi,
+                 double q[AA_RESTRICT 4], double v[3]);
+
 /* Misc */
 
 AA_API void
