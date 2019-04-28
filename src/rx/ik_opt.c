@@ -90,6 +90,7 @@ aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts)
     if( opts->q_ref_data ) free( opts->q_ref_data );
 }
 
+AA_DEF_SETTER( aa_rx_ksol_opts, enum aa_rx_ik_algo, ik_algo )
 
 AA_DEF_SETTER( aa_rx_ksol_opts, double, dt )
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_angle )

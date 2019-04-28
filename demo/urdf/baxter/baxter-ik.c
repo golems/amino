@@ -103,32 +103,47 @@ int main(int argc, char *argv[])
     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
     aa_rx_ksol_opts_take_seed( ko, n_q, qstart_all, AA_MEM_BORROW );
 
-    //const struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
+    aa_rx_ksol_opts_set_ik_algo(ko,
+                                //AA_RX_IK_JPINV
+                                AA_RX_IK_SQP_JPINV
 
+        );
+
+
+    struct aa_rx_ik_cx * cx = aa_rx_ik_cx_create(ssg, ko);
     aa_tick("Inverse Kinematics: ");
-    int r = aa_rx_ik_lopt_solve( ssg, ko,
-                                 1, E_ref, 7,
-                                 n_qs, qs );
+
+
+    int r;
+    {
+        struct aa_dvec q_vec = AA_DVEC_INIT(n_qs, qs, 1);
+        struct aa_dmat E_mat = AA_DMAT_INIT(7, 1, E_ref, 7);
+
+        r = aa_rx_ik_solve( cx, &E_mat, &q_vec );
+    }
 
     aa_tock();
+
     if( r ) {
+        /* NO IK */
         char *e = aa_rx_errstr( aa_mem_region_local_get(), r );
         fprintf(stderr, "Oops, IK failed: `%s' (0x%x)\n", e, r);
         aa_mem_region_local_pop(e);
+    } else {
+
+        // set all-config joint position
+        {
+            double q_all[n_q];
+            AA_MEM_ZERO(q_all,n_q);
+            aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
+                                 qs, q_all );
+
+            aa_rx_win_set_config( win, n_q, q_all );
+        }
+
+        /*--- Do Display ---*/
+        aa_rx_win_run();
     }
-
-    // set all-config joint position
-    {
-        double q_all[n_q];
-        AA_MEM_ZERO(q_all,n_q);
-        aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
-                             qs, q_all );
-
-        aa_rx_win_set_config( win, n_q, q_all );
-    }
-
-    /*--- Do Display ---*/
-    aa_rx_win_run();
 
     /*--- Cleanup ---*/
     aa_rx_sg_destroy(scenegraph);

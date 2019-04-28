@@ -223,23 +223,23 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
 }
 
 
-static int
-aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
+int
+aa_rx_ik_jpinv( const struct aa_rx_sg_sub *ssg,
                        const struct aa_rx_ksol_opts *opts,
-                       size_t n_tf, const double *TF, size_t ld_TF,
-                       size_t n_q_all, const double *q_start_all,
-                       size_t n_q, double *q_subset )
+                       const struct aa_dmat *TF,
+                       struct aa_dvec *q )
 {
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
 
-    /* Only chains for now */
-    assert(n_tf == 1 );
-    assert(n_q == aa_rx_sg_sub_config_count(ssg) );
-    (void)ld_TF;
-
-    if( 0 == n_q_all || NULL == q_start_all ) {
-        q_start_all = opts->q_all_seed;
-        n_q_all = opts->n_all_seed;
+    if( 1 != TF->cols ) {
+        /* Only chains for now */
+        return AA_RX_INVALID_PARAMETER;
     }
+
+    const double *q_start_all = opts->q_all_seed;
+    size_t n_q_all = opts->n_all_seed;
+
     if( 0 == n_q_all || NULL == q_start_all ) {
         return AA_RX_INVALID_PARAMETER;
     }
@@ -249,11 +249,11 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     const struct aa_rx_sg *sg = ssg->scenegraph;
     size_t n_f = aa_rx_sg_frame_count(sg);
 
-    assert( aa_rx_sg_sub_config_count(ssg) == n_q);
 
-    double q0_sub[n_q];
+    double *q0_sub = AA_MEM_REGION_NEW_N(reg, double, q->len);
+    struct aa_dvec *q_sub = aa_dvec_alloc(reg, q->len);
 
-    aa_rx_sg_config_get( ssg->scenegraph, n_q_all, n_q, aa_rx_sg_sub_configs(ssg),
+    aa_rx_sg_config_get( ssg->scenegraph, n_q_all, q->len, aa_rx_sg_sub_configs(ssg),
                          q_start_all, q0_sub );
 
     /* printf("jacobian ik\n"); */
@@ -264,9 +264,9 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
 
 
     struct kin_solve_cx cx;
-    cx.n = n_q;
+    cx.n = q->len;
     cx.opts = opts;
-    cx.E1 = TF;
+    cx.E1 = TF->data;
     cx.ssg = ssg;
     //cx.dq_dt = opts->dq_dt;
     cx.iteration = 0;
@@ -280,26 +280,27 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
     cx.q0_all = q_start_all;
     cx.n_all = n_q_all;
 
-    cx.reg = aa_mem_region_local_get();
-    cx.TF_rel0 = AA_MEM_REGION_NEW_N(cx.reg, double, 7*n_f);
-    cx.TF_abs0 = AA_MEM_REGION_NEW_N(cx.reg, double, 7*n_f);
+    cx.reg = reg;
+    cx.TF_rel0 = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
+    cx.TF_abs0 = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
 
     aa_rx_sg_tf( ssg->scenegraph,
                  cx.n_all, cx.q0_all,
                  n_f,
                  cx.TF_rel0, 7,
                  cx.TF_abs0, 7 );
-
-    int r = aa_ode_sol( AA_ODE_RK23_BS, &sol_opts, n_q,
+    int r = aa_ode_sol( AA_ODE_RK23_BS, &sol_opts, q->len,
                         kin_solve_sys, &cx,
                         kin_solve_check, &cx,
-                        0, opts->dt, q0_sub, q_subset );
+                        0, opts->dt, q0_sub, q_sub->data);
 
-    aa_mem_region_pop(cx.reg, cx.TF_rel0);
+
+    aa_mem_region_pop(reg,ptrtop);
 
     if( r ) {
         return AA_RX_NO_SOLUTION | AA_RX_NO_IK;
     } else {
+        aa_lb_dcopy( q_sub, q );
         return 0;
     }
 
@@ -310,36 +311,31 @@ aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg,
 
 }
 
-struct aa_rx_ik_jac_cx
-{
-    const struct aa_rx_sg_sub *ssg;
-    const struct aa_rx_ksol_opts *opts;
-};
-
 AA_API struct aa_rx_ik_jac_cx *
 aa_rx_ik_jac_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts )
 {
-    struct aa_rx_ik_jac_cx *cx = AA_NEW0(struct aa_rx_ik_jac_cx);
-    cx->ssg = ssg;
-    cx->opts = opts;
-    return cx;
+    struct aa_rx_ik_cx *cx =  aa_rx_ik_cx_create(ssg,opts);
+    return (struct aa_rx_ik_jac_cx*) cx;
 }
 
 AA_API void
 aa_rx_ik_jac_cx_destroy( struct aa_rx_ik_jac_cx *cx )
 {
-    free(cx);
+    aa_rx_ik_cx_destroy((struct aa_rx_ik_cx*)cx);
 }
 
 
 AA_API int aa_rx_ik_jac_solve( const struct aa_rx_ik_jac_cx *context,
                                size_t n_tf, const double *TF, size_t ld_TF,
                                size_t n_q, double *q )
+
 {
-    return aa_rx_sg_sub_ksol_dls( context->ssg, context->opts,
-                                  n_tf, TF, ld_TF,
-                                  0, NULL,
-                                  n_q, q );
+    struct aa_rx_ik_cx* cx = (struct aa_rx_ik_cx*)context;
+    const struct aa_dmat TFm = AA_DMAT_INIT(7, n_tf, (double*)TF, ld_TF);
+    struct aa_dvec qv = AA_DVEC_INIT(n_q, q, 1);
+
+    return aa_rx_ik_jpinv( cx->ssg, cx->opts,
+                           &TFm, &qv );
 }
 
 

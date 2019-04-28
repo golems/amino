@@ -125,6 +125,27 @@ struct aa_rx_ksol_opts {
     size_t max_iterations;
 
     aa_rx_frame_id frame;
+
+    enum aa_rx_ik_algo ik_algo;
 };
+
+struct aa_rx_ik_cx
+{
+    const struct aa_rx_sg_sub *ssg;
+    const struct aa_rx_ksol_opts *opts;
+};
+
+
+AA_API int
+aa_rx_ik_jpinv( const struct aa_rx_sg_sub *ssg,
+                const struct aa_rx_ksol_opts *opts,
+                const struct aa_dmat *TF,
+                struct aa_dvec *q );
+
+/*-- NLOPT IK Solver --*/
+AA_API int
+aa_rx_ik_nlopt(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts,
+               const struct aa_dmat *TF,
+               struct aa_dvec *q );
 
 #endif /*AMINO_RX_SCENE_KIN_H*/

@@ -39,6 +39,13 @@
 #define AMINO_RX_RXTYPE_H
 
 /**
+ * Number of elements in a transform.
+ *
+ * Quaternion (4) + vector (3)
+ */
+#define AA_RX_TF_LEN 7
+
+/**
  * @file rxtype.h
  * @brief Scenegraph-related type declarations
  */
@@ -78,6 +85,7 @@ struct aa_rx_win;
  * Parameters for SDL display function.
  */
 struct aa_sdl_display_params;
+
 
 /**
  * Display handler function to call in SDL loop.

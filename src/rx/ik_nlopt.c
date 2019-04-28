@@ -192,19 +192,23 @@ s_obj(unsigned n, const double *q, double *dq, void *vcx)
 
 
 AA_API int
-aa_rx_ik_lopt_solve(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts,
-                    size_t n_tf, const double *TF, size_t ld_TF,
-                    size_t n_qarg, double *q_sol)
+aa_rx_ik_nlopt(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts,
+               const struct aa_dmat *TF,
+               struct aa_dvec *q )
 {
 
-    assert(n_tf == 1 );
-    (void)ld_TF;
+    struct aa_mem_region *reg =  aa_mem_region_local_get();
+    void *ptrtop = aa_mem_region_ptr(reg);
+
     size_t n_x, n_qs;
     aa_rx_sg_sub_jacobian_size(ssg,&n_x,&n_qs);
+    assert( n_qs == q->len );
 
-    /* Only chains for now */
-    assert( 6 == n_x );
-    assert( n_qs == n_qarg );
+    if( 1 != TF->cols
+        || 6 != n_x ) {
+        /* Only chains for now */
+        return AA_RX_INVALID_PARAMETER;
+    }
 
     // seed
     const double *q_start_all = opts->q_all_seed;
@@ -220,10 +224,13 @@ aa_rx_ik_lopt_solve(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts
     size_t n_f = aa_rx_sg_frame_count(sg);
 
 
-    double q0_sub[n_qs];
+    struct aa_dvec *q0_sub = aa_dvec_alloc(reg, n_qs);
+    struct aa_dvec *q_sub = aa_dvec_alloc(reg, n_qs);
+    //double q0_sub[n_qs];
 
     aa_rx_sg_config_get( ssg->scenegraph, n_q_all, n_qs, aa_rx_sg_sub_configs(ssg),
-                         q_start_all, q0_sub );
+                         q_start_all, q0_sub->data );
+    aa_lb_dcopy(q0_sub, q_sub);
 
     /* printf("jacobian ik\n"); */
     /* printf("q ref:  %s\n", opts->q_ref ? "yes" : "no"); */
@@ -234,7 +241,7 @@ aa_rx_ik_lopt_solve(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts
     struct kin_solve_cx cx;
     cx.n = n_qs;
     cx.opts = opts;
-    cx.E1 = TF;
+    cx.E1 = TF->data;
     cx.ssg = ssg;
     cx.iteration = 0;
 
@@ -242,9 +249,9 @@ aa_rx_ik_lopt_solve(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts
     cx.q0_all = q_start_all;
     cx.n_all = n_q_all;
 
-    cx.reg = aa_mem_region_local_get();
-    cx.TF_rel0 = AA_MEM_REGION_NEW_N(cx.reg, double, 7*n_f);
-    cx.TF_abs0 = AA_MEM_REGION_NEW_N(cx.reg, double, 7*n_f);
+    cx.reg = reg;
+    cx.TF_rel0 = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
+    cx.TF_abs0 = AA_MEM_REGION_NEW_N(reg, double, 7*n_f);
 
     aa_rx_sg_tf( ssg->scenegraph,
                  cx.n_all, cx.q0_all,
@@ -274,16 +281,19 @@ aa_rx_ik_lopt_solve(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts
 
     int r = -1;
     double minf;
-    if (nlopt_optimize(opt, q_sol, &minf) < 0) {
+    if (nlopt_optimize(opt, q_sub->data, &minf) < 0) {
         printf("nlopt failed!\n");
     } else {
         r = 0;
+        aa_lb_dcopy( q_sub, q );
         printf("found minimum\n");
     }
 
     nlopt_destroy(opt);
 
-    aa_mem_region_pop(cx.reg, cx.TF_rel0);
+    //aa_mem_region_pop(cx.reg, cx.TF_rel0);
+
+    aa_mem_region_pop(reg,ptrtop);
 
     if( r ) {
         return AA_RX_NO_SOLUTION | AA_RX_NO_IK;

@@ -32,9 +32,6 @@
  *
  */
 
-#ifdef HAVE_CONFIG
-#include "config.h"
-#endif
 
 #include <math.h>
 #include "amino.h"

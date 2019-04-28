@@ -208,6 +208,7 @@ libamino_la_SOURCES =                  \
 	src/rx/geom_opt.c              \
 	src/rx/scene_kin.c             \
 	src/rx/ik_opt.c                \
+	src/rx/scene_ik.c              \
 	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/rx_ct.c                 \

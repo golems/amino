@@ -60,8 +60,23 @@ typedef int aa_rx_ik_fun( void *context,
 struct aa_rx_ksol_opts;
 
 /**
- * Create options struct for kinematic solver.
+ * Inverse Kinematics Algorithm
  */
+enum aa_rx_ik_algo {
+    /** Jacobian pseudo-inverse adapative integration */
+    AA_RX_IK_JPINV,
+
+    /** Levenberg-Marquardt */
+    AA_RX_IK_LMA,
+
+    /** SQP w/ Jacobian pseudo-inverse to find gradient */
+    AA_RX_IK_SQP_JPINV,
+
+    /** SQP, dual-quaternion objective, finite-difference gradient */
+    AA_RX_IK_SQP_DQ_FD
+};
+
+/** Create options struct for kinematic solver. */
 AA_API struct aa_rx_ksol_opts*
 aa_rx_ksol_opts_create();
 
@@ -76,6 +91,15 @@ aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts);
  */
 AA_API void
 aa_rx_ksol_opts_set_dt( struct aa_rx_ksol_opts *opts, double dt);
+
+/**
+ * Set inverse kinematics algorithm
+ *
+ * @sa aa_rx_ik_algorithm
+ */
+AA_API void
+aa_rx_ksol_opts_set_ik_algo( struct aa_rx_ksol_opts *opts,
+                             enum aa_rx_ik_algo algo );
 
 /**
  * Set angular tolerance.
@@ -111,13 +135,13 @@ aa_rx_ksol_opts_set_tol_dq( struct aa_rx_ksol_opts *opts, double tol);
  * Set damping constant for damped least squares (LU decompisition).
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_k_dls( struct aa_rx_ksol_opts *opts, double s2min);
+aa_rx_ksol_opts_set_k_dls( struct aa_rx_ksol_opts *opts, double s2min);
 
 /**
  * Set minimum square singular value for damped least squares (SVD).
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_s2min( struct aa_rx_ksol_opts *opts, double s2min);
+aa_rx_ksol_opts_set_s2min( struct aa_rx_ksol_opts *opts, double s2min);
 
 /**
  * Set angular gain.
@@ -191,6 +215,33 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
                     const double *J, double *AA_RESTRICT dq );
 
 
+
+
+
+
+struct aa_rx_ik_cx;
+
+/**
+ * Create an IK solver context.
+ */
+AA_API struct aa_rx_ik_cx *
+aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts );
+
+/**
+ * Destroy an IK solver context.
+ */
+AA_API void
+aa_rx_ik_cx_destroy(struct aa_rx_ik_cx *cx);
+
+/**
+ * Run the IK solver.
+ */
+AA_API int
+aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
+                const struct aa_dmat *TF,
+                struct aa_dvec *q );
+
+
 struct aa_rx_ik_jac_cx;
 
 /**
@@ -222,11 +273,6 @@ AA_API int aa_rx_ik_jac_fun( void *context,
 
 
 
-/*-- NLOPT IK Solver --*/
-AA_API int
-aa_rx_ik_lopt_solve(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts,
-                    size_t n_tf, const double *TF, size_t ld_TF,
-                    size_t n_qs, double *q_sol);
 
 
 
