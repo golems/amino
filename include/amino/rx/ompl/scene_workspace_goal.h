@@ -65,7 +65,7 @@ public:
 
     const sgSpaceInformation::Ptr &typed_si;
     struct aa_rx_ksol_opts *ko;
-    struct aa_rx_ik_jac_cx *ik_cx;
+    struct aa_rx_ik_cx *ik_cx;
 
     ompl::base::StateSamplerPtr state_sampler;
     sgSpaceInformation::StateType *seed;
@@ -91,6 +91,7 @@ public:
     /** Weighting of translation error in distance computation */
     double weight_translation;
 };
+
 
 }
 

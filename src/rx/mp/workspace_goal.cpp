@@ -87,9 +87,10 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
         aa_rx_ksol_opts_take_seed( wsg->ko, n_all, q, AA_MEM_COPY );
 
         /* solve */
-        r = aa_rx_ik_jac_solve( wsg->ik_cx,
-                                wsg->n_e, wsg->E, 7,
-                                n_s, qs );
+        struct aa_dmat ikTF = AA_DMAT_INIT( AA_RX_TF_LEN, 1, wsg->E, AA_RX_TF_LEN );
+        struct aa_dvec ikQ = AA_DVEC_INIT( n_s, qs, 1 );
+        r = aa_rx_ik_solve( wsg->ik_cx,
+                            &ikTF, &ikQ );
     }
 
     if( AA_RX_OK == r ) {
@@ -108,7 +109,7 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
     typed_si(si),
     ob::GoalLazySamples(si, ob::GoalSamplingFn(sampler_fun), false),
     ko( aa_rx_ksol_opts_create() ),
-    ik_cx( aa_rx_ik_jac_cx_create(si->getTypedStateSpace()->sub_scene_graph, ko) ),
+    ik_cx( aa_rx_ik_cx_create(si->getTypedStateSpace()->sub_scene_graph, ko) ),
     n_e(n_e_),
     state_sampler( si->allocStateSampler() ),
     seed(typed_si->allocTypedState()),
@@ -149,7 +150,7 @@ sgWorkspaceGoal::~sgWorkspaceGoal ()
 {
     typed_si->freeState(this->seed);
     aa_rx_ksol_opts_destroy(this->ko);
-    aa_rx_ik_jac_cx_destroy(this->ik_cx);
+    aa_rx_ik_cx_destroy(this->ik_cx);
     delete [] this->E;
     delete[] this->frames;
     aa_checked_free( this->q_start );
