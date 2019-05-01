@@ -49,6 +49,8 @@
 #include <inttypes.h>
 #include <sys/resource.h>
 
+#include "amino/diffeq.h"
+
 static void rand_dh( double dh[4] ) {
     dh[0] = aa_frand_minmax(-M_PI, M_PI);
     dh[1] = aa_frand_minmax(-1, 1);
@@ -1139,6 +1141,30 @@ void dhparam()
 
 }
 
+typedef void (raw_vector_field_fun)(const double*,double*);
+
+void pde_j_helper( void *cx, const struct aa_dvec *x, struct aa_dvec *y)
+{
+    void (*f)(const double*,double*) = (raw_vector_field_fun*)cx;
+    f(x->data, y->data);
+
+}
+
+void qpde( const double *q )
+{
+    double dJfd[4*4], dJ[4*4];
+    struct aa_dmat Jfd = AA_DMAT_INIT(4,4,dJfd,4);
+    struct aa_dmat J = AA_DMAT_INIT(4,4,dJ,4);
+
+    aa_tf_qln_jac( q, &J );
+
+    struct aa_dvec vq = AA_DVEC_INIT(4,(double*)q,1);
+    aa_de_jac_fd( pde_j_helper, aa_tf_qln, &vq, 1e-6, &Jfd );
+
+
+    aveq( "qln_jac / fd ", 4*4, dJfd, dJ, 1e-3 );
+}
+
 int main( void ) {
     // init
     time_t seed = time(NULL);
@@ -1182,6 +1208,8 @@ int main( void ) {
         cross( E[0]+AA_TF_QUTR_T, E[1]+AA_TF_QUTR_T );
 
         dhparam();
+
+        qpde( E[0]+AA_TF_QUTR_Q );
     }
 
 

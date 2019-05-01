@@ -42,6 +42,7 @@
 
 #include "amino.h"
 #include "amino_internal.h"
+#include "amino/mat_internal.h"
 
 /*----------------------*/
 /* ORDINARY QUATERNIONS */

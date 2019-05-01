@@ -112,7 +112,7 @@ int check( const struct aa_rx_sg_sub *ssg,
     double *E_act =  TF_abs->data + TF_abs->ld*(size_t)aa_rx_sg_sub_frame_ee(ssg);
     double S[8]; aa_tf_qutr2duqu(E_act,S);
     struct aa_dmat *JS = aa_dmat_alloc(reg,8,n);
-    aa_tf_duqu_jacobian_vel2diff(S, J, JS);
+    aa_tf_duqu_jac_vel2diff(S, J, JS);
 
     struct aa_dvec *dSx = aa_dvec_alloc(reg,8);
     struct aa_dvec *dSJ = aa_dvec_alloc(reg,8);

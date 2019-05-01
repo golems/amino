@@ -1864,8 +1864,18 @@ AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA
  * @param The dual quaternion derivative Jacobian
  */
 AA_API void
-aa_tf_duqu_jacobian_vel2diff(const double S[8], const struct aa_dmat *Jvel,
-                             struct aa_dmat *Js );
+aa_tf_duqu_jac_vel2diff(const double S[8], const struct aa_dmat *Jvel,
+                        struct aa_dmat *Js );
+
+
+/**
+ * Compute the Jacobian of the quaternion logarithm.
+ *
+ * @param[in]  q  The quaternion
+ * @param[out] Js Storage for the Jacobian, 4x4 matrix
+ */
+AA_API void
+aa_tf_qln_jac(const double q[4], struct aa_dmat *Js );
 
 /** Convert a pure dual quaternion to conventional dual quaternion.
 */

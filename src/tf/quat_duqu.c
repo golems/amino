@@ -425,8 +425,8 @@ AA_API void aa_tf_xyz2duqu (
 }
 
 AA_API void
-aa_tf_duqu_jacobian_vel2diff(const double S[8], const struct aa_dmat *Jvel,
-                             struct aa_dmat *Js )
+aa_tf_duqu_jac_vel2diff(const double S[8], const struct aa_dmat *Jvel,
+                        struct aa_dmat *Js )
 {
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);

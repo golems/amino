@@ -452,6 +452,58 @@ aa_tf_qln( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
     r[AA_TF_QUAT_W] = log(qnorm);
 }
 
+
+AA_API void
+aa_tf_qln_jac(const double q[4], struct aa_dmat *Js )
+{
+    aa_dmat_check_size(4,4,Js);
+
+    WITH_QUAT_XYZW(q, x, y, z, w);
+    const double *q_v = q + AA_TF_QUAT_V;
+    double vv = aa_tf_vdot(q_v,q_v);
+    double qq = vv + w*w;
+    double v_norm = sqrt(vv);
+    double q_norm = sqrt(qq);
+    double q3 = qq*q_norm;
+    double theta = atan2(v_norm,w);
+
+    double zeta, eta;
+    if( theta < DBL_EPSILON )  {
+        zeta = aa_horner3( theta*theta, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / q3;
+        eta = aa_tf_invsinc_series2(theta*theta)/q_norm;
+    } else {
+        eta = theta / v_norm;
+        zeta = w / (qq*vv)  - eta / vv ;
+    }
+
+
+    double xzeta = x*zeta;
+    double yzeta = y*zeta;
+    double zzeta = z*zeta;
+    double iqq = 1 / qq;
+
+    AA_DMAT_REF(Js,0,0) = x * xzeta + eta;
+    AA_DMAT_REF(Js,1,0) = x * yzeta;
+    AA_DMAT_REF(Js,2,0) = x * zzeta;
+    AA_DMAT_REF(Js,3,0) = x * iqq;
+
+    AA_DMAT_REF(Js,0,1) = y * xzeta;
+    AA_DMAT_REF(Js,1,1) = y * yzeta + eta;
+    AA_DMAT_REF(Js,2,1) = y * zzeta;
+    AA_DMAT_REF(Js,3,1) = y * iqq;
+
+    AA_DMAT_REF(Js,0,2) = z * xzeta;
+    AA_DMAT_REF(Js,1,2) = z * yzeta;
+    AA_DMAT_REF(Js,2,2) = z * zzeta + eta;
+    AA_DMAT_REF(Js,3,2) = z * iqq;
+
+    AA_DMAT_REF(Js,0,3) = -(x/qq);
+    AA_DMAT_REF(Js,1,3) = -(y/qq);
+    AA_DMAT_REF(Js,2,3) = -(z/qq);
+    AA_DMAT_REF(Js,3,3) =   w/qq;
+
+}
+
 AA_API void
 aa_tf_qpow( const double q[AA_RESTRICT 4], double a, double r[AA_RESTRICT 4] )
 {
@@ -465,8 +517,7 @@ AA_API double
 aa_tf_qangle( const double _q[AA_RESTRICT 4] )
 {
     aa_tf_quat_t *q = (aa_tf_quat_t *)_q;
-    return atan2( sqrt( aa_tf_vdot(q->v, q->v) ),
-                  q->w );
+    return atan2( aa_tf_vnorm(q->v), q->w );
 }
 
 AA_API void
@@ -697,6 +748,20 @@ AA_API void aa_tf_qdulnj(
     const double dq[AA_RESTRICT 4],
     double dln[AA_RESTRICT 3] )
 {
+
+    /* double Jd[4*4]; */
+    /* struct aa_dmat J = AA_DMAT_INIT(4,4,Jd,4); */
+    /* aa_tf_qln_jac(q, &J); */
+
+    /* struct aa_dvec vdq = AA_DVEC_INIT(4,(double*)dq,1); */
+    /* double dlnd[4]; */
+    /* struct aa_dvec vdln = AA_DVEC_INIT(4,dlnd,1); */
+    /* aa_lb_dgemv(CblasNoTrans, */
+    /*             1, &J, &vdq, */
+    /*             0, &vdln); */
+    /* AA_MEM_CPY(dln, dlnd, 3); */
+
+
     double J[3*4];
     qjuln(q,J);
     cblas_dgemv( CblasColMajor, CblasNoTrans,

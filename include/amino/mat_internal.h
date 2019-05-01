@@ -53,4 +53,12 @@ aa_lb_check_size( size_t a, size_t b )
     if( a != b )
         aa_lb_fail_size(a,b);
 }
+
+static inline void
+aa_dmat_check_size( size_t m, size_t n, const struct aa_dmat *A )
+{
+    aa_lb_check_size( m, A->rows );
+    aa_lb_check_size( n, A->cols );
+}
+
 #endif /* AMINO_MAT_INTERNAL_H */

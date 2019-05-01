@@ -73,7 +73,14 @@ struct aa_dmat {
     size_t ld;      ///< Leading dimension of matrix
 };
 
-
+/**
+ * Reference a matrix entry.
+ *
+ * @param M matrix
+ * @param i row
+ * @param j column
+ */
+#define AA_DMAT_REF(M,i,j) (((M)->data)[(M)->ld*(j) + (i)])
 
 typedef void
 (aa_lb_err_fun)( const char *message );
