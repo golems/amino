@@ -209,7 +209,6 @@ libamino_la_SOURCES =                  \
 	src/rx/scene_kin.c             \
 	src/rx/ik_opt.c                \
 	src/rx/scene_ik.c              \
-	src/rx/ik_jacobian.c           \
 	src/rx/plugin.c                \
 	src/rx/rx_ct.c                 \
 	src/rx/scene_wk.c              \
@@ -635,12 +634,6 @@ endif # HAVE_CLP
 
 test_lpsolve_LDADD += libamino.la libtestutil.la
 
-
-
-## NLOPT
-if HAVE_NLOPT
-libamino_la_SOURCES += src/rx/ik_nlopt.c
-endif
 
 if HAVE_CGAL
 

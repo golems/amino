@@ -105,7 +105,8 @@ int main(int argc, char *argv[])
 
     aa_rx_ksol_opts_set_ik_algo(ko,
                                 //AA_RX_IK_JPINV
-                                AA_RX_IK_SQP_JPINV
+                                //AA_RX_IK_SQP_JPINV
+                                AA_RX_IK_SQP_DQ_FD
 
         );
 

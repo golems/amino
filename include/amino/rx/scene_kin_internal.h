@@ -135,17 +135,29 @@ struct aa_rx_ik_cx
     const struct aa_rx_ksol_opts *opts;
 };
 
+typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
 
-AA_API int
-aa_rx_ik_jpinv( const struct aa_rx_sg_sub *ssg,
-                const struct aa_rx_ksol_opts *opts,
-                const struct aa_dmat *TF,
-                struct aa_dvec *q );
+struct kin_solve_cx {
+    size_t n;
+    const struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_sg_sub *ssg;
+    const double *E1;
+    //const double *dq_dt;
 
-/*-- NLOPT IK Solver --*/
-AA_API int
-aa_rx_ik_nlopt(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts,
-               const struct aa_dmat *TF,
-               struct aa_dvec *q );
+    size_t iteration;
+
+    struct aa_mem_region *reg;
+
+    const double *q0_all;
+
+    struct aa_dvec *q0_sub;
+    struct aa_dvec *q_sub;
+
+    size_t n_all;
+    double *TF_rel0;
+    double *TF_abs0;
+};
+
+
 
 #endif /*AMINO_RX_SCENE_KIN_H*/

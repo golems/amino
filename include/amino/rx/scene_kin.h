@@ -72,7 +72,14 @@ enum aa_rx_ik_algo {
     /** SQP w/ Jacobian pseudo-inverse to find gradient */
     AA_RX_IK_SQP_JPINV,
 
-    /** SQP, dual-quaternion objective, finite-difference gradient */
+    /**
+     * SQP, dual-quaternion objective, finite-difference gradient
+     *
+     * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
+     * library for improved solving of generic inverse kinematics."
+     * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
+     * (Humanoids). IEEE, 2015.
+     */
     AA_RX_IK_SQP_DQ_FD
 };
 
