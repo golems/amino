@@ -454,9 +454,9 @@ aa_tf_qln( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
 
 
 AA_API void
-aa_tf_qln_jac(const double q[4], struct aa_dmat *Js )
+aa_tf_qln_jac(const double q[4], struct aa_dmat *J )
 {
-    aa_dmat_check_size(4,4,Js);
+    aa_dmat_check_size(4,4,J);
 
     WITH_QUAT_XYZW(q, x, y, z, w);
     const double *q_v = q + AA_TF_QUAT_V;
@@ -476,31 +476,51 @@ aa_tf_qln_jac(const double q[4], struct aa_dmat *Js )
         zeta = w / (qq*vv)  - eta / vv ;
     }
 
-
     double xzeta = x*zeta;
     double yzeta = y*zeta;
     double zzeta = z*zeta;
     double iqq = 1 / qq;
 
-    AA_DMAT_REF(Js,0,0) = x * xzeta + eta;
-    AA_DMAT_REF(Js,1,0) = x * yzeta;
-    AA_DMAT_REF(Js,2,0) = x * zzeta;
-    AA_DMAT_REF(Js,3,0) = x * iqq;
+    AA_DMAT_REF(J,0,0) = x * xzeta + eta;
+    AA_DMAT_REF(J,1,0) = x * yzeta;
+    AA_DMAT_REF(J,2,0) = x * zzeta;
+    AA_DMAT_REF(J,3,0) = x * iqq;
 
-    AA_DMAT_REF(Js,0,1) = y * xzeta;
-    AA_DMAT_REF(Js,1,1) = y * yzeta + eta;
-    AA_DMAT_REF(Js,2,1) = y * zzeta;
-    AA_DMAT_REF(Js,3,1) = y * iqq;
+    AA_DMAT_REF(J,0,1) = AA_DMAT_REF(J,1,0);
+    AA_DMAT_REF(J,1,1) = y * yzeta + eta;
+    AA_DMAT_REF(J,2,1) = y * zzeta;
+    AA_DMAT_REF(J,3,1) = y * iqq;
 
-    AA_DMAT_REF(Js,0,2) = z * xzeta;
-    AA_DMAT_REF(Js,1,2) = z * yzeta;
-    AA_DMAT_REF(Js,2,2) = z * zzeta + eta;
-    AA_DMAT_REF(Js,3,2) = z * iqq;
+    AA_DMAT_REF(J,0,2) = AA_DMAT_REF(J,2,0);
+    AA_DMAT_REF(J,1,2) = AA_DMAT_REF(J,2,1);
+    AA_DMAT_REF(J,2,2) = z * zzeta + eta;
+    AA_DMAT_REF(J,3,2) = z * iqq;
 
-    AA_DMAT_REF(Js,0,3) = -(x/qq);
-    AA_DMAT_REF(Js,1,3) = -(y/qq);
-    AA_DMAT_REF(Js,2,3) = -(z/qq);
-    AA_DMAT_REF(Js,3,3) =   w/qq;
+    AA_DMAT_REF(J,0,3) = -AA_DMAT_REF(J,3,0);
+    AA_DMAT_REF(J,1,3) = -AA_DMAT_REF(J,3,1);
+    AA_DMAT_REF(J,2,3) = -AA_DMAT_REF(J,3,2);
+    AA_DMAT_REF(J,3,3) =  w/qq;
+
+
+    /* /\* Fill xyz columns *\/ */
+    /* const double *v = q + AA_TF_QUAT_XYZ; */
+    /* double vzeta[4]; */
+    /* for( size_t i = 0; i < 4; i ++ ) { */
+    /*     vzeta[i] = v[i]*zeta; */
+    /* } */
+    /* vzeta[3] = 1/qq; */
+    /* for( size_t j = 0; j < 3; j ++ ) { */
+    /*     double *col = &AA_DMAT_REF(Js,0,j); */
+    /*     for( size_t i = 0; i < 4; i ++ ) { */
+    /*         col[i] = v[j] * vzeta[i]; */
+    /*     } */
+    /*     col[j] += eta; */
+    /* } */
+
+    /* /\* Fill w column *\/ */
+    /* for( size_t i = 0; i < 4; i ++ ) { */
+    /*     AA_DMAT_REF(Js,i,3) = -q[i] / qq; */
+    /* } */
 
 }
 
