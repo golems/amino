@@ -348,8 +348,13 @@ aa_lb_dgemv( CBLAS_TRANSPOSE trans,
              const struct aa_dvec *x,
              double beta, struct aa_dvec *y )
 {
-    aa_lb_check_size( A->rows, y->len );
-    aa_lb_check_size( A->cols, x->len );
+    if( CblasTrans == trans ) {
+        aa_lb_check_size( A->rows, x->len );
+        aa_lb_check_size( A->cols, y->len );
+    } else {
+        aa_lb_check_size( A->rows, y->len );
+        aa_lb_check_size( A->cols, x->len );
+    }
 
     cblas_dgemv( CblasColMajor, trans,
                  MAT_ROWS(A), MAT_COLS(A),
