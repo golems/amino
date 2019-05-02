@@ -361,17 +361,15 @@ aa_tf_duqu_exp( const double S[AA_RESTRICT 8], double eS[AA_RESTRICT 8] )
 AA_API void
 aa_tf_duqu_ln( const double S[AA_RESTRICT 8], double lnS[AA_RESTRICT 8] )
 {
+    double vv = aa_tf_vdot(S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_REAL_XYZ);
+    double gamma = aa_tf_vdot(S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_DUAL_XYZ);
 
-    double vv, vd, theta, nr, mr2, mr, ar, ad;
-    vv = aa_tf_vdot(S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_REAL_XYZ);
-    vd = aa_tf_vdot(S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_DUAL_XYZ);
-
-    mr2 = vv + S[AA_TF_DUQU_REAL_W]*S[AA_TF_DUQU_REAL_W];
-    mr = sqrt( mr2 );
+    double mr2 = vv + S[AA_TF_DUQU_REAL_W]*S[AA_TF_DUQU_REAL_W];
+    double mr = sqrt( mr2 );
 
     /* Scalar part */
     lnS[AA_TF_DUQU_REAL_W] = log(mr);
-    lnS[AA_TF_DUQU_DUAL_W] = (vd + S[AA_TF_DUQU_REAL_W]*S[AA_TF_DUQU_DUAL_W]) / mr2;
+    lnS[AA_TF_DUQU_DUAL_W] = (gamma + S[AA_TF_DUQU_REAL_W]*S[AA_TF_DUQU_DUAL_W]) / mr2;
 
     /* Vector part */
     /* ! Dual number computation */
@@ -379,23 +377,25 @@ aa_tf_duqu_ln( const double S[AA_RESTRICT 8], double lnS[AA_RESTRICT 8] )
     /* ! a = atan2( nv, dh(W_INDEX) ) / nv */
 
     /* expanded dual computation */
-    nr = sqrt(vv);                   /* nr is positive */
-    theta = atan2( nr, S[AA_TF_DUQU_REAL_W] ); /* theta is always positive */
+    double nr = sqrt(vv);                   /* nr is positive */
+    double theta = atan2( nr, S[AA_TF_DUQU_REAL_W] ); /* theta is always positive */
 
     /* Try to avoid small number division */
+    double kappa, zeta;
     if( theta < DBL_EPSILON )  {
         /* ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) ) */
-        ad = aa_horner3( theta*theta, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / mr;
-        ar = aa_tf_invsinc_series2(theta*theta)/mr;
+        kappa = aa_horner3( theta*theta, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / mr;
+        zeta = aa_tf_invsinc_series2(theta*theta)/(mr2*mr);
     } else {
-        ar = theta/nr;
-        ad = (S[AA_TF_DUQU_REAL_W] - ar*mr2) / vv;
+        kappa = theta/nr;
+        zeta = (S[AA_TF_DUQU_REAL_W]/mr2 - kappa) / vv;
     }
-    ad = (vd*ad - S[AA_TF_DUQU_DUAL_W]) / mr2;
+    double ad = gamma*zeta - S[AA_TF_DUQU_DUAL_W] / mr2;
     FOR_VEC(i)
-        lnS[AA_TF_DUQU_REAL_XYZ+i] = ar * S[AA_TF_DUQU_REAL_XYZ+i];
+        lnS[AA_TF_DUQU_REAL_XYZ+i] = kappa * S[AA_TF_DUQU_REAL_XYZ+i];
     FOR_VEC(i)
-        lnS[AA_TF_DUQU_DUAL_XYZ+i] = ad * S[AA_TF_DUQU_REAL_XYZ+i] + ar * S[AA_TF_DUQU_DUAL_XYZ+i];
+        lnS[AA_TF_DUQU_DUAL_XYZ+i] = (ad * S[AA_TF_DUQU_REAL_XYZ+i]
+                                      + kappa * S[AA_TF_DUQU_DUAL_XYZ+i]);
 }
 
 
