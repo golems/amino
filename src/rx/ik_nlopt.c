@@ -112,18 +112,26 @@ s_nlobj_dq_fd(unsigned n, const double *q, double *dq, void *vcx)
     return x;
 }
 
+static void
+mv_block_helper (double alpha, double *A, double *x, double *y)
+{
+    cblas_dgemv(CblasColMajor, CblasTrans, 8, 4,
+                alpha, A, 8, x, 1,
+                0, y, 1);
+    cblas_dgemv(CblasColMajor, CblasTrans, 4, 4,
+                alpha, A, 8, x+4, 1,
+                0, y+4, 1);
+}
 
 static double
 s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
 {
-
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
     double  E_act[7];
     struct aa_dmat *TF_abs;
     s_tf( cx, q, &TF_abs, E_act );
-    //double result = s_serr( E_act, cx->E1 );
 
     double S_act[8], S_ref[8], S_err[8], S_ln[8];
     aa_tf_qutr2duqu(E_act, S_act);
@@ -132,7 +140,6 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
     aa_tf_duqu_minimize(S_err);
     aa_tf_duqu_ln(S_err, S_ln);
     double result = aa_la_dot(8,S_ln,S_ln);
-
 
     if( dq ) {
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
@@ -154,34 +161,54 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
          */
 
         double a[8], b[8], dJ[8*8];
-        struct aa_dvec va = AA_DVEC_INIT(8,a,1);
         struct aa_dvec vb = AA_DVEC_INIT(8,b,1);
         struct aa_dmat vJ_8x8 = AA_DMAT_INIT(8,8,dJ,8);
         struct aa_dmat *J_8x8 = &vJ_8x8;
 
-        struct aa_dmat *J_ln = J_8x8;
-        aa_tf_duqu_ln_jac(S_err,J_ln);
-        struct aa_dvec v_S_ln = AA_DVEC_INIT(8,S_ln,1);
-        aa_lb_dgemv( CblasTrans, 2, J_8x8, &v_S_ln, 0, &va );
+        {
+            struct aa_dmat *J_ln = J_8x8;
+            aa_tf_duqu_ln_jac(S_err,J_ln);
+            /*
+             *  struct aa_dvec v_S_ln = AA_DVEC_INIT(8,S_ln,1);
+             * //aa_lb_dgemv( CblasTrans, 2, J_8x8, &v_S_ln, 0, &va );
+             *
+             * Avoid multiplying by the zero block:
+             *
+             * J_ln = [J_r   0]     J_ln^T = [J_r^T J_d^T]
+             *        [J_d J_r]              [  0   J_r^T]
+             *
+             * J_ln^T * del(S_ln^T*S_ln)^T = 2*J_ln^T S_ln
+             *
+             * 2*J_ln^T S_ln = 2*[J_r^T  J_d^T] (S_ln_r)
+             *                   [   0   J_r^T] (S_ln_d)
+             *
+             */
+            mv_block_helper(2, dJ, S_ln, a);
+        }
 
-        struct aa_dmat *M_S_ref = J_8x8;
-        aa_tf_duqu_mat_r(S_ref,M_S_ref);
-        aa_lb_dgemv( CblasTrans, 1, J_8x8, &va, 0, &vb );
+        {
+            struct aa_dmat *M_S_ref = J_8x8;
+            aa_tf_duqu_mat_r(S_ref,M_S_ref);
+            mv_block_helper(1, dJ, a, b);
+        }
+
 
         /* struct aa_dmat *J_conj = J_8x8; */
         /* aa_tf_duqu_conj_jac(J_conj); */
         /* aa_lb_dgemv( CblasTrans, 1, J_8x8, &vb, 0, &va ); */
-        aa_tf_duqu_conj(vb.data, va.data);
+        /* aa_tf_duqu_conj(vb.data, va.data); */
+        for( int i = 0; i < 3; i ++ ) {
+            b[i+AA_TF_DUQU_REAL_XYZ] *= -1;
+            b[i+AA_TF_DUQU_DUAL_XYZ] *= -1;
+        }
 
         struct aa_dmat *J_S = aa_dmat_alloc(cx->reg,8,n);
         struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs);
         aa_tf_duqu_jac_vel2diff(S_act,J_vel, J_S);
-        aa_lb_dgemv( CblasTrans, 1, J_S, &va, 0, &v_dq );
-
+        aa_lb_dgemv( CblasTrans, 1, J_S, &vb, 0, &v_dq );
 
         /* printf("an: "); */
         /* aa_dump_vec(stdout,dq,n); */
-
     }
 
     aa_mem_region_pop(cx->reg, ptrtop);
