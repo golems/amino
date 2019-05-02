@@ -91,3 +91,7 @@ aa_tf_crossf( const float a[AA_RESTRICT 3], const float b[AA_RESTRICT 3], float 
 /**************************/
 
 #include "quat_qutr.c"
+
+
+/* Jacobians */
+#include "quat_pde.c"

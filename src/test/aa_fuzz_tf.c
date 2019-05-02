@@ -1150,7 +1150,7 @@ void pde_j_helper( void *cx, const struct aa_dvec *x, struct aa_dvec *y)
 
 }
 
-void qpde( const double *q )
+void q_pde( const double *q )
 {
     double dJfd[4*4], dJ[4*4];
     struct aa_dmat Jfd = AA_DMAT_INIT(4,4,dJfd,4);
@@ -1163,6 +1163,25 @@ void qpde( const double *q )
 
 
     aveq( "qln_jac / fd ", 4*4, dJfd, dJ, 1e-3 );
+}
+
+void dq_pde( const double *S )
+{
+    double dJfd[8*8], dJ[8*8];
+    struct aa_dmat Jfd = AA_DMAT_INIT(8,8,dJfd,8);
+    struct aa_dmat J = AA_DMAT_INIT(8,8,dJ,8);
+
+    aa_tf_duqu_ln_jac( S, &J );
+
+    struct aa_dvec vq = AA_DVEC_INIT(8,(double*)S,1);
+    aa_de_jac_fd( pde_j_helper, aa_tf_duqu_ln, &vq, 1e-6, &Jfd );
+
+    /* printf("\n--\nJ_fd:\n"); */
+    /* aa_dump_mat(stdout,dJfd,8,8); */
+    /* printf("J:\n"); */
+    /* aa_dump_mat(stdout,dJ,8,8); */
+
+    aveq( "qln_jac / fd ", 8*8, dJfd, dJ, 1e-3 );
 }
 
 int main( void ) {
@@ -1209,7 +1228,8 @@ int main( void ) {
 
         dhparam();
 
-        qpde( E[0]+AA_TF_QUTR_Q );
+        q_pde( E[0]+AA_TF_QUTR_Q );
+        dq_pde( S[0] );
     }
 
 

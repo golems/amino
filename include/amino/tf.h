@@ -1872,10 +1872,19 @@ aa_tf_duqu_jac_vel2diff(const double S[8], const struct aa_dmat *Jvel,
  * Compute the Jacobian of the quaternion logarithm.
  *
  * @param[in]  q  The quaternion
- * @param[out] Js Storage for the Jacobian, 4x4 matrix
+ * @param[out] J Storage for the Jacobian, 4x4 matrix
  */
 AA_API void
-aa_tf_qln_jac(const double q[4], struct aa_dmat *Js );
+aa_tf_qln_jac(const double q[4], struct aa_dmat *J );
+
+/**
+ * Compute the Jacobian of the dual quaternion logarithm.
+ *
+ * @param[in]  S  The quaternion
+ * @param[out] J Storage for the Jacobian, 8x8 matrix
+ */
+AA_API void
+aa_tf_duqu_ln_jac(const double S[8], struct aa_dmat *J );
 
 /** Convert a pure dual quaternion to conventional dual quaternion.
 */
