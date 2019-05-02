@@ -80,7 +80,13 @@ enum aa_rx_ik_algo {
      * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
      * (Humanoids). IEEE, 2015.
      */
-    AA_RX_IK_SQP_DQ_FD
+    AA_RX_IK_SQP_DQ_FD,
+
+
+    /**
+     * SQP, dual-quaternion objective, analytic gradient
+     */
+    AA_RX_IK_SQP_DQ_AN
 };
 
 /** Create options struct for kinematic solver. */

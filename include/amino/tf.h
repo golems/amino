@@ -1878,6 +1878,12 @@ AA_API void
 aa_tf_qln_jac(const double q[4], struct aa_dmat *J );
 
 /**
+ * Fill J with Jacobian of dual quaternion conjugate.
+ */
+AA_API void
+aa_tf_duqu_conj_jac( struct aa_dmat *J );
+
+/**
  * Compute the Jacobian of the dual quaternion logarithm.
  *
  * @param[in]  S  The quaternion

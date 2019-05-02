@@ -195,3 +195,21 @@ aa_tf_duqu_ln_jac(const double S[8], struct aa_dmat *J )
         AA_DMAT_REF(&J_dr,i,3) = -AA_DMAT_REF(&J_dr,3,i);
     }
 }
+
+AA_API void
+aa_tf_duqu_conj_jac( struct aa_dmat *J )
+{
+    aa_dmat_zero(J);
+    for( size_t i = 0; i < 3; i ++ ) {
+        size_t kr = i + AA_TF_DUQU_REAL_XYZ;
+        size_t kd = i + AA_TF_DUQU_DUAL_XYZ;
+        AA_DMAT_REF(J,kr,kr) = -1;
+        AA_DMAT_REF(J,kd,kd) = -1;
+    }
+    {
+        size_t kr = AA_TF_DUQU_REAL_W;
+        size_t kd = AA_TF_DUQU_DUAL_W;
+        AA_DMAT_REF(J,kr,kr) = 1;
+        AA_DMAT_REF(J,kd,kd) = 1;
+    }
+}
