@@ -261,11 +261,20 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     int r = -1;
     double minf;
     if (nlopt_optimize(opt, cx->q_sub->data, &minf) < 0) {
-        // no solution
+        // no miniumum
         // printf("nlopt failed!\n");
     } else {
-        r = 0;
+        // found miniumum
         aa_lb_dcopy( cx->q_sub, q );
+
+        // check error
+        double theta, x, E_sol[7];
+        struct aa_dmat *TF_abs;
+        s_tf(cx, cx->q_sub->data, &TF_abs, E_sol);
+        s_err2(E_sol, cx->E1, &theta, &x);
+        if( theta < cx->opts->tol_angle && x < cx->opts->tol_trans ) {
+            r = 0;
+        }
         //printf("found minimum\n");
     }
 
