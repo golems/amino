@@ -79,7 +79,7 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     const struct aa_rx_sg_sub *ssg  = cx->ssg;
     /* Clamp */
-    for( size_t i = 0; i < cx->n; i ++ ) {
+    for( size_t i = 0; i < cx->q_sub->len; i ++ ) {
         double min,max;
         aa_rx_config_id id = aa_rx_sg_sub_config(ssg,i);
         if( 0 == aa_rx_sg_get_limit_pos(ssg->scenegraph, id, &min, &max ) ) {
@@ -88,7 +88,7 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
     }
 
     /* Check term */
-    double dq_norm = aa_la_dot( cx->n, y, y );
+    double dq_norm = aa_la_dot( cx->q_sub->len, y, y );
 
     double  E[7];
     {
@@ -130,7 +130,7 @@ s_ik_jpinv( struct kin_solve_cx *cx,
     struct aa_mem_region *reg = cx->reg;
     void *ptrtop = aa_mem_region_ptr(reg);
 
-    if( 1 != cx->q_sub->inc || 1 != cx->q0_sub->inc ) {
+    if( 1 != cx->q_sub->inc || 1 != cx->q_all->inc ) {
         return AA_RX_INVALID_PARAMETER;
     }
 
@@ -141,18 +141,20 @@ s_ik_jpinv( struct kin_solve_cx *cx,
     sol_opts.adapt_factor_inc = 2.0;
 
 
+    struct aa_dvec *qsol = aa_dvec_alloc( reg, cx->q_sub->len );
     int r = aa_ode_sol( AA_ODE_RK23_BS, &sol_opts, q->len,
                         kin_solve_sys, cx,
                         kin_solve_check, cx,
-                        0, cx->opts->dt, cx->q0_sub->data, cx->q_sub->data);
+                        0, cx->opts->dt, cx->q_sub->data, qsol->data);
 
 
+
+    aa_lb_dcopy( qsol, q );
     aa_mem_region_pop(reg,ptrtop);
 
     if( r ) {
         return AA_RX_NO_SOLUTION | AA_RX_NO_IK;
     } else {
-        aa_lb_dcopy( cx->q_sub, q );
         return 0;
     }
 

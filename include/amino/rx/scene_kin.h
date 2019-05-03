@@ -255,6 +255,32 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
                 struct aa_dvec *q );
 
 
+AA_API struct aa_dvec *
+aa_rx_ik_get_start( const struct aa_rx_ik_cx *context );
+
+AA_API struct aa_dvec *
+aa_rx_ik_get_seed( const struct aa_rx_ik_cx *context );
+
+AA_API void
+aa_rx_ik_set_start( const struct aa_rx_ik_cx *context, const struct aa_dvec *q_start );
+
+AA_API void
+aa_rx_ik_set_seed( const struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed );
+
+AA_API void
+aa_rx_ik_set_seed_center( const struct aa_rx_ik_cx *context );
+
+/**
+ * Check an IK solution.
+ *
+ * @return 0 when the IK solution is within tolerances.
+ */
+AA_API int
+aa_rx_ik_check( const struct aa_rx_ik_cx *context,
+                const struct aa_dmat *TF,
+                struct aa_dvec *q );
+
+
 struct aa_rx_ik_jac_cx;
 
 /**

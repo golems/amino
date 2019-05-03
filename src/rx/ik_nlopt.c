@@ -246,14 +246,14 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     const struct aa_rx_sg *sg = cx->ssg->scenegraph;
 
-    if( 1 != cx->q_sub->inc || 1 != cx->q0_sub->inc ) {
+    if( 1 != cx->q_sub->inc || 1 != cx->q_all->inc ) {
         return AA_RX_INVALID_PARAMETER;
     }
 
-    size_t n_sub = cx->n;
+    size_t n_sub = cx->q_sub->len;
 
 
-    aa_lb_dcopy(cx->q0_sub, cx->q_sub);
+    //aa_lb_dcopy(cx->q0_sub, cx->q_sub);
 
     //nlopt_algorithm alg = NLOPT_LN_BOBYQA;
     nlopt_algorithm alg = NLOPT_LD_SLSQP;

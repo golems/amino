@@ -57,37 +57,38 @@ int main(int argc, char *argv[])
 
 
     /* --- Solve IK --- */
-    size_t n_q = aa_rx_sg_config_count(scenegraph);
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     struct aa_rx_sg_sub *ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
+    size_t n_q = aa_rx_sg_config_count(scenegraph);
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
 
     assert( 7 == n_qs );
 
-    // seed position
+    // start and seed position
     double qstart_all[n_q];
-    {
-        double qstart_s[7] = {
-            .05 * M_PI, // s0
-            -.25 * M_PI, // s1
-            0, // e0
-            .25*M_PI, // e1
-            0, // w0
-            .25*M_PI, // w1
-            0 // w2
-        };
-        AA_MEM_ZERO(qstart_all, n_q);
-        aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
-                             qstart_s, qstart_all );
-    }
+    double qstart_s[7] = {
+        .05 * M_PI, // s0
+        -.25 * M_PI, // s1
+        0, // e0
+        .25*M_PI, // e1
+        0, // w0
+        .25*M_PI, // w1
+        0 // w2
+    };
+    struct aa_dvec qv_start_all = AA_DVEC_INIT(n_q, qstart_all, 1);
+    struct aa_dvec qv_start_sub = AA_DVEC_INIT(n_qs, qstart_s, 1);
+    aa_dvec_zero(&qv_start_all);
+    aa_rx_sg_sub_config_scatter(ssg, &qv_start_sub, &qv_start_all);
 
 
     // solver goal
-    double qs[n_qs];
+    double q_solution[n_qs];
+    struct aa_dvec qv_solution = AA_DVEC_INIT(n_qs, q_solution, 1);
     //double E_ref[7];
 
     double E_ref[7] = {0, 1, 0, 0,
                        .8, -.25, .3051};
+    struct aa_dmat E_mat = AA_DMAT_INIT(7, 1, E_ref, 7);
     {
         double E0[7] = {0, 1, 0, 0,
                         0.6, -0.0, 0.3};
@@ -113,17 +114,11 @@ int main(int argc, char *argv[])
 
 
     struct aa_rx_ik_cx * cx = aa_rx_ik_cx_create(ssg, ko);
+    aa_rx_ik_set_start(cx, &qv_start_all);
+    aa_rx_ik_set_seed(cx, &qv_start_sub);
+
     aa_tick("Inverse Kinematics: ");
-
-
-    int r;
-    {
-        struct aa_dvec q_vec = AA_DVEC_INIT(n_qs, qs, 1);
-        struct aa_dmat E_mat = AA_DMAT_INIT(7, 1, E_ref, 7);
-
-        r = aa_rx_ik_solve( cx, &E_mat, &q_vec );
-    }
-
+    int r = aa_rx_ik_solve( cx, &E_mat, &qv_solution );
     aa_tock();
 
     if( r ) {
@@ -134,14 +129,8 @@ int main(int argc, char *argv[])
     } else {
 
         // set all-config joint position
-        {
-            double q_all[n_q];
-            AA_MEM_ZERO(q_all,n_q);
-            aa_rx_sg_config_set( scenegraph, n_q, n_qs, aa_rx_sg_sub_configs(ssg),
-                                 qs, q_all );
-
-            aa_rx_win_set_config( win, n_q, q_all );
-        }
+        aa_rx_sg_sub_config_scatter(ssg, &qv_solution, &qv_start_all);
+        aa_rx_win_set_config( win, qv_start_all.len, qv_start_all.data );
 
         /*--- Do Display ---*/
         aa_rx_win_run();

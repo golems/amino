@@ -133,27 +133,25 @@ struct aa_rx_ik_cx
 {
     const struct aa_rx_sg_sub *ssg;
     const struct aa_rx_ksol_opts *opts;
+
+    struct aa_dvec *q_start;
+    struct aa_dvec *q_seed;
 };
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
 
 struct kin_solve_cx {
-    size_t n;
+    struct aa_mem_region *reg;
+
     const struct aa_rx_ksol_opts *opts;
     const struct aa_rx_sg_sub *ssg;
     const double *E1;
-    //const double *dq_dt;
 
     size_t iteration;
 
-    struct aa_mem_region *reg;
-
-    const double *q0_all;
-
-    struct aa_dvec *q0_sub;
+    struct aa_dvec *q_all;
     struct aa_dvec *q_sub;
 
-    size_t n_all;
     double *TF_rel0;
     double *TF_abs0;
 };

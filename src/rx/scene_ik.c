@@ -80,16 +80,56 @@ aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts 
     cx->ssg = ssg;
     cx->opts = opts;
 
+    cx->q_start = aa_dvec_malloc( aa_rx_sg_sub_all_config_count(ssg) );
+    aa_dvec_zero(cx->q_start);
+
+    cx->q_seed = aa_dvec_malloc( aa_rx_sg_sub_config_count(ssg) );
+    aa_rx_ik_set_seed_center(cx);
+
     return cx;
 }
 
 AA_API void
 aa_rx_ik_cx_destroy( struct aa_rx_ik_cx *cx )
 {
+    free(cx->q_start);
+    free(cx->q_seed);
     free(cx);
 }
 
+AA_API struct aa_dvec *
+aa_rx_ik_get_start( const struct aa_rx_ik_cx *context )
+{
+    return context->q_start;
+}
 
+AA_API struct aa_dvec *
+aa_rx_ik_get_seed( const struct aa_rx_ik_cx *context )
+{
+    return context->q_seed;
+}
+
+AA_API void
+aa_rx_ik_set_start( const struct aa_rx_ik_cx *context, const struct aa_dvec *q_start )
+{
+    aa_lb_dcopy( q_start, context->q_start );
+}
+
+AA_API void
+aa_rx_ik_set_seed( const struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed )
+{
+    aa_lb_dcopy( q_seed, context->q_seed );
+}
+
+AA_API void
+aa_rx_ik_set_seed_center( const struct aa_rx_ik_cx *context )
+{
+    size_t n_s = context->q_seed->len;
+    double q_s[n_s];
+    aa_rx_sg_sub_center_configs( context->ssg, n_s, q_s );
+    struct aa_dvec v = AA_DVEC_INIT(n_s,q_s,1);
+    aa_rx_ik_set_seed( context, &v );
+}
 
 
 static struct kin_solve_cx *
@@ -99,28 +139,19 @@ s_kin_solve_cx_alloc( const struct aa_rx_ik_cx *ik_cx,
     struct kin_solve_cx *cx = AA_MEM_REGION_NEW(reg, struct kin_solve_cx);
     cx->reg = reg;
 
-
     cx->ssg = ik_cx->ssg;
     cx->opts = ik_cx->opts;
 
-    cx->n = aa_rx_sg_sub_config_count(cx->ssg);
     cx->iteration = 0;
-
-    cx->q0_all = cx->opts->q_all_seed;
-    cx->n_all = cx->opts->n_all_seed;
 
     const struct aa_rx_sg *sg = cx->ssg->scenegraph;
     size_t n_f = aa_rx_sg_frame_count(sg);
     cx->TF_rel0 = AA_MEM_REGION_NEW_N(cx->reg, double, AA_RX_TF_LEN*n_f);
     cx->TF_abs0 = AA_MEM_REGION_NEW_N(cx->reg, double, AA_RX_TF_LEN*n_f);
 
-
-    cx->q0_sub = aa_dvec_alloc(reg, cx->n);
-    cx->q_sub = aa_dvec_alloc(reg, cx->n);
-
-
-    aa_rx_sg_config_get( sg, cx->n_all, cx->n, aa_rx_sg_sub_configs(cx->ssg),
-                         cx->q0_all, cx->q0_sub->data );
+    cx->q_all = aa_dvec_dup(reg, ik_cx->q_start );
+    cx->q_sub = aa_dvec_dup(reg, ik_cx->q_seed );
+    aa_rx_sg_sub_config_scatter( cx->ssg, cx->q_sub, cx->q_all );
 
     return cx;
 }
@@ -150,7 +181,7 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
     kcx->E1 = TF->data; // TODO: be more general
 
     aa_rx_sg_tf( kcx->ssg->scenegraph,
-                 kcx->n_all, kcx->q0_all,
+                 kcx->q_all->len, kcx->q_all->data,
                  aa_rx_sg_frame_count(kcx->ssg->scenegraph),
                  kcx->TF_rel0, AA_RX_TF_LEN,
                  kcx->TF_abs0, AA_RX_TF_LEN );
@@ -198,6 +229,9 @@ END:
 
 
 
+/* static void s_tf0 (const struct kin_solve_cx *cx, const double *q_s, */
+/*                    struct aa_dmat **pTF_abs, */
+/*                    double *E) */
 
 static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
                   struct aa_dmat **pTF_abs,
@@ -206,23 +240,16 @@ static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     const struct aa_rx_sg *sg = ssg->scenegraph;
 
-    size_t n_q = aa_rx_sg_config_count(sg);
+    //size_t n_q = aa_rx_sg_config_count(sg);
     size_t n_sq = aa_rx_sg_sub_config_count(ssg);
 
-    /* Get the configuration */
-    double q_all[n_q];
-    AA_MEM_CPY(q_all, cx->q0_all, n_q);
-    aa_rx_sg_sub_config_set( ssg,
-                             n_sq, q_s,
-                             n_q, q_all);
+
+    struct aa_dvec vqs = AA_DVEC_INIT(n_sq, (double*)q_s, 1);
+    aa_rx_sg_sub_config_scatter( ssg, &vqs, cx->q_all );
 
     /* Compute the transforms */
-    {
-        struct aa_dvec qv;
-        aa_dvec_view( &qv, n_q, q_all, 1 );
-        // TODO: faster TF update
-        *pTF_abs = aa_rx_sg_get_tf_abs(sg, cx->reg, &qv );
-    }
+    // TODO: faster TF update
+    *pTF_abs = aa_rx_sg_get_tf_abs( sg, cx->reg, cx->q_all );
 
 
     /* aa_rx_sg_tf_update( sg, */
@@ -242,6 +269,25 @@ static void s_tf (const struct kin_solve_cx *cx, const double *q_s,
     AA_MEM_CPY(E, E_ee, AA_RX_TF_LEN);
 }
 
+
+/* AA_API int */
+/* aa_rx_ik_check( const struct aa_rx_ik_cx *cx, */
+/*                 const struct aa_dmat *TF, */
+/*                 struct aa_dvec *q ) */
+/* { */
+/*     void *ptrtop = aa_mem_region_ptr(cx->reg); */
+
+/*     double theta, x, E_sol[7]; */
+/*     s_tf(cx, cx->q_sub->data, &TF_abs, E_sol); */
+/*     s_err2(E_sol, cx->E1, &theta, &x); */
+
+/*     int r = ( theta < cx->opts->tol_angle && x < cx->opts->tol_trans ) ? */
+/*         0 : AA_RX_NO_SOLUTION | AA_RX_NO_IK; */
+
+/*     aa_mem_region_pop(cx->reg, ptrtop); */
+
+/*     return r; */
+/* } */
 
 
 static double s_serr( const double E_act[7], const double E_ref[7] )
@@ -303,9 +349,9 @@ static void s_ksol_jpinv( const struct kin_solve_cx *cx,
 }
 
 
-#ifdef HAVE_NLOPT
+
+
 #include "ik_jacobian.c"
-#endif /*HAVE_NLOPT*/
 
 #ifdef HAVE_NLOPT
 #include "ik_nlopt.c"
