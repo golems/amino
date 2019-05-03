@@ -137,19 +137,18 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
     aa_tf_qutr2duqu(E_act, S_act);
     aa_tf_qutr2duqu(cx->E1, S_ref);
     aa_tf_duqu_cmul(S_act,S_ref,S_err);
-    aa_tf_duqu_minimize(S_err);
+    // Apply a negative factor in gradient when we have to minimze the
+    // error quaternion
+    int needs_min = (S_err[AA_TF_DUQU_REAL_W] < 0 );
+    if( needs_min ) {
+        for( size_t i = 0; i < 8; i ++ ) S_err[i] *= -1;
+    }
     aa_tf_duqu_ln(S_err, S_ln);
     double result = aa_la_dot(8,S_ln,S_ln);
 
     if( dq ) {
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
 
-        /* struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1); */
-        /* double eps = 1e-6; */
-        /* aa_de_grad_fd( s_nlobj_dq_fd_helper, vcx, */
-        /*                &vq, eps, &v_dq ); */
-        /* printf("--\nfd: "); */
-        /* aa_dump_vec(stdout,dq,n); */
 
 
         /*
@@ -183,7 +182,7 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
              *                   [   0   J_r^T] (S_ln_d)
              *
              */
-            mv_block_helper(2, dJ, S_ln, a);
+            mv_block_helper(needs_min ? -2 : 2, dJ, S_ln, a);
         }
 
         {
@@ -197,18 +196,36 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
         /* aa_tf_duqu_conj_jac(J_conj); */
         /* aa_lb_dgemv( CblasTrans, 1, J_8x8, &vb, 0, &va ); */
         /* aa_tf_duqu_conj(vb.data, va.data); */
-        for( int i = 0; i < 3; i ++ ) {
-            b[i+AA_TF_DUQU_REAL_XYZ] *= -1;
-            b[i+AA_TF_DUQU_DUAL_XYZ] *= -1;
-        }
+        //if( !needs_min ) {
+            for( int i = 0; i < 3; i ++ ) {
+                b[i+AA_TF_DUQU_REAL_XYZ] *= -1;
+                b[i+AA_TF_DUQU_DUAL_XYZ] *= -1;
+            }
+        //}
 
         struct aa_dmat *J_S = aa_dmat_alloc(cx->reg,8,n);
         struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs);
         aa_tf_duqu_jac_vel2diff(S_act,J_vel, J_S);
         aa_lb_dgemv( CblasTrans, 1, J_S, &vb, 0, &v_dq );
 
-        /* printf("an: "); */
-        /* aa_dump_vec(stdout,dq,n); */
+
+        /* { */
+        /*     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1); */
+        /*     struct aa_dvec *v_dq_fd = aa_dvec_alloc(cx->reg,n); */
+        /*     double eps = 1e-6; */
+        /*     aa_de_grad_fd( s_nlobj_dq_fd_helper, vcx, */
+        /*                    &vq, eps, v_dq_fd ); */
+
+
+        /*     printf("--\n"); */
+        /*     printf("needs min: %d\n", needs_min); */
+        /*     printf("ad: "); */
+        /*     aa_dump_vec(stdout,v_dq_fd->data,n); */
+        /*     printf("an: "); */
+        /*     aa_dump_vec(stdout,dq,n); */
+
+        /*     assert( aa_dvec_ssd(v_dq_fd, &v_dq) < 1e-3 ); */
+        /* } */
     }
 
     aa_mem_region_pop(cx->reg, ptrtop);
