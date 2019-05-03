@@ -58,7 +58,8 @@ static void kin_solve_sys( const void *vcx,
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
 
     struct aa_dmat *TF_abs;
-    s_tf( cx, q,  &TF_abs, E_act );
+    struct aa_dvec vq = AA_DVEC_INIT(cx->q_sub->len,(double*)q,1);
+    s_tf( cx, &vq,  &TF_abs, E_act );
 
     struct aa_dvec v_dq;
     aa_dvec_view(&v_dq, n_qs, dq, 1);
@@ -94,12 +95,13 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
     {
         void *ptrtop = aa_mem_region_ptr(cx->reg);
         struct aa_dmat *TF_abs;
-        s_tf( cx, x, &TF_abs, E );
+        struct aa_dvec vq = AA_DVEC_INIT(cx->q_sub->len,x,1);
+        s_tf( cx, &vq, &TF_abs, E );
         aa_mem_region_pop(cx->reg, ptrtop);
     }
 
     double theta_err, x_err;
-    s_err2( E, cx->E1, &theta_err, &x_err );
+    s_err2( E, cx->TF_ref->data, &theta_err, &x_err );
 
     cx->iteration++;
     if( (theta_err < cx->opts->tol_angle) &&

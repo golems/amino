@@ -57,7 +57,8 @@ s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx)
 
     double  E_act[7];
     struct aa_dmat *TF_abs;
-    s_tf( cx, q, &TF_abs, E_act );
+    struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
+    s_tf( cx, &vq, &TF_abs, E_act );
 
     if( dq ) {
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
@@ -65,7 +66,7 @@ s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx)
         aa_lb_dscal(-1,&v_dq);
     }
 
-    double x = s_serr( E_act, cx->E1 );
+    double x = s_serr( E_act, cx->TF_ref->data );
 
     aa_mem_region_pop(cx->reg, ptrtop);
     return x;
@@ -76,16 +77,15 @@ static double s_nlobj_dq_fd_helper( void *vcx, const struct aa_dvec *x)
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
-    double *q = x->data;
     assert(1 == x->inc);
 
     double  E_act[7];
     struct aa_dmat *TF_abs;
-    s_tf( cx, q, &TF_abs, E_act );
+    s_tf( cx, x, &TF_abs, E_act );
 
     double S_act[8], S_ref[8], S_err[8], S_ln[8];
     aa_tf_qutr2duqu(E_act, S_act);
-    aa_tf_qutr2duqu(cx->E1, S_ref);
+    aa_tf_qutr2duqu(cx->TF_ref->data, S_ref);
     aa_tf_duqu_cmul(S_act,S_ref,S_err);
     aa_tf_duqu_minimize(S_err);
     aa_tf_duqu_ln(S_err, S_ln);
@@ -131,11 +131,12 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
 
     double  E_act[7];
     struct aa_dmat *TF_abs;
-    s_tf( cx, q, &TF_abs, E_act );
+    struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
+    s_tf( cx, &vq, &TF_abs, E_act );
 
     double S_act[8], S_ref[8], S_err[8], S_ln[8];
     aa_tf_qutr2duqu(E_act, S_act);
-    aa_tf_qutr2duqu(cx->E1, S_ref);
+    aa_tf_qutr2duqu(cx->TF_ref->data, S_ref);
     aa_tf_duqu_cmul(S_act,S_ref,S_err);
     // Apply a negative factor in gradient when we have to minimze the
     // error quaternion
@@ -275,33 +276,17 @@ s_ik_nlopt( struct kin_solve_cx *cx,
 
     nlopt_set_lower_bounds(opt, lb);
     nlopt_set_upper_bounds(opt, ub);
-    int r = -1;
     double minf;
-    if (nlopt_optimize(opt, cx->q_sub->data, &minf) < 0) {
-        // no miniumum
-        // printf("nlopt failed!\n");
-    } else {
+    if (0 == nlopt_optimize(opt, cx->q_sub->data, &minf) < 0) {
         // found miniumum
         aa_lb_dcopy( cx->q_sub, q );
-
-        // check error
-        double theta, x, E_sol[7];
-        struct aa_dmat *TF_abs;
-        s_tf(cx, cx->q_sub->data, &TF_abs, E_sol);
-        s_err2(E_sol, cx->E1, &theta, &x);
-        if( theta < cx->opts->tol_angle && x < cx->opts->tol_trans ) {
-            r = 0;
-        }
-        //printf("found minimum\n");
     }
 
-    nlopt_destroy(opt);
 
+    int result = aa_rx_ik_check(cx->ik_cx, cx->TF_ref, q );
+    nlopt_destroy(opt);
     aa_mem_region_pop(reg,ptrtop);
 
-    if( r ) {
-        return AA_RX_NO_SOLUTION | AA_RX_NO_IK;
-    } else {
-        return 0;
-    }
+    return result;
+
 }

@@ -262,13 +262,22 @@ AA_API struct aa_dvec *
 aa_rx_ik_get_seed( const struct aa_rx_ik_cx *context );
 
 AA_API void
-aa_rx_ik_set_start( const struct aa_rx_ik_cx *context, const struct aa_dvec *q_start );
+aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start );
 
 AA_API void
-aa_rx_ik_set_seed( const struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed );
+aa_rx_ik_set_seed( struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed );
 
 AA_API void
-aa_rx_ik_set_seed_center( const struct aa_rx_ik_cx *context );
+aa_rx_ik_set_seed_center( struct aa_rx_ik_cx *context );
+
+AA_API void
+aa_rx_ik_set_seed_center( struct aa_rx_ik_cx *context );
+
+AA_API void
+aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name );
+
+AA_API void
+aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id );
 
 /**
  * Check an IK solution.
@@ -278,7 +287,7 @@ aa_rx_ik_set_seed_center( const struct aa_rx_ik_cx *context );
 AA_API int
 aa_rx_ik_check( const struct aa_rx_ik_cx *context,
                 const struct aa_dmat *TF,
-                struct aa_dvec *q );
+                struct aa_dvec *q_sub );
 
 
 struct aa_rx_ik_jac_cx;

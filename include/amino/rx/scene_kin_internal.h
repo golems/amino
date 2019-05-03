@@ -136,6 +136,8 @@ struct aa_rx_ik_cx
 
     struct aa_dvec *q_start;
     struct aa_dvec *q_seed;
+
+    aa_rx_frame_id frame;
 };
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);
@@ -143,9 +145,12 @@ typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8], 
 struct kin_solve_cx {
     struct aa_mem_region *reg;
 
+    const struct aa_rx_ik_cx *ik_cx;
+
     const struct aa_rx_ksol_opts *opts;
     const struct aa_rx_sg_sub *ssg;
-    const double *E1;
+
+    const struct aa_dmat *TF_ref;
 
     size_t iteration;
 
@@ -154,6 +159,9 @@ struct kin_solve_cx {
 
     double *TF_rel0;
     double *TF_abs0;
+
+
+    aa_rx_frame_id frame;
 };
 
 
