@@ -304,7 +304,9 @@
 
 (let ((scanner (ppcre:create-scanner "\\s+")))
   (defun split-spaces (text &optional (start 0))
-    (ppcre:split scanner text :start start)))
+    (loop for cons on (ppcre:split scanner text :start start)
+       until (not (zerop (length (car cons))))
+       finally (return cons))))
 
 (defun parse-float-sequence (text &optional (start 0))
   (map 'list #'parse-float (split-spaces text start)))
