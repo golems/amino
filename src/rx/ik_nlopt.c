@@ -113,14 +113,22 @@ s_nlobj_dq_fd(unsigned n, const double *q, double *dq, void *vcx)
 }
 
 static void
-mv_block_helper (double alpha, double *A, double *x, double *y)
+mv_block_helper (const double *A, const double *x, double *y)
 {
     cblas_dgemv(CblasColMajor, CblasTrans, 8, 4,
-                alpha, A, 8, x, 1,
+                1, A, 8, x, 1,
                 0, y, 1);
     cblas_dgemv(CblasColMajor, CblasTrans, 4, 4,
-                alpha, A, 8, x+4, 1,
+                1, A, 8, x+4, 1,
                 0, y+4, 1);
+}
+
+static void
+duqu_rmul_helper( const double *Sr, const double *x, double *y )
+{
+    double M[8*8];
+    aa_tf_duqu_matrix_r(Sr,M,8);
+    mv_block_helper(M, x, y);
 }
 
 static double
@@ -141,20 +149,18 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
     // Apply a negative factor in gradient when we have to minimze the
     // error quaternion
     int needs_min = (S_err[AA_TF_DUQU_REAL_W] < 0 );
-    double alpha;
     if( needs_min ) {
         for( size_t i = 0; i < 8; i ++ ) S_err[i] *= -1;
-        alpha = -2;
     } else {
-        alpha = 2;
     }
     aa_tf_duqu_ln(S_err, S_ln);
     double result = aa_la_dot(8,S_ln,S_ln);
 
     if( dq ) {
+        if( needs_min ) {
+            for( size_t i = 0; i < 8; i ++ ) S_ln[i] *= -1;
+        }
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
-
-
 
         /*
          * g_sumsq * J_ln*[S_ref]_r*J_conj*J_S
@@ -165,7 +171,6 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
          */
 
         double a[8], b[8], dJ[8*8];
-        struct aa_dvec vb = AA_DVEC_INIT(8,b,1);
         struct aa_dmat vJ_8x8 = AA_DMAT_INIT(8,8,dJ,8);
         struct aa_dmat *J_8x8 = &vJ_8x8;
 
@@ -187,27 +192,43 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
              *                   [   0   J_r^T] (S_ln_d)
              *
              */
-            mv_block_helper(alpha, dJ, S_ln, a);
+            mv_block_helper(dJ, S_ln, a);
         }
 
-
-        {
-            struct aa_dmat *M_S_ref = J_8x8;
-            aa_tf_duqu_mat_r(S_ref,M_S_ref);
-            mv_block_helper(1, dJ, a, b);
-        }
-        aa_tf_duqu_conj1(b);
 
         /* aa_tf_duqu_conj1(a); */
         /* aa_tf_qmul(S_ref,a,b); */
         /* aa_tf_qmul_a(S_ref+4,a+4,b); */
         /* aa_tf_qmul(S_ref,a+4,b+4); */
 
+        /*
+         * dS/dphi = [S]_R V J
+         * g [S]_R V J
+         * -> [S]_R^T g V J
+         * -> V^T [S]_R^T g J
+         * -> J^T V [S]_R^T g
+         */
 
-        struct aa_dmat *J_S = aa_dmat_alloc(cx->reg,8,n);
-        struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs);
-        aa_tf_duqu_jac_vel2diff(S_act,J_vel, J_S);
-        aa_lb_dgemv( CblasTrans, 1, J_S, &vb, 0, &v_dq );
+        duqu_rmul_helper( S_ref, a, b );
+        aa_tf_duqu_conj1(b);
+
+        /* struct aa_dmat *J_S = aa_dmat_alloc(cx->reg,8,n); */
+        /* struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs); */
+        /* aa_tf_duqu_jac_vel2diff(S_act,J_vel, J_S); */
+        /* aa_lb_dgemv( CblasTrans, 1, J_S, &vb, 0, &v_dq ); */
+        {
+            duqu_rmul_helper( S_act, b, a );
+            // a is now a pure dual quaternion
+
+            aa_tf_cross_a(a+AA_TF_DUQU_DUAL_XYZ,E_act+AA_TF_QUTR_V,a);
+
+            double c[6];
+            aa_tf_duqu2pure(a,c);
+            struct aa_dvec vc = AA_DVEC_INIT(6,c,1);
+            struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs);
+            aa_lb_dgemv( CblasTrans, 1, J_vel, &vc, 0, &v_dq );
+
+        }
 
 
         /* { */

@@ -930,6 +930,12 @@ AA_API void aa_tf_cross( const double a[AA_RESTRICT 3], const double b[AA_RESTRI
                          double c[AA_RESTRICT 3] ) ;
 
 /**
+ * Cross-product accumulate
+ */
+AA_API void aa_tf_cross_a( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3],
+                           double c[AA_RESTRICT 3] ) ;
+
+/**
  * Construct matrix for left cross product
  * v*a = M*a
  */
