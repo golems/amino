@@ -141,8 +141,12 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
     // Apply a negative factor in gradient when we have to minimze the
     // error quaternion
     int needs_min = (S_err[AA_TF_DUQU_REAL_W] < 0 );
+    double alpha;
     if( needs_min ) {
         for( size_t i = 0; i < 8; i ++ ) S_err[i] *= -1;
+        alpha = -2;
+    } else {
+        alpha = 2;
     }
     aa_tf_duqu_ln(S_err, S_ln);
     double result = aa_la_dot(8,S_ln,S_ln);
@@ -183,26 +187,22 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
              *                   [   0   J_r^T] (S_ln_d)
              *
              */
-            mv_block_helper(needs_min ? -2 : 2, dJ, S_ln, a);
+            mv_block_helper(alpha, dJ, S_ln, a);
         }
+
 
         {
             struct aa_dmat *M_S_ref = J_8x8;
             aa_tf_duqu_mat_r(S_ref,M_S_ref);
             mv_block_helper(1, dJ, a, b);
         }
+        aa_tf_duqu_conj1(b);
 
+        /* aa_tf_duqu_conj1(a); */
+        /* aa_tf_qmul(S_ref,a,b); */
+        /* aa_tf_qmul_a(S_ref+4,a+4,b); */
+        /* aa_tf_qmul(S_ref,a+4,b+4); */
 
-        /* struct aa_dmat *J_conj = J_8x8; */
-        /* aa_tf_duqu_conj_jac(J_conj); */
-        /* aa_lb_dgemv( CblasTrans, 1, J_8x8, &vb, 0, &va ); */
-        /* aa_tf_duqu_conj(vb.data, va.data); */
-        //if( !needs_min ) {
-            for( int i = 0; i < 3; i ++ ) {
-                b[i+AA_TF_DUQU_REAL_XYZ] *= -1;
-                b[i+AA_TF_DUQU_DUAL_XYZ] *= -1;
-            }
-        //}
 
         struct aa_dmat *J_S = aa_dmat_alloc(cx->reg,8,n);
         struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs);
@@ -211,7 +211,6 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
 
 
         /* { */
-        /*     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1); */
         /*     struct aa_dvec *v_dq_fd = aa_dvec_alloc(cx->reg,n); */
         /*     double eps = 1e-6; */
         /*     aa_de_grad_fd( s_nlobj_dq_fd_helper, vcx, */
@@ -277,7 +276,7 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     nlopt_set_lower_bounds(opt, lb);
     nlopt_set_upper_bounds(opt, ub);
     double minf;
-    if (0 == nlopt_optimize(opt, cx->q_sub->data, &minf) < 0) {
+    if (nlopt_optimize(opt, cx->q_sub->data, &minf) > 0) {
         // found miniumum
         aa_lb_dcopy( cx->q_sub, q );
     }

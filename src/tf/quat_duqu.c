@@ -123,14 +123,20 @@ AA_API void aa_tf_duqu_sub( const double a[AA_RESTRICT 8], const double b[AA_RES
     aa_tf_qsub(A->dual.data, B->dual.data, C->dual.data);
 }
 
+AA_API void
+aa_tf_duqu_conj1( double _s[AA_RESTRICT 8] )
+{
+    struct aa_tf_duqu *S = (struct aa_tf_duqu *)_s;
+    aa_tf_qconj1(S->real.data);
+    aa_tf_qconj1(S->dual.data);
+}
+
 
 AA_API void
-aa_tf_duqu_conj( const double _s[AA_RESTRICT 8], double _c[AA_RESTRICT 8] )
+aa_tf_duqu_conj( const double s[AA_RESTRICT 8], double c[AA_RESTRICT 8] )
 {
-    const struct aa_tf_duqu *S = (struct aa_tf_duqu *)_s;
-    struct aa_tf_duqu *C = (struct aa_tf_duqu *)_c;
-    aa_tf_qconj(S->real.data, C->real.data );
-    aa_tf_qconj(S->dual.data, C->dual.data );
+    AA_MEM_CPY(c,s,8);
+    aa_tf_duqu_conj1(c);
 }
 
 

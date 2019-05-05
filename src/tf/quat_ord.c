@@ -176,14 +176,18 @@ aa_tf_normalize2( const double q[AA_RESTRICT 4], double qn[AA_RESTRICT 4] )
     FOR_QUAT(i) qn[i] = q[i]/n;
 }
 
+AA_API void
+aa_tf_qconj1( double q[AA_RESTRICT 4] )
+{
+    double *v = q+AA_TF_QUAT_XYZ;
+    FOR_VEC(i) v[i] = -v[i];
+}
 
 AA_API void
 aa_tf_qconj( const double q[AA_RESTRICT 4], double qc[AA_RESTRICT 4] )
 {
-    const double *v = q+AA_TF_QUAT_XYZ;
-    double *vc = qc+AA_TF_QUAT_XYZ;
-    FOR_VEC(i) vc[i] = -v[i];
-    qc[AA_TF_QUAT_W] = q[AA_TF_QUAT_W];
+    AA_MEM_CPY(qc,q, 4);
+    aa_tf_qconj1(qc);
 }
 
 
