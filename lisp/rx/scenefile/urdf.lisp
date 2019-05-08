@@ -189,6 +189,37 @@
                                 :limits limits
                                  :tf tf)))))
 
+
+(defun urdf-material-properties (node materials)
+  (let* ((name (dom:get-attribute node "name"))
+         (node (if (and name (not (zerop (length name))) materials)
+                   (gethash name materials)
+                   node))
+         (result *draw-options*))
+    (when-let ((rgba-text (dom-select-path node '("color" "@rgba")
+                                           :singleton t :undefined-error nil)))
+      (let ((elts (parse-float-sequence rgba-text)))
+        (push `(:color . ,(subseq elts 0 3)) result)
+        (push `(:alpha . ,(elt elts 3)) result)))
+    ;;(format t "~A: ~A~%" name result)
+    result))
+
+
+(defun urdf-materials (dom)
+  (let ((materials (make-hash-table :test #'equal)))
+    (dolist (node (dom-select-path dom  '("robot" "material")
+                                   :undefined-error nil))
+      ;;(urdf-material-properties node nil)
+      (let ((name  (dom-select-path node '("@name") :singleton t :undefined-error nil)))
+        (when name
+          (setf (gethash name materials)
+                node))))
+    ;; (loop for k being the hash-keys of materials
+    ;;    do (format t "~&~A: ~A~%"
+    ;;               k
+    ;;               (urdf-material-properties (gethash k materials) nil)))
+    materials))
+
 (defun urdf-bind-links (dom scene-graph link-parent-map &key
                                                           (default-color '(.5 .5 .5))
                                                           (default-alpha 1d0))
@@ -249,30 +280,28 @@
                                                                    offset))))
                      (scene-graph-f scene-graph new-frame)
                      (scene-frame-name new-frame)))))
-           (node-options (&key rgba visual collision)
-             `(,@(when rgba
-                       `((:color . ,(subseq rgba 0 3))
-                         (:alpha . ,(elt rgba 3))))
-                 (:visual . ,visual)
-                 (:collision . ,collision))))
+           (node-options (default &key visual collision)
+             (merge-draw-options (draw-options :visual visual
+                                               :collision collision)
+                                 default)))
 
-    (loop for link-node in (dom-select-path dom '("robot" "link"))
+    (loop with materials = (urdf-materials dom)
+       for link-node in (dom-select-path dom '("robot" "link"))
        for name = (dom:get-attribute link-node "name")
        for visuals = (path-n link-node '("visual"))
        for inertial-node = (path-1 link-node '("inertial"))
        for default-visual-node = (car visuals)
-       for default-rgba-text = (when default-visual-node
-                                 (path-1 default-visual-node '("material" "color" "@rgba")))
-       for default-rgba = (if default-rgba-text
-                              (parse-float-sequence default-rgba-text)
-                              (append default-color (list default-alpha)))
+       for material-node = (when default-visual-node
+                             (path-1 default-visual-node '("material")))
+       for material-props = (when material-node
+                              (urdf-material-properties material-node materials))
        do
        ;; Add visuals
          (loop for visual-node in visuals
             for rgba-text = (when visual-node (path-1 visual-node '("material" "color" "@rgba")))
             for rgba = (if rgba-text (parse-float-sequence rgba-text)
                            (append default-color (list default-alpha)))
-            for options = (node-options :rgba rgba :visual t)
+            for options = (node-options material-props :visual t :collision nil)
             for geometry = (node-geometry name visual-node options)
             when geometry
             do (let ((frame-name (node-origin name visual-node "visual" geometry)))
@@ -280,7 +309,7 @@
                        (scene-graph-add-geometry scene-graph frame-name geometry))))
        ;; Add collisions
          (loop for collision-node in (path-n link-node '("collision"))
-            for options = (node-options :rgba default-rgba :visual nil :collision t)
+            for options = (node-options material-props :visual nil :collision t)
             for geometry = (node-geometry name collision-node options)
             do
               (let ((frame-name (node-origin name collision-node "collision" geometry)))
