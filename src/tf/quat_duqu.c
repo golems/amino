@@ -442,54 +442,66 @@ aa_tf_duqu_jac_vel2diff(const double S[8], const struct aa_dmat *Jvel,
     double Sh[8]; aa_tf_duqu_smul(0.5,S,Sh);
     aa_tf_duqu_mat_r(Sh, SR);
 
-    struct aa_dmat *VM = aa_dmat_alloc(reg,8,8);
+    struct aa_dmat *VM = aa_dmat_alloc(reg,8,6);
     struct aa_dmat Vb;
     aa_dmat_zero(VM);
     {
         aa_dmat_view_block(&Vb, VM,
-                           AA_TF_DUQU_DUAL_XYZ, AA_TF_DUQU_REAL_XYZ,
+                           4,3,
                            3, 3 );
         double v[3]; aa_tf_duqu_trans(S,v);
         aa_tf_cross_mat_l(v, &Vb);
     }
+    for( size_t i = 0; i < 3; i ++ ) {
+        AA_DMAT_REF(VM, i, i+3) = 1;
+        AA_DMAT_REF(VM, i+4, i) = 1;
+    }
+
+    // TODO: avoid the GEMM by permuting and doing a cross product
+    struct aa_dmat *tmp = aa_dmat_alloc(reg,8,6);
+    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
+                 1, SR, VM,
+                 0, tmp );
+
+    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
+                 1, tmp, Jvel,
+                 0, Js );
 
     // SR := SR * VM, VM is unit lower triangular
     // TODO: save a few multiplies by manually handling upper/lower blocks
-    cblas_dtrmm( CblasColMajor, CblasRight, CblasLower, CblasNoTrans, CblasUnit,
-                 8, 8, 1,
-                 VM->data, 8,
-                 SR->data, 8 );
-    aa_mem_region_pop(reg,VM);
+    /* cblas_dtrmm( CblasColMajor, CblasRight, CblasLower, CblasNoTrans, CblasUnit, */
+    /*              8, 8, 1, */
+    /*              VM->data, 8, */
+    /*              SR->data, 8 ); */
+
+    /* // Expand velocity Jacobian with zeros for scalar (w) rows */
+    /* size_t n = Jvel->cols; */
+    /* struct aa_dmat *JE = aa_dmat_alloc(reg,8,n); */
+    /* { */
+    /*     // copy vector rows */
+    /*     struct aa_dmat Jm, JEm; */
+    /*     aa_dmat_view_block( &Jm, Jvel, AA_TF_DX_W, 0, 3, n ); */
+    /*     aa_dmat_view_block( &JEm, JE, AA_TF_DUQU_REAL_XYZ, 0, 3, n ); */
+    /*     aa_dmat_copy(&Jm, &JEm); */
+
+    /*     aa_dmat_view_block( &Jm, Jvel, AA_TF_DX_V, 0, 3, n ); */
+    /*     aa_dmat_view_block( &JEm, JE, AA_TF_DUQU_DUAL_XYZ, 0, 3, n ); */
+    /*     aa_dmat_copy(&Jm, &JEm); */
+    /* } */
+
+    /* { */
+    /*     // zero vector rows */
+    /*     struct aa_dvec JEw; */
+    /*     aa_dmat_row_vec(JE, AA_TF_DUQU_REAL_W, &JEw ); */
+    /*     aa_dvec_zero(&JEw); */
+    /*     aa_dmat_row_vec(JE, AA_TF_DUQU_DUAL_W, &JEw ); */
+    /*     aa_dvec_zero(&JEw); */
+    /* } */
 
 
-    // Expand velocity Jacobian with zeros for scalar (w) rows
-    size_t n = Jvel->cols;
-    struct aa_dmat *JE = aa_dmat_alloc(reg,8,n);
-    {
-        // copy vector rows
-        struct aa_dmat Jm, JEm;
-        aa_dmat_view_block( &Jm, Jvel, AA_TF_DX_W, 0, 3, n );
-        aa_dmat_view_block( &JEm, JE, AA_TF_DUQU_REAL_XYZ, 0, 3, n );
-        aa_dmat_copy(&Jm, &JEm);
-
-        aa_dmat_view_block( &Jm, Jvel, AA_TF_DX_V, 0, 3, n );
-        aa_dmat_view_block( &JEm, JE, AA_TF_DUQU_DUAL_XYZ, 0, 3, n );
-        aa_dmat_copy(&Jm, &JEm);
-    }
-
-    {
-        // zero vector rows
-        struct aa_dvec JEw;
-        aa_dmat_row_vec(JE, AA_TF_DUQU_REAL_W, &JEw );
-        aa_dvec_zero(&JEw);
-        aa_dmat_row_vec(JE, AA_TF_DUQU_DUAL_W, &JEw );
-        aa_dvec_zero(&JEw);
-    }
-
-
-    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
-                 1, SR, JE,
-                 0, Js );
+    /* aa_lb_dgemm( CblasNoTrans, CblasNoTrans, */
+    /*              1, SR, JE, */
+    /*              0, Js ); */
 
     aa_mem_region_pop(reg,ptrtop);
 }

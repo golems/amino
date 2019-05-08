@@ -270,8 +270,8 @@ aa_tf_qv_vel2twist( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3]
     AA_MEM_CPY( tw, w, 3 );
 
     // translation
-    aa_tf_cross( v, w, tv );
-    FOR_VEC(i) tv[i] += dv[i];
+    AA_MEM_CPY( tv, dv, 3 );
+    aa_tf_cross_a( v, w, tv );
 }
 
 AA_API void
@@ -284,7 +284,7 @@ aa_tf_qv_twist2vel( const double q[AA_RESTRICT 4], const double v[AA_RESTRICT 3]
     AA_MEM_CPY( w, tw, 3 );
 
     // translation
-    FOR_VEC(i) dv[i] = tv[i];
+    AA_MEM_CPY(dv, tv, 3 );
     aa_tf_cross_a(tw, v, dv );
 }
 
