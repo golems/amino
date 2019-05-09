@@ -272,15 +272,11 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     }
 
     size_t n_sub = cx->q_sub->len;
-
-
-    //aa_lb_dcopy(cx->q0_sub, cx->q_sub);
-
-    //nlopt_algorithm alg = NLOPT_LN_BOBYQA;
     nlopt_algorithm alg = NLOPT_LD_SLSQP;
     nlopt_opt opt = nlopt_create(alg, (unsigned)n_sub); /* algorithm and dimensionality */
+
     nlopt_set_min_objective(opt, obj, cx);
-    nlopt_set_xtol_rel(opt, 1e-4);
+    nlopt_set_xtol_rel(opt, 1e-4); // TODO: make a parameter
     double *lb = AA_MEM_REGION_NEW_N(reg,double,n_sub);
     double *ub = AA_MEM_REGION_NEW_N(reg,double,n_sub);
     { // bounds
@@ -299,8 +295,8 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     double minf;
     if (nlopt_optimize(opt, cx->q_sub->data, &minf) > 0) {
         // found miniumum
-        aa_lb_dcopy( cx->q_sub, q );
     }
+    aa_lb_dcopy( cx->q_sub, q );
 
 
     int result = aa_rx_ik_check(cx->ik_cx, cx->TF_ref, q );

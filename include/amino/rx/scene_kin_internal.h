@@ -137,6 +137,8 @@ struct aa_rx_ik_cx
     struct aa_dvec *q_start;
     struct aa_dvec *q_seed;
 
+    double restart_time;
+
     aa_rx_frame_id frame;
 };
 

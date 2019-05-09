@@ -73,6 +73,9 @@ struct aa_dmat {
     size_t ld;      ///< Leading dimension of matrix
 };
 
+
+#define AA_DVEC_REF(v,i) ((v)->data[(i) * (v)->inc])
+
 /**
  * Reference a matrix entry.
  *
@@ -81,6 +84,8 @@ struct aa_dmat {
  * @param j column
  */
 #define AA_DMAT_REF(M,i,j) (((M)->data)[(M)->ld*(j) + (i)])
+
+
 
 typedef void
 (aa_lb_err_fun)( const char *message );

@@ -41,6 +41,7 @@
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_kin_internal.h"
+#include "amino/mat_internal.h"
 
 AA_API void
 aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *ssg )
@@ -415,6 +416,22 @@ aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
         q[i] = aa_rx_sg_config_center( ssg->scenegraph,
                                        aa_rx_sg_sub_config(ssg, i) );
 
+    }
+}
+
+AA_API void
+aa_rx_sg_sub_rand_config( const struct aa_rx_sg_sub *ssg, struct aa_dvec *dst )
+{
+    size_t n = aa_rx_sg_sub_config_count(ssg);
+    const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
+    aa_lb_check_size(dst->len, n);
+    for( size_t i = 0; i < n; i ++ ) {
+        double min = -M_PI, max = M_PI;
+        {
+            aa_rx_config_id j = aa_rx_sg_sub_config(ssg, i);
+            aa_rx_sg_get_limit_pos(sg, j, & min, &max);
+        }
+        AA_DVEC_REF(dst,i) = aa_frand_minmax(min,max);
     }
 }
 

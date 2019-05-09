@@ -271,7 +271,10 @@ AA_API void
 aa_rx_ik_set_seed_center( struct aa_rx_ik_cx *context );
 
 AA_API void
-aa_rx_ik_set_seed_center( struct aa_rx_ik_cx *context );
+aa_rx_ik_set_seed_rand( struct aa_rx_ik_cx *context );
+
+AA_API void
+aa_rx_ik_set_restart_time( struct aa_rx_ik_cx *context, double t );
 
 AA_API void
 aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name );

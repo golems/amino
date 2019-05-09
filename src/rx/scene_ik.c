@@ -139,6 +139,12 @@ aa_rx_ik_set_seed_center( struct aa_rx_ik_cx *context )
 }
 
 AA_API void
+aa_rx_ik_set_seed_rand( struct aa_rx_ik_cx *context )
+{
+    aa_rx_sg_sub_rand_config( context->ssg, context->q_seed );
+}
+
+AA_API void
 aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name )
 {
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(context->ssg);
@@ -150,6 +156,12 @@ AA_API void
 aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id )
 {
     context->frame = id;
+}
+
+AA_API void
+aa_rx_ik_set_restart_time( struct aa_rx_ik_cx *context, double t )
+{
+    context->restart_time = t;
 }
 
 
@@ -211,42 +223,62 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
                  kcx->TF_rel0, AA_RX_TF_LEN,
                  kcx->TF_abs0, AA_RX_TF_LEN );
 
+
     /* Dispatch and solve */
-    int r = AA_RX_NO_IK;
-    switch(context->opts->ik_algo) {
-    case AA_RX_IK_JPINV:
-        assert(q->inc == 1);
-        r = s_ik_jpinv( kcx, q );
-        goto END;
-    case AA_RX_IK_LMA:
-        break;
-#ifdef HAVE_NLOPT
-    case AA_RX_IK_SQP_JPINV:
-        r = s_ik_nlopt( kcx, s_nlobj_jpinv, q );
-        goto END;
-    case AA_RX_IK_SQP_DQ_FD:
-        r = s_ik_nlopt( kcx, s_nlobj_dq_fd, q );
-        goto END;
-    case AA_RX_IK_SQP_DQ_AN:
-        r = s_ik_nlopt( kcx, s_nlobj_dq_an, q );
-        goto END;
-#else /*HAVE_NLOPT*/
-        /* Can't implement these without NLOPT */
-    case AA_RX_IK_SQP_JPINV:
-    case AA_RX_IK_SQP_DQ_FD:
-    case AA_RX_IK_SQP_DQ_AN:
-        fprintf(stderr, "Error: Need NLOPT for SQP IK algorithms");
-        break;
-#endif /*HAVE_NLOPT*/
+    struct timespec t0;
+    if(context->restart_time > 0) {
+        t0 = aa_tm_now();
     }
+    int r = AA_RX_NO_IK;
+    int restart = 0;
+    do  {
+        restart = 0;
+        switch(context->opts->ik_algo) {
+        case AA_RX_IK_JPINV:
+            assert(q->inc == 1);
+            r = s_ik_jpinv( kcx, q );
+            break;
+        case AA_RX_IK_LMA:
+            goto ERR;
+#ifdef HAVE_NLOPT
+        case AA_RX_IK_SQP_JPINV:
+            r = s_ik_nlopt( kcx, s_nlobj_jpinv, q );
+            break;
+        case AA_RX_IK_SQP_DQ_FD:
+            r = s_ik_nlopt( kcx, s_nlobj_dq_fd, q );
+            break;
+        case AA_RX_IK_SQP_DQ_AN:
+            r = s_ik_nlopt( kcx, s_nlobj_dq_an, q );
+            break;
+#else /*HAVE_NLOPT*/
+            /* Can't implement these without NLOPT */
+        case AA_RX_IK_SQP_JPINV:
+        case AA_RX_IK_SQP_DQ_FD:
+        case AA_RX_IK_SQP_DQ_AN:
+            fprintf(stderr, "Error: Need NLOPT for SQP IK algorithms");
+            goto ERR;
+#endif /*HAVE_NLOPT*/
+        }
 
+        if(r && (context->restart_time > 0) ) {
+            // try restart
+            double dt = aa_tm_timespec2sec( aa_tm_sub(aa_tm_now(),t0) );
+            if( dt < context->restart_time ) {
+                // random reseed
+                //printf("restart\n");
+                aa_rx_sg_sub_rand_config( context->ssg, kcx->q_sub );
+                restart = 1;
+            }
+        }
+    } while (restart);
 
-    fprintf(stderr, "Error: unimplemented IK algorithm");
-    r = AA_RX_NO_SOLUTION | AA_RX_NO_IK | AA_RX_INVALID_PARAMETER;
-
-END:
     aa_mem_region_pop(kcx->reg, kcx);
     return r;
+
+ERR:
+    aa_mem_region_pop(kcx->reg, kcx);
+    fprintf(stderr, "Error: unimplemented IK algorithm");
+    return AA_RX_NO_SOLUTION | AA_RX_NO_IK | AA_RX_INVALID_PARAMETER;
 }
 
 

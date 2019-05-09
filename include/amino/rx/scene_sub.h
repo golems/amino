@@ -170,6 +170,11 @@ AA_API void
 aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
                              size_t n, double *q );
 
+
+AA_API void
+aa_rx_sg_sub_rand_config( const struct aa_rx_sg_sub *ssg,
+                          struct aa_dvec *dst );
+
 /*-- Jacobians --*/
 
 /**
