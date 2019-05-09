@@ -238,6 +238,14 @@ AA_API struct aa_dvec *
 aa_dvec_dup( struct aa_mem_region *reg, const struct aa_dvec *src);
 
 /**
+ * Duplicate matrix out of region
+ *
+ * When finished, pop the descriptor.
+ */
+AA_API struct aa_dmat *
+aa_dmat_dup( struct aa_mem_region *reg, const struct aa_dmat *src);
+
+/**
  * Region-allocate a matrix.
  *
  * When finished, pop the descriptor.

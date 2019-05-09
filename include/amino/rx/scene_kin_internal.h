@@ -139,6 +139,8 @@ struct aa_rx_ik_cx
 
     double restart_time;
 
+    struct aa_dmat *TF;
+
     aa_rx_frame_id frame;
 };
 
@@ -159,8 +161,7 @@ struct kin_solve_cx {
     struct aa_dvec *q_all;
     struct aa_dvec *q_sub;
 
-    double *TF_rel0;
-    double *TF_abs0;
+    struct aa_dmat *TF;
 
 
     aa_rx_frame_id frame;

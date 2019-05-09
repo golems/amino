@@ -56,13 +56,12 @@ s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx)
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
     double  E_act[7];
-    struct aa_dmat *TF_abs;
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
-    s_tf( cx, &vq, &TF_abs, E_act );
+    s_tf_update( cx, &vq, cx->TF, E_act );
 
     if( dq ) {
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
-        s_ksol_jpinv(cx,q,TF_abs, E_act, &v_dq);
+        s_ksol_jpinv(cx,q,cx->TF, E_act, &v_dq);
         aa_lb_dscal(-1,&v_dq);
     }
 
@@ -80,8 +79,7 @@ static double s_nlobj_dq_fd_helper( void *vcx, const struct aa_dvec *x)
     assert(1 == x->inc);
 
     double  E_act[7];
-    struct aa_dmat *TF_abs;
-    s_tf( cx, x, &TF_abs, E_act );
+    s_tf_update( cx, x, cx->TF, E_act );
 
     double S_act[8], S_ref[8], S_err[8], S_ln[8];
     aa_tf_qutr2duqu(E_act, S_act);
@@ -138,9 +136,8 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
     double  E_act[7];
-    struct aa_dmat *TF_abs;
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
-    s_tf( cx, &vq, &TF_abs, E_act );
+    s_tf_update( cx, &vq, cx->TF, E_act );
 
     double S_act[8], S_ref[8], S_err[8], S_ln[8];
     aa_tf_qutr2duqu(E_act, S_act);
@@ -225,7 +222,7 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
             double c[6];
             aa_tf_duqu2pure(a,c);
             struct aa_dvec vc = AA_DVEC_INIT(6,c,1);
-            struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs);
+            struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,cx->TF);
             aa_lb_dgemv( CblasTrans, 1, J_vel, &vc, 0, &v_dq );
 
         }
@@ -299,7 +296,9 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     aa_lb_dcopy( cx->q_sub, q );
 
 
-    int result = aa_rx_ik_check(cx->ik_cx, cx->TF_ref, q );
+    double E[7];
+    s_tf_update( cx, cx->q_sub, cx->TF, E);
+    int result = s_check(cx->ik_cx, cx->TF_ref, E );
     nlopt_destroy(opt);
     aa_mem_region_pop(reg,ptrtop);
 

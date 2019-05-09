@@ -207,6 +207,7 @@ libamino_la_SOURCES =                  \
 	src/rx/scene_geom.c            \
 	src/rx/geom_opt.c              \
 	src/rx/scene_kin.c             \
+	src/rx/scene_sub.cpp           \
 	src/rx/ik_opt.c                \
 	src/rx/scene_ik.c              \
 	src/rx/plugin.c                \

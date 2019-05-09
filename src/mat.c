@@ -221,6 +221,14 @@ aa_dvec_dup( struct aa_mem_region *reg, const struct aa_dvec *src)
 }
 
 AA_API struct aa_dmat *
+aa_dmat_dup( struct aa_mem_region *reg, const struct aa_dmat *src)
+{
+    struct aa_dmat *dst = aa_dmat_alloc(reg,src->rows,src->cols);
+    aa_dmat_copy(src,dst);
+    return dst;
+}
+
+AA_API struct aa_dmat *
 aa_dmat_malloc( size_t rows, size_t cols )
 {
     struct aa_dmat *r;

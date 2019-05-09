@@ -57,13 +57,12 @@ static void kin_solve_sys( const void *vcx,
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
 
-    struct aa_dmat *TF_abs;
     struct aa_dvec vq = AA_DVEC_INIT(cx->q_sub->len,(double*)q,1);
-    s_tf( cx, &vq,  &TF_abs, E_act );
+    s_tf_update( cx, &vq,  cx->TF, E_act );
 
     struct aa_dvec v_dq;
     aa_dvec_view(&v_dq, n_qs, dq, 1);
-    s_ksol_jpinv(cx, q, TF_abs, E_act, &v_dq);
+    s_ksol_jpinv(cx, q, cx->TF, E_act, &v_dq);
 
     aa_mem_region_pop(cx->reg, ptrtop);
 
@@ -94,9 +93,8 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
     double  E[7];
     {
         void *ptrtop = aa_mem_region_ptr(cx->reg);
-        struct aa_dmat *TF_abs;
         struct aa_dvec vq = AA_DVEC_INIT(cx->q_sub->len,x,1);
-        s_tf( cx, &vq, &TF_abs, E );
+        s_tf_update( cx, &vq, cx->TF, E );
         aa_mem_region_pop(cx->reg, ptrtop);
     }
 

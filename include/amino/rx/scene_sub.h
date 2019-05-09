@@ -175,6 +175,13 @@ AA_API void
 aa_rx_sg_sub_rand_config( const struct aa_rx_sg_sub *ssg,
                           struct aa_dvec *dst );
 
+/*-- TF --*/
+
+AA_API void
+aa_rx_sg_sub_tf_update( const struct aa_rx_sg_sub *ssg,
+                        const struct aa_dvec *q_sub,
+                        struct aa_dmat *TF_abs );
+
 /*-- Jacobians --*/
 
 /**

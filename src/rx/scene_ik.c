@@ -93,6 +93,8 @@ aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts 
     cx->q_seed = aa_dvec_malloc( aa_rx_sg_sub_config_count(ssg) );
     aa_rx_ik_set_seed_center(cx);
 
+    cx->TF = aa_dmat_malloc( AA_RX_TF_LEN, aa_rx_sg_sub_all_frame_count(ssg) );
+
     return cx;
 }
 
@@ -101,6 +103,7 @@ aa_rx_ik_cx_destroy( struct aa_rx_ik_cx *cx )
 {
     free(cx->q_start);
     free(cx->q_seed);
+    free(cx->TF);
     free(cx);
 }
 
@@ -120,6 +123,7 @@ AA_API void
 aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start )
 {
     aa_lb_dcopy( q_start, context->q_start );
+    aa_rx_sg_fill_tf_abs( aa_rx_sg_sub_sg(context->ssg), q_start, context->TF );
 }
 
 AA_API void
@@ -181,10 +185,7 @@ s_kin_solve_cx_alloc( const struct aa_rx_ik_cx *ik_cx,
 
     cx->iteration = 0;
 
-    const struct aa_rx_sg *sg = cx->ssg->scenegraph;
-    size_t n_f = aa_rx_sg_frame_count(sg);
-    cx->TF_rel0 = AA_MEM_REGION_NEW_N(cx->reg, double, AA_RX_TF_LEN*n_f);
-    cx->TF_abs0 = AA_MEM_REGION_NEW_N(cx->reg, double, AA_RX_TF_LEN*n_f);
+    cx->TF = aa_dmat_dup(reg, ik_cx->TF);
 
     cx->q_all = aa_dvec_dup(reg, ik_cx->q_start );
     cx->q_sub = aa_dvec_dup(reg, ik_cx->q_seed );
@@ -217,11 +218,11 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
     }
     kcx->TF_ref = TF;
 
-    aa_rx_sg_tf( kcx->ssg->scenegraph,
-                 kcx->q_all->len, kcx->q_all->data,
-                 aa_rx_sg_frame_count(kcx->ssg->scenegraph),
-                 kcx->TF_rel0, AA_RX_TF_LEN,
-                 kcx->TF_abs0, AA_RX_TF_LEN );
+    /* aa_rx_sg_tf( kcx->ssg->scenegraph, */
+    /*              kcx->q_all->len, kcx->q_all->data, */
+    /*              aa_rx_sg_frame_count(kcx->ssg->scenegraph), */
+    /*              kcx->TF_rel0, AA_RX_TF_LEN, */
+    /*              kcx->TF_abs0, AA_RX_TF_LEN ); */
 
 
     /* Dispatch and solve */
@@ -296,21 +297,41 @@ s_tf0 ( struct aa_mem_region *reg,
     return TF;
 }
 
-static void s_tf (const struct kin_solve_cx *cx,
-                  const struct aa_dvec *qs,
-                  struct aa_dmat **pTF_abs,
-                  double *E)
+/* static void s_tf (const struct kin_solve_cx *cx, */
+/*                   const struct aa_dvec *qs, */
+/*                   struct aa_dmat **pTF_abs, */
+/*                   double *E) */
+/* { */
+/*     const struct aa_rx_sg_sub *ssg = cx->ssg; */
+/*     aa_rx_sg_sub_config_scatter( ssg, qs, cx->q_all ); */
+/*     *pTF_abs = s_tf0( cx->reg, ssg, cx->frame, cx->q_all, E ); */
+
+/*     /\* aa_rx_sg_tf_update( sg, *\/ */
+/*     /\*                     n_q, cx->q0_all, q_all, *\/ */
+/*     /\*                     n_f, *\/ */
+/*     /\*                     cx->TF_rel0, 7, cx->TF_abs0, 7, *\/ */
+/*     /\*                     TF_rel, ld_rel, TF_abs, ld_abs ); *\/ */
+
+/* } */
+
+static void s_tf_update (const struct kin_solve_cx *cx,
+                         const struct aa_dvec *qs,
+                         struct aa_dmat *TF_abs,
+                         double *E)
 {
+    // Slow, full TFs
+    /* const struct aa_rx_sg_sub *ssg = cx->ssg; */
+    /* const struct aa_rx_sg *sg = ssg->scenegraph; */
+    /* aa_rx_sg_sub_config_scatter( ssg, qs, cx->q_all ); */
+    /* aa_rx_sg_fill_tf_abs( sg, cx->q_all, cx->TF ); */
+
+    // Fast update
     const struct aa_rx_sg_sub *ssg = cx->ssg;
-    aa_rx_sg_sub_config_scatter( ssg, qs, cx->q_all );
-    *pTF_abs = s_tf0( cx->reg, ssg, cx->frame, cx->q_all, E );
+    aa_rx_sg_sub_tf_update(ssg, qs, TF_abs);
 
-    /* aa_rx_sg_tf_update( sg, */
-    /*                     n_q, cx->q0_all, q_all, */
-    /*                     n_f, */
-    /*                     cx->TF_rel0, 7, cx->TF_abs0, 7, */
-    /*                     TF_rel, ld_rel, TF_abs, ld_abs ); */
 
+    double *E_ee = &AA_DMAT_REF(TF_abs,0,(size_t)cx->frame);
+    AA_MEM_CPY(E, E_ee, AA_RX_TF_LEN);
 }
 
 
@@ -346,6 +367,22 @@ static void s_err2( const double E_act[7], const double E_ref[7],
 }
 
 
+
+static int
+s_check( const struct aa_rx_ik_cx *cx,
+         const struct aa_dmat *TF_ref,
+         const double *E )
+{
+    double theta, x;
+    s_err2(E, TF_ref->data, &theta, &x);
+
+    int r = ( theta < cx->opts->tol_angle && x < cx->opts->tol_trans ) ?
+        0 : AA_RX_NO_SOLUTION | AA_RX_NO_IK;
+
+
+    return r;
+}
+
 AA_API int
 aa_rx_ik_check( const struct aa_rx_ik_cx *cx,
                 const struct aa_dmat *TF,
@@ -357,17 +394,12 @@ aa_rx_ik_check( const struct aa_rx_ik_cx *cx,
     struct aa_dvec *q_all = aa_dvec_dup(reg,cx->q_start);
     aa_rx_sg_sub_config_scatter( cx->ssg, q_sub, q_all );
 
-    double E[7], theta, x;
+    double E[7];
     struct aa_dmat *TF_abs = s_tf0( reg, cx->ssg, cx->frame, q_all, E );
     (void)TF_abs;
 
-    s_err2(E, TF->data, &theta, &x);
-
-    int r = ( theta < cx->opts->tol_angle && x < cx->opts->tol_trans ) ?
-        0 : AA_RX_NO_SOLUTION | AA_RX_NO_IK;
-
+    int r = s_check(cx,TF, E);
     aa_mem_region_pop(reg, ptrtop);
-
     return r;
 }
 
