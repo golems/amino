@@ -41,12 +41,6 @@
  *
  */
 
-#define DECLARE_QUAT_XYZW          \
-    const size_t x = AA_TF_QUAT_X; \
-    const size_t y = AA_TF_QUAT_Y; \
-    const size_t z = AA_TF_QUAT_Z; \
-    const size_t w = AA_TF_QUAT_W;
-
 
 #define WITH_VEC_XYZ(var,x,y,z)         \
     double x = (var)[AA_TF_QUAT_X];     \

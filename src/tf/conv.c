@@ -406,14 +406,32 @@ AA_API void
 aa_tf_dhprox2duqu( double alpha, double a, double d, double phi,
                    double S[AA_RESTRICT 8])
 {
-    double v[3];
-    double *H = S+AA_TF_DUQU_REAL;
-    double *D = S+AA_TF_DUQU_DUAL;
+    double sp = sin(phi/2);
+    double cp = cos(phi/2);
+    double sa = sin(alpha/2);
+    double ca = cos(alpha/2);
 
-    aa_tf_dhprox2qv(alpha, a, d, phi, H, v);
+    double *q = S+AA_TF_DUQU_REAL;
+    double *dual = S+AA_TF_DUQU_DUAL;
 
-    FOR_VEC(i) v[i] *= 0.5;
-    aa_tf_qmul_vq(v, H, D);
+    double d2 = d/2, a2 = a/2;
+
+    DECLARE_QUAT_XYZW;
+
+    double ss=sa*sp;
+    double sc=sa*cp;
+    double cs=ca*sp;
+    double cc=ca*cp;
+
+    q[x] =  sc;
+    q[y] = -ss;
+    q[z] =  cs;
+    q[w] =  cc;
+
+    dual[x] =  a2*q[w] + d2*q[y];
+    dual[y] = -a2*q[z] - d2*q[x];
+    dual[z] =  a2*q[y] + d2*q[w];
+    dual[w] = -a2*q[x] - d2*q[z];
 }
 
 AA_API void
@@ -479,14 +497,33 @@ AA_API void
 aa_tf_dhdist2duqu( double alpha, double a, double d, double phi,
                    double S[AA_RESTRICT 8])
 {
-    double v[3];
-    double *H = S+AA_TF_DUQU_REAL;
-    double *D = S+AA_TF_DUQU_DUAL;
 
-    aa_tf_dhdist2qv(alpha, a, d, phi, H, v);
+    double sp = sin(phi/2);
+    double cp = cos(phi/2);
+    double sa = sin(alpha/2);
+    double ca = cos(alpha/2);
 
-    FOR_VEC(i) v[i] *= 0.5;
-    aa_tf_qmul_vq(v, H, D);
+    double ss=sa*sp;
+    double sc=sa*cp;
+    double cs=ca*sp;
+    double cc=ca*cp;
+
+    DECLARE_QUAT_XYZW;
+
+    double *q = S+AA_TF_DUQU_REAL;
+    double *dual = S+AA_TF_DUQU_DUAL;
+
+    q[x] = sc;
+    q[y] = ss;
+    q[z] = cs;
+    q[w] = cc;
+
+    double d2 = d/2, a2 = a/2;
+
+    dual[x] =  a2*q[w] - d2*q[y];
+    dual[y] =  a2*q[z] + d2*q[x];
+    dual[z] = -a2*q[y] + d2*q[w];
+    dual[w] = -a2*q[x] - d2*q[z];
 }
 
 AA_API void

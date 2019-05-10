@@ -64,4 +64,11 @@ static inline double
 dot3( const double a[AA_RESTRICT 3], const double b[AA_RESTRICT 3] )
 { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] ; }
 
+
+#define DECLARE_QUAT_XYZW          \
+    const size_t x = AA_TF_QUAT_X; \
+    const size_t y = AA_TF_QUAT_Y; \
+    const size_t z = AA_TF_QUAT_Z; \
+    const size_t w = AA_TF_QUAT_W;
+
 #endif /* AMINO_INTERNAL_H */

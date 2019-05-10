@@ -1113,18 +1113,24 @@ void dhparam()
     double dh[4];
     rand_dh(dh);
 
-    double T[12], E[7], S[8], ET[7], ES[7];
+    double T[12], E[7], S[8], ET[7], ES[7], SE[8];
 
     aa_tf_dhprox2tfmat(dh[0], dh[1], dh[2], dh[3], T);
     aa_tf_dhprox2qutr(dh[0], dh[1], dh[2], dh[3], E);
     aa_tf_dhprox2duqu(dh[0], dh[1], dh[2], dh[3], S);
     aa_tf_tfmat2qutr( T, ET );
     aa_tf_duqu2qutr( S, ES );
+    aa_tf_qutr2duqu( E, SE );
+
     aa_tf_qminimize(E + AA_TF_QUTR_Q);
     aa_tf_qminimize(ES + AA_TF_QUTR_Q);
     aa_tf_qminimize(ET + AA_TF_QUTR_Q);
+    aa_tf_duqu_minimize( S );
+    aa_tf_duqu_minimize( SE );
 
     aveq( "dhprox tfmat qutr", 7, ET, E, 1e-5 );
+    aveq( "dhprox qutr duqu (S)", 8, SE, S, 1e-5 );
+
     aveq( "dhprox tfmat duqu", 7, ET, ES, 1e-5 );
 
     aa_tf_dhdist2tfmat(dh[0], dh[1], dh[2], dh[3], T);
