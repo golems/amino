@@ -339,7 +339,7 @@ struct aa_tf_dx {
 
 /// Index of spatial velocity translational part
 #define AA_TF_DX_V 0
-/// Index of spatial velocity translational part
+/// Index of spatial velocity rotational part
 #define AA_TF_DX_W 3
 
 /** Transform and spatial velocity */

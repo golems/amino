@@ -213,6 +213,38 @@ aa_rx_sg_sub_get_jacobian( const struct aa_rx_sg_sub *ssg,
 AA_API double *
 aa_rx_sg_sub_alloc_jacobian( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region );
 
+
+
+/**
+ * Allocate and fill the twist Jacobian.
+ *
+ * @f[
+ *     \begin{bmatrix} \omega \\ \dot{v} + v \times \omega \end{bmatrix}
+ *     = J \dot\theta
+ * @f]
+ *
+ * @sa AA_TF_DX_V
+ * @sa AA_TF_DX_W
+ */
+AA_API struct aa_dmat *
+aa_rx_sg_sub_jac_twist_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region,
+                            const struct aa_dmat *TF  );
+
+/**
+ * Fill in the blocks of the twist jacobian.
+ *
+ * @f[
+ *     \begin{bmatrix} \omega \\ \dot{v} + v \times \omega \end{bmatrix}
+ *     =
+ *    \begin{bmatrix} J_p \\ J_r \end{bmatrix} \dot\theta
+ * @f]
+ */
+AA_API void
+aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
+                             const struct aa_dmat *TF,
+                             struct aa_dmat *Jp, struct aa_dmat *Jr );
+
+
 /**
  * Allocate sub scene graph config array.
  */

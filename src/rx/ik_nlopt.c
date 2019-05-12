@@ -193,11 +193,6 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
         }
 
 
-        /* aa_tf_duqu_conj1(a); */
-        /* aa_tf_qmul(S_ref,a,b); */
-        /* aa_tf_qmul_a(S_ref+4,a+4,b); */
-        /* aa_tf_qmul(S_ref,a+4,b+4); */
-
         /*
          * dS/dphi = [S]_R V J
          * g [S]_R V J
@@ -209,21 +204,22 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
         duqu_rmul_helper( S_ref, a, b );
         aa_tf_duqu_conj1(b);
 
-        /* struct aa_dmat *J_S = aa_dmat_alloc(cx->reg,8,n); */
-        /* struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,TF_abs); */
-        /* aa_tf_duqu_jac_vel2diff(S_act,J_vel, J_S); */
-        /* aa_lb_dgemv( CblasTrans, 1, J_S, &vb, 0, &v_dq ); */
+        duqu_rmul_helper( S_act, b, a );  /* TODO: Pure result, some
+                                           * extra multiplies here. */
+        // a is now a pure dual quaternion
         {
-            duqu_rmul_helper( S_act, b, a );
-            // a is now a pure dual quaternion
-
-            aa_tf_cross_a(a+AA_TF_DUQU_DUAL_XYZ,E_act+AA_TF_QUTR_V,a);
-
             double c[6];
-            aa_tf_duqu2pure(a,c);
             struct aa_dvec vc = AA_DVEC_INIT(6,c,1);
-            struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,cx->TF);
-            aa_lb_dgemv( CblasTrans, 1, J_vel, &vc, 0, &v_dq );
+            // Using Twist Jacobian
+            aa_tf_duqu2pure(a,c);
+            struct aa_dmat *Jtw = aa_rx_sg_sub_jac_twist_get(cx->ssg, cx->reg, cx->TF);
+            aa_lb_dgemv( CblasTrans, 1, Jtw, &vc, 0, &v_dq );
+
+            // Using Velocity Jacobian
+            /* aa_tf_cross_a(a+AA_TF_DUQU_DUAL_XYZ,E_act+AA_TF_QUTR_V,a); */
+            /* aa_tf_duqu2pure(a,c); */
+            /* struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,cx->TF); */
+            /* aa_lb_dgemv( CblasTrans, 1, J_vel, &vc, 0, &v_dq ); */
 
         }
 
