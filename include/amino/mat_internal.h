@@ -55,6 +55,12 @@ aa_lb_check_size( size_t a, size_t b )
 }
 
 static inline void
+aa_dvec_check_size( size_t n, const struct aa_dvec *x )
+{
+    aa_lb_check_size(n, x->len);
+}
+
+static inline void
 aa_dmat_check_size( size_t m, size_t n, const struct aa_dmat *A )
 {
     aa_lb_check_size( m, A->rows );

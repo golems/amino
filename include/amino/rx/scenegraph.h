@@ -39,6 +39,8 @@
 #define AMINO_SCENEGRAPH_H
 
 #include "amino/mat.h"
+#include "rxtype.h"
+
 /**
  * @file scenegraph.h
  * @brief The scenegraph data structure
@@ -436,6 +438,8 @@ AA_API const double *aa_rx_sg_frame_axis
 /*     aa_rx_sg_tf(SCENE_GRAPH, N_Q, Q, N_TF,                              \ */
 /*                 TF_REL, LD_REL,                                         \ */
 /*                 TF_ABS, LD_ABS );       */                                 \
+
+
 
 /**
  *  Compute transforms for the scene graph as quaternion-translations.

@@ -63,6 +63,17 @@ struct aa_rx_inertial {
     double mass;
 };
 
+#define AA_RX_FK_LD AA_RX_TF_LEN
+
+struct aa_rx_fk {
+    const struct aa_rx_sg *sg;
+    double *TF_abs;
+    int in_heap;
+};
+
+#define AA_RX_FK_REF(fk, id)                    \
+    ( (fk)->TF_abs + (AA_RX_FK_LD * (id)) )
+
 #ifdef __cplusplus
 
 #include <vector>

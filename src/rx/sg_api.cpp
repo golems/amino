@@ -41,6 +41,8 @@
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_fk.h"
+#include "amino/mat_internal.h"
 
 
 AA_API struct aa_rx_sg *aa_rx_sg_create()
@@ -833,4 +835,101 @@ AA_API double *
 aa_rx_sg_alloc_config ( const struct aa_rx_sg *sg, struct aa_mem_region *region )
 {
     return AA_MEM_REGION_NEW_N( region, double, aa_rx_sg_config_count(sg) );
+}
+
+
+
+struct aa_rx_fk *
+aa_rx_fk_alloc(const struct aa_rx_sg *scene_graph, struct aa_mem_region *reg)
+{
+    struct aa_rx_fk *fk = AA_MEM_REGION_NEW(reg,struct aa_rx_fk);
+    fk->sg = scene_graph;
+    fk->TF_abs = AA_MEM_REGION_NEW_N( reg,double,
+                                      AA_RX_FK_LD*aa_rx_sg_frame_count(scene_graph));
+    fk->in_heap = 0;
+    return fk;
+}
+
+/**
+ * Heap allocate a forward kinematics struct.
+ */
+struct aa_rx_fk *
+aa_rx_fk_malloc(const struct aa_rx_sg *scene_graph)
+{
+    struct aa_rx_fk *fk = AA_NEW(struct aa_rx_fk);
+    fk->sg = scene_graph;
+    fk->TF_abs = AA_NEW_AR(double, AA_RX_FK_LD*aa_rx_sg_frame_count(scene_graph));
+    fk->in_heap = 1;
+    return fk;
+}
+
+AA_API void
+aa_rx_fk_cpy(struct aa_rx_fk *dst, const struct aa_rx_fk *src)
+{
+    assert( src->sg == dst->sg );
+    AA_MEM_CPY( dst->TF_abs, src->TF_abs,
+                AA_RX_FK_LD * aa_rx_sg_frame_count(src->sg) );
+}
+
+AA_API double *
+aa_rx_fk_ref(const struct aa_rx_fk *fk, aa_rx_frame_id id)
+{
+    AA_RX_FK_REF(fk, (size_t)(id));
+}
+
+AA_API void
+aa_rx_fk_get_abs(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[AA_RX_TF_LEN] )
+{
+    AA_MEM_CPY(E, AA_RX_FK_REF(fk, (size_t)(id)), AA_RX_TF_LEN);
+}
+
+/**
+ * Destroy a malloc'ed struct aa_rx_fk.
+ */
+AA_API void
+aa_rx_fk_destroy(struct aa_rx_fk * fk)
+{
+    if( fk->in_heap ) {
+        free(fk->TF_abs);
+        free(fk);
+    } else {
+        fprintf(stderr, "ERROR: attempting to free non-heap allocated aa_rx_fk.");
+        abort();
+        exit(EXIT_FAILURE);
+    }
+}
+
+/**
+ * Compute the forward kinematics.
+ */
+AA_API void
+aa_rx_fk_all( struct aa_rx_fk *fk,
+              const struct aa_dvec *q )
+
+{
+    const struct aa_rx_sg *scenegraph = fk->sg;
+    aa_rx_sg_ensure_clean_frames(scenegraph);
+    aa_dvec_check_size( aa_rx_sg_config_count(scenegraph), q );
+
+    amino::SceneGraph *sg = scenegraph->sg;
+
+    double E_rel[AA_RX_TF_LEN], *E_abs = fk->TF_abs;
+    for( size_t i_frame = 0;
+         i_frame < sg->frames.size();
+         i_frame++, E_abs += AA_RX_FK_LD )
+    {
+        amino::SceneFrame *f = sg->frames[i_frame];
+        // compute relative
+        f->tf_rel( q->data, E_rel );
+        // chain to global
+        if( f->in_global() ) {
+            // TODO: can we somehow get rid of this branch?
+            //       maybe a separate type for global frames
+            AA_MEM_CPY(E_abs, E_rel, 7);
+        } else {
+            assert( f->parent_id < (ssize_t)i_frame );
+            double *E_parent = AA_RX_FK_REF(fk, (size_t)(f->parent_id));
+            aa_tf_qutr_mul(E_parent, E_rel, E_abs);
+        }
+    }
 }
