@@ -2,9 +2,8 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
- *
- * Author(s): Neil T. Dantam <ntd@rice.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -162,7 +161,6 @@ struct kin_solve_cx {
     struct aa_dvec *q_all;
     struct aa_dvec *q_sub;
 
-    struct aa_dmat *TF; // TODO: remove
     struct aa_rx_fk *fk;
 
 

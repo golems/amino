@@ -2,9 +2,10 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@rice.edu>
+ * Author(s): Neil T. Dantam <ndantam@mines.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -56,6 +57,9 @@
 #include "amino/rx/scene_gl_internal.h"
 #include "amino/rx/scene_sdl_internal.h"
 #include "amino/rx/mp_seq.h"
+
+#include "amino/rx/scenegraph_internal.h"
+#include "amino/rx/scene_fk.h"
 
 #include <pthread.h>
 
@@ -295,6 +299,17 @@ aa_rx_win_display_sg_tf( struct aa_rx_win *win, struct aa_sdl_display_params *pa
     aa_sdl_display_params_set_update(params);
     const struct aa_gl_globals *globals = win->gl_globals;
     aa_rx_sg_render( scenegraph, globals, n_tf, tf_abs, ld_tf );
+}
+
+
+AA_API void
+aa_rx_win_display_fk( struct aa_rx_win *win, struct aa_sdl_display_params *params,
+                      const struct aa_rx_fk *fk )
+{
+    // TODO: maybe update scenegraph
+
+    aa_rx_win_display_sg_tf( win, params, fk->sg,
+                             aa_rx_fk_cnt(fk), aa_rx_fk_data(fk), aa_rx_fk_ld(fk) );
 }
 
 

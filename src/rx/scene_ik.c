@@ -193,7 +193,6 @@ s_kin_solve_cx_alloc( const struct aa_rx_ik_cx *ik_cx,
 
     cx->iteration = 0;
 
-    cx->TF = aa_dmat_dup(reg, ik_cx->TF);
 
     cx->fk = aa_rx_fk_alloc(aa_rx_sg_sub_sg(cx->ssg), reg);
     aa_rx_fk_cpy(cx->fk, ik_cx->fk);
@@ -297,19 +296,19 @@ ERR:
 }
 
 
-static struct aa_dmat *
-s_tf0 ( struct aa_mem_region *reg,
-        const struct aa_rx_sg_sub *ssg, aa_rx_frame_id frame,
-        const struct aa_dvec *q_all, double *E )
-{
-    const struct aa_rx_sg *sg = ssg->scenegraph;
-    struct aa_dmat *TF = aa_rx_sg_get_tf_abs( sg, reg, q_all );
+/* static struct aa_dmat * */
+/* s_tf0 ( struct aa_mem_region *reg, */
+/*         const struct aa_rx_sg_sub *ssg, aa_rx_frame_id frame, */
+/*         const struct aa_dvec *q_all, double *E ) */
+/* { */
+/*     const struct aa_rx_sg *sg = ssg->scenegraph; */
+/*     struct aa_dmat *TF = aa_rx_sg_get_tf_abs( sg, reg, q_all ); */
 
-    double *E_ee = &AA_DMAT_REF(TF,0,(size_t)frame);
-    AA_MEM_CPY(E, E_ee, AA_RX_TF_LEN);
+/*     double *E_ee = &AA_DMAT_REF(TF,0,(size_t)frame); */
+/*     AA_MEM_CPY(E, E_ee, AA_RX_TF_LEN); */
 
-    return TF;
-}
+/*     return TF; */
+/* } */
 
 /* static void s_tf (const struct kin_solve_cx *cx, */
 /*                   const struct aa_dvec *qs, */
@@ -327,28 +326,6 @@ s_tf0 ( struct aa_mem_region *reg,
 /*     /\*                     TF_rel, ld_rel, TF_abs, ld_abs ); *\/ */
 
 /* } */
-
-static void s_tf_update (const struct kin_solve_cx *cx,
-                         const struct aa_dvec *qs,
-                         struct aa_dmat *TF_abs,
-                         double *E)
-{
-    // Slow, full TFs
-    /* const struct aa_rx_sg_sub *ssg = cx->ssg; */
-    /* const struct aa_rx_sg *sg = ssg->scenegraph; */
-    /* aa_rx_sg_sub_config_scatter( ssg, qs, cx->q_all ); */
-    /* aa_rx_sg_fill_tf_abs( sg, cx->q_all, cx->TF ); */
-
-    // Fast update
-    const struct aa_rx_sg_sub *ssg = cx->ssg;
-    aa_rx_sg_sub_tf_update(ssg, qs, TF_abs);
-
-
-    double *E_ee = &AA_DMAT_REF(TF_abs,0,(size_t)cx->frame);
-    AA_MEM_CPY(E, E_ee, AA_RX_TF_LEN);
-}
-
-
 
 static double s_serr( const double E_act[7], const double E_ref[7] )
 {
@@ -408,11 +385,11 @@ aa_rx_ik_check( const struct aa_rx_ik_cx *cx,
     struct aa_dvec *q_all = aa_dvec_dup(reg,cx->q_start);
     aa_rx_sg_sub_config_scatter( cx->ssg, q_sub, q_all );
 
-    double E[7];
-    struct aa_dmat *TF_abs = s_tf0( reg, cx->ssg, cx->frame, q_all, E );
-    (void)TF_abs;
+    struct aa_rx_fk *fk = aa_rx_fk_alloc(aa_rx_sg_sub_sg(cx->ssg), reg);
+    aa_rx_fk_sub(fk, cx->ssg, q_sub);
+    double *E_act = aa_rx_fk_ref(fk, cx->frame);
 
-    int r = s_check(cx,TF, E);
+    int r = s_check(cx,TF, E_act);
     aa_mem_region_pop(reg, ptrtop);
     return r;
 }
@@ -420,15 +397,16 @@ aa_rx_ik_check( const struct aa_rx_ik_cx *cx,
 
 static void s_ksol_jpinv( const struct kin_solve_cx *cx,
                           const double *q,
-                          const struct aa_dmat *TF_abs,
-                          const double E_act[7],
                           struct aa_dvec *dq )
 {
     size_t n_x, n_qs;
     aa_rx_sg_sub_jacobian_size(cx->ssg,&n_x,&n_qs);
     struct aa_dvec *w_e = aa_dvec_alloc(cx->reg,n_x);
     aa_dvec_zero(w_e);
+
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
     aa_rx_wk_dx_pos( &cx->opts->wk_opts, E_act, cx->TF_ref->data, w_e );
+
 
     if( cx->opts->q_ref ) {
         struct aa_dvec *v_dqnull = aa_dvec_alloc(cx->reg,n_qs);
@@ -437,10 +415,10 @@ static void s_ksol_jpinv( const struct kin_solve_cx *cx,
             dqnull[i] = - cx->opts->dq_dt[i] * ( q[i] - cx->opts->q_ref[i] );
         }
         aa_rx_wk_dx2dq_np( cx->ssg, &cx->opts->wk_opts,
-                           TF_abs, w_e, v_dqnull, dq );
+                           cx->fk, w_e, v_dqnull, dq );
     } else {
         aa_rx_wk_dx2dq( cx->ssg, &cx->opts->wk_opts,
-                        TF_abs,
+                        cx->fk,
                         w_e, dq );
     }
 }

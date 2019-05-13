@@ -68,6 +68,18 @@ aa_rx_fk_malloc(const struct aa_rx_sg *scene_graph);
 AA_API void
 aa_rx_fk_cpy(struct aa_rx_fk *dst, const struct aa_rx_fk *src);
 
+/** Pointer to FK data */
+AA_API double *
+aa_rx_fk_data( const struct aa_rx_fk *fk );
+
+/** Leading dimension of FK data */
+AA_API size_t
+aa_rx_fk_ld( const struct aa_rx_fk *fk );
+
+/** Number of frames in the FK */
+AA_API size_t
+aa_rx_fk_cnt( const struct aa_rx_fk *fk );
+
 /**
  * Destroy a malloc'ed struct aa_rx_fk.
  */
@@ -91,7 +103,7 @@ aa_rx_fk_ref(const struct aa_rx_fk *fk, aa_rx_frame_id id);
  * Copy an absolute TF out of fk.
  */
 AA_API void
-aa_rx_fk_get_abs(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[AA_RX_TF_LEN]);
+aa_rx_fk_get_abs_qutr(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[7]);
 
 /**
  * Update relative transform in the FK.

@@ -41,6 +41,7 @@
 #include "amino/rx/scene_sdl.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
+#include "amino/rx/scene_fk.h"
 #include "amino/rx/scene_wk.h"
 
 #include "amino/mat.hpp"
@@ -57,6 +58,8 @@ struct display_cx {
     QuatTran E0;
     DVec &q;
     DVec &dq_subset;
+
+    struct aa_rx_fk *fk;
 };
 
 int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
@@ -85,11 +88,15 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     aa_rx_sg_config_get( scenegraph, m, n_c,
                          aa_rx_sg_sub_configs(cx->ssg), cx->q.data(), q_subset.data() );
 
+    struct aa_rx_fk *fk = cx->fk;
+    aa_rx_fk_all(fk,&cx->q);
 
-    struct aa_dmat *TF_abs = aa_rx_sg_get_tf_abs(scenegraph, reg, &cx->q );
+    aa_rx_win_display_fk( cx->win, params, fk );
 
-    aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
-                             n, TF_abs->data, TF_abs->ld );
+
+    struct aa_dmat mTF_abs = AA_DMAT_INIT( AA_RX_TF_LEN, n,
+                                           aa_rx_fk_data(fk), aa_rx_fk_ld(fk) );
+    struct aa_dmat *TF_abs = &mTF_abs;
 
     /* Reference Velocity and Position */
     DVec &dx_r = *DVec::alloc(reg,6);
@@ -144,7 +151,8 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
         /*                               n_c, &dqr_subset, &dq_subset ); */
 
         int r = aa_rx_wk_dx2dq_lc3( cx->lc3, dt,
-                                    TF_abs,
+                                    //TF_abs,
+                                    fk,
                                     &dx_r,
                                     &q_subset, &cx->dq_subset,
                                     &dqr_subset, &dq_subset );
@@ -193,7 +201,8 @@ int main(int argc, char *argv[])
         .lc3 = aa_rx_wk_lc3_create(cx.ssg,cx.wk_opts),
         .E0 = QuatTran(),
         .q = *DVec::alloc_local(n_q),
-        .dq_subset = *DVec::alloc_local(aa_rx_sg_sub_config_count(cx.ssg))
+        .dq_subset = *DVec::alloc_local(aa_rx_sg_sub_config_count(cx.ssg)),
+        .fk = aa_rx_fk_malloc(scenegraph)
     };
 
 
@@ -222,9 +231,8 @@ int main(int argc, char *argv[])
 
     // initial end-effector config
     {
-        RegionScope rs;
-        struct aa_dmat *TF_abs = aa_rx_sg_get_tf_abs( scenegraph, rs.reg(), &cx.q );
-        cx.E0 = QuatTran::from_qv( DMat::col_vec(TF_abs,tip_id).data() );
+        aa_rx_fk_all(cx.fk, &cx.q);
+        aa_rx_fk_get_abs_qutr( cx.fk, tip_id, cx.E0.data );
     }
 
 

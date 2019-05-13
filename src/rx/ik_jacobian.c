@@ -3,6 +3,7 @@
 /*
  * Copyright (c) 2013, Georgia Tech Research Corporation
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -51,18 +52,17 @@ static void kin_solve_sys( const void *vcx,
     (void) t; // time invariant
     const struct kin_solve_cx *cx = (const struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
-    double E_act[7];
     //printf("ksolve\n");
 
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
-
     struct aa_dvec vq = AA_DVEC_INIT(cx->q_sub->len,(double*)q,1);
-    s_tf_update( cx, &vq,  cx->TF, E_act );
+
+    aa_rx_fk_sub(cx->fk, cx->ssg, &vq);
 
     struct aa_dvec v_dq;
     aa_dvec_view(&v_dq, n_qs, dq, 1);
-    s_ksol_jpinv(cx, q, cx->TF, E_act, &v_dq);
+    s_ksol_jpinv(cx, q, &v_dq);
 
     aa_mem_region_pop(cx->reg, ptrtop);
 
@@ -90,16 +90,12 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
     /* Check term */
     double dq_norm = aa_la_dot( cx->q_sub->len, y, y );
 
-    double  E[7];
-    {
-        void *ptrtop = aa_mem_region_ptr(cx->reg);
-        struct aa_dvec vq = AA_DVEC_INIT(cx->q_sub->len,x,1);
-        s_tf_update( cx, &vq, cx->TF, E );
-        aa_mem_region_pop(cx->reg, ptrtop);
-    }
+    struct aa_dvec vq = AA_DVEC_INIT(cx->q_sub->len,x,1);
+    aa_rx_fk_sub(cx->fk, cx->ssg, &vq);
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
 
     double theta_err, x_err;
-    s_err2( E, cx->TF_ref->data, &theta_err, &x_err );
+    s_err2( E_act, cx->TF_ref->data, &theta_err, &x_err );
 
     cx->iteration++;
     if( (theta_err < cx->opts->tol_angle) &&

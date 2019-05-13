@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2018, Colorado School of Mines
+ * Copyright (c) 2018-2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ndantam@mines.edu>
@@ -48,6 +48,7 @@
 #include "amino.h"
 #include "amino/opt/opt.h"
 #include "amino/rx/scene_wk.h"
+#include "amino/rx/scene_fk.h"
 #include "amino/rx/scene_sub.h"
 
 struct aa_rx_wk_opts {
@@ -62,15 +63,14 @@ struct aa_rx_wk_opts {
 static inline int
 aa_rx_wk_get_js( const struct aa_rx_sg_sub *ssg,
                  const struct aa_rx_wk_opts * opts,
-                 const struct aa_dmat *TF_abs,
+                 //const struct aa_dmat *TF_abs,
+                 const struct aa_rx_fk *fk,
                  struct aa_dmat *J,
                  struct aa_dmat *Jstar )
 {
     int r = -1;
 
-    aa_rx_sg_sub_jacobian(ssg,
-                          TF_abs->cols, TF_abs->data, TF_abs->ld,
-                          J->data, J->ld );
+    aa_rx_sg_sub_jac_vel_fill(ssg,fk,J);
 
     // Compute a damped pseudo inverse
     // TODO: Try DGECON to avoid damping when possible without taking the SVD

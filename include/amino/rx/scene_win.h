@@ -2,6 +2,7 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -149,6 +150,14 @@ AA_API void
 aa_rx_win_display_sg_tf( struct aa_rx_win *win, struct aa_sdl_display_params *params,
                          const struct aa_rx_sg *scenegraph,
                          size_t n_tf, const double *tf_abs, size_t ld_tf );
+
+
+/**
+ * Display a scene graph in the window with the forward kinematics.
+ */
+AA_API void
+aa_rx_win_display_fk( struct aa_rx_win *win, struct aa_sdl_display_params *params,
+                      const struct aa_rx_fk *fk );
 
 /**
  * Set the configuration vector for the window.

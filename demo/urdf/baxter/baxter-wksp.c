@@ -2,6 +2,7 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -38,6 +39,7 @@
 
 #include "baxter-demo.h"
 #include "amino/rx/scene_gl.h"
+#include "amino/rx/scene_fk.h"
 #include "amino/rx/scene_sdl.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
@@ -53,7 +55,9 @@ struct display_cx {
     const struct aa_rx_wk_lc3_cx *lc3;
     double E0[7];
     double *q;
+    struct aa_dvec *vq;
     struct aa_dvec *dq_subset;
+    struct aa_rx_fk *fk;
 };
 
 int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *params )
@@ -74,20 +78,15 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
 
     size_t m = aa_rx_sg_config_count(scenegraph);
-    size_t n = aa_rx_sg_frame_count(scenegraph);
     size_t n_c = aa_rx_sg_sub_config_count(cx->ssg);
 
     struct aa_dvec *q_subset = aa_dvec_alloc(reg,n_c);
-    aa_rx_sg_config_get( scenegraph, m, n_c,
-                         aa_rx_sg_sub_configs(cx->ssg), cx->q, q_subset->data );
+    aa_rx_sg_sub_config_gather(cx->ssg, cx->vq, q_subset );
 
+    struct aa_rx_fk *fk = cx->fk;
+    aa_rx_fk_all(fk,cx->vq);
 
-    struct aa_dvec qv;
-    aa_dvec_view( &qv, m, cx->q, 1 );
-    struct aa_dmat *TF_abs = aa_rx_sg_get_tf_abs(scenegraph, reg, &qv );
-
-    aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
-                             n, TF_abs->data, TF_abs->ld );
+    aa_rx_win_display_fk( cx->win, params, fk );
 
     /* Reference Velocity and Position */
     /* double dx_r[6]; */
@@ -95,7 +94,8 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     struct aa_dvec *dx_r = aa_dvec_alloc(reg,6);
     aa_dvec_zero(dx_r);
     {
-        double *E_act =  TF_abs->data + TF_abs->ld*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
+        double E_act[7];
+        aa_rx_fk_get_abs_qutr( fk, aa_rx_sg_sub_frame_ee(cx->ssg), E_act );
 
         double z_pos = sin(t*2*M_PI) / (4*M_PI);
         double z_vel = cos( t*2*M_PI ) / 2; // derivative of position
@@ -139,17 +139,14 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
         //aa_tick("solve: ");
 
         /* int r = aa_rx_wk_dx2dq( cx->ssg, cx->wk_opts, */
-        /*                         TF_abs, */
-        /*                         6, dx_r, */
-        /*                         n_c, dq_subset ); */
+        /*                         fk, dx_r, dq_subset ); */
 
         /* int r = aa_rx_wk_dx2dq_np( cx->ssg, cx->wk_opts, */
-        /*                               TF_abs, */
-        /*                               6, dx_r, */
-        /*                               n_c, dqr_subset, dq_subset ); */
+        /*                            fk, dx_r, */
+        /*                            dqr_subset, dq_subset ); */
 
         int r = aa_rx_wk_dx2dq_lc3( cx->lc3, dt,
-                                    TF_abs,
+                                    fk,
                                     dx_r,
                                     q_subset, cx->dq_subset,
                                     dqr_subset, dq_subset );
@@ -194,13 +191,16 @@ int main(int argc, char *argv[])
     struct display_cx cx = {0};
     cx.win = win;
     cx.scenegraph = scenegraph;
-    cx.q = AA_NEW0_AR(double, n_q );
+    cx.vq = aa_dvec_malloc(n_q);
+    cx.q = cx.vq->data;
+    aa_dvec_zero(cx.vq);
 
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
     cx.wk_opts = aa_rx_wk_opts_create();
     cx.dq_subset = aa_dvec_malloc(aa_rx_sg_sub_config_count(cx.ssg));
     cx.lc3 = aa_rx_wk_lc3_create(cx.ssg,cx.wk_opts);
+    cx.fk = aa_rx_fk_malloc(scenegraph);
 
 
     // set start and goal states
@@ -223,18 +223,12 @@ int main(int argc, char *argv[])
                     0 // w2
     };
     aa_rx_sg_config_set( scenegraph, n_q, 7,
-                         ids, q1, cx.q );
+                         ids, q1, cx.vq->data );
 
     // initial end-effector config
     {
-        size_t n = aa_rx_sg_frame_count(scenegraph);
-        double TF_abs[7*n];
-        double TF_rel[7*n];
-        aa_rx_sg_tf( scenegraph, n_q, cx.q,
-                     n,
-                     TF_rel, 7,
-                     TF_abs, 7 );
-        AA_MEM_CPY( cx.E0, TF_abs + 7*tip_id, 7 );
+        aa_rx_fk_all(cx.fk, cx.vq);
+        aa_rx_fk_get_abs_qutr( cx.fk, tip_id, cx.E0 );
     }
 
 

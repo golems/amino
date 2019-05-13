@@ -3,6 +3,7 @@
 /*
  * Copyright (c) 2013, Georgia Tech Research Corporation
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2018-2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -55,14 +56,14 @@ s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx)
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
-    double  E_act[7];
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
-    s_tf_update( cx, &vq, cx->TF, E_act );
+    aa_rx_fk_sub(cx->fk, cx->ssg, &vq);
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
 
 
     if( dq ) {
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
-        s_ksol_jpinv(cx,q,cx->TF, E_act, &v_dq);
+        s_ksol_jpinv(cx,q, &v_dq);
         aa_lb_dscal(-1,&v_dq);
     }
 
@@ -295,9 +296,9 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     aa_lb_dcopy( cx->q_sub, q );
 
 
-    double E[7];
-    s_tf_update( cx, cx->q_sub, cx->TF, E);
-    int result = s_check(cx->ik_cx, cx->TF_ref, E );
+    aa_rx_fk_sub(cx->fk, cx->ssg, q);
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
+    int result = s_check(cx->ik_cx, cx->TF_ref, E_act );
     nlopt_destroy(opt);
     aa_mem_region_pop(reg,ptrtop);
 

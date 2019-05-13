@@ -2,9 +2,10 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@rice.edu>
+ * Author(s): Neil T. Dantam <ndantam@mines.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -878,7 +879,7 @@ aa_rx_fk_ref(const struct aa_rx_fk *fk, aa_rx_frame_id id)
 }
 
 AA_API void
-aa_rx_fk_get_abs(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[AA_RX_TF_LEN] )
+aa_rx_fk_get_abs_qutr(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[7] )
 {
     AA_MEM_CPY(E, AA_RX_FK_REF(fk, (size_t)(id)), AA_RX_TF_LEN);
 }
@@ -937,4 +938,25 @@ aa_rx_fk_all( struct aa_rx_fk *fk,
         f->tf_rel( q->data, E_rel );
         aa_rx_fk_set_rel(fk,i_frame,E_rel);
     }
+}
+
+
+/** Pointer to FK data */
+AA_API double *
+aa_rx_fk_data( const struct aa_rx_fk *fk )
+{
+    return fk->TF_abs;
+}
+
+/** Leading dimension of FK data */
+AA_API size_t
+aa_rx_fk_ld( const struct aa_rx_fk *fk )
+{
+    return AA_RX_FK_LD;
+}
+
+AA_API size_t
+aa_rx_fk_cnt( const struct aa_rx_fk *fk )
+{
+    return aa_rx_sg_frame_count(fk->sg);
 }

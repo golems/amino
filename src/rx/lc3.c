@@ -1,7 +1,7 @@
 /* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2018, Colorado School of Mines
+ * Copyright (c) 2018-2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ndantam@mines.edu>
@@ -48,6 +48,7 @@
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_kin_internal.h"
 #include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_fk.h"
 
 #include "amino/math.h"
 
@@ -71,7 +72,7 @@ lc3_constraints (
     const struct aa_rx_wk_lc3_cx *cx,
     double dt,
     size_t n_x, size_t n_q,
-    const struct aa_dmat *TF_abs,
+    const struct aa_rx_fk *fk,
     /* const double *dx_r, */
     /* const double *q_a, const double *dq_a, const double *dq_r, */
     const struct aa_dvec *dx_r,
@@ -86,7 +87,6 @@ lc3_constraints (
     double **pc
     )
 {
-    assert(TF_abs);
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     const struct aa_rx_sg_sub *ssg = cx->ssg;
     {
@@ -117,13 +117,15 @@ lc3_constraints (
     *pc     = c;
 
 
+
     // Rest of allocated arrays are local temps
     void *ptrtop = aa_mem_region_ptr(reg);
 
-    struct aa_dmat *J = aa_rx_sg_sub_get_jacobian( ssg, reg, TF_abs );
+    struct aa_dmat *J = aa_rx_sg_sub_jac_vel_get( ssg, reg, fk );
+    //struct aa_dmat *J = aa_rx_sg_sub_get_jac_vel_get( ssg, reg, fk );
     struct aa_dmat vJstar = AA_DMAT_INIT( n_q, n_x, A, n_q );
     struct aa_dmat *N  = aa_dmat_alloc(reg, n_q, n_q);
-    aa_rx_wk_get_js( ssg, &cx->wk_opts, TF_abs, J, &vJstar );
+    aa_rx_wk_get_js( ssg, &cx->wk_opts, fk, J, &vJstar );
     aa_rx_wk_get_n( ssg, &cx->wk_opts, J, &vJstar, 1, N );
 
     struct aa_dvec *dq_rn  = aa_dvec_alloc(reg, n_q );
@@ -246,7 +248,10 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
 
     struct aa_dvec qv;
     aa_dvec_view( &qv, n_qall, q_all, 1 );
-    struct aa_dmat *TF_abs = aa_rx_sg_get_tf_abs(sg, reg, &qv);
+
+    struct aa_rx_fk *fk = aa_rx_fk_alloc(sg,reg);
+    aa_rx_fk_all(fk,&qv);
+
 
     double *A;
     double *b_min, *b_max;
@@ -256,7 +261,7 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
     lc3_constraints (
         cx, dt,
         n_x, n_q,
-        TF_abs,
+        fk,
         dx_r,
         q_a, dq_a, dq_r,
         &A,
@@ -284,7 +289,7 @@ aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
 AA_API int
 aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
                     double dt,
-                    const struct aa_dmat *TF_abs,
+                    const struct aa_rx_fk *fk,
                     const struct aa_dvec *dx_r,
                     const struct aa_dvec *q_a,  const struct aa_dvec *dq_a,
                     const struct aa_dvec *dq_r, struct aa_dvec *dq )
@@ -292,6 +297,7 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
 
     if( dt <= 0 ) return -1;
     const struct aa_rx_sg_sub *ssg = cx->ssg;
+
 
     size_t n_x, n_q;
     aa_rx_sg_sub_jacobian_size( ssg, &n_x, &n_q );
@@ -314,7 +320,7 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
     lc3_constraints (
         cx, dt,
         n_x, n_q,
-        TF_abs,
+        fk,
         dx_r,
         q_a, dq_a, dq_r,
         &A,

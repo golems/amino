@@ -2,9 +2,10 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@rice.edu>
+ * Author(s): Neil T. Dantam <ndantam@mines.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -313,9 +314,9 @@ aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
 }
 
 AA_API void
-aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
-                             const struct aa_rx_fk *fk,
-                             struct aa_dmat *Jr, struct aa_dmat *Jp )
+aa_rx_sg_sub_jac_twist_fill2( const struct aa_rx_sg_sub *ssg,
+                              const struct aa_rx_fk *fk,
+                              struct aa_dmat *Jr, struct aa_dmat *Jp )
 {
     size_t n_frames = aa_rx_sg_sub_frame_count(ssg);
     size_t n_configs = aa_rx_sg_sub_config_count(ssg);
@@ -384,22 +385,26 @@ aa_rx_sg_sub_jac_twist_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region
     size_t rows, cols;
     aa_rx_sg_sub_jacobian_size(ssg,&rows,&cols);
     struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
-
-    struct aa_dmat Jr, Jp;
-
-    aa_dmat_view_block(&Jp, J, AA_TF_DX_V, 0, 3, cols);
-    aa_dmat_view_block(&Jr, J, AA_TF_DX_W, 0, 3, cols);
-
-    aa_rx_sg_sub_jac_twist_fill( ssg, fk, &Jr, &Jp );
-
+    aa_rx_sg_sub_jac_twist_fill(ssg,fk,J);
     return J;
+}
+
+AA_API void
+aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
+                             const struct aa_rx_fk *fk,
+                             struct aa_dmat *J )
+{
+    struct aa_dmat Jr, Jp;
+    aa_dmat_view_block(&Jp, J, AA_TF_DX_V, 0, 3, J->cols);
+    aa_dmat_view_block(&Jr, J, AA_TF_DX_W, 0, 3, J->cols);
+    aa_rx_sg_sub_jac_twist_fill2( ssg, fk, &Jr, &Jp );
 }
 
 
 AA_API void
-aa_rx_sg_sub_jac_vel_fill( const struct aa_rx_sg_sub *ssg,
-                           const struct aa_rx_fk *fk,
-                           struct aa_dmat *Jr, struct aa_dmat *Jp )
+aa_rx_sg_sub_jac_vel_fill2( const struct aa_rx_sg_sub *ssg,
+                            const struct aa_rx_fk *fk,
+                            struct aa_dmat *Jr, struct aa_dmat *Jp )
 {
     size_t n_frames = aa_rx_sg_sub_frame_count(ssg);
     size_t n_configs = aa_rx_sg_sub_config_count(ssg);
@@ -445,7 +450,7 @@ aa_rx_sg_sub_jac_vel_fill( const struct aa_rx_sg_sub *ssg,
                 double tmp[3];
                 for( size_t j = 0; j < 3; j++ ) tmp[j] = pe[j] - t[j];
                 aa_tf_cross(jr, tmp, jp);
-
+                break;
             }
             case AA_RX_FRAME_PRISMATIC:
                 AA_MEM_ZERO(jr, 3);
@@ -470,20 +475,27 @@ aa_rx_sg_sub_jac_vel_fill( const struct aa_rx_sg_sub *ssg,
 
 AA_API struct aa_dmat *
 aa_rx_sg_sub_jac_vel_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *reg,
-                            const struct aa_rx_fk *fk  )
+                          const struct aa_rx_fk *fk  )
 {
     size_t rows, cols;
     aa_rx_sg_sub_jacobian_size(ssg,&rows,&cols);
     struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
 
-    struct aa_dmat Jr, Jp;
+    aa_rx_sg_sub_jac_vel_fill(ssg,fk,J);
 
-    aa_dmat_view_block(&Jp, J, AA_TF_DX_V, 0, 3, cols);
-    aa_dmat_view_block(&Jr, J, AA_TF_DX_W, 0, 3, cols);
-
-    aa_rx_sg_sub_jac_vel_fill( ssg, fk, &Jr, &Jp );
 
     return J;
+}
+
+AA_API void
+aa_rx_sg_sub_jac_vel_fill( const struct aa_rx_sg_sub *ssg,
+                           const struct aa_rx_fk *fk,
+                           struct aa_dmat *J )
+{
+    struct aa_dmat Jr, Jp;
+    aa_dmat_view_block(&Jp, J, AA_TF_DX_V, 0, 3, J->cols);
+    aa_dmat_view_block(&Jr, J, AA_TF_DX_W, 0, 3, J->cols);
+    aa_rx_sg_sub_jac_vel_fill2( ssg, fk, &Jr, &Jp );
 }
 
 AA_API void

@@ -82,7 +82,7 @@ aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
  *
  * @param[in] ssg the subscenegraph to control
  * @param[in] opts workspace control options
- * @param[in] TF_abs absolute frames (quaternion-translations) for the entire scenegraph
+ * @param[in] fk updated forward kinematics
  * @param[in] n_x size of dx
  * @param[in] dx reference workspace velocity
  * @param[in] n_q size of dq
@@ -91,7 +91,7 @@ aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
 AA_API int
 aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
-                const struct aa_dmat *TF_abs,
+                const struct aa_rx_fk *fk,
                 const struct aa_dvec *dx,
                 struct aa_dvec *dq );
 
@@ -103,7 +103,7 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
  *
  * @param[in] ssg the subscenegraph to control
  * @param[in] opts workspace control options
- * @param[in] TF_abs absolute frames (quaternion-translations) for the entire scenegraph
+ * @param[in] fk updated forward kinematics
  * @param[in] n_x size of dx
  * @param[in] dx reference workspace velocity
  * @param[in] n_q size of dq
@@ -113,7 +113,7 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
 AA_API int
 aa_rx_wk_dx2dq_np( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
-                   const struct aa_dmat *TF_abs,
+                   const struct aa_rx_fk *fk,
                    const struct aa_dvec *dx, const struct aa_dvec *dq_r,
                    struct aa_dvec *dq );
 
@@ -135,10 +135,11 @@ AA_API  struct aa_rx_wk_lc3_cx *
 aa_rx_wk_lc3_create ( const struct aa_rx_sg_sub *ssg,
                       const struct aa_rx_wk_opts * opts );
 
+
 AA_API int
 aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *lc3,
                     double dt,
-                    const struct aa_dmat *TF_abs,
+                    const struct aa_rx_fk *fk,
                     const struct aa_dvec *dx_r,
                     const struct aa_dvec *q_a, const struct aa_dvec *dq_a,
                     const struct aa_dvec *dq_r, struct aa_dvec *dq );

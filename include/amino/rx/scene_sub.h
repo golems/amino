@@ -2,9 +2,10 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015-2016, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@rice.edu>
+ * Author(s): Neil T. Dantam <ndantam@mines.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -178,10 +179,10 @@ aa_rx_sg_sub_rand_config( const struct aa_rx_sg_sub *ssg,
 
 /*-- TF --*/
 
-AA_API void
-aa_rx_sg_sub_tf_update( const struct aa_rx_sg_sub *ssg,
-                        const struct aa_dvec *q_sub,
-                        struct aa_dmat *TF_abs );
+/* AA_API void */
+/* aa_rx_sg_sub_tf_update( const struct aa_rx_sg_sub *ssg, */
+/*                         const struct aa_dvec *q_sub, */
+/*                         struct aa_dmat *TF_abs ); */
 
 /*-- Jacobians --*/
 
@@ -241,9 +242,57 @@ aa_rx_sg_sub_jac_twist_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region
  * @f]
  */
 AA_API void
+aa_rx_sg_sub_jac_twist_fill2( const struct aa_rx_sg_sub *ssg,
+                              const struct aa_rx_fk *fk,
+                              struct aa_dmat *Jp, struct aa_dmat *Jr );
+
+/**
+ * Fill in the blocks of the twist jacobian.
+ *
+ * @f[
+ *     \begin{bmatrix} \omega \\ \dot{v} + v \times \omega \end{bmatrix}
+ *     =
+ *     J \end{bmatrix} \dot\theta
+ * @f]
+ */
+AA_API void
 aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
                              const struct aa_rx_fk *fk,
-                             struct aa_dmat *Jp, struct aa_dmat *Jr );
+                             struct aa_dmat *J );
+
+/**
+ * Allocate and fill the velocity Jacobian.
+ *
+ * @f[
+ *     \begin{bmatrix} \omega \\ \dot{v}  \end{bmatrix}
+ *     = J \dot\theta
+ * @f]
+ *
+ * @sa AA_TF_DX_V
+ * @sa AA_TF_DX_W
+ */
+AA_API struct aa_dmat *
+aa_rx_sg_sub_jac_vel_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region,
+                          const struct aa_rx_fk *fk );
+
+/**
+ * Fill in the blocks of the velocity jacobian.
+ *
+ * @f[
+ *     \begin{bmatrix} \omega \\ \dot{v} \end{bmatrix}
+ *     =
+ *     J \dot\theta
+ * @f]
+ */
+AA_API void
+aa_rx_sg_sub_jac_vel_fill2( const struct aa_rx_sg_sub *ssg,
+                            const struct aa_rx_fk *fk,
+                            struct aa_dmat *Jp, struct aa_dmat *Jr );
+
+AA_API void
+aa_rx_sg_sub_jac_vel_fill( const struct aa_rx_sg_sub *ssg,
+                           const struct aa_rx_fk *fk,
+                           struct aa_dmat *J );
 
 
 

@@ -2,7 +2,7 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2017, Rice University
- * Copyright (c) 2018, Colorado School of Mines
+ * Copyright (c) 2018-2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ndantam@mines.edu>
@@ -49,6 +49,8 @@
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_wk.h"
 
+#include "amino/rx/scene_fk.h"
+
 #include "amino/rx/scene_wk_internal.h"
 #include "amino/mat_internal.h"
 
@@ -76,7 +78,7 @@ aa_rx_wk_opts_destroy( struct aa_rx_wk_opts * opts)
 AA_API int
 aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
                 const struct aa_rx_wk_opts * opts,
-                const struct aa_dmat *TF_abs,
+                const struct aa_rx_fk *fk,
                 const struct aa_dvec *dx,
                 struct aa_dvec *dq )
 {
@@ -90,7 +92,7 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
 
     struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
     struct aa_dmat *J_star = aa_dmat_alloc(reg,cols,rows);
-    aa_rx_wk_get_js( ssg, opts, TF_abs, J, J_star );
+    aa_rx_wk_get_js( ssg, opts, fk, J, J_star );
 
     // workspace solution: dq = J^* dx
     aa_lb_dgemv( CblasNoTrans,
@@ -102,11 +104,10 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
     return 0;
 }
 
-
 AA_API int
 aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
-                   const struct aa_dmat *TF_abs,
+                   const struct aa_rx_fk *fk,
                    const struct aa_dvec *dx, const struct aa_dvec *dq_r,
                    struct aa_dvec *dq )
 {
@@ -122,7 +123,7 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
     struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
     struct aa_dmat *J_star = aa_dmat_alloc(reg,cols,rows);
     struct aa_dmat *N = aa_dmat_alloc(reg,cols,cols);
-    aa_rx_wk_get_js( ssg, opts, TF_abs, J, J_star );
+    aa_rx_wk_get_js( ssg, opts, fk, J, J_star );
     aa_rx_wk_get_n( ssg, opts, J, J_star, 1, N );
 
     // workspace solution: dq = J^* dx

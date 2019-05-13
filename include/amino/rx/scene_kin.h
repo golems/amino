@@ -2,6 +2,7 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ * Copyright (c) 2019, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
@@ -321,9 +322,6 @@ AA_API int aa_rx_ik_jac_solve( const struct aa_rx_ik_jac_cx *context,
 AA_API int aa_rx_ik_jac_fun( void *context,
                              size_t n_tf, const double *TF, size_t ld_TF,
                              size_t n_q, double *q );
-
-
-
 
 
 
