@@ -307,7 +307,7 @@ aa_dmat_zero( struct aa_dmat *mat );
  * \f[ \mathbf{x} \leftrightarrow \mathbf{y} \f]
  */
 AA_API void
-aa_lb_dswap( struct aa_dvec *x, struct aa_dvec *y );
+aa_dvec_swap( struct aa_dvec *x, struct aa_dvec *y );
 
 /**
  * Scale x by alpha.
@@ -315,7 +315,7 @@ aa_lb_dswap( struct aa_dvec *x, struct aa_dvec *y );
  * \f[ \mathbf{x} \leftarrow \alpha \mathbf{x} \f]
  */
 AA_API void
-aa_lb_dscal( double alpha, struct aa_dvec *x );
+aa_dvec_scal( double alpha, struct aa_dvec *x );
 
 /**
  * Increment x by alpha.
@@ -323,7 +323,7 @@ aa_lb_dscal( double alpha, struct aa_dvec *x );
  * \f[ \mathbf{x} \leftarrow \alpha + \mathbf{x} \f]
  */
 AA_API void
-aa_lb_dinc( double alpha, struct aa_dvec *x );
+aa_dvec_inc( double alpha, struct aa_dvec *x );
 
 /**
  * Copy x to y.
@@ -331,7 +331,7 @@ aa_lb_dinc( double alpha, struct aa_dvec *x );
  * \f[ \mathbf{y} \leftarrow \mathbf{x} \f]
  */
 AA_API void
-aa_lb_dcopy( const struct aa_dvec *x, struct aa_dvec *y );
+aa_dvec_copy( const struct aa_dvec *x, struct aa_dvec *y );
 
 
 /**
@@ -340,7 +340,7 @@ aa_lb_dcopy( const struct aa_dvec *x, struct aa_dvec *y );
  * \f[ \mathbf{y} \leftarrow \alpha \mathbf{x} + \mathbf{y} \f]
  */
 AA_API void
-aa_lb_daxpy( double a, const struct aa_dvec *x, struct aa_dvec *y );
+aa_dvec_axpy( double a, const struct aa_dvec *x, struct aa_dvec *y );
 
 /**
  * Dot product
@@ -348,7 +348,7 @@ aa_lb_daxpy( double a, const struct aa_dvec *x, struct aa_dvec *y );
  * \f[ \mathbf{x}^T \mathbf{y} \f]
  */
 AA_API double
-aa_lb_ddot( const struct aa_dvec *x, struct aa_dvec *y );
+aa_dvec_dot( const struct aa_dvec *x, struct aa_dvec *y );
 
 /**
  * Euclidean Norm
@@ -356,7 +356,7 @@ aa_lb_ddot( const struct aa_dvec *x, struct aa_dvec *y );
  * \f[ \left\Vert \mathbf{x} \right\Vert_2  \f]
  */
 AA_API double
-aa_lb_dnrm2( const struct aa_dvec *x );
+aa_dvec_nrm2( const struct aa_dvec *x );
 
 /* Level 2 BLAS */
 

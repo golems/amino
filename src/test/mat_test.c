@@ -338,7 +338,7 @@ test_inc()
 
     struct aa_dvec x = AA_DVEC_INIT(3,xd,1);
     struct aa_dvec y = AA_DVEC_INIT(3,yd,1);
-    aa_lb_dinc(1,&x);
+    aa_dvec_inc(1,&x);
 
 
     adveq( "dinc", &x,&y,0);

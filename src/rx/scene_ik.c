@@ -129,7 +129,7 @@ aa_rx_ik_get_seed( const struct aa_rx_ik_cx *context )
 AA_API void
 aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start )
 {
-    aa_lb_dcopy( q_start, context->q_start );
+    aa_dvec_copy( q_start, context->q_start );
     aa_rx_sg_fill_tf_abs( aa_rx_sg_sub_sg(context->ssg), q_start, context->TF );
     aa_rx_fk_all( context->fk, q_start );
 }
@@ -137,7 +137,7 @@ aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start )
 AA_API void
 aa_rx_ik_set_seed( struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed )
 {
-    aa_lb_dcopy( q_seed, context->q_seed );
+    aa_dvec_copy( q_seed, context->q_seed );
 }
 
 AA_API void
@@ -337,7 +337,7 @@ static double s_serr( const double E_act[7], const double E_ref[7] )
     double w[6];
     aa_tf_qutr_lnv(E_rel,w);
     struct aa_dvec wv = AA_DVEC_INIT(6,w,1);
-    return aa_lb_dnrm2(&wv);
+    return aa_dvec_nrm2(&wv);
 }
 
 static void s_err2( const double E_act[7], const double E_ref[7],

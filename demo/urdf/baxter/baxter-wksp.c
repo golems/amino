@@ -151,8 +151,8 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
 
     // integrate
-    aa_lb_dcopy(dq_subset, cx->dq_subset);
-    aa_lb_daxpy(dt,dq_subset,q_subset);
+    aa_dvec_copy(dq_subset, cx->dq_subset);
+    aa_dvec_axpy(dt,dq_subset,q_subset);
     aa_rx_sg_sub_config_scatter(cx->ssg, q_subset, cx->q_all);
 
     aa_sdl_display_params_set_update(params);

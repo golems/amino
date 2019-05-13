@@ -94,8 +94,8 @@ AA_API void aa_de_jac_fd( aa_de_vector_field_fun *fun, void *cx,
         fun(cx,mv,jtmp);
         fun(cx,pv,&jcol);
         // jcol = (jcol - jtmp) / (2*eps)
-        aa_lb_daxpy(-1, jtmp, &jcol);
-        aa_lb_dscal(1.0 / (2*eps), &jcol);
+        aa_dvec_axpy(-1, jtmp, &jcol);
+        aa_dvec_scal(1.0 / (2*eps), &jcol);
 
         *pp = orig;
         *mm = orig;

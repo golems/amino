@@ -85,7 +85,7 @@ void de_vec_field_fk( void *vcx, const struct aa_dvec *q_sub,
     double *E_act =  TF_abs->data + TF_abs->ld*(size_t)aa_rx_sg_sub_frame_ee(cx->ssg);
     double S[8]; aa_tf_qutr2duqu(E_act,S);
     struct aa_dvec Sv = AA_DVEC_INIT(8,S,1);
-    aa_lb_dcopy(&Sv, S_ee);
+    aa_dvec_copy(&Sv, S_ee);
 
     aa_mem_region_pop(reg,ptrtop);
 }
@@ -238,8 +238,8 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     check( cx->ssg, &qv, q_subset, TF_abs, dx_r, dq_subset );
 
     // integrate
-    aa_lb_dcopy(dq_subset, cx->dq_subset);
-    aa_lb_daxpy(dt, dq_subset, q_subset);
+    aa_dvec_copy(dq_subset, cx->dq_subset);
+    aa_dvec_axpy(dt, dq_subset, q_subset);
 
     aa_rx_sg_config_set( scenegraph, m, n_c,
                          aa_rx_sg_sub_configs(cx->ssg),

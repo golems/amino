@@ -519,7 +519,7 @@ aa_rx_win_set_bconfig( struct aa_rx_win * win,
     win->n_q = q->len;
     win->q = AA_NEW_AR(double,q->len);
     struct aa_dvec qw = AA_DVEC_INIT(win->n_q, win->q, 1);
-    aa_lb_dcopy(q,&qw);
+    aa_dvec_copy(q,&qw);
 
 
     aa_rx_win_unlock(win);

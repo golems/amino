@@ -66,7 +66,7 @@ namespace la {
 static inline void
 scal( struct aa_dvec *x, double alpha ) {
     AA_MATPP_PRINT("dscal\n");
-    aa_lb_dscal(alpha, x);
+    aa_dvec_scal(alpha, x);
 }
 
 static inline void
@@ -79,14 +79,14 @@ static inline void
 copy( const struct aa_dvec *x, struct aa_dvec *y )
 {
     AA_MATPP_PRINT("dcopy\n");
-    aa_lb_dcopy( x, y );
+    aa_dvec_copy( x, y );
 }
 
 static inline void
 axpy( double a, const struct aa_dvec *x, struct aa_dvec *y )
 {
     AA_MATPP_PRINT("daxpy\n");
-    aa_lb_daxpy(a,x,y);
+    aa_dvec_axpy(a,x,y);
 }
 
 static inline void

@@ -277,7 +277,7 @@ aa_rx_sg_fill_tf_abs( const struct aa_rx_sg *scene_graph,
     struct aa_dvec *qp;
     if( 1 != q->inc ) {
         qp = aa_dvec_alloc(reg,q->len);
-        aa_lb_dcopy(q,qp);
+        aa_dvec_copy(q,qp);
     } else {
         qp = (struct aa_dvec*)q;
     }

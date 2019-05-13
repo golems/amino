@@ -216,7 +216,7 @@ AA_API struct aa_dvec *
 aa_dvec_dup( struct aa_mem_region *reg, const struct aa_dvec *src)
 {
     struct aa_dvec *dst = aa_dvec_alloc(reg,src->len);
-    aa_lb_dcopy(src,dst);
+    aa_dvec_copy(src,dst);
     return dst;
 }
 
@@ -298,14 +298,14 @@ aa_dmat_zero( struct aa_dmat *mat )
 
 /* Level 1 BLAS */
 AA_API void
-aa_lb_dswap( struct aa_dvec *x, struct aa_dvec *y )
+aa_dvec_swap( struct aa_dvec *x, struct aa_dvec *y )
 {
     aa_lb_check_size(x->len, y->len);
     cblas_dswap( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API void
-aa_lb_dscal( double a, struct aa_dvec *x )
+aa_dvec_scal( double a, struct aa_dvec *x )
 {
     cblas_dscal( VEC_LEN(x), a, AA_VEC_ARGS(x) );
 }
@@ -317,34 +317,34 @@ static void s_inc( size_t n, double alpha, double *x, size_t inc ) {
 }
 
 AA_API void
-aa_lb_dinc( double alpha, struct aa_dvec *x )
+aa_dvec_inc( double alpha, struct aa_dvec *x )
 {
     s_inc( x->len, alpha, x->data, x->inc );
 }
 
 AA_API void
-aa_lb_dcopy( const struct aa_dvec *x, struct aa_dvec *y )
+aa_dvec_copy( const struct aa_dvec *x, struct aa_dvec *y )
 {
     aa_lb_check_size(x->len, y->len);
     cblas_dcopy( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API void
-aa_lb_daxpy( double a, const struct aa_dvec *x, struct aa_dvec *y )
+aa_dvec_axpy( double a, const struct aa_dvec *x, struct aa_dvec *y )
 {
     aa_lb_check_size(x->len, y->len);
     cblas_daxpy( VEC_LEN(x), a, AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API double
-aa_lb_ddot( const struct aa_dvec *x, struct aa_dvec *y )
+aa_dvec_dot( const struct aa_dvec *x, struct aa_dvec *y )
 {
     aa_lb_check_size(x->len, y->len);
     return cblas_ddot( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API double
-aa_lb_dnrm2( const struct aa_dvec *x )
+aa_dvec_nrm2( const struct aa_dvec *x )
 {
     return cblas_dnrm2( VEC_LEN(x), AA_VEC_ARGS(x) );
 }

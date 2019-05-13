@@ -136,8 +136,8 @@ lc3_constraints (
     /*  A = [J_star*dt, N*(dq_a - dq_r) ] */
     cblas_dscal( (int)(n_q*n_x), dt, A, 1 ); // A = J_star * dt
     // dq_rn = dq_a - dq_r
-    aa_lb_dcopy(dq_a, dq_rn);
-    aa_lb_daxpy( -1, dq_r, dq_rn );
+    aa_dvec_copy(dq_a, dq_rn);
+    aa_dvec_axpy( -1, dq_r, dq_rn );
     aa_lb_dgemv( CblasNoTrans,
                  1, N, dq_rn,
                  0, &vAn );
@@ -149,8 +149,8 @@ lc3_constraints (
                  0, &vcx );
     // c now holds dx_a
     // c = (c-dx_r)/(-dt)
-    aa_lb_daxpy(-1, dx_r, &vcx);
-    aa_lb_dscal(-1/dt, &vcx);
+    aa_dvec_axpy(-1, dx_r, &vcx);
+    aa_dvec_scal(-1/dt, &vcx);
 
     c[n_x] = 1; // TODO: add weighting parameter to options
 
@@ -338,7 +338,7 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
 
     if( 0 == r ) {
         // extract velocity
-        aa_lb_dcopy(dq_a, dq);
+        aa_dvec_copy(dq_a, dq);
 
         // WS reference
         cblas_dgemv( CblasColMajor, CblasNoTrans,

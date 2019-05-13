@@ -64,7 +64,7 @@ s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx)
     if( dq ) {
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
         s_ksol_jpinv(cx,q, &v_dq);
-        aa_lb_dscal(-1,&v_dq);
+        aa_dvec_scal(-1,&v_dq);
     }
 
     double x = s_serr( E_act, cx->TF_ref->data );
@@ -293,7 +293,7 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     if (nlopt_optimize(opt, cx->q_sub->data, &minf) > 0) {
         // found miniumum
     }
-    aa_lb_dcopy( cx->q_sub, q );
+    aa_dvec_copy( cx->q_sub, q );
 
 
     aa_rx_fk_sub(cx->fk, cx->ssg, q);

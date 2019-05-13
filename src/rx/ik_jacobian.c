@@ -145,7 +145,7 @@ s_ik_jpinv( struct kin_solve_cx *cx,
 
 
 
-    aa_lb_dcopy( qsol, q );
+    aa_dvec_copy( qsol, q );
     aa_mem_region_pop(reg,ptrtop);
 
     if( r ) {
@@ -255,7 +255,7 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
     if( dx_ref ) {
         struct aa_dvec dx_refd;
         aa_dvec_view(&dx_refd, 6, (double*)dx_ref, 1);
-        aa_lb_dcopy( &dx_refd, w_e );
+        aa_dvec_copy( &dx_refd, w_e );
     } else {
         aa_dvec_zero(w_e);
     }
