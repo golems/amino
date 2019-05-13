@@ -139,7 +139,8 @@ struct aa_rx_ik_cx
 
     double restart_time;
 
-    struct aa_dmat *TF;
+    struct aa_dmat *TF; // TODO: remove
+    struct aa_rx_fk *fk;
 
     aa_rx_frame_id frame;
 };
@@ -161,7 +162,8 @@ struct kin_solve_cx {
     struct aa_dvec *q_all;
     struct aa_dvec *q_sub;
 
-    struct aa_dmat *TF;
+    struct aa_dmat *TF; // TODO: remove
+    struct aa_rx_fk *fk;
 
 
     aa_rx_frame_id frame;

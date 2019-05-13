@@ -874,7 +874,7 @@ aa_rx_fk_cpy(struct aa_rx_fk *dst, const struct aa_rx_fk *src)
 AA_API double *
 aa_rx_fk_ref(const struct aa_rx_fk *fk, aa_rx_frame_id id)
 {
-    AA_RX_FK_REF(fk, (size_t)(id));
+    return AA_RX_FK_REF(fk, (size_t)(id));
 }
 
 AA_API void
@@ -899,6 +899,21 @@ aa_rx_fk_destroy(struct aa_rx_fk * fk)
     }
 }
 
+AA_API void
+aa_rx_fk_set_rel(struct aa_rx_fk *fk, aa_rx_frame_id id, const double E_rel[AA_RX_TF_LEN])
+{
+    aa_rx_frame_id parent = aa_rx_sg_frame_parent(fk->sg,id);
+    double *E_abs = aa_rx_fk_ref(fk, id);
+    if( AA_RX_FRAME_ROOT ==  parent ) {
+        // TODO: can we somehow get rid of this branch?
+        //       maybe a separate type for global frames
+        AA_MEM_CPY(E_abs, E_rel, AA_RX_TF_LEN);
+    } else {
+        double *E_abs_parent = aa_rx_fk_ref(fk, parent);
+        aa_tf_qutr_mul(E_abs_parent, E_rel, E_abs);
+    }
+}
+
 /**
  * Compute the forward kinematics.
  */
@@ -919,17 +934,7 @@ aa_rx_fk_all( struct aa_rx_fk *fk,
          i_frame++, E_abs += AA_RX_FK_LD )
     {
         amino::SceneFrame *f = sg->frames[i_frame];
-        // compute relative
         f->tf_rel( q->data, E_rel );
-        // chain to global
-        if( f->in_global() ) {
-            // TODO: can we somehow get rid of this branch?
-            //       maybe a separate type for global frames
-            AA_MEM_CPY(E_abs, E_rel, 7);
-        } else {
-            assert( f->parent_id < (ssize_t)i_frame );
-            double *E_parent = AA_RX_FK_REF(fk, (size_t)(f->parent_id));
-            aa_tf_qutr_mul(E_parent, E_rel, E_abs);
-        }
+        aa_rx_fk_set_rel(fk,i_frame,E_rel);
     }
 }

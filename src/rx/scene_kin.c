@@ -40,6 +40,8 @@
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
+
+#include "amino/rx/scene_fk.h"
 #include "amino/rx/scene_kin_internal.h"
 #include "amino/mat_internal.h"
 
@@ -312,7 +314,7 @@ aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
 
 AA_API void
 aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
-                             const struct aa_dmat *TF,
+                             const struct aa_rx_fk *fk,
                              struct aa_dmat *Jr, struct aa_dmat *Jp )
 {
     size_t n_frames = aa_rx_sg_sub_frame_count(ssg);
@@ -334,7 +336,6 @@ aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
     {
         aa_rx_frame_id frame = frames[i_frame];
         assert( frame >= 0 );
-        assert( (size_t)frame < TF->cols );
         enum aa_rx_frame_type ft = aa_rx_sg_frame_type(sg, frame);
 
         switch(ft) {
@@ -346,7 +347,7 @@ aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
             assert( i_config <  n_configs );
 
             const double *a = aa_rx_sg_frame_axis(sg, frame);
-            const double *E = &AA_DMAT_REF(TF,0,(size_t)frame);
+            const double *E = aa_rx_fk_ref(fk,frame);
             const double *q = E + AA_TF_QUTR_Q;
             const double *t = E + AA_TF_QUTR_T;
 
@@ -378,7 +379,7 @@ aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
 
 AA_API struct aa_dmat *
 aa_rx_sg_sub_jac_twist_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *reg,
-                            const struct aa_dmat *TF )
+                            const struct aa_rx_fk *fk  )
 {
     size_t rows, cols;
     aa_rx_sg_sub_jacobian_size(ssg,&rows,&cols);
@@ -389,7 +390,98 @@ aa_rx_sg_sub_jac_twist_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region
     aa_dmat_view_block(&Jp, J, AA_TF_DX_V, 0, 3, cols);
     aa_dmat_view_block(&Jr, J, AA_TF_DX_W, 0, 3, cols);
 
-    aa_rx_sg_sub_jac_twist_fill( ssg, TF, &Jr, &Jp );
+    aa_rx_sg_sub_jac_twist_fill( ssg, fk, &Jr, &Jp );
+
+    return J;
+}
+
+
+AA_API void
+aa_rx_sg_sub_jac_vel_fill( const struct aa_rx_sg_sub *ssg,
+                           const struct aa_rx_fk *fk,
+                           struct aa_dmat *Jr, struct aa_dmat *Jp )
+{
+    size_t n_frames = aa_rx_sg_sub_frame_count(ssg);
+    size_t n_configs = aa_rx_sg_sub_config_count(ssg);
+
+    aa_rx_frame_id frame_ee = ssg->frames[n_frames-1];
+    double *E_ee = aa_rx_fk_ref(fk,frame_ee);
+    const double *pe = E_ee + AA_TF_QUTR_T;
+
+    aa_lb_check_size(3, Jr->rows);
+    aa_lb_check_size(3, Jp->rows);
+    aa_lb_check_size(n_configs, Jr->cols);
+    aa_lb_check_size(n_configs, Jp->cols);
+
+    aa_rx_frame_id *frames = aa_rx_sg_sub_frames(ssg);
+    const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
+
+    double *jr = Jr->data, *jp = Jp->data;
+    size_t i_frame = 0, i_config = 0;
+    for( ;
+         i_frame < n_frames && i_config < n_configs;
+         i_frame++ )
+    {
+        aa_rx_frame_id frame = frames[i_frame];
+        assert( frame >= 0 );
+        enum aa_rx_frame_type ft = aa_rx_sg_frame_type(sg, frame);
+
+        switch(ft) {
+        case AA_RX_FRAME_FIXED:
+            break;
+
+        case AA_RX_FRAME_REVOLUTE:
+        case AA_RX_FRAME_PRISMATIC: {
+            assert( i_config <  n_configs );
+
+            const double *a = aa_rx_sg_frame_axis(sg, frame);
+            const double *E = aa_rx_fk_ref(fk,frame);
+            const double *q = E + AA_TF_QUTR_Q;
+            const double *t = E + AA_TF_QUTR_T;
+
+            switch(ft)  {
+            case AA_RX_FRAME_REVOLUTE: {
+                aa_tf_qrot(q,a,jr);
+                double tmp[3];
+                for( size_t j = 0; j < 3; j++ ) tmp[j] = pe[j] - t[j];
+                aa_tf_cross(jr, tmp, jp);
+
+            }
+            case AA_RX_FRAME_PRISMATIC:
+                AA_MEM_ZERO(jr, 3);
+                aa_tf_qrot(q,a,jp);
+                break;
+            default: assert(0);
+            }
+            jr += Jr->ld;
+            jp += Jp->ld;
+            i_config++;
+            break;
+        } /* end joint */
+        } /* end switch */
+    } /* end for */
+
+    assert( i_frame <= n_frames );
+    assert( i_config <= n_configs );
+    assert( i_config == n_configs );
+
+}
+
+
+AA_API struct aa_dmat *
+aa_rx_sg_sub_jac_vel_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *reg,
+                            const struct aa_rx_fk *fk  )
+{
+    size_t rows, cols;
+    aa_rx_sg_sub_jacobian_size(ssg,&rows,&cols);
+    struct aa_dmat *J = aa_dmat_alloc(reg,rows,cols);
+
+    struct aa_dmat Jr, Jp;
+
+    aa_dmat_view_block(&Jp, J, AA_TF_DX_V, 0, 3, cols);
+    aa_dmat_view_block(&Jr, J, AA_TF_DX_W, 0, 3, cols);
+
+    aa_rx_sg_sub_jac_vel_fill( ssg, fk, &Jr, &Jp );
 
     return J;
 }

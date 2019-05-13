@@ -37,8 +37,7 @@
 
 
 #include "amino.h"
-#include "amino/rx/rxtype.h"
-#include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_fk.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_kin_internal.h"
@@ -73,4 +72,28 @@ aa_rx_sg_sub_tf_update( const struct aa_rx_sg_sub *ssg,
         }
 
     }
+}
+
+
+AA_API void
+aa_rx_fk_sub( struct aa_rx_fk *fk,
+              const struct aa_rx_sg_sub *ssg,
+              const struct aa_dvec *q_sub )
+{
+    aa_rx_sg_ensure_clean_frames(ssg->scenegraph);
+    size_t n_all = aa_rx_sg_config_count(ssg->scenegraph);
+    double q_all[n_all];
+    struct aa_dvec vq_all = AA_DVEC_INIT(n_all, q_all, 1);
+    aa_rx_sg_sub_config_scatter(ssg, q_sub, &vq_all);
+
+    amino::SceneGraph *sg = ssg->scenegraph->sg;
+
+    for( size_t i_sub = 0; i_sub < ssg->frame_count; i_sub++ ) {
+        double E_rel[AA_RX_TF_LEN];
+        aa_rx_frame_id i_frame = ssg->frames[i_sub];
+        amino::SceneFrame *f = sg->frames[i_frame];
+        f->tf_rel(q_all, E_rel);
+        aa_rx_fk_set_rel(fk,i_frame,E_rel);
+    }
+
 }

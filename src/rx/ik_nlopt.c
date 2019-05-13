@@ -59,6 +59,7 @@ s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx)
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
     s_tf_update( cx, &vq, cx->TF, E_act );
 
+
     if( dq ) {
         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
         s_ksol_jpinv(cx,q,cx->TF, E_act, &v_dq);
@@ -78,8 +79,8 @@ static double s_nlobj_dq_fd_helper( void *vcx, const struct aa_dvec *x)
     void *ptrtop = aa_mem_region_ptr(cx->reg);
     assert(1 == x->inc);
 
-    double  E_act[7];
-    s_tf_update( cx, x, cx->TF, E_act );
+    aa_rx_fk_sub(cx->fk, cx->ssg, x);
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
 
     double S_act[8], S_ref[8], S_err[8], S_ln[8];
     aa_tf_qutr2duqu(E_act, S_act);
@@ -135,9 +136,10 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
-    double  E_act[7];
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
-    s_tf_update( cx, &vq, cx->TF, E_act );
+    aa_rx_fk_sub(cx->fk, cx->ssg, &vq );
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
+
 
     double S_act[8], S_ref[8], S_err[8], S_ln[8];
     aa_tf_qutr2duqu(E_act, S_act);
@@ -212,7 +214,7 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
             struct aa_dvec vc = AA_DVEC_INIT(6,c,1);
             // Using Twist Jacobian
             aa_tf_duqu2pure(a,c);
-            struct aa_dmat *Jtw = aa_rx_sg_sub_jac_twist_get(cx->ssg, cx->reg, cx->TF);
+            struct aa_dmat *Jtw = aa_rx_sg_sub_jac_twist_get(cx->ssg, cx->reg, cx->fk);
             aa_lb_dgemv( CblasTrans, 1, Jtw, &vc, 0, &v_dq );
 
             // Using Velocity Jacobian
@@ -282,6 +284,7 @@ s_ik_nlopt( struct kin_solve_cx *cx,
             }
         }
     }
+
 
     nlopt_set_lower_bounds(opt, lb);
     nlopt_set_upper_bounds(opt, ub);

@@ -38,6 +38,7 @@
 #ifndef AMINO_RX_SCENE_SUB_H
 #define AMINO_RX_SCENE_SUB_H
 
+#include "rxtype.h"
 #include "scenegraph.h"
 
 /**
@@ -228,7 +229,7 @@ aa_rx_sg_sub_alloc_jacobian( const struct aa_rx_sg_sub *ssg, struct aa_mem_regio
  */
 AA_API struct aa_dmat *
 aa_rx_sg_sub_jac_twist_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region *region,
-                            const struct aa_dmat *TF  );
+                            const struct aa_rx_fk *fk  );
 
 /**
  * Fill in the blocks of the twist jacobian.
@@ -241,8 +242,10 @@ aa_rx_sg_sub_jac_twist_get( const struct aa_rx_sg_sub *ssg, struct aa_mem_region
  */
 AA_API void
 aa_rx_sg_sub_jac_twist_fill( const struct aa_rx_sg_sub *ssg,
-                             const struct aa_dmat *TF,
+                             const struct aa_rx_fk *fk,
                              struct aa_dmat *Jp, struct aa_dmat *Jr );
+
+
 
 
 /**
@@ -268,5 +271,13 @@ aa_rx_sg_sub_expand_path( const struct aa_rx_sg_sub *ssg, size_t n_pts,
                           const double *q_start,
                           const double *path_sub,
                           double *path_all );
+
+/**
+ * Compute the forward kinematics for the sub-scenegraph.
+ */
+AA_API void
+aa_rx_fk_sub( struct aa_rx_fk *fk,
+              const struct aa_rx_sg_sub *ssg,
+              const struct aa_dvec *q_sub );
 
 #endif /*AMINO_RX_SCENE_SUB_H*/

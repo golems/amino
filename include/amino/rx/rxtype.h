@@ -112,4 +112,6 @@ typedef int (*aa_sdl_win_display_fun)(
     struct aa_sdl_display_params *params);
 
 
+struct aa_rx_fk;;
+
 #endif /*AMINO_RX_RXTYPE_H*/

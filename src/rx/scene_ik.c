@@ -48,6 +48,7 @@
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxerr.h"
 #include "amino/rx/scenegraph.h"
+#include "amino/rx/scene_fk.h"
 #include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
 #include "amino/rx/scene_kin_internal.h"
@@ -91,9 +92,14 @@ aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts 
     aa_dvec_zero(cx->q_start);
 
     cx->q_seed = aa_dvec_malloc( aa_rx_sg_sub_config_count(ssg) );
-    aa_rx_ik_set_seed_center(cx);
 
     cx->TF = aa_dmat_malloc( AA_RX_TF_LEN, aa_rx_sg_sub_all_frame_count(ssg) );
+    cx->fk = aa_rx_fk_malloc(aa_rx_sg_sub_sg(ssg));
+
+    aa_rx_ik_set_seed_center(cx);
+    aa_rx_sg_fill_tf_abs( aa_rx_sg_sub_sg(cx->ssg), cx->q_start, cx->TF );
+    aa_rx_fk_all( cx->fk, cx->q_start );
+
 
     return cx;
 }
@@ -101,6 +107,7 @@ aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts 
 AA_API void
 aa_rx_ik_cx_destroy( struct aa_rx_ik_cx *cx )
 {
+    aa_rx_fk_destroy(cx->fk);
     free(cx->q_start);
     free(cx->q_seed);
     free(cx->TF);
@@ -124,6 +131,7 @@ aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start )
 {
     aa_lb_dcopy( q_start, context->q_start );
     aa_rx_sg_fill_tf_abs( aa_rx_sg_sub_sg(context->ssg), q_start, context->TF );
+    aa_rx_fk_all( context->fk, q_start );
 }
 
 AA_API void
@@ -187,9 +195,15 @@ s_kin_solve_cx_alloc( const struct aa_rx_ik_cx *ik_cx,
 
     cx->TF = aa_dmat_dup(reg, ik_cx->TF);
 
+    cx->fk = aa_rx_fk_alloc(aa_rx_sg_sub_sg(cx->ssg), reg);
+    aa_rx_fk_cpy(cx->fk, ik_cx->fk);
+
     cx->q_all = aa_dvec_dup(reg, ik_cx->q_start );
     cx->q_sub = aa_dvec_dup(reg, ik_cx->q_seed );
     aa_rx_sg_sub_config_scatter( cx->ssg, cx->q_sub, cx->q_all );
+
+
+
 
     return cx;
 }

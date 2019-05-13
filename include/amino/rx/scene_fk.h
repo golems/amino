@@ -33,8 +33,8 @@
  *
  */
 
-#ifndef AMINO_SCENEGRAPH_H
-#define AMINO_SCENEGRAPH_H
+#ifndef AMINO_SCENE_FK_H
+#define AMINO_SCENE_FK_H
 
 #include "scenegraph.h"
 #include "rxtype.h"
@@ -94,10 +94,16 @@ AA_API void
 aa_rx_fk_get_abs(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[AA_RX_TF_LEN]);
 
 /**
+ * Update relative transform in the FK.
+ */
+AA_API void
+aa_rx_fk_set_rel(struct aa_rx_fk *fk, aa_rx_frame_id id, const double E[AA_RX_TF_LEN]);
+
+/**
  * Rotate a point to absolute coordinates.
  */
 AA_API void
 aa_rx_fk_rot_abs( const struct aa_rx_fk *fk, aa_rx_frame_id id,
                   const double *v_id, double *v_abs );
 
-#endif /*AMINO_SCENEGRAPH_H*/
+#endif /*AMINO_SCENE_FK_H*/
