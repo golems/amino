@@ -54,8 +54,7 @@ struct display_cx {
     struct aa_rx_wk_opts *wk_opts;
     const struct aa_rx_wk_lc3_cx *lc3;
     double E0[7];
-    double *q;
-    struct aa_dvec *vq;
+    struct aa_dvec *q_all;
     struct aa_dvec *dq_subset;
     struct aa_rx_fk *fk;
 };
@@ -67,7 +66,6 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     void *ptrtop = aa_mem_region_ptr(reg);
 
     struct display_cx *cx = (struct display_cx *)cx_;
-    const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
     const struct timespec *first = aa_sdl_display_params_get_time_initial(params);
@@ -77,20 +75,16 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     double dt = aa_tm_timespec2sec( aa_tm_sub(*now, *last) );
 
 
-    size_t m = aa_rx_sg_config_count(scenegraph);
     size_t n_c = aa_rx_sg_sub_config_count(cx->ssg);
-
     struct aa_dvec *q_subset = aa_dvec_alloc(reg,n_c);
-    aa_rx_sg_sub_config_gather(cx->ssg, cx->vq, q_subset );
+    aa_rx_sg_sub_config_gather(cx->ssg, cx->q_all, q_subset );
 
     struct aa_rx_fk *fk = cx->fk;
-    aa_rx_fk_all(fk,cx->vq);
+    aa_rx_fk_all(fk,cx->q_all);
 
     aa_rx_win_display_fk( cx->win, params, fk );
 
     /* Reference Velocity and Position */
-    /* double dx_r[6]; */
-    /* AA_MEM_ZERO(dx_r, 6); */
     struct aa_dvec *dx_r = aa_dvec_alloc(reg,6);
     aa_dvec_zero(dx_r);
     {
@@ -158,12 +152,8 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
     // integrate
     aa_lb_dcopy(dq_subset, cx->dq_subset);
-    for( size_t i = 0; i < n_c; i ++ ) {
-        q_subset->data[i] += dt*dq_subset->data[i];
-    }
-    aa_rx_sg_config_set( scenegraph, m, n_c,
-                         aa_rx_sg_sub_configs(cx->ssg),
-                         q_subset->data, cx->q );
+    aa_lb_daxpy(dt,dq_subset,q_subset);
+    aa_rx_sg_sub_config_scatter(cx->ssg, q_subset, cx->q_all);
 
     aa_sdl_display_params_set_update(params);
 
@@ -191,9 +181,8 @@ int main(int argc, char *argv[])
     struct display_cx cx = {0};
     cx.win = win;
     cx.scenegraph = scenegraph;
-    cx.vq = aa_dvec_malloc(n_q);
-    cx.q = cx.vq->data;
-    aa_dvec_zero(cx.vq);
+    cx.q_all = aa_dvec_malloc(n_q);
+    aa_dvec_zero(cx.q_all);
 
     aa_rx_frame_id tip_id = aa_rx_sg_frame_id(scenegraph, "right_w2");
     cx.ssg = aa_rx_sg_chain_create( scenegraph, AA_RX_FRAME_ROOT, tip_id);
@@ -214,20 +203,20 @@ int main(int argc, char *argv[])
     aa_rx_config_id ids[7];
     aa_rx_sg_config_indices( scenegraph, 7,
                              names, ids );
-    double q1[7] = {-.25 * M_PI, // s0
-                    0 * M_PI, // s1
-                    M_PI, // e0
-                    .5*M_PI, // e1
-                    0, // w0
-                    0*M_PI, // w1
-                    0 // w2
-    };
-    aa_rx_sg_config_set( scenegraph, n_q, 7,
-                         ids, q1, cx.vq->data );
-
     // initial end-effector config
     {
-        aa_rx_fk_all(cx.fk, cx.vq);
+        double q1[7] = {-.25 * M_PI, // s0
+                        0 * M_PI, // s1
+                        M_PI, // e0
+                        .5*M_PI, // e1
+                        0, // w0
+                        0*M_PI, // w1
+                        0 // w2
+        };
+        struct aa_dvec vq1 = AA_DVEC_INIT(7,q1,1);
+        aa_rx_sg_sub_config_scatter(cx.ssg, &vq1, cx.q_all);
+
+        aa_rx_fk_all(cx.fk, cx.q_all);
         aa_rx_fk_get_abs_qutr( cx.fk, tip_id, cx.E0 );
     }
 
