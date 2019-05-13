@@ -67,26 +67,26 @@ s_err_default( const char *message )
     exit(EXIT_FAILURE);
 }
 
-static aa_lb_err_fun  *s_err_fun = s_err_default;
+static aa_la_err_fun  *s_err_fun = s_err_default;
 
 void
-aa_lb_set_err( aa_lb_err_fun *fun )
+aa_la_set_err( aa_la_err_fun *fun )
 {
     s_err_fun = fun;
 }
 
 AA_API void
-aa_lb_err( const char *message ) {
+aa_la_err( const char *message ) {
     s_err_fun(message);
 }
 
 AA_API void
-aa_lb_fail_size( size_t a, size_t b )
+aa_la_fail_size( size_t a, size_t b )
 {
         const size_t size = 256;
         char buf[size];
         snprintf(buf,size, "Mismatched sizes: %lu != %lu\n", a, b);
-        aa_lb_err(buf);
+        aa_la_err(buf);
 }
 
 /****************/
@@ -108,7 +108,7 @@ aa_dvec_slice( const struct aa_dvec *src,
                struct aa_dvec *dst )
 {
     if( stop > src->len || stop < start ) {
-        aa_lb_err("Slice out-of-bounds\n");
+        aa_la_err("Slice out-of-bounds\n");
     }
     *dst = AA_DVEC_INIT( (stop - start) / step,
                          src->data + src->inc*start,
@@ -120,7 +120,7 @@ AA_API void
 aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst )
 {
     if( row >= src->rows ) {
-        aa_lb_err("Row vector out-of-bounds\n");
+        aa_la_err("Row vector out-of-bounds\n");
     }
     aa_dvec_view(dst,src->cols, src->data + row, src->ld);
 }
@@ -129,7 +129,7 @@ AA_API void
 aa_dmat_col_vec( const struct aa_dmat *src, size_t col, struct aa_dvec *dst )
 {
     if( col >= src->cols ) {
-        aa_lb_err("Row vector out-of-bounds\n");
+        aa_la_err("Row vector out-of-bounds\n");
     }
     aa_dvec_view(dst, src->rows, src->data + col*src->ld, 1);
 }
@@ -173,7 +173,7 @@ aa_dmat_block( const struct aa_dmat *src,
         col_start >= n ||
         col_end > n )
     {
-        aa_lb_err("Block out-of-bounds\n");
+        aa_la_err("Block out-of-bounds\n");
     }
 
     aa_dmat_view( dst,
@@ -300,7 +300,7 @@ aa_dmat_zero( struct aa_dmat *mat )
 AA_API void
 aa_dvec_swap( struct aa_dvec *x, struct aa_dvec *y )
 {
-    aa_lb_check_size(x->len, y->len);
+    aa_la_check_size(x->len, y->len);
     cblas_dswap( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
@@ -325,21 +325,21 @@ aa_dvec_inc( double alpha, struct aa_dvec *x )
 AA_API void
 aa_dvec_copy( const struct aa_dvec *x, struct aa_dvec *y )
 {
-    aa_lb_check_size(x->len, y->len);
+    aa_la_check_size(x->len, y->len);
     cblas_dcopy( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API void
 aa_dvec_axpy( double a, const struct aa_dvec *x, struct aa_dvec *y )
 {
-    aa_lb_check_size(x->len, y->len);
+    aa_la_check_size(x->len, y->len);
     cblas_daxpy( VEC_LEN(x), a, AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
 AA_API double
 aa_dvec_dot( const struct aa_dvec *x, struct aa_dvec *y )
 {
-    aa_lb_check_size(x->len, y->len);
+    aa_la_check_size(x->len, y->len);
     return cblas_ddot( VEC_LEN(x), AA_VEC_ARGS(x), AA_VEC_ARGS(y) );
 }
 
@@ -351,17 +351,17 @@ aa_dvec_nrm2( const struct aa_dvec *x )
 
 /* Level 2 BLAS */
 AA_API void
-aa_lb_dgemv( CBLAS_TRANSPOSE trans,
-             double alpha, const struct aa_dmat *A,
-             const struct aa_dvec *x,
-             double beta, struct aa_dvec *y )
+aa_dmat_gemv( CBLAS_TRANSPOSE trans,
+              double alpha, const struct aa_dmat *A,
+              const struct aa_dvec *x,
+              double beta, struct aa_dvec *y )
 {
     if( CblasTrans == trans ) {
-        aa_lb_check_size( A->rows, x->len );
-        aa_lb_check_size( A->cols, y->len );
+        aa_la_check_size( A->rows, x->len );
+        aa_la_check_size( A->cols, y->len );
     } else {
-        aa_lb_check_size( A->rows, y->len );
-        aa_lb_check_size( A->cols, x->len );
+        aa_la_check_size( A->rows, y->len );
+        aa_la_check_size( A->cols, x->len );
     }
 
     cblas_dgemv( CblasColMajor, trans,
@@ -374,14 +374,14 @@ aa_lb_dgemv( CBLAS_TRANSPOSE trans,
 
 /* Level 3 BLAS */
 AA_API void
-aa_lb_dgemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
-             double alpha, const struct aa_dmat *A,
-             const struct aa_dmat *B,
-             double beta, struct aa_dmat *C )
+aa_dmat_gemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
+              double alpha, const struct aa_dmat *A,
+              const struct aa_dmat *B,
+              double beta, struct aa_dmat *C )
 {
-    aa_lb_check_size( A->rows, C->rows );
-    aa_lb_check_size( A->cols, B->rows );
-    aa_lb_check_size( B->cols, C->cols );
+    aa_la_check_size( A->rows, C->rows );
+    aa_la_check_size( A->cols, B->rows );
+    aa_la_check_size( B->cols, C->cols );
 
     assert( A->rows <= A->ld );
     assert( B->rows <= B->ld );
@@ -398,13 +398,13 @@ aa_lb_dgemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
 /* LAPACK */
 
 AA_API void
-aa_lb_dlacpy( const char uplo[1],
-              const struct aa_dmat *A,
-              struct aa_dmat *B )
+aa_dmat_lacpy( const char uplo[1],
+               const struct aa_dmat *A,
+               struct aa_dmat *B )
 {
 
-    aa_lb_check_size(A->rows,B->rows);
-    aa_lb_check_size(A->cols,B->cols);
+    aa_la_check_size(A->rows,B->rows);
+    aa_la_check_size(A->cols,B->cols);
     int mi   = (int)(A->rows);
     int ni   = (int)(A->cols);
     int ldai = (int)(A->ld);
@@ -418,7 +418,7 @@ aa_lb_dlacpy( const char uplo[1],
 AA_API void
 aa_dmat_copy(  const struct aa_dmat *A, struct aa_dmat *B)
 {
-    aa_lb_dlacpy("G",A,B);
+    aa_dmat_lacpy("G",A,B);
 }
 
 
@@ -440,7 +440,7 @@ static double s_ssd( size_t n,
 AA_API double
 aa_dvec_ssd( const struct aa_dvec *x, const struct aa_dvec *y)
 {
-    aa_lb_check_size( x->len, y->len );
+    aa_la_check_size( x->len, y->len );
     return s_ssd( x->len, 0,
                   x->data, x->inc,
                   y->data, y->inc );
@@ -450,8 +450,8 @@ AA_API double
 aa_dmat_ssd( const struct aa_dmat *A, const struct aa_dmat *B)
 {
     size_t m = A->rows, n = A->cols;
-    aa_lb_check_size( m, B->rows );
-    aa_lb_check_size( n, B->cols );
+    aa_la_check_size( m, B->rows );
+    aa_la_check_size( n, B->cols );
     double a = 0;
     for( double *Ac=A->data, *Bc=B->data, *ec=A->data + n*A->ld;
          Ac < ec;
@@ -503,8 +503,8 @@ aa_dmat_axpy( double alpha, const struct aa_dmat *X, struct aa_dmat *Y)
     size_t m=X->rows, n=X->cols, ldX=X->ld, ldY=Y->ld;
     double *x=X->data, *y=Y->data;
 
-    aa_lb_check_size(m, Y->rows);
-    aa_lb_check_size(n, Y->cols);
+    aa_la_check_size(m, Y->rows);
+    aa_la_check_size(n, Y->cols);
 
 
     if( m == ldX && m == ldY ) {
@@ -525,8 +525,8 @@ aa_dmat_trans( const struct aa_dmat *A, struct aa_dmat *B)
     const size_t lda = A->ld;
     const size_t ldb = B->ld;
 
-    aa_lb_check_size(m, B->cols);
-    aa_lb_check_size(n, B->rows);
+    aa_la_check_size(m, B->cols);
+    aa_la_check_size(n, B->rows);
 
     for ( double *Acol = A->data, *Brow=B->data, *Be=B->data + n;
           Brow < Be;
@@ -539,7 +539,7 @@ aa_dmat_trans( const struct aa_dmat *A, struct aa_dmat *B)
 AA_API int
 aa_dmat_inv( struct aa_dmat *A )
 {
-    aa_lb_check_size(A->rows,A->cols);
+    aa_la_check_size(A->rows,A->cols);
     int info;
 
     int *ipiv = (int*)
@@ -603,8 +603,8 @@ int
 aa_dmat_pinv( const struct aa_dmat *A, double tol, struct aa_dmat *As )
 {
 
-    aa_lb_check_size(A->rows, As->cols);
-    aa_lb_check_size(A->cols, As->rows);
+    aa_la_check_size(A->rows, As->cols);
+    aa_la_check_size(A->cols, As->rows);
 
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
@@ -652,7 +652,7 @@ aa_dmat_pinv( const struct aa_dmat *A, double tol, struct aa_dmat *As )
     /*     ldb = (int)m; */
     /* } */
 
-    /* aa_lb_dlacpy( "A", A, Ap ); */
+    /* aa_la_dlacpy( "A", A, Ap ); */
 
     /* // B is symmetric.  Only compute the upper half. */
     /* cblas_dsyrk( CblasColMajor, CblasUpper, CblasNoTrans, */
@@ -680,8 +680,8 @@ aa_dmat_pinv( const struct aa_dmat *A, double tol, struct aa_dmat *As )
 int
 aa_dmat_dpinv( const struct aa_dmat *A, double k, struct aa_dmat *As)
 {
-    aa_lb_check_size(A->rows, As->cols);
-    aa_lb_check_size(A->cols, As->rows);
+    aa_la_check_size(A->rows, As->cols);
+    aa_la_check_size(A->cols, As->rows);
 
     // TODO: Try DGESV for non-positive-definite matrices
 
@@ -708,7 +708,7 @@ aa_dmat_dpinv( const struct aa_dmat *A, double k, struct aa_dmat *As)
 
         /* Ap = A */
         struct aa_dmat *Ap = aa_dmat_alloc(reg,m,n);
-        aa_lb_dlacpy( "A", A, Ap );
+        aa_dmat_lacpy( "A", A, Ap );
 
         // B is symmetric.  Only compute the upper half.
         // B = A * A'
@@ -791,8 +791,8 @@ int
 aa_dmat_dzdpinv(  const struct aa_dmat *A, double s_min, struct aa_dmat *As)
 {
 
-    aa_lb_check_size(A->rows, As->cols);
-    aa_lb_check_size(A->cols, As->rows);
+    aa_la_check_size(A->rows, As->cols);
+    aa_la_check_size(A->cols, As->rows);
 
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);

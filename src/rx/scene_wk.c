@@ -84,8 +84,8 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
 {
     size_t rows,cols;
     aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
-    aa_lb_check_size(dx->len,   rows);
-    aa_lb_check_size(dq->len,   cols);
+    aa_la_check_size(dx->len,   rows);
+    aa_la_check_size(dq->len,   cols);
 
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
@@ -95,9 +95,9 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
     aa_rx_wk_get_js( ssg, opts, fk, J, J_star );
 
     // workspace solution: dq = J^* dx
-    aa_lb_dgemv( CblasNoTrans,
-                 1.0, J_star, dx,
-                 0.0, dq );
+    aa_dmat_gemv( CblasNoTrans,
+                  1.0, J_star, dx,
+                  0.0, dq );
 
     aa_mem_region_pop(reg,ptrtop);
 
@@ -113,9 +113,9 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
 {
     size_t rows, cols;
     aa_rx_sg_sub_jacobian_size( ssg, &rows, &cols );
-    aa_lb_check_size(dx->len,   rows);
-    aa_lb_check_size(dq_r->len, cols);
-    aa_lb_check_size(dq->len,   cols);
+    aa_la_check_size(dx->len,   rows);
+    aa_la_check_size(dq_r->len, cols);
+    aa_la_check_size(dq->len,   cols);
 
     struct aa_mem_region *reg =  aa_mem_region_local_get();
     void *ptrtop = aa_mem_region_ptr(reg);
@@ -127,14 +127,14 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
     aa_rx_wk_get_n( ssg, opts, J, J_star, 1, N );
 
     // workspace solution: dq = J^* dx
-    aa_lb_dgemv(CblasNoTrans,
-                1, J_star, dx,
-                0, dq );
+    aa_dmat_gemv(CblasNoTrans,
+                 1, J_star, dx,
+                 0, dq );
 
     // Nullspace projection: dq = dq - N*dq_r
-    aa_lb_dgemv(CblasNoTrans,
-                -1, N, dq_r,
-                1, dq );
+    aa_dmat_gemv(CblasNoTrans,
+                 -1, N, dq_r,
+                 1, dq );
 
     aa_mem_region_pop(reg,ptrtop);
     return 0;
@@ -147,8 +147,8 @@ aa_rx_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
                    struct aa_dvec *dq_r )
 {
     size_t n_q = aa_rx_sg_sub_config_count(ssg);
-    aa_lb_check_size(q->len, n_q);
-    aa_lb_check_size(dq_r->len, n_q);
+    aa_la_check_size(q->len, n_q);
+    aa_la_check_size(dq_r->len, n_q);
 
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
 
@@ -172,7 +172,7 @@ aa_rx_wk_dx_pos( const struct aa_rx_wk_opts * opts,
                  const double *E_act, const double *E_ref,
                  struct aa_dvec *dx )
 {
-    aa_lb_check_size(dx->len, 6);
+    aa_la_check_size(dx->len, 6);
 
     double Ee[7];
     aa_tf_qutr_mulc( E_act, E_ref, Ee );

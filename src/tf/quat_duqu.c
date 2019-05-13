@@ -459,13 +459,13 @@ aa_tf_duqu_jac_vel2diff(const double S[8], const struct aa_dmat *Jvel,
 
     // TODO: avoid the GEMM by permuting and doing a cross product
     struct aa_dmat *tmp = aa_dmat_alloc(reg,8,6);
-    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
-                 1, SR, VM,
-                 0, tmp );
+    aa_dmat_gemm( CblasNoTrans, CblasNoTrans,
+                  1, SR, VM,
+                  0, tmp );
 
-    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
-                 1, tmp, Jvel,
-                 0, Js );
+    aa_dmat_gemm( CblasNoTrans, CblasNoTrans,
+                  1, tmp, Jvel,
+                  0, Js );
 
     // SR := SR * VM, VM is unit lower triangular
     // TODO: save a few multiplies by manually handling upper/lower blocks
@@ -499,7 +499,7 @@ aa_tf_duqu_jac_vel2diff(const double S[8], const struct aa_dmat *Jvel,
     /* } */
 
 
-    /* aa_lb_dgemm( CblasNoTrans, CblasNoTrans, */
+    /* aa_dmat_gemm( CblasNoTrans, CblasNoTrans, */
     /*              1, SR, JE, */
     /*              0, Js ); */
 

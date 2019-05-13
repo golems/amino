@@ -41,33 +41,33 @@
   (matrix-storage-error "~A" message))
 
 
-(defcfun aa-lb-set-err :void
+(defcfun aa-la-set-err :void
   (fun :pointer))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; BLAS Level 1 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(defcfun aa-lb-dswap :void
+(defcfun aa-dvec-swap :void
   (x dvec-inout)
   (y dvec-inout))
 
-(defcfun aa-lb-dscal :void
+(defcfun aa-dvec-scal :void
   (a :double)
   (x dvec-inout))
 
-(defcfun aa-lb-dcopy :void
+(defcfun aa-dvec-copy :void
   (x dvec-input)
   (y dvec-output))
 
-(defcfun aa-lb-ddot :double
+(defcfun aa-dvec-dot :double
   (x dvec-input)
   (y dvec-input))
 
-(defcfun aa-lb-dnrm2 :double
+(defcfun aa-dvec-nrm2 :double
   (x dvec-input))
 
-(defcfun aa-lb-daxpy :void
+(defcfun aa-dvec-axpy :void
   (a :double)
   (x dvec-input)
   (y dvec-inout))
@@ -76,7 +76,7 @@
 ;;; BLAS Level 2 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(defcfun aa-lb-dgemv :void
+(defcfun aa-dmat-gemv :void
   (trans transpose-t)
   (alpha :double)
   (A dmat-input)
@@ -88,7 +88,7 @@
 ;;; BLAS Level 3 ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(defcfun aa-lb-dgemm :void
+(defcfun aa-dmat-gemm :void
   (trans-A transpose-t)
   (trans-B transpose-t)
   (alpha :double)

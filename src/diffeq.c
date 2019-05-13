@@ -45,7 +45,7 @@ AA_API void aa_de_grad_fd( aa_de_scalar_field_fun *fun, void *cx,
     void *ptrtop = aa_mem_region_ptr(reg);
 
     size_t n = x->len;
-    aa_lb_check_size( n, y->len );
+    aa_la_check_size( n, y->len );
 
     struct aa_dvec *p = aa_dvec_dup(reg,x);
     struct aa_dvec *m = aa_dvec_dup(reg,x);
@@ -76,7 +76,7 @@ AA_API void aa_de_jac_fd( aa_de_vector_field_fun *fun, void *cx,
 
     size_t m = J->rows;
     size_t n = J->cols;
-    aa_lb_check_size( n, x->len );
+    aa_la_check_size( n, x->len );
 
     struct aa_dvec *pv = aa_dvec_dup(reg,x);
     struct aa_dvec *mv = aa_dvec_dup(reg,x);

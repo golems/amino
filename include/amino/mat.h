@@ -52,25 +52,25 @@
  *
  */
 
-typedef size_t aa_lb_size;
+typedef size_t aa_la_size;
 
 /**
  * Descriptor for a vector.
  */
 struct aa_dvec {
-    size_t len;   ///< Number of elements in vector
+    aa_la_size len;   ///< Number of elements in vector
     double *data; ///< Pointer to data
-    size_t inc;   ///< Increment between successive vector elements
+    aa_la_size inc;   ///< Increment between successive vector elements
 };
 
 /**
  * Descriptor for a block matrix.
  */
 struct aa_dmat {
-    size_t rows;    ///< number of rows in matrix
-    size_t cols;    ///< number of columns
+    aa_la_size rows;    ///< number of rows in matrix
+    aa_la_size cols;    ///< number of columns
     double *data;   ///< Pointer to matrix data
-    size_t ld;      ///< Leading dimension of matrix
+    aa_la_size ld;      ///< Leading dimension of matrix
 };
 
 
@@ -88,13 +88,13 @@ struct aa_dmat {
 
 
 typedef void
-(aa_lb_err_fun)( const char *message );
+(aa_la_err_fun)( const char *message );
 
 AA_API void
-aa_lb_err( const char *message );
+aa_la_err( const char *message );
 
 AA_API void
-aa_lb_set_err( aa_lb_err_fun *fun );
+aa_la_set_err( aa_la_err_fun *fun );
 
 
 /**
@@ -366,10 +366,10 @@ aa_dvec_nrm2( const struct aa_dvec *x );
  * \f[ \mathbf{y} \leftarrow \alpha \mathbf{A}^{\rm op} \mathbf{x} + \beta \mathbf{y}  \f]
  */
 AA_API void
-aa_lb_dgemv( CBLAS_TRANSPOSE trans,
-             double alpha, const struct aa_dmat *A,
-             const struct aa_dvec *x,
-             double beta, struct aa_dvec *y );
+aa_dmat_gemv( CBLAS_TRANSPOSE trans,
+              double alpha, const struct aa_dmat *A,
+              const struct aa_dvec *x,
+              double beta, struct aa_dvec *y );
 
 
 
@@ -381,10 +381,10 @@ aa_lb_dgemv( CBLAS_TRANSPOSE trans,
  * \f[ \mathbf{y} \leftarrow \alpha \mathbf{A}^{\rm opA} \mathbf{B}^\rm{opB} + \beta \mathbf{C}  \f]
  */
 AA_API void
-aa_lb_dgemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
-             double alpha, const struct aa_dmat *A,
-             const struct aa_dmat *B,
-             double beta, struct aa_dmat *C );
+aa_dmat_gemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
+              double alpha, const struct aa_dmat *A,
+              const struct aa_dmat *B,
+              double beta, struct aa_dmat *C );
 
 
 
@@ -413,9 +413,9 @@ aa_lb_dgemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
  *
  */
 AA_API void
-aa_lb_dlacpy( const char uplo[1],
-              const struct aa_dmat *A,
-              struct aa_dmat *B );
+aa_dmat_lacpy( const char uplo[1],
+               const struct aa_dmat *A,
+               struct aa_dmat *B );
 
 
 

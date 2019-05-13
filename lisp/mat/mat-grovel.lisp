@@ -51,7 +51,7 @@
   (include "amino/mat.h")
 
   ;; Types
-  (ctype aa-lb-size "aa_lb_size")
+  (ctype aa-la-size "aa_la_size")
 
   (cenum transpose-t
          ((:tranpose "CblasTrans"))
@@ -59,14 +59,14 @@
 
   ;; Structs
   (cstruct aa-dvec "struct aa_dvec"
-           (len"len" :type aa-lb-size)
+           (len"len" :type aa-la-size)
            (data "data" :type :pointer)
-           (inc"inc" :type aa-lb-size))
+           (inc"inc" :type aa-la-size))
 
 
 
   (cstruct aa-dmat "struct aa_dmat"
-           (rows "rows" :type aa-lb-size)
-           (cols "cols" :type aa-lb-size)
+           (rows "rows" :type aa-la-size)
+           (cols "cols" :type aa-la-size)
            (data "data" :type :pointer)
-           (ld "ld" :type aa-lb-size)))
+           (ld "ld" :type aa-la-size)))

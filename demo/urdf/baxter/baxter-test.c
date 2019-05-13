@@ -105,7 +105,7 @@ int check( const struct aa_rx_sg_sub *ssg,
     struct aa_dmat *J = aa_rx_sg_sub_get_jacobian( ssg, reg, TF_abs );
     size_t m = J->rows, n = J->cols;
     struct aa_dvec *dx_check = aa_dvec_alloc(reg, m);
-    aa_lb_dgemv( CblasNoTrans, 1, J, dq_u, 0, dx_check );
+    aa_dmat_gemv( CblasNoTrans, 1, J, dq_u, 0, dx_check );
     printf("ssd(dx): %f\n", aa_dvec_ssd( dx_r, dx_check ) );
 
     /* Check duqu derivative Jacobian */
@@ -117,7 +117,7 @@ int check( const struct aa_rx_sg_sub *ssg,
     struct aa_dvec *dSx = aa_dvec_alloc(reg,8);
     struct aa_dvec *dSJ = aa_dvec_alloc(reg,8);
     aa_tf_duqu_vel2diff(S, dx_check->data, dSx->data);
-    aa_lb_dgemv( CblasNoTrans, 1, JS, dq_u, 0, dSJ );
+    aa_dmat_gemv( CblasNoTrans, 1, JS, dq_u, 0, dSJ );
     printf("ssd(dS): %f\n", aa_dvec_ssd( dSx, dSJ ) );
 
     /* Check finite difference Jacobian */

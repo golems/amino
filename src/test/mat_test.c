@@ -371,7 +371,7 @@ int main(void)
         aa_dvec_view( &x, 2, xd, 2 );
         aa_dvec_view( &y, 3, yd, 1 );
 
-        aa_lb_dgemv( CblasNoTrans, 1, &A, &x, 0, &y );
+        aa_dmat_gemv( CblasNoTrans, 1, &A, &x, 0, &y );
 
         aveq( "dgemv", 3,yd,rd,0);
     }

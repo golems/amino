@@ -240,7 +240,7 @@ aa_rx_sg_sub_config_scatter( const struct aa_rx_sg_sub *ssg,
 {
     if( config_subset->len != ssg->config_count ||
         config_all->len != aa_rx_sg_config_count(ssg->scenegraph)
-       ) { aa_lb_err("Mismatched config vector sizes\n"); }
+       ) { aa_la_err("Mismatched config vector sizes\n"); }
 
     int inc = (int)config_all->inc;
     for( size_t i = 0, j=0; i < ssg->config_count; i ++, j+=config_subset->inc ) {
@@ -257,7 +257,7 @@ aa_rx_sg_sub_config_gather( const struct aa_rx_sg_sub *ssg,
 {
     if( config_subset->len != ssg->config_count ||
         config_all->len != aa_rx_sg_config_count(ssg->scenegraph)
-       ) { aa_lb_err("Mismatched config vector sizes\n"); }
+       ) { aa_la_err("Mismatched config vector sizes\n"); }
 
     int inc = (int)config_all->inc;
     for( size_t i = 0, j=0; i < ssg->config_count; i ++, j+=config_subset->inc ) {
@@ -321,10 +321,10 @@ aa_rx_sg_sub_jac_twist_fill2( const struct aa_rx_sg_sub *ssg,
     size_t n_frames = aa_rx_sg_sub_frame_count(ssg);
     size_t n_configs = aa_rx_sg_sub_config_count(ssg);
 
-    aa_lb_check_size(3, Jr->rows);
-    aa_lb_check_size(3, Jp->rows);
-    aa_lb_check_size(n_configs, Jr->cols);
-    aa_lb_check_size(n_configs, Jp->cols);
+    aa_la_check_size(3, Jr->rows);
+    aa_la_check_size(3, Jp->rows);
+    aa_la_check_size(n_configs, Jr->cols);
+    aa_la_check_size(n_configs, Jp->cols);
 
     aa_rx_frame_id *frames = aa_rx_sg_sub_frames(ssg);
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
@@ -413,10 +413,10 @@ aa_rx_sg_sub_jac_vel_fill2( const struct aa_rx_sg_sub *ssg,
     double *E_ee = aa_rx_fk_ref(fk,frame_ee);
     const double *pe = E_ee + AA_TF_QUTR_T;
 
-    aa_lb_check_size(3, Jr->rows);
-    aa_lb_check_size(3, Jp->rows);
-    aa_lb_check_size(n_configs, Jr->cols);
-    aa_lb_check_size(n_configs, Jp->cols);
+    aa_la_check_size(3, Jr->rows);
+    aa_la_check_size(3, Jp->rows);
+    aa_la_check_size(n_configs, Jr->cols);
+    aa_la_check_size(n_configs, Jp->cols);
 
     aa_rx_frame_id *frames = aa_rx_sg_sub_frames(ssg);
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
@@ -612,7 +612,7 @@ aa_rx_sg_sub_rand_config( const struct aa_rx_sg_sub *ssg, struct aa_dvec *dst )
 {
     size_t n = aa_rx_sg_sub_config_count(ssg);
     const struct aa_rx_sg *sg = aa_rx_sg_sub_sg(ssg);
-    aa_lb_check_size(dst->len, n);
+    aa_la_check_size(dst->len, n);
     for( size_t i = 0; i < n; i ++ ) {
         double min = -M_PI, max = M_PI;
         {

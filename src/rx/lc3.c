@@ -138,15 +138,15 @@ lc3_constraints (
     // dq_rn = dq_a - dq_r
     aa_dvec_copy(dq_a, dq_rn);
     aa_dvec_axpy( -1, dq_r, dq_rn );
-    aa_lb_dgemv( CblasNoTrans,
-                 1, N, dq_rn,
-                 0, &vAn );
+    aa_dmat_gemv( CblasNoTrans,
+                  1, N, dq_rn,
+                  0, &vAn );
 
     // Fill C
     // actual workspace velocity
-    aa_lb_dgemv( CblasNoTrans,
-                 1.0, J, dq_a,
-                 0, &vcx );
+    aa_dmat_gemv( CblasNoTrans,
+                  1.0, J, dq_a,
+                  0, &vcx );
     // c now holds dx_a
     // c = (c-dx_r)/(-dt)
     aa_dvec_axpy(-1, dx_r, &vcx);
@@ -301,11 +301,11 @@ aa_rx_wk_dx2dq_lc3( const struct aa_rx_wk_lc3_cx *cx,
 
     size_t n_x, n_q;
     aa_rx_sg_sub_jacobian_size( ssg, &n_x, &n_q );
-    aa_lb_check_size( dx_r->len, n_x);
-    aa_lb_check_size( q_a->len,  n_q);
-    aa_lb_check_size( dq_a->len, n_q);
-    aa_lb_check_size( dq_r->len, n_q);
-    aa_lb_check_size( dq->len,   n_q);
+    aa_la_check_size( dx_r->len, n_x);
+    aa_la_check_size( q_a->len,  n_q);
+    aa_la_check_size( dq_a->len, n_q);
+    aa_la_check_size( dq_r->len, n_q);
+    aa_la_check_size( dq->len,   n_q);
 
 
     struct aa_mem_region *reg =  aa_mem_region_local_get();

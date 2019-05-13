@@ -95,7 +95,7 @@ lacpy( const char uplo[1],
        struct aa_dmat *B )
 {
     AA_MATPP_PRINT("dlacpy\n");
-    aa_lb_dlacpy(uplo,A,B);
+    aa_dmat_lacpy(uplo,A,B);
 }
 
 static inline void
@@ -112,7 +112,7 @@ gemv( CBLAS_TRANSPOSE trans,
       double beta, struct aa_dvec *y )
 {
     AA_MATPP_PRINT("dgemv\n");
-    aa_lb_dgemv(trans,alpha,A,x,beta,y);
+    aa_dmat_gemv(trans,alpha,A,x,beta,y);
 }
 
 static inline void
@@ -122,7 +122,7 @@ gemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
       double beta, struct aa_dmat *C )
 {
     AA_MATPP_PRINT("dgemm\n");
-    aa_lb_dgemm( transA, transB, alpha, A, B, beta, C );
+    aa_dmat_gemm( transA, transB, alpha, A, B, beta, C );
 }
 
 

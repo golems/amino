@@ -35,4 +35,4 @@
 ;; descriptor binding
 (in-package :amino)
 
-(aa-lb-set-err (callback ld-error-handler))
+(aa-la-set-err (callback ld-error-handler))

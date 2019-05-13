@@ -704,7 +704,7 @@ AA_API void aa_tf_qdulnj(
     /* struct aa_dvec vdq = AA_DVEC_INIT(4,(double*)dq,1); */
     /* double dlnd[4]; */
     /* struct aa_dvec vdln = AA_DVEC_INIT(4,dlnd,1); */
-    /* aa_lb_dgemv(CblasNoTrans, */
+    /* aa_dmat_gemv(CblasNoTrans, */
     /*             1, &J, &vdq, */
     /*             0, &vdln); */
     /* AA_MEM_CPY(dln, dlnd, 3); */

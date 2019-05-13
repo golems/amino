@@ -101,9 +101,9 @@ aa_rx_wk_get_n( const struct aa_rx_sg_sub *ssg,
 
 
     // N = alpha*A^* A
-    aa_lb_dgemm( CblasNoTrans, CblasNoTrans,
-                 alpha, Jstar, J,
-                 0.0, N );
+    aa_dmat_gemm( CblasNoTrans, CblasNoTrans,
+                  alpha, Jstar, J,
+                  0.0, N );
 
     // N = N - alpha*I
     for( double *x = N->data, *e = N->data + N->cols*N->ld;

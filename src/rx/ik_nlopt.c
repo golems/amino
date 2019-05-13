@@ -179,7 +179,7 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
             aa_tf_duqu_ln_jac(S_err,J_ln);
             /*
              *  struct aa_dvec v_S_ln = AA_DVEC_INIT(8,S_ln,1);
-             * //aa_lb_dgemv( CblasTrans, 2, J_8x8, &v_S_ln, 0, &va );
+             * //aa_dmat_gemv( CblasTrans, 2, J_8x8, &v_S_ln, 0, &va );
              *
              * Avoid multiplying by the zero block:
              *
@@ -216,13 +216,13 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
             // Using Twist Jacobian
             aa_tf_duqu2pure(a,c);
             struct aa_dmat *Jtw = aa_rx_sg_sub_jac_twist_get(cx->ssg, cx->reg, cx->fk);
-            aa_lb_dgemv( CblasTrans, 1, Jtw, &vc, 0, &v_dq );
+            aa_dmat_gemv( CblasTrans, 1, Jtw, &vc, 0, &v_dq );
 
             // Using Velocity Jacobian
             /* aa_tf_cross_a(a+AA_TF_DUQU_DUAL_XYZ,E_act+AA_TF_QUTR_V,a); */
             /* aa_tf_duqu2pure(a,c); */
             /* struct aa_dmat *J_vel = aa_rx_sg_sub_get_jacobian(cx->ssg,cx->reg,cx->TF); */
-            /* aa_lb_dgemv( CblasTrans, 1, J_vel, &vc, 0, &v_dq ); */
+            /* aa_dmat_gemv( CblasTrans, 1, J_vel, &vc, 0, &v_dq ); */
 
         }
 
