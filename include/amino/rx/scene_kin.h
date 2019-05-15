@@ -74,7 +74,9 @@ enum aa_rx_ik_algo {
     AA_RX_IK_SQP_JPINV,
 
     /**
-     * SQP, dual-quaternion objective, finite-difference gradient
+     * SQP, dual-quaternion log objective, finite-difference gradient.
+     *
+     * Sum of squares of the log of the pose error
      *
      * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
      * library for improved solving of generic inverse kinematics."
@@ -83,11 +85,23 @@ enum aa_rx_ik_algo {
      */
     AA_RX_IK_SQP_DQ_FD,
 
+    /**
+     * SQP, dual-quaternion log objective, analytic gradient.
+     */
+    AA_RX_IK_SQP_DQ_AN,
 
     /**
-     * SQP, dual-quaternion objective, analytic gradient
+     * SQP, quaternion log and vector ssd, finite difference gradient.
+     *
+     * Sum of squares of the log of the rotation error plus sum of
+     * squares of translation error.
+     *
+     * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
+     * library for improved solving of generic inverse kinematics."
+     * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
+     * (Humanoids). IEEE, 2015.
      */
-    AA_RX_IK_SQP_DQ_AN
+    AA_RX_IK_SQP_QV_FD
 };
 
 /** Create options struct for kinematic solver. */

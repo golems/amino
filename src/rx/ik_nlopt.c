@@ -249,6 +249,48 @@ s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
     return result;
 }
 
+static double s_nlobj_qv_fd_helper( void *vcx, const struct aa_dvec *x)
+{
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
+    void *ptrtop = aa_mem_region_ptr(cx->reg);
+    assert(1 == x->inc);
+
+    aa_rx_fk_sub(cx->fk, cx->ssg, x);
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
+
+    double E_err[7], q_ln[4];
+    double *E_ref = cx->TF_ref->data;
+    aa_tf_qutr_cmul(E_act,E_ref,E_err);
+    double *v_err = E_err + AA_TF_QUTR_V;
+    double *q_err = E_err + AA_TF_QUTR_Q;
+
+    aa_tf_qminimize(q_err);
+    aa_tf_duqu_ln(q_err, q_ln);
+
+    double result = ( aa_tf_qdot(q_ln,q_ln)
+                      + aa_tf_vdot(v_err,v_err) );
+
+    aa_mem_region_pop(cx->reg, ptrtop);
+    return result;
+}
+
+static double
+s_nlobj_qv_fd(unsigned n, const double *q, double *dq, void *vcx)
+{
+    struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
+    double x = s_nlobj_qv_fd_helper(vcx, &vq);
+
+    if( dq ) {
+        struct aa_dvec vdq = AA_DVEC_INIT(n,dq,1);
+        // TODO: make epsilon a parameter
+        double eps = 1e-6;
+        aa_de_grad_fd( s_nlobj_qv_fd_helper, vcx,
+                       &vq, eps, &vdq );
+    }
+
+    return x;
+}
+
 
 
 static int

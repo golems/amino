@@ -74,6 +74,9 @@ s_nlobj_dq_fd(unsigned n, const double *q, double *dq, void *vcx);
 static double
 s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx);
 
+static double
+s_nlobj_qv_fd(unsigned n, const double *q, double *dq, void *vcx);
+
 AA_API struct aa_rx_ik_cx *
 aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts )
 {
@@ -264,11 +267,15 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
         case AA_RX_IK_SQP_DQ_AN:
             r = s_ik_nlopt( kcx, s_nlobj_dq_an, q );
             break;
+        case AA_RX_IK_SQP_QV_FD:
+            r = s_ik_nlopt( kcx, s_nlobj_qv_fd, q );
+            break;
 #else /*HAVE_NLOPT*/
             /* Can't implement these without NLOPT */
         case AA_RX_IK_SQP_JPINV:
         case AA_RX_IK_SQP_DQ_FD:
         case AA_RX_IK_SQP_DQ_AN:
+        case AA_RX_IK_SQP_LNSEP_FD:
             fprintf(stderr, "Error: Need NLOPT for SQP IK algorithms");
             goto ERR;
 #endif /*HAVE_NLOPT*/
