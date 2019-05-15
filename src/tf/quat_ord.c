@@ -245,6 +245,17 @@ aa_tf_qmatrix_r( const double q[AA_RESTRICT 4], double *AA_RESTRICT M, size_t ld
     AA_MATREF(M,ldm, w,w) =  q[w];
 }
 
+AA_API void aa_tf_qmat_l( const double *q, struct aa_dmat *M )
+{
+    aa_tf_qmatrix_l( q, M->data, M->ld );
+}
+
+AA_API void aa_tf_qmat_r( const double *q, struct aa_dmat *M )
+{
+    aa_tf_qmatrix_r( q, M->data, M->ld );
+}
+
+
 
 AA_API void
 aa_tf_qmul( const double a[AA_RESTRICT 4], const double b[AA_RESTRICT 4], double c[AA_RESTRICT 4] )

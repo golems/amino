@@ -1346,6 +1346,10 @@ AA_API void aa_tf_qmatrix_l( const double *q, double *M, size_t ldm );
 AA_API void aa_tf_qmatrix_r( const double *q, double *M, size_t ldm );
 
 
+AA_API void aa_tf_qmat_l( const double *q, struct aa_dmat *M );
+AA_API void aa_tf_qmat_r( const double *q, struct aa_dmat *M );
+
+
 /** Generate random unit quaternion */
 void aa_tf_qurand( double q[4] );
 
