@@ -106,12 +106,11 @@ int main(int argc, char *argv[])
 
     aa_rx_ksol_opts_set_ik_algo(ko,
                                 //AA_RX_IK_JPINV
-                                //AA_RX_IK_SQP_JPINV
-                                //AA_RX_IK_SQP_DQ_FD
-                                AA_RX_IK_SQP_DQ_AN
-
+                                AA_RX_IK_SQP_WK
         );
 
+    //aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_obj_dqln);
+    aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_obj_qlnpv);
 
     struct aa_rx_ik_cx * cx = aa_rx_ik_cx_create(ssg, ko);
     aa_rx_ik_set_start(cx, &qv_start_all);

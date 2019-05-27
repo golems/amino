@@ -62,23 +62,22 @@ s_ik_jpinv( struct kin_solve_cx *cx,
 
 static int
 s_ik_nlopt( struct kin_solve_cx *cx,
-            double (*obj)(unsigned n, const double *q, double *dq, void *vcx),
             struct aa_dvec *q );
 
-static double
-s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx);
+/* static double */
+/* s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx); */
 
-static double
-s_nlobj_dq_fd(unsigned n, const double *q, double *dq, void *vcx);
+/* static double */
+/* s_nlobj_dq_fd(unsigned n, const double *q, double *dq, void *vcx); */
 
-static double
-s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx);
+/* static double */
+/* s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx); */
 
-static double
-s_nlobj_qv_fd(unsigned n, const double *q, double *dq, void *vcx);
+/* static double */
+/* s_nlobj_qv_fd(unsigned n, const double *q, double *dq, void *vcx); */
 
-static double
-s_nlobj_qv_an(unsigned n, const double *q, double *dq, void *vcx);
+/* static double */
+/* s_nlobj_qv_an(unsigned n, const double *q, double *dq, void *vcx); */
 
 AA_API struct aa_rx_ik_cx *
 aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts )
@@ -226,7 +225,6 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
         return AA_RX_INVALID_PARAMETER;
     }
 
-
     /* Init Context */
     struct kin_solve_cx *kcx = s_kin_solve_cx_alloc( context,
                                                      aa_mem_region_local_get() );
@@ -260,29 +258,12 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
             break;
         case AA_RX_IK_LMA:
             goto ERR;
+        case AA_RX_IK_SQP_WK:
 #ifdef HAVE_NLOPT
-        case AA_RX_IK_SQP_JPINV:
-            r = s_ik_nlopt( kcx, s_nlobj_jpinv, q );
-            break;
-        case AA_RX_IK_SQP_DQ_FD:
-            r = s_ik_nlopt( kcx, s_nlobj_dq_fd, q );
-            break;
-        case AA_RX_IK_SQP_DQ_AN:
-            r = s_ik_nlopt( kcx, s_nlobj_dq_an, q );
-            break;
-        case AA_RX_IK_SQP_QV_FD:
-            r = s_ik_nlopt( kcx, s_nlobj_qv_fd, q );
-            break;
-        case AA_RX_IK_SQP_QV_AN:
-            r = s_ik_nlopt( kcx, s_nlobj_qv_an, q );
+            r = s_ik_nlopt( kcx, q );
             break;
 #else /*HAVE_NLOPT*/
             /* Can't implement these without NLOPT */
-        case AA_RX_IK_SQP_JPINV:
-        case AA_RX_IK_SQP_DQ_FD:
-        case AA_RX_IK_SQP_DQ_AN:
-        case AA_RX_IK_SQP_QV_FD:
-        case AA_RX_IK_SQP_QV_AN:
             fprintf(stderr, "Error: Need NLOPT for SQP IK algorithms");
             goto ERR;
 #endif /*HAVE_NLOPT*/
@@ -441,6 +422,17 @@ static void s_ksol_jpinv( const struct kin_solve_cx *cx,
 
 
 #include "ik_jacobian.c"
+
+
+
+AA_API void
+aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *ko,
+                         aa_rx_ik_obj_fun *fun )
+{
+    ko->obj_fun = fun;
+}
+
+
 
 #ifdef HAVE_NLOPT
 #include "ik_nlopt.c"

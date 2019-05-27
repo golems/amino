@@ -126,6 +126,9 @@ struct aa_rx_ksol_opts {
     aa_rx_frame_id frame;
 
     enum aa_rx_ik_algo ik_algo;
+
+    aa_rx_ik_obj_fun *obj_fun;
+    //void *obj_fun_cx;
 };
 
 struct aa_rx_ik_cx
@@ -142,6 +145,7 @@ struct aa_rx_ik_cx
     struct aa_rx_fk *fk;
 
     aa_rx_frame_id frame;
+
 };
 
 typedef int (*rfx_kin_duqu_fun) ( const void *cx, const double *q, double S[8],  double *J);

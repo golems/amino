@@ -80,6 +80,9 @@ aa_rx_ksol_opts_create()
 
     opt->frame = AA_RX_FRAME_NONE;
 
+    opt->ik_algo = AA_RX_IK_SQP_WK;
+    opt->obj_fun = &aa_rx_ik_obj_qlnpv;
+
     return opt;
 }
 

@@ -70,46 +70,19 @@ enum aa_rx_ik_algo {
     /** Levenberg-Marquardt */
     AA_RX_IK_LMA,
 
-    /** SQP w/ Jacobian pseudo-inverse to find gradient */
-    AA_RX_IK_SQP_JPINV,
-
     /**
-     * SQP, dual-quaternion log objective, finite-difference gradient.
+     * Sequential Quadratic Program, Workspace Objective.
      *
-     * Sum of squares of the log of the pose error
-     *
-     * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
-     * library for improved solving of generic inverse kinematics."
-     * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
-     * (Humanoids). IEEE, 2015.
+     * @sa aa_rx_ksol_opts_set_obj
      */
-    AA_RX_IK_SQP_DQ_FD,
-
-    /**
-     * SQP, dual-quaternion log objective, analytic gradient.
-     */
-    AA_RX_IK_SQP_DQ_AN,
-
-    /**
-     * SQP, quaternion log and vector ssd, finite difference gradient.
-     *
-     * Sum of squares of the log of the rotation error plus sum of
-     * squares of translation error.
-     *
-     * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
-     * library for improved solving of generic inverse kinematics."
-     * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
-     * (Humanoids). IEEE, 2015.
-     */
-    AA_RX_IK_SQP_QV_FD,
-
-    /**
-     * SQP, quaternion log and vector ssd, analytic gradient.
-     */
-    AA_RX_IK_SQP_QV_AN
+    AA_RX_IK_SQP_WK
 };
 
-/** Create options struct for kinematic solver. */
+/**
+ * Create options struct for kinematic solver.
+ *
+ * The default options should offer good performance and robustness.
+ */
 AA_API struct aa_rx_ksol_opts*
 aa_rx_ksol_opts_create();
 
@@ -133,6 +106,11 @@ aa_rx_ksol_opts_set_dt( struct aa_rx_ksol_opts *opts, double dt);
 AA_API void
 aa_rx_ksol_opts_set_ik_algo( struct aa_rx_ksol_opts *opts,
                              enum aa_rx_ik_algo algo );
+
+
+
+
+
 
 /**
  * Set angular tolerance.
@@ -301,6 +279,77 @@ aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name );
 
 AA_API void
 aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id );
+
+typedef double aa_rx_ik_obj_fun(void *cx, const double *q, double *dq);
+
+/**
+ * Set the objective function for optimization (e.g., SQP) IK.
+ *
+ * @sa aa_rx_ik_obj_dqln
+ * @sa aa_rx_ik_obj_qlnpv
+ */
+AA_API void
+aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *opts,
+                         aa_rx_ik_obj_fun *fun );
+
+/**
+ * IK Objective function.
+ *
+ * Logarithm of the pose error:
+ *
+ * \f[ f(q) = | \ln S_{\rm act}(q) \otimes S_{\rm ref} |^2 \f]
+ */
+AA_API double
+aa_rx_ik_obj_dqln( void *cx, double *q, double *dq );
+
+/**
+ * IK Objective function (for testing only)
+ *
+ * This function uses finite difference and will be slow.
+ *
+ * Logarithm of the pose error:
+ *
+ * \f[ f(q) = | \ln S_{\rm act}(q) \otimes S_{\rm ref} |^2 \f]
+ *
+ * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
+ * library for improved solving of generic inverse kinematics."
+ * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
+ * (Humanoids). IEEE, 2015.
+ */
+AA_API double
+aa_rx_ik_obj_dqln_fd( void *cx, const double *q, double *dq );
+
+/**
+ * IK Objective function.
+ *
+ * Logarithm of the quaternion error, plus translation error
+ *
+ * \f[
+ *    f(q) = | \ln h_{\rm act}(q) \otimes h_{\rm ref} |^2 + |v_{\rm act}(q) - v_{\rm ref}|^2
+ * \f]
+ */
+AA_API double
+aa_rx_ik_obj_qlnpv( void *cx, const double *q, double *dq );
+
+/**
+ * IK Objective function (for testing only).
+ *
+ * This function uses finite difference and will be slow.
+ *
+ * Logarithm of the quaternion error, plus translation error
+ *
+ * \f[
+ *   f(q) = | \ln h_{\rm act}(q) \otimes h_{\rm ref} |^2 + |v_{\rm act}(q) - v_{\rm ref}|^2
+ * \f]
+ *
+ * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
+ * library for improved solving of generic inverse kinematics."
+ * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
+ * (Humanoids). IEEE, 2015.
+ */
+AA_API double
+aa_rx_ik_obj_qlnpv_fd( void *cx, const double *q, double *dq );
+
 
 /**
  * Check an IK solution.

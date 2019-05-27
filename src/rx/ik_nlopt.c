@@ -50,29 +50,30 @@
 #include "amino/diffeq.h"
 
 
-static double
-s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx)
-{
-    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
-    void *ptrtop = aa_mem_region_ptr(cx->reg);
 
-    struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
-    aa_rx_fk_sub(cx->fk, cx->ssg, &vq);
-    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
+/* static double */
+/* s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx) */
+/* { */
+/*     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx; */
+/*     void *ptrtop = aa_mem_region_ptr(cx->reg); */
+
+/*     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1); */
+/*     aa_rx_fk_sub(cx->fk, cx->ssg, &vq); */
+/*     double *E_act = aa_rx_fk_ref(cx->fk, cx->frame); */
 
 
-    if( dq ) {
-        struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
-        s_ksol_jpinv(cx,q, &v_dq);
-        aa_dvec_scal(-1,&v_dq);
-    }
+/*     if( dq ) { */
+/*         struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1); */
+/*         s_ksol_jpinv(cx,q, &v_dq); */
+/*         aa_dvec_scal(-1,&v_dq); */
+/*     } */
 
-    double x = s_serr( E_act, cx->TF_ref->data );
+/*     double x = s_serr( E_act, cx->TF_ref->data ); */
 
-    aa_mem_region_pop(cx->reg, ptrtop);
-    return x;
+/*     aa_mem_region_pop(cx->reg, ptrtop); */
+/*     return x; */
 
-}
+/* } */
 
 static double s_nlobj_dq_fd_helper( void *vcx, const struct aa_dvec *x)
 {
@@ -95,9 +96,12 @@ static double s_nlobj_dq_fd_helper( void *vcx, const struct aa_dvec *x)
     return result;
 }
 
-static double
-s_nlobj_dq_fd(unsigned n, const double *q, double *dq, void *vcx)
+AA_API double
+aa_rx_ik_obj_dqln_fd( void *vcx, const double *q, double *dq )
 {
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
+    size_t n = aa_rx_sg_sub_config_count(cx->ssg);
+
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
     double x = s_nlobj_dq_fd_helper(vcx, &vq);
 
@@ -131,12 +135,13 @@ duqu_rmul_helper( const double *Sr, const double *x, double *y )
     mv_block_helper(M, x, y);
 }
 
-static double
-s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx)
-{
+
+AA_API double
+aa_rx_ik_obj_dqln( void *vcx, double *q, double *dq ) {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
+    size_t n = aa_rx_sg_sub_config_count(cx->ssg);
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
     aa_rx_fk_sub(cx->fk, cx->ssg, &vq );
     double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
@@ -284,9 +289,13 @@ static double s_nlobj_qv_fd_helper( void *vcx, const struct aa_dvec *x)
     return result;
 }
 
-static double
-s_nlobj_qv_fd(unsigned n, const double *q, double *dq, void *vcx)
+
+AA_API double
+aa_rx_ik_obj_qlnpv_fd( void *vcx, const double *q, double *dq )
 {
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
+    size_t n = aa_rx_sg_sub_config_count(cx->ssg);
+
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
     double x = s_nlobj_qv_fd_helper(vcx, &vq);
 
@@ -310,12 +319,14 @@ q_rmul_helper( const double *q, const struct aa_dvec *x, struct aa_dvec *y )
     aa_dmat_gemv(CblasTrans, 1, &M, x, 0, y);
 }
 
-static double
-s_nlobj_qv_an(unsigned n, const double *q, double *dq, void *vcx)
+
+AA_API double
+aa_rx_ik_obj_qlnpv( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
+    size_t n = aa_rx_sg_sub_config_count(cx->ssg);
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
     aa_rx_fk_sub(cx->fk, cx->ssg, &vq );
 
@@ -414,14 +425,24 @@ s_nlobj_qv_an(unsigned n, const double *q, double *dq, void *vcx)
     return result;
 }
 
+struct obj_cx {
+    void *cx;
+    aa_rx_ik_obj_fun *fun;
+};
 
+static double
+s_obj_cx_dispatch(unsigned n, const double *q, double *dq, void *vcx)
+{
+    (void)n;
+    struct obj_cx *cx = (struct obj_cx *)vcx;
+    return cx->fun(cx->cx, q, dq);
+}
 
 static int
 s_ik_nlopt( struct kin_solve_cx *cx,
-            double (*obj)(unsigned n, const double *q, double *dq, void *vcx),
             struct aa_dvec *q )
 {
-
+    printf("bif\n");
     struct aa_mem_region *reg = cx->reg;
     void *ptrtop = aa_mem_region_ptr(reg);
 
@@ -436,7 +457,11 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     nlopt_algorithm alg = NLOPT_LD_SLSQP;
     nlopt_opt opt = nlopt_create(alg, (unsigned)n_sub); /* algorithm and dimensionality */
 
-    nlopt_set_min_objective(opt, obj, cx);
+    struct obj_cx ocx;
+    ocx.cx = cx;
+    ocx.fun = cx->ik_cx->opts->obj_fun;
+    nlopt_set_min_objective(opt, s_obj_cx_dispatch, &ocx);
+
     nlopt_set_xtol_rel(opt, 1e-4); // TODO: make a parameter
     double *lb = AA_MEM_REGION_NEW_N(reg,double,n_sub);
     double *ub = AA_MEM_REGION_NEW_N(reg,double,n_sub);
