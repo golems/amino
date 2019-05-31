@@ -122,7 +122,7 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
         AA_MEM_SET(this->frames, id_last, n_e);
     }
     // TODO: multiple frames
-    aa_rx_ik_parm_set_frame(ko, this->frames[0]);
+    aa_rx_ik_set_frame_id(this->ik_cx, this->frames[0]);
 
     /* Set goals */
     this->E = new double[n_e*7];

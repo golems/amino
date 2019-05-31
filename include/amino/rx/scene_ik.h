@@ -43,7 +43,7 @@
 
 /**
  * @file scene_ik.h
- * @brief Inverse Kinematics
+ * @brief Inverse Position Kinematics
  */
 
 struct aa_rx_sg_sub;
@@ -58,30 +58,33 @@ typedef int aa_rx_ik_fun( void *context,
                           size_t n_q, double *q );
 
 
+/**
+ * IK parameters opaque structure.
+ */
 struct aa_rx_ik_parm;
 
 /**
  * Inverse Kinematics Algorithm
  */
 enum aa_rx_ik_algo {
-    /** Jacobian pseudo-inverse adapative integration */
-    AA_RX_IK_JPINV,
-
-    /** Levenberg-Marquardt (unimplemented) */
-    AA_RX_IK_LMA,
-
     /**
      * Sequential Quadratic Program.
-     *
-     * If using a workspace error for the objective, there is no need to
-     * set additional constraints.  Alternatively, you may use a
-     * jointspace error for the objective and then set a workspace error
-     * constraint.
      *
      * @sa aa_rx_ik_parm_set_obj
      * @sa aa_rx_ik_parm_set_eqct
      */
-    AA_RX_IK_SQP
+    AA_RX_IK_SQP,
+
+    /**
+     * Jacobian pseudo-inverse w/ adapative integration  (kludgey)
+     */
+    AA_RX_IK_JPINV,
+
+    /**
+     * Levenberg-Marquardt (unimplemented)
+     */
+    AA_RX_IK_LMA
+
 };
 
 /**
@@ -253,7 +256,9 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ik_parm *parm, size_t n_q,
 
 
 
-
+/**
+ * IK solver context, opaque structure.
+ */
 struct aa_rx_ik_cx;
 
 /**
@@ -276,37 +281,65 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
                 const struct aa_dmat *TF,
                 struct aa_dvec *q );
 
-
+/**
+ * Return reference to the start state used by the IK solver.
+ *
+ * The start state holds the full scene configuration.
+ */
 AA_API struct aa_dvec *
 aa_rx_ik_get_start( const struct aa_rx_ik_cx *context );
 
+/**
+ * Return reference to the seed state used by the IK solver.
+ *
+ * The seed state holds the sub-scenegraph configuration.
+ */
 AA_API struct aa_dvec *
 aa_rx_ik_get_seed( const struct aa_rx_ik_cx *context );
 
+/**
+ * Set the start state used by the IK solver.
+ *
+ * The start state holds the full scene configuration.
+ */
 AA_API void
 aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start );
 
+/**
+ * Set seed used by the IK solver.
+ *
+ * The seed state holds the sub-scenegraph configuration.
+ */
 AA_API void
 aa_rx_ik_set_seed( struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed );
 
-AA_API struct aa_dvec *
-aa_rx_ik_get_start( const struct aa_rx_ik_cx *context );
-
-AA_API struct aa_dvec *
-aa_rx_ik_get_seed( const struct aa_rx_ik_cx *context );
-
+/**
+ * Convenience function to set the seed to the centered configuration.
+ */
 AA_API void
 aa_rx_ik_set_seed_center( struct aa_rx_ik_cx *context );
 
+/**
+ * Convenience function to set a random seed.
+ */
 AA_API void
 aa_rx_ik_set_seed_rand( struct aa_rx_ik_cx *context );
 
+/**
+ * Set the maximum time limit for IK restarts.
+ */
 AA_API void
 aa_rx_ik_set_restart_time( struct aa_rx_ik_cx *context, double t );
 
+/**
+ * Set the frame to solve for.
+ */
 AA_API void
 aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name );
 
+/**
+ * Set the frame to solve for.
+ */
 AA_API void
 aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id );
 
@@ -314,22 +347,27 @@ aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id );
  * Function type for optimization objectives and contstraints.
  *
  *
- * @sa aa_rx_ik_err_dqln
- * @sa aa_rx_ik_err_qlnpv
- * @sa aa_rx_ik_err_jcenter
+ * @sa aa_rx_ik_opt_err_dqln
+ * @sa aa_rx_ik_opt_err_qlnpv
+ * @sa aa_rx_ik_opt_err_jcenter
  */
 typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
 
 /**
  * Set an error objective function for optimization (e.g., SQP) IK.
  *
+ * If using a workspace objective, no additional constraints are
+ * needed (position limit bound constraints are automatiically added).
+ * If using a jointspace objective, a workspace constraint may be
+ * necessary.
+ *
  * @param parm     options structure
  * @param fun      error function
  * @param tol_abs  absolute tolerance on error
  *
- * @sa aa_rx_ik_err_dqln
- * @sa aa_rx_ik_err_qlnpv
- * @sa aa_rx_ik_err_jcenter
+ * @sa aa_rx_ik_opt_err_dqln
+ * @sa aa_rx_ik_opt_err_qlnpv
+ * @sa aa_rx_ik_opt_err_jcenter
  */
 AA_API void
 aa_rx_ik_parm_set_obj( struct aa_rx_ik_parm *parm,
@@ -338,6 +376,7 @@ aa_rx_ik_parm_set_obj( struct aa_rx_ik_parm *parm,
 /**
  * Set the equality constraint for optimization (e.g., SQP) IK.
  *
+ * Consider using a workspace constraint and a jointspace objective.
  *
  * @sa aa_rx_ik_err_dqln
  * @sa aa_rx_ik_err_qlnpv
