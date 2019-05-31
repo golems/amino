@@ -34,11 +34,11 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_KIN_INTERNAL_H
-#define AMINO_RX_SCENE_KIN_INTERNAL_H
+#ifndef AMINO_RX_SCENE_IK_INTERNAL_H
+#define AMINO_RX_SCENE_IK_INTERNAL_H
 
 #include "scene_wk_internal.h"
-#include "scene_kin.h"
+#include "scene_ik.h"
 
 struct aa_rx_sg_sub
 {
@@ -182,4 +182,4 @@ struct kin_solve_cx {
 
 
 
-#endif /*AMINO_RX_SCENE_KIN_H*/
+#endif /*AMINO_RX_SCENE_IK_H*/

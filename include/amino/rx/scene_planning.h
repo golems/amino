@@ -38,7 +38,7 @@
 #ifndef AMINO_RX_SCENE_PLANNING_H
 #define AMINO_RX_SCENE_PLANNING_H
 
-#include "scene_kin.h"
+#include "scene_ik.h"
 
 /**
  * @file scene_planning.h

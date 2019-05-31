@@ -39,11 +39,11 @@
 #include "amino.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_ik.h"
 #include "amino/rx/scene_sub.h"
 
 #include "amino/rx/scene_fk.h"
-#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_ik_internal.h"
 #include "amino/mat_internal.h"
 
 AA_API void

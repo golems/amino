@@ -36,14 +36,14 @@
  *
  */
 
-#ifndef AMINO_RX_SCENE_KIN_H
-#define AMINO_RX_SCENE_KIN_H
+#ifndef AMINO_RX_SCENE_IK_H
+#define AMINO_RX_SCENE_IK_H
 
 #include "scenegraph.h"
 
 /**
- * @file scene_kin.h
- * @brief Scenegraph kinematics
+ * @file scene_ik.h
+ * @brief Inverse Kinematics
  */
 
 struct aa_rx_sg_sub;
@@ -496,4 +496,4 @@ AA_API int aa_rx_ik_jac_fun( void *context,
 /* } */
 
 
-#endif /*AMINO_RX_SCENE_KIN_H*/
+#endif /*AMINO_RX_SCENE_IK_H*/

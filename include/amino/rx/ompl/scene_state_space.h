@@ -46,7 +46,7 @@
 #include "amino/rx/rxerr.h"
 #include "amino/rx/rxtype.h"
 #include "amino/rx/scenegraph.h"
-#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_ik_internal.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 

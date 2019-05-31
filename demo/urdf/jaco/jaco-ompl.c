@@ -52,7 +52,7 @@ static int SCREEN_HEIGHT = 600;
 #include "amino/rx/scene_geom.h"
 
 #include "amino/rx/rxerr.h"
-#include "amino/rx/scene_kin.h"
+#include "amino/rx/scene_ik.h"
 #include "amino/rx/scene_collision.h"
 #include "amino/rx/scene_planning.h"
 

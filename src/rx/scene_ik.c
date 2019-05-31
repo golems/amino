@@ -49,9 +49,8 @@
 #include "amino/rx/rxerr.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scene_fk.h"
-#include "amino/rx/scene_kin.h"
 #include "amino/rx/scene_sub.h"
-#include "amino/rx/scene_kin_internal.h"
+#include "amino/rx/scene_ik_internal.h"
 
 
 
@@ -63,21 +62,6 @@ s_ik_jpinv( struct kin_solve_cx *cx,
 static int
 s_ik_nlopt( struct kin_solve_cx *cx,
             struct aa_dvec *q );
-
-/* static double */
-/* s_nlobj_jpinv(unsigned n, const double *q, double *dq, void *vcx); */
-
-/* static double */
-/* s_nlobj_dq_fd(unsigned n, const double *q, double *dq, void *vcx); */
-
-/* static double */
-/* s_nlobj_dq_an(unsigned n, const double *q, double *dq, void *vcx); */
-
-/* static double */
-/* s_nlobj_qv_fd(unsigned n, const double *q, double *dq, void *vcx); */
-
-/* static double */
-/* s_nlobj_qv_an(unsigned n, const double *q, double *dq, void *vcx); */
 
 AA_API struct aa_rx_ik_cx *
 aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ik_parm *opts )

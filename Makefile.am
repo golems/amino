@@ -48,7 +48,7 @@ noinst_HEADERS = \
              include/wavefront_internal.h \
              include/amino/mat_internal.h \
              include/amino/ct/traj_internal.hpp \
-             include/amino/rx/scene_kin_internal.h \
+             include/amino/rx/scene_ik_internal.h \
              include/amino/rx/scene_wk_internal.h \
              include/amino/rx/scenegraph_internal.h \
              include/amino/rx/scene_geom_internal.h \
@@ -140,7 +140,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/scene_gl.h     \
 	include/amino/rx/scene_sub.h    \
-	include/amino/rx/scene_kin.h    \
+	include/amino/rx/scene_ik.h    \
 	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_planning.h \
