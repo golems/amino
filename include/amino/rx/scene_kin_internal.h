@@ -103,7 +103,10 @@ struct aa_rx_ksol_opts {
     double tol_angle_svd;    ///< angle error tolerate
     double tol_trans_svd;    ///< translation error tolerance
 
-    double tol_dq;       ///< translation error tolerance
+    double tol_dq;          ///< joint step tolerance
+
+    double tol_obj_abs;     ///< Objective function tolerance, absolute
+    double tol_obj_rel;     ///< Objective function tolerance, relative
 
     //double dx_dt;        ///< scaling for cartesian error
     /* double gain_angle;     ///< scaling for cartesian error */
@@ -128,7 +131,6 @@ struct aa_rx_ksol_opts {
     enum aa_rx_ik_algo ik_algo;
 
     aa_rx_ik_opt_fun *obj_fun;
-    double tol_abs;
 
     aa_rx_ik_opt_fun *eqct_fun;
     double eqct_tol;

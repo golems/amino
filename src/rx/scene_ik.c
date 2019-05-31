@@ -440,12 +440,10 @@ static void s_ksol_jpinv( const struct kin_solve_cx *cx,
 
 
 AA_API void
-aa_rx_ksol_opts_set_err( struct aa_rx_ksol_opts *ko,
-                         aa_rx_ik_opt_fun *fun,
-                         double tol_abs)
+aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *ko,
+                         aa_rx_ik_opt_fun *fun )
 {
     ko->obj_fun = fun;
-    ko->tol_abs = tol_abs;
 }
 
 

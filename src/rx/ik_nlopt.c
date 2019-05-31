@@ -97,7 +97,7 @@ static double s_nlobj_dq_fd_helper( void *vcx, const struct aa_dvec *x)
 }
 
 AA_API double
-aa_rx_ik_err_dqln_fd( void *vcx, const double *q, double *dq )
+aa_rx_ik_opt_err_dqln_fd( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     size_t n = aa_rx_sg_sub_config_count(cx->ssg);
@@ -137,7 +137,7 @@ duqu_rmul_helper( const double *Sr, const double *x, double *y )
 
 
 AA_API double
-aa_rx_ik_err_dqln( void *vcx, double *q, double *dq ) {
+aa_rx_ik_opt_err_dqln( void *vcx, double *q, double *dq ) {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
@@ -291,7 +291,7 @@ static double s_nlobj_qv_fd_helper( void *vcx, const struct aa_dvec *x)
 
 
 AA_API double
-aa_rx_ik_err_qlnpv_fd( void *vcx, const double *q, double *dq )
+aa_rx_ik_opt_err_qlnpv_fd( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     size_t n = aa_rx_sg_sub_config_count(cx->ssg);
@@ -321,7 +321,7 @@ q_rmul_helper( const double *q, const struct aa_dvec *x, struct aa_dvec *y )
 
 
 AA_API double
-aa_rx_ik_err_qlnpv( void *vcx, const double *q, double *dq )
+aa_rx_ik_opt_err_qlnpv( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
@@ -430,7 +430,7 @@ aa_rx_ik_err_qlnpv( void *vcx, const double *q, double *dq )
 // TODO: weighted error
 
 AA_API double
-aa_rx_ik_err_jcenter( void *vcx, const double *q, double *dq )
+aa_rx_ik_opt_err_jcenter( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     struct aa_mem_region *reg = cx->reg;
@@ -509,9 +509,12 @@ s_ik_nlopt( struct kin_solve_cx *cx,
 
 
     //nlopt_set_xtol_rel(opt, 1e-4); // TODO: make a parameter
-    if( cx->opts->tol_abs >= 0 ) {
-        nlopt_set_ftol_abs(opt, cx->opts->tol_abs );
-    }
+    if( cx->opts->tol_obj_abs >= 0 )
+        nlopt_set_ftol_abs(opt, cx->opts->tol_obj_abs );
+    if( cx->opts->tol_obj_rel >= 0 )
+        nlopt_set_ftol_rel(opt, cx->opts->tol_obj_rel );
+    if( cx->opts->tol_dq >= 0 )
+        nlopt_set_xtol_rel(opt, cx->opts->tol_dq );
 
     double *lb = AA_MEM_REGION_NEW_N(reg,double,n_sub);
     double *ub = AA_MEM_REGION_NEW_N(reg,double,n_sub);

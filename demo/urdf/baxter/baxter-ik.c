@@ -111,15 +111,18 @@ int main(int argc, char *argv[])
 
 
     /* Default workspace objective */
-    aa_rx_ksol_opts_set_err(ko, aa_rx_ik_err_qlnpv, 1e-9);
+    aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_opt_err_qlnpv);
 
     /* An alternate workspace objective */
-    //aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_err_dqln);
+    //aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_opt_err_dqln);
 
     /* A jointspace objective and workspace constraint */
     /* { */
-    /*     aa_rx_ksol_opts_set_obj(ko,  aa_rx_ik_err_jcenter); */
-    /*     aa_rx_ksol_opts_set_eqct(ko, aa_rx_ik_err_qlnpv, 1e-9); */
+    /*     aa_rx_ksol_opts_set_obj(ko,  aa_rx_ik_opt_err_jcenter); */
+    /*     aa_rx_ksol_opts_set_eqct(ko, aa_rx_ik_opt_err_qlnpv, 1e-9); */
+    /*     /\* Need to update the tolerances since we cannot zero the joint error *\/ */
+    /*     aa_rx_ksol_opts_set_tol_dq(ko,1e-6); */
+    /*     aa_rx_ksol_opts_set_tol_obj_abs(ko,-1); */
     /* } */
 
     struct aa_rx_ik_cx * cx = aa_rx_ik_cx_create(ssg, ko);

@@ -149,6 +149,18 @@ AA_API void
 aa_rx_ksol_opts_set_tol_dq( struct aa_rx_ksol_opts *opts, double tol);
 
 /**
+ * Set absolute tolerance on objective function.
+ */
+AA_API void
+aa_rx_ksol_opts_set_tol_obj_abs( struct aa_rx_ksol_opts *opts, double tol );
+
+/**
+ * Set relative tolerance on objective function.
+ */
+AA_API void
+aa_rx_ksol_opts_set_tol_obj_rel( struct aa_rx_ksol_opts *opts, double tol );
+
+/**
  * Set damping constant for damped least squares (LU decompisition).
  */
 AA_API void
@@ -292,6 +304,14 @@ aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name );
 AA_API void
 aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id );
 
+/**
+ * Function type for optimization objectives and contstraints.
+ *
+ *
+ * @sa aa_rx_ik_err_dqln
+ * @sa aa_rx_ik_err_qlnpv
+ * @sa aa_rx_ik_err_jcenter
+ */
 typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
 
 /**
@@ -306,9 +326,8 @@ typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
  * @sa aa_rx_ik_err_jcenter
  */
 AA_API void
-aa_rx_ksol_opts_set_err( struct aa_rx_ksol_opts *opts,
-                         aa_rx_ik_opt_fun *fun,
-                         double tol_abs );
+aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *opts,
+                         aa_rx_ik_opt_fun *fun );
 
 /**
  * Set the equality constraint for optimization (e.g., SQP) IK.
@@ -322,6 +341,8 @@ aa_rx_ksol_opts_set_eqct( struct aa_rx_ksol_opts *opts,
                           aa_rx_ik_opt_fun *fun,
                           double tol);
 
+
+
 /**
  * IK Workspace error
  *
@@ -334,7 +355,7 @@ aa_rx_ksol_opts_set_eqct( struct aa_rx_ksol_opts *opts,
  * @sa aa_rx_ksol_opts_set_eqct
  */
 AA_API double
-aa_rx_ik_err_dqln( void *cx, double *q, double *dq );
+aa_rx_ik_opt_err_dqln( void *cx, double *q, double *dq );
 
 /**
  * IK workspace error (for testing only)
@@ -354,7 +375,7 @@ aa_rx_ik_err_dqln( void *cx, double *q, double *dq );
  * @sa aa_rx_ksol_opts_set_eqct
  */
 AA_API double
-aa_rx_ik_err_dqln_fd( void *cx, const double *q, double *dq );
+aa_rx_ik_opt_err_dqln_fd( void *cx, const double *q, double *dq );
 
 /**
  * IK workspace error.
@@ -370,7 +391,7 @@ aa_rx_ik_err_dqln_fd( void *cx, const double *q, double *dq );
  * @sa aa_rx_ksol_opts_set_eqct
  */
 AA_API double
-aa_rx_ik_err_qlnpv( void *cx, const double *q, double *dq );
+aa_rx_ik_opt_err_qlnpv( void *cx, const double *q, double *dq );
 
 /**
  * IK workspace error (for testing only).
@@ -394,7 +415,7 @@ aa_rx_ik_err_qlnpv( void *cx, const double *q, double *dq );
  *
  */
 AA_API double
-aa_rx_ik_err_qlnpv_fd( void *cx, const double *q, double *dq );
+aa_rx_ik_opt_err_qlnpv_fd( void *cx, const double *q, double *dq );
 
 
 /**
@@ -410,7 +431,7 @@ aa_rx_ik_err_qlnpv_fd( void *cx, const double *q, double *dq );
  * @sa aa_rx_ksol_opts_set_obj
  */
 AA_API double
-aa_rx_ik_err_jcenter( void *cx, const double *q, double *dq );
+aa_rx_ik_opt_err_jcenter( void *cx, const double *q, double *dq );
 
 
 /**
