@@ -84,7 +84,7 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
         aa_rx_sg_sub_config_set( ssg,
                                  n_s, wsg->seed->values,
                                  n_all, q );
-        aa_rx_ksol_opts_take_seed( wsg->ko, n_all, q, AA_MEM_COPY );
+        aa_rx_ik_parm_take_seed( wsg->ko, n_all, q, AA_MEM_COPY );
 
         /* solve */
         struct aa_dmat ikTF = AA_DMAT_INIT( AA_RX_TF_LEN, 1, wsg->E, AA_RX_TF_LEN );
@@ -108,7 +108,7 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
                                   const double *E_arg, size_t ldE ) :
     typed_si(si),
     ob::GoalLazySamples(si, ob::GoalSamplingFn(sampler_fun), false),
-    ko( aa_rx_ksol_opts_create() ),
+    ko( aa_rx_ik_parm_create() ),
     ik_cx( aa_rx_ik_cx_create(si->getTypedStateSpace()->sub_scene_graph, ko) ),
     n_e(n_e_),
     state_sampler( si->allocStateSampler() ),
@@ -131,7 +131,7 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
         AA_MEM_SET(this->frames, id_last, n_e);
     }
     // TODO: multiple frames
-    aa_rx_ksol_opts_set_frame(ko, this->frames[0]);
+    aa_rx_ik_parm_set_frame(ko, this->frames[0]);
 
     /* Set goals */
     this->E = new double[n_e*7];
@@ -140,16 +140,16 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
                    this->E, 7 );
 
     /* These settings should be optional */
-    aa_rx_ksol_opts_center_seed(ko, ssg);
-    aa_rx_ksol_opts_center_configs(ko, ssg, .1);
-    aa_rx_ksol_opts_set_tol_dq(ko, .01);
+    aa_rx_ik_parm_center_seed(ko, ssg);
+    aa_rx_ik_parm_center_configs(ko, ssg, .1);
+    aa_rx_ik_parm_set_tol_dq(ko, .01);
 }
 
 
 sgWorkspaceGoal::~sgWorkspaceGoal ()
 {
     typed_si->freeState(this->seed);
-    aa_rx_ksol_opts_destroy(this->ko);
+    aa_rx_ik_parm_destroy(this->ko);
     aa_rx_ik_cx_destroy(this->ik_cx);
     delete [] this->E;
     delete[] this->frames;
@@ -217,12 +217,12 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
     // size_t n_s = aa_rx_sg_sub_config_count(ssg);
     // double qs[n_s];
 
-    // struct aa_rx_ksol_opts *ko = NULL;
+    // struct aa_rx_ik_parm *ko = NULL;
     // if( NULL == opts ) {
-    //     ko = aa_rx_ksol_opts_create();
-    //     aa_rx_ksol_opts_center_seed( ko, ssg );
-    //     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    //     aa_rx_ksol_opts_set_tol_dq( ko, .01 );
+    //     ko = aa_rx_ik_parm_create();
+    //     aa_rx_ik_parm_center_seed( ko, ssg );
+    //     aa_rx_ik_parm_center_configs( ko, ssg, .1 );
+    //     aa_rx_ik_parm_set_tol_dq( ko, .01 );
     //     opts = ko;
     // }
 
@@ -243,7 +243,7 @@ aa_rx_mp_set_wsgoal( struct aa_rx_mp *mp,
     // TODO: check state validity
 
     // if( ko ) {
-    //     aa_rx_ksol_opts_destroy(ko);
+    //     aa_rx_ik_parm_destroy(ko);
     // }
 
 }

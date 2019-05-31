@@ -114,7 +114,7 @@ static int kin_solve_check( void *vcx, double t, double *AA_RESTRICT x, double *
 
 /* static int */
 /* s_ik_jpinv( const struct aa_rx_sg_sub *ssg, */
-/*             const struct aa_rx_ksol_opts *opts, */
+/*             const struct aa_rx_ik_parm *opts, */
 /*             const struct aa_dmat *TF, */
 /*             struct aa_dvec *q ) */
 
@@ -162,7 +162,7 @@ s_ik_jpinv( struct kin_solve_cx *cx,
 }
 
 AA_API struct aa_rx_ik_jac_cx *
-aa_rx_ik_jac_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts )
+aa_rx_ik_jac_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ik_parm *opts )
 {
     struct aa_rx_ik_cx *cx =  aa_rx_ik_cx_create(ssg,opts);
     return (struct aa_rx_ik_jac_cx*) cx;
@@ -210,7 +210,7 @@ AA_API int aa_rx_ik_jac_fun( void *context_,
 
 
 AA_API int
-aa_rx_ik_jac_dx2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_jac_dx2dq ( const struct aa_rx_ik_parm *opts, size_t n_q,
                      const double *AA_RESTRICT q_act, const double *AA_RESTRICT dx, const double *J,
                      double *AA_RESTRICT dq )
 {
@@ -243,7 +243,7 @@ aa_rx_ik_jac_dx2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
 }
 
 AA_API int
-aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_jac_x2dq ( const struct aa_rx_ik_parm *opts, size_t n_q,
                     const double *AA_RESTRICT q_act, const double *AA_RESTRICT E_act,
                     const double E_ref[7], const double dx_ref[6],
                     const double *J, double *AA_RESTRICT dq )
@@ -323,7 +323,7 @@ aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
 /*                       size_t n, const double *q0, const double S1[8], */
 /*                       rfx_kin_duqu_fun kin_fun, void *kin_cx, */
 /*                       double *q1, */
-/*                       const struct aa_rx_ksol_opts *opts ) { */
+/*                       const struct aa_rx_ik_parm *opts ) { */
 
     /* struct kin_solve_cx cx; */
     /* cx.n = n; */

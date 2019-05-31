@@ -58,7 +58,7 @@ typedef int aa_rx_ik_fun( void *context,
                           size_t n_q, double *q );
 
 
-struct aa_rx_ksol_opts;
+struct aa_rx_ik_parm;
 
 /**
  * Inverse Kinematics Algorithm
@@ -78,8 +78,8 @@ enum aa_rx_ik_algo {
      * jointspace error for the objective and then set a workspace error
      * constraint.
      *
-     * @sa aa_rx_ksol_opts_set_obj
-     * @sa aa_rx_ksol_opts_set_eqct
+     * @sa aa_rx_ik_parm_set_obj
+     * @sa aa_rx_ik_parm_set_eqct
      */
     AA_RX_IK_SQP
 };
@@ -89,20 +89,20 @@ enum aa_rx_ik_algo {
  *
  * The default options should offer good performance and robustness.
  */
-AA_API struct aa_rx_ksol_opts*
-aa_rx_ksol_opts_create();
+AA_API struct aa_rx_ik_parm*
+aa_rx_ik_parm_create();
 
 /**
  * Destroy options struct for kinematic solver.
  */
 AA_API void
-aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts);
+aa_rx_ik_parm_destroy( struct aa_rx_ik_parm *parm);
 
 /**
  * Set integration step.
  */
 AA_API void
-aa_rx_ksol_opts_set_dt( struct aa_rx_ksol_opts *opts, double dt);
+aa_rx_ik_parm_set_dt( struct aa_rx_ik_parm *parm, double dt);
 
 /**
  * Set inverse kinematics algorithm
@@ -110,8 +110,8 @@ aa_rx_ksol_opts_set_dt( struct aa_rx_ksol_opts *opts, double dt);
  * @sa aa_rx_ik_algorithm
  */
 AA_API void
-aa_rx_ksol_opts_set_ik_algo( struct aa_rx_ksol_opts *opts,
-                             enum aa_rx_ik_algo algo );
+aa_rx_ik_parm_set_algo( struct aa_rx_ik_parm *parm,
+                        enum aa_rx_ik_algo algo );
 
 
 
@@ -122,99 +122,99 @@ aa_rx_ksol_opts_set_ik_algo( struct aa_rx_ksol_opts *opts,
  * Set angular tolerance.
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_angle( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ik_parm_set_tol_angle( struct aa_rx_ik_parm *parm, double tol);
 
 /**
  * Set translational tolerance.
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_trans( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ik_parm_set_tol_trans( struct aa_rx_ik_parm *parm, double tol);
 
 /**
  * Set angular tolerance to switch to SVD.
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_angle_svd( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ik_parm_set_tol_angle_svd( struct aa_rx_ik_parm *parm, double tol);
 
 /**
  * Set translational tolerance to switch to SVD.
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_trans_svd( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ik_parm_set_tol_trans_svd( struct aa_rx_ik_parm *parm, double tol);
 
 /**
  * Set tolerance on joint motion.
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_dq( struct aa_rx_ksol_opts *opts, double tol);
+aa_rx_ik_parm_set_tol_dq( struct aa_rx_ik_parm *parm, double tol);
 
 /**
  * Set absolute tolerance on objective function.
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_obj_abs( struct aa_rx_ksol_opts *opts, double tol );
+aa_rx_ik_parm_set_tol_obj_abs( struct aa_rx_ik_parm *parm, double tol );
 
 /**
  * Set relative tolerance on objective function.
  */
 AA_API void
-aa_rx_ksol_opts_set_tol_obj_rel( struct aa_rx_ksol_opts *opts, double tol );
+aa_rx_ik_parm_set_tol_obj_rel( struct aa_rx_ik_parm *parm, double tol );
 
 /**
  * Set damping constant for damped least squares (LU decompisition).
  */
 AA_API void
-aa_rx_ksol_opts_set_k_dls( struct aa_rx_ksol_opts *opts, double s2min);
+aa_rx_ik_parm_set_k_dls( struct aa_rx_ik_parm *parm, double s2min);
 
 /**
  * Set minimum square singular value for damped least squares (SVD).
  */
 AA_API void
-aa_rx_ksol_opts_set_s2min( struct aa_rx_ksol_opts *opts, double s2min);
+aa_rx_ik_parm_set_s2min( struct aa_rx_ik_parm *parm, double s2min);
 
 /**
  * Set angular gain.
  */
 AA_API void
-aa_rx_ksol_opts_set_gain_angle( struct aa_rx_ksol_opts *opts, double k );
+aa_rx_ik_parm_set_gain_angle( struct aa_rx_ik_parm *parm, double k );
 
 /**
  * Set translational gain.
  */
 AA_API void
-aa_rx_ksol_opts_set_gain_trans( struct aa_rx_ksol_opts *opts, double k );
+aa_rx_ik_parm_set_gain_trans( struct aa_rx_ik_parm *parm, double k );
 
 /**
  * Set maximum interations.
  */
 AA_API void
-aa_rx_ksol_opts_set_max_iterations( struct aa_rx_ksol_opts *opts, size_t n );
+aa_rx_ik_parm_set_max_iterations( struct aa_rx_ik_parm *parm, size_t n );
 
 /**
  * Set frame to solve.
  */
 AA_API void
-aa_rx_ksol_opts_set_frame( struct aa_rx_ksol_opts *opts, aa_rx_frame_id frame );
+aa_rx_ik_parm_set_frame( struct aa_rx_ik_parm *parm, aa_rx_frame_id frame );
 
 /**
  * Set a reference configuration.
  */
 AA_API void
-aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_parm_take_config( struct aa_rx_ik_parm *parm, size_t n_q,
                              double *q, enum aa_mem_refop refop );
 
 /**
  * Set a configuration gain (nullspace).
  */
 AA_API void
-aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_parm_take_gain_config( struct aa_rx_ik_parm *parm, size_t n_q,
                                   double *q, enum aa_mem_refop refop );
 
 /**
  * Set a configuration seed (initial) value.
  */
 AA_API void
-aa_rx_ksol_opts_take_seed( struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_parm_take_seed( struct aa_rx_ik_parm *parm, size_t n_q,
                            double *q_all, enum aa_mem_refop refop );
 
 
@@ -222,14 +222,14 @@ aa_rx_ksol_opts_take_seed( struct aa_rx_ksol_opts *opts, size_t n_q,
  * Set the configuration seed (initial) to be the center position.
  */
 AA_API void
-aa_rx_ksol_opts_center_seed( struct aa_rx_ksol_opts *opts,
+aa_rx_ik_parm_center_seed( struct aa_rx_ik_parm *parm,
                              const struct aa_rx_sg_sub *ssg );
 
 /**
  * Convenience function to set IK options to center joints
  */
 AA_API void
-aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
+aa_rx_ik_parm_center_configs( struct aa_rx_ik_parm *parm,
                                 const struct aa_rx_sg_sub *ssg,
                                 double gain );
 
@@ -237,14 +237,14 @@ aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
  * Print debugging output for IK solver.
  */
 AA_API void
-aa_rx_ksol_opts_set_debug( struct aa_rx_ksol_opts *opts, int debug );
+aa_rx_ik_parm_set_debug( struct aa_rx_ik_parm *parm, int debug );
 
 
 
 /*-- Jacobian IK Solver --*/
 
 AA_API int
-aa_rx_ik_jac_x2dq ( const struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_jac_x2dq ( const struct aa_rx_ik_parm *parm, size_t n_q,
                     const double *AA_RESTRICT q_act, const double *AA_RESTRICT E_act,
                     const double E_ref[7], const double dx_ref[6],
                     const double *J, double *AA_RESTRICT dq );
@@ -260,7 +260,7 @@ struct aa_rx_ik_cx;
  * Create an IK solver context.
  */
 AA_API struct aa_rx_ik_cx *
-aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts );
+aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ik_parm *parm );
 
 /**
  * Destroy an IK solver context.
@@ -317,7 +317,7 @@ typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
 /**
  * Set an error objective function for optimization (e.g., SQP) IK.
  *
- * @param opts     options structure
+ * @param parm     options structure
  * @param fun      error function
  * @param tol_abs  absolute tolerance on error
  *
@@ -326,7 +326,7 @@ typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
  * @sa aa_rx_ik_err_jcenter
  */
 AA_API void
-aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *opts,
+aa_rx_ik_parm_set_obj( struct aa_rx_ik_parm *parm,
                          aa_rx_ik_opt_fun *fun );
 
 /**
@@ -337,7 +337,7 @@ aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *opts,
  * @sa aa_rx_ik_err_qlnpv
  */
 AA_API void
-aa_rx_ksol_opts_set_eqct( struct aa_rx_ksol_opts *opts,
+aa_rx_ik_parm_set_eqct( struct aa_rx_ik_parm *parm,
                           aa_rx_ik_opt_fun *fun,
                           double tol);
 
@@ -351,8 +351,8 @@ aa_rx_ksol_opts_set_eqct( struct aa_rx_ksol_opts *opts,
  *
  * \f[ f(q) = \| \ln S_{\rm act}(q) \otimes S_{\rm ref} \|^2 \f]
  *
- * @sa aa_rx_ksol_opts_set_obj
- * @sa aa_rx_ksol_opts_set_eqct
+ * @sa aa_rx_ik_parm_set_obj
+ * @sa aa_rx_ik_parm_set_eqct
  */
 AA_API double
 aa_rx_ik_opt_err_dqln( void *cx, double *q, double *dq );
@@ -371,8 +371,8 @@ aa_rx_ik_opt_err_dqln( void *cx, double *q, double *dq );
  * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
  * (Humanoids). IEEE, 2015.
  *
- * @sa aa_rx_ksol_opts_set_obj
- * @sa aa_rx_ksol_opts_set_eqct
+ * @sa aa_rx_ik_parm_set_obj
+ * @sa aa_rx_ik_parm_set_eqct
  */
 AA_API double
 aa_rx_ik_opt_err_dqln_fd( void *cx, const double *q, double *dq );
@@ -387,8 +387,8 @@ aa_rx_ik_opt_err_dqln_fd( void *cx, const double *q, double *dq );
  *            + \|v_{\rm act}(q) - v_{\rm ref}\|^2
  * \f]
  *
- * @sa aa_rx_ksol_opts_set_obj
- * @sa aa_rx_ksol_opts_set_eqct
+ * @sa aa_rx_ik_parm_set_obj
+ * @sa aa_rx_ik_parm_set_eqct
  */
 AA_API double
 aa_rx_ik_opt_err_qlnpv( void *cx, const double *q, double *dq );
@@ -410,8 +410,8 @@ aa_rx_ik_opt_err_qlnpv( void *cx, const double *q, double *dq );
  * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
  * (Humanoids). IEEE, 2015.
  *
- * @sa aa_rx_ksol_opts_set_obj
- * @sa aa_rx_ksol_opts_set_eqct
+ * @sa aa_rx_ik_parm_set_obj
+ * @sa aa_rx_ik_parm_set_eqct
  *
  */
 AA_API double
@@ -428,7 +428,7 @@ aa_rx_ik_opt_err_qlnpv_fd( void *cx, const double *q, double *dq );
  *      f(q) = \frac{1}{2} \| \ln q_{\rm act} - q_{\rm center}\|^2
  * \f]
  *
- * @sa aa_rx_ksol_opts_set_obj
+ * @sa aa_rx_ik_parm_set_obj
  */
 AA_API double
 aa_rx_ik_opt_err_jcenter( void *cx, const double *q, double *dq );
@@ -451,7 +451,7 @@ struct aa_rx_ik_jac_cx;
  * Create a Jacobian IK solver.
  */
 AA_API struct aa_rx_ik_jac_cx *
-aa_rx_ik_jac_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts );
+aa_rx_ik_jac_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ik_parm *parm );
 
 /**
  * Destroy a Jacobian IK solver.
@@ -478,19 +478,19 @@ AA_API int aa_rx_ik_jac_fun( void *context,
 
 /* AA_API int */
 /* aa_rx_sg_sub_ksol_dls( const struct aa_rx_sg_sub *ssg, */
-/*                        const struct aa_rx_ksol_opts *opts, */
+/*                        const struct aa_rx_ik_parm *parm, */
 /*                        size_t n_tf, const double *TF, size_t ld_TF, */
 /*                        size_t n_q_all, const double *q_start_all, */
 /*                        size_t n_q, double *q_subset ); */
 
 /* static inline int */
 /* aa_rx_sg_chain_ksol_dls( const struct aa_rx_sg_sub *ssg, */
-/*                          const struct aa_rx_ksol_opts *opts, */
+/*                          const struct aa_rx_ik_parm *parm, */
 /*                          const double *TF, */
 /*                          size_t n_q_all, const double *q_start_all, */
 /*                          size_t n_qs, double *q_subset ) */
 /* { */
-/*     return aa_rx_sg_sub_ksol_dls( ssg, opts, 1, TF, 7, */
+/*     return aa_rx_sg_sub_ksol_dls( ssg, parm, 1, TF, 7, */
 /*                                   n_q_all, q_start_all, */
 /*                                   n_qs, q_subset ); */
 /* } */

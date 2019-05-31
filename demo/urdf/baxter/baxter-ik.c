@@ -99,33 +99,33 @@ int main(int argc, char *argv[])
     }
 
     // solver options
-    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
-    aa_rx_ksol_opts_set_debug( ko, 1 ); // print debugging output
-    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    aa_rx_ksol_opts_take_seed( ko, n_q, qstart_all, AA_MEM_BORROW );
+    struct aa_rx_ik_parm *ikp = aa_rx_ik_parm_create();
+    aa_rx_ik_parm_set_debug( ikp, 1 ); // print debugging output
+    aa_rx_ik_parm_center_configs( ikp, ssg, .1 );
+    aa_rx_ik_parm_take_seed( ikp, n_q, qstart_all, AA_MEM_BORROW );
 
-    aa_rx_ksol_opts_set_ik_algo(ko,
+    aa_rx_ik_parm_set_ik_algo(ikp,
                                 //AA_RX_IK_JPINV
                                 AA_RX_IK_SQP
         );
 
 
     /* Default workspace objective */
-    aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_opt_err_qlnpv);
+    aa_rx_ik_parm_set_obj(ikp, aa_rx_ik_opt_err_qlnpv);
 
     /* An alternate workspace objective */
-    //aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_opt_err_dqln);
+    //aa_rx_ik_parm_set_obj(ikp, aa_rx_ik_opt_err_dqln);
 
     /* A jointspace objective and workspace constraint */
     /* { */
-    /*     aa_rx_ksol_opts_set_obj(ko,  aa_rx_ik_opt_err_jcenter); */
-    /*     aa_rx_ksol_opts_set_eqct(ko, aa_rx_ik_opt_err_qlnpv, 1e-9); */
+    /*     aa_rx_ik_parm_set_obj(ikp,  aa_rx_ik_opt_err_jcenter); */
+    /*     aa_rx_ik_parm_set_eqct(ikp, aa_rx_ik_opt_err_qlnpv, 1e-9); */
     /*     /\* Need to update the tolerances since we cannot zero the joint error *\/ */
-    /*     aa_rx_ksol_opts_set_tol_dq(ko,1e-6); */
-    /*     aa_rx_ksol_opts_set_tol_obj_abs(ko,-1); */
+    /*     aa_rx_ik_parm_set_tol_dq(ikp,1e-6); */
+    /*     aa_rx_ik_parm_set_tol_obj_abs(ikp,-1); */
     /* } */
 
-    struct aa_rx_ik_cx * cx = aa_rx_ik_cx_create(ssg, ko);
+    struct aa_rx_ik_cx * cx = aa_rx_ik_cx_create(ssg, ikp);
     aa_rx_ik_set_start(cx, &qv_start_all);
     aa_rx_ik_set_seed(cx, &qv_start_sub);
 

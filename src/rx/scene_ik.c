@@ -80,7 +80,7 @@ s_ik_nlopt( struct kin_solve_cx *cx,
 /* s_nlobj_qv_an(unsigned n, const double *q, double *dq, void *vcx); */
 
 AA_API struct aa_rx_ik_cx *
-aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ksol_opts *opts )
+aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ik_parm *opts )
 {
     struct aa_rx_ik_cx *cx = AA_NEW0(struct aa_rx_ik_cx);
     cx->ssg = ssg;
@@ -440,17 +440,17 @@ static void s_ksol_jpinv( const struct kin_solve_cx *cx,
 
 
 AA_API void
-aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *ko,
-                         aa_rx_ik_opt_fun *fun )
+aa_rx_ik_parm_set_obj( struct aa_rx_ik_parm *ko,
+                       aa_rx_ik_opt_fun *fun )
 {
     ko->obj_fun = fun;
 }
 
 
 AA_API void
-aa_rx_ksol_opts_set_eqct( struct aa_rx_ksol_opts *opts,
-                          aa_rx_ik_opt_fun *fun,
-                          double tol)
+aa_rx_ik_parm_set_eqct( struct aa_rx_ik_parm *opts,
+                        aa_rx_ik_opt_fun *fun,
+                        double tol)
 {
     opts->eqct_fun = fun;
     opts->eqct_tol = tol;

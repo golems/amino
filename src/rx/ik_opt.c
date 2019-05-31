@@ -55,11 +55,11 @@
 #include "amino/getset.h"
 
 
-AA_API struct aa_rx_ksol_opts*
-aa_rx_ksol_opts_create()
+AA_API struct aa_rx_ik_parm*
+aa_rx_ik_parm_create()
 {
 
-    struct aa_rx_ksol_opts *opt = AA_NEW0(struct aa_rx_ksol_opts);
+    struct aa_rx_ik_parm *opt = AA_NEW0(struct aa_rx_ik_parm);
 
     /* Set sane defaults */
     opt->dt = 1;
@@ -90,40 +90,40 @@ aa_rx_ksol_opts_create()
 }
 
 AA_API void
-aa_rx_ksol_opts_destroy( struct aa_rx_ksol_opts *opts)
+aa_rx_ik_parm_destroy( struct aa_rx_ik_parm *opts)
 {
     if( opts->dq_dt_data ) free( opts->dq_dt_data );
     if( opts->q_ref_data ) free( opts->q_ref_data );
 }
 
-AA_DEF_SETTER( aa_rx_ksol_opts, enum aa_rx_ik_algo, ik_algo )
+AA_DEF_SETTER( aa_rx_ik_parm, enum aa_rx_ik_algo, ik_algo )
 
-AA_DEF_SETTER( aa_rx_ksol_opts, double, dt )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_angle )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_trans )
+AA_DEF_SETTER( aa_rx_ik_parm, double, dt )
+AA_DEF_SETTER( aa_rx_ik_parm, double, tol_angle )
+AA_DEF_SETTER( aa_rx_ik_parm, double, tol_trans )
 
-AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_angle_svd )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_trans_svd )
+AA_DEF_SETTER( aa_rx_ik_parm, double, tol_angle_svd )
+AA_DEF_SETTER( aa_rx_ik_parm, double, tol_trans_svd )
 
-AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_dq )
+AA_DEF_SETTER( aa_rx_ik_parm, double, tol_dq )
 
-AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_obj_abs )
-AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_obj_rel )
+AA_DEF_SETTER( aa_rx_ik_parm, double, tol_obj_abs )
+AA_DEF_SETTER( aa_rx_ik_parm, double, tol_obj_rel )
 
-AA_DEF_SETTER( aa_rx_ksol_opts, size_t, max_iterations )
+AA_DEF_SETTER( aa_rx_ik_parm, size_t, max_iterations )
 
-AA_DEF_SETTER( aa_rx_ksol_opts, int, debug )
+AA_DEF_SETTER( aa_rx_ik_parm, int, debug )
 
 
-AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, s2min, wk_opts.s2min )
-AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, k_dls, wk_opts.k_dls )
+AA_DEF_SETTER_SUB( aa_rx_ik_parm, double, s2min, wk_opts.s2min )
+AA_DEF_SETTER_SUB( aa_rx_ik_parm, double, k_dls, wk_opts.k_dls )
 
-AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, gain_angle, wk_opts.gain_angle )
-AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, gain_trans,  wk_opts.gain_trans)
+AA_DEF_SETTER_SUB( aa_rx_ik_parm, double, gain_angle, wk_opts.gain_angle )
+AA_DEF_SETTER_SUB( aa_rx_ik_parm, double, gain_trans,  wk_opts.gain_trans)
 
 
 AA_API void
-aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_parm_take_config( struct aa_rx_ik_parm *opts, size_t n_q,
                         double *q, enum aa_mem_refop refop )
 {
     aa_checked_free(opts->q_ref_data);
@@ -134,7 +134,7 @@ aa_rx_ksol_opts_take_config( struct aa_rx_ksol_opts *opts, size_t n_q,
 
 
 AA_API void
-aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_parm_take_gain_config( struct aa_rx_ik_parm *opts, size_t n_q,
                              double *q, enum aa_mem_refop refop )
 {
     aa_checked_free(opts->dq_dt_data);
@@ -144,7 +144,7 @@ aa_rx_ksol_opts_take_gain_config( struct aa_rx_ksol_opts *opts, size_t n_q,
 }
 
 AA_API void
-aa_rx_ksol_opts_take_seed( struct aa_rx_ksol_opts *opts, size_t n_q,
+aa_rx_ik_parm_take_seed( struct aa_rx_ik_parm *opts, size_t n_q,
                            double *q, enum aa_mem_refop refop )
 {
     aa_checked_free(opts->q_all_seed_data);
@@ -155,7 +155,7 @@ aa_rx_ksol_opts_take_seed( struct aa_rx_ksol_opts *opts, size_t n_q,
 
 
 AA_API void
-aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
+aa_rx_ik_parm_center_configs( struct aa_rx_ik_parm *opts,
                                 const struct aa_rx_sg_sub *ssg,
                                 double gain )
 {
@@ -176,12 +176,12 @@ aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
         }
     }
 
-    aa_rx_ksol_opts_take_config( opts, n_qs, q_ref, AA_MEM_STEAL );
-    aa_rx_ksol_opts_take_gain_config( opts, n_qs, q_gain, AA_MEM_STEAL );
+    aa_rx_ik_parm_take_config( opts, n_qs, q_ref, AA_MEM_STEAL );
+    aa_rx_ik_parm_take_gain_config( opts, n_qs, q_gain, AA_MEM_STEAL );
 }
 
 AA_API void
-aa_rx_ksol_opts_center_seed( struct aa_rx_ksol_opts *opts, const struct aa_rx_sg_sub *ssg )
+aa_rx_ik_parm_center_seed( struct aa_rx_ik_parm *opts, const struct aa_rx_sg_sub *ssg )
 {
     size_t n_qs = aa_rx_sg_sub_config_count(ssg);
     size_t n_qa = aa_rx_sg_sub_all_config_count(ssg);
@@ -192,17 +192,17 @@ aa_rx_ksol_opts_center_seed( struct aa_rx_ksol_opts *opts, const struct aa_rx_sg
     aa_rx_sg_sub_config_set( ssg, n_qs, q_s,
                              n_qa, q_a );
 
-    aa_rx_ksol_opts_take_seed( opts, n_qa, q_a, AA_MEM_STEAL );
+    aa_rx_ik_parm_take_seed( opts, n_qa, q_a, AA_MEM_STEAL );
 }
 
 AA_API void
-aa_rx_ksol_opts_set_frame( struct aa_rx_ksol_opts *opts, aa_rx_frame_id frame )
+aa_rx_ik_parm_set_frame( struct aa_rx_ik_parm *opts, aa_rx_frame_id frame )
 {
     opts->frame = frame;
 }
 
 AA_API aa_rx_frame_id
-aa_rx_ksol_opts_get_frame( const struct aa_rx_ksol_opts *opts )
+aa_rx_ik_parm_get_frame( const struct aa_rx_ik_parm *opts )
 {
     return opts->frame;
 }

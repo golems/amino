@@ -92,7 +92,7 @@ aa_rx_sg_chain_jacobian( const struct aa_rx_sg *sg,
                          double *J, size_t ld_J );
 
 
-struct aa_rx_ksol_opts {
+struct aa_rx_ik_parm {
     struct aa_rx_wk_opts wk_opts; ///< workspace solver options
 
     double dt;            ///< initial timestep
@@ -143,7 +143,7 @@ struct aa_rx_ksol_opts {
 struct aa_rx_ik_cx
 {
     const struct aa_rx_sg_sub *ssg;
-    const struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_ik_parm *opts;
 
     struct aa_dvec *q_start;
     struct aa_dvec *q_seed;
@@ -164,7 +164,7 @@ struct kin_solve_cx {
 
     const struct aa_rx_ik_cx *ik_cx;
 
-    const struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_ik_parm *opts;
     const struct aa_rx_sg_sub *ssg;
 
     const struct aa_dmat *TF_ref;

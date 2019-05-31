@@ -72,7 +72,7 @@ aa_rx_ct_limits( struct aa_mem_region *region, const struct aa_rx_sg *sg );
 
 AA_API int
 aa_rx_ct_tjx_path( struct aa_mem_region *region,
-                   const struct aa_rx_ksol_opts *opts,
+                   const struct aa_rx_ik_parm *opts,
                    const struct aa_rx_sg_sub *ssg,
                    struct aa_ct_seg_list *segs,
                    size_t n_q_all, const double *q_start_all,

@@ -47,7 +47,7 @@
 
 
 struct path_cx {
-    const struct aa_rx_ksol_opts *opts;
+    const struct aa_rx_ik_parm *opts;
     const struct aa_rx_sg_sub *ssg;
     const struct aa_rx_sg *sg;
     size_t n_q_all;

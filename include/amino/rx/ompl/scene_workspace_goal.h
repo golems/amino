@@ -64,7 +64,7 @@ public:
     virtual ~sgWorkspaceGoal ();
 
     const sgSpaceInformation::Ptr &typed_si;
-    struct aa_rx_ksol_opts *ko;
+    struct aa_rx_ik_parm *ko;
     struct aa_rx_ik_cx *ik_cx;
 
     ompl::base::StateSamplerPtr state_sampler;

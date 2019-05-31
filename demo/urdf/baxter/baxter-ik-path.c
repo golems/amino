@@ -80,16 +80,12 @@ int main(int argc, char *argv[])
     }
 
     // solver options
-    struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
-    aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    aa_rx_ksol_opts_set_tol_dq( ko, .001 );
-    aa_rx_ksol_opts_take_seed( ko, n_q, qstart_all, AA_MEM_BORROW );
-
-    const struct aa_rx_ik_jac_cx *ik_cx = aa_rx_ik_jac_cx_create(ssg,ko);
+    struct aa_rx_ik_parm *ikp = aa_rx_ik_parm_create();
+    const struct aa_rx_ik_cx *ik_cx = aa_rx_ik_cx_create(ssg,ikp);
 
     // solver goal
     double qs[n_qs];
-    //double E_ref[7];
+    struct aa_dvec qv_solution = AA_DVEC_INIT(n_qs, qs, 1);
 
     double E_ref0[7] = {0, 1, 0, 0,
                        .8, -.25, .3051};
@@ -103,9 +99,10 @@ int main(int argc, char *argv[])
         aa_tf_qutr_mul( E0, E1, E_ref1 );
     }
     aa_tick("Inverse Kinematics: ");
-    int r = aa_rx_ik_jac_solve( ik_cx,
-                                1, E_ref0, 7,
-                                n_qs, qs );
+    struct aa_dmat E_mat = AA_DMAT_INIT(7, 1, E_ref0, 7);
+    int r = aa_rx_ik_solve( ik_cx, &E_mat, &qv_solution );
+
+
     aa_tock();
     if( r) {
         fprintf(stderr, "WARNING: Initial position IK failed\n");
@@ -136,13 +133,7 @@ int main(int argc, char *argv[])
     aa_ct_pt_list_add_qutr(pt_list, E_ref0);
     aa_ct_pt_list_add_qutr(pt_list, E_ref1);
     struct aa_ct_seg_list *seg_list = aa_ct_tjx_slerp_generate(reg, pt_list);
-    aa_rx_ksol_opts_set_dt( ko, .1 );
-    aa_rx_ksol_opts_set_gain_trans( ko, .5 );
-    aa_rx_ksol_opts_set_gain_angle( ko, .5 );
-    aa_rx_ksol_opts_set_tol_dq( ko, .5 );
-    /* aa_rx_ksol_opts_set_gain_trans( ko, 0 ); */
-    /* aa_rx_ksol_opts_set_gain_angle( ko, 0 ); */
-    aa_rx_ct_tjx_path( reg, ko, ssg,
+    aa_rx_ct_tjx_path( reg, ikp, ssg,
                        seg_list, n_q, qstart_all,
                        &n_points, &path );
 
