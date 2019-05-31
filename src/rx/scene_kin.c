@@ -598,12 +598,19 @@ AA_API void
 aa_rx_sg_sub_center_configs( const struct aa_rx_sg_sub *ssg,
                              size_t n, double *q )
 {
-    size_t n_qs = aa_rx_sg_sub_config_count(ssg);
-    size_t n_min = AA_MIN(n,n_qs);
-    for( size_t i = 0; i < n_min; i ++ ) {
-        q[i] = aa_rx_sg_config_center( ssg->scenegraph,
-                                       aa_rx_sg_sub_config(ssg, i) );
+    struct aa_dvec v = AA_DVEC_INIT(n,q,1);
+    aa_rx_sg_sub_center_configv( ssg, &v );
+}
 
+AA_API void
+aa_rx_sg_sub_center_configv( const struct aa_rx_sg_sub *ssg,
+                             struct aa_dvec *q )
+{
+    size_t n_qs = aa_rx_sg_sub_config_count(ssg);
+    aa_dvec_check_size(n_qs, q);
+    for( size_t i = 0; i < n_qs; i ++ ) {
+        AA_DVEC_REF(q,i) = aa_rx_sg_config_center( ssg->scenegraph,
+                                                   aa_rx_sg_sub_config(ssg, i) );
     }
 }
 

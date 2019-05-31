@@ -97,7 +97,7 @@ static double s_nlobj_dq_fd_helper( void *vcx, const struct aa_dvec *x)
 }
 
 AA_API double
-aa_rx_ik_obj_dqln_fd( void *vcx, const double *q, double *dq )
+aa_rx_ik_err_dqln_fd( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     size_t n = aa_rx_sg_sub_config_count(cx->ssg);
@@ -137,7 +137,7 @@ duqu_rmul_helper( const double *Sr, const double *x, double *y )
 
 
 AA_API double
-aa_rx_ik_obj_dqln( void *vcx, double *q, double *dq ) {
+aa_rx_ik_err_dqln( void *vcx, double *q, double *dq ) {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
 
@@ -291,7 +291,7 @@ static double s_nlobj_qv_fd_helper( void *vcx, const struct aa_dvec *x)
 
 
 AA_API double
-aa_rx_ik_obj_qlnpv_fd( void *vcx, const double *q, double *dq )
+aa_rx_ik_err_qlnpv_fd( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     size_t n = aa_rx_sg_sub_config_count(cx->ssg);
@@ -321,7 +321,7 @@ q_rmul_helper( const double *q, const struct aa_dvec *x, struct aa_dvec *y )
 
 
 AA_API double
-aa_rx_ik_obj_qlnpv( void *vcx, const double *q, double *dq )
+aa_rx_ik_err_qlnpv( void *vcx, const double *q, double *dq )
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
@@ -422,19 +422,58 @@ aa_rx_ik_obj_qlnpv( void *vcx, const double *q, double *dq )
     }
 
     aa_mem_region_pop(cx->reg, ptrtop);
+    //printf("err: %f\n", result);
     return result;
 }
 
-struct obj_cx {
+
+// TODO: weighted error
+
+AA_API double
+aa_rx_ik_err_jcenter( void *vcx, const double *q, double *dq )
+{
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
+    struct aa_mem_region *reg = cx->reg;
+    void *ptrtop = aa_mem_region_ptr(reg);
+
+    size_t n = aa_rx_sg_sub_config_count(cx->ssg);
+    struct aa_dvec *q_center = aa_dvec_alloc(reg,n);
+    aa_rx_sg_sub_center_configv(cx->ssg,q_center);
+
+    double result = 0;
+
+    if( dq ) { // error and gradient
+        for( size_t i = 0; i < n; i ++ ) {
+            double d = q[i] - AA_DVEC_REF(q_center,i);
+            result += (d*d);
+            dq[i] = d;
+        }
+        //printf("--\n");
+        //printf("q:  "); aa_dump_vec(stdout,q,n);
+        //printf("qc: "); aa_dump_vec(stdout,q_center->data,n);
+        //printf("dq: "); aa_dump_vec(stdout,dq,n);
+    } else { // error only
+        for( size_t i = 0; i < n; i ++ ) {
+            double d = q[i] - AA_DVEC_REF(q_center,i);
+            result += (d*d);
+        }
+    }
+
+    aa_mem_region_pop(cx->reg, ptrtop);
+
+    return result / 2;
+}
+
+struct err_cx {
     void *cx;
-    aa_rx_ik_obj_fun *fun;
+    aa_rx_ik_opt_fun *fun;
 };
 
 static double
-s_obj_cx_dispatch(unsigned n, const double *q, double *dq, void *vcx)
+s_err_cx_dispatch(unsigned n, const double *q, double *dq, void *vcx)
 {
     (void)n;
-    struct obj_cx *cx = (struct obj_cx *)vcx;
+    struct err_cx *cx = (struct err_cx *)vcx;
     return cx->fun(cx->cx, q, dq);
 }
 
@@ -442,7 +481,6 @@ static int
 s_ik_nlopt( struct kin_solve_cx *cx,
             struct aa_dvec *q )
 {
-    printf("bif\n");
     struct aa_mem_region *reg = cx->reg;
     void *ptrtop = aa_mem_region_ptr(reg);
 
@@ -457,12 +495,24 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     nlopt_algorithm alg = NLOPT_LD_SLSQP;
     nlopt_opt opt = nlopt_create(alg, (unsigned)n_sub); /* algorithm and dimensionality */
 
-    struct obj_cx ocx;
+    struct err_cx ocx, eqctcx;
     ocx.cx = cx;
     ocx.fun = cx->ik_cx->opts->obj_fun;
-    nlopt_set_min_objective(opt, s_obj_cx_dispatch, &ocx);
+    nlopt_set_min_objective(opt, s_err_cx_dispatch, &ocx);
 
-    nlopt_set_xtol_rel(opt, 1e-4); // TODO: make a parameter
+    if( cx->ik_cx->opts->eqct_fun ) {
+        eqctcx.cx = cx;
+        eqctcx.fun = cx->ik_cx->opts->eqct_fun;
+        nlopt_add_equality_constraint(opt, s_err_cx_dispatch, &eqctcx,
+                                      cx->ik_cx->opts->eqct_tol);
+    }
+
+
+    //nlopt_set_xtol_rel(opt, 1e-4); // TODO: make a parameter
+    if( cx->opts->tol_abs >= 0 ) {
+        nlopt_set_ftol_abs(opt, cx->opts->tol_abs );
+    }
+
     double *lb = AA_MEM_REGION_NEW_N(reg,double,n_sub);
     double *ub = AA_MEM_REGION_NEW_N(reg,double,n_sub);
     { // bounds
@@ -480,8 +530,12 @@ s_ik_nlopt( struct kin_solve_cx *cx,
     nlopt_set_lower_bounds(opt, lb);
     nlopt_set_upper_bounds(opt, ub);
     double minf;
-    if (nlopt_optimize(opt, cx->q_sub->data, &minf) > 0) {
-        // found miniumum
+    nlopt_result ores = nlopt_optimize(opt, cx->q_sub->data, &minf);
+    if( cx->opts->debug ) {
+        /* fprintf("AMINO IK NLOPT RESULT: %s (%d)", */
+        /*         nlopt_result_to_string(ores), ores); */
+
+        fprintf(stderr, "AMINO IK NLOPT RESULT: %d\n", ores);
     }
     aa_dvec_copy( cx->q_sub, q );
 

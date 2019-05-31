@@ -67,15 +67,21 @@ enum aa_rx_ik_algo {
     /** Jacobian pseudo-inverse adapative integration */
     AA_RX_IK_JPINV,
 
-    /** Levenberg-Marquardt */
+    /** Levenberg-Marquardt (unimplemented) */
     AA_RX_IK_LMA,
 
     /**
-     * Sequential Quadratic Program, Workspace Objective.
+     * Sequential Quadratic Program.
+     *
+     * If using a workspace error for the objective, there is no need to
+     * set additional constraints.  Alternatively, you may use a
+     * jointspace error for the objective and then set a workspace error
+     * constraint.
      *
      * @sa aa_rx_ksol_opts_set_obj
+     * @sa aa_rx_ksol_opts_set_eqct
      */
-    AA_RX_IK_SQP_WK
+    AA_RX_IK_SQP
 };
 
 /**
@@ -215,6 +221,12 @@ aa_rx_ksol_opts_center_configs( struct aa_rx_ksol_opts *opts,
                                 const struct aa_rx_sg_sub *ssg,
                                 double gain );
 
+/**
+ * Print debugging output for IK solver.
+ */
+AA_API void
+aa_rx_ksol_opts_set_debug( struct aa_rx_ksol_opts *opts, int debug );
+
 
 
 /*-- Jacobian IK Solver --*/
@@ -280,75 +292,125 @@ aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name );
 AA_API void
 aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id );
 
-typedef double aa_rx_ik_obj_fun(void *cx, const double *q, double *dq);
+typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
 
 /**
- * Set the objective function for optimization (e.g., SQP) IK.
+ * Set an error objective function for optimization (e.g., SQP) IK.
  *
- * @sa aa_rx_ik_obj_dqln
- * @sa aa_rx_ik_obj_qlnpv
+ * @param opts     options structure
+ * @param fun      error function
+ * @param tol_abs  absolute tolerance on error
+ *
+ * @sa aa_rx_ik_err_dqln
+ * @sa aa_rx_ik_err_qlnpv
+ * @sa aa_rx_ik_err_jcenter
  */
 AA_API void
-aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *opts,
-                         aa_rx_ik_obj_fun *fun );
+aa_rx_ksol_opts_set_err( struct aa_rx_ksol_opts *opts,
+                         aa_rx_ik_opt_fun *fun,
+                         double tol_abs );
 
 /**
- * IK Objective function.
+ * Set the equality constraint for optimization (e.g., SQP) IK.
+ *
+ *
+ * @sa aa_rx_ik_err_dqln
+ * @sa aa_rx_ik_err_qlnpv
+ */
+AA_API void
+aa_rx_ksol_opts_set_eqct( struct aa_rx_ksol_opts *opts,
+                          aa_rx_ik_opt_fun *fun,
+                          double tol);
+
+/**
+ * IK Workspace error
+ *
  *
  * Logarithm of the pose error:
  *
- * \f[ f(q) = | \ln S_{\rm act}(q) \otimes S_{\rm ref} |^2 \f]
+ * \f[ f(q) = \| \ln S_{\rm act}(q) \otimes S_{\rm ref} \|^2 \f]
+ *
+ * @sa aa_rx_ksol_opts_set_obj
+ * @sa aa_rx_ksol_opts_set_eqct
  */
 AA_API double
-aa_rx_ik_obj_dqln( void *cx, double *q, double *dq );
+aa_rx_ik_err_dqln( void *cx, double *q, double *dq );
 
 /**
- * IK Objective function (for testing only)
+ * IK workspace error (for testing only)
  *
  * This function uses finite difference and will be slow.
  *
  * Logarithm of the pose error:
  *
- * \f[ f(q) = | \ln S_{\rm act}(q) \otimes S_{\rm ref} |^2 \f]
+ * \f[ f(q) = \| \ln S_{\rm act}(q) \otimes S_{\rm ref} \|^2 \f]
  *
  * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
  * library for improved solving of generic inverse kinematics."
  * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
  * (Humanoids). IEEE, 2015.
+ *
+ * @sa aa_rx_ksol_opts_set_obj
+ * @sa aa_rx_ksol_opts_set_eqct
  */
 AA_API double
-aa_rx_ik_obj_dqln_fd( void *cx, const double *q, double *dq );
+aa_rx_ik_err_dqln_fd( void *cx, const double *q, double *dq );
 
 /**
- * IK Objective function.
+ * IK workspace error.
  *
  * Logarithm of the quaternion error, plus translation error
  *
  * \f[
- *    f(q) = | \ln h_{\rm act}(q) \otimes h_{\rm ref} |^2 + |v_{\rm act}(q) - v_{\rm ref}|^2
+ *    f(q) =    \| \ln h_{\rm act}(q) \otimes h_{\rm ref} \|^2
+ *            + \|v_{\rm act}(q) - v_{\rm ref}\|^2
  * \f]
+ *
+ * @sa aa_rx_ksol_opts_set_obj
+ * @sa aa_rx_ksol_opts_set_eqct
  */
 AA_API double
-aa_rx_ik_obj_qlnpv( void *cx, const double *q, double *dq );
+aa_rx_ik_err_qlnpv( void *cx, const double *q, double *dq );
 
 /**
- * IK Objective function (for testing only).
+ * IK workspace error (for testing only).
  *
  * This function uses finite difference and will be slow.
  *
  * Logarithm of the quaternion error, plus translation error
  *
  * \f[
- *   f(q) = | \ln h_{\rm act}(q) \otimes h_{\rm ref} |^2 + |v_{\rm act}(q) - v_{\rm ref}|^2
+ *   f(q) =   \| \ln h_{\rm act}(q) \otimes h_{\rm ref} \|^2
+ *          + \|v_{\rm act}(q) - v_{\rm ref}\|^2
  * \f]
  *
  * From: Beeson, Patrick, and Barrett Ames. "TRAC-IK: An open-source
  * library for improved solving of generic inverse kinematics."
  * 2015 IEEE-RAS 15th International Conference on Humanoid Robots
  * (Humanoids). IEEE, 2015.
+ *
+ * @sa aa_rx_ksol_opts_set_obj
+ * @sa aa_rx_ksol_opts_set_eqct
+ *
  */
 AA_API double
-aa_rx_ik_obj_qlnpv_fd( void *cx, const double *q, double *dq );
+aa_rx_ik_err_qlnpv_fd( void *cx, const double *q, double *dq );
+
+
+/**
+ * Error from the joint center.
+ *
+ * Use this function as the objective in conjunction with a workspace
+ * error function as the constraint
+ *
+ * \f[
+ *      f(q) = \frac{1}{2} \| \ln q_{\rm act} - q_{\rm center}\|^2
+ * \f]
+ *
+ * @sa aa_rx_ksol_opts_set_obj
+ */
+AA_API double
+aa_rx_ik_err_jcenter( void *cx, const double *q, double *dq );
 
 
 /**

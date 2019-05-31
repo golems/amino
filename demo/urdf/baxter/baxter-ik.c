@@ -100,23 +100,35 @@ int main(int argc, char *argv[])
 
     // solver options
     struct aa_rx_ksol_opts *ko = aa_rx_ksol_opts_create();
+    aa_rx_ksol_opts_set_debug( ko, 1 ); // print debugging output
     aa_rx_ksol_opts_center_configs( ko, ssg, .1 );
-    aa_rx_ksol_opts_set_tol_dq( ko, .01 );
     aa_rx_ksol_opts_take_seed( ko, n_q, qstart_all, AA_MEM_BORROW );
 
     aa_rx_ksol_opts_set_ik_algo(ko,
                                 //AA_RX_IK_JPINV
-                                AA_RX_IK_SQP_WK
+                                AA_RX_IK_SQP
         );
 
-    //aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_obj_dqln);
-    aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_obj_qlnpv);
+
+    /* Default workspace objective */
+    aa_rx_ksol_opts_set_err(ko, aa_rx_ik_err_qlnpv, 1e-9);
+
+    /* An alternate workspace objective */
+    //aa_rx_ksol_opts_set_obj(ko, aa_rx_ik_err_dqln);
+
+    /* A jointspace objective and workspace constraint */
+    /* { */
+    /*     aa_rx_ksol_opts_set_obj(ko,  aa_rx_ik_err_jcenter); */
+    /*     aa_rx_ksol_opts_set_eqct(ko, aa_rx_ik_err_qlnpv, 1e-9); */
+    /* } */
 
     struct aa_rx_ik_cx * cx = aa_rx_ik_cx_create(ssg, ko);
     aa_rx_ik_set_start(cx, &qv_start_all);
     aa_rx_ik_set_seed(cx, &qv_start_sub);
 
-    aa_tick("Inverse Kinematics: ");
+    aa_rx_ik_set_restart_time(cx, 1); // restart for 1 second
+
+    aa_tick("Begin Inverse Kinematics...\n");
     int r = aa_rx_ik_solve( cx, &E_mat, &qv_solution );
     aa_tock();
 

@@ -250,6 +250,10 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
     int r = AA_RX_NO_IK;
     int restart = 0;
     do  {
+        if(context->opts->debug) {
+            fprintf(stderr, "AMINO IK SEED: ");
+            aa_dump_vec(stderr, q->data, q->len);
+        }
         restart = 0;
         switch(context->opts->ik_algo) {
         case AA_RX_IK_JPINV:
@@ -258,7 +262,7 @@ aa_rx_ik_solve( const struct aa_rx_ik_cx *context,
             break;
         case AA_RX_IK_LMA:
             goto ERR;
-        case AA_RX_IK_SQP_WK:
+        case AA_RX_IK_SQP:
 #ifdef HAVE_NLOPT
             r = s_ik_nlopt( kcx, q );
             break;
@@ -362,6 +366,16 @@ s_check( const struct aa_rx_ik_cx *cx,
     double theta, x;
     s_err2(E, TF_ref->data, &theta, &x);
 
+    if( cx->opts->debug ) {
+        fprintf(stderr,
+                "AMINO IK ERR MAX: %f, %f\n"
+                "AMINO IK ERR ACT: %f, %f\n",
+                cx->opts->tol_angle,
+                cx->opts->tol_trans,
+                theta, x
+            );
+    }
+
     int r = ( theta < cx->opts->tol_angle && x < cx->opts->tol_trans ) ?
         0 : AA_RX_NO_SOLUTION | AA_RX_NO_IK;
 
@@ -426,13 +440,23 @@ static void s_ksol_jpinv( const struct kin_solve_cx *cx,
 
 
 AA_API void
-aa_rx_ksol_opts_set_obj( struct aa_rx_ksol_opts *ko,
-                         aa_rx_ik_obj_fun *fun )
+aa_rx_ksol_opts_set_err( struct aa_rx_ksol_opts *ko,
+                         aa_rx_ik_opt_fun *fun,
+                         double tol_abs)
 {
     ko->obj_fun = fun;
+    ko->tol_abs = tol_abs;
 }
 
 
+AA_API void
+aa_rx_ksol_opts_set_eqct( struct aa_rx_ksol_opts *opts,
+                          aa_rx_ik_opt_fun *fun,
+                          double tol)
+{
+    opts->eqct_fun = fun;
+    opts->eqct_tol = tol;
+}
 
 #ifdef HAVE_NLOPT
 #include "ik_nlopt.c"

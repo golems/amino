@@ -127,7 +127,14 @@ struct aa_rx_ksol_opts {
 
     enum aa_rx_ik_algo ik_algo;
 
-    aa_rx_ik_obj_fun *obj_fun;
+    aa_rx_ik_opt_fun *obj_fun;
+    double tol_abs;
+
+    aa_rx_ik_opt_fun *eqct_fun;
+    double eqct_tol;
+
+    int debug;
+
     //void *obj_fun_cx;
 };
 

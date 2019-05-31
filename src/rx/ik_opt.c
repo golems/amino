@@ -69,7 +69,8 @@ aa_rx_ksol_opts_create()
     opt->tol_angle_svd = 10*opt->tol_angle;
     opt->tol_trans_svd = 10*opt->tol_trans;
 
-    opt->tol_dq = .1*M_PI/180;
+    //opt->tol_dq = .1*M_PI/180;
+    opt->tol_dq = 1e-4;
 
     opt->wk_opts.gain_angle = 1;
     opt->wk_opts.gain_trans = 1;
@@ -80,8 +81,8 @@ aa_rx_ksol_opts_create()
 
     opt->frame = AA_RX_FRAME_NONE;
 
-    opt->ik_algo = AA_RX_IK_SQP_WK;
-    opt->obj_fun = &aa_rx_ik_obj_qlnpv;
+    opt->ik_algo = AA_RX_IK_SQP;
+    opt->obj_fun = &aa_rx_ik_err_qlnpv;
 
     return opt;
 }
@@ -104,6 +105,8 @@ AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_trans_svd )
 
 AA_DEF_SETTER( aa_rx_ksol_opts, double, tol_dq )
 AA_DEF_SETTER( aa_rx_ksol_opts, size_t, max_iterations )
+
+AA_DEF_SETTER( aa_rx_ksol_opts, int, debug )
 
 
 AA_DEF_SETTER_SUB( aa_rx_ksol_opts, double, s2min, wk_opts.s2min )
