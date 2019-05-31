@@ -75,16 +75,8 @@ sampler_fun( const ob::GoalLazySamples *arg, ob::State *state )
     while( AA_RX_OK != r && wsg->isSampling() ) {
         /* Re-seed */
         wsg->state_sampler->sampleUniform(wsg->seed);
-        double q[n_all];
-        if( wsg->q_start ) {
-            AA_MEM_CPY(q, wsg->q_start, n_all);
-        } else {
-            AA_MEM_ZERO(q,n_all);
-        }
-        aa_rx_sg_sub_config_set( ssg,
-                                 n_s, wsg->seed->values,
-                                 n_all, q );
-        aa_rx_ik_parm_take_seed( wsg->ko, n_all, q, AA_MEM_COPY );
+        struct aa_dvec vq = AA_DVEC_INIT(n_s, wsg->seed->values, 1);
+        aa_rx_ik_set_seed(wsg->ik_cx, &vq);
 
         /* solve */
         struct aa_dmat ikTF = AA_DMAT_INIT( AA_RX_TF_LEN, 1, wsg->E, AA_RX_TF_LEN );
@@ -113,7 +105,6 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
     n_e(n_e_),
     state_sampler( si->allocStateSampler() ),
     seed(typed_si->allocTypedState()),
-    q_start(NULL),
     weight_orientation(1),
     weight_translation(1)
 {
@@ -140,9 +131,9 @@ sgWorkspaceGoal::sgWorkspaceGoal (const sgSpaceInformation::Ptr &si,
                    this->E, 7 );
 
     /* These settings should be optional */
-    aa_rx_ik_parm_center_seed(ko, ssg);
-    aa_rx_ik_parm_center_configs(ko, ssg, .1);
-    aa_rx_ik_parm_set_tol_dq(ko, .01);
+    // aa_rx_ik_parm_center_seed(ko, ssg);
+    // aa_rx_ik_parm_center_configs(ko, ssg, .1);
+    // aa_rx_ik_parm_set_tol_dq(ko, .01);
 }
 
 
@@ -153,12 +144,14 @@ sgWorkspaceGoal::~sgWorkspaceGoal ()
     aa_rx_ik_cx_destroy(this->ik_cx);
     delete [] this->E;
     delete[] this->frames;
-    aa_checked_free( this->q_start );
 }
 
 void sgWorkspaceGoal::setStart(size_t n_all, double *q)
 {
-    this->q_start = q ? AA_MEM_DUP(double, q, n_all) : NULL;
+    //this->q_start = q ? AA_MEM_DUP(double, q, n_all) : NULL;
+    struct aa_dvec qv = AA_DVEC_INIT(n_all,q,1);
+    aa_rx_ik_set_start(this->ik_cx,&qv);
+
 }
 
 
@@ -171,7 +164,9 @@ void sgWorkspaceGoal::setStart(size_t n_all, double *q)
 double sgWorkspaceGoal::distanceGoal (const ompl::base::State *state) const
 {
     amino::sgStateSpace *space = typed_si->getTypedStateSpace();
-    double *TF_abs = space->get_tf_abs(state, this->q_start);
+    const struct aa_dvec *q_start = aa_rx_ik_get_start(this->ik_cx);
+    double *TF_abs = space->get_tf_abs(state,
+                                       q_start->data);
 
     double a = 0;
     for( size_t i = 0; i < n_e; i ++ ) {

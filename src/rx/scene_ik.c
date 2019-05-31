@@ -123,6 +123,9 @@ aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start )
     aa_rx_fk_all( context->fk, q_start );
 }
 
+AA_DEF_GETTER(aa_rx_ik, struct aa_dvec *, q_start)
+AA_DEF_GETTER(aa_rx_ik, struct aa_dvec *, q_seed)
+
 AA_API void
 aa_rx_ik_set_seed( struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed )
 {

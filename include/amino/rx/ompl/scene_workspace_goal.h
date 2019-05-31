@@ -83,8 +83,6 @@ public:
     /** Poses of goal frames (quaternion-translation) */
     double *E;
 
-    double *q_start;
-
     /** Weighting of orientation error in distance computation */
     double weight_orientation;
 

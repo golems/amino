@@ -289,6 +289,12 @@ aa_rx_ik_set_start( struct aa_rx_ik_cx *context, const struct aa_dvec *q_start )
 AA_API void
 aa_rx_ik_set_seed( struct aa_rx_ik_cx *context, const struct aa_dvec *q_seed );
 
+AA_API struct aa_dvec *
+aa_rx_ik_get_start( const struct aa_rx_ik_cx *context );
+
+AA_API struct aa_dvec *
+aa_rx_ik_get_seed( const struct aa_rx_ik_cx *context );
+
 AA_API void
 aa_rx_ik_set_seed_center( struct aa_rx_ik_cx *context );
 
