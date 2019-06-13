@@ -42,9 +42,12 @@ EXTRA_DIST += \
 noinst_HEADERS = \
              src/opt/opt_internal.h \
              src/tf/quat_ord.c \
+             src/tf/quat_pde.c \
              src/tf/quat_duqu.c \
              src/tf/quat_qutr.c \
              src/rx/sg_convenience.h \
+             src/rx/ik_jacobian.c \
+             src/rx/ik_nlopt.c \
              include/wavefront_internal.h \
              include/amino/mat_internal.h \
              include/amino/ct/traj_internal.hpp \
@@ -140,6 +143,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_geom.h   \
 	include/amino/rx/scene_gl.h     \
 	include/amino/rx/scene_sub.h    \
+	include/amino/rx/scene_fk.h    \
 	include/amino/rx/scene_ik.h    \
 	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/scene_collision.h \
