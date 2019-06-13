@@ -103,7 +103,7 @@ class DVec(ctypes.Structure,VecMixin):
         if( ls != len(thing) ):
             raise IndexError()
         elif isinstance(thing,DVec):
-            libamino.aa_lb_dcopy(thing,self)
+            libamino.aa_dvec_copy(thing,self)
         else:
             for i in range(0,ls):
                 self[i] = thing[i]
@@ -115,7 +115,7 @@ class DVec(ctypes.Structure,VecMixin):
         if( ls != len(thing) ):
             raise IndexError()
         elif isinstance(thing,DVec):
-            libamino.aa_lb_dcopy(self,thing)
+            libamino.aa_dvec_copy(self,thing)
         else:
             for i in range(0,ls):
                 thing[i] = self[i]
@@ -129,7 +129,7 @@ class DVec(ctypes.Structure,VecMixin):
 
     def axpy(self,alpha,x):
         """self = alpha*x, where alpha is a scalar and x is a DVec"""
-        libamino.aa_lb_daxpy(alpha,x,self)
+        libamino.aa_dvec_axpy(alpha,x,self)
         return self
 
 
@@ -145,7 +145,7 @@ class DVec(ctypes.Structure,VecMixin):
 
     def increment(self,alpha):
         """self = self + alpha, for scalar alpha"""
-        libamino.aa_lb_dinc(alpha,self)
+        libamino.aa_dvec_inc(alpha,self)
         return self
 
     def gemv(self,trans,alpha,A,x,beta):
@@ -162,7 +162,7 @@ class DVec(ctypes.Structure,VecMixin):
             raise IndexError()
         if  A.cols() != len(x):
             raise IndexError()
-        libamino.aa_lb_dgemv(trans,alpha,A,x,beta,self)
+        libamino.aa_dmat_gemv(trans,alpha,A,x,beta,self)
         return self
 
     def ssd(self,other):
@@ -171,7 +171,7 @@ class DVec(ctypes.Structure,VecMixin):
 
     def nrm2(self):
         """Euclidean norm of self"""
-        return libamino.aa_lb_dnrm2(self)
+        return libamino.aa_dvec_nrm2(self)
 
     def __getitem__(self, key):
         """Return an item or slice of self"""
@@ -249,7 +249,7 @@ class DVec(ctypes.Structure,VecMixin):
 
     def __imul__(self,other):
         """Multiply self by a scalar"""
-        libamino.aa_lb_dscal(other,self)
+        libamino.aa_dvec_scal(other,self)
         return self
 
     def __neg__(self):
@@ -401,7 +401,7 @@ class DMat(ctypes.Structure,SSDEqMixin):
             raise IndexError()
         if B.cols() != C.cols():
             raise IndexError()
-        libamino.aa_lb_dgemm(transA,transB,alpha,A,B,beta,C)
+        libamino.aa_dmat_gemm(transA,transB,alpha,A,B,beta,C)
         return C
 
     def pinv(self, tol=-1):
@@ -549,16 +549,16 @@ class DMat(ctypes.Structure,SSDEqMixin):
 #---------------#
 
 ## Blas 1
-libamino.aa_lb_daxpy.argtypes = [ctypes.c_double, ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
-libamino.aa_lb_dcopy.argtypes = [ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
-libamino.aa_lb_dscal.argtypes = [ctypes.c_double, ctypes.POINTER(DVec)]
-libamino.aa_lb_dinc.argtypes = [ctypes.c_double, ctypes.POINTER(DVec)]
+libamino.aa_dvec_axpy.argtypes = [ctypes.c_double, ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
+libamino.aa_dvec_copy.argtypes = [ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
+libamino.aa_dvec_scal.argtypes = [ctypes.c_double, ctypes.POINTER(DVec)]
+libamino.aa_dvec_inc.argtypes = [ctypes.c_double, ctypes.POINTER(DVec)]
 
-libamino.aa_lb_ddot.argtypes = [ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
-libamino.aa_lb_ddot.restype = ctypes.c_double
+libamino.aa_dvec_dot.argtypes = [ctypes.POINTER(DVec), ctypes.POINTER(DVec)]
+libamino.aa_dvec_dot.restype = ctypes.c_double
 
-libamino.aa_lb_dnrm2.argtypes = [ctypes.POINTER(DVec)]
-libamino.aa_lb_dnrm2.restype = ctypes.c_double
+libamino.aa_dvec_nrm2.argtypes = [ctypes.POINTER(DVec)]
+libamino.aa_dvec_nrm2.restype = ctypes.c_double
 
 libamino.aa_dvec_set.argtypes = [ctypes.POINTER(DVec), ctypes.c_double]
 
@@ -584,13 +584,13 @@ libamino.aa_dmat_block.argtypes = [ ctypes.POINTER(DMat),
                                     ctypes.c_size_t, ctypes.c_size_t,
                                     ctypes.POINTER(DMat) ]
 
-libamino.aa_lb_dgemv.argtypes = [ ctypes.c_int,
+libamino.aa_dmat_gemv.argtypes = [ ctypes.c_int,
                                   ctypes.c_double, ctypes.POINTER(DMat), ctypes.POINTER(DVec),
                                   ctypes.c_double, ctypes.POINTER(DVec) ]
 
 
 # Blas 3
-libamino.aa_lb_dgemm.argtypes = [ ctypes.c_int, ctypes.c_int,
+libamino.aa_dmat_gemm.argtypes = [ ctypes.c_int, ctypes.c_int,
                                   ctypes.c_double, ctypes.POINTER(DMat), ctypes.POINTER(DMat),
                                   ctypes.c_double, ctypes.POINTER(DMat) ]
 
