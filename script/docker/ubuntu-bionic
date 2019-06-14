@@ -9,6 +9,7 @@ RUN apt-get -y update && \
             libompl-dev libfcl-dev \
             doxygen groff \
             sbcl \
+            python \
             flex povray ffmpeg \
             coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev \
             wget git

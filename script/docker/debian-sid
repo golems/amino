@@ -11,6 +11,7 @@ RUN /root/amino/script/install/apt-retry.sh \
         libompl-dev libfcl-dev \
         doxygen groff \
         sbcl \
+        python \
         flex povray libav-tools \
         coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev \
         wget git \

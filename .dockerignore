@@ -8,6 +8,8 @@ install-sh
 ylwrap
 test-driver
 autom4te.cache
+build
+build-*
 *.gz
 **/Makefile
 **/Makefile.in

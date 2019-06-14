@@ -20,8 +20,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
 
-include Makefile-lisp.am
-include Makefile-demo.am
 
 EXTRA_DIST += \
 	src/la_impl.c                       \
@@ -826,3 +824,6 @@ endif
 
 
 EXTRA_DIST += doc/manual
+
+include Makefile-lisp.am
+include Makefile-demo.am
