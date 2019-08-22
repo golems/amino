@@ -63,7 +63,11 @@ features in Amino:
 Debian and Ubuntu GNU/Linux {#installation_setup_apt}
 ---------------------------
 
-To install the dependencies on Debian or Ubuntu GNU/Linux via APT:
+Most the dependencies on Debian or Ubuntu GNU/Linux can be installed
+via APT.  The following command should install all/most dependencies.
+For distribution-specific package lists, please see the files under
+`./share/docker/` which are used for distribution-specific integration
+tests.
 
     sudo apt-get install build-essential gfortran \
          autoconf automake libtool autoconf-archive autotools-dev \
