@@ -376,11 +376,11 @@ cl_check_callback( ::fcl::CollisionObject *o1,
     return false;
 }
 
-int
-aa_rx_cl_check( struct aa_rx_cl *cl,
-                size_t n_tf,
-                const double *TF, size_t ldTF,
-                struct aa_rx_cl_set *cl_set )
+static int
+s_cl_check( struct aa_rx_cl *cl,
+            void (*f)(void *cx, aa_rx_frame_id id, double E[7]),
+            void *cx,
+            struct aa_rx_cl_set *cl_set )
 {
     /* Update Transforms */
     for( auto itr = cl->objects->begin();
@@ -389,7 +389,8 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
     {
         fcl::CollisionObject *obj = *itr;
         aa_rx_frame_id id = (intptr_t) obj->getUserData();
-        const double *TF_obj = TF+id*ldTF;
+        double TF_obj[7];
+        f(cx,id,TF_obj);
 
         enum aa_rx_geom_shape shape_type;
         struct aa_rx_geom *geom = (struct aa_rx_geom*)obj->collisionGeometry()->getUserData();
@@ -419,6 +420,43 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
 
     cl->manager->collide( &data, cl_check_callback );
     return data.result;
+}
+
+struct check_cx_array {
+    const double *TF;
+    size_t ldTF;
+};
+
+void check_helper_array( void *vcx, aa_rx_frame_id id, double E[7] )
+{
+    struct check_cx_array *cx = (struct check_cx_array *) vcx;
+    const double *TF_obj = cx->TF+id*cx->ldTF;
+    AA_MEM_CPY(E, TF_obj, 7);
+}
+
+int
+aa_rx_cl_check( struct aa_rx_cl *cl,
+                size_t n_tf,
+                const double *TF, size_t ldTF,
+                struct aa_rx_cl_set *cl_set )
+{
+    struct check_cx_array cx;
+    cx.TF = TF;
+    cx.ldTF = ldTF;
+    return s_cl_check(cl, check_helper_array, &cx, cl_set);
+}
+
+
+void check_helper_fk( void *vcx, aa_rx_frame_id id, double E[7] )
+{
+    aa_rx_fk_get_abs_qutr( (struct aa_rx_fk *)vcx, id, E );
+}
+
+AA_API int
+aa_rx_cl_check_fk( struct aa_rx_cl *cl,
+                   struct aa_rx_fk *fk,
+                   struct aa_rx_cl_set *cl_set ) {
+    return s_cl_check(cl, check_helper_fk, fk, cl_set);
 }
 
 AA_API void

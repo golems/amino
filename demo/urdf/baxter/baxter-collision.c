@@ -56,6 +56,9 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     struct display_cx *cx = (struct display_cx *)cx_;
     const struct timespec *now = aa_sdl_display_params_get_time_now(params);
     const struct timespec *last = aa_sdl_display_params_get_time_last(params);
+    struct aa_mem_region *reg = aa_mem_region_local_get();
+    void *top = aa_mem_region_ptr(reg);
+
 
     const struct aa_rx_sg *scenegraph = cx->scenegraph;
 
@@ -64,6 +67,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     double q[m];
     AA_MEM_ZERO(q,m);
 
+
     int first = aa_sdl_display_params_is_first(params);
     if( ! first ) {
         double dt = aa_tm_timespec2sec( aa_tm_sub(*now, *last) );
@@ -71,19 +75,16 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     }
     q[ cx->i_q ] = cx->q;
 
-    double TF_rel[7*n];
-    double TF_abs[7*n];
-    aa_rx_sg_tf(scenegraph, m, q,
-                n,
-                TF_rel, 7,
-                TF_abs, 7 );
 
-    aa_rx_win_display_sg_tf( cx->win, params, scenegraph,
-                             n, TF_abs, 7 );
+    struct aa_dvec qv = AA_DVEC_INIT(m, q, 1);
+    struct aa_rx_fk *fk = aa_rx_fk_alloc(scenegraph, reg);
+    aa_rx_fk_all(fk, &qv);
 
+    aa_rx_win_display_fk( cx->win, params, fk );
 
     struct aa_rx_cl_set *clset = aa_rx_cl_set_create( scenegraph );
-    int col = aa_rx_cl_check( cx->cl, n, TF_abs, 7, clset );
+
+    int col = aa_rx_cl_check_fk( cx->cl, fk, clset );
 
     printf("in collision: %s\n",
            col ? "yes" : "no" );
@@ -101,6 +102,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     }
 
     aa_rx_cl_set_destroy( clset );
+    aa_mem_region_pop(reg, top);
 
     return 0;
 }

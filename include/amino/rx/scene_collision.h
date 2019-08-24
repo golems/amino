@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_COLLISION_H
 #define AMINO_RX_SCENE_COLLISION_H
 
+#include "scene_fk.h"
+
 /**
  * @file scene_collision.h
  * @brief Collision checking
@@ -170,6 +172,19 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
                 size_t n_tf,
                 const double *TF, size_t ldTF,
                 struct aa_rx_cl_set *cl_set );
+
+/**
+ * Detect collisions.
+ *
+ * If cl_set is non-NULL, it will be filled in with all detected collisions.
+ * If cl_set is NULL, collision checking may short-circuit after the first collision is detected.
+ *
+ * @returns 0 if no collisions are detected and non-zero if any collisions are detected.
+ */
+AA_API int
+aa_rx_cl_check_fk( struct aa_rx_cl *cl,
+                   struct aa_rx_fk *fk,
+                   struct aa_rx_cl_set *cl_set );
 
 /**
  * Allow all collisions at configuration q.
