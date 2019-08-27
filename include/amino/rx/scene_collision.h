@@ -204,4 +204,28 @@ aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * cl_set);
 AA_API void
 aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, size_t n_q, const double* q, struct aa_rx_cl_set* cl_set);
 
+
+/*--------------------*/
+/* Collision Distance */
+/*--------------------*/
+
+
+/**
+ * Opaque type for a collision distances.
+ *
+ */
+struct aa_rx_cl_dist;
+
+
+AA_API struct aa_rx_cl_dist *
+aa_rx_cl_dist_create( const struct aa_rx_sg* scene_graph );
+
+AA_API void
+aa_rx_cl_dist_destroy( struct aa_rx_cl_dist* dist );
+
+AA_API int
+aa_rx_cl_dist_check( struct aa_rx_cl *cl,
+                     const struct aa_rx_fk *fk,
+                     struct aa_rx_cl_dist *cl_dist );
+
 #endif /*AMINO_RX_SCENE_COLLISION_H*/

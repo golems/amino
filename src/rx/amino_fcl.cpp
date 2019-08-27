@@ -50,6 +50,7 @@
 #include "amino/rx/scene_collision.h"
 
 #include <fcl/collision.h>
+#include <fcl/distance.h>
 #include <fcl/shape/geometric_shapes.h>
 #include <fcl/broadphase/broadphase.h>
 #include <fcl/BVH/BVH_model.h>
@@ -376,11 +377,11 @@ cl_check_callback( ::fcl::CollisionObject *o1,
     return false;
 }
 
-static int
-s_cl_check( struct aa_rx_cl *cl,
-            void (*f)(void *cx, aa_rx_frame_id id, double E[7]),
-            void *cx,
-            struct aa_rx_cl_set *cl_set )
+
+static void
+s_update_tf( struct aa_rx_cl *cl,
+            void (*f)(const void *cx, aa_rx_frame_id id, double E[7]),
+            const void *cx )
 {
     /* Update Transforms */
     for( auto itr = cl->objects->begin();
@@ -412,6 +413,17 @@ s_cl_check( struct aa_rx_cl *cl,
     }
     cl->manager->update();
 
+}
+
+
+static int
+s_cl_check( struct aa_rx_cl *cl,
+            void (*f)(const void *cx, aa_rx_frame_id id, double E[7]),
+            const void *cx,
+            struct aa_rx_cl_set *cl_set )
+{
+    s_update_tf(cl,f,cx);
+
     /* Check Collision */
     struct cl_check_data data;
     data.result = 0;
@@ -427,7 +439,7 @@ struct check_cx_array {
     size_t ldTF;
 };
 
-void check_helper_array( void *vcx, aa_rx_frame_id id, double E[7] )
+void check_helper_array( const void *vcx, aa_rx_frame_id id, double E[7] )
 {
     struct check_cx_array *cx = (struct check_cx_array *) vcx;
     const double *TF_obj = cx->TF+id*cx->ldTF;
@@ -447,7 +459,7 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
 }
 
 
-void check_helper_fk( void *vcx, aa_rx_frame_id id, double E[7] )
+void check_helper_fk( const void *vcx, aa_rx_frame_id id, double E[7] )
 {
     aa_rx_fk_get_abs_qutr( (struct aa_rx_fk *)vcx, id, E );
 }
@@ -502,4 +514,144 @@ AA_API void aa_rx_sg_allow_config( struct aa_rx_sg* scene_graph, size_t n_q, con
 
     aa_rx_cl_set_destroy(allowed);
 
+}
+
+
+/*----------*/
+/* Distance */
+/*----------*/
+
+static bool
+cl_dist_callback( ::fcl::CollisionObject *o1,
+                  ::fcl::CollisionObject *o2,
+                  void *data_,
+                  ::fcl::FCL_REAL &dist );
+
+
+
+struct dist_ent {
+    double dist;
+    double point0[3];
+    double point1[3];
+};
+
+struct aa_rx_cl_dist {
+    const struct aa_rx_sg *sg;
+
+    int in_collision;
+
+    // frame_cnt x frame_cnt
+    struct dist_ent *data;
+};
+
+
+struct dist_ent *
+s_get_dist_ent( const struct aa_rx_cl_dist *cl_dist,
+                aa_rx_frame_id id1, aa_rx_frame_id id2 )
+{
+    assert( id1 > id2 );
+    size_t n = aa_rx_sg_frame_count(cl_dist->sg);
+    return cl_dist->data + id2*n + id1;
+}
+
+AA_API struct aa_rx_cl_dist *
+aa_rx_cl_dist_create( const struct aa_rx_sg* scene_graph )
+{
+    aa_rx_sg_ensure_clean_frames( scene_graph );
+    struct aa_rx_cl_dist *r = AA_NEW(struct aa_rx_cl_dist);
+    r->sg = scene_graph;
+
+    size_t n = aa_rx_sg_frame_count(scene_graph);
+    r->data = AA_NEW0_AR(struct dist_ent, n*n);
+
+    return r;
+}
+
+AA_API void
+aa_rx_cl_dist_destroy( struct aa_rx_cl_dist* dist )
+{
+    free(dist->data);
+    free(dist);
+}
+
+AA_API int
+aa_rx_cl_dist_check( struct aa_rx_cl *cl,
+                     const struct aa_rx_fk *fk,
+                     struct aa_rx_cl_dist *cl_dist )
+{
+    /* Set Transforms*/
+    s_update_tf(cl, check_helper_fk, fk);
+
+
+    /* Initialize */
+    cl_dist->in_collision = 0;
+    // Set distance entries to a big number
+    size_t n = aa_rx_sg_frame_count(cl_dist->sg);
+    for (size_t j = 0; j < n; j ++ ) {
+        for (size_t i = j + 1; i < n; i ++ ) {
+            struct dist_ent * ent = s_get_dist_ent(cl_dist, i, j);
+            ent->dist = DBL_MAX;
+        }
+    }
+
+    /* Check Distance */
+    cl->manager->distance( cl_dist, cl_dist_callback );
+
+    /* Result */
+    return cl_dist->in_collision;
+}
+
+
+static bool
+cl_dist_callback( ::fcl::CollisionObject *o1,
+                  ::fcl::CollisionObject *o2,
+                  void *data_,
+                  ::fcl::FCL_REAL &dist )
+{
+    struct aa_rx_cl_dist *data = (struct aa_rx_cl_dist *)data_;
+    aa_rx_frame_id id1 = (intptr_t) o1->getUserData();
+    aa_rx_frame_id id2 = (intptr_t) o2->getUserData();
+
+    // Normalize ID order
+    if( id1 < id2 ) {
+        aa_rx_frame_id tmpid = id1;
+        id1 = id2;
+        id2 = tmpid;
+
+        ::fcl::CollisionObject *tmpo = o1;
+        o1 = o2;
+        o2 = tmpo;
+    } else if( id1 == id2 ) { // no same-frame collisions
+        return false;
+    }
+
+    // TODO: elide on allowed collisions
+
+    const struct aa_rx_sg *sg = data->sg;
+    struct dist_ent *ent = s_get_dist_ent(data, id1, id2);
+
+    ::fcl::DistanceRequest request(true);
+    ::fcl::DistanceResult result;
+    ::fcl::distance(o1, o2, request, result);
+
+    /* Frames may have multiple collision objects.
+     * Take the minimum. */
+    if( ent->dist > result.min_distance ) {
+        ent->dist = result.min_distance;
+        if( ent->dist <= 0 ) {
+            data->in_collision = 1;
+        }
+
+        // TODO: Check whether we are in local or global coordinates.
+        //       If local, need to correct cylinder offset.
+        for( size_t i = 0; i < 3; i ++ ) {
+            ent->point0[i] = result.nearest_points[0][i];
+            ent->point1[i] = result.nearest_points[1][i];
+        }
+    }
+
+    // const char *name1 = aa_rx_sg_frame_name(sg,id1);
+    // const char *name2 = aa_rx_sg_frame_name(sg,id2);
+    // printf("%s x %s: %f\n", name1, name2, ent->dist );
+    return false;
 }

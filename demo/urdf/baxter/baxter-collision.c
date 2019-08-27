@@ -76,14 +76,16 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     q[ cx->i_q ] = cx->q;
 
 
+    /* Forward Kinematics */
     struct aa_dvec qv = AA_DVEC_INIT(m, q, 1);
     struct aa_rx_fk *fk = aa_rx_fk_alloc(scenegraph, reg);
     aa_rx_fk_all(fk, &qv);
 
+    /* OpenGL Display Update */
     aa_rx_win_display_fk( cx->win, params, fk );
 
+    /* Collision Check */
     struct aa_rx_cl_set *clset = aa_rx_cl_set_create( scenegraph );
-
     int col = aa_rx_cl_check_fk( cx->cl, fk, clset );
 
     printf("in collision: %s\n",
@@ -100,10 +102,17 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
             }
         }
     }
-
     aa_rx_cl_set_destroy( clset );
-    aa_mem_region_pop(reg, top);
 
+
+    /* Distance Check */
+    struct aa_rx_cl_dist *cldist = aa_rx_cl_dist_create( scenegraph );
+    int dist = aa_rx_cl_dist_check( cx->cl, fk, cldist );
+    aa_rx_cl_dist_destroy(cldist);
+
+
+
+    aa_mem_region_pop(reg, top);
     return 0;
 }
 
