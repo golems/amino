@@ -218,14 +218,23 @@ struct aa_rx_cl_dist;
 
 
 AA_API struct aa_rx_cl_dist *
-aa_rx_cl_dist_create( const struct aa_rx_sg* scene_graph );
+aa_rx_cl_dist_create( const struct aa_rx_cl * );
 
 AA_API void
 aa_rx_cl_dist_destroy( struct aa_rx_cl_dist* dist );
 
 AA_API int
-aa_rx_cl_dist_check( struct aa_rx_cl *cl,
-                     const struct aa_rx_fk *fk,
-                     struct aa_rx_cl_dist *cl_dist );
+aa_rx_cl_dist_check( struct aa_rx_cl_dist *cl_dist,
+                     const struct aa_rx_fk *fk );
+
+AA_API double
+aa_rx_cl_dist_get_dist( const struct aa_rx_cl_dist *cl_dist,
+                        aa_rx_frame_id id0, aa_rx_frame_id id1 );
+
+AA_API double
+aa_rx_cl_dist_get_points( const struct aa_rx_cl_dist *cl_dist,
+                          aa_rx_frame_id id0, aa_rx_frame_id id1,
+                          double point0[3], double point1[3] );
+
 
 #endif /*AMINO_RX_SCENE_COLLISION_H*/

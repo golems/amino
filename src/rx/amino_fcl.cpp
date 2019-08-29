@@ -379,7 +379,7 @@ cl_check_callback( ::fcl::CollisionObject *o1,
 
 
 static void
-s_update_tf( struct aa_rx_cl *cl,
+s_update_tf( const struct aa_rx_cl *cl,
             void (*f)(const void *cx, aa_rx_frame_id id, double E[7]),
             const void *cx )
 {
@@ -536,7 +536,7 @@ struct dist_ent {
 };
 
 struct aa_rx_cl_dist {
-    const struct aa_rx_sg *sg;
+    const struct aa_rx_cl *cl;
 
     int in_collision;
 
@@ -549,19 +549,20 @@ struct dist_ent *
 s_get_dist_ent( const struct aa_rx_cl_dist *cl_dist,
                 aa_rx_frame_id id1, aa_rx_frame_id id2 )
 {
-    assert( id1 > id2 );
-    size_t n = aa_rx_sg_frame_count(cl_dist->sg);
+    assert( id1 >= id2 );
+    size_t n = aa_rx_sg_frame_count(cl_dist->cl->sg);
     return cl_dist->data + id2*n + id1;
 }
 
 AA_API struct aa_rx_cl_dist *
-aa_rx_cl_dist_create( const struct aa_rx_sg* scene_graph )
+aa_rx_cl_dist_create( const struct aa_rx_cl * cl )
 {
-    aa_rx_sg_ensure_clean_frames( scene_graph );
-    struct aa_rx_cl_dist *r = AA_NEW(struct aa_rx_cl_dist);
-    r->sg = scene_graph;
+    aa_rx_sg_ensure_clean_frames( cl->sg );
 
-    size_t n = aa_rx_sg_frame_count(scene_graph);
+    struct aa_rx_cl_dist *r = AA_NEW(struct aa_rx_cl_dist);
+    r->cl = cl;
+
+    size_t n = aa_rx_sg_frame_count(cl->sg);
     r->data = AA_NEW0_AR(struct dist_ent, n*n);
 
     return r;
@@ -575,19 +576,23 @@ aa_rx_cl_dist_destroy( struct aa_rx_cl_dist* dist )
 }
 
 AA_API int
-aa_rx_cl_dist_check( struct aa_rx_cl *cl,
-                     const struct aa_rx_fk *fk,
-                     struct aa_rx_cl_dist *cl_dist )
+aa_rx_cl_dist_check( struct aa_rx_cl_dist *cl_dist,
+                     const struct aa_rx_fk *fk )
 {
     /* Set Transforms*/
-    s_update_tf(cl, check_helper_fk, fk);
-
+    s_update_tf(cl_dist->cl, check_helper_fk, fk);
 
     /* Initialize */
     cl_dist->in_collision = 0;
-    // Set distance entries to a big number
-    size_t n = aa_rx_sg_frame_count(cl_dist->sg);
+    size_t n = aa_rx_sg_frame_count(cl_dist->cl->sg);
     for (size_t j = 0; j < n; j ++ ) {
+        /* zero diagaonal (frame collision with itself) */
+        struct dist_ent * ent_diag = s_get_dist_ent(cl_dist, j, j);
+        ent_diag->dist = 0;
+        AA_MEM_ZERO( ent_diag->point0, 3 );
+        AA_MEM_ZERO( ent_diag->point1, 3 );
+        // Set non-diagonal distances entries to a big number
+        // (entries stored as lower triangular matrix)
         for (size_t i = j + 1; i < n; i ++ ) {
             struct dist_ent * ent = s_get_dist_ent(cl_dist, i, j);
             ent->dist = DBL_MAX;
@@ -595,13 +600,22 @@ aa_rx_cl_dist_check( struct aa_rx_cl *cl,
     }
 
     /* Check Distance */
-    cl->manager->distance( cl_dist, cl_dist_callback );
+    cl_dist->cl->manager->distance( cl_dist, cl_dist_callback );
 
     /* Result */
     return cl_dist->in_collision;
 }
 
+static void s_normalize_ids( aa_rx_frame_id *id1, aa_rx_frame_id *id2 )
+{
+    if( *id1 < *id2 ) {
+        aa_rx_frame_id tmpid = *id1;
+        *id1 = *id2;
+        *id2 = tmpid;
+    }
+}
 
+// TODO: negative distances are always -1 (-ntd, 2019-08-28), why?
 static bool
 cl_dist_callback( ::fcl::CollisionObject *o1,
                   ::fcl::CollisionObject *o2,
@@ -625,9 +639,11 @@ cl_dist_callback( ::fcl::CollisionObject *o1,
         return false;
     }
 
-    // TODO: elide on allowed collisions
+    /* Elide allowed collisions */
+    if( aa_rx_cl_set_get(data->cl->allowed,id1,id2) ) {
+        return false;
+    }
 
-    const struct aa_rx_sg *sg = data->sg;
     struct dist_ent *ent = s_get_dist_ent(data, id1, id2);
 
     ::fcl::DistanceRequest request(true);
@@ -650,8 +666,31 @@ cl_dist_callback( ::fcl::CollisionObject *o1,
         }
     }
 
+    // const struct aa_rx_sg *sg = data->cl->sg;
     // const char *name1 = aa_rx_sg_frame_name(sg,id1);
     // const char *name2 = aa_rx_sg_frame_name(sg,id2);
     // printf("%s x %s: %f\n", name1, name2, ent->dist );
     return false;
+}
+
+AA_API double
+aa_rx_cl_dist_get_dist( const struct aa_rx_cl_dist *cl_dist,
+                        aa_rx_frame_id id0, aa_rx_frame_id id1 )
+{
+    s_normalize_ids(&id0, &id1);
+    s_get_dist_ent(cl_dist, id0, id1);
+    struct dist_ent * ent = s_get_dist_ent(cl_dist, id0, id1);
+    return ent->dist;
+}
+
+AA_API double
+aa_rx_cl_dist_get_points( const struct aa_rx_cl_dist *cl_dist,
+                          aa_rx_frame_id id0, aa_rx_frame_id id1,
+                          double point0[3], double point1[3] )
+{
+    s_normalize_ids(&id0, &id1);
+    struct dist_ent * ent = s_get_dist_ent(cl_dist, id0, id1);
+    AA_MEM_CPY(point0, ent->point0, 3);
+    AA_MEM_CPY(point1, ent->point1, 3);
+    return ent->dist;
 }

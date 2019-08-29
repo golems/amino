@@ -91,23 +91,32 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     printf("in collision: %s\n",
            col ? "yes" : "no" );
 
-    if( col ) {
-        for( aa_rx_frame_id i = 0; i < (aa_rx_frame_id)n; i ++ ) {
-            for( aa_rx_frame_id j = 0; j < i; j ++ ) {
-                if( aa_rx_cl_set_get( clset, i, j ) ) {
-                    printf( "    collision:\t%s\t%s\n",
-                            aa_rx_sg_frame_name(scenegraph, i),
-                            aa_rx_sg_frame_name(scenegraph, j) );
-                }
+    /* Distance Check */
+    struct aa_rx_cl_dist *cldist = aa_rx_cl_dist_create( cx->cl );
+    int distcol = aa_rx_cl_dist_check( cldist, fk );
+    assert(distcol == col);
+
+
+    /* Display results */
+    for( aa_rx_frame_id i = 0; i < (aa_rx_frame_id)n; i ++ ) {
+        for( aa_rx_frame_id j = 0; j < i; j ++ ) {
+            double dist = aa_rx_cl_dist_get_dist(cldist, i, j);
+            if( aa_rx_cl_set_get( clset, i, j ) ) {
+                assert( dist <= 0 );
+                printf( "    collision:\t%s\t%s\n",
+                        aa_rx_sg_frame_name(scenegraph, i),
+                        aa_rx_sg_frame_name(scenegraph, j)
+                    );
+            } else {
+                assert( dist > 0 );
             }
         }
     }
+
+
+
+
     aa_rx_cl_set_destroy( clset );
-
-
-    /* Distance Check */
-    struct aa_rx_cl_dist *cldist = aa_rx_cl_dist_create( scenegraph );
-    int dist = aa_rx_cl_dist_check( cx->cl, fk, cldist );
     aa_rx_cl_dist_destroy(cldist);
 
 
