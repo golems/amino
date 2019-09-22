@@ -295,7 +295,9 @@
   "Draw principal axis markers for frame PARENT."
   (flet ((helper (subname axis color)
            (item-arrow-axis parent (draw-subframe name subname)
-                            :options (merge-draw-options (draw-options :color color)
+                            :options (merge-draw-options (draw-options :color color
+                                                                       :no-shadow t)
+
                                                          options)
                             :axis axis
                             :length length
