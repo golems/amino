@@ -87,7 +87,7 @@ END [[:blank:]]*("#".*)?"\n"
 
 DIGIT    [[:digit:]]
 INT      {DIGIT}+
-NUMBER   "-"?{INT}("."{DIGIT}*)?
+NUMBER   "-"?{INT}("."{DIGIT}*)?([eds]"-"?{INT})?
 BLANKS   [[:blank:]]+
 MAYBE_BLANKS   [[:blank:]]*
 
