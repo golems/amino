@@ -9,7 +9,9 @@ Setup and Dependencies {#installation_setup}
 ======================
 
 The following dependies are required or optional.  Please see below
-for the corresponding list of Debian and Ubuntu packages.
+for the corresponding list of Debian and Ubuntu packages.  Also,
+please consult the errata notes below as some package versions have
+missing features or bugs that require workarounds.
 
 Required Dependencies {#installation_setup_required}
 ---------------------
@@ -22,6 +24,7 @@ These dependecies are required to compile and use Amino:
   [OpenBLAS](http://www.openblas.net/), [Intel MKL]
   (https://software.intel.com/en-us/intel-mkl), or [ATLAS]
   (http://math-atlas.sourceforge.net/) are recommended.)
+* [NLopt] (http://github.com/stevengj/nlopt)
 * [GFortran] (https://gcc.gnu.org/fortran/) or [F2C] (http://www.netlib.org/f2c/) (only to build from git)
 * [Maxima] (http://maxima.sourceforge.net/) (only to build from git)
 * [Flex] (http://flex.sourceforge.net/) (only to build from git)
@@ -77,23 +80,54 @@ tests.
          sbcl \
          default-jdk \
          blender flex povray ffmpeg \
-         coinor-libclp-dev libglpk-dev liblpsolve55-dev
+         coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev
 
 Now proceed to Quicklisp Setup below.
 
-**Note 1**: Some versions of Blender in Ubuntu and Debian do not support
-           the COLLADA format for 3D meshes, so you may need to install
-           Blender manually in this case
-           (see https://www.blender.org/download/).
 
-**Note 2**: The versions of SBCL in some distributions (e.g., SBCL 1.2.4
-            in Debian Jessie) do not work with new versions of [CFFI]
-            (https://common-lisp.net/project/cffi/).  In these cases,
-            you will need to install SBCL manually (see
-            http://www.sbcl.org/platform-table.html).
+Installation Errata {#installation_errata}
+-------------------
+
+Some package versions are missing features or contain minor bugs that
+impede usage with amino.  A listing of issues encountered so far is
+below:
+
+### OMPL Missing Eigen dependency
+
+Version 1.4.2 of OMPL and the corresponding Debian/Ubuntu packages
+contain are missing a required dependency on libeigen.  To resolve,
+you may need to do the following:
+
+1. Manually install libeigen:
+
+        sudo apt-get install libeigen3-dev
+
+2. Manually add the eigen include directory to the ompl pkg-config
+   file.  The ompl pkg-config file will typically be in
+   `/usr/lib/x86_64-linux-gnu/pkgconfig/ompl.pc`.  The eigen include
+   path will typically be `/usr/include/eigen3`.  Thus, you may change
+   the Cflags entry in `/usr/lib/x86_64-linux-gnu/pkgconfig/ompl.pc`
+   to:
+
+        Cflags: -I${includedir} -I/usr/include/eigen3
+
+### Blender Missing COLLADA Support
+
+ Some versions of Blender in Ubuntu and Debian do not support the
+COLLADA format for 3D meshes, so you may need to install Blender
+manually in this case (see https://www.blender.org/download/).
+
+### SBCL and CFFI incompatibility
+
+The versions of SBCL in some distributions (e.g., SBCL 1.2.4 in Debian
+Jessie) do not work with new versions of [CFFI]
+(https://common-lisp.net/project/cffi/).  In these cases, you will
+need to install SBCL manually (see
+http://www.sbcl.org/platform-table.html).
+
 
 Mac OS X {#installation_setup_mac}
------------------------
+--------
 
 ### Install Dependencies via Homebrew
 
