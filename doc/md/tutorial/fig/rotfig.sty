@@ -96,14 +96,14 @@
 \newcommand{\qconj}[1]{#1^*}
 
 \newcommand{\ndiml}[3]{%
-  \draw[<->,>=latex,fbdann] (#1) -- node[fill=white] {#3} (#2);
+  \draw[<->,>=latex,fbdann] (#1) -- node[fill=white,rounded corners=.5em] {#3} (#2);
 }
 
 \newcommand{\xyaxes}[4] {%
   \draw[axis,->,thick] (0,0) -- (#2,0) node[below right] {#3};%
   \draw[axis,->,thick] (0,0) -- (0,#2) node[above left] {#4};%
   %\draw[fill=metallic,metallic] (0,0) circle (.25em);
-  \draw[accentcolor] (0,0)  node[below left] {#1};
+  \draw[accentcolor] (0,0)  node[below left] {$#1$};
 
   \node[fill=accentcolor,
   accentcolor,

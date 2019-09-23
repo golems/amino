@@ -7,7 +7,7 @@ Amino performs linear algebra using the standard,
 high-performance-computing [BLAS](http://www.netlib.org/blas/) (Basic
 Linear Algebra Subprograms) and
 [LAPACK](http://www.netlib.org/lapack/) (Linear Algebra PACKage)
-libraries.  Multiple, optimized implements of BLAS/LAPACK are
+libraries.  Multiple, optimized implementations of BLAS/LAPACK are
 available such as [ATLAS](http://math-atlas.sourceforge.net/),
 [OpenBLAS](https://www.openblas.net/), and the [Intel Math Kernel
 Library (MKL)](https://software.intel.com/en-us/mkl).
@@ -190,19 +190,19 @@ matrix \f$\mathbf{A}\f$:
     \underbrace{
     \begin{array}{|c|c|}
     \hline
-    x_0 & x_1 & x_2 \\
+     x_0 & \strut x_1 & x_2 \\
     \hline
     \end{array}
     }_{\texttt{ld=3}}
-    \begin{array}{|c|c|}
+    \!\begin{array}{|c|c|}
     \hline
-    y_0 & y_1 & y_2 \\
+    y_0 &  \strut y_1 & y_2 \\
     \hline
     \end{array}
     \!\!\!\!\
     \begin{array}{|c|c|}
     \hline
-    z_0 & z_1 & z_2 \\
+    z_0 & \strut  z_1 & z_2 \\
     \hline
     \end{array}
     \\

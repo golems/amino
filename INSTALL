@@ -94,9 +94,9 @@ below:
 
 ### OMPL Missing Eigen dependency
 
-Version 1.4.2 of OMPL and the corresponding Debian/Ubuntu packages
-contain are missing a required dependency on libeigen.  To resolve,
-you may need to do the following:
+Version 1.4.2 of OMPL and the corresponding Debian/Ubuntu packages are
+missing a required dependency on libeigen.  To resolve, you may need
+to do the following:
 
 1. Manually install libeigen:
 

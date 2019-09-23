@@ -477,3 +477,27 @@ Example Code {#tutorial_rot_code}
         pR = Rxy.rotate(p)
         print pq
         print pR
+
+References {#tutorial_rot_references}
+==========
+
+* Diebel, J., 2006. [Representing attitude: Euler angles, unit
+  quaternions, and rotation vectors]
+  (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.110.5134).
+
+* Grassia, F.S., 1998. [Practical parameterization of rotations using
+  the exponential map]
+  (http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.132.20). Journal
+  of graphics tools, 3(3), pp.29-48.
+
+* Relevant Wikipedia Entries:
+  * [Rotation formalisms in three dimensions]
+    (https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions)
+  * [Quaternion] (https://en.wikipedia.org/wiki/Quaternion)
+  * [Quaternions and_spatial_rotation]
+    (https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation)
+  * [3D rotation group]
+    (https://en.wikipedia.org/wiki/3D_rotation_group)
+  * [Rotation Matrix] (https://en.wikipedia.org/wiki/Rotation_matrix)
+  * [Axis–angle representation]
+    (https://en.wikipedia.org/wiki/Axis–angle_representation)
