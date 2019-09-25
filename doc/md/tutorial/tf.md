@@ -13,7 +13,12 @@ Transformation {#tutorial_tf}
 \newcommand{\quat}[1]{\mathcal{#1}}
 \newcommand{\qmul}[0]{\otimes}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
+\newcommand{\tf}[3]{{^{#2}{#1}_{#3}}}
+\newcommand{\qmul}[0]{\otimes}
 \f]
+
+This tutorial covers the combination of rotation and translation in
+three dimensions.
 
 Euclidean Transformation {#tutorial_tf_euclidean}
 ========================
@@ -25,6 +30,9 @@ Euclidean distances between points on the rigid body are preserved
 under motion.
 
 ![Robot Local Frames](euclideantf.svg)
+
+Euclidean transformations are also called *rigid transformations*
+(since bodies are rigid) or *Euclidean isometry* ("equal measure").
 
 Local Coordinate Frames
 -----------------------
@@ -43,6 +51,12 @@ the local frame:
 ![Local Coordinate Frames](localframe.svg)
 
 
+Since we often must deal with many local coordinate frames, it is
+helpful to adopt a notation to keep track of relevant frames.
+Specifically, we will write the parent frame as a leading prefix and
+the child frame as a trailing suffix.  For example, in the figure
+above, \f$\tf{x}{0}{1}\f$ is the x-translation from parent frame 0 to
+child frame 1.
 
 
 <!-- ![Local Coordinates for a Point](localpoint.svg) -->
@@ -71,6 +85,15 @@ links, each with its own local coordinate frame:
 
 ![Robot Local Frames](robotframe.svg)
 
+Generally, we chain transformations with a multiplication, either
+matrix or quaternion as discussed [below] (#tutorial_tf_rep).  Our
+notation convention for parent and child frames helps us keep track of
+the appropriate products.  To chain the transorm from a-to-b
+\f$\tf{T}{a}{b}\f$ and from b-to-c \f$\tf{T}{b}{c}\f$, we multiply:
+
+\f[ \tf{T}{a}{b}\,\tf{T}{b}{c} = \tf{T}{a}{c} \f]
+
+
 ![Transforming a Point](tfchain.svg)
 
 Representations {#tutorial_tf_rep}
@@ -91,7 +114,12 @@ Example Code {#tutorial_tf_code}
 
 References {#tutorial_tf_references}
 ==========
-
+* Lynch and Park. [Modern Robotics]
+  (http://hades.mech.northwestern.edu/index.php/Modern_Robotics).
+  Ch. 3, 4.
+* Murray, Li, and Sastry. [A Mathematical Introduction to Robot
+  Manipulation] (http://www.cds.caltech.edu/~murray/mlswiki/). Ch. 2,
+  3.
 * Dantam, N., 2018. [Practical Exponential Coordinates using Implicit
   Dual Quaternions]
   (http://dyalab.mines.edu/papers/dantam2018practical.pdf). Workshop

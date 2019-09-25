@@ -15,6 +15,8 @@ Rotation {#tutorial_rot}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
 \f]
 
+This tutorial covers three-dimensional rotations.
+
 Complex Numbers {#tutorial_rot_c}
 ===============
 
