@@ -14,7 +14,10 @@ Transformation {#tutorial_tf}
 \newcommand{\qmul}[0]{\otimes}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
 \newcommand{\tf}[3]{{^{#2}{#1}_{#3}}}
+\newcommand{\tfmat}[3]{{^{#2}\MAT{#1}_{#3}}}
+\newcommand{\tfquat}[3]{{^{#2}\quat{#1}_{#3}}}
 \newcommand{\qmul}[0]{\otimes}
+\newcommand{\dualelt}[0]{\varepsilon}
 \f]
 
 This tutorial covers the combination of rotation and translation in
@@ -102,12 +105,269 @@ Representations {#tutorial_tf_rep}
 Transformation Matrices {#tutorial_tf_rep_mat}
 -----------------------
 
+We may combine a rotation matrix and a translation vector to produce a
+transformation matrix.  To represent point transformation and
+transform chaining as matrix-vector and matrix-matrix products, we
+must augment the points and matrices.  We augment points with an
+additional one,
+
+\f[
+    \begin{bmatrix}
+    p_x \\ p_y \\ p_z
+    \end{bmatrix}
+       \rightarrow
+    \begin{bmatrix}
+    p_x \\ p_y \\ p_z \\ 1
+    \end{bmatrix}
+    \; .
+\f]
+
+Then, we construct the transformation matrix as follows,
+
+\f[
+    \tfmat{T}{a}{b} =
+    \begin{bmatrix}
+    \tfmat{R}{a}{b}
+    &
+    \tfmat{v}{a}{b}
+    \\
+    0_{1 \times 3} & 1
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+    r_{11} & r_{12} & r_{13} & v_x \\
+    r_{21} & r_{22} & r_{23} & v_y \\
+    r_{31} & r_{32} & r_{33} & v_z \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+    \;
+    .
+\f]
+
+Transforming a point corresponds to a matrix-vector product:
+
+\f[
+    \tfmat{p}{a}{}
+    =
+    \tfmat{T}{a}{b}
+    \,
+    \tfmat{p}{b}{}
+    \quad\rightarrow\quad
+    \begin{bmatrix}
+    \tf{p}{a}{x} \\
+    \tf{p}{a}{y} \\
+    \tf{p}{a}{z} \\
+    1
+    \end{bmatrix}
+    \begin{bmatrix}
+    \tfmat{R}{a}{b}
+    &
+    \tfmat{v}{a}{b}
+    \\
+    0_{1 \times 3} & 1
+    \end{bmatrix}
+    \begin{bmatrix}
+    \tf{p}{b}{x} \\
+    \tf{p}{b}{y} \\
+    \tf{p}{b}{z} \\
+    1
+    \end{bmatrix}
+\f]
+
+Chaining transformations corresponds to a matrix-matrix product:
+\f[
+    \tfmat{T}{a}{c}
+    =
+    \tfmat{T}{a}{b}
+    \,
+    \tfmat{T}{b}{c}
+\f]
+
+
+
+
+Since the bottom row of the transformation matrix is constant, we can
+save memory and computation time by omitting this row from our
+storage and computation.  Thus, we store the transformation matrix in
+memory using only the rotation matrix and translation vector,
+requiring a total of 12 numbers:
+\f[
+    \begin{bmatrix}
+    r_{11} & r_{12} & r_{13} & v_x \\
+    r_{21} & r_{22} & r_{23} & v_y \\
+    r_{31} & r_{32} & r_{33} & v_z \\
+    0 & 0 & 0 & 1
+    \end{bmatrix}
+    \rightarrow
+    \begin{array}{|c|c|}
+    \hline
+    r_{11} & r_{21} & r_{31} &
+    r_{12} & r_{22} & r_{32} &
+    r_{13} & r_{23} & r_{33} &
+    v_x & v_y & v_z \\
+    \hline
+    \end{array}
+    \;
+    .
+\f]
+
 Dual Number Quaternions {#tutorial_tf_rep_duqu}
 -----------------------
+
+Dual quaternions a compact, computationally efficient, and
+analytically convenient representation for Euclidean transformations.
+A dual quaternion combines the ordinary quaternions and the dual
+numbers.  A dual number contains the dual element \f$\dualelt\f$, such
+that, \f[ \dualelt^2 = 0 \quad\text{and}\quad \dualelt \neq 0 \; .
+\f]
+
+Combing the quaternion units and the dual element yields eight factors
+in the dual quaternion,
+
+\f[
+\quat{S}
+=
+\underbrace{
+\left(
+r_x \ielt
++ r_y \jelt
++ r_z \kelt
++ r_w
+\right)
+}_{\text{real part}}
++
+\underbrace{
+\left(
+  d_x \ielt
++ d_y \jelt
++ d_z \kelt
++ d_w
+\right)
+}_{\text{dual part}}
+\dualelt
+\; .
+\f]
+
+We construct the dual quaternion for a rotation \f$\quat{h}\f$ and
+translation \f$\vec{v}\f$ as follows:
+
+\f[
+    \quat{S}
+    = \quat{h} + \quat{d}\dualelt
+    = \quat{h} + \frac{1}{2} \vec{v} \qmul \quat{h} \dualelt
+    \; .
+\f]
+
+Chaining dual quaternions corresponds to multiplication.  Note that
+the product of the two dual parts cancels as \f$\dualelt^2 = 0\f$ and
+that the product of the real parts is a chaining of the rotations.
+
+\f[ \tfquat{S}{a}{c} = \tfquat{S}{a}{b} \qmul \tfquat{S}{b}{c} =
+\left( \tfquat{r}{a}{b} + \tfquat{d}{a}{b}\dualelt \right) \qmul
+\left( \tfquat{r}{b}{c} + \tfquat{d}{b}{c}\dualelt \right) =
+\tfquat{r}{a}{b} \qmul \tfquat{r}{b}{c} + \left( \tfquat{r}{a}{b}
+\qmul \tfquat{d}{b}{c} + \tfquat{d}{a}{b} \qmul \tfquat{r}{b}{c}
+\right) \dualelt \f]
+
+
+To represent the dual quaternion in-memory, we need eight numbers,
+which we store as separate oridinary quaternions for the  real-part
+and dual-part,
+
+\f[
+\left(
+r_x \ielt
++ r_y \jelt
++ r_z \kelt
++ r_w
+\right)
++
+\left(
+  d_x \ielt
++ d_y \jelt
++ d_z \kelt
++ d_w
+\right)
+\dualelt
+\quad\rightarrow\quad
+\begin{array}{|c|c|}
+\hline
+r_x
+& r_y
+& r_z
+& r_w
+& d_x
+& d_y
+& d_z
+& d_w \\
+\hline
+\end{array}
+\; .
+\f]
+
+
+    double dual_quaternion_as_array[8];
+
+    struct duqu {
+       struct quat real;
+       struct quat dual;
+    };
+
 
 Implicit Dual Quaternions {#tutorial_tf_rep_imp}
 -------------------------
 
+Since we can construct the dual quaternion for a Euclidean
+transformation for an ordinary quaternion and translation vector, we
+take this quaternion and vector as the *implicit* representation of a
+dual quaternion.  Such a quaternion-vector representation is more
+compact, requiring only 7 elements, compared to the eight elements of
+the explicit dual quaternion.  Moreover, common operations such as
+chain transformations, is more efficient using the implicit
+representation. We retain the view of this quaternion-vector as a dual
+quaternion for analysis, e.g., when considering derivatives and
+velocities, where chaining as multiplication and defined logarithm and
+exponential maps simplify some operations.
+
+To represent the implicit dual quaternion in-memory, we need a total
+of 7 numbers for the ordinary (rotation) quaternion and translation
+vector:
+
+
+\f[
+\left\lgroup
+\left(
+h_x \ielt
++ h_y \jelt
++ h_z \kelt
++ h_w
+\right),\
+\left(
+  v_x, v_y, v_z
+\right)
+\right\rgroup
+\quad\rightarrow\quad
+\begin{array}{|c|c|}
+\hline
+h_x
+& h_y
+& h_z
+& h_w
+& v_x
+& v_y
+& v_z \\
+\hline
+\end{array}
+\; .
+\f]
+
+
+    double implicit_dual_quaternion_as_array[7];
+
+    struct qutr {
+       struct quat rotation;
+       double translation[3];
+    };
 
 Example Code {#tutorial_tf_code}
 ============

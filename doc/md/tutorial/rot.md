@@ -17,7 +17,7 @@ Rotation {#tutorial_rot}
 
 This tutorial covers three-dimensional rotations.
 
-Complex Numbers {#tutorial_rot_c}
+Complex Numbers {#tutorial_rot_complex}
 ===============
 
 Complex numbers offer a way to represent planar (2D) rotations.  The
@@ -413,8 +413,26 @@ Rotation is analgous to the 2D case:
     \begin{bmatrix}
     x_1 \\ y_1 \\ z_1
     \end{bmatrix}
+    \; .
 \f]
 
+We store the rotation matrix in memory using column-major order:
+\f[
+    \begin{bmatrix}
+    r_{11} & r_{12} & r_{13} \\
+    r_{21} & r_{22} & r_{23} \\
+    r_{31} & r_{32} & r_{33} \\
+    \end{bmatrix}
+    \rightarrow
+    \begin{array}{|c|c|}
+    \hline
+    r_{11} & r_{21} & r_{31} &
+    r_{12} & r_{22} & r_{32} &
+    r_{13} & r_{23} & r_{33} \\
+    \hline
+    \end{array}
+    \; .
+\f]
 
 Example Code {#tutorial_rot_code}
 ============
