@@ -437,6 +437,7 @@
                                "translation"
                                "type" "axis" "offset" "parent"
                                "height" "radius"
+                               "scale"
                                "shape" "mesh" "dimension" "delta" "thickness" "color" "alpha" "specular")
                               (setq properties (add-prop properties stmt)))
                              (("visual" "collision")
