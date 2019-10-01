@@ -1,6 +1,7 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
 ;;;; Copyright (c) 2013, Georgia Tech Research Corporation
+;;;; Copyright (c) 2019, Colorado School of Mines
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -44,98 +45,46 @@
 ;;; LEVEL 1 BLAS ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
-;;; scal
-(def-blas-cfun ("dscal_" blas-dscal) :void
-  (n blas-size-t)
-  (alpha :double)
-  (x :vector))
 
 (defun dscal (alpha x)
-  (with-foreign-vector (x inc-x n) x :inout
-    (blas-dscal n alpha x inc-x)))
-
-;;; axpy
-(def-blas-cfun ("daxpy_" blas-daxpy) :void
-  (n blas-size-t)
-  (alpha :double)
-  (x :vector)
-  (y :vector))
+  (aa-dvec-scal alpha x)
+  x)
 
 (defun daxpy (alpha x y)
-  (with-foreign-vector (x inc-x n-x) x :input
-    (with-foreign-vector (y inc-y n-y) y :inout
-      (check-matrix-dimensions n-x n-y)
-      (blas-daxpy n-x alpha x inc-x y inc-y))))
-
-;;; dot
-(def-blas-cfun ("ddot_" blas-ddot) :double
-  (n blas-size-t)
-  (x :vector)
-  (y :vector))
+  (aa-dvec-axpy alpha x y)
+  y)
 
 (defun ddot (x y)
-  (with-foreign-vector (x inc-x n-x) x :input
-    (with-foreign-vector (y inc-y n-y) y :input
-      (check-matrix-dimensions n-x n-y)
-      (blas-ddot n-x x inc-x y inc-y))))
-
-;;; nrm2
-(def-blas-cfun ("dnrm2_" blas-dnrm2) :double
-  (n blas-size-t)
-  (x :vector))
+  (aa-dvec-dot x y))
 
 (defun dnrm2 (x)
-  (with-foreign-vector (x inc-x n) x :input
-    (blas-dnrm2 n x inc-x)))
+  (aa-dvec-nrm2 x))
 
-;;; asum
-(def-blas-cfun ("dasum_" blas-dasum) :double
-  (n blas-size-t)
-  (x :vector))
+;; ;;; asum
+;; (def-blas-cfun ("dasum_" blas-dasum) :double
+;;   (n blas-size-t)
+;;   (x :vector))
 
-(defun dasum (x)
-  (with-foreign-vector (x inc-x n) x :input
-    (blas-dasum n x inc-x)))
+;; (defun dasum (x)
+;;   (with-foreign-vector (x inc-x n) x :input
+;;     (blas-dasum n x inc-x)))
 
-;;; copy
-(def-blas-cfun ("dcopy_" blas-dcopy) :void
-  (n blas-size-t)
-  (x :vector)
-  (y :vector))
 
 (defun dcopy (x &optional y)
   (let ((y (or y
                (make-vec (vec-length x)))))
-    (with-foreign-vector (x incx len-x) x :input
-      (with-foreign-vector (y incy len-y) y :output
-        (check-matrix-dimensions len-x len-y)
-        (blas-dcopy len-x x incx y incy)))))
+    (aa-dvec-copy x y)
+    y))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 2 BLAS ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
-;;; gemv
-(def-blas-cfun ("dgemv_" blas-dgemv) :void
-  (trans transpose-t)
-  (m blas-size-t)
-  (n blas-size-t)
-  (alpha :double)
-  (a :matrix)
-  (x :vector)
-  (beta :double)
-  (y :vector))
 
-(defun dgemv (alpha a x beta y &key transpose)
-  (with-foreign-matrix (a ld-a m n) a :input
-    (with-foreign-vector (x inc-x n-x) x :input
-      (with-foreign-vector (y inc-y n-y) y :inout
-        (check-matrix-dimensions m n-y)
-        (check-matrix-dimensions n n-x)
-        (blas-dgemv transpose m n
-                    alpha a ld-a
-                    x inc-x
-                    beta y inc-y)))))
+(defun dgemv (alpha a x beta y &key (transpose :no-transpose))
+  (aa-dmat-gemv transpose alpha a x beta y)
+  y)
+
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; LEVEL 3 BLAS ;;;

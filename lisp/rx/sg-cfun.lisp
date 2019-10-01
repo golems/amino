@@ -72,6 +72,12 @@
   (sg rx-sg-t)
   (frame rx-frame-id))
 
+(cffi:defcfun (mutable-scene-graph-config-count "aa_rx_sg_config_count") size-t
+  (m-sg rx-sg-t))
+
+(cffi:defcfun (mutable-scene-graph-frame-count "aa_rx_sg_frame_count") size-t
+  (m-sg rx-sg-t))
+
 (cffi:defcfun aa-rx-sg-frame-id rx-frame-id
   (sg rx-sg-t)
   (name :string))

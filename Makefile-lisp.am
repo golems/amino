@@ -16,11 +16,11 @@ aarx_core_SOURCES = \
 	lisp/mat/mat-macro.lisp \
 	lisp/mat/mat-lib.lisp \
 	lisp/mat/mat-init.lisp \
+	lisp/mat/mat-blas.lisp \
+	lisp/mat/mat-la.lisp \
 	lisp/basic-ops.lisp \
 	lisp/foreign.lisp \
-	lisp/blas.lisp \
 	lisp/libc.lisp \
-	lisp/amino-la.lisp \
 	lisp/op.lisp \
 	lisp/generic.lisp \
 	lisp/blas-generic.lisp \

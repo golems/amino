@@ -504,7 +504,7 @@
                              (("shape" "color" "alpha" "specular" "mesh"
                                        "dimension" "delta" "thickness" "radius" "height" "start-radius" "end-radius" "scale")
                               (setq properties (add-prop properties stmt)))
-                             (("visual" "collision")
+                             (("visual" "collision" "no-shadow")
                               (setq properties (add-prop-bool properties stmt)))
                              ("isa"
                               (setq properties (add-prop properties stmt))
@@ -524,6 +524,7 @@
                (list*
                 (cons :visual (get-prop properties "visual" t))
                 (cons :collision (get-prop properties "collision" t))
+                (cons :no-shadow (get-prop properties "no-shadow" nil))
                 (loop
                    for name in '("color" "alpha" "scale" "specular")
                    for kw in   '(:color  :alpha :scale :specular)

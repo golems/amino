@@ -18,6 +18,11 @@
 ;;;;;;;;;;;;;
 ;; LEVEL 2 ;;
 ;;;;;;;;;;;;;
+
 (defmethod generic* ((a matrix) (b array))
+  (let ((y (make-vec (matrix-rows a))))
+    (dgemv 1d0 a b 0d0 y)))
+
+(defmethod generic* ((a matrix) (b cons))
   (let ((y (make-vec (matrix-rows a))))
     (dgemv 1d0 a b 0d0 y)))

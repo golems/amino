@@ -44,6 +44,20 @@
 (defcfun aa-la-set-err :void
   (fun :pointer))
 
+;; AA_API void
+;; aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst );
+
+(defcfun ("aa_dmat_row_vec" %aa-dmat-row-vec) :void
+  (mat :pointer)
+  (row size-t )
+  (vec :pointer))
+
+(defcfun ("aa_dmat_col_vec" %aa-dmat-col-vec) :void
+  (mat :pointer)
+  (col size-t )
+  (vec :pointer))
+
+
 ;;;;;;;;;;;;;;;;;;;;
 ;;; BLAS Level 1 ;;;
 ;;;;;;;;;;;;;;;;;;;;
@@ -53,14 +67,32 @@
   (y dvec-inout))
 
 (defcfun aa-dvec-scal :void
-  (a :double)
+  (a amino-ffi::coercible-double)
   (x dvec-inout))
 
 (defcfun aa-dvec-copy :void
   (x dvec-input)
   (y dvec-output))
 
+(defcfun ("aa_dvec_copy" %aa-dvec-copy-to-foreign) :void
+  (x dvec-input)
+  (y :pointer))
+
+(defcfun ("aa_dvec_copy" %aa-dvec-copy-from-foreign) :void
+  (x :pointer)
+  (y dvec-input))
+
+
+(defun %aa-dvec-copy-foreign (pointer)
+  (let ((v (make-vec (foreign-slot-value pointer '(:struct aa-dvec) 'len))))
+    (%aa-dvec-copy-from-foreign pointer v)
+    v))
+
 (defcfun aa-dvec-dot :double
+  (x dvec-input)
+  (y dvec-input))
+
+(defcfun aa-dvec-ssd :double
   (x dvec-input)
   (y dvec-input))
 
@@ -68,7 +100,7 @@
   (x dvec-input))
 
 (defcfun aa-dvec-axpy :void
-  (a :double)
+  (a amino-ffi::coercible-double)
   (x dvec-input)
   (y dvec-inout))
 
@@ -78,10 +110,10 @@
 
 (defcfun aa-dmat-gemv :void
   (trans transpose-t)
-  (alpha :double)
+  (alpha amino-ffi::coercible-double)
   (A dmat-input)
   (x dvec-input)
-  (beta :double)
+  (beta amino-ffi::coercible-double)
   (y dvec-inout))
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -91,10 +123,10 @@
 (defcfun aa-dmat-gemm :void
   (trans-A transpose-t)
   (trans-B transpose-t)
-  (alpha :double)
+  (alpha amino-ffi::coercible-double)
   (A dmat-input)
   (B dmat-input)
-  (beta :double)
+  (beta amino-ffi::coercible-double)
   (C dmat-inout))
 
 
@@ -104,3 +136,8 @@
 
 (defcfun aa-dmat-inv1 :int
   (A dmat-inout))
+
+
+(defcfun aa-dmat-copy :void
+  (x dmat-input)
+  (y dmat-output))

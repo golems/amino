@@ -363,6 +363,7 @@
                     modifiers
                     mesh
                     matrix
+                    options
                     (handedness :right)
                     )
   "Create a povray mesh2 object.
@@ -371,6 +372,7 @@ VERTEX-VECTORS: List of vertices in the mesh as pov-vertex
 FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
 "
   (let ((args modifiers)
+        (alpha (draw-option options :alpha))
         (vector-function (ecase handedness
                            (:right #'%pov-float-vector-right)
                            (:left #'%pov-float-vector))))
@@ -388,7 +390,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (face-count (/ (length vertex-indices) 3)))
 
           (when (= (length textures) 1)
-            (arg (pov-alist-texture (car textures))))
+            (arg (pov-alist-texture (car textures) alpha)))
 
           (let ((normal-indices (mesh-data-normal-indices mesh-data)))
             (when (>  (length normal-indices) 0)
@@ -424,7 +426,9 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                              face-count))))
 
           (when (> (length textures) 1)
-            (arg (pov-texture-list (map 'list #'pov-alist-texture textures))))
+            (arg (pov-texture-list (map 'list (lambda (texture)
+                                                (pov-alist-texture texture alpha))
+                                        textures))))
 
           (when-let ((normals (mesh-data-normal-vectors mesh-data)))
             (arg (pov-list "normal_vectors"
@@ -462,7 +466,7 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (list* (pov-item type (rope #\" file #\"))
                       modifiers))))
 
-(defun pov-alist-texture (alist)
+(defun pov-alist-texture (alist &optional alpha)
   (let ((finishes nil)
         (pigments nil)
         (has-image-map (assoc :image-map alist)))
@@ -482,9 +486,14 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
                (unless has-image-map
                  (push (pov-item name pigment) pigments)))
              (alpha ()
-               (when-let ((assoc-alpha (assoc :alpha alist)))
+               (let* ((assoc-alpha (cdr (assoc :alpha alist)))
+                      ;; Superimpose texture and external alpha.
+                      ;; Lets us make transparent meshes.
+                      (merged-alpha (if assoc-alpha
+                                        (* assoc-alpha (or alpha 1d0))
+                                        (or alpha 1d0))))
                  (unless has-image-map
-                   (push (pov-alpha (cdr assoc-alpha)) pigments)))))
+                   (push (pov-alpha merged-alpha) pigments)))))
       (loop
          for property in '(:ambient :diffuse :color :specular :index-of-refraction :image-map
                            :metallic :reflection :roughness :brilliance :crand)

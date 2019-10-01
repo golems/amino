@@ -157,7 +157,7 @@ Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
   (visual t)
   c-geom)
 
-(defun %scene-geometry (shape options)
+(defun %scene-geometry (shape options &optional (c-geom))
   (make-scene-geometry :shape shape
                        :options options
                        :type (let ((type (draw-option options :type)))
@@ -166,24 +166,23 @@ Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
                                  (tree-set type)
                                  (rope (tree-set #'rope-compare-fast type))))
                        :collision (draw-option options :collision)
-                       :visual (draw-option options :visual)))
+                       :visual (draw-option options :visual)
+                       :c-geom c-geom))
 
 (defun %rx-scene-geometry (rx-geom options)
-  (make-scene-geometry :shape (rx-geom-shape rx-geom)
-                       :c-geom rx-geom
-                       :options options
-                       :type (let ((type (draw-option options :type)))
-                               (etypecase type
-                                 (list (apply #'tree-set #'rope-compare-fast type))
-                                 (tree-set type)
-                                 (rope (tree-set #'rope-compare-fast type))))
-                       :collision (draw-option options :collision)
-                       :visual (draw-option options :visual)))
+  (%scene-geometry (rx-geom-shape rx-geom) options rx-geom))
 
 (defun modify-scene-geometry (geom options)
-  (%rx-scene-geometry (aa-rx-geom-modify-opt (scene-geometry-c-geom geom)
-                                             (alist-rx-geom-opt options))
-                      options))
+  ;(print geom)
+  (let ((c-geom (aa-rx-geom-modify-opt (scene-geometry-c-geom geom)
+                                       (alist-rx-geom-opt options)))
+        (shape (scene-geometry-shape geom)))
+    (cond
+      ((amino-ffi::foreign-container-p shape)
+       (%rx-scene-geometry c-geom options))
+      ((scene-mesh-p shape)
+       (%scene-geometry shape options c-geom))
+      (t (assert nil)))))
 
 
 
@@ -874,13 +873,13 @@ Throws an error if scene graph is invalid."
         ;; draw-options
         (when draw-options
           ;(print (scene-frame-geometry frame))
-          (print (map 'list
-                      (lambda (g)
-                        (modify-scene-geometry
-                         g
-                         (merge-draw-options draw-options
-                                             (scene-geometry-options g))))
-                      (scene-frame-geometry frame)))
+          ;; (print (map 'list
+          ;;             (lambda (g)
+          ;;               (modify-scene-geometry
+          ;;                g
+          ;;                (merge-draw-options draw-options
+          ;;                                    (scene-geometry-options g))))
+          ;;             (scene-frame-geometry frame)))
           (setf (scene-frame-geometry frame)
                 (map 'list
                      (lambda (g)

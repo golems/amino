@@ -110,11 +110,11 @@
   :slots (list))
 
 ;; Inverse Kinematics
-(amino-ffi::def-foreign-container rx-ksol-opts rx-ksol-opts-t
-  :destructor aa-rx-ksol-opts-destroy)
+(amino-ffi::def-foreign-container rx-ik-parm rx-ik-parm-t
+  :destructor aa-rx-ik-parm-destroy)
 
-(amino-ffi::def-foreign-container rx-ik-jac-cx rx-ik-jac-cx-t
-  :destructor aa-rx-ik-jac-cx-destroy)
+(amino-ffi::def-foreign-container rx-ik-cx rx-ik-cx-t
+  :destructor aa-rx-ik-cx-destroy)
 
 ;;; Wavefront
 

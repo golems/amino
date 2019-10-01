@@ -79,3 +79,51 @@
 ;;   (let ((c 0))
 ;;     (dotimes (i (min (length a) (length b)))
 ;;       (let ((x (- (aref a i))
+
+(defun row-matrix (&rest rows)
+  "Create a matrix from the given rows."
+  (declare (dynamic-extent rows))
+  (let ((m (length rows))
+        (n (vec-length (car rows))))
+    (let ((matrix (make-matrix m n)))
+      (with-foreign-dmat (dmat matrix :inout)
+        (cffi:with-foreign-object (rowvec '(:struct aa-dvec))
+          (loop
+             for row in rows
+             for i from 0
+             do
+               (%aa-dmat-row-vec dmat i rowvec)
+               (%aa-dvec-copy-to-foreign row rowvec))))
+        matrix)))
+
+(defun col-matrix (&rest cols)
+  "Create a matrix from the given columns."
+  (declare (dynamic-extent cols))
+  (let ((n (length cols))
+        (m (vec-length (car cols))))
+    (let ((matrix (make-matrix m n)))
+      (with-foreign-dmat (dmat matrix :inout)
+        (cffi:with-foreign-object (colvec '(:struct aa-dvec))
+          (loop
+             for col in cols
+             for j from 0
+             do
+               (%aa-dmat-col-vec dmat j colvec)
+               (%aa-dvec-copy-to-foreign col colvec))))
+        matrix)))
+
+(defun row-vector (&rest args)
+  (declare (dynamic-extent args))
+  (row-matrix args))
+
+(defun col-vector (&rest args)
+  (declare (dynamic-extent args))
+  (col-matrix args))
+
+
+(defun matrix-copy (matrix &optional
+                    (copy (make-matrix (matrix-rows matrix)
+                                       (matrix-cols matrix))))
+  "Create a copy of MATRIX."
+  (aa-dmat-copy matrix copy)
+  copy)
