@@ -749,6 +749,11 @@ EXTRA_DIST += \
 	doc/footer.html \
 	doc/carousel.html \
 	doc/logo.png \
+	demo/tutorial/python/t0.0-vector.py \
+	demo/tutorial/python/t0.1-matrix.py \
+	demo/tutorial/python/t0.2-lls.py \
+	demo/tutorial/python/t1-rotation.py \
+	demo/tutorial/python/t2-tf.py \
         share/doc.lisp
 
 
