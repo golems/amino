@@ -363,6 +363,8 @@ if HAVE_PYTHON
 TESTS += python/test/mattest.sh
 TESTS += python/test/tftest.sh
 
+TESTS += python/test/py_tutorial_test.sh
+
 ALL_LOCAL += all-python
 all-python:
 	cd "$(srcdir)/python" && $(PYTHON) setup.py build \

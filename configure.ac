@@ -916,6 +916,7 @@ CONFIG_SCRIPT([demo/urdf/fetch/fetch-view])
 
 CONFIG_SCRIPT([python/test/mattest.sh])
 CONFIG_SCRIPT([python/test/tftest.sh])
+CONFIG_SCRIPT([python/test/py_tutorial_test.sh])
 
 CONFIG_SCRIPT([aarxc])
 

@@ -182,14 +182,16 @@ Computationally, we may represent the quaternion as an array of four
 elements or as a struct with the four parts.  Either form (array or
 struct) will have the same memory layout.
 
-    double quaternion_as_array[4];
+~~~{.c}
+double quaternion_as_array[4];
 
-    struct quat {
-        double x;
-        double y;
-        double z;
-        double w;
-    };
+struct quat {
+    double x;
+    double y;
+    double z;
+    double w;
+};
+~~~
 
 Multiplication
 --------------
@@ -437,66 +439,91 @@ We store the rotation matrix in memory using column-major order:
 Example Code {#tutorial_rot_code}
 ============
 
-1. Import the package:
+<ol>
+<li> Import the package:
 
-        from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat
-        from math import pi
+~~~{.py}
+from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat
+from math import pi
+~~~
+</li>
 
-2. Specify a rotation of pi/2 radians about the x axis:
+<li> Specify a rotation of pi/2 radians about the x axis:
 
-        ax = XAngle(pi/2)
-        print ax
+~~~{.py}
+ax = XAngle(pi/2)
+print ax
+~~~
+</li>
 
-3. Convert the rotation to axis-angle, quaternion, and rotation matrix
-   forms:
+<li> Convert the rotation to axis-angle, quaternion, and rotation
+     matrix forms:
 
-        Ax = AxAng(ax)
-        qx = Quat(ax)
-        Rx = RotMat(ax)
-        print Ax
-        print qx
-        print Rx
+~~~{.py}
+Ax = AxAng(ax)
+qx = Quat(ax)
+Rx = RotMat(ax)
+print Ax
+print qx
+print Rx
+~~~
+</li>
 
-4. Rotate a point using each of the axis-angle, quaternion, and
-   rotation matrix forms:
+<li> Rotate a point using each of the axis-angle, quaternion, and
+     rotation matrix forms:
 
-        p = [1,2,3]
-        pa = Ax.rotate(p)
-        pq = qx.rotate(p)
-        pR = Rx.rotate(p)
-        print pa
-        print pq
-        print pR
+~~~{.py}
+p = [1,2,3]
+pa = Ax.rotate(p)
+pq = qx.rotate(p)
+pR = Rx.rotate(p)
+print pa
+print pq
+print pR
+~~~
+</li>
 
-5. Invert the rotations:
+<li> Invert the rotations:
 
-        qxi = ~qx
-        Rxi = ~Rx
-        Axi = ~Ax
-        print Axi
-        print qxi
-        print Rxi
+~~~{.py}
+qxi = ~qx
+Rxi = ~Rx
+Axi = ~Ax
+print Axi
+print qxi
+print Rxi
+~~~
+</li>
 
-6. Rotate by the inverse to get back the original point:
+<li> Rotate by the inverse to get back the original point:
 
-        print Axi.rotate(pa)
-        print qxi.rotate(pq)
-        print Rxi.rotate(pR)
+~~~{.py}
+print Axi.rotate(pa)
+print qxi.rotate(pq)
+print Rxi.rotate(pR)
+~~~
+</li>
 
-7. Specify another rotation and chain:
+<li> Specify another rotation and chain:
 
-        ay = YAngle(pi/2)
-        qxy = qx * ay
-        Rxy = Rx * ay
-        print qxy
-        print Rxy
+~~~{.py}
+ay = YAngle(pi/2)
+qxy = qx * ay
+Rxy = Rx * ay
+print qxy
+print Rxy
+~~~
+</li>
 
-8. Rotate by the chained forms:
+<li> Rotate by the chained forms:
 
-        pq = qxy.rotate(p)
-        pR = Rxy.rotate(p)
-        print pq
-        print pR
+~~~{.py}
+pq = qxy.rotate(p)
+pR = Rxy.rotate(p)
+print pq
+print pR
+~~~
+</li>
 
 References {#tutorial_rot_references}
 ==========

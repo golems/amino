@@ -533,6 +533,13 @@ class RotMat(ctypes.Structure):
         """Convert to an axis-angle and store in a"""
         libamino.aa_tf_rotmat2axang(self, a)
 
+
+    def ln(self):
+        """Return the natural logarithm"""
+        h = Vec3(None)
+        libamino.aa_tf_rotmat_lnv(self,h)
+        return h
+
     def __invert__(self):
         """Return the inverse"""
         r = RotMat(None)
@@ -636,6 +643,59 @@ class TfMat(ctypes.Structure):
         """Return the translation part"""
         return self.v
 
+    def __getitem__(self, key):
+        i,j = key
+        if j < 3:
+            return self.R[key]
+        elif j == 3:
+            return self.v[i]
+        else:
+            raise IndexError(key)
+
+    def __setitem__(self, key, item):
+        i,j = key
+        if j < 3:
+            self.R[key] = item
+        elif j == 3:
+            self.v[i] = item
+        else:
+            raise IndexError(key)
+
+    @staticmethod
+    def row_matrix(args):
+        m = len(args)
+        A = TfMat(None)
+        if m != 3:
+            raise  IndexError()
+        for i in range(0,m):
+            n = len(args[i])
+            if n != 4:
+                raise  IndexError()
+            for j in range(0,n):
+                A[i,j] = args[i][j]
+
+        return A
+
+    def __str__(self):
+        s = "TfMat.row_matrix(["
+        for i in range(0,3):
+            if i == 0:
+                s += "["
+            else:
+                s += ",\n                  ["
+            for j in range(0,4):
+                if j == 0:
+                    s += "%f" % self[i,j]
+                else:
+                    s += ", %f" % self[i,j]
+            s += "]"
+        s += "])"
+        # Omit the bottom, constant row
+        return s
+
+    def __len__(self):
+        return 12
+
 class DualQuat(ctypes.Structure,CopyEltsMixin):
     """Class for Dual Number Quaternions"""
     _fields_ = [ ("real", Quat),
@@ -668,8 +728,30 @@ class DualQuat(ctypes.Structure,CopyEltsMixin):
         libamino.aa_tf_duqu_conj(self,h)
         return h
 
+    def __invert__(self):
+        """Return the inverse"""
+        # TODO: should we use the actual inverse?
+        return self.conj()
+
+    def ln(self):
+        """Return the dual quaternion logarithm"""
+        h = DualQuat(None)
+        libamino.aa_tf_duqu_ln(self,h)
+        return h
+
+    @staticmethod
+    def identity():
+        return DualQuat( (Quat.identity(), Vec3.identity()) )
+
+    def norm_parts(self):
+        """Real and dual parts 2-norm (Euclidean)"""
+        r = ctypes.c_double()
+        d = ctypes.c_double()
+        libamino.aa_tf_duqu_norm(self, ctypes.byref(r), ctypes.byref(d))
+        return (r.value,d.value)
+
     def transform(self,p):
-        """Chain two TF matrices"""
+        """Transform point p"""
         q = Vec3(None)
         libamino.aa_tf_duqu_tf(self,Vec3.ensure(p),q)
         return q
@@ -819,6 +901,8 @@ class QuatTrans(ctypes.Structure,CopyEltsMixin):
         """Return the translation part"""
         return self.trans
 
+    def __len__(self):
+        return 7
 
 #---------------#
 # LIBRARY CALLS #
@@ -925,6 +1009,8 @@ libamino.aa_tf_rotmat_mul.argtypes = [ctypes.POINTER(RotMat), ctypes.POINTER(Rot
 
 libamino.aa_tf_rotmat_inv2.argtypes = [ ctypes.POINTER(RotMat), ctypes.POINTER(RotMat) ]
 
+libamino.aa_tf_rotmat_lnv.argtypes = [ ctypes.POINTER(RotMat), ctypes.POINTER(Vec3) ]
+
 # Transforms
 libamino.aa_tf_tfmat_tf.argtypes = [ ctypes.POINTER(TfMat),
                                      ctypes.POINTER(Vec3),
@@ -938,6 +1024,13 @@ libamino.aa_tf_duqu_tf.argtypes = [ ctypes.POINTER(DualQuat),
                                     ctypes.POINTER(Vec3),
                                     ctypes.POINTER(Vec3) ]
 
+libamino.aa_tf_duqu_ln.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(DualQuat) ]
+
+libamino.aa_tf_duqu_norm.argtypes = [ ctypes.POINTER(DualQuat),
+                                      ctypes.POINTER(ctypes.c_double) ,
+                                      ctypes.POINTER(ctypes.c_double) ]
+
+
 libamino.aa_tf_tfmat_mul.argtypes = [ ctypes.POINTER(TfMat), ctypes.POINTER(TfMat), ctypes.POINTER(TfMat) ]
 
 libamino.aa_tf_duqu_mul.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(DualQuat), ctypes.POINTER(DualQuat) ]
@@ -947,5 +1040,7 @@ libamino.aa_tf_qutr_mul.argtypes = [ ctypes.POINTER(QuatTrans), ctypes.POINTER(Q
 libamino.aa_tf_tfmat_inv2.argtypes = [ ctypes.POINTER(TfMat), ctypes.POINTER(TfMat)]
 
 libamino.aa_tf_duqu_conj.argtypes = [ ctypes.POINTER(DualQuat), ctypes.POINTER(DualQuat)]
+
+libamino.aa_tf_qutr_conj.argtypes = [ ctypes.POINTER(QuatTrans), ctypes.POINTER(QuatTrans)]
 
 libamino.aa_tf_qutr_conj.argtypes = [ ctypes.POINTER(QuatTrans), ctypes.POINTER(QuatTrans)]

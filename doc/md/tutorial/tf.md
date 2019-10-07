@@ -306,12 +306,14 @@ r_x
 \f]
 
 
-    double dual_quaternion_as_array[8];
+~~~{.c}
+double dual_quaternion_as_array[8];
 
-    struct duqu {
-       struct quat real;
-       struct quat dual;
-    };
+struct duqu {
+    struct quat real;
+    struct quat dual;
+};
+~~~
 
 
 Implicit Dual Quaternions {#tutorial_tf_rep_imp}
@@ -361,16 +363,156 @@ h_x
 \; .
 \f]
 
+~~~{.c}
+double implicit_dual_quaternion_as_array[7];
 
-    double implicit_dual_quaternion_as_array[7];
-
-    struct qutr {
-       struct quat rotation;
-       double translation[3];
-    };
+struct qutr {
+   struct quat rotation;
+   double translation[3];
+};
+~~~
 
 Example Code {#tutorial_tf_code}
 ============
+
+<ol>
+
+<li> Import the package:
+~~~{.py}
+from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat, TfMat, DualQuat, QuatTrans
+from math import pi
+~~~
+</li>
+
+<li> Specify a rotation and translation.  Label the parent as frame
+     `0` and child as frame `1`:
+
+~~~{.py}
+rot_0_1   = ZAngle(pi/4)
+trans_0_1 = Vec3([1,2,3])
+tf_0_1 = (rot_0_1,trans_0_1)
+~~~
+</li>
+
+
+<li> Construct the transforms:
+
+~~~{.py}
+S_0_1 = DualQuat( tf_0_1 )
+print S_0_1
+
+T_0_1 = TfMat( tf_0_1 )
+print T_0_1
+
+E_0_1 = QuatTrans( tf_0_1 )
+print E_0_1
+~~~
+</li>
+
+<li> Convert between Representations:
+
+~~~{.py}
+T_S = TfMat(S_0_1)
+T_E = TfMat(E_0_1)
+print T_S
+print T_E
+
+S_T = DualQuat(T_0_1)
+S_E = DualQuat(E_0_1)
+print S_T
+print S_E
+
+E_T = QuatTrans(T_0_1)
+E_S = QuatTrans(S_0_1)
+print E_T
+print E_S
+~~~
+</li>
+
+<li> Specify point `a` with coordinates in frame `1`:
+
+~~~{.py}
+p_1_a = Vec3([3,5,7])
+print p_1_a
+~~~
+</li>
+
+<li> Transform the point to frame `0`:
+
+~~~{.py}
+p_0_a_T = T_0_1.transform(p_1_a)
+p_0_a_E = E_0_1.transform(p_1_a)
+p_0_a_S = S_0_1.transform(p_1_a)
+
+print p_0_a_T
+print p_0_a_E
+print p_0_a_S
+~~~
+</li>
+
+<li> Specify a transform between parent frame `1` to child frame `2`:
+
+~~~{.py}
+rot_1_2   = YAngle(pi/2)
+trans_1_2 = Vec3([2,4,8])
+tf_1_2 = (rot_1_2,trans_1_2)
+
+S_1_2 = DualQuat( tf_1_2 )
+T_1_2 = TfMat( tf_1_2 )
+E_1_2 = QuatTrans( tf_1_2 )
+~~~
+</li>
+
+<li> Specify point `b` with coordinates in frame `2`:
+
+~~~{.py}
+p_2_b = Vec3([2,1,0])
+print p_2_b
+~~~
+</li>
+
+<li> Transform `b` to frame `0` with two successive transformations:
+
+~~~{.py}
+p_1_b_T = T_1_2.transform(p_2_b)
+p_0_b_T = T_0_1.transform(p_1_b_T)
+
+p_1_b_E = E_1_2.transform(p_2_b)
+p_0_b_E = E_0_1.transform(p_1_b_E)
+
+p_1_b_S = S_1_2.transform(p_2_b)
+p_0_b_S = S_0_1.transform(p_1_b_S)
+
+print p_0_b_E
+print p_0_b_T
+print p_0_b_S
+~~~
+</li>
+
+<li> Chain the transforms between frame `0` and `2`:
+
+~~~{.py}
+S_0_2 = S_0_1 * S_1_2
+T_0_2 = T_0_1 * T_1_2
+E_0_2 = E_0_1 * E_1_2
+~~~
+</li>
+
+<li> Use chained transforms to transform `b`.  The result is
+     equivalent to the successive transformation of `b` from `2` to
+     `1` and then from `1` to `0`.
+
+~~~{.py}
+p_0_b_T_chain = T_0_2.transform(p_2_b)
+p_0_b_E_chain = E_0_2.transform(p_2_b)
+p_0_b_S_chain = S_0_2.transform(p_2_b)
+
+print p_0_b_E_chain
+print p_0_b_T_chain
+print p_0_b_S_chain
+~~~
+</li>
+</ol>
 
 References {#tutorial_tf_references}
 ==========

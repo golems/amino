@@ -77,48 +77,66 @@ These three items enable flexible access to parts of other vectors and
 matrices, such as "slices" of vectors and rows, columns, or diagonals
 of matrices.  The following C struct defines the vector for doubles:
 
-    struct aa_dvec {
-        size_t len;
-        double *data;
-        size_t inc;
-    }
+~~~{.c}
+struct aa_dvec {
+    size_t len;
+    double *data;
+    size_t inc;
+}
+~~~
 
 
 ### Example Code
 
 The following code illustrates the vector representations and slices.
 
-1. Import amino:
+<ol>
+<li> Import amino:
 
-        from amino import DVec
+~~~{.py}
+from amino import DVec
+~~~
+</li>
 
-2. Construct and print the vector \f$\mathbf{x} = [1,2,3,4]\f$:
+<li> Construct and print the vector \f$\mathbf{x} = [1,2,3,4]\f$:
 
-        x = DVec([1,2,3,4])
-        print x
-        print len(x)
-        print x.inc()
+~~~{.py}
+x = DVec([1,2,3,4])
+print x
+print len(x)
+print x.inc()
+~~~
+</li>
 
-3. Try some common arithmetic operators:
+<li> Try some common arithmetic operators:
 
-        print "-x:   %s" % (-x)
-        print "2*x:  %s" % (2*x)
-        print "x+x:  %s" % (x+x)
-        print "x+1:  %s" % (x+1)
-        print "x/2:  %s" % (x/2)
+~~~{.py}
+print "-x:   %s" % (-x)
+print "2*x:  %s" % (2*x)
+print "x+x:  %s" % (x+x)
+print "x+1:  %s" % (x+1)
+print "x/2:  %s" % (x/2)
+~~~
+</li>
 
-4. Slice `x` with an increment of 2, giving every other element:
+<li> Slice `x` with an increment of 2, giving every other element:
 
-        s = x[0:4:2]
-        print "s: %s" % s
-        print "s.len: %d" % len(s)
-        print "s.inc: %d" % s.inc()
+~~~{.py}
+s = x[0:4:2]
+print "s: %s" % s
+print "s.len: %d" % len(s)
+print "s.inc: %d" % s.inc()
+~~~
+</li>
 
-5. Increment the slice (and underlying elements of `x`):
+<li> Increment the slice (and underlying elements of `x`):
 
-        s+=1
-        print "s: %s" % s
-        print "x: %s" % x
+~~~{.py}
+s+=1
+print "s: %s" % s
+print "x: %s" % x
+~~~
+</li>
 
 
 Matrices {#tutorial_la_matrix}
@@ -215,12 +233,14 @@ Thus, our matrix represent consists of the row count, column count,
 data pointer, and leading dimension. Note that for an entire matrix,
 the leading dimension will equal the row count.
 
-    struct aa_dmat {
-        size_t rows;
-        size_t cols;
-        double *data;
-        size_t ld;
-    }
+~~~{.c}
+struct aa_dmat {
+    size_t rows;
+    size_t cols;
+    double *data;
+    size_t ld;
+}
+~~~
 
 We can use the previously introduced vector format to view rows,
 columns, and diagonals of our matrix.
@@ -375,53 +395,71 @@ plus the leading dimension:
 
 ### Example Code
 
-1. Import amino:
+<ol>
+<li> Import amino:
 
-        from amino import DVec, DMat
+~~~{.py}
+from amino import DVec, DMat
+~~~
+</li>
 
-2. Create a 2x3 matrix:
+<li> Create a 2x3 matrix:
 
-        A = DMat.row_matrix([[1,2,3],[4,5,6]])
-        print A
-        print "A.rows: %d" % A.rows()
-        print "A.cols: %d" % A.cols()
-        print "A.ld:   %d" % A.ld()
-        for k in range(6):
-            print "A._data[%d] = %f" % (k,A._data[k])
+~~~{.py}
+A = DMat.row_matrix([[1,2,3],[4,5,6]])
+print A
+print "A.rows: %d" % A.rows()
+print "A.cols: %d" % A.cols()
+print "A.ld:   %d" % A.ld()
+for k in range(6):
+    print "A._data[%d] = %f" % (k,A._data[k])
+~~~
+</li>
 
-3. Create a 3x2 matrix:
+<li> Create a 3x2 matrix:
 
-        B = DMat.col_matrix([[1,2,3],[4,5,6]])
-        print B
-        print "B.rows: %d" % B.rows()
-        print "B.cols: %d" % B.cols()
-        print "B.ld:   %d" % B.ld()
-        for k in range(6):
-            print "B._data[%d] = %f" % (k,A._data[k])
+~~~{.py}
+B = DMat.col_matrix([[1,2,3],[4,5,6]])
+print B
+print "B.rows: %d" % B.rows()
+print "B.cols: %d" % B.cols()
+print "B.ld:   %d" % B.ld()
+for k in range(6):
+    print "B._data[%d] = %f" % (k,A._data[k])
 
-4. Try some arithmetic functions:
+~~~
+</li>
 
-        print A*2
-        print A/2
-        print A+A
-        print A+1
-        print A-1
-        print A.t()
-        print A*[1,2,3]
-        print A*B
+<li> Try some arithmetic functions:
 
-5. Construct some vector views of the matrix:
+~~~{.py}
+print A*2
+print A/2
+print A+A
+print A+1
+print A-1
+print A.t()
+print A*[1,2,3]
+print A*B
+~~~
+</li>
 
-        print A
-        print A.row_vec(0)
-        print A.col_vec(1)
+<li> Construct some vector views of the matrix:
 
-        d = A.diag_vec()
-        print d
-        d += 10
-        print d
+~~~{.py}
+print A
+print A.row_vec(0)
+print A.col_vec(1)
 
-        print A
+d = A.diag_vec()
+print d
+d += 10
+print d
+
+print A
+~~~
+</li>
+</ol>
 
 
 
@@ -659,36 +697,57 @@ of the *error*:
 
 ### Example Code
 
-1. Create a matrix and vector for a system of equations,
+<ol>
+<li> Create a matrix and vector for a system of equations,
    \f$\mathbf{A}\mathbf{x} = \mathbf{b}\f$, with two equations and two
    unknowns:
 
-        A = DMat.row_matrix([[1,2],[3,4]])
-        b = [5,6]
 
-2. Invert the (square) matrix to solve the system:
+~~~{.py}
+A = DMat.row_matrix([[1,2],[3,4]])
+b = [5,6]
+~~~
+</li>
 
-        x = A.inv() * b
-        print x
+<li> Invert the (square) matrix to solve the system:
 
-3. Create a matrix and vector for an *over-determined* system:
+~~~{.py}
+x = A.inv() * b
+print x
+~~~
+</li>
 
-        A = DMat.row_matrix([[1,2],[3,4],[5,6]])
-        b = [7,8,9]
+<li> Create a matrix and vector for an *over-determined* system:
 
-4. Pseudo-invert the (non-square) matrix to find the least-squares
-   solution:
+~~~{.py}
+A = DMat.row_matrix([[1,2],[3,4],[5,6]])
+b = [7,8,9]
+~~~
+</li>
 
-        x = A.pinv()*b
-        print x
+<li> Pseudo-invert the (non-square) matrix to find the least-squares
+     solution:
 
-5. Create a matrix and vector for an *under-determined* system:
+~~~{.py}
+x = A.pinv()*b
+print x
+~~~
+</li>
 
-        A = DMat.row_matrix([[1,2,3],[4,5,6]])
-        b = [7,8]
+<li> Create a matrix and vector for an *under-determined* system:
 
-6. Pseudo-invert the (non-square) matrix to find the least-squares
-   solution:
+~~~{.py}
+A = DMat.row_matrix([[1,2,3],[4,5,6]])
+b = [7,8]
+~~~
+</li>
 
-        x = A.pinv()*b
-        print x
+<li> Pseudo-invert the (non-square) matrix to find the least-squares
+    solution:
+
+~~~{.py}
+x = A.pinv()*b
+print x
+~~~
+</li>
+</ol>
