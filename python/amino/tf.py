@@ -43,6 +43,10 @@ from math import sqrt
 
 from mixin import VecMixin, CopyEltsMixin
 
+def ensure(thing,desired_type):
+    """If thing is not of desired_type, construct a new desired_type from thing"""
+    return thing if isinstance(thing,desired_type) else desired_type(thing)
+
 class Vec3(ctypes.Structure,VecMixin):
     """Class for length-3 vectors"""
 
@@ -66,10 +70,7 @@ class Vec3(ctypes.Structure,VecMixin):
     @staticmethod
     def ensure(thing):
         """Ensure thing is a Vec3.  If it's not, convert it."""
-        if( isinstance(thing,Vec3) ):
-            return thing
-        else:
-            return Vec3(thing)
+        return ensure(thing,Vec3)
 
     @staticmethod
     def identity():
@@ -240,6 +241,7 @@ def EulerRPY(v):
         return EulerZYX(v)
 
 class AxAng(ctypes.Structure):
+    """3D rotation about an arbitrary axis"""
     _fields_ = [ ("axis", Vec3),
                  ("angle", ctypes.c_double) ]
     def __init__(self, v):
@@ -259,6 +261,7 @@ class AxAng(ctypes.Structure):
             v.to_axang(self)
 
     def normalize(self):
+        """Ensure the axis is a unit vector"""
         libamino.aa_tf_axang_normalize(self)
         return self
 
@@ -331,10 +334,7 @@ class Quat(ctypes.Structure,VecMixin):
     @staticmethod
     def ensure(thing):
         """Ensure thing is a Quat.  If it's not, convert it."""
-        if( isinstance(thing,Quat) ):
-            return thing
-        else:
-            return Quat(thing)
+        return ensure(thing,Quat)
 
 
     def to_quat(self, h):
@@ -510,10 +510,7 @@ class RotMat(ctypes.Structure):
     @staticmethod
     def ensure(thing):
         """Ensure thing is a RotMat.  If it's not, convert it."""
-        if( isinstance(thing,RotMat) ):
-            return thing
-        else:
-            return RotMat(thing)
+        return ensure(thing,RotMat)
 
     def __mul__(self,other):
         """Chain two matrices"""
@@ -662,6 +659,11 @@ class TfMat(ctypes.Structure):
             raise IndexError(key)
 
     @staticmethod
+    def ensure(thing):
+        """Ensure thing is a TfMat.  If it's not, convert it."""
+        return ensure(thing,TfMat)
+
+    @staticmethod
     def row_matrix(args):
         m = len(args)
         A = TfMat(None)
@@ -742,6 +744,11 @@ class DualQuat(ctypes.Structure,CopyEltsMixin):
     @staticmethod
     def identity():
         return DualQuat( (Quat.identity(), Vec3.identity()) )
+
+    @staticmethod
+    def ensure(thing):
+        """Ensure thing is a DualQuat.  If it's not, convert it."""
+        return ensure(thing,DualQuat)
 
     def norm_parts(self):
         """Real and dual parts 2-norm (Euclidean)"""
@@ -831,6 +838,11 @@ class QuatTrans(ctypes.Structure,CopyEltsMixin):
     @staticmethod
     def identity():
         return QuatTrans( (Quat.identity(), Vec3.identity()) )
+
+    @staticmethod
+    def ensure(thing):
+        """Ensure thing is a QuatTrans.  If it's not, convert it."""
+        return ensure(thing,QuatTrans)
 
     def __mul__(self,other):
         """Chain two Dual Quaternions"""

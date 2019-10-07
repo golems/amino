@@ -38,7 +38,7 @@
 
 import ctypes
 from lib import libamino
-from tf import Vec3,Quat
+from tf import Vec3,Quat,QuatTrans
 from mat import DVec, DMat
 
 
@@ -64,19 +64,86 @@ class geom_opt(ctypes.Structure):
 
 class GeomOpt(object):
     __slots__ = ['ptr']
-    def __init__(self):
+    def __init__(self,options={}):
         self.ptr = libamino.aa_rx_geom_opt_create()
+        for key in options:
+            self.__setattr__(key,options[key])
+
     def __del__(self):
         libamino.aa_rx_geom_opt_destroy(self.ptr)
+
+
+    def _get_val(self,func):
+        return func(self.ptr).value
+
+    def _get_val3(self,func0, func1, func2):
+        return [self._get_val(func0),
+                self._get_val(func1),
+                self._get_val(func2)]
+
+    def _get_bool(self,func):
+        if 0 == self.get_val(func):
+            return False
+        else:
+            return True
+
+    def __getattr__(self, name):
+        if 'visual' == name:
+            return self._get_bool(libamino.aa_rx_geom_opt_get_visual)
+        elif 'collision' == name:
+            return self._get_bool(libamino.aa_rx_geom_opt_get_collision)
+        elif 'no_shadow' == name:
+            return self._get_bool(libamino.aa_rx_geom_opt_get_no_shadow)
+        elif 'alpha' == name:
+            return self._get_val(libamino.aa_rx_geom_opt_get_alpha)
+        elif 'scale' == name:
+            return self._get_val(libamino.aa_rx_geom_opt_get_scale)
+        elif 'color' == name:
+            return self._get_val3( libamino.aa_rx_geom_opt_get_color_red,
+                                   libamino.aa_rx_geom_opt_get_color_blue,
+                                   libamino.aa_rx_geom_opt_get_color_green )
+        elif 'specular' == name:
+            return self._get_val3( libamino.aa_rx_geom_opt_get_specular_red,
+                                   libamino.aa_rx_geom_opt_get_specular_blue,
+                                   libamino.aa_rx_geom_opt_get_specular_green )
+        # elif 'ptr' == name:
+        #     return object.__getattr__(self,name)
+        else:
+            raise AttributeError("Undefine attribute: " + name)
+
+    def __setattr__(self, name, value):
+        if 'visual' == name:
+            libamino.aa_rx_geom_opt_set_visual(self.ptr, value)
+        elif 'collision' == name:
+            libamino.aa_rx_geom_opt_set_collision(self.ptr, value)
+        elif 'no_shadow' == name:
+            libamino.aa_rx_geom_opt_set_no_shadow(self.ptr, value)
+        elif 'alpha' == name:
+            libamino.aa_rx_geom_opt_set_alpha(self.ptr, value)
+        elif 'scale' == name:
+            libamino.aa_rx_geom_opt_set_scale(self.ptr, value)
+        elif 'color' == name:
+            libamino.aa_rx_geom_opt_set_color3(self.ptr,
+                                               value[0], value[1], value[2])
+        elif 'specular' == name:
+            libamino.aa_rx_geom_opt_set_specular3(self.ptr,
+                                                  value[0], value[1], value[2])
+        elif 'ptr' == name:
+            object.__setattr__(self,name,value)
+        else:
+            raise AttributeError("Undefine attribute: " + name)
+
 
     @staticmethod
     def ensure(thing):
         if isinstance(thing, GeomOpt):
             return thing
+        elif isinstance(thing, dict):
+            return GeomOpt(thing)
         elif thing is None:
             return GeomOpt()
         else:
-            return Exception()
+            raise Exception()
 
 class Geom(object):
     __slots__ = ['ptr']
@@ -85,18 +152,125 @@ class Geom(object):
 
     @staticmethod
     def Box(opt, dimension):
+        """Create a box geometry object."""
         o = GeomOpt.ensure(opt)
         return Geom(libamino.aa_rx_geom_box(o.ptr, Vec3.ensure(dimension)))
+
+    @staticmethod
+    def Sphere(opt, radius):
+        """Create a sphere geometry object."""
+        o = GeomOpt.ensure(opt)
+        return Geom(libamino.aa_rx_geom_sphere(o.ptr, radius))
+
+    @staticmethod
+    def Cylinder(opt, height, radius):
+        """Create a cylinder geometry object."""
+        o = GeomOpt.ensure(opt)
+        return Geom(libamino.aa_rx_geom_cylinder(o.ptr, height, radius))
+
+    @staticmethod
+    def Cone(opt, height, start_radius, end_radius):
+        """Create a cone geometry object."""
+        o = GeomOpt.ensure(opt)
+        return Geom(libamino.aa_rx_geom_cone(o.ptr, height, start_radius, end_radius))
+
+    @staticmethod
+    def Torus(opt, angle, major_radius, minor_radius):
+        """Create a torus geometry object."""
+        o = GeomOpt.ensure(opt)
+        return Geom(libamino.aa_rx_geom_torus(o.ptr, height, major_radius, minor_radius))
+
+    @staticmethod
+    def Grid(opt, dimension, delta, width):
+        """Create a grid geometry object."""
+        o = GeomOpt.ensure(opt)
+        c_dimension = (ctypes.c_double*2)(dimension[0], dimension[1])
+        c_delta = (ctypes.c_double*2)(delta[0], delta[1])
+        # c_dimension[0] = dimension[0]
+        # c_dimension[1] = dimension[1]
+        # c_delta[0] = delta[0]
+        # c_delta[1] = delta[1]
+        return Geom(libamino.aa_rx_geom_grid(o.ptr, c_dimension, c_delta, width))
 
 libamino.aa_rx_geom_opt_create.argtypes = []
 libamino.aa_rx_geom_opt_create.restype = ctypes.POINTER(geom_opt)
 libamino.aa_rx_geom_opt_destroy.argtypes = [ctypes.POINTER(geom_opt) ]
 
+libamino.aa_rx_geom_opt_set_no_shadow.argtypes = [ctypes.POINTER(geom_opt),
+                                                  ctypes.c_int ]
+
+libamino.aa_rx_geom_opt_set_visual.argtypes = [ctypes.POINTER(geom_opt),
+                                                  ctypes.c_int ]
+
+libamino.aa_rx_geom_opt_set_collision.argtypes = [ctypes.POINTER(geom_opt),
+                                                  ctypes.c_int ]
+
+libamino.aa_rx_geom_opt_set_alpha.argtypes = [ctypes.POINTER(geom_opt),
+                                              ctypes.c_double ]
+
+libamino.aa_rx_geom_opt_set_color3.argtypes = [ctypes.POINTER(geom_opt),
+                                               ctypes.c_double,
+                                               ctypes.c_double,
+                                               ctypes.c_double ]
+
+libamino.aa_rx_geom_opt_set_specular3.argtypes = [ctypes.POINTER(geom_opt),
+                                                  ctypes.c_double,
+                                                  ctypes.c_double,
+                                                  ctypes.c_double ]
+
+libamino.aa_rx_geom_opt_set_scale.argtypes = [ctypes.POINTER(geom_opt),
+                                              ctypes.c_double ]
+
+libamino.aa_rx_geom_opt_get_scale.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_scale.restypes = ctypes.c_double
+
+libamino.aa_rx_geom_opt_get_alpha.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_alpha.restypes = ctypes.c_double
+
+libamino.aa_rx_geom_opt_get_color_red.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_color_red.restypes = ctypes.c_double
+libamino.aa_rx_geom_opt_get_color_blue.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_color_blue.restypes = ctypes.c_double
+libamino.aa_rx_geom_opt_get_color_green.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_color_green.restypes = ctypes.c_double
+
+libamino.aa_rx_geom_opt_get_specular_red.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_specular_red.restypes = ctypes.c_double
+libamino.aa_rx_geom_opt_get_specular_blue.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_specular_blue.restypes = ctypes.c_double
+libamino.aa_rx_geom_opt_get_specular_green.argtypes = [ctypes.POINTER(geom_opt)]
+libamino.aa_rx_geom_opt_get_specular_green.restypes = ctypes.c_double
+
 libamino.aa_rx_geom_box.argtypes = [ctypes.POINTER(geom_opt), ctypes.POINTER(Vec3)]
 libamino.aa_rx_geom_box.restype = ctypes.POINTER(geom)
 
 
+libamino.aa_rx_geom_sphere.argtypes = [ctypes.POINTER(geom_opt), ctypes.c_double]
+libamino.aa_rx_geom_sphere.restype = ctypes.POINTER(geom)
+
+libamino.aa_rx_geom_cylinder.argtypes = [ctypes.POINTER(geom_opt),
+                                         ctypes.c_double, ctypes.c_double]
+libamino.aa_rx_geom_cylinder.restype = ctypes.POINTER(geom)
+
+libamino.aa_rx_geom_cone.argtypes = [ctypes.POINTER(geom_opt),
+                                     ctypes.c_double, ctypes.c_double, ctypes.c_double ]
+libamino.aa_rx_geom_cone.restype = ctypes.POINTER(geom)
+
+
+libamino.aa_rx_geom_grid.argtypes = [ctypes.POINTER(geom_opt),
+                                     ctypes.POINTER(ctypes.c_double),
+                                     ctypes.POINTER(ctypes.c_double),
+                                     ctypes.c_double ]
+libamino.aa_rx_geom_grid.restype = ctypes.POINTER(geom)
+
+
+libamino.aa_rx_geom_torus.argtypes = [ctypes.POINTER(geom_opt),
+                                     ctypes.c_double, ctypes.c_double, ctypes.c_double ]
+libamino.aa_rx_geom_torus.restype = ctypes.POINTER(geom)
+
+
 class SceneGraph:
+    """A scene graph"""
     __slots__ = ['ptr']
 
     def __init__(self):
@@ -104,19 +278,53 @@ class SceneGraph:
     def __del__(self):
         libamino.aa_rx_sg_destroy(self.ptr)
 
-    def add_frame_fixed(self,parent,name,tf):
-        if(isinstance(tf,tuple)):
-            h,v = tf
-        else:
-            h = tf.rotation()
-            v = tf.translation()
+    def add_frame_fixed(self,parent,name,
+                        tf=QuatTrans.identity(),
+                        geom=None ):
+        """Add a fixed frame to the scene"""
+        E = QuatTrans.ensure(tf)
+        libamino.aa_rx_sg_add_frame_fixed(self.ptr, parent, name,
+                                          E.quat, E.trans)
+        self.attach_geom(name,geom)
 
-        libamino.aa_rx_sg_add_frame_fixed( self.ptr, parent, name,
-                                           Quat.ensure(h), Vec3.ensure(v) )
+
+    def add_frame_revolute(self,parent,name,
+                           tf=QuatTrans.identity(),
+                           config_name=None,
+                           axis=(0, 0, 1),
+                           offset=0,
+                           geom=None ):
+        """Add a revolute frame to the scene"""
+        E = QuatTrans.ensure(tf)
+        if config_name is None: config_name = name
+        libamino.aa_rx_sg_add_frame_revolute(self.ptr, parent, name,
+                                             E.quat, E.trans,
+                                             config_name, Vec3.ensure(axis), offset)
+        self.attach_geom(name,geom)
+
+    def add_frame_prismatic(self,parent,name,
+                            tf=QuatTrans.identity(),
+                            config_name=None,
+                            axis=(0, 0, 1),
+                            offset=0,
+                            geom=None ):
+        """Add a prismatic frame to the scene"""
+        E = QuatTrans.ensure(tf)
+        if config_name is None: config_name = name
+        libamino.aa_rx_sg_add_frame_prismatic(self.ptr, parent, name,
+                                              E.quat, E.trans,
+                                              config_name, Vec3.ensure(axis), offset)
+        self.attach_geom(name,geom)
 
     def attach_geom(self,name,geom):
-        if( geom.ptr ):
+        """Attach geometry to the named frame"""
+        if( isinstance(geom,Geom) and geom.ptr ):
             libamino.aa_rx_geom_attach(self.ptr, name, geom.ptr)
+        elif geom is None:
+            pass
+        elif isinstance(geom, list) or isinstance(geom, tuple):
+            for elt in geom:
+                self.attach_geom(name,elt)
         else:
             raise Exception()
 
@@ -192,10 +400,21 @@ libamino.aa_rx_dl_sg_at.argtypes = [ ctypes.c_char_p, ctypes.c_char_p,
                                     ctypes.POINTER(sg), ctypes.c_char_p]
 libamino.aa_rx_dl_sg_at.restype = ctypes.POINTER(sg)
 
-
 libamino.aa_rx_sg_add_frame_fixed.argtypes = [ctypes.POINTER(sg),
                                               ctypes.c_char_p, ctypes.c_char_p,
                                               ctypes.POINTER(Quat), ctypes.POINTER(Vec3)]
+
+libamino.aa_rx_sg_add_frame_revolute.argtypes = [ctypes.POINTER(sg),
+                                                 ctypes.c_char_p, ctypes.c_char_p,
+                                                 ctypes.POINTER(Quat), ctypes.POINTER(Vec3),
+                                                 ctypes.c_char_p, ctypes.POINTER(Vec3),
+                                                 ctypes.c_double]
+
+libamino.aa_rx_sg_add_frame_prismatic.argtypes = [ctypes.POINTER(sg),
+                                                  ctypes.c_char_p, ctypes.c_char_p,
+                                                  ctypes.POINTER(Quat), ctypes.POINTER(Vec3),
+                                                  ctypes.c_char_p, ctypes.POINTER(Vec3),
+                                                  ctypes.c_double]
 
 libamino.aa_rx_geom_attach.argtypes = [ctypes.POINTER(sg), ctypes.c_char_p,
                                        ctypes.POINTER(geom)]

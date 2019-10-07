@@ -1,0 +1,135 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+
+\def\px{1.5}
+\def\py{1.5}
+
+
+%% (transform (tf* (z-angle (degrees 30)) (vec3* 3 2 0)) (vec3* 1.5 1.5 0))
+
+\def\thetag{00}
+\def\xg{2}
+\def\yg{1}
+
+\def\thetaa{00}
+\def\xa{1.35}
+\def\ya{1}
+
+\def\thetab{00}
+\def\xb{1.2}
+\def\yb{1}
+
+\def\thetac{00}
+\def\xc{5}
+\def\yc{1}
+
+% 1: nodename
+% 2: label
+\newcommand{\localaxes}[2] {%
+  \draw[axis,->,thick] (0,0) -- (1.5,0) node[below right,inner sep=0] {$\unitvec{x}_{#2}$};%
+  \draw[axis,->,thick] (0,0) -- (0,1.5) node[above left,inner sep=0]
+  {$\unitvec{y}_{#2}$};%
+  %\draw[fill=metallic,metallic] (0,0) circle (.25em);
+  \draw[accentcolor] (0,0)  node[below left] {${#2}$};
+
+  \node[fill=accentcolor,
+  accentcolor,
+  draw=accentcolor,
+  circle,
+  inner sep=0,
+  minimum
+  width=.5em] (#1) {};
+
+  %\draw (0,0) circle[metallic] (.25em) node[below left] {#1};
+}
+
+\begin{document}
+
+\begin{tikzpicture}[scale=1,font=\Large,
+  ee/.style={
+    dashed,
+    very thick,
+    ->,
+    >=stealth,
+    draw=Accentcolor,
+  },
+  lbl/.style={
+    above,
+    font=\large,
+    Accentcolor
+  },
+  box/.style={
+    minimum height=2em,
+    minimum width=2em,
+    % xshift=1em,
+    % yshift=1em,
+    draw=primarycolor,
+    thick,
+    opacity=.15
+  },
+  boxa/.style={
+    box,
+    fill=red,
+  },
+  boxb/.style={
+    box,
+    fill=green,
+  },
+  boxc/.style={
+    box,
+    fill=blue,
+  }
+  ]
+
+    \localaxes{0}{{\rm root}}
+
+    \begin{scope}[shift={(\xg,\yg)}, rotate=\thetag]
+      \localaxes{g}{{\rm grid}}
+
+      \draw (0) edge[ee,out=-\thetag,in=180]
+      node[lbl,sloped] {$\mytf{S}{0}{\rm grid}$}
+      (g);
+
+      \begin{scope}[shift={(\xa,\ya)}, rotate=\thetaa]
+        \node[boxa] {};
+        \localaxes{A}{A}
+
+        \draw (g) edge[ee,out=-\thetaa,in=180]
+        node[lbl,sloped] {$\mytf{S}{\rm grid}{A}$}
+        (A);
+
+
+        \begin{scope}[shift={(\xb,\yb)}, rotate=\thetab]
+          \node[boxb] {};
+          \localaxes{B}{B}
+
+          \draw (A) edge[ee,out=-\thetab,in=180]
+          node[lbl,sloped] {$\mytf{S}{A}{B}$}
+          (B);
+
+        \end{scope}
+
+      \end{scope}
+
+      \begin{scope}[shift={(\xc,\yc)}, rotate=\thetac]
+        \node[boxc] {};
+        \localaxes{C}{C}
+
+        \draw (g) edge[ee,out=-\thetac,in=180]
+        node[lbl,below,sloped] {$\mytf{S}{\rm grid}{C}$}
+        (C);
+
+      \end{scope}
+
+
+    \end{scope}
+
+\end{tikzpicture}
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

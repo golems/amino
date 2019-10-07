@@ -1,6 +1,7 @@
 ;;;; -*- mode: lisp -*-
 ;;;;
 ;;;; Copyright (c) 2015, Rice University
+;;;; Copyright (c) 2019, Colorado School of Mines
 ;;;; All rights reserved.
 ;;;;
 ;;;; Author(s): Neil T. Dantam <ntd@gatech.edu>
@@ -167,6 +168,8 @@
 (defun curly-tokenize-file (file)
   (curly-tokenize (read-file-into-string file)))
 
+
+;; A recursive descent parser
 (defun curly-parse-string (string &optional pathname)
   (let ((start 0)
         (line 1))
@@ -262,28 +265,29 @@
                            ((:frame :object)
                             (named-block token))
                            (:identifier ; beginning of block statement
-                            (body-statement (list token)))
+                            (body-next token nil))
                            (t (parse-error type "identifier, frame, object, geometry, or }")))
                      (body-first-item)))))
-             (body-statement (items)
+
+             (body-next (name items)
                (declare (type list items))
-               ;(format t "~&body statement: ~A" (reverse items))
                (multiple-value-bind (type token) (next)
-                 (case type
-                   (#\; (reverse items))
-                   ;; (#\{
-                   ;;  (assert (= 1 (length items)))
-                   ;;  (make-curly-block :name (car items)
-                   ;;                    :type (car items)
-                   ;;                    :line line
-                   ;;                    :statements (body-first-item)))
-
-                   (#\[
-                    (body-statement (cons (array nil) items)))
-                   ((:identifier :integer :float :string)
-                    (body-statement (cons token items)))
-                   (otherwise (parse-error type "a value")))))
-
+                 (body-statement name type token items)))
+             (body-statement (name type token items)
+               (declare (type list items))
+               (case type
+                 (#\; (cons name (reverse items)))
+                 (#\[
+                  (body-next name (cons (array nil) items)))
+                 ((:identifier :integer :float :string)
+                  (body-next name (cons token items)))
+                 (:binop
+                  (multiple-value-bind (exp type token) (expr-val (cons token items))
+                    (body-statement name type token (list exp))))
+                 (- ; unary minus
+                  (multiple-value-bind (exp type token) (expr-val (cons '_ items))
+                    (body-statement name type token (list exp))))
+                 (otherwise (parse-error type "a value"))))
              (expr ()
                (expr-val nil))
              (expr-result (e)
@@ -502,7 +506,7 @@
                      (null)
                      (cons (string-case (car stmt)
                              (("shape" "color" "alpha" "specular" "mesh"
-                                       "dimension" "delta" "thickness" "radius" "height" "start-radius" "end-radius" "scale")
+                                       "dimension" "delta" "thickness" "radius" "height" "start_radius" "end_radius" "scale")
                               (setq properties (add-prop properties stmt)))
                              (("visual" "collision" "no-shadow")
                               (setq properties (add-prop-bool properties stmt)))
@@ -539,11 +543,16 @@
                          (shape-prop (string-case shape-prop
                                        ("box"
                                         (scene-geometry-box options (get-prop properties "dimension")))
+                                       ("cone"
+                                        (scene-geometry-cone options
+                                                             :height (get-prop properties "height")
+                                                             :start-radius (get-prop properties "start_radius")
+                                                             :end-radius (get-prop properties "end_radius")))
                                        ("sphere"
                                         (scene-geometry-sphere options (get-prop properties "radius")))
                                        ("grid"
                                         (scene-geometry-grid options
-                                                             :dimension (get-prop properties "dimension")
+                                                            :dimension (get-prop properties "dimension")
                                                              :delta (get-prop properties "delta")
                                                              :width (get-prop properties "thickness")))
                                        ("cylinder"

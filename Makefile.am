@@ -746,6 +746,10 @@ EXTRA_DIST += \
 	doc/md/scenecompiler.md \
 	doc/md/gui.md \
 	doc/md/scenefile.md \
+	doc/md/tutorial/la.md \
+	doc/md/tutorial/rot.md \
+	doc/md/tutorial/tf.md \
+	doc/md/tutorial/scene.md \
 	doc/footer.html \
 	doc/carousel.html \
 	doc/logo.png \
@@ -754,6 +758,9 @@ EXTRA_DIST += \
 	demo/tutorial/python/t0.2-lls.py \
 	demo/tutorial/python/t1-rotation.py \
 	demo/tutorial/python/t2-tf.py \
+	demo/tutorial/python/t3.0-scene.py \
+	demo/tutorial/python/t3.1-robot.py \
+	demo/tutorial/plugin/CMakeLists.txt \
         share/doc.lisp
 
 
@@ -807,9 +814,15 @@ MANUAL_SVGS = \
 	doc/manual/tfpoint.svg \
 	doc/manual/tfchain.svg \
 	doc/manual/robotframe.svg \
+	doc/manual/simplescene.svg \
 	doc/manual/cplane.svg
 
-doc: doxygen $(MANUAL_SVGS)
+MANUAL_PNGS = \
+	doc/manual/procedural-robot.png \
+	doc/manual/baxter-win.png \
+	doc/manual/simple-scene-screenshot.png
+
+doc: doxygen $(MANUAL_SVGS) $(MANUAL_PNGS)
 	$(MKDIR_P) doc/manual/doc
 	cp $(top_srcdir)/doc/logo-medium.png doc/manual/doc
 
@@ -821,6 +834,10 @@ doc/manual/%.svg: doc/md/tutorial/fig/%.pdf
 	$(MKDIR_P) $(dir $@)
 	pdftocairo -svg $< $@
 
+
+doc/manual/%.png: doc/md/tutorial/fig/%.png
+	$(MKDIR_P) $(dir $@)
+	cp $< $@
 
 else
 

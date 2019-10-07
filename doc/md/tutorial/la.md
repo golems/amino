@@ -73,9 +73,10 @@ same data pointer and an increment of 2.  The length is now 3.
 \f]
 
 
-These three items enable flexible access to parts of other vectors and
-matrices, such as "slices" of vectors and rows, columns, or diagonals
-of matrices.  The following C struct defines the vector for doubles:
+The combination of length, data pointer, and increment value items
+enables flexible access to parts of other vectors and matrices, such
+as "slices" of vectors and rows, columns, or diagonals of matrices.
+The following C struct defines the vector for doubles:
 
 ~~~{.c}
 struct aa_dvec {
