@@ -121,6 +121,8 @@
               (values (parse-float (subseq string start end))
                       :float
                       end)))
+    ("\\*\\*" :binop ^)
+    ("\\^" :binop ^)
     ("\\*" :binop *)
     ("\\+" :binop +)
     ("/" :binop /)
@@ -343,17 +345,19 @@
 
 
 (defun curly-eval (defs e)
-  (labels ((recurse (args)
-             (map 'list (lambda (e)
-                          (curly-eval defs e))
-                  args)))
+  (labels ((recurse-0 (e)
+             (curly-eval defs e))
+           (recurse (args)
+             (map 'list #'recurse-0 args)))
     (etypecase e
       (number e)
       (string (if-let ((a (assoc e defs :test #'equal)))
                 (cdr a)
                 e))
       (list
-       (destructuring-case e
+       (destructuring-ecase e
+         ((expt base power)
+          (expt (recurse-0 base) (recurse-0 power)))
          ((+ &rest args)
           (apply #'+ (recurse args)))
          ((- &rest args)

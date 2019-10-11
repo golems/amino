@@ -45,6 +45,15 @@ CblasNoTrans   = 111
 CblasTrans     = 112
 CblasConjTrans = 113
 
+
+
+def is_int(thing):
+    return isinstance(thing,int) or isinstance(thing,long)
+
+def is_scalar(thing):
+    return is_int(thing) or isinstance(thing,float)
+
+
 class DVec(ctypes.Structure,VecMixin):
     _fields_ = [ ("_size", ctypes.c_size_t),
                  ("_data", ctypes.POINTER(ctypes.c_double)),
@@ -63,7 +72,7 @@ class DVec(ctypes.Structure,VecMixin):
             l = len(arg)
             self._allocate(l)
             self.copy_from(arg)
-        elif type(arg) == int :
+        elif is_int(arg):
             self._allocate(arg)
         else:
             raise Exception('Invalid argument')
@@ -203,7 +212,7 @@ class DVec(ctypes.Structure,VecMixin):
             return self.axpy(1,other)
         elif isinstance(other,list):
             return self.axpy(1,DVec(other))
-        elif type(other) == int or type(other) == float:
+        elif is_scalar(other):
             return self.increment(other)
         else:
             raise Exception('Invalid argument')
@@ -222,7 +231,7 @@ class DVec(ctypes.Structure,VecMixin):
             return self.axpy(-1,other)
         if isinstance(other,list):
             return self.axpy(-1,DVec(other))
-        elif type(other) == int or type(other) == float:
+        elif is_scalar(other):
             return self.increment(-other)
         else:
             raise Exception('Invalid argument')
@@ -233,14 +242,14 @@ class DVec(ctypes.Structure,VecMixin):
             return DVec(self).axpy(-1,other)
         elif isinstance(other,list):
             return self.__sub__(DVec(other))
-        elif type(other) == int or type(other) == float:
+        elif is_scalar(other):
             return DVec(self).increment(-other)
         else:
             raise Exception('Invalid argument')
 
     def __rsub__(self,other):
         """Subtract a self from a scalar or vector"""
-        if type(other) == int or type(other) == float:
+        if is_scalar(other):
             return self.__neg__().increment(other)
         elif isinstance(other,list):
             return DVec(other).axpy(-1,self)
@@ -442,7 +451,7 @@ class DMat(ctypes.Structure,SSDEqMixin):
         self._data[ i + j*self._ld] = item
 
     def __imul__(self, other):
-        if isinstance(other,int) or isinstance(other,float):
+        if is_scalar(other):
             libamino.aa_dmat_scal(self,other)
             return self
         else:
@@ -453,7 +462,7 @@ class DMat(ctypes.Structure,SSDEqMixin):
         return DMat(self).__imul__(-1)
 
     def __mul__(self, other):
-        if isinstance(other,int) or isinstance(other,float):
+        if is_scalar(other):
             return DMat(self).__imul__(other)
         elif isinstance(other,DVec) :
             y = DVec.create(self.rows())
@@ -469,7 +478,7 @@ class DMat(ctypes.Structure,SSDEqMixin):
             raise TypeError('Cannot multiply matrix with %s'%type(other))
 
     def __rmul__(self, other):
-        if isinstance(other,int) or isinstance(other,float):
+        if is_scalar(other):
             return DMat(self).__imul__(other)
         else:
             raise TypeError('Cannot multiply matrix with %s'%type(other))
@@ -483,7 +492,7 @@ class DMat(ctypes.Structure,SSDEqMixin):
         return DMat(self).__idiv__(other)
 
     def __iadd__(self, other):
-        if isinstance(other,int) or isinstance(other,float):
+        if is_scalar(other):
             libamino.aa_dmat_inc(self,other)
             return self
         if isinstance(other,DMat):
@@ -493,19 +502,19 @@ class DMat(ctypes.Structure,SSDEqMixin):
             raise TypeError('Cannot increment matrix with %s'%type(other))
 
     def __add__(self, other):
-        if isinstance(other,int) or isinstance(other,float) or isinstance(other,DMat):
+        if is_scalar(other) or isinstance(other,DMat):
             return DMat(self).__iadd__(other)
         else:
             raise TypeError('Cannot add matrix add %s'%type(other))
 
     def __radd__(self, other):
-        if isinstance(other,int) or isinstance(other,float):
+        if is_scalar(other):
             return DMat(self).__iadd__(other)
         else:
             raise TypeError('Cannot add matrix add %s'%type(other))
 
     def __isub__(self, other):
-        if isinstance(other,int) or isinstance(other,float):
+        if is_scalar(other):
             libamino.aa_dmat_inc(self,-other)
             return self
         if isinstance(other,DMat):
@@ -515,13 +524,13 @@ class DMat(ctypes.Structure,SSDEqMixin):
             raise TypeError('Cannot increment matrix with %s'%type(other))
 
     def __sub__(self, other):
-        if isinstance(other,int) or isinstance(other,float) or isinstance(other,DMat):
+        if is_scalar(other) or isinstance(other,DMat):
             return DMat(self).__isub__(other)
         else:
             raise TypeError('Cannot subtract matrix with %s'%type(other))
 
     def __rsub__(self, other):
-        if isinstance(other,int) or isinstance(other,float):
+        if is_scalar(other):
             return self.__neg__().__iadd__(other)
         else:
             raise TypeError('Cannot subtract matrix with %s'%type(other))

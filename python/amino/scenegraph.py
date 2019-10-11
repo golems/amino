@@ -368,13 +368,21 @@ class SceneGraph:
         else:
             return name_or_id
 
-    def config_vector(self, config_dict, vector=None):
-        if vector is None:
-            vector = DVec.create(self.config_count())
-            vector.set(0)
-        for key in config_dict:
-            vector[ self.config_id(key) ] = config_dict[key]
-        return vector
+    def config_vector(self,config,vector=None):
+        if( isinstance(config,dict) ):
+            if vector is None:
+                vector = DVec.create(self.config_count())
+                vector.set(0)
+            elif len(vector) != self.config_count():
+                raise IndexError()
+            for key in config:
+                vector[ self.config_id(key) ] = config[key]
+            return vector
+        elif vector is None:
+            return DVec.ensure(config)
+        else:
+            vector.copy_from(config)
+            return vector
 
     def chain(self,root,tip):
         return SubSceneGraph.chain(self,root,tip)
@@ -450,6 +458,8 @@ class SubSceneGraph:
     def config_count(self):
         return libamino.aa_rx_sg_sub_config_count(self.ptr)
 
+    def config_id(self,key):
+        return libamino.aa_rx_sg_sub_config_count(self.ptr)
 
     def scatter_config(self,v_sub, v_all=None):
         if( v_all is None ):
@@ -461,6 +471,18 @@ class SubSceneGraph:
         v_sub = DVec.create(self.config_count())
         libamino.aa_rx_sg_sub_config_gather(self.ptr,v_all, v_sub)
         return v_sub
+
+    def end_effector_id(self):
+        return libamino.aa_rx_sg_sub_frame_ee(self.ptr)
+
+    def config_vector(self,config,vector=None):
+        # TODO: convert dictionary
+        if vector is None:
+            return DVec.ensure(config)
+        else:
+            vector.copy_from(config)
+            return vector
+
 
     @staticmethod
     def chain(scenegraph,root,tip):
@@ -493,3 +515,9 @@ libamino.aa_rx_sg_sub_config_gather.argtypes = [ctypes.POINTER(sg_sub),
 
 libamino.aa_rx_sg_chain_create.argtypes = [ctypes.POINTER(sg), ctypes.c_int, ctypes.c_int]
 libamino.aa_rx_sg_chain_create.restype = ctypes.POINTER(sg_sub)
+
+libamino.aa_rx_sg_sub_frame_ee.argtypes = [ctypes.POINTER(sg_sub)]
+libamino.aa_rx_sg_sub_frame_ee.restype = ctypes.c_int
+
+libamino.aa_rx_sg_sub_frame_ee.argtypes = [ctypes.POINTER(sg_sub)]
+libamino.aa_rx_sg_sub_frame_ee.restype = ctypes.c_int

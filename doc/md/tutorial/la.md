@@ -3,6 +3,9 @@ Linear Algebra {#tutorial_la}
 
 [TOC]
 
+This tutorial covers vector and matrix representations and concepts,
+including vector slices, matrix blocks, and least-squares solutions.
+
 Amino performs linear algebra using the standard,
 high-performance-computing [BLAS](http://www.netlib.org/blas/) (Basic
 Linear Algebra Subprograms) and
@@ -12,8 +15,6 @@ available such as [ATLAS](http://math-atlas.sourceforge.net/),
 [OpenBLAS](https://www.openblas.net/), and the [Intel Math Kernel
 Library (MKL)](https://software.intel.com/en-us/mkl).
 
-This tutorial covers vector and matrix representations and concepts,
-including vector slices, matrix blocks, and least-squares solutions.
 
 Vectors {#tutorial_la_vector}
 -------
@@ -31,7 +32,7 @@ consider the following vector:
     \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -56,7 +57,7 @@ same data pointer and an increment of 2.  The length is now 3.
     \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -159,7 +160,7 @@ For example, a 3x3 matrix would be stored in memory as follows:
     \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -197,7 +198,7 @@ matrix \f$\mathbf{A}\f$:
     \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -257,7 +258,7 @@ to the first element of the column, and a increment of 1:
   \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -284,7 +285,7 @@ to the first element of the column, and a increment of 1:
   \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -314,7 +315,7 @@ leading dimension.
   \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -342,7 +343,7 @@ leading dimension.
   \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -374,7 +375,7 @@ plus the leading dimension:
   \end{bmatrix}
 
     \qquad
-    \rightarrow
+    \leadsto
     \qquad
 
     \begin{cases}
@@ -490,7 +491,7 @@ each unknown as a matrix.
     \end{array}
 
     \quad\quad
-    \rightarrow
+    \leadsto
     \quad\quad
 
     \begin{bmatrix}
@@ -561,7 +562,7 @@ columns):
     \end{array}
 
     \quad\quad
-    \rightarrow
+    \leadsto
     \quad\quad
 
     \begin{bmatrix}
@@ -587,7 +588,7 @@ rows:
     \end{array}
 
     \quad\quad
-    \rightarrow
+    \leadsto
     \quad\quad
 
     \begin{bmatrix}

@@ -36,7 +36,9 @@
 import ctypes
 
 from lib import libamino
-from tf import Vec3, Quat, XAngle, YAngle, ZAngle, AxAng, RotMat, TfMat, DualQuat, QuatTrans, EulerRPY
+from tf import Vec3, Quat, XAngle, YAngle, ZAngle, AxAng, RotMat, TfMat, DualQuat, QuatTrans, EulerRPY, TfVel, Twist
 from mat import DVec, DMat
 from scenegraph import GeomOpt, Geom, SceneGraph, SubSceneGraph
 from scenewin import SceneWin
+
+from kinematics import SceneFK, SceneDK, SceneIK

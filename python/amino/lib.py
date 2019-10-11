@@ -32,3 +32,5 @@
 import ctypes
 
 libamino = ctypes.CDLL("libamino.so")
+libamino.aa_frand_init.argtypes = []
+libamino.aa_frand_init()

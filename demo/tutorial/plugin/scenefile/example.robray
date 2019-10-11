@@ -1,0 +1,113 @@
+/* example.roboray
+ * ===============
+ *
+ * Serial robot example in a scene file.
+ */
+
+
+/* Parameters for the robot */
+def rad 0.05; // Link radius
+def len0 1;      // upper arm length
+def len1 1;      // forearm length
+def r 1.618;     // a ratio
+
+/* Define classes for robot parts */
+class link {
+    shape cylinder;
+    radius rad;
+    color [.5, .5, .5];
+    specular [2, 2, 2];
+}
+
+class joint_style {
+    color [0, 0, 0];
+    specular [.5, .5, .5];
+}
+
+
+/* Draw the grid */
+frame grid {
+    geometry {
+        shape grid;
+        delta [.1, .1];
+        thickness .005;
+        dimension [1, 1];
+    }
+}
+
+
+/* Draw the robot */
+
+// Shoulder
+frame s0 {
+    type revolute;  # frame type: revolute joint
+    axis [1, 0, 0]; # joint axis
+    geometry {
+        isa joint_style; # instance of joint_style class
+        shape sphere;
+        radius r*rad;
+    }
+}
+
+frame s1 {
+    parent s0;
+    type revolute;
+    axis [0, 1, 0];
+}
+
+frame s2 {
+    parent s1;
+    type revolute;
+    axis [1, 0, 0];
+
+    // nested frame is a child of s2
+    frame upper-link {
+        rpy  [0, pi/2, 0];
+        geometry {
+            isa link;
+            height len0;
+        }
+    }
+}
+
+
+// Elbow
+frame e {
+    parent s2;
+    type revolute;
+    axis [0,1,0];
+    translation [len0, 0, 0];
+
+    frame e-link {
+        rpy [pi/2, 0, 0];
+        translation [0, rad, 0];
+        geometry {
+            isa joint_style;
+            shape cylinder;
+            height 2*rad;
+            radius r*rad;
+        }
+    }
+
+    frame lower-link {
+        rpy [0, pi/2, 0];
+        geometry {
+            isa link;
+            height len1;
+        }
+    }
+
+    // "Hand"
+    frame hand {
+        rpy [0, pi/2, 0];
+        translation [len1, 0, 0];
+        geometry {
+            shape cone;
+            height 2*r*r*rad;
+            start_radius  r*rad;
+            end_radius 0;
+        }
+
+    }
+
+}

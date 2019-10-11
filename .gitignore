@@ -210,8 +210,8 @@ amino*.tar.gz
 /doc/md/tutorial/fig/localframe.fdb_latexmk
 /doc/md/tutorial/fig/localframe.fls
 /demo/urdf/baxter/baxter-test
-/demo/tutorial/plugin/CMakeCache.txt
-/demo/tutorial/plugin/Makefile
-/demo/tutorial/plugin/baxter-model.c
-/demo/tutorial/plugin/baxter-model.c.h
-/demo/tutorial/plugin/cmake_install.cmake
+/demo/tutorial/plugin/*/CMakeCache.txt
+/demo/tutorial/plugin/*/Makefile
+/demo/tutorial/plugin/*/*.c
+/demo/tutorial/plugin/*/*.c.h
+/demo/tutorial/plugin/*/*.cmake

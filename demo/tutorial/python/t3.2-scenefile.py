@@ -30,7 +30,7 @@ win = SceneWin(scenegraph=sg,start=True,async=True)
 # Do a simple wave
 dt = 1.0/60
 t = 0
-while True:
+hile win.is_runnining():
     t += dt
     e_angle = (120 + 15*cos(t)) * (pi/180)
     win.set_config({"s1": -.75*pi,

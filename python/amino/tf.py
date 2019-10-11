@@ -43,6 +43,8 @@ from math import sqrt
 
 from mixin import VecMixin, CopyEltsMixin
 
+from mat import DVec, is_scalar
+
 def ensure(thing,desired_type):
     """If thing is not of desired_type, construct a new desired_type from thing"""
     return thing if isinstance(thing,desired_type) else desired_type(thing)
@@ -66,6 +68,12 @@ class Vec3(ctypes.Structure,VecMixin):
     def copy_from(self,other):
         self._copy_elts(other)
         return self
+
+    def zero(self):
+        """Set to zero."""
+        self.x = 0
+        self.y = 0
+        self.z = 0
 
     @staticmethod
     def ensure(thing):
@@ -120,6 +128,49 @@ class Vec3(ctypes.Structure,VecMixin):
 
     def __str__(self):
         return 'Vec3(%f, %f, %f)' % (self.x, self.y, self.z)
+
+    def __iadd__(self,other):
+        if isinstance(other,Vec3):
+            self.x += other.x
+            self.y += other.y
+            self.z += other.z
+            return self
+        elif is_scalar(other):
+            self.x += other
+            self.y += other
+            self.z += other
+            return self
+        else:
+            return self.__iadd__(Vec3(other))
+
+    def __add__(self,other):
+        """Add a scalar or vector to self"""
+        return Vec3(self).__iadd__(other)
+
+    def __radd__(self,other):
+        """Add a scalar or vector to self"""
+        return Vec3(self).__iadd__(other)
+
+
+    def __isub__(self,other):
+        if isinstance(other,Vec3):
+            self.x -= other.x
+            self.y -= other.y
+            self.z -= other.z
+        elif is_scalar(other):
+            self.x -= other
+            self.y -= other
+            self.z -= other
+        else:
+            self.__isub(Vec3(other))
+
+    def __sub__(self,other):
+        """Add a scalar or vector to self"""
+        return Vec3(self).__isub__(other)
+
+    def __rsub__(self,other):
+        """Add a scalar or vector to self"""
+        return Vec3(self).__isub__(other)
 
     def to_quat(self,h):
         """Convert to a quaternion and copy to h.
@@ -821,13 +872,13 @@ class QuatTrans(ctypes.Structure,CopyEltsMixin):
     _fields_ = [ ("quat", Quat),
                  ("trans", Vec3) ]
 
-    def __init__(self, arg):
+    def __init__(self, arg=None):
         if arg is not None:
             self.conv_from(arg)
 
     def conv_from(self,arg):
         if isinstance(arg,tuple):
-            R,v = arg
+            (R,v) = arg
             self.quat.conv_from(R)
             self.trans.copy_from(v)
         elif isinstance(arg, list):
@@ -915,6 +966,76 @@ class QuatTrans(ctypes.Structure,CopyEltsMixin):
 
     def __len__(self):
         return 7
+
+#--------------#
+# Differential #
+#--------------#
+
+class TfVec(ctypes.Structure):
+    _fields_ = [ ("trans", Vec3),
+                 ("rot", Vec3) ]
+
+    def _first(self):
+        return self.trans
+    def _second(self):
+        return self.rot
+
+    def set_translation(self,x):
+        self.trans.copy_from(x)
+
+    def set_rotation(self,x):
+        self.rot.copy_from(x)
+
+    def copy_from(self,x):
+        self.set_rotation(x.rot)
+        self.set_translation(x.trans)
+
+    def zero(self):
+        """Set to zero."""
+        self.rot.zero()
+        self.trans.zero()
+
+    def __len__(self):
+        """Number of elements in self"""
+        return 6
+
+    def __getitem__(self, key):
+        if key < 0:
+            raise IndexError(key)
+        elif key < 3:
+            return self._first()[key]
+        elif key < 6:
+            return self._second()[key-3]
+        else:
+            raise IndexError(key)
+
+    def __setitem__(self, key, item):
+        if key < 0:
+            raise IndexError(key)
+        elif key < 3:
+            self._first()[key] = item
+        elif key < 6:
+            self._second()[key-3] = item
+        else:
+            raise IndexError(key)
+
+    def to_dvec(self, vec=DVec(6)):
+        vec.copy_from(self)
+        return vec
+
+    def from_dvec(self, vec):
+        vec.copy_to(self)
+
+
+class TfVel(TfVec):
+    """A rotational and translational velocity."""
+    def __init__(self):
+        pass
+
+class Twist(TfVec):
+    """A twist velocity."""
+    def __init__(self):
+        pass
 
 #---------------#
 # LIBRARY CALLS #

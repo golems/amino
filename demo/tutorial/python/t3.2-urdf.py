@@ -13,7 +13,7 @@ import os
 
 # Scene Parameters
 # Change scene_plugin based on your directory structure
-scene_plugin="%s/git/amino/demo/tutorial/plugin/libbaxter-model.so" % os.environ['HOME']
+scene_plugin="%s/git/amino/demo/tutorial/plugin/urdf/libbaxter-model.so" % os.environ['HOME']
 scene_name="baxter"
 
 # Create an (empty) scene graph

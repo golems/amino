@@ -11,6 +11,7 @@ Scene Graphs {#tutorial_scene}
 \newcommand{\jelt}[0]{\unitvec{\jmath}}
 \newcommand{\kelt}[0]{\unitvec{k}}
 \newcommand{\quat}[1]{\mathcal{#1}}
+\newcommand{\sequat}[0]{\quat{h}}
 \newcommand{\qmul}[0]{\otimes}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
 \newcommand{\tf}[3]{{^{#2}{#1}_{#3}}}
@@ -18,6 +19,12 @@ Scene Graphs {#tutorial_scene}
 \newcommand{\tfquat}[3]{{^{#2}\quat{#1}_{#3}}}
 \newcommand{\qmul}[0]{\otimes}
 \newcommand{\dualelt}[0]{\varepsilon}
+\newcommand{\setranssym}[0]{v}
+\newcommand{\setrans}[0]{\vec{\setranssym}}
+\newcommand{\setransvel}[0]{\dot{\setrans}}
+\newcommand{\confsym}[0]{\theta}
+\newcommand{\conf}[0]{\confsym}
+\newcommand{\confvec}[0]{\boldsymbol{\confsym}}
 \f]
 
 This tutorial introduces the scene graph data structure and Scene
@@ -68,14 +75,93 @@ the scroll wheel.  Close the window the exit.
 
 Robot Scene {#tutorial_scene_robot}
 ===========
-Next, we will procedurally construct the following serial robot:
+
+Next, we will procedurally construct a serial robot.  We model the
+robot joints as frames whose transform is parameterized by a
+configuration variable (i.e., the joint angle).  In other words, the
+joint angle tells us the relative transform between a joint's local
+coordinate frame and the joint's parent frame.
+
+Robot Joints
+------------
+
+The most common types of joints are *revolute* (rotating) and
+*prismatic* (linear).
+
+
+
+\htmlonly
+<div align="center" style="float:right; margin-left: 1em;">
+<video width="400" height="300" controls autoplay loop>
+  <source src="prismatic.mp4" type="video/mp4">
+  <source src="prismatic.ogg" type="video/ogg">
+  Your browser does not support the video tag.
+</video>
+</div>
+\endhtmlonly
+
+### Prismatic Joints
+
+Prismatic joints create a linear motion.  We compute the relative
+translation along the axis of motion:
+\f[
+    \setrans = \ell \unitvec{u}
+\; .
+\f]
+
+<div style="clear: both"></div>
+
+
+\htmlonly
+<div align="center" style="float:right; margin-left: 1em;">
+<video width="400" height="300" controls autoplay loop>
+  <source src="revolute.mp4" type="video/mp4">
+  <source src="revolute.ogg" type="video/ogg">
+  Your browser does not support the video tag.
+</video>
+</div>
+\endhtmlonly
+
+### Revolute Joints
+
+Revolute joints create a rotating motion.  We compute the relative
+rotation about the axis of motion from the quaternion exponential
+\f[
+    \sequat = \exp\left(\frac{\conf}{2} \unitvec{u}\right)
+\; .
+\f]
+
+<div style="clear: both"></div>
+
+### Summary
+
+The following table summarizes the relative rotation and translation
+for these joints.  The joint frame is labeled *c* and its parent *p*.
+For the revolute frame, we compute the rotation quaternion via the
+exponential; the translation \f$ \tf{\vec{v}}{p}{c} \f$ is constant.
+For the prismatic frame, rotation \f$\tf{\quat{h}}{p}{c}\f$ is
+constant and we compute translation along the joint axis
+\f$\vec{u}\f$.
+
+
+| Type      | Rotation                                          | Translation                | Diagram                                         |
+|-----------|---------------------------------------------------|----------------------------|-------------------------------------------------|
+| Revolute  | \f$\exp \left( \frac{\theta}{2}\vec{u} \right)\f$ | \f$ \tf{\vec{v}}{p}{c} \f$ | ![Revolute Frame Diagram](joint-revolute.svg)   |
+| Prismatic | \f$\tf{\quat{h}}{p}{c}\f$                         | \f$ \ell \vec{u} \f$       | ![Prismatic Frame Diagram](joint-prismatic.svg) |
+
+
+Example Robot Construction
+--------------------------
+
+We will construct the following robot:
 
 ![Procedurally constructed 4-DoF Robot](procedural-robot.png)
 
 This robot has four joints: three at the shoulder and one at the
-elbow.  For each joint, we create a "revolute" frame and specify the
-joint's axis of rotation.  To represent the robot's links, we attach
-geometry, i.e., a sphere, cylinders, and a cone, to various frames.
+elbow.  For each joint, we create a "revolute" (rotating) frame and
+specify the joint's axis of rotation.  To represent the robot's links,
+we attach geometry, i.e., a sphere, cylinders, and a cone, to various
+frames.
 
 The following code constructs the robot, displays it in the viewer,
 and waves the elbow:
@@ -182,7 +268,7 @@ aarxc --gui package://baxter_description/urdf/baxter.urdf
 <li> Use the scene compiler to build the plugin.
   The following CMake file will build a plugin for the baxter:
 
-@include plugin/CMakeLists.txt
+@include plugin/urdf/CMakeLists.txt
 
 From the directory containing the CMakLists.txt, build the plugin by
 running:

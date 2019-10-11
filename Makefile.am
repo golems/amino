@@ -400,6 +400,7 @@ EXTRA_DIST += \
 	python/setup.py \
 	python/amino/mat.py \
 	python/amino/tf.py \
+	python/amino/kinematics.py \
 	python/amino/mixin.py \
 	python/amino/scenegraph.py \
 	python/amino/scenewin.py \
@@ -750,6 +751,8 @@ EXTRA_DIST += \
 	doc/md/tutorial/rot.md \
 	doc/md/tutorial/tf.md \
 	doc/md/tutorial/scene.md \
+	doc/md/tutorial/kinematics.md \
+	doc/md/tutorial/collision.md \
 	doc/footer.html \
 	doc/carousel.html \
 	doc/logo.png \
@@ -760,7 +763,11 @@ EXTRA_DIST += \
 	demo/tutorial/python/t2-tf.py \
 	demo/tutorial/python/t3.0-scene.py \
 	demo/tutorial/python/t3.1-robot.py \
-	demo/tutorial/plugin/CMakeLists.txt \
+	demo/tutorial/plugin/urdf/CMakeLists.txt \
+	demo/tutorial/plugin/scenefile/CMakeLists.txt \
+	demo/tutorial/plugin/scenefile/example.robray \
+	demo/tutorial/plugin/7dof/CMakeLists.txt \
+	demo/tutorial/plugin/7dof/7dof.robray \
         share/doc.lisp
 
 
@@ -801,6 +808,8 @@ doxygen: doc/md/copying.md doc/md/mainpage.md lisp-rx.md lisp-amino.md
 doc/manual: doxygen
 
 MANUAL_SVGS = \
+	doc/manual/joint-revolute.svg \
+	doc/manual/joint-prismatic.svg \
 	doc/manual/bodyframe.svg \
 	doc/manual/euclideantf.svg \
 	doc/manual/planerot.svg \

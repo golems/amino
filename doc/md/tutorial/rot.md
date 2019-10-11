@@ -15,7 +15,11 @@ Rotation {#tutorial_rot}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
 \f]
 
-This tutorial covers three-dimensional rotations.
+This tutorial covers three-dimensional (3D) rotations.  We begin by
+relating complex numbers and two-dimensional (planar) rotation.  Then,
+we extend to 3D rotations represented using *quaternions*, a 3D
+analogue to the complex numbers.  Finally, we discuss matrix
+representations for rotation.
 
 Complex Numbers {#tutorial_rot_complex}
 ===============
@@ -202,9 +206,9 @@ quaternion elements.  For example, the derivation of
 
 \f[
     \left\lgroup \ielt\jelt\kelt=-1 \right\rgroup
-    \rightarrow \left\lgroup \ielt\jelt\kelt^2=-\kelt \right\rgroup
-    \rightarrow \left\lgroup -\ielt\jelt=-\kelt \right\rgroup
-    \rightarrow \left\lgroup \ielt\jelt=\kelt \right\rgroup
+    \leadsto \left\lgroup \ielt\jelt\kelt^2=-\kelt \right\rgroup
+    \leadsto \left\lgroup -\ielt\jelt=-\kelt \right\rgroup
+    \leadsto \left\lgroup \ielt\jelt=\kelt \right\rgroup
 \f]
 
 Following a similar derivation for the other products, we obtain the
@@ -425,7 +429,7 @@ We store the rotation matrix in memory using column-major order:
     r_{21} & r_{22} & r_{23} \\
     r_{31} & r_{32} & r_{33} \\
     \end{bmatrix}
-    \rightarrow
+    \leadsto
     \begin{array}{|c|c|}
     \hline
     r_{11} & r_{21} & r_{31} &

@@ -49,13 +49,15 @@ class win(ctypes.Structure):
     pass
 
 class SceneWin(object):
-    __slots__ = ['ptr', 'scenegraph']
+    __slots__ = ['ptr', 'scenegraph', 'q']
 
     def __init__(self, title="PyAmino", width=800, height=600,
-                 start=True, async=True, scenegraph=None):
+                 start=True, async=True, scenegraph=None, config=None):
         self.ptr = libaminogl.aa_rx_win_default_create(title,width,height)
         if scenegraph:
             self.set_scenegraph(scenegraph)
+        if config:
+            self.set_config(config)
         if start:
             self.start(async)
 
@@ -70,19 +72,22 @@ class SceneWin(object):
 
     def set_scenegraph(self, scenegraph):
         self.scenegraph = scenegraph
+        self.q = DVec(scenegraph.config_count())
         libaminogl.aa_rx_win_set_sg(self.ptr,scenegraph.ptr)
 
     def set_config(self,config):
-        if isinstance(config,dict):
-            self.set_config( self.scenegraph.config_vector(config) )
-        elif len(config) != self.scenegraph.config_count():
-            raise IndexError()
-        else:
-            libaminogl.aa_rx_win_set_bconfig(self.ptr,DVec.ensure(config))
+        self.scenegraph.config_vector(config,self.q)
+        libaminogl.aa_rx_win_set_bconfig(self.ptr,self.q)
 
     def stop(self):
         libaminogl.aa_rx_win_run_async()
         pass
+
+    def is_runnining(self):
+        if 0 == libaminogl.aa_rx_win_is_running(self.ptr):
+            return False
+        else:
+            return True
 
 
 libaminogl.aa_gl_init.argtypes = []
@@ -99,3 +104,6 @@ libaminogl.aa_rx_win_run_async.argtypes = [ ]
 libaminogl.aa_rx_win_stop.argtypes = [ ctypes.POINTER(win) ]
 
 libaminogl.aa_rx_win_set_sg.argtypes = [ ctypes.POINTER(win), ctypes.POINTER(sg) ]
+
+libaminogl.aa_rx_win_is_running.argtypes = [ ctypes.POINTER(win) ]
+libaminogl.aa_rx_win_is_running.restype = ctypes.c_int

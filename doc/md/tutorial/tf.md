@@ -115,7 +115,7 @@ additional one,
     \begin{bmatrix}
     p_x \\ p_y \\ p_z
     \end{bmatrix}
-       \rightarrow
+       \leadsto
     \begin{bmatrix}
     p_x \\ p_y \\ p_z \\ 1
     \end{bmatrix}
@@ -152,7 +152,7 @@ Transforming a point corresponds to a matrix-vector product:
     \tfmat{T}{a}{b}
     \,
     \tfmat{p}{b}{}
-    \quad\rightarrow\quad
+    \quad\leadsto\quad
     \begin{bmatrix}
     \tf{p}{a}{x} \\
     \tf{p}{a}{y} \\
@@ -198,7 +198,7 @@ requiring a total of 12 numbers:
     r_{31} & r_{32} & r_{33} & v_z \\
     0 & 0 & 0 & 1
     \end{bmatrix}
-    \rightarrow
+    \leadsto
     \begin{array}{|c|c|}
     \hline
     r_{11} & r_{21} & r_{31} &
@@ -289,7 +289,7 @@ r_x \ielt
 + d_w
 \right)
 \dualelt
-\quad\rightarrow\quad
+\quad\leadsto\quad
 \begin{array}{|c|c|}
 \hline
 r_x
@@ -320,12 +320,12 @@ Implicit Dual Quaternions {#tutorial_tf_rep_imp}
 -------------------------
 
 Since we can construct the dual quaternion for a Euclidean
-transformation for an ordinary quaternion and translation vector, we
+transformation from an ordinary quaternion and translation vector, we
 take this quaternion and vector as the *implicit* representation of a
 dual quaternion.  Such a quaternion-vector representation is more
 compact, requiring only 7 elements, compared to the eight elements of
 the explicit dual quaternion.  Moreover, common operations such as
-chain transformations, is more efficient using the implicit
+chaining transformations, are more efficient using the implicit
 representation. We retain the view of this quaternion-vector as a dual
 quaternion for analysis, e.g., when considering derivatives and
 velocities, where chaining as multiplication and defined logarithm and
@@ -348,7 +348,7 @@ h_x \ielt
   v_x, v_y, v_z
 \right)
 \right\rgroup
-\quad\rightarrow\quad
+\quad\leadsto\quad
 \begin{array}{|c|c|}
 \hline
 h_x
