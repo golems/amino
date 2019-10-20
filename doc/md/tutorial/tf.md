@@ -221,7 +221,7 @@ numbers.  A dual number contains the dual element \f$\dualelt\f$, such
 that, \f[ \dualelt^2 = 0 \quad\text{and}\quad \dualelt \neq 0 \; .
 \f]
 
-Combing the quaternion units and the dual element yields eight factors
+Combining the quaternion units and the dual element yields eight factors
 in the dual quaternion,
 
 \f[

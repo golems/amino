@@ -81,6 +81,32 @@ is defined recursively from the relative pose as:
 
 where *p* is the parent of *c* and 0 is the root frame.
 
+
+
+For example, consider the simple scene with a grid and three blocks.
+![Frame Structure of the Simple Scene ](simplescene.svg)
+
+We compute the absolute poses of the blocks as follows:
+\f{align*}{
+    \tf{\seduqu}{0}{A} & =
+    \tf{\seduqu}{0}{\rm grid}
+    \qmul
+    \tf{\seduqu}{\rm grid}{A}
+    \\
+    \tf{\seduqu}{0}{B} & =
+    \tf{\seduqu}{0}{\rm grid}
+    \qmul
+    \tf{\seduqu}{\rm grid}{A}
+    \qmul
+    \tf{\seduqu}{A}{B}
+    \\
+    \tf{\seduqu}{0}{C} & =
+    \tf{\seduqu}{0}{\rm grid}
+    \qmul
+    \tf{\seduqu}{\rm grid}{C}
+\f}
+
+
 Often, we want the absolute transform of every frame in the then
 scene, e.g., for visualization or [collision](@ref tutorial_collision)
 checking.  We efficiently compute every absolute transform by ordering
