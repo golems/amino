@@ -30,19 +30,22 @@ win = SceneWin(scenegraph=sg,start=True,async=True)
 # Create the FK context
 fk = SceneFK(sg)
 
-# Do a simple wave
-dt = 1.0/60
-t = 0
+# Initial Configuration
 config_dict = {"s1": -.75*pi,
                "e": .75*pi,
                "f0": .125*pi,
                "f1": .125*pi,
                "f2": .125*pi }
 
-cl_set = SceneCollisionSet(sg)
+# Collision context and collision set
 cl = SceneCollision(sg)
+cl_set = SceneCollisionSet(sg)
+
+# Allowable collisions
 cl.allow_config(config_dict)
 
+dt = 1.0/60
+t = 0
 while win.is_runnining():
     # wiggle fingers
     f  = (30 + 30*sin(t)) * (pi/180)

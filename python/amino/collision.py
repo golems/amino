@@ -64,6 +64,10 @@ class SceneCollisionSet(object):
         libaminocl.aa_rx_cl_set_destroy(self.ptr)
 
     def __getitem__(self, key):
+        """Returns the value for the frame pair indicated by key.
+
+        Args:
+            key: A tuple of two frame names or ids."""
         i,j = key
         i = self.scenegraph.ensure_frame_id_actual(i)
         j = self.scenegraph.ensure_frame_id_actual(j)
@@ -71,6 +75,11 @@ class SceneCollisionSet(object):
         return False if v == 0 else True
 
     def __setitem__(self, key, item):
+        """Sets the value for the frame pair indicated by key.
+
+        Args:
+            key: A tuple of two frame names or ids.
+            item: True or False"""
         i,j = key
         i = self.scenegraph.ensure_frame_id_actual(i)
         j = self.scenegraph.ensure_frame_id_actual(j)
@@ -78,11 +87,11 @@ class SceneCollisionSet(object):
         libaminocl.aa_rx_cl_set_set(self.ptr, i, j, v)
 
     def clear(self):
-        """Set all entries to False."""
+        """Sets all entries to False."""
         libaminocl.aa_rx_cl_set_clear(self.ptr)
 
     def fill(self, src):
-        """Fill self with all true entries in other."""
+        """Fills self with all true entries in other."""
         libaminocl.aa_rx_cl_set_fill(self.ptr, src.ptr)
 
 
@@ -124,17 +133,17 @@ class SceneCollision(object):
         libaminocl.aa_rx_cl_destroy(self.ptr)
 
     def allow(self, i, j):
-        """Allow collisions between frames i and j."""
+        """Allows collisions between frames i and j."""
         i = self.scenegraph.ensure_frame_id_actual(i)
         j = self.scenegraph.ensure_frame_id_actual(j)
         libaminocl.aa_rx_cl_allow(self.ptr, i, j)
 
     def allow_set(self, collision_set):
-        """Allow collisions between all frames in the collision set."""
+        """Allows collisions between all frames in the collision set."""
         libaminocl.aa_rx_cl_allow_set(self.ptr, collision_set.ptr)
 
     def allow_config(self, config):
-        """Allow collisions between all frames coliding at config."""
+        """Allows collisions between all frames coliding at config."""
         fk = SceneFK(self.scenegraph)
         fk.update(config)
         cl_set = SceneCollisionSet(self.scenegraph)
@@ -142,7 +151,17 @@ class SceneCollision(object):
         self.allow_set(cl_set)
 
     def check(self, fk, collision_set = None):
-        """Check whether the scene is in collision."""
+        """Checks for collisions and optionally outputs colliding frames.
+
+        Args:
+            fk: A SceneFK updated with the configuration to check.
+            collision_set: If not None, a SceneCollisionSet that will
+                be filled with all detected, non-allowed collisions.
+
+        Returns:
+           True if collisions are detected and False otherwise.
+
+        """
         cl_set_ptr = None
         if collision_set:
             collision_set.clear()
