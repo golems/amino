@@ -405,6 +405,7 @@ EXTRA_DIST += \
 	python/amino/scenegraph.py \
 	python/amino/scenewin.py \
 	python/amino/lib.py \
+	python/amino/collision.py \
 	python/amino/__init__.py
 
 
@@ -586,7 +587,7 @@ libamino_collision_la_SOURCES = \
 
 libamino_collision_la_CFLAGS = $(FCL_CFLAGS)
 libamino_collision_la_CXXFLAGS = $(FCL_CFLAGS)
-libamino_collision_la_LIBADD = $(FCL_LIBS)
+libamino_collision_la_LIBADD = libamino.la $(FCL_LIBS)
 
 
 TESTS += fcl_test
@@ -753,6 +754,7 @@ EXTRA_DIST += \
 	doc/md/tutorial/scene.md \
 	doc/md/tutorial/kinematics.md \
 	doc/md/tutorial/collision.md \
+	doc/md/tutorial/mp.md \
 	doc/footer.html \
 	doc/carousel.html \
 	doc/logo.png \
@@ -763,6 +765,12 @@ EXTRA_DIST += \
 	demo/tutorial/python/t2-tf.py \
 	demo/tutorial/python/t3.0-scene.py \
 	demo/tutorial/python/t3.1-robot.py \
+	demo/tutorial/python/t3.2-scenefile.py \
+	demo/tutorial/python/t3.2-urdf.py \
+	demo/tutorial/python/t4.1-fk.py \
+	demo/tutorial/python/t4.2-dk.py \
+	demo/tutorial/python/t4.3-ik.py \
+	demo/tutorial/python/t5.1-collision-check.py \
 	demo/tutorial/plugin/urdf/CMakeLists.txt \
 	demo/tutorial/plugin/scenefile/CMakeLists.txt \
 	demo/tutorial/plugin/scenefile/example.robray \

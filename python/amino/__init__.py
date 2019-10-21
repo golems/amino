@@ -42,3 +42,5 @@ from scenegraph import GeomOpt, Geom, SceneGraph, SubSceneGraph
 from scenewin import SceneWin
 
 from kinematics import SceneFK, SceneDK, SceneIK
+
+from collision import SceneCollisionSet, SceneCollision

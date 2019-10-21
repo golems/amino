@@ -78,6 +78,18 @@ class SceneFK(object):
         libamino.aa_rx_fk_get_rel_qutr(self.ptr, parent, child, E)
         return E
 
+    def __len__(self):
+        """Number of frames."""
+        return libamino.aa_rx_fk_cnt(self.ptr)
+
+    def _data_ptr(self):
+        """Return pointer to data."""
+        return libamino.aa_rx_fk_data(self.ptr)
+
+    def _data_ld(self):
+        """Return leading dimension of data."""
+        return libamino.aa_rx_fk_ld(self.ptr)
+
 
 libamino.aa_rx_fk_malloc.argtypes = [ctypes.POINTER(sg)]
 libamino.aa_rx_fk_malloc.restype = ctypes.POINTER(fk)
@@ -93,7 +105,14 @@ libamino.aa_rx_fk_get_rel_qutr.argtypes = [ctypes.POINTER(fk),
                                            ctypes.c_int, ctypes.c_int,
                                            ctypes.POINTER(QuatTrans)]
 
+libamino.aa_rx_fk_data.argtypes = [ctypes.POINTER(fk)]
+libamino.aa_rx_fk_data.restype = ctypes.POINTER(ctypes.c_double)
 
+libamino.aa_rx_fk_ld.argtypes = [ctypes.POINTER(fk)]
+libamino.aa_rx_fk_ld.restype = ctypes.c_size_t
+
+libamino.aa_rx_fk_cnt.argtypes = [ctypes.POINTER(fk)]
+libamino.aa_rx_fk_cnt.restype = ctypes.c_size_t
 
 #############################
 ## Differential Kinematics ##

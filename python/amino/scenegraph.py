@@ -365,8 +365,24 @@ class SceneGraph:
     def ensure_frame_id(self,name_or_id):
         if isinstance(name_or_id,basestring):
             return self.frame_id(name_or_id)
+        elif name_or_id >= self.frame_count:
+            raise IndexError("Invalid frame id: %d" % name_or_id)
         else:
             return name_or_id
+
+    def ensure_frame_id_actual(self,name_or_id):
+        r = self.ensure_frame_id(name_or_id)
+        if r < 0:
+            raise IndexError("Not an actual frame")
+        return r
+
+    def ensure_frame_name(self,name_or_id):
+        if isinstance(name_or_id,basestring):
+            return name_or_id
+        elif name_or_id is None:
+            return FRAME_NONE
+        else:
+            return libamino.aa_rx_sg_frame_name(self.ptr,name_or_id)
 
     def config_vector(self,config,vector=None):
         if( isinstance(config,dict) ):
@@ -403,6 +419,12 @@ libamino.aa_rx_sg_config_id.restype = ctypes.c_int
 
 libamino.aa_rx_sg_frame_id.argtypes = [ctypes.POINTER(sg), ctypes.c_char_p ]
 libamino.aa_rx_sg_frame_id.restype = ctypes.c_int
+
+libamino.aa_rx_sg_frame_name.argtypes = [ctypes.POINTER(sg), ctypes.c_int]
+libamino.aa_rx_sg_frame_name.restype = ctypes.c_char_p
+
+libamino.aa_rx_sg_config_name.argtypes = [ctypes.POINTER(sg), ctypes.c_int]
+libamino.aa_rx_sg_config_name.restype = ctypes.c_char_p
 
 libamino.aa_rx_dl_sg_at.argtypes = [ ctypes.c_char_p, ctypes.c_char_p,
                                     ctypes.POINTER(sg), ctypes.c_char_p]
