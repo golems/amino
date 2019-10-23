@@ -29,51 +29,66 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
-
 # Object must provide .ssd(other), .nrm2(), .__setitem__()
+"""Helper mixins."""
+
 
 class SSDEqMixin(object):
-    def __eq__(self,other):
-        return (0 == self.ssd(other))
-    def __ne__(self,other):
-        return (0 != self.ssd(other))
+    """Equality test mixin using sum-square-differences."""
 
-    def isclose(self, b, rel_tol=1e-09, abs_tol=0.0):
+    def __eq__(self, other):
+        return self.ssd(other) == 0
+
+    def __ne__(self, other):
+        return self.ssd(other) != 0
+
+    def isclose(self, other, rel_tol=1e-09, abs_tol=0.0):
+        """Returns true if object is close to other."""
         a = self
+        b = other
         na = a.nrm2()
         nb = b.nrm2()
         d = a.ssd(b)
         return d <= max(rel_tol * max(na, nb), abs_tol)
+
 
 class CopyEltsMixin(object):
-    def _copy_elts(self,v):
+    """Copy Elements mixin."""
+
+    def _copy_elts(self, src):
         n = len(self)
-        if( n != len(v) ):
+        if n != len(src):
             raise IndexError()
-        for i in range(0,n):
-            self[i] = v[i]
+        for i in range(0, n):
+            self[i] = src[i]
         return self
 
-class VecMixin(object):
-    def __eq__(self,other):
-        return (0 == self.ssd(other))
-    def __ne__(self,other):
-        return (0 != self.ssd(other))
 
-    def isclose(self, b, rel_tol=1e-09, abs_tol=0.0):
+class VecMixin(object):
+    """Mixin for vector-like objects."""
+
+    def __eq__(self, other):
+        return self.ssd(other) == 0
+
+    def __ne__(self, other):
+        return self.ssd(other) != 0
+
+    def isclose(self, other, rel_tol=1e-09, abs_tol=0.0):
+        """Returns true if object is close to other."""
         a = self
+        b = other
         na = a.nrm2()
         nb = b.nrm2()
         d = a.ssd(b)
         return d <= max(rel_tol * max(na, nb), abs_tol)
 
-    def _copy_elts(self,v):
+    def _copy_elts(self, src):
         n = len(self)
-        if( n != len(v) ):
+        if n != len(src):
             raise IndexError()
-        for i in range(0,n):
-            self[i] = v[i]
+        for i in range(0, n):
+            self[i] = src[i]
         return self
 
-    def __radd__(self,other):
+    def __radd__(self, other):
         return self + other

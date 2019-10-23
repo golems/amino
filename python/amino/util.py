@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #  Copyright (c) 2019, Colorado School of Mines
 #  All rights reserved.
 #
@@ -30,16 +28,19 @@
 #   TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
+"""Utilities"""
 
-from distutils.core import setup
 
-setup(
-    name='amino',
-    version='0.0',
-    description='Amino Library',
-    author='Neil T. Dantam',
-    author_email='ndantam@mines.edu',
-    url='http://amino.dyalab.org',
-    license='BSD',
-    packages=['amino'],
-    package_dir={'amino': 'amino'})
+def ensure(thing, desired_type):
+    """If thing is not of desired_type, construct a new desired_type from thing"""
+    return thing if isinstance(thing, desired_type) else desired_type(thing)
+
+
+def is_int(thing):
+    """Returns True when thing is an integer type."""
+    return isinstance(thing, (int, long))
+
+
+def is_scalar(thing):
+    """Returns True when thing is an integer or float type."""
+    return is_int(thing) or isinstance(thing, float)

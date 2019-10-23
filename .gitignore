@@ -215,3 +215,5 @@ amino*.tar.gz
 /demo/tutorial/plugin/*/*.c
 /demo/tutorial/plugin/*/*.c.h
 /demo/tutorial/plugin/*/*.cmake
+/pylint.report
+/python/test/pylint.sh

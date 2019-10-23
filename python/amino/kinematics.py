@@ -32,86 +32,101 @@
 ##
 ## @file kinematics.py Scene Graphs
 ##
+"""Forward, differential, and inverse kinematics."""
 
 import ctypes
-from lib import libamino
-from tf import Vec3,Quat,QuatTrans, TfVel, Twist
-from mat import DVec, DMat
-from scenegraph import SceneGraph, sg, sg_sub
+from amino.lib import libamino
+from amino.tf import QuatTrans
+from amino.mat import DVec, DMat
+from amino.scenegraph import RxSg, RxSgSub
 
 ########################
 ## Forward Kinematics ##
 ########################
 
-class fk(ctypes.Structure):
+
+class RxFK(ctypes.Structure):
     """Opaque type for fk result pointer"""
     pass
 
+
 class SceneFK(object):
-    """Forward Kinematics"""
-    __slots__ = ['ptr', 'q', 'scenegraph']
+    """Forward Kinematics."""
+    __slots__ = ['_ptr', '_q', 'scenegraph']
 
     def __init__(self, scenegraph):
         self.scenegraph = scenegraph
-        self.ptr = libamino.aa_rx_fk_malloc(scenegraph.ptr)
-        self.q = DVec.create(scenegraph.config_count())
+        self._ptr = libamino.aa_rx_fk_malloc(scenegraph._ptr)
+        self._q = DVec(scenegraph.config_count)
 
     def __del__(self):
-        libamino.aa_rx_fk_destroy(self.ptr)
+        libamino.aa_rx_fk_destroy(self._ptr)
 
-    def update(self,config):
-        self.scenegraph.config_vector(config, self.q)
-        libamino.aa_rx_fk_all(self.ptr, self.q)
+    def __getitem__(self, key):
+        """Get a transform.
 
-    def tf_abs(self, frame):
-        """Get the absolute TF for frame"""
+        Args:
+            key: a frame name/id or pair of frame names/ids.
+        """
         E = QuatTrans()
-        frame = self.scenegraph.ensure_frame_id(frame)
-        libamino.aa_rx_fk_get_abs_qutr(self.ptr, frame, E)
+        if isinstance(key, tuple):
+            parent, child = key
+            parent = self.scenegraph.ensure_frame_id(parent)
+            child = self.scenegraph.ensure_frame_id(child)
+            libamino.aa_rx_fk_get_rel_qutr(self._ptr, parent, child, E)
+        else:
+            key = self.scenegraph.ensure_frame_id(key)
+            libamino.aa_rx_fk_get_abs_qutr(self._ptr, key, E)
         return E
 
-    def tf_rel(self, parent, child):
-        """Get the relative TF for frame"""
-        E = QuatTrans()
-        parent = self.scenegraph.ensure_frame_id(parent)
-        child = self.scenegraph.ensure_frame_id(child)
-        libamino.aa_rx_fk_get_rel_qutr(self.ptr, parent, child, E)
-        return E
+    @property
+    def config(self):
+        """The current configuration."""
+        return self._q
+
+    @config.setter
+    def config(self, config):
+        self.scenegraph.config_vector(config, self._q)
+        libamino.aa_rx_fk_all(self._ptr, self._q)
+        return self._q
 
     def __len__(self):
         """Number of frames."""
-        return libamino.aa_rx_fk_cnt(self.ptr)
+        return libamino.aa_rx_fk_cnt(self._ptr)
 
     def _data_ptr(self):
         """Return pointer to data."""
-        return libamino.aa_rx_fk_data(self.ptr)
+        return libamino.aa_rx_fk_data(self._ptr)
 
     def _data_ld(self):
         """Return leading dimension of data."""
-        return libamino.aa_rx_fk_ld(self.ptr)
+        return libamino.aa_rx_fk_ld(self._ptr)
 
 
-libamino.aa_rx_fk_malloc.argtypes = [ctypes.POINTER(sg)]
-libamino.aa_rx_fk_malloc.restype = ctypes.POINTER(fk)
+libamino.aa_rx_fk_malloc.argtypes = [ctypes.POINTER(RxSg)]
+libamino.aa_rx_fk_malloc.restype = ctypes.POINTER(RxFK)
 
-libamino.aa_rx_fk_destroy.argtypes = [ctypes.POINTER(fk)]
+libamino.aa_rx_fk_destroy.argtypes = [ctypes.POINTER(RxFK)]
 
-libamino.aa_rx_fk_all.argtypes = [ctypes.POINTER(fk), ctypes.POINTER(DVec)]
+libamino.aa_rx_fk_all.argtypes = [ctypes.POINTER(RxFK), ctypes.POINTER(DVec)]
 
-libamino.aa_rx_fk_get_abs_qutr.argtypes = [ctypes.POINTER(fk), ctypes.c_int,
-                                           ctypes.POINTER(QuatTrans)]
+libamino.aa_rx_fk_get_abs_qutr.argtypes = [
+    ctypes.POINTER(RxFK), ctypes.c_int,
+    ctypes.POINTER(QuatTrans)
+]
 
-libamino.aa_rx_fk_get_rel_qutr.argtypes = [ctypes.POINTER(fk),
-                                           ctypes.c_int, ctypes.c_int,
-                                           ctypes.POINTER(QuatTrans)]
+libamino.aa_rx_fk_get_rel_qutr.argtypes = [
+    ctypes.POINTER(RxFK), ctypes.c_int, ctypes.c_int,
+    ctypes.POINTER(QuatTrans)
+]
 
-libamino.aa_rx_fk_data.argtypes = [ctypes.POINTER(fk)]
+libamino.aa_rx_fk_data.argtypes = [ctypes.POINTER(RxFK)]
 libamino.aa_rx_fk_data.restype = ctypes.POINTER(ctypes.c_double)
 
-libamino.aa_rx_fk_ld.argtypes = [ctypes.POINTER(fk)]
+libamino.aa_rx_fk_ld.argtypes = [ctypes.POINTER(RxFK)]
 libamino.aa_rx_fk_ld.restype = ctypes.c_size_t
 
-libamino.aa_rx_fk_cnt.argtypes = [ctypes.POINTER(fk)]
+libamino.aa_rx_fk_cnt.argtypes = [ctypes.POINTER(RxFK)]
 libamino.aa_rx_fk_cnt.restype = ctypes.c_size_t
 
 #############################
@@ -119,52 +134,66 @@ libamino.aa_rx_fk_cnt.restype = ctypes.c_size_t
 #############################
 
 
-class wk_opts(ctypes.Structure):
+class RxWkOpts(ctypes.Structure):
     """Opaque type for workspace options result pointer"""
     pass
 
 
 class SceneDK(object):
     """Differential Kinematics"""
-    __slots__ = ["opts", "ssg", "fk",
-                 "tf_ref",
-                 "vel_ref",
-                 "config_vector_ref",
-                 "dx",
+    __slots__ = [
+        "opts",
+        "ssg",
+        "fk",
+        "_tf_ref",
+        "_tf_vel_ref",
+        "_config_ref",
+        "dx",
     ]
 
     def __init__(self, sub_scenegraph, scene_fk):
         self.ssg = sub_scenegraph
         self.fk = scene_fk
         self.opts = libamino.aa_rx_wk_opts_create()
-        self.tf_ref = None
-        self.vel_ref = None
-        self.config_vector_ref = None
+        self._tf_ref = None
+        self._tf_vel_ref = None
+        self._config_ref = None
         self.dx = DVec(6)
 
     def __del__(self):
         libamino.aa_rx_wk_opts_destroy(self.opts)
 
-    def set_ref_tf(self,tf):
-        """Set the reference pose."""
-        # TODO: should we to copy?
-        self.tf_ref = tf
+    @property
+    def ref_tf(self):
+        """Reference pose."""
+        return self._tf_ref
 
-    def set_ref_tf_vel(self, dx):
-        """Set the reference pose velocity."""
-        # TODO: should we to copy?
-        self.vel_ref = dx
-        pass
+    @ref_tf.setter
+    def ref_tf(self, tf):
+        self._tf_ref = QuatTrans(tf)
 
-    def set_ref_config_vector_all(self, config_vector):
-        """Set the reference configuration vector."""
-        # TODO: should we to copy?
-        self.config_vector_ref = config_vector
+    @property
+    def ref_tf_vel(self):
+        """Reference pose velocity."""
+        # TODO: should we copy?
+        return self._tf_vel_ref
 
-    def set_ref_config_dict(self, config_dict):
+    @ref_tf_vel.setter
+    def ref_tf_vel(self, dx):
+        # TODO: should we copy?
+        self._tf_vel_ref = dx
+
+    @property
+    def ref_config_all(self):
+        """Reference configuration."""
+        # TODO: should we to copy?
+        return self._config_ref
+
+    @ref_config_all.setter
+    def ref_config_all(self, value):
+        """Reference configuration."""
         sg = self.ssg.scenegraph
-        self.config_vector_ref = sg.config_vector(config_dict, self.config_vector_ref)
-
+        self._config_ref = sg.copy_config(value)
 
     def solve_vel(self, dq=None):
         """Solve for velocity.
@@ -172,135 +201,161 @@ class SceneDK(object):
         Returns:
             sub-scenegraph configuration velocity or None if no solution.
         """
-        if( (self.tf_ref is None) and (self.vel_ref is None) ):
+        if (self._tf_ref is None) and (self._tf_vel_ref is None):
             raise Exception("No reference provided.")
 
-        if( dq is None ):
-            dq = DVec(self.ssg.config_count());
+        if dq is None:
+            dq = DVec(self.ssg.config_count)
 
         dx = self.dx
 
         # velocity reference
-        if( not (self.vel_ref is None) ):
-            dx.copy_from(self.vel_ref)
+        if self._tf_vel_ref:
+            dx.copy_from(self._tf_vel_ref)
         else:
             dx.zero()
 
         # position reference
-        if( not (self.tf_ref is None) ):
-            tf_act = self.fk.tf_abs( self.ssg.end_effector_id() )
-            libamino.aa_rx_wk_dx_pos(self.opts, tf_act, self.tf_ref, dx )
+        if self._tf_ref:
+            tf_act = self.fk[self.ssg.end_effector_id]
+            libamino.aa_rx_wk_dx_pos(self.opts, tf_act, self._tf_ref, dx)
 
         # configuration reference
         # TODO
 
-        r = libamino.aa_rx_wk_dx2dq( self.ssg.ptr, self.opts, self.fk.ptr,
-                                     dx, dq )
+        r = libamino.aa_rx_wk_dx2dq(self.ssg._ptr, self.opts, self.fk._ptr, dx,
+                                    dq)
 
-        if( 0 == r ):
-            return dq
-        else:
-            return None
+        return dq if r == 0 else None
+
 
 libamino.aa_rx_wk_opts_create.argtypes = []
-libamino.aa_rx_wk_opts_create.restype = ctypes.POINTER(wk_opts)
-libamino.aa_rx_wk_opts_destroy.argtypes = [ctypes.POINTER(wk_opts)]
+libamino.aa_rx_wk_opts_create.restype = ctypes.POINTER(RxWkOpts)
+libamino.aa_rx_wk_opts_destroy.argtypes = [ctypes.POINTER(RxWkOpts)]
 
-
-libamino.aa_rx_wk_dx2dq.argtypes = [ ctypes.POINTER(sg_sub),
-                                     ctypes.POINTER(wk_opts),
-                                     ctypes.POINTER(fk),
-                                     ctypes.POINTER(DVec),
-                                     ctypes.POINTER(DVec) ]
+libamino.aa_rx_wk_dx2dq.argtypes = [
+    ctypes.POINTER(RxSgSub),
+    ctypes.POINTER(RxWkOpts),
+    ctypes.POINTER(RxFK),
+    ctypes.POINTER(DVec),
+    ctypes.POINTER(DVec)
+]
 libamino.aa_rx_wk_dx2dq.restype = ctypes.c_int
 
-libamino.aa_rx_wk_dx_pos.argtypes = [ctypes.POINTER(wk_opts),
-                                     ctypes.POINTER(QuatTrans),
-                                     ctypes.POINTER(QuatTrans),
-                                     ctypes.POINTER(DVec)]
+libamino.aa_rx_wk_dx_pos.argtypes = [
+    ctypes.POINTER(RxWkOpts),
+    ctypes.POINTER(QuatTrans),
+    ctypes.POINTER(QuatTrans),
+    ctypes.POINTER(DVec)
+]
 
 ########################
 ## Inverse Kinematics ##
 ########################
 
-class ik_cx(ctypes.Structure):
+
+class RxIK(ctypes.Structure):
     """Opaque type for inverse kinematics context"""
     pass
 
-class ik_parm(ctypes.Structure):
+
+class RxIKParm(ctypes.Structure):
     """Opaque type for inverse kinematics parameters"""
     pass
 
 
 class SceneIK(object):
     """Inverse Kinematics"""
-    __slots__ = ["ptr", "ik_parm",
-                 "ssg",
-                 "tf_ref" ]
+    __slots__ = ["_ptr", "ik_parm", "ssg", "_tf_ref"]
 
     def __init__(self, sub_scenegraph):
         self.ssg = sub_scenegraph
-        self.tf_ref = None
+        self._tf_ref = None
         self.ik_parm = libamino.aa_rx_ik_parm_create()
-        self.ptr = libamino.aa_rx_ik_cx_create(self.ssg.ptr, self.ik_parm)
+        self._ptr = libamino.aa_rx_ik_cx_create(self.ssg._ptr, self.ik_parm)
 
     def __del__(self):
-        libamino.aa_rx_ik_cx_destroy(self.ptr)
+        libamino.aa_rx_ik_cx_destroy(self._ptr)
         libamino.aa_rx_ik_parm_destroy(self.ik_parm)
 
-    def set_ref_tf(self, tf_ref):
+    @property
+    def ref_tf(self):
+        """Reference transformation"""
+        return self._tf_ref
+
+    @ref_tf.setter
+    def ref_tf(self, tf_ref):
         """Set the reference transformation"""
-        self.tf_ref = tf_ref
+        self._tf_ref = QuatTrans(tf_ref)
 
     def set_seed(self, config_sub):
+        """Sets the optimization seed."""
         q = self.ssg.config_vector(config_sub)
-        libamino.aa_rx_ik_set_seed(self.ptr, q)
+        libamino.aa_rx_ik_set_seed(self._ptr, q)
 
     def set_seed_center(self):
-        libamino.aa_rx_ik_set_seed_center(self.ptr)
+        """Sets the optimization seed to the joint center position."""
+        libamino.aa_rx_ik_set_seed_center(self._ptr)
 
     def set_seed_rand(self):
-        libamino.aa_rx_ik_set_seed_rand(self.ptr)
+        """Sets the optimization seed to a random position."""
+        libamino.aa_rx_ik_set_seed_rand(self._ptr)
 
-    def set_restart_time(self, t):
-        libamino.aa_rx_ik_set_restart_time(self.ptr, t)
+    @property
+    def restart_time(self):
+        """Maximum time limit for IK restarts."""
+        return libamino.aa_rx_ik_get_restart_time(self._ptr)
+
+    @restart_time.setter
+    def restart_time(self, t):
+        libamino.aa_rx_ik_set_restart_time(self._ptr, t)
 
     def solve(self):
         """
-        Solve the IK problem.
+        Solves the IK problem.
 
         Returns:
             The sub-scenegraph configuration vector or None if no solution.
         """
-        if self.tf_ref is None:
+        if self._tf_ref is None:
             raise Exception("No reference provided.")
 
-        M = DMat((len(self.tf_ref), 1))
-        M.col_vec(0).copy_from( self.tf_ref )
+        M = DMat((len(self._tf_ref), 1))
+        M.col_vec(0).copy_from(self._tf_ref)
 
-        q = DVec(self.ssg.config_count())
+        q = DVec(self.ssg.config_count)
 
-        r = libamino.aa_rx_ik_solve( self.ptr, M, q )
+        r = libamino.aa_rx_ik_solve(self._ptr, M, q)
 
-        return q if 0 == r else None
+        return q if r == 0 else None
 
 
 libamino.aa_rx_ik_parm_create.argtypes = []
-libamino.aa_rx_ik_parm_create.restype = ctypes.POINTER(ik_parm)
-libamino.aa_rx_ik_parm_destroy.argtypes = [ctypes.POINTER(ik_parm)]
+libamino.aa_rx_ik_parm_create.restype = ctypes.POINTER(RxIKParm)
+libamino.aa_rx_ik_parm_destroy.argtypes = [ctypes.POINTER(RxIKParm)]
 
-libamino.aa_rx_ik_cx_create.argtypes = [ctypes.POINTER(sg_sub), ctypes.POINTER(ik_parm) ]
-libamino.aa_rx_ik_cx_create.restype = ctypes.POINTER(ik_cx)
-libamino.aa_rx_ik_cx_destroy.argtypes = [ctypes.POINTER(ik_cx)]
+libamino.aa_rx_ik_cx_create.argtypes = [
+    ctypes.POINTER(RxSgSub), ctypes.POINTER(RxIKParm)
+]
+libamino.aa_rx_ik_cx_create.restype = ctypes.POINTER(RxIK)
+libamino.aa_rx_ik_cx_destroy.argtypes = [ctypes.POINTER(RxIK)]
 
-
-libamino.aa_rx_ik_solve.argtypes = [ ctypes.POINTER(ik_cx),
-                                     ctypes.POINTER(DMat),
-                                     ctypes.POINTER(DVec) ]
+libamino.aa_rx_ik_solve.argtypes = [
+    ctypes.POINTER(RxIK),
+    ctypes.POINTER(DMat),
+    ctypes.POINTER(DVec)
+]
 libamino.aa_rx_ik_solve.restype = ctypes.c_int
 
+libamino.aa_rx_ik_set_seed.argtypes = [
+    ctypes.POINTER(RxIK), ctypes.POINTER(DVec)
+]
+libamino.aa_rx_ik_set_seed_center.argtypes = [ctypes.POINTER(RxIK)]
+libamino.aa_rx_ik_set_seed_rand.argtypes = [ctypes.POINTER(RxIK)]
 
-libamino.aa_rx_ik_set_seed.argtypes = [ ctypes.POINTER(ik_cx), ctypes.POINTER(DVec) ]
-libamino.aa_rx_ik_set_seed_center.argtypes = [ctypes.POINTER(ik_cx)]
-libamino.aa_rx_ik_set_seed_rand.argtypes = [ctypes.POINTER(ik_cx)]
-libamino.aa_rx_ik_set_restart_time.argtypes = [ctypes.POINTER(ik_cx), ctypes.c_double]
+libamino.aa_rx_ik_set_restart_time.argtypes = [
+    ctypes.POINTER(RxIK), ctypes.c_double
+]
+
+libamino.aa_rx_ik_get_restart_time.argtypes = [ctypes.POINTER(RxIK)]
+libamino.aa_rx_ik_get_restart_time.restype = ctypes.c_double

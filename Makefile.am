@@ -393,11 +393,17 @@ CLEAN_LOCAL += clean-python
 clean-python:
 	-rm -rf "$(builddir)/python/build"
 
+.PHONY: pylint.report
+
+pylint.report:
+	./python/test/pylint.sh > pylint.report
+
 endif
 
 # package
 EXTRA_DIST += \
 	python/setup.py \
+	python/amino/util.py \
 	python/amino/mat.py \
 	python/amino/tf.py \
 	python/amino/kinematics.py \

@@ -3,11 +3,13 @@
 from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat, TfMat, DualQuat, QuatTrans
 from math import pi
 
+
 def h1(name):
     """Print a level 1 heading"""
     print ""
     print "{:^16}".format(name)
     print "{:=^16}".format('')
+
 
 def h2(name):
     """Print a level 2 heading"""
@@ -15,37 +17,38 @@ def h2(name):
     print "{:^16}".format(name)
     print "{:-^16}".format('')
 
-def check_equiv_tf(a,b):
+
+def check_equiv_tf(a, b):
     eps = 1e-6
     rel = (a * ~b)
-    (rot,trans) = (rel.rotation(), rel.translation())
-    assert trans.nrm2() < eps
-    assert rot.ln().nrm2() < eps
+    assert rel.translation.nrm2() < eps
+    assert rel.rotation.ln().nrm2() < eps
 
-def check_equiv_vec(a,b):
+
+def check_equiv_vec(a, b):
     eps = 1e-6
     assert a.ssd(b) < eps
+
 
 h1("Construction")
 
 # parent frame: 0
 # child frame:  1
-rot_0_1   = ZAngle(pi/4)
-trans_0_1 = Vec3([1,2,3])
-tf_0_1 = (rot_0_1,trans_0_1)
+rot_0_1 = ZAngle(pi / 4)
+trans_0_1 = Vec3([1, 2, 3])
+tf_0_1 = (rot_0_1, trans_0_1)
 
 h2("Dual Quaternion")
-S_0_1 = DualQuat( tf_0_1 )
+S_0_1 = DualQuat(tf_0_1)
 print S_0_1
 
 h2("Tf Matrix")
-T_0_1 = TfMat( tf_0_1 )
+T_0_1 = TfMat(tf_0_1)
 print T_0_1
 
 h2("Quaternion-Translation")
-E_0_1 = QuatTrans( tf_0_1 )
+E_0_1 = QuatTrans(tf_0_1)
 print E_0_1
-
 
 h1("Conversions")
 
@@ -73,12 +76,11 @@ check_equiv_tf(E_0_1, E_T)
 print E_T
 print E_S
 
-
 h1("Transform")
 
 h2("Initial Point")
 # point a in frame 1
-p_1_a = Vec3([3,5,7])
+p_1_a = Vec3([3, 5, 7])
 print p_1_a
 
 h2("Transformed Point")
@@ -93,7 +95,6 @@ check_equiv_vec(p_0_a_S, p_0_a_E)
 print p_0_a_T
 print p_0_a_E
 print p_0_a_S
-
 
 h1("Inverse Transform")
 
@@ -115,21 +116,20 @@ print p_1_a_T
 print p_1_a_S
 print p_1_a_E
 
-
 h1("Chaining Transforms")
 
-rot_1_2   = YAngle(pi/2)
-trans_1_2 = Vec3([2,4,8])
-tf_1_2 = (rot_1_2,trans_1_2)
+rot_1_2 = YAngle(pi / 2)
+trans_1_2 = Vec3([2, 4, 8])
+tf_1_2 = (rot_1_2, trans_1_2)
 
-S_1_2 = DualQuat( tf_1_2 )
-T_1_2 = TfMat( tf_1_2 )
-E_1_2 = QuatTrans( tf_1_2 )
+S_1_2 = DualQuat(tf_1_2)
+T_1_2 = TfMat(tf_1_2)
+E_1_2 = QuatTrans(tf_1_2)
 
 h2("Initial Point")
 # point b in frame 2
 
-p_2_b = Vec3([2,1,0])
+p_2_b = Vec3([2, 1, 0])
 print p_2_b
 
 h2("Successive Transforms")
@@ -168,14 +168,12 @@ p_0_b_T_chain = T_0_2.transform(p_2_b)
 p_0_b_E_chain = E_0_2.transform(p_2_b)
 p_0_b_S_chain = S_0_2.transform(p_2_b)
 
-
 check_equiv_vec(p_0_b_E_chain, p_0_b_T_chain)
 check_equiv_vec(p_0_b_E_chain, p_0_b_S_chain)
 
 check_equiv_vec(p_0_b_T_chain, p_0_b_T)
 check_equiv_vec(p_0_b_E_chain, p_0_b_E)
 check_equiv_vec(p_0_b_S_chain, p_0_b_S)
-
 
 print p_0_b_E_chain
 print p_0_b_T_chain
