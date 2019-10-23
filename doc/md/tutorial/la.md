@@ -17,9 +17,10 @@ Library (MKL)](https://software.intel.com/en-us/mkl).
 
 
 Vectors {#tutorial_la_vector}
--------
+=======
 
-### Vector Representation
+Representation
+--------------
 
 We represent mathematical vectors using a length count, a data
 pointer, and an "increment" between successive elements.  For example,
@@ -88,63 +89,19 @@ struct aa_dvec {
 ~~~
 
 
-### Example Code
+Example Code
+------------
 
 The following code illustrates the vector representations and slices.
 
-<ol>
-<li> Import amino:
-
-~~~{.py}
-from amino import DVec
-~~~
-</li>
-
-<li> Construct and print the vector \f$\mathbf{x} = [1,2,3,4]\f$:
-
-~~~{.py}
-x = DVec([1,2,3,4])
-print x
-print len(x)
-print x.inc()
-~~~
-</li>
-
-<li> Try some common arithmetic operators:
-
-~~~{.py}
-print "-x:   %s" % (-x)
-print "2*x:  %s" % (2*x)
-print "x+x:  %s" % (x+x)
-print "x+1:  %s" % (x+1)
-print "x/2:  %s" % (x/2)
-~~~
-</li>
-
-<li> Slice `x` with an increment of 2, giving every other element:
-
-~~~{.py}
-s = x[0:4:2]
-print "s: %s" % s
-print "s.len: %d" % len(s)
-print "s.inc: %d" % s.inc()
-~~~
-</li>
-
-<li> Increment the slice (and underlying elements of `x`):
-
-~~~{.py}
-s+=1
-print "s: %s" % s
-print "x: %s" % x
-~~~
-</li>
+@include python/t0.0-vector.py
 
 
 Matrices {#tutorial_la_matrix}
---------
+========
 
-### Matrix Representation
+Representation
+--------------
 
 The memory layout for matrices stores elements column-by-column, i.e.,
 [column-major
@@ -395,78 +352,14 @@ plus the leading dimension:
 
 \f]
 
-### Example Code
+Example Code
+------------
 
-<ol>
-<li> Import amino:
-
-~~~{.py}
-from amino import DVec, DMat
-~~~
-</li>
-
-<li> Create a 2x3 matrix:
-
-~~~{.py}
-A = DMat.row_matrix([[1,2,3],[4,5,6]])
-print A
-print "A.rows: %d" % A.rows()
-print "A.cols: %d" % A.cols()
-print "A.ld:   %d" % A.ld()
-for k in range(6):
-    print "A._data[%d] = %f" % (k,A._data[k])
-~~~
-</li>
-
-<li> Create a 3x2 matrix:
-
-~~~{.py}
-B = DMat.col_matrix([[1,2,3],[4,5,6]])
-print B
-print "B.rows: %d" % B.rows()
-print "B.cols: %d" % B.cols()
-print "B.ld:   %d" % B.ld()
-for k in range(6):
-    print "B._data[%d] = %f" % (k,A._data[k])
-
-~~~
-</li>
-
-<li> Try some arithmetic functions:
-
-~~~{.py}
-print A*2
-print A/2
-print A+A
-print A+1
-print A-1
-print A.t()
-print A*[1,2,3]
-print A*B
-~~~
-</li>
-
-<li> Construct some vector views of the matrix:
-
-~~~{.py}
-print A
-print A.row_vec(0)
-print A.col_vec(1)
-
-d = A.diag_vec()
-print d
-d += 10
-print d
-
-print A
-~~~
-</li>
-</ol>
-
+@include python/t0.1-matrix.py
 
 
 Linear Least Squares {#tutorial_la_lls}
---------------------
+====================
 
 This sections discusses how to solve systems of linear equations using
 the matrix inverse and pseudoinverse.
@@ -477,7 +370,8 @@ equations. However, obtaining an explicit pseudoinverse provides
 useful capabilities when we are solving for a robot's motion, so we
 will present the explicit computation here.)
 
-### Systems of Linear Equations
+Systems of Linear Equations
+---------------------------
 
 We can represent and efficiently solve systems of linear equations in
 terms of matrices.  Consider the example below with two linear
@@ -545,7 +439,8 @@ the inverse of the coefficient matrix.
 
 
 
-### Over and under-determined Systems
+Over and under-determined Systems
+---------------------------------
 
 If we have more unknowns than equations, there may be infinitely many
 solutions to the system.  Similarly, more equations than unknowns may
@@ -697,59 +592,22 @@ of the *error*:
   * *minimize:*  \f$\Vert\mathbf{A} \mathbf{z} - \mathbf{b}\Vert\f$
 * **Solution:** \f$ \mathbf{x} = \mathbf{A}^+ \mathbf{b} \f$
 
-### Example Code
+Example Code
+------------
 
-<ol>
-<li> Create a matrix and vector for a system of equations,
-   \f$\mathbf{A}\mathbf{x} = \mathbf{b}\f$, with two equations and two
-   unknowns:
+@include python/t0.2-lls.py
 
 
-~~~{.py}
-A = DMat.row_matrix([[1,2],[3,4]])
-b = [5,6]
-~~~
-</li>
 
-<li> Invert the (square) matrix to solve the system:
+See Also {#tutoral_mat_sa}
+========
 
-~~~{.py}
-x = A.inv() * b
-print x
-~~~
-</li>
+Python
+------
 
-<li> Create a matrix and vector for an *over-determined* system:
+* @ref amino.mat.DVec
+* @ref amino.mat.DMat
 
-~~~{.py}
-A = DMat.row_matrix([[1,2],[3,4],[5,6]])
-b = [7,8,9]
-~~~
-</li>
+## C
 
-<li> Pseudo-invert the (non-square) matrix to find the least-squares
-     solution:
-
-~~~{.py}
-x = A.pinv()*b
-print x
-~~~
-</li>
-
-<li> Create a matrix and vector for an *under-determined* system:
-
-~~~{.py}
-A = DMat.row_matrix([[1,2,3],[4,5,6]])
-b = [7,8]
-~~~
-</li>
-
-<li> Pseudo-invert the (non-square) matrix to find the least-squares
-    solution:
-
-~~~{.py}
-x = A.pinv()*b
-print x
-~~~
-</li>
-</ol>
+* @ref mat.h

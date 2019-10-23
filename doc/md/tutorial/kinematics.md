@@ -1199,6 +1199,22 @@ Example Code
 
 @include python/t4.3-ik.py
 
+
+See Also {#tutorial_scene_sa}
+========
+
+## Python
+
+* @ref amino.kinematics.SceneFK
+* @ref amino.kinematics.SceneDK
+* @ref amino.kinematics.SceneIK
+
+## C
+
+* @ref scene_fk.h
+* @ref scene_wk.h
+* @ref scene_ik.h
+
 References {#tutorial_kin_refs}
 ==========
 

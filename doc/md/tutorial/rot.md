@@ -440,97 +440,35 @@ We store the rotation matrix in memory using column-major order:
     \; .
 \f]
 
-Example Code {#tutorial_rot_code}
+
+
+Example Code {#tutorial_rot_sample_code}
 ============
 
-<ol>
-<li> Import the package:
 
-~~~{.py}
-from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat
-from math import pi
-~~~
-</li>
+@include python/t1-rotation.py
 
-<li> Specify a rotation of pi/2 radians about the x axis:
 
-~~~{.py}
-ax = XAngle(pi/2)
-print ax
-~~~
-</li>
+See Also {#tutorial_rot_sa}
+========
 
-<li> Convert the rotation to axis-angle, quaternion, and rotation
-     matrix forms:
+## Python
 
-~~~{.py}
-Ax = AxAng(ax)
-qx = Quat(ax)
-Rx = RotMat(ax)
-print Ax
-print qx
-print Rx
-~~~
-</li>
+* @ref amino.tf.XAngle
+* @ref amino.tf.YAngle
+* @ref amino.tf.ZAngle
+* @ref amino.tf.EulerRPY
+* @ref amino.tf.AxAng
+* @ref amino.tf.Quat
+* @ref amino.tf.RotMat
 
-<li> Rotate a point using each of the axis-angle, quaternion, and
-     rotation matrix forms:
+## C
 
-~~~{.py}
-p = [1,2,3]
-pa = Ax.rotate(p)
-pq = qx.rotate(p)
-pR = Rx.rotate(p)
-print pa
-print pq
-print pR
-~~~
-</li>
-
-<li> Invert the rotations:
-
-~~~{.py}
-qxi = ~qx
-Rxi = ~Rx
-Axi = ~Ax
-print Axi
-print qxi
-print Rxi
-~~~
-</li>
-
-<li> Rotate by the inverse to get back the original point:
-
-~~~{.py}
-print Axi.rotate(pa)
-print qxi.rotate(pq)
-print Rxi.rotate(pR)
-~~~
-</li>
-
-<li> Specify another rotation and chain:
-
-~~~{.py}
-ay = YAngle(pi/2)
-qxy = qx * ay
-Rxy = Rx * ay
-print qxy
-print Rxy
-~~~
-</li>
-
-<li> Rotate by the chained forms:
-
-~~~{.py}
-pq = qxy.rotate(p)
-pR = Rxy.rotate(p)
-print pq
-print pR
-~~~
-</li>
+* @ref tf.h
 
 References {#tutorial_rot_references}
 ==========
+
 
 * Diebel, J., 2006. [Representing attitude: Euler angles, unit
   quaternions, and rotation vectors]
@@ -552,3 +490,95 @@ References {#tutorial_rot_references}
   * [Rotation Matrix] (https://en.wikipedia.org/wiki/Rotation_matrix)
   * [Axis–angle representation]
     (https://en.wikipedia.org/wiki/Axis–angle_representation)
+
+
+
+
+
+
+
+<!-- <ol> -->
+<!-- <li> Import the package: -->
+
+<!-- ~~~{.py} -->
+<!-- from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat -->
+<!-- from math import pi -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Specify a rotation of pi/2 radians about the x axis: -->
+
+<!-- ~~~{.py} -->
+<!-- ax = XAngle(pi/2) -->
+<!-- print ax -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Convert the rotation to axis-angle, quaternion, and rotation -->
+<!--      matrix forms: -->
+
+<!-- ~~~{.py} -->
+<!-- Ax = AxAng(ax) -->
+<!-- qx = Quat(ax) -->
+<!-- Rx = RotMat(ax) -->
+<!-- print Ax -->
+<!-- print qx -->
+<!-- print Rx -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Rotate a point using each of the axis-angle, quaternion, and -->
+<!--      rotation matrix forms: -->
+
+<!-- ~~~{.py} -->
+<!-- p = [1,2,3] -->
+<!-- pa = Ax.rotate(p) -->
+<!-- pq = qx.rotate(p) -->
+<!-- pR = Rx.rotate(p) -->
+<!-- print pa -->
+<!-- print pq -->
+<!-- print pR -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Invert the rotations: -->
+
+<!-- ~~~{.py} -->
+<!-- qxi = ~qx -->
+<!-- Rxi = ~Rx -->
+<!-- Axi = ~Ax -->
+<!-- print Axi -->
+<!-- print qxi -->
+<!-- print Rxi -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Rotate by the inverse to get back the original point: -->
+
+<!-- ~~~{.py} -->
+<!-- print Axi.rotate(pa) -->
+<!-- print qxi.rotate(pq) -->
+<!-- print Rxi.rotate(pR) -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Specify another rotation and chain: -->
+
+<!-- ~~~{.py} -->
+<!-- ay = YAngle(pi/2) -->
+<!-- qxy = qx * ay -->
+<!-- Rxy = Rx * ay -->
+<!-- print qxy -->
+<!-- print Rxy -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Rotate by the chained forms: -->
+
+<!-- ~~~{.py} -->
+<!-- pq = qxy.rotate(p) -->
+<!-- pR = Rxy.rotate(p) -->
+<!-- print pq -->
+<!-- print pR -->
+<!-- ~~~ -->
+<!-- </li> -->
