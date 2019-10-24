@@ -60,11 +60,6 @@ class Vec3(ctypes.Structure, VecMixin):
         else:
             raise IndexError()
 
-    def copy_from(self, other):
-        """Copies other into self."""
-        self._copy_elts(other)
-        return self
-
     def zero(self):
         """Sets to zero."""
         self.x = 0
@@ -78,7 +73,7 @@ class Vec3(ctypes.Structure, VecMixin):
 
     @staticmethod
     def identity():
-        """Returns the identify Vec3."""
+        """Returns the identity Vec3."""
         return Vec3([0, 0, 0])
 
     def ssd(self, other):
@@ -120,7 +115,6 @@ class Vec3(ctypes.Structure, VecMixin):
         return libamino.aa_tf_vdot(self, Vec3.ensure(other))
 
     def __len__(self):
-        """Returns 3"""
         return 3
 
     def __str__(self):
@@ -143,15 +137,12 @@ class Vec3(ctypes.Structure, VecMixin):
         return self.__iadd__(Vec3(other))
 
     def __add__(self, other):
-        """Adds a scalar or vector to self"""
         return Vec3(self).__iadd__(other)
 
     def __radd__(self, other):
-        """Adds a scalar or vector to self"""
         return Vec3(self).__iadd__(other)
 
     def __isub__(self, other):
-        """Decrements self by other."""
         if isinstance(other, Vec3):
             self.x -= other.x
             self.y -= other.y
@@ -399,8 +390,15 @@ class AxAng(ctypes.Structure):
     _fields_ = [("axis", Vec3), ("angle", ctypes.c_double)]
 
     def __init__(self, arg=None):
-        if arg is not None:
+        if arg is None:
+            self.set_identity()
+        else:
             self.conv_from(arg)
+
+    def set_identity(self):
+        """Set to identity"""
+        self.axis.copy_from((0, 0, 1))
+        self.angle = 0
 
     def conv_from(self, src):
         """Converts src into an AxAng."""
@@ -468,7 +466,9 @@ class Quat(ctypes.Structure, VecMixin):
           and the scalar (w) is zero
         * Else arg is converted to a Quat
         """
-        if arg is not None:
+        if arg is None:
+            self.set_identity()
+        else:
             self.conv_from(arg)
 
     def conv_from(self, src):
@@ -479,7 +479,7 @@ class Quat(ctypes.Structure, VecMixin):
             self.z = 0
             self.w = src
         elif isinstance(src, (list, tuple)):
-            self._copy_elts(src)
+            self.copy_from(src)
         else:
             src.to_quat(self)
         return self
@@ -564,6 +564,20 @@ class Quat(ctypes.Structure, VecMixin):
         """Converts to the minimal quaternion for the represented rotation."""
         libamino.aa_tf_qminimize(self)
         return self
+
+    def set_identity(self):
+        """Set to identity"""
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        self.w = 1
+
+    def zero(self):
+        """Set to zero"""
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        self.w = 0
 
     def __imul__(self, other):
         if is_scalar(other):
@@ -660,17 +674,23 @@ class RotMat(ctypes.Structure):
         * If arg is 1, the object is the identity rotation matrix.
         * Else arg is converted to a rotation matrix.
         """
-        if arg is not None:
+        if arg is None:
+            self.set_identity()
+        else:
             self.conv_from(arg)
 
     def conv_from(self, src):
         """Converts src to a rotation matrix."""
         if src == 1:
-            self.cx = Vec3(1, 0, 0)
-            self.cy = Vec3(0, 1, 0)
-            self.cz = Vec3(0, 0, 1)
+            self.set_identity()
         else:
             src.to_rotmat(self)
+
+    def set_identity(self):
+        """Set to identity"""
+        self.cx.copy_from((1, 0, 0))
+        self.cy.copy_from((0, 1, 0))
+        self.cz.copy_from((0, 0, 1))
 
     def rotate(self, p):
         """Rotate a point."""
@@ -791,7 +811,9 @@ class TfMat(ctypes.Structure):
     _fields_ = [("R", RotMat), ("v", Vec3)]
 
     def __init__(self, arg=None):
-        if arg is not None:
+        if arg is None:
+            self.set_identity()
+        else:
             self.conv_from(arg)
 
     def conv_from(self, src):
@@ -808,6 +830,11 @@ class TfMat(ctypes.Structure):
         r = TfMat()
         libamino.aa_tf_tfmat_mul(self, other, r)
         return r
+
+    def set_identity(self):
+        """Set to identity"""
+        self.R.set_identity()
+        self.v.copy_from((0, 0, 0))
 
     def __invert__(self):
         """Returns the inverse"""
@@ -904,8 +931,15 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
     _fields_ = [("real", Quat), ("dual", Quat)]
 
     def __init__(self, arg=None):
-        if arg is not None:
+        if arg is None:
+            self.set_identity()
+        else:
             self.conv_from(arg)
+
+    def set_identity(self):
+        """Set to identity"""
+        self.real.set_identity()
+        self.dual.zero()
 
     def conv_from(self, src):
         """Converts src to a Dual Quaternion."""
@@ -913,7 +947,7 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
             h, v = src
             libamino.aa_tf_qv2duqu(Quat.ensure(h), Vec3.ensure(v), self)
         elif isinstance(src, list):
-            self._copy_elts(src)
+            self.copy_from(src)
         else:
             self.conv_from((src.rotation, src.translation))
 
@@ -1010,7 +1044,7 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
     @property
     def rotation(self):
         """Rotation part"""
-        return self.real
+        return Quat(self.real)
 
     @property
     def translation(self):
@@ -1019,14 +1053,33 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
         libamino.aa_tf_duqu_trans(self, v)
         return v
 
+    @rotation.setter
+    def rotation(self, value):
+        h = Quat(value)
+        v = self.translation
+        libamino.aa_tf_qv2duqu(h, v, self)
+
+    @translation.setter
+    def translation(self, value):
+        h = self.rotation
+        v = Vec3(value)
+        libamino.aa_tf_qv2duqu(h, v, self)
+
 
 class QuatTrans(ctypes.Structure, CopyEltsMixin):
     """Class for Quaternion-Translation"""
     _fields_ = [("quat", Quat), ("trans", Vec3)]
 
     def __init__(self, arg=None):
-        if arg is not None:
+        if arg is None:
+            self.set_identity()
+        else:
             self.conv_from(arg)
+
+    def set_identity(self):
+        """Set to identity"""
+        self.quat.set_identity()
+        self.trans.copy_from((0, 0, 0))
 
     def conv_from(self, src):
         """Converts src to quaternion-translation."""
@@ -1035,7 +1088,7 @@ class QuatTrans(ctypes.Structure, CopyEltsMixin):
             self.quat.conv_from(R)
             self.trans.copy_from(v)
         elif isinstance(src, list):
-            self._copy_elts(src)
+            self.copy_from(src)
         else:
             self.conv_from((src.rotation, src.translation))
 
@@ -1116,10 +1169,18 @@ class QuatTrans(ctypes.Structure, CopyEltsMixin):
         """Rotation part"""
         return self.quat
 
+    @rotation.setter
+    def rotation(self, value):
+        return self.quat.conv_from(value)
+
     @property
     def translation(self):
         """Translation"""
         return self.trans
+
+    @translation.setter
+    def translation(self, value):
+        return self.trans.copy_from(value)
 
     def __len__(self):
         return 7

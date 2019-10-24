@@ -416,6 +416,27 @@ class TestTf(unittest.TestCase):
         self.cmpmul((XAngle(.25), [1, 2, 3]), (YAngle(.5), [1, 2, 3]),
                     [3, 7, 11])
 
+    def cmp_prop(self, rot, trans):
+        T = TfMat()
+        S = DualQuat()
+        E = QuatTrans()
+
+        T.rotation = rot
+        T.translation = trans
+
+        E.rotation = rot
+        E.translation = trans
+
+        S.translation = trans
+        S.rotation = rot
+
+        self.cmptfs(T, S, E, [1, 2, 3])
+
+    def test_prop(self):
+        self.cmp_prop(XAngle(pi / 2), (1, 2, 3))
+        self.cmp_prop(YAngle(pi / 2), (1, 2, 3))
+        self.cmp_prop(ZAngle(pi / 2), (1, 2, 3))
+
 
 if __name__ == '__main__':
     unittest.main()

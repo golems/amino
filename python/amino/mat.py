@@ -88,8 +88,7 @@ class DVec(ctypes.Structure, VecMixin):
         elif isinstance(src, DVec):
             libamino.aa_dvec_copy(src, self)
         else:
-            for i in range(0, ls):
-                self[i] = src[i]
+            super(DVec, self).copy_from(src)
         return src
 
     def copy_to(self, dst):
@@ -100,8 +99,7 @@ class DVec(ctypes.Structure, VecMixin):
         elif isinstance(dst, DVec):
             libamino.aa_dvec_copy(self, dst)
         else:
-            for i in range(0, ls):
-                dst[i] = self[i]
+            super(DVec, self).copy_to(dst)
         return dst
 
     def axpy(self, alpha, x):
