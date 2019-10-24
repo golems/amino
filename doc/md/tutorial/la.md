@@ -188,9 +188,9 @@ matrix \f$\mathbf{A}\f$:
     \end{cases}
 \f]
 
-Thus, our matrix represent consists of the row count, column count,
-data pointer, and leading dimension. Note that for an entire matrix,
-the leading dimension will equal the row count.
+Thus, our matrix representation consists of the row count, column
+count, data pointer, and leading dimension. Note that for an entire
+matrix, the leading dimension will equal the row count.
 
 ~~~{.c}
 struct aa_dmat {

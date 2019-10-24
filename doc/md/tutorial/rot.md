@@ -24,8 +24,9 @@ representations for rotation.
 Complex Numbers {#tutorial_rot_complex}
 ===============
 
-Complex numbers offer a way to represent planar (2D) rotations.  The
-imaginary unit \f$\ielt\f$ is defined as a number whose square is -1:
+Complex numbers provide a representation of planar (2D) rotations.
+The imaginary unit \f$\ielt\f$ is defined as a number whose square is
+-1:
 
 
 \f[
@@ -33,10 +34,9 @@ imaginary unit \f$\ielt\f$ is defined as a number whose square is -1:
 \f]
 
 [Euler's Formula](https://en.wikipedia.org/wiki/Euler%27s_formula)
-provides the relationship between complex numbers and planar angles.
-If we expand the Taylor series for the complex exponential, we can
-rearrange the terms into the Taylor series for \f$\sin\f$ and
-\f$\cos\f$:
+relates complex numbers and planar angles.  If we expand the Taylor
+series for the complex exponential, we can rearrange the terms into
+the Taylor series for \f$\sin\f$ and \f$\cos\f$:
 
 \f[
     \begin{array}{ccl}
@@ -66,13 +66,12 @@ rearrange the terms into the Taylor series for \f$\sin\f$ and
     \end{array}
 \f]
 
-We can see Euler's formula illustrated in the complex plane:
+The complex plane illustrates Euler's formula:
 
 ![Complex Plane](cplane.svg)
 
-
 We can apply Euler's formula to rotate points in the plane by viewing
-the point in polar coordinates.
+the point in polar coordinates as radius \f$r\f$ and angle \f$\theta_1\f$:
 
 \f[
     x_1 + y_1 \ielt = r \left(\cos \theta_1 + \ielt \sin \theta_1
@@ -83,8 +82,9 @@ the point in polar coordinates.
 where \f$r = \sqrt{{x_1}^2 + {y_1}^2}\f$ and \f$\theta_1 = \tan^{-1}
 \frac{y_1}{x_1}\f$.
 
-To rotate the polar coordinate point, we need only add the rotation
-angle to the polar coordinate angle:
+To rotate the polar coordinate point, we may add the rotation angle
+\f$\theta_r\f$ to the original polar coordinate angle \f$\theta_1\f$,
+yielding the new angle \f$\theta_2\f$
 
 ![Complex Plane](eulerrot.svg)
 
@@ -103,7 +103,6 @@ to multiplication of the exponential coordinates:
     =
     re^{\theta_1\ielt} e^{\theta_r\ielt}
 \f]
-
 
 Though Euler's formula is (at the least) a "neat trick," the
 advantages of representing angles in the plane using imaginary numbers
@@ -140,9 +139,9 @@ Axis-Angle {#tutorial_rot_aa}
 ==========
 
 
-A visually-meaningful representation of 3D rotation is *Axis-Angle*
-form, given by the unit axis \f$\unitvec{u}\f$ about which we rotate
-and the angle \f$\theta\f$ by which we rotate:
+A visually-meaningful representation of 3D rotation is the
+*Axis-Angle* form, given by the unit axis \f$\unitvec{u}\f$ about
+which we rotate and the angle \f$\theta\f$ by which we rotate:
 ![Axis-Angle](axang.svg)
 
 While the axis-angle form is easy enough to visualize, it is not
