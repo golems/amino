@@ -74,7 +74,16 @@ class CopyEltsMixin(object):
         return self
 
 
-class VecMixin(CopyEltsMixin, SSDEqMixin):
+class DivCompatMixin:
+    def __div__(self, other):
+        return self.__truediv__(other)
+
+    def __idiv__(self, other):
+        """Divide self by a scalar"""
+        return self.__itruediv__(other)
+
+
+class VecMixin(CopyEltsMixin, SSDEqMixin, DivCompatMixin):
     """Mixin for vector-like objects."""
 
     def __radd__(self, other):

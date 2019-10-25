@@ -37,7 +37,7 @@
 import ctypes
 
 from amino.lib import libamino
-from amino.mixin import VecMixin, SSDEqMixin
+from amino.mixin import VecMixin, SSDEqMixin, DivCompatMixin
 from amino.util import ensure, is_int, is_scalar
 
 CBLAS_NO_TRANS = 111
@@ -244,13 +244,13 @@ class DVec(ctypes.Structure, VecMixin):
         """Multiply self by a scalar"""
         return DVec(self).__imul__(other)
 
-    def __idiv__(self, other):
+    def __itruediv__(self, other):
         """Divide self by a scalar"""
         return self.__imul__(1.0 / other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         """Divide self by a scalar"""
-        return DVec(self).__idiv__(other)
+        return DVec(self).__itruediv__(other)
 
     def __str__(self):
         s = "DVec(["
@@ -265,7 +265,7 @@ class DVec(ctypes.Structure, VecMixin):
         return s
 
 
-class DMat(ctypes.Structure, SSDEqMixin):
+class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin):
     """Matrix of double floats."""
     _fields_ = [("_rows", ctypes.c_size_t), ("_cols", ctypes.c_size_t),
                 ("_data", ctypes.POINTER(ctypes.c_double)),
@@ -477,13 +477,13 @@ class DMat(ctypes.Structure, SSDEqMixin):
         else:
             raise TypeError('Cannot multiply matrix with %s' % type(other))
 
-    def __idiv__(self, other):
+    def __itruediv__(self, other):
         """Divide self by a scalar"""
         return self.__imul__(1.0 / other)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         """Divide self by a scalar"""
-        return DMat(self).__idiv__(other)
+        return DMat(self).__itruediv__(other)
 
     def __iadd__(self, other):
         if is_scalar(other):

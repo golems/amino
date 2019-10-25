@@ -373,6 +373,7 @@ all-python:
 
 INSTALL_EXEC_LOCAL += install-exec-python
 install-exec-python:
+	$(MKDIR_P) "$(DESTDIR)$(pkgpythondir)"
 	cd "$(srcdir)/python" && $(PYTHON) setup.py build \
 		--build-base $(shell readlink -f $(builddir))/python/build \
 		install \
@@ -382,11 +383,15 @@ install-exec-python:
 
 UNINSTALL_LOCAL += uninstall-python
 uninstall-python:
+	echo "PYDIR:" "$(DESTDIR)$(pkgpythondir)"
 	if test -f "$(DESTDIR)$(pkgpythondir)/install_files.txt" ; then \
 		cat "$(DESTDIR)$(pkgpythondir)/install_files.txt" | \
-			xargs rm -rf; \
+			xargs rm -rvf; \
 		rm "$(DESTDIR)$(pkgpythondir)/install_files.txt"; \
-		rmdir  "$(DESTDIR)$(pkgpythondir)"; \
+		if test -d "$(DESTDIR)$(pkgpythondir)/__pycache__"; then \
+			rmdir -v "$(DESTDIR)$(pkgpythondir)/__pycache__"; \
+		fi; \
+		rmdir -v "$(DESTDIR)$(pkgpythondir)"; \
 	fi
 
 CLEAN_LOCAL += clean-python
@@ -398,12 +403,18 @@ clean-python:
 pylint.report:
 	./python/test/pylint.sh > pylint.report
 
-endif
+if HAVE_PYLINT
+TESTS += python/test/pylint.sh
+endif # HAVE_PYLINT
+
+endif # HAVE_PYTHON
 
 # package
 EXTRA_DIST += \
 	python/setup.py \
 	python/amino/util.py \
+	python/amino/util2.py \
+	python/amino/util3.py \
 	python/amino/mat.py \
 	python/amino/tf.py \
 	python/amino/kinematics.py \
@@ -417,6 +428,9 @@ EXTRA_DIST += \
 
 # tests
 EXTRA_DIST += \
+	python/test/pylintrc \
+	python/test/pylint3rc \
+	python/test/pylint.sh \
 	python/test/tftest.py \
 	python/test/mattest.py
 

@@ -51,13 +51,13 @@ while win.is_runnining():
 
     # absolute hand pose is changing
     TF_g_h = fk["hand"]
-    print "g->hand: %s" % TF_g_h
+    print("g->hand: %s" % TF_g_h)
 
     # Relative pose between elbow and hand does not change; there are
     # only fixed transforms and joints with unchanging configuration
     # between these two frames.
     TF_e_h = fk["e", "hand"]
-    print "e->hand: %s" % TF_e_h
+    print("e->hand: %s" % TF_e_h)
 
     # sleep till next cycle
     sleep(dt)

@@ -189,7 +189,7 @@ class Vec3(ctypes.Structure, VecMixin):
     def __rmul__(self, other):
         return self * other
 
-    def __idiv__(self, other):
+    def __itruediv__(self, other):
         if is_scalar(other):
             self.x /= other
             self.y /= other
@@ -197,10 +197,8 @@ class Vec3(ctypes.Structure, VecMixin):
             return self
         raise TypeError()
 
-    def __div__(self, other):
-        v = Vec3(self)
-        v /= other
-        return v
+    def __truediv__(self, other):
+        return Vec3(self).__itruediv__(other)
 
     def to_quat(self, h):
         """Converts to a quaternion and copies to h.

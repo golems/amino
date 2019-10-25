@@ -66,12 +66,12 @@ while win.is_runnining():
     is_collision = cl.check(fk, cl_set)
 
     # print collision results
-    print "Collision: %s" % ('yes' if is_collision else 'no')
+    print("Collision: %s" % ('yes' if is_collision else 'no'))
     for i in range(0, sg.frame_count):
         for j in range(0, i):
             if cl_set[i, j]:
-                print "    %s, %s" % (sg.ensure_frame_name(i),
-                                      sg.ensure_frame_name(j))
+                print("    %s, %s" % (sg.ensure_frame_name(i),
+                                      sg.ensure_frame_name(j)))
 
     # sleep till next cycle
     sleep(dt)

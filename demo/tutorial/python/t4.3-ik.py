@@ -51,10 +51,10 @@ while win.is_runnining():
 
     # Display in Window
     if q_sub:  # check for valid solution
-        print q_sub
+        print(q_sub)
         win.config = ssg.scatter_config(q_sub)
     else:
-        print "No IK Solution"
+        print("No IK Solution")
 
     # reseed for next run
     ik.set_seed_rand()

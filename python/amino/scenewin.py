@@ -38,6 +38,7 @@ import ctypes
 from amino.mat import DVec
 from amino.scenegraph import RxSg
 from amino.kinematics import SceneFK
+from amino.util import ensure_cstring
 
 LIBAMINOGL = ctypes.CDLL("libamino-gl.so")
 
@@ -70,6 +71,7 @@ class SceneWin(object):
             scenegraph: scene to display
             config: configuration of the scene
         """
+        title = ensure_cstring(title)
         self._ptr = LIBAMINOGL.aa_rx_win_default_create(title, width, height)
         self._q = None
         self._scenegraph = None

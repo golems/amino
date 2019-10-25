@@ -38,6 +38,7 @@ import ctypes
 from amino.lib import libamino
 from amino.tf import Vec3, Quat, QuatTrans
 from amino.mat import DVec, DMat
+from amino.util import ensure_cstring, is_string
 
 FRAME_ROOT = -1
 FRAME_NONE = -2
@@ -344,6 +345,8 @@ class SceneGraph(object):
                         geom=None):
         """Adds a new fixed frame to the scene."""
         E = QuatTrans.ensure(tf)
+        name = ensure_cstring(name)
+        parent = ensure_cstring(parent)
         libamino.aa_rx_sg_add_frame_fixed(self._ptr, parent, name, E.quat,
                                           E.trans)
         self.attach_geom(name, geom)
@@ -360,6 +363,9 @@ class SceneGraph(object):
         E = QuatTrans.ensure(tf)
         if config_name is None:
             config_name = name
+        name = ensure_cstring(name)
+        parent = ensure_cstring(parent)
+        config_name = ensure_cstring(config_name)
         libamino.aa_rx_sg_add_frame_revolute(self._ptr, parent, name, E.quat,
                                              E.trans, config_name,
                                              Vec3.ensure(axis), offset)
@@ -377,6 +383,9 @@ class SceneGraph(object):
         E = QuatTrans.ensure(tf)
         if config_name is None:
             config_name = name
+        name = ensure_cstring(name)
+        parent = ensure_cstring(parent)
+        config_name = ensure_cstring(config_name)
         libamino.aa_rx_sg_add_frame_prismatic(self._ptr, parent, name, E.quat,
                                               E.trans, config_name,
                                               Vec3.ensure(axis), offset)
@@ -384,6 +393,7 @@ class SceneGraph(object):
 
     def attach_geom(self, name, geom):
         """Attaches geometry to the named frame."""
+        name = ensure_cstring(name)
         if geom is None:
             return
         elif isinstance(geom, Geom):
@@ -405,6 +415,9 @@ class SceneGraph(object):
         Raises:
             LookupError: the shared object or named scene could not be found.
         """
+        root = ensure_cstring(root)
+        name = ensure_cstring(name)
+        filename = ensure_cstring(filename)
         r = libamino.aa_rx_dl_sg_at(filename, name, self._ptr, root)
         if r is None:
             raise LookupError("Could not load scene %s:%s" % (filename, name))
@@ -426,10 +439,12 @@ class SceneGraph(object):
 
     def config_id(self, name):
         """Returns the config id for string name."""
+        name = ensure_cstring(name)
         return libamino.aa_rx_sg_config_id(self._ptr, name)
 
     def frame_id(self, name):
         """Returns the frame id for string name."""
+        name = ensure_cstring(name)
         return libamino.aa_rx_sg_frame_id(self._ptr, name)
 
     def config_name(self, i):
@@ -446,7 +461,7 @@ class SceneGraph(object):
         Raises:
             IndexError: value is out range.
         """
-        if isinstance(value, basestring):
+        if is_string(value):
             return self.config_id(value)
         elif value >= self.config_count:
             raise IndexError("Invalid config id: %d" % value)
@@ -459,7 +474,7 @@ class SceneGraph(object):
         Raises:
             IndexError: value is out range.
         """
-        if isinstance(value, basestring):
+        if is_string(value):
             return self.frame_id(value)
         elif value >= self.frame_count:
             raise IndexError("Invalid frame id: %d" % value)
@@ -479,8 +494,7 @@ class SceneGraph(object):
 
     def ensure_frame_name(self, value):
         """Ensures value is a string frame name, converting int ids if necessary."""
-        return value if isinstance(value,
-                                   basestring) else self.frame_name(value)
+        return value if is_string(value) else self.frame_name(value)
 
     def config_vector(self, config, vector=None):
         """Create or convert to a configuration vector.

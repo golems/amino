@@ -804,13 +804,17 @@ AC_ARG_WITH([python],
             [with_python="auto"])
 
 AS_IF([test "x$with_python" != xno], [
-  AM_PATH_PYTHON([2.7],
+  AM_PATH_PYTHON([3.7],
                  ,
-                 AS_IF([test "x$with_python" = xyes],
-                       [AC_MSG_ERROR([No python detected])]))
+                 [AS_IF([test "x$with_python" = xyes],
+                       [AC_MSG_ERROR([No python detected])])
+                 ])
 ])
 
-AM_CONDITIONAL([HAVE_PYTHON], [test "x$PYTHON" != x])
+AM_CONDITIONAL([HAVE_PYTHON], [test "x$PYTHON" != "x" -a "x$PYTHON" != "x:"])
+
+AC_CHECK_PROGS([PYLINT],[pylint3])
+AM_CONDITIONAL([HAVE_PYLINT], [test "x$PYLINT" != x])
 
 ###########
 ## Demos ##
@@ -936,17 +940,23 @@ AC_MSG_NOTICE([CFLAGS:            $CFLAGS])
 AC_MSG_NOTICE([C++ compiler:      $CXX])
 AC_MSG_NOTICE([CXX:               $CXXFLAGS])
 AC_MSG_NOTICE([Use Fortran        $with_fortran])
-AC_MSG_NOTICE([Use Common Lisp:   $with_common_lisp])
-AC_MSG_NOTICE([Common Lisp:       $COMMON_LISP])
-AS_IF([test "x$with_fortran" = xyes],[
-AC_MSG_NOTICE([Fortran compiler:  $FC])]
-AC_MSG_NOTICE([FCFLAGS:           $FCFLAGS])
-)
+AS_IF([test "x$with_fortran" != xno],[
+  AC_MSG_NOTICE([Fortran compiler:  $FC])
+  AC_MSG_NOTICE([FCFLAGS:           $FCFLAGS])
+])
 AC_MSG_NOTICE([Use Java           $with_java])
-AS_IF([test "x$with_java" = xyes], [
-AC_MSG_NOTICE([Java compiler:     $JAVAC])]
-AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
-)
+AS_IF([test "x$with_java" != xno], [
+  AC_MSG_NOTICE([Java compiler:     $JAVAC])
+  AC_MSG_NOTICE([Build Java Lib:    $BUILD_JAVA])
+])
+AC_MSG_NOTICE([Common Lisp:       $COMMON_LISP])
+AS_IF([test "x$with_common_lisp" != xno], [
+  AC_MSG_NOTICE([Use Common Lisp:   $with_common_lisp])
+])
+AC_MSG_NOTICE([Use Python:        $with_python])
+AS_IF([test "x$with_python" != xno], [
+AC_MSG_NOTICE([Python:            $PYTHON])
+])
 AC_MSG_NOTICE([Use SDL2/OpenGL:   $AMINO_GL])
 AC_MSG_NOTICE([Use Spacenav:      $HAVE_SPACENAV])
 AC_MSG_NOTICE([Use FCL:           $HAVE_FCL])

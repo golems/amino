@@ -91,7 +91,7 @@ while win.is_runnining():
         dq_all = ssg.scatter_config(dq_sub)
         q_all += dt * dq_all
     else:
-        print "Error"
+        print("Error")
 
     # update window
     win.config = q_all
