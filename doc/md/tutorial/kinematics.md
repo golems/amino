@@ -18,7 +18,7 @@ Kinematics {#tutorial_kin}
 \newcommand{\tfmat}[3]{{^{#2}\MAT{#1}_{#3}}}
 \newcommand{\tfquat}[3]{{^{#2}\quat{#1}_{#3}}}
 \newcommand{\qmul}[0]{\otimes}
-\newcommand{\dualelt}[0]{\varepsilon}
+\newcommand{\dualelt}[0]{\boldsymbol{\varepsilon}}
 \newcommand{\confsym}[0]{\theta}
 \newcommand{\conf}[0]{\confsym}
 \newcommand{\confvec}[0]{\boldsymbol{\confsym}}

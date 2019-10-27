@@ -18,7 +18,7 @@ Scene Graphs {#tutorial_scene}
 \newcommand{\tfmat}[3]{{^{#2}\MAT{#1}_{#3}}}
 \newcommand{\tfquat}[3]{{^{#2}\quat{#1}_{#3}}}
 \newcommand{\qmul}[0]{\otimes}
-\newcommand{\dualelt}[0]{\varepsilon}
+\newcommand{\dualelt}[0]{\boldsymbol{\varepsilon}}
 \newcommand{\setranssym}[0]{v}
 \newcommand{\setrans}[0]{\vec{\setranssym}}
 \newcommand{\setransvel}[0]{\dot{\setrans}}
@@ -76,11 +76,18 @@ the scroll wheel.  Close the window the exit.
 Robot Scene {#tutorial_scene_robot}
 ===========
 
-Next, we will procedurally construct a serial robot.  We model the
-robot joints as frames whose transform is parameterized by a
-configuration variable (i.e., the joint angle).  In other words, the
+Next, we will procedurally construct a serial robot.  We model robots
+as chains or trees of local coordinate frames:
+
+![Robot Local Frames](robotframe.svg)
+
+Each joint corresponds to a frame whose transform is parameterized by
+a configuration variable (i.e., the joint angle).  In other words, the
 joint angle tells us the relative transform between a joint's local
-coordinate frame and the joint's parent frame.
+coordinate frame and the joint's parent frame.  For each rigid body or
+link in the robot, we represent the points of that link in the link's
+local coordinate frame.
+
 
 Robot Joints
 ------------

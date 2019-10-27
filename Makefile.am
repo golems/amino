@@ -840,6 +840,7 @@ MANUAL_SVGS = \
 	doc/manual/joint-prismatic.svg \
 	doc/manual/bodyframe.svg \
 	doc/manual/euclideantf.svg \
+	doc/manual/duqu.svg \
 	doc/manual/planerot.svg \
 	doc/manual/spacerot.svg \
 	doc/manual/axang.svg \

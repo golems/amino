@@ -11,13 +11,23 @@ Transformation {#tutorial_tf}
 \newcommand{\jelt}[0]{\unitvec{\jmath}}
 \newcommand{\kelt}[0]{\unitvec{k}}
 \newcommand{\quat}[1]{\mathcal{#1}}
+\newcommand{\sequat}[0]{\quat{h}}
+\newcommand{\setranssym}[0]{v}
+\newcommand{\setrans}[0]{\vec{\setranssym}}
 \newcommand{\qmul}[0]{\otimes}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
 \newcommand{\tf}[3]{{^{#2}{#1}_{#3}}}
+\newcommand{\mytf}[3]{{^{#2}\!}{#1}_{#3}}
 \newcommand{\tfmat}[3]{{^{#2}\MAT{#1}_{#3}}}
 \newcommand{\tfquat}[3]{{^{#2}\quat{#1}_{#3}}}
 \newcommand{\qmul}[0]{\otimes}
-\newcommand{\dualelt}[0]{\varepsilon}
+\newcommand{\dualelt}[0]{\boldsymbol{\varepsilon}}
+\newcommand{\pttf}[2]{{^{#2}\!}{#1}}
+\newcommand{\qconj}[1]{{#1}^*}
+\newcommand\overcmt[2]{\overbrace{{#1}}^{#2}}
+\newcommand\undercmt[2]{\underbrace{{#1}}_{#2}}
+\newcommand{\dualmark}[1]{\tilde{#1}}
+\require{cancel}
 \f]
 
 This tutorial covers the combination of rotation and translation in
@@ -48,21 +58,38 @@ the body rotates and translates.
 ![Robot Local Frames](bodyframe.svg)
 
 The global coordinates of all points on the body following a Euclidean
-transformation are fully defined by the rotation and translation of
-the local frame:
+transformation are fully defined by the rotation and translation
+(linear displacement) of the local frame:
 
 ![Local Coordinate Frames](localframe.svg)
 
 
-Since we often must deal with many local coordinate frames, it is
-helpful to adopt a notation to keep track of relevant frames.
-Specifically, we will write the parent frame as a leading prefix and
-the child frame as a trailing suffix.  For example, in the figure
-above, \f$\tf{x}{0}{1}\f$ is the x-translation from parent frame 0 to
-child frame 1.
+<!-- We can represent a point using coordinates in different frames.  For -->
+<!-- example, we can represent point p below in either frame a or frame b: -->
 
 
 <!-- ![Local Coordinates for a Point](localpoint.svg) -->
+
+
+
+
+
+Since we have to keep track of many different frames, it is helpful to
+adopt a notation convention that indicates which frames a particular
+variable relates to.  A useful convention we will use is to indicate
+parent frame with a leading superscript and a child frame with a
+trailing subscript:
+
+\f[
+    \mytf{X}{\rm parent}{\rm child}
+    \; .
+\f]
+
+For example, in the figure above, \f$\tf{x}{0}{1}\f$ is the
+x-translation from parent frame 0 to child frame 1.
+
+
+
 
 Transforming a Point
 --------------------
@@ -77,10 +104,27 @@ In the figure below, we start with the local coordinates of point
 \f$p\f$ in frame b.  To obtain the coordinates of the point in frame
 a, we first rotate and then we translate the point:
 
+To transform a point from frame b to frame a, we first rotate the
+point and then add the translation.
+
+\f[
+  \mytf{p}{a}{} =
+  \overcmt{
+    (\mytf{\sequat}{a}{b}) \qmul (\mytf{p}{b}{}) \qmul
+    {(\mytf{\sequat}{a}{b})}^*
+    }{\text{rotate}}
+    \
+    +
+    \overcmt{\mytf{\setrans}{a}{b}}{\text{translate}}
+\f]
+
+
 ![Transforming a Point](tfpoint.svg)
+
 
 Chaining Transforms
 -------------------
+
 
 Sometimes we need to chain a sequence of transformations.  This need
 occurs when dealing with robot manipulators, where we have a series of
@@ -214,39 +258,88 @@ requiring a total of 12 numbers:
 Dual Number Quaternions {#tutorial_tf_rep_duqu}
 -----------------------
 
+
+Dual Number Quaternions {#tutorial_tf_duqu}
+=======================
+
+
+
+<!-- \f[ -->
+<!-- f(a + b \dualelt) -->
+<!-- \quad=\quad -->
+<!-- f(a) -->
+<!-- + \frac{f'(a)}{1!}(b\dualelt) -->
+<!-- + \cancelto{0}{\frac{f''(a)}{2!}(b\dualelt)^2} -->
+<!-- + \cancelto{0}{\frac{f'''(a)}{3!}b\dualelt)^3} -->
+<!-- + \cancelto{0}{\ldots} -->
+<!-- \quad=\quad -->
+<!-- f(a) + f'(a)b\dualelt -->
+<!-- \f] -->
+
+
+
 Dual quaternions a compact, computationally efficient, and
 analytically convenient representation for Euclidean transformations.
-A dual quaternion combines the ordinary quaternions and the dual
-numbers.  A dual number contains the dual element \f$\dualelt\f$, such
-that, \f[ \dualelt^2 = 0 \quad\text{and}\quad \dualelt \neq 0 \; .
+Dual quaternions are an extension of the ordinary quaternions that is
+capable of representing both rotation and translation.  A dual
+quaternion is a quaternion of **dual numbers**.  Dual numbers are
+constructed using the dual element \f$\dualelt\f$, where:
+
+\f[
+    \dualelt^2 = 0
+    \quad{\rm and}\quad
+    \dualelt \neq 0
 \f]
+
+
+Multiplication of dual numbers cancels the product of the dual parts:
+
+\f[
+    (a_r + a_d \dualelt) * (b_r + b_d \dualelt)
+    \quad = \quad
+    a_r b_r + a_r b_d \dualelt + b_r a_d \dualelt + \cancelto{0}{a_d b_d \dualelt^2}
+    \quad = \quad
+    a_r b_r + (a_r b_d + b_r a_d) \dualelt
+\f]
+
+Dual numbers yield interesting properties.  In particular, the Taylor
+series for any dual number, evaluated at the real part, consists of
+only two terms; all higher order terms contain and \f$\dualelt^2\f$
+and cancel to zero.  Consequently, we can evaluate any dual function,
+such as sine, cosine, exponential, and logarithm, in terms of the real
+function and its derivative.
+
 
 Combining the quaternion units and the dual element yields eight factors
 in the dual quaternion,
 
-\f[
-\quat{S}
-=
-\underbrace{
-\left(
-r_x \ielt
-+ r_y \jelt
-+ r_z \kelt
-+ r_w
-\right)
-}_{\text{real part}}
-+
-\underbrace{
-\left(
-  d_x \ielt
-+ d_y \jelt
-+ d_z \kelt
-+ d_w
-\right)
-}_{\text{dual part}}
-\dualelt
-\; .
-\f]
+
+![Dual Quaternion Coefficients](duqu.svg)
+
+
+<!-- \f[ -->
+<!-- \quat{S} -->
+<!-- = -->
+<!-- \underbrace{ -->
+<!-- \left( -->
+<!-- r_x \ielt -->
+<!-- + r_y \jelt -->
+<!-- + r_z \kelt -->
+<!-- + r_w -->
+<!-- \right) -->
+<!-- }_{\text{real part}} -->
+<!-- + -->
+<!-- \underbrace{ -->
+<!-- \left( -->
+<!--   d_x \ielt -->
+<!-- + d_y \jelt -->
+<!-- + d_z \kelt -->
+<!-- + d_w -->
+<!-- \right) -->
+<!-- }_{\text{dual part}} -->
+<!-- \dualelt -->
+<!-- \; . -->
+<!-- \f] -->
 
 We construct the dual quaternion for a rotation \f$\quat{h}\f$ and
 translation \f$\vec{v}\f$ as follows:
@@ -371,6 +464,64 @@ struct qutr {
    double translation[3];
 };
 ~~~
+=======
+We can chain the transforms from a to b and from b to c, giving a
+single transform from a to consider.  Consider transforming a point in
+c first to b and then to a.
+
+![Transforming a Point](tfchain.svg)
+
+\f[
+\mytf{p}{a}{}
+      =
+      \left( \mytf{\quat{h}}{a}{b}\right)
+      \qmul
+      \overcmt{
+      \left(
+        \left( \mytf{\quat{h}}{b}{c}) \qmul (\mytf{p}{c}{} \right)
+        \qmul
+        \qconj{\left(\mytf{\quat{h}}{b}{c}\right)}
+        +
+        \mytf{v}{b}{c}
+      \right)
+      }{\mytf{p}{b}{}}
+      \qmul
+      \qconj{\left(\mytf{\quat{h}}{a}{b}\right)}
+      +
+      \mytf{v}{a}{b}
+\f]
+
+\f[
+      \pttf{p}{a}
+      =
+      \undercmt{
+        \left(\mytf{\quat{h}}{a}{b}\right)
+        \qmul
+        \left( \mytf{\quat{h}}{b}{c}\right)
+      }{\mytf{\quat{h}}{a}{c}}
+      \qmul
+      \left(\mytf{p}{c}{} \right)
+      \qmul
+      \qconj{
+        \undercmt{
+          \left(\mytf{\quat{h}}{a}{b}
+            \qmul
+            \mytf{\quat{h}}{b}{c}\right)
+        }{\mytf{\quat{h}}{a}{c}}
+      }
+      +
+      \undercmt{
+        \left(\mytf{\quat{h}}{a}{b}\right)
+        \qmul
+        \mytf{v}{b}{c}
+        \qmul
+        \qconj{\left(\mytf{\quat{h}}{a}{b}\right)}
+        +
+        \mytf{v}{a}{b}
+      }{
+        \mytf{v}{a}{c}
+      }
+\f]
 
 Example Code {#tutorial_tf_code}
 ============
