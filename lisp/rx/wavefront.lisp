@@ -269,7 +269,7 @@
         (otherwise (error "Unknown file type: ~A" file-type))))))
 
 
-(defun mesh-povray (mesh-data
+(defun mesh-povray (mesh-data options
                     &key
                       reload
                       ;(mesh-up-axis "Z")
@@ -293,7 +293,9 @@
         (let ((name (mesh-data-name mesh-data)))
           (format t "~&  POVENC ~A~%" obj-file)
           (output (pov-declare (mesh-data-name mesh-data)
-                               (pov-mesh2 :mesh-data mesh-data :handedness handedness))
+                               (pov-mesh2 :mesh-data mesh-data
+                                          :handedness handedness
+                                          :options options))
                   abs-output-file)
           (values (name-mangle name) rel-output-file))
         ;; Don't regenerate

@@ -881,7 +881,27 @@ aa_rx_fk_ref(const struct aa_rx_fk *fk, aa_rx_frame_id id)
 AA_API void
 aa_rx_fk_get_abs_qutr(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[7] )
 {
+    if( id < 0 || (size_t)id > aa_rx_fk_cnt(fk) ) {
+        fprintf(stderr, "ERROR: Invalid frame id %d\n", id);
+        abort();
+        exit(EXIT_FAILURE);
+    }
     AA_MEM_CPY(E, AA_RX_FK_REF(fk, (size_t)(id)), AA_RX_TF_LEN);
+}
+
+
+AA_API void
+aa_rx_fk_get_rel_qutr(const struct aa_rx_fk *fk,
+                      aa_rx_frame_id parent, aa_rx_frame_id child,
+                      double E[7])
+{
+    const double *gEp = (AA_RX_FRAME_ROOT == parent) ?
+        aa_tf_qutr_ident : AA_RX_FK_REF(fk, (size_t)(parent));
+
+    const double *gEc = (AA_RX_FRAME_ROOT == child) ?
+        aa_tf_qutr_ident : AA_RX_FK_REF(fk, (size_t)(child));
+
+    aa_tf_qutr_cmul(gEp, gEc, E);
 }
 
 /**

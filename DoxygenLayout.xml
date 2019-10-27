@@ -13,6 +13,10 @@
       <tab type="user" visible="yes" title="Linear Algebra" url="@ref tutorial_la"/>
       <tab type="user" visible="yes" title="Rotation" url="@ref tutorial_rot"/>
       <tab type="user" visible="yes" title="Transformation" url="@ref tutorial_tf"/>
+      <tab type="user" visible="yes" title="Scene Graphs" url="@ref tutorial_scene"/>
+      <tab type="user" visible="yes" title="Kinematics" url="@ref tutorial_kin"/>
+      <tab type="user" visible="yes" title="Collision" url="@ref tutorial_col"/>
+      <tab type="user" visible="yes" title="Motion Planning" url="@ref tutorial_mp"/>
     </tab>
 
     <tab type="usergroup" visible="yes" title="Documentation">

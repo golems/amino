@@ -1,0 +1,365 @@
+\ProvidesPackage{ntdfbd}
+
+\tikzset{%
+  fbdaxis/.style = {%
+    ->,color=gray
+  },
+  fbdann/.style = {
+    color=angrycolor
+  },
+  fbdforce/.style = {
+    ->,>=latex,very thick
+  },
+  fbd:lblfill/.style={
+    rounded corners=.25em,
+    fill=white,
+    opacity=.75,
+    text opacity=1
+  },
+  fbd:lbl/.style={
+    fbdann,
+    fbd:lblfill,
+    inner sep=0,
+  },
+  fbd:dim/.style={
+    color=angrycolor,<->,>=latex
+  },
+  fbd:dir/.style={
+    color=angrycolor,->,>=latex
+  },
+  fbd:dimex/.style={
+    densely dotted,fbdann
+  }
+}
+
+\newcommand{\fbdground}[2] {%
+  \draw (-#1/2,0)-- (#1/2,0); % line
+  \fill[pattern=north east lines,name=ground] (-#1/2,0) rectangle (#1/2,-#2); % hashes
+}
+
+\newcommand{\fbdaxis}[2] {%
+  \draw[fbdaxis] (#1) -- ++(0,#2) node[above] {$\hat{y}$};
+  \draw[fbdaxis] (#1) -- ++(#2,0) node[right] {$\hat{x}$};
+}
+
+\newcommand{\fbdpin}[2]{%
+  \draw[rounded corners=8pt] (-#1,-#2)-- (-#1, 0) --
+  (0,#2)--(#1,0)--(#1,-#2);
+}
+
+\newcommand{\fbdjoint}[1][.5em]{%
+    \filldraw [fill=white] (0,0) circle (#1);
+    \fill[black] circle (#1/2);
+}
+
+\newcommand{\fbdmasscenter}[2] {%
+  \begin{scope}[shift=(#1:#2), rotate=45]
+    \filldraw [fill=white] (0,0) circle (6pt);
+    \draw [very thick] (0,-6pt)--(0,6pt);
+    \draw [very thick] (-6pt,0pt)--(6pt,0pt);
+  \end{scope}
+}
+
+\newcommand{\fbdlink}[1]{%
+  \draw [double distance=1.0mm, very thick] (0,0)--(0:#1)
+}
+
+% \newcommand{\ndimd}[3]{
+%   \draw[fbdann] #1 -- #2
+%   node [coordinate, near end] (#3) {};
+% }
+
+\newcommand{\ndiml}[3]{%
+  \draw[<->,>=latex,fbdann] (#1) -- node[fill=white] {#3} (#2);
+}
+
+% Draw line annotation
+% Input:
+%   #1 Line offset (optional)
+%   #2 Line angle
+%   #3 Line length
+%   #4 Line label
+% Example:
+%   \lineann[1]{30}{2}{$L_1$}
+\newcommand{\fbdlineann}[4][0.5]{%
+    \begin{scope}[rotate=#2, fbdann,inner sep=2pt]
+        \draw[dashed] (0,0) -- +(0,#1)
+            node [coordinate, near end] (a) {};
+        \draw[dashed] (#3,0) -- +(0,#1)
+            node [coordinate, near end] (b) {};
+        \draw[<->] (a) -- node[fill=white] {#4} (b);
+    \end{scope}
+}
+
+% Draw line annotation
+% Input:
+%   #1 Line offset (optional)
+%   #2 Line length
+%   #3 Line label
+% Example:
+%   \lineann[1]{30}{2}{$L_1$}
+\newcommand{\fbdxann}[3][0.5]{%
+   \begin{scope}[fbdann,inner sep=2pt]
+    \draw[fbd:dimex] (0,0) -- +(0,#1)
+    node [coordinate, near end] (fbdanna) {};
+    \draw[fbd:dimex] (#2,0) -- +(0,#1)
+    node [coordinate, near end] (fbdannb) {};
+    \node[fbdann,fbd:lblfill] at ($(fbdannb)-0.5*(#2,0)$) (fbdannn) {#3};
+    \draw[fbd:dir] (fbdannn) -- (fbdanna);
+    \draw[fbd:dir] (fbdannn) -- (fbdannb);
+   \end{scope}
+}
+
+\newcommand{\fbdxanno}[3][0.5]{%
+   \begin{scope}[fbdann,inner sep=2pt]
+
+     \draw[fbd:dimex] (0,0) -- +(0,#1)
+     node [coordinate, near end] (fbdanna) {};
+
+     \draw[fbd:dimex] (#2,0) -- +(0,#1)
+     node [coordinate, near end] (fbdannb) {};
+
+     \node at ($(fbdanna)+(.5*#2,.75em)$)  {#3};
+     \draw[fbd:dim] (fbdanna) -- (fbdannb);
+
+   \end{scope}
+}
+
+\newcommand{\nvar}[2]{%
+    \newlength{#1}
+    \setlength{#1}{#2}
+}
+
+\nvar{\dg}{0.3cm}
+\def\fdw{0.25}
+\def\fdh{0.5}
+\nvar{\ddx}{1.5cm}
+\nvar{\ddth}{1.0cm}
+% Draw an angle annotation
+% Input:
+%   #1 offset
+%   #2 Angle
+%   #3 Label
+% Example:
+%   \angann{30}{$\theta_1$}
+\newcommand{\fbdangann}[3][1.25cm]{%
+    \begin{scope}[fbdann]
+    \draw [fbd:dimex] (0,0) -- (#1+.25em,0pt);
+    \draw [fbd:dim,shorten >=0pt] (#1,0pt) arc (0:#2:#1);
+    % Unfortunately automatic node placement on an arc is not supported yet.
+    % We therefore have to compute an appropriate coordinate ourselves.
+    \node[fbd:lbl] at (#2/2:#1+.5em) {#3};
+    \end{scope}
+}
+
+\newcommand{\fbdangdir}[3][1.25cm]{%
+    \begin{scope}[fbdann]
+    \draw [fbd:dimex] (0,0) -- (#1+.25em,0pt);
+    \draw [fbd:dir,shorten >=0pt] (#1,0pt) arc (0:#2:#1);
+    % Unfortunately automatic node placement on an arc is not supported yet.
+    % We therefore have to compute an appropriate coordinate ourselves.
+    \node[fbd:lbl] at (#2/2:#1+.5em) {#3};
+    \draw[fbd:dimex] (0,0) -- (#2:#1+.25em);
+    \end{scope}
+}
+
+\newcommand{\fbdangannl}[3][1.25cm]{%
+  \fbdangann[#1]{#2}{#3}
+  \draw[fbd:dimex] (0,0) -- (#2:#1+.25em);
+}
+
+\newcommand{\fbdangannr}[3][1.25cm]{%
+  \begin{scope}[fbdann]
+    \draw [fbd:dimex] (0,0) -- (-#1-.25em,0pt);
+    \draw [fbd:dim,shorten >=0pt] (-#1,0pt) arc (0:#2:-#1);
+    % Unfortunately automatic node placement on an arc is not supported yet.
+    % We therefore have to compute an appropriate coordinate ourselves.
+    \node[fbd:lbl] at (#2/2:-#1-.5em) {#3};
+    \end{scope}
+  \draw[fbd:dimex] (0,0) -- (#2:-#1-.25em);
+}
+
+% \newcommand{\fbdxang}[3][1.25cm]{%
+%     \begin{scope}[fbdann]
+%     \draw [dashed] (0,0) -- (#1+.5em,0pt);
+%     \draw [<->, shorten >=3.5pt] (#1,0pt) arc (0:#2:#1);
+%     % Unfortunately automatic node placement on an arc is not supported yet.
+%     % We therefore have to compute an appropriate coordinate ourselves.
+%     \node at (#2/2-2:#1+.5em) {#3};
+%     \end{scope}
+% }
+
+
+\tikzset{
+  axis/.style = {
+    color=metallic,
+    <->,
+    thick,
+    >=latex
+  },
+  edge/.style = {
+    color=primarycolor,
+    very thick
+  },
+  length/.style = {
+    fbdann,
+  },
+  angle/.style = {
+    color=accentcolor
+  },
+  tfchain/.style={
+    Accentcolor,
+    ultra thick,
+    out=0,
+    in=180,
+    opacity=.75,
+    ->,
+    >=stealth,
+    dashed,
+    text opacity=1
+  }
+}
+
+
+
+% Define commands for links, joints and such
+
+\newcommand{\linkpair}[3][]{%
+  \draw [double distance=1.5mm, very thick,#1]
+  #2 -- #3
+}
+
+\newcommand{\link}{%
+  % \draw [double distance=1.5mm, very thick] (0,0)--
+  \linkpair{(0,0)}{}
+}
+
+
+\newcommand{\xlinkfill}[1]{
+  \draw[fill=white,draw=none]
+  (0,-.75mm) rectangle (#1,.75mm)
+  ;
+}
+
+\newcommand{\xlink}[1]{
+  \draw [very thick]
+  (0,.75mm) edge ++(#1,0)
+  (0,-.75mm) edge ++(#1,0)
+  ;
+}
+
+\newcommand{\jointat}[1]{%
+  \filldraw [fill=metallic] #1 circle (5pt);
+  \fill[black] #1 circle (2pt);
+}
+\newcommand{\joint}[1]{%
+  \filldraw [fill=metallic] (0,0) circle (5pt);
+  \fill[black] circle (2pt);
+  %\draw (-45:5pt) edge[thick] ++(5pt,5pt);
+  \node[coordinate] (#1) {};
+}
+
+\newcommand{\jointball}[1]{%
+  %\filldraw [fill=metallic] (0,0) circle (5pt);
+  %\fill[black] circle (2pt);
+  %\draw (-45:5pt) edge[thick] ++(5pt,5pt);
+  %\node[circle,ball color=metallic,shading=ball,minimum width=10pt] {};
+  \shade [ball color=metallic] (0.,0) circle (5pt);
+  \node[coordinate] (#1) {};
+}
+
+\newcommand{\jointprism}[1]{%
+  \draw[very thick] (0,0) -- ++(0,.25) -- ++(#1,0) ;
+  \draw[very thick] (0,0) -- ++(0,-.25) -- ++(#1,0) ;
+}
+
+\newcommand{\grip}{%
+  \draw[ultra thick](0cm,\dg)--(0cm,-\dg);
+   \fill (0cm, 0.5\dg)+(0cm,3.0pt) -- +(1\dg,0cm) -- +(0pt,0pt);
+   \fill (0cm, -0.5\dg)+(0cm,0pt) -- +(1\dg,0cm) -- +(0pt,-3pt);
+}
+
+
+\newcommand{\robotbase}{%
+  \fbdpin{\fdw}{\fdh}
+  \begin{scope}[shift={(0,-\fdh)}]
+    \fbdground{1}{.25}
+  \end{scope}
+}
+
+\newcommand{\robotbasex}{%
+  \begin{scope}[shift={(0,-\fdh)}]
+    \fbdground{1}{.25}
+  \end{scope}
+  \link(-90:\fdh);
+}
+
+\newcommand{\jointx}[1]{%
+  \draw[fill=black] (-.2em,-.5em) rectangle (.2em,.5em);
+  \draw[fill=white,draw=white] (-.05em,-.5em) rectangle (.05em,.5em);
+  % \draw (0,0)
+  % node[cylinder,
+  % rotate,
+  % draw=black,
+  % thick,
+  % %aspect=0.7,
+  % %anchor=north,
+  % minimum height=1em,minimum width=1em,
+  % shape border rotate=90,
+  % cylinder uses custom fill,
+  % cylinder body fill=blue!30,
+  % cylinder end  fill=blue!10,
+  % %opacity=.4,
+  % %anchor=north
+  % ]
+  %  {};
+   \node[coordinate] (#1) {};
+}
+
+% Define the kinematic parameters of the three link manipulator.
+
+\newcommand{\blockingbox}{\draw[thick,fill=red!50!black] (-.25,.7) rectangle
+  (.25,2.9)}
+
+\newcommand{\blockingbound}{\draw[] (-2,-1) rectangle  (2,3.25)}
+
+
+\newcommand{\localaxes}[1][]{
+  \begin{scope}[#1]
+    \draw[axis,->,primarycolor]
+    (0,0) -- ++(0,1)
+    ;
+    \draw[axis,->,primarycolor]
+    (0,0) -- ++(1,0)
+    ;
+  \end{scope}
+}
+\newcommand{\localframe}[1]{
+  \localaxes
+
+  \filldraw [fill=primarycolor,draw=white] (0,0) circle (.05);
+  %\filldraw [fill=white,draw=white] (0,0) circle (.01);
+
+  \node[coordinate] (#1) {#1};
+
+  \node[primarycolor,below] {#1};
+
+}
+
+
+\newcommand{\xyaxes}[4] {%
+  \draw[axis,->] (0,0) -- (#2,0) node[below right] {#3};%
+  \draw[axis,->] (0,0) -- (0,#2) node[above left] {#4};%
+  %\draw[fill=metallic,metallic] (0,0) circle (.25em);
+  \draw[metallic] (0,0)  node[below left] {#1};
+
+  \node[fill=metallic,
+  metallic,
+  draw=metallic,
+  circle,
+  inner sep=0,
+  minimum
+  width=.5em] (#1) {};
+
+  %\draw (0,0) circle[metallic] (.25em) node[below left] {#1};
+}

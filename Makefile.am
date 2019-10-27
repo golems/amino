@@ -363,6 +363,8 @@ if HAVE_PYTHON
 TESTS += python/test/mattest.sh
 TESTS += python/test/tftest.sh
 
+TESTS += python/test/py_tutorial_test.sh
+
 ALL_LOCAL += all-python
 all-python:
 	cd "$(srcdir)/python" && $(PYTHON) setup.py build \
@@ -371,6 +373,7 @@ all-python:
 
 INSTALL_EXEC_LOCAL += install-exec-python
 install-exec-python:
+	$(MKDIR_P) "$(DESTDIR)$(pkgpythondir)"
 	cd "$(srcdir)/python" && $(PYTHON) setup.py build \
 		--build-base $(shell readlink -f $(builddir))/python/build \
 		install \
@@ -380,33 +383,54 @@ install-exec-python:
 
 UNINSTALL_LOCAL += uninstall-python
 uninstall-python:
+	echo "PYDIR:" "$(DESTDIR)$(pkgpythondir)"
 	if test -f "$(DESTDIR)$(pkgpythondir)/install_files.txt" ; then \
 		cat "$(DESTDIR)$(pkgpythondir)/install_files.txt" | \
-			xargs rm -rf; \
+			xargs rm -rvf; \
 		rm "$(DESTDIR)$(pkgpythondir)/install_files.txt"; \
-		rmdir  "$(DESTDIR)$(pkgpythondir)"; \
+		if test -d "$(DESTDIR)$(pkgpythondir)/__pycache__"; then \
+			rmdir -v "$(DESTDIR)$(pkgpythondir)/__pycache__"; \
+		fi; \
+		rmdir -v "$(DESTDIR)$(pkgpythondir)"; \
 	fi
 
 CLEAN_LOCAL += clean-python
 clean-python:
 	-rm -rf "$(builddir)/python/build"
 
-endif
+.PHONY: pylint.report
+
+pylint.report:
+	./python/test/pylint.sh > pylint.report
+
+if HAVE_PYLINT
+TESTS += python/test/pylint.sh
+endif # HAVE_PYLINT
+
+endif # HAVE_PYTHON
 
 # package
 EXTRA_DIST += \
 	python/setup.py \
+	python/amino/util.py \
+	python/amino/util2.py \
+	python/amino/util3.py \
 	python/amino/mat.py \
 	python/amino/tf.py \
+	python/amino/kinematics.py \
 	python/amino/mixin.py \
 	python/amino/scenegraph.py \
 	python/amino/scenewin.py \
 	python/amino/lib.py \
+	python/amino/collision.py \
 	python/amino/__init__.py
 
 
 # tests
 EXTRA_DIST += \
+	python/test/pylintrc \
+	python/test/pylint3rc \
+	python/test/pylint.sh \
 	python/test/tftest.py \
 	python/test/mattest.py
 
@@ -583,7 +607,7 @@ libamino_collision_la_SOURCES = \
 
 libamino_collision_la_CFLAGS = $(FCL_CFLAGS)
 libamino_collision_la_CXXFLAGS = $(FCL_CFLAGS)
-libamino_collision_la_LIBADD = $(FCL_LIBS)
+libamino_collision_la_LIBADD = libamino.la $(FCL_LIBS)
 
 
 TESTS += fcl_test
@@ -744,9 +768,34 @@ EXTRA_DIST += \
 	doc/md/scenecompiler.md \
 	doc/md/gui.md \
 	doc/md/scenefile.md \
+	doc/md/tutorial/la.md \
+	doc/md/tutorial/rot.md \
+	doc/md/tutorial/tf.md \
+	doc/md/tutorial/scene.md \
+	doc/md/tutorial/kinematics.md \
+	doc/md/tutorial/collision.md \
+	doc/md/tutorial/mp.md \
 	doc/footer.html \
 	doc/carousel.html \
 	doc/logo.png \
+	demo/tutorial/python/t0.0-vector.py \
+	demo/tutorial/python/t0.1-matrix.py \
+	demo/tutorial/python/t0.2-lls.py \
+	demo/tutorial/python/t1-rotation.py \
+	demo/tutorial/python/t2-tf.py \
+	demo/tutorial/python/t3.0-scene.py \
+	demo/tutorial/python/t3.1-robot.py \
+	demo/tutorial/python/t3.2-scenefile.py \
+	demo/tutorial/python/t3.2-urdf.py \
+	demo/tutorial/python/t4.1-fk.py \
+	demo/tutorial/python/t4.2-dk.py \
+	demo/tutorial/python/t4.3-ik.py \
+	demo/tutorial/python/t5.1-collision-check.py \
+	demo/tutorial/plugin/urdf/CMakeLists.txt \
+	demo/tutorial/plugin/scenefile/CMakeLists.txt \
+	demo/tutorial/plugin/scenefile/example.robray \
+	demo/tutorial/plugin/7dof/CMakeLists.txt \
+	demo/tutorial/plugin/7dof/7dof.robray \
         share/doc.lisp
 
 
@@ -787,6 +836,11 @@ doxygen: doc/md/copying.md doc/md/mainpage.md lisp-rx.md lisp-amino.md
 doc/manual: doxygen
 
 MANUAL_SVGS = \
+	doc/manual/joint-revolute.svg \
+	doc/manual/joint-prismatic.svg \
+	doc/manual/bodyframe.svg \
+	doc/manual/euclideantf.svg \
+	doc/manual/duqu.svg \
 	doc/manual/planerot.svg \
 	doc/manual/spacerot.svg \
 	doc/manual/axang.svg \
@@ -798,9 +852,15 @@ MANUAL_SVGS = \
 	doc/manual/tfpoint.svg \
 	doc/manual/tfchain.svg \
 	doc/manual/robotframe.svg \
+	doc/manual/simplescene.svg \
 	doc/manual/cplane.svg
 
-doc: doxygen $(MANUAL_SVGS)
+MANUAL_PNGS = \
+	doc/manual/procedural-robot.png \
+	doc/manual/baxter-win.png \
+	doc/manual/simple-scene-screenshot.png
+
+doc: doxygen $(MANUAL_SVGS) $(MANUAL_PNGS)
 	$(MKDIR_P) doc/manual/doc
 	cp $(top_srcdir)/doc/logo-medium.png doc/manual/doc
 
@@ -812,6 +872,10 @@ doc/manual/%.svg: doc/md/tutorial/fig/%.pdf
 	$(MKDIR_P) $(dir $@)
 	pdftocairo -svg $< $@
 
+
+doc/manual/%.png: doc/md/tutorial/fig/%.png
+	$(MKDIR_P) $(dir $@)
+	cp $< $@
 
 else
 

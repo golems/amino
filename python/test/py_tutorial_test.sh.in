@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+
+export PYTHONPATH="@abs_top_srcdir@/python:$PYTHONPATH"
+export LD_LIBRARY_PATH="`pwd`/.libs:$LD_LIBRARY_PATH"
+
+@PYTHON@ @abs_top_srcdir@/demo/tutorial/python/t0.0-vector.py
+@PYTHON@ @abs_top_srcdir@/demo/tutorial/python/t0.1-matrix.py
+@PYTHON@ @abs_top_srcdir@/demo/tutorial/python/t0.2-lls.py
+@PYTHON@ @abs_top_srcdir@/demo/tutorial/python/t1-rotation.py
+@PYTHON@ @abs_top_srcdir@/demo/tutorial/python/t2-tf.py

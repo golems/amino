@@ -1,0 +1,77 @@
+\documentclass[]{standalone}
+
+
+\usepackage{tikz}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{positioning,calc}
+\usetikzlibrary{patterns}
+\usetikzlibrary{chains}
+\usetikzlibrary{shapes}
+
+\definecolor{minesprimary}{RGB}{33,49,77}
+\definecolor{minesaccenta}{RGB}{146,162,189}
+\definecolor{minesaccentb}{RGB}{210,73,42}
+\definecolor{primarycolor}{RGB}{33,49,77}   % dark blue
+\definecolor{accentcolor}{RGB}{146,162,189} % light blue
+\definecolor{lightcolor}{RGB}{146,162,189} % light blue
+\definecolor{angrycolor}{RGB}{210,73,42}    % orange
+\definecolor{Accentcolor}{RGB}{210,73,42}    % orange
+\definecolor{bgfillcolor}{RGB}{206,213,221} % bluish grayish
+\definecolor{metallic}{RGB}{139,141,142} % bluish grayish
+
+
+\usepackage{ntdfbd}
+
+\begin{document}
+
+
+\begin{tikzpicture}[
+  scale=1,
+  font=\Large,
+  jointaxis/.style={
+    ultra thick,->,color=Accentcolor
+  },
+  ]
+
+  \begin{scope}[
+    rotate=-90]
+    \robotbasex
+    \begin{scope}[rotate=90]
+      \draw[very thick] (0,0) -- ++(0,.25) -- ++(2,0) ;
+      \draw[very thick] (0,0) -- ++(0,-.25) -- ++(2,0) ;
+
+      \begin{scope}[shift={(1,0)}]
+        \link(0:1.25);
+        \localaxes[scale=.75,fbdann]
+        \node[anchor=north,fbd:lblfill] {c};
+      \end{scope}
+
+      \begin{scope}[shift={(-\fdh,0)}]
+        \fbdxann[1.]{1+\fdh}{$\ell$}
+        \draw[jointaxis] (0,0) -- ++(.75,0)
+        node[anchor=west] {$\hat{u}$}
+        ;
+        \begin{scope}[rotate=60,scale=.75]
+          \localaxes
+          \node[coordinate] (p) {};
+          \node[node distance=.75em,below
+          of=p,xshift=.25em,fbd:lblfill] {p};
+        \end{scope}
+
+      \end{scope}
+
+    \end{scope}
+  \end{scope}
+
+\end{tikzpicture}
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

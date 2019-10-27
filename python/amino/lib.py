@@ -28,7 +28,10 @@
 #   TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
+"""Foreign libamino"""
 
 import ctypes
 
 libamino = ctypes.CDLL("libamino.so")
+libamino.aa_frand_init.argtypes = []
+libamino.aa_frand_init()

@@ -52,11 +52,6 @@
   (q-all :pointer))
 
 
-(cffi:defcfun (mutable-scene-graph-config-count "aa_rx_sg_config_count") size-t
-  (m-sg rx-sg-t))
-
-(cffi:defcfun (mutable-scene-graph-frame-count "aa_rx_sg_frame_count") size-t
-  (m-sg rx-sg-t))
 
 (cffi:defcfun aa-rx-mp-set-goal :int
   (mp rx-mp-t)
@@ -417,54 +412,54 @@
 ;;; CARTESIAN ;;;
 ;;;;;;;;;;;;;;;;;
 
-(cffi:defcfun aa-rx-ct-tjx-path :int
-  (region amino::mem-region-t)
-  (opts rx-ksol-opts-t)
-  (ssg rx-sg-sub-t)
-  (seg-list amino::ct-seg-list-t)
-  (n-q-all amino::size-t)
-  (q-start-all :pointer)
-  (n-points :pointer)
-  (path :pointer))
+;; (cffi:defcfun aa-rx-ct-tjx-path :int
+;;   (region amino::mem-region-t)
+;;   (opts rx-ik-parm-t)
+;;   (ssg rx-sg-sub-t)
+;;   (seg-list amino::ct-seg-list-t)
+;;   (n-q-all amino::size-t)
+;;   (q-start-all :pointer)
+;;   (n-points :pointer)
+;;   (path :pointer))
 
 
-(defun cartesian-path (ssg start-map tfs &key
-                                           ksol-opts)
-  (let* ((opts (or ksol-opts (aa-rx-ksol-opts-create)))
-         (sg (sub-scene-graph-scene-graph ssg))
-         (m-sg (sub-scene-graph-mutable-scene-graph ssg))
-         (aa-rx-ksol-opts-get-frame opts)
-         (frame-id (let ((frame-id (aa-rx-ksol-opts-get-frame opts)))
-                     (if (= frame-id +frame-id-none+)
-                         (aa-rx-sg-sub-frame-ee ssg)
-                         frame-id)))
-         (frame-name (mutable-scene-graph-frame-name m-sg frame-id))
-         (tfs (cons (scene-graph-tf-absolute sg frame-name
-                                             :configuration-map start-map)
-                    (ensure-list tfs)))
-         (pt-list (amino::make-ct-pt-list-tf tfs))
-         (seg-list (amino::ct-tjx-slerp pt-list))
-         (start-vec (sub-scene-graph-all-config-vector ssg start-map)))
+;; (defun cartesian-path (ssg start-map tfs &key
+;;                                            ksol-opts)
+;;   (let* ((opts (or ksol-opts (aa-rx-ksol-opts-create)))
+;;          (sg (sub-scene-graph-scene-graph ssg))
+;;          (m-sg (sub-scene-graph-mutable-scene-graph ssg))
+;;          (aa-rx-ksol-opts-get-frame opts)
+;;          (frame-id (let ((frame-id (aa-rx-ksol-opts-get-frame opts)))
+;;                      (if (= frame-id +frame-id-none+)
+;;                          (aa-rx-sg-sub-frame-ee ssg)
+;;                          frame-id)))
+;;          (frame-name (mutable-scene-graph-frame-name m-sg frame-id))
+;;          (tfs (cons (scene-graph-tf-absolute sg frame-name
+;;                                              :configuration-map start-map)
+;;                     (ensure-list tfs)))
+;;          (pt-list (amino::make-ct-pt-list-tf tfs))
+;;          (seg-list (amino::ct-tjx-slerp pt-list))
+;;          (start-vec (sub-scene-graph-all-config-vector ssg start-map)))
 
-    ;; Call path generator
-    (with-foreign-simple-vector (q-start-ptr n-q) start-vec :input
-      (multiple-value-bind (result n-path path-ptr)
-          (cffi:with-foreign-object (plan-length 'amino-ffi:size-t)
-            (cffi:with-foreign-object (plan-ptr :pointer)
-              (let ((result (aa-rx-ct-tjx-path (amino::ct-seg-list-region seg-list)
-                                               opts ssg seg-list n-q q-start-ptr
-                                               plan-length plan-ptr)))
-                (values result
-                        (cffi:mem-ref plan-length 'amino-ffi:size-t)
-                        (cffi:mem-ref plan-ptr :pointer)))))
-        (assert (zerop result))
-        ;; Expand path
-        (let ((path (make-vec (* n-path (sub-scene-graph-all-config-count ssg)))))
-          (cffi:with-pointer-to-vector-data (pointer path)
-            (aa-rx-sg-sub-expand-path ssg n-path q-start-ptr
-                                      path-ptr pointer))
-          (make-motion-plan :path path
-                            :sub-scene-graph ssg))))))
+;;     ;; Call path generator
+;;     (with-foreign-simple-vector (q-start-ptr n-q) start-vec :input
+;;       (multiple-value-bind (result n-path path-ptr)
+;;           (cffi:with-foreign-object (plan-length 'amino-ffi:size-t)
+;;             (cffi:with-foreign-object (plan-ptr :pointer)
+;;               (let ((result (aa-rx-ct-tjx-path (amino::ct-seg-list-region seg-list)
+;;                                                opts ssg seg-list n-q q-start-ptr
+;;                                                plan-length plan-ptr)))
+;;                 (values result
+;;                         (cffi:mem-ref plan-length 'amino-ffi:size-t)
+;;                         (cffi:mem-ref plan-ptr :pointer)))))
+;;         (assert (zerop result))
+;;         ;; Expand path
+;;         (let ((path (make-vec (* n-path (sub-scene-graph-all-config-count ssg)))))
+;;           (cffi:with-pointer-to-vector-data (pointer path)
+;;             (aa-rx-sg-sub-expand-path ssg n-path q-start-ptr
+;;                                       path-ptr pointer))
+;;           (make-motion-plan :path path
+;;                             :sub-scene-graph ssg))))))
 
 ;;;;;;;;;;;;;;;
 ;;; MP Seq. ;;;

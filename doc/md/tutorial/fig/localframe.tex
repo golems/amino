@@ -10,8 +10,8 @@
 
 %% (transform (tf* (z-angle (degrees 30)) (vec3* 3 2 0)) (vec3* 1.5 1.5 0))
 
-\def\thetab{30}
-\def\xb{3}
+\def\thetab{-30}
+\def\xb{7}
 \def\yb{2}
 \def\pxa{3.549}
 \def\pya{4.049}
@@ -21,14 +21,27 @@
 \def\yc{-2.75}
 
 
-\begin{tikzpicture}[scale=1,font=\Large]
-    \xyaxes{a}{3.5}{$\unitvec{x}_a$}{$\unitvec{y}_a$}
+\begin{tikzpicture}[scale=1,font=\Large,
+  body/.style={
+    thick,
+    fill={bgfillcolor},
+    opacity=.20
+  },
+  ]
+    \draw[body] (0,0) rectangle (2,5);
+
+     \draw[dotted] (0,0) edge ++($(\xb,0)+(.5,0)$) ;
+
+    \xyaxes{0}{3.5}{$\unitvec{x}_0$}{$\unitvec{y}_0$}
 
     \begin{scope}[
       shift={(\xb,\yb)},
       rotate=\thetab,
       ]
-      \xyaxes{b}{3.}{$\unitvec{x}_b$}{$\unitvec{y}_b$}
+    \draw[body,dashed] (0,0) rectangle (2,5);
+      \xyaxes{1}{3.}{$\unitvec{x}_1$}{$\unitvec{y}_1$}
+
+
 
       % \node[circle,
       % fill=black,
@@ -47,19 +60,19 @@
       \draw[<->,fbdann,>=stealth] (1,0) arc  (0:-\thetab:1) ;
     \end{scope}
 
-      \node[fbdann,anchor=west] at ($(b)+(1,.25)$)
-      {$\mytf{\theta}{a}{b}$, $\mytf{\unitvec{u}}{a}{b}$};
+      \node[fbdann,anchor=west] at ($(1)+(1,.25)$)
+      {$\mytf{\theta}{0}{1}$, $\mytf{\unitvec{u}}{0}{1}$};
 
     % \node[coordinate] at ($(p)-(0,3)$) (py) {};
     % \node[coordinate] at ($(p)-(3,0)$) (px) {};
 
-     \draw[dotted] (b) edge ++(2,0) ;
+     \draw[dotted] (1) edge ++(2,0) ;
 
     % \node[coordinate] at (\pxa,1) (ax) {};
     % \node[coordinate] at (1,\pya) (ay) {};
 
-    \ndiml{0,\yb}{b}{$\mytf{x}{a}{b}$};
-    \ndiml{\xb,0}{b}{$\mytf{y}{a}{b}$};
+    \ndiml{0,\yb}{1}{$\mytf{x}{0}{1}$};
+    \ndiml{\xb,0}{1}{$\mytf{y}{0}{1}$};
 \end{tikzpicture}
 
 

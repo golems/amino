@@ -167,6 +167,12 @@ aa_rx_ik_set_restart_time( struct aa_rx_ik_cx *context, double t )
 }
 
 
+AA_API double
+aa_rx_ik_get_restart_time( struct aa_rx_ik_cx *context )
+{
+    return context->restart_time;
+}
+
 static struct kin_solve_cx *
 s_kin_solve_cx_alloc( const struct aa_rx_ik_cx *ik_cx,
                       struct aa_mem_region *reg )

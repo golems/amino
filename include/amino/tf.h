@@ -1124,6 +1124,14 @@ AA_API void aa_tf_qsub( const double a[AA_RESTRICT 4],
                         const double b[AA_RESTRICT 4],
                         double c[AA_RESTRICT 4] );
 
+/** Quaternion subtraction, in-place. */
+AA_API void aa_tf_qisub( double a[AA_RESTRICT 4],
+                         const double b[AA_RESTRICT 4] );
+
+/** Quaternion addition, in-place. */
+AA_API void aa_tf_qiadd( double a[AA_RESTRICT 4],
+                         const double b[AA_RESTRICT 4] );
+
 /** Quaternion multiplication. */
 AA_API void aa_tf_qmul( const double a[AA_RESTRICT 4],
                         const double b[AA_RESTRICT 4],

@@ -5,6 +5,8 @@
 \RequirePackage{amsmath}
 \RequirePackage{amsfonts}
 
+\RequirePackage{sequat}
+
 \usetikzlibrary{decorations.pathreplacing}
 \usetikzlibrary{decorations.pathmorphing}
 \usetikzlibrary{positioning,calc}
@@ -81,29 +83,19 @@
   },
 }
 
-\newcommand{\unitvec}[1]{\boldsymbol{\hat{#1}}}
+% \newcommand{\unitvec}[1]{\boldsymbol{\hat{#1}}}
 
 \DeclareMathAlphabet{\mathcurs}{T1}{pzc}{m}{n}
-\newcommand{\quat}[1]{\mathcurs{#1}}
-\newcommand{\sequat}{\quat{h}}
-\newcommand{\normtwo}[1]{\left\vert #1 \right\vert}
-
-\newcommand{\sequangle}{\phi}
-\newcommand{\mytf}[3]{{^{#2}\!}{#1}_{#3}}
-\newcommand{\duqu}[1]{{{#1}}}
-\newcommand{\tf}[3]{\mytf{\duqu{#1}}{#2}{#3}}
-\newcommand{\quatsym}{\quat{h}}
-\newcommand{\qconj}[1]{#1^*}
 
 \newcommand{\ndiml}[3]{%
-  \draw[<->,>=latex,fbdann] (#1) -- node[fill=white] {#3} (#2);
+  \draw[<->,>=latex,fbdann] (#1) -- node[fill=white,rounded corners=.5em] {#3} (#2);
 }
 
 \newcommand{\xyaxes}[4] {%
   \draw[axis,->,thick] (0,0) -- (#2,0) node[below right] {#3};%
   \draw[axis,->,thick] (0,0) -- (0,#2) node[above left] {#4};%
   %\draw[fill=metallic,metallic] (0,0) circle (.25em);
-  \draw[accentcolor] (0,0)  node[below left] {#1};
+  \draw[accentcolor] (0,0)  node[below left] {$#1$};
 
   \node[fill=accentcolor,
   accentcolor,
