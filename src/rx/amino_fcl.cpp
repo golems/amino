@@ -616,6 +616,19 @@ static void s_normalize_ids( aa_rx_frame_id *id1, aa_rx_frame_id *id2 )
     }
 }
 
+static void
+s_correct_cylinder_dist(::fcl::CollisionObject *obj,
+                                    double *point )
+{
+    struct aa_rx_geom *geom = (struct aa_rx_geom*)obj->collisionGeometry()->getUserData();
+    enum aa_rx_geom_shape shape_type;
+    void *shape_ = aa_rx_geom_shape( geom, &shape_type);
+    if( AA_RX_CYLINDER == shape_type ) {
+        struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
+        point[2] += shape->height/2;
+    }
+}
+
 // TODO: negative distances are always -1 (-ntd, 2019-08-28), why?
 static bool
 cl_dist_callback( ::fcl::CollisionObject *o1,
@@ -659,12 +672,14 @@ cl_dist_callback( ::fcl::CollisionObject *o1,
             data->in_collision = 1;
         }
 
-        // TODO: Check whether we are in local or global coordinates.
-        //       If local, need to correct cylinder offset.
         for( size_t i = 0; i < 3; i ++ ) {
             ent->point0[i] = result.nearest_points[0][i];
             ent->point1[i] = result.nearest_points[1][i];
         }
+
+        //s_correct_cylinder_dist(o1, ent->point0);
+        //s_correct_cylinder_dist(o2, ent->point1);
+
     }
 
     // const struct aa_rx_sg *sg = data->cl->sg;
@@ -689,9 +704,22 @@ aa_rx_cl_dist_get_points( const struct aa_rx_cl_dist *cl_dist,
                           aa_rx_frame_id id0, aa_rx_frame_id id1,
                           double point0[3], double point1[3] )
 {
-    s_normalize_ids(&id0, &id1);
-    struct dist_ent * ent = s_get_dist_ent(cl_dist, id0, id1);
-    AA_MEM_CPY(point0, ent->point0, 3);
-    AA_MEM_CPY(point1, ent->point1, 3);
+    struct dist_ent * ent;
+    double *p0, *p1;
+    aa_rx_frame_id i0, i1;
+    if( id0 > id1 ) {
+        i0 = id0;
+        i1 = id1;
+        p0 = point0;
+        p1 = point1;
+    } else {
+        i0 = id1;
+        i1 = id0;
+        p0 = point1;
+        p1 = point0;
+    }
+    ent = s_get_dist_ent(cl_dist, i0, i1);
+    AA_MEM_CPY(p0, ent->point0, 3);
+    AA_MEM_CPY(p1, ent->point1, 3);
     return ent->dist;
 }
