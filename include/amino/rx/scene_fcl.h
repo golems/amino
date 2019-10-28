@@ -46,23 +46,52 @@
 /* Utility */
 #ifdef __cplusplus
 
-#include <fcl/math/transform.h>
+// #include <fcl/math/transform.h>
+
+#include "amino/tf.hpp"
+#include "amino/eigen_compat.hpp"
 
 namespace amino {
 namespace fcl {
 
+typedef double fcl_scalar;
 
-static inline ::fcl::Transform3f
+typedef ::fcl::CollisionGeometry<fcl_scalar> CollisionGeometry ;
+typedef ::fcl::CollisionObject<fcl_scalar> CollisionObject ;
+typedef ::fcl::Vector3<fcl_scalar> Vec3;
+typedef ::fcl::OBBRSS<fcl_scalar> OBBRSS;
+
+typedef ::fcl::Box<fcl_scalar> Box;
+typedef ::fcl::Sphere<fcl_scalar> Sphere;
+typedef ::fcl::Cylinder<fcl_scalar> Cylinder;
+
+typedef ::fcl::CollisionRequest<fcl_scalar> CollisionRequest;
+typedef ::fcl::CollisionResult<fcl_scalar> CollisionResult;
+typedef ::fcl::BroadPhaseCollisionManager<fcl_scalar> BroadPhaseCollisionManager;
+typedef ::fcl::DynamicAABBTreeCollisionManager<fcl_scalar> DynamicAABBTreeCollisionManager;
+
+
+
+
+static inline ::fcl::Transform3<::amino::fcl::fcl_scalar>
 qutr2fcltf( const double E[7] )
 {
     const double *q = E + AA_TF_QUTR_Q;
     const double *v = E + AA_TF_QUTR_V;
-    return ::fcl::Transform3f(::fcl::Quaternion3f( q[AA_TF_QUAT_W],
-                                                   q[AA_TF_QUAT_X],
-                                                   q[AA_TF_QUAT_Y],
-                                                   q[AA_TF_QUAT_Z]),
-                              ::fcl::Vec3f(v[0], v[1], v[2]));
+
+    ::amino::QuatTran oE = QuatTran::from_qv(E);
+    ::fcl::Transform3<::amino::fcl::fcl_scalar> result;
+    ::amino::conv(&oE, &result);
+    return result;
+
+
+    // return ::fcl::Transform3f(::fcl::Quaternionf( q[AA_TF_QUAT_W],
+    //                                                q[AA_TF_QUAT_X],
+    //                                                q[AA_TF_QUAT_Y],
+    //                                                q[AA_TF_QUAT_Z]),
+    //                           ::fcl::Vec3f(v[0], v[1], v[2]));
 }
+
 
 
 } /* namespace fcl */

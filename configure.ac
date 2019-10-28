@@ -446,62 +446,92 @@ AS_IF([test "x$with_fcl" = xyes -a "x$HAVE_FCL" != xyes],
       [AC_MSG_ERROR([FCL not found])])
 
 # FCL pointer type
-AS_IF([test "x$HAVE_FCL" = xyes],
-      [AC_MSG_CHECKING([FCL shared_ptr type])
-       AC_LANG([C++])
-       AC_TRY_COMPILE([#include <fcl/collision.h>
-                       #include <fcl/shape/geometric_shapes.h>
-                      ],
-                      [std::shared_ptr<fcl::CollisionGeometry> a( new fcl::Box(1,1,1) );
-                       fcl::CollisionObject* obj = new fcl::CollisionObject(a, fcl::Transform3f());],
-               [AA_FCL_SHARED_PTR="std::shared_ptr"],
-               [AA_FCL_SHARED_PTR="boost::shared_ptr"])
-       AC_MSG_RESULT(["$AA_FCL_SHARED_PTR"])
-       AC_DEFINE_UNQUOTED([AA_FCL_SHARED_PTR],[$AA_FCL_SHARED_PTR],[Type for FCL shared pointers.])])
+# std::shared_ptr
+dnl AS_IF([test "x$HAVE_FCL" = xyes],
+dnl [
+dnl CXXFLAGS_SAVED="$CXXFLAGS"
+dnl CXXFLAGS="$CXXFLAGS $FCL_CFLAGS"
+
+dnl AC_MSG_CHECKING([FCL uses std::shared_ptr ])
+dnl AC_LANG([C++])
+dnl AC_TRY_COMPILE([#include <fcl/fcl.h>
+dnl                ],
+dnl                [std::shared_ptr<fcl::CollisionGeometryf> a( new fcl::Boxf(1,1,1) );
+dnl                fcl::CollisionObjectf* obj = new fcl::CollisionObjectf(a, fcl::Transform3f());
+dnl                ],
+dnl                [AA_FCL_SHARED_PTR="std::shared_ptr"
+dnl                AC_MSG_RESULT(["yes"])],
+dnl                [AC_MSG_RESULT([no"])]
+dnl                )
+
+dnl # boost::shared_ptr
+dnl AS_IF([test "x$AA_FCL_SHARED_PTR" = x],
+dnl       [AC_MSG_CHECKING([FCL uses boost::shared_ptr ])
+dnl        AC_LANG([C++])
+dnl        AC_TRY_COMPILE([#include <fcl/fcl.h>
+dnl                       ],
+dnl                       [boost::shared_ptr<fcl::CollisionGeometryf> a( new fcl::Boxf(1,1,1) );
+dnl                        fcl::CollisionObject* obj = new fcl::CollisionObject(a, fcl::Transform3f());
+dnl                        ],
+dnl                [AA_FCL_SHARED_PTR="boost::shared_ptr"
+dnl                 AC_MSG_RESULT(["yes"])],
+dnl                [AC_MSG_RESULT(["no"])]
+dnl                )
+dnl       ])
+
+dnl CXXFLAGS="$CXXFLAGS_SAVED"
+
+dnl AS_IF([test "x$AA_FCL_SHARED_PTR" = x],
+dnl       [AC_MSG_ERROR([Could not determine FCL shared_ptr type ])])
 
 
-# FCL extra linking
-# boost_system is sometimes required
-AC_DEFUN([FCL_LINK],
-         [
-           AS_IF([test "x$FCL_LINKED" != xyes],
-           [
-             AC_LANG([C++])
-             AC_MSG_CHECKING([FCL extra libs "$1"])
-             CXXFLAGS_SAVED="$CXXFLAGS"
-             LIBS_SAVED="$LIBS"
+dnl AC_DEFINE_UNQUOTED([AA_FCL_SHARED_PTR],[$AA_FCL_SHARED_PTR],[Type for FCL shared pointers.])
 
-             LIBS="$1 $FCL_LIBS $LIBS"
-             CXXFLAGS="$CXXFLAGS $FCL_CFLAGS"
+dnl ]) # end HAVE_FCL
 
-             AC_LINK_IFELSE(
-               [AC_LANG_PROGRAM([
-                                  #include <fcl/broadphase/broadphase.h>
-                                  #include <fcl/BVH/BVH_model.h>
-                                ],
-                                [fcl::BroadPhaseCollisionManager *manager =
-                                 new fcl::DynamicAABBTreeCollisionManager();])],
-               [AC_MSG_RESULT([yes])
-                FCL_LINKED=yes
-                FCL_LIBS="$FCL_LIBS $1"
-               ],
-               [AC_MSG_RESULT([no])])
 
-             CXXFLAGS="$CXXFLAGS_SAVED"
-             LIBS="$LIBS_SAVED"
-           ])
-         ])
+dnl # FCL extra linking
+dnl # boost_system is sometimes required
+dnl AC_DEFUN([FCL_LINK],
+dnl          [
+dnl            AS_IF([test "x$FCL_LINKED" != xyes],
+dnl            [
+dnl              AC_LANG([C++])
+dnl              AC_MSG_CHECKING([FCL extra libs "$1"])
+dnl              CXXFLAGS_SAVED="$CXXFLAGS"
+dnl              LIBS_SAVED="$LIBS"
 
-AS_IF([test "x$HAVE_FCL" = xyes],
-[
-FCL_LINK([])
-FCL_LINK([-lboost_system])
-FCL_LINK([-lboost_system-mt])
+dnl              LIBS="$1 $FCL_LIBS $LIBS"
+dnl              CXXFLAGS="$CXXFLAGS $FCL_CFLAGS"
 
-AS_IF([test "x$FCL_LINKED" != xyes],
-      [AC_MSG_ERROR([Could not link against FCL])])
+dnl              AC_LINK_IFELSE(
+dnl                [AC_LANG_PROGRAM([
+dnl                                   #include <fcl/broadphase/broadphase.h>
+dnl                                   #include <fcl/BVH/BVH_model.h>
+dnl                                 ],
+dnl                                 [fcl::BroadPhaseCollisionManager *manager =
+dnl                                  new fcl::DynamicAABBTreeCollisionManager();])],
+dnl                [AC_MSG_RESULT([yes])
+dnl                 FCL_LINKED=yes
+dnl                 FCL_LIBS="$FCL_LIBS $1"
+dnl                ],
+dnl                [AC_MSG_RESULT([no])])
 
-])
+dnl              CXXFLAGS="$CXXFLAGS_SAVED"
+dnl              LIBS="$LIBS_SAVED"
+dnl            ])
+dnl          ])
+
+dnl AS_IF([test "x$HAVE_FCL" = xyes],
+dnl [
+dnl FCL_LINK([])
+dnl FCL_LINK([-lboost_system])
+dnl FCL_LINK([-lboost_system-mt])
+
+dnl AS_IF([test "x$FCL_LINKED" != xyes],
+dnl       [AC_MSG_ERROR([Could not link against FCL])])
+
+dnl ])
 
 AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])

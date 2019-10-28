@@ -49,10 +49,12 @@
 
 #include "amino/rx/scene_collision.h"
 
-#include <fcl/collision.h>
-#include <fcl/shape/geometric_shapes.h>
-#include <fcl/broadphase/broadphase.h>
-#include <fcl/BVH/BVH_model.h>
+// #include <fcl/collision.h>
+// #include <fcl/shape/geometric_shapes.h>
+// #include <fcl/broadphase/broadphase.h>
+// #include <fcl/BVH/BVH_model.h>
+
+#include <fcl/fcl.h>
 
 #include "amino/rx/scene_collision_internal.h"
 #include "amino/rx/scene_fcl.h"
@@ -77,8 +79,8 @@ aa_rx_cl_init( )
 }
 
 struct aa_rx_cl_geom {
-    AA_FCL_SHARED_PTR<fcl::CollisionGeometry> ptr;
-    aa_rx_cl_geom( fcl::CollisionGeometry *ptr_) :
+    std::shared_ptr<::amino::fcl::CollisionGeometry> ptr;
+    aa_rx_cl_geom( ::amino::fcl::CollisionGeometry *ptr_) :
         ptr(ptr_) { }
 
     ~aa_rx_cl_geom() { }
@@ -90,7 +92,7 @@ aa_rx_cl_geom_destroy( struct aa_rx_cl_geom *cl_geom ) {
 }
 
 
-static fcl::CollisionGeometry *
+static ::amino::fcl::CollisionGeometry *
 cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
 {
 
@@ -100,7 +102,7 @@ cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
     /* TODO: FCL should be able to reference external arrays for mesh
      * vertices and indices so that we don't have to copy the mesh.
      */
-    std::vector<fcl::Vec3f> vertices;
+    std::vector<::amino::fcl::Vec3> vertices;
     std::vector<fcl::Triangle> triangles;
 
 
@@ -113,9 +115,9 @@ cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
             unsigned x=j++;
             unsigned y=j++;
             unsigned z=j++;
-            vertices.push_back( fcl::Vec3f( scale*v[x],
-                                            scale*v[y],
-                                            scale*v[z]) );
+            vertices.push_back( ::amino::fcl::Vec3( scale*v[x],
+                                                    scale*v[y],
+                                                    scale*v[z]) );
         }
     }
     //printf("filled verts\n");
@@ -134,7 +136,7 @@ cl_init_mesh( double scale, const struct aa_rx_mesh *mesh )
     }
     //printf("filled tris\n");
 
-    auto model = new(fcl::BVHModel<fcl::OBBRSS>);
+    auto model = new(fcl::BVHModel<::amino::fcl::OBBRSS>);
     model->beginModel();
     model->addSubModel(vertices, triangles);
     model->endModel();
@@ -162,7 +164,7 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
 
 
     /* Ok, now do it */
-    fcl::CollisionGeometry *ptr = NULL;
+    ::amino::fcl::CollisionGeometry *ptr = NULL;
     enum aa_rx_geom_shape shape_type;
     void *shape_ = aa_rx_geom_shape(geom, &shape_type);
     double scale = aa_rx_geom_opt_get_scale(opt);
@@ -182,19 +184,19 @@ static void cl_init_helper( void *cx, aa_rx_frame_id frame_id, struct aa_rx_geom
     }
     case AA_RX_BOX: {
         struct aa_rx_shape_box *shape = (struct aa_rx_shape_box *)  shape_;
-        ptr = new fcl::Box(scale*shape->dimension[0],
-                           scale*shape->dimension[1],
-                           scale*shape->dimension[2]);
+        ptr = new ::amino::fcl::Box(scale*shape->dimension[0],
+                                    scale*shape->dimension[1],
+                                    scale*shape->dimension[2]);
         break;
     }
     case AA_RX_SPHERE: {
         struct aa_rx_shape_sphere *shape = (struct aa_rx_shape_sphere *)  shape_;
-        ptr = new fcl::Sphere(scale*shape->radius);
+        ptr = new ::amino::fcl::Sphere(scale*shape->radius);
         break;
     }
     case AA_RX_CYLINDER: {
         struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
-        ptr = new fcl::Cylinder(scale*shape->radius, scale*shape->height);
+        ptr = new ::amino::fcl::Cylinder(scale*shape->radius, scale*shape->height);
         break;
     }
     case AA_RX_CONE: {
@@ -243,8 +245,8 @@ void aa_rx_sg_cl_init( struct aa_rx_sg *scene_graph )
 struct aa_rx_cl
 {
     const struct aa_rx_sg *sg;
-    fcl::BroadPhaseCollisionManager *manager;
-    std::vector<fcl::CollisionObject*> *objects;
+    ::amino::fcl::BroadPhaseCollisionManager *manager;
+    std::vector<::amino::fcl::CollisionObject*> *objects;
 
     // A bit-matrix of allowable collisions
     struct aa_rx_cl_set *allowed;
@@ -259,7 +261,7 @@ static void cl_create_helper( void *cx_, aa_rx_frame_id frame_id, struct aa_rx_g
     struct aa_rx_cl_geom *cl_geom = aa_rx_geom_get_collision(geom);
     if( NULL == cl_geom ) return;
 
-    fcl::CollisionObject *obj = new fcl::CollisionObject( cl_geom->ptr );
+    ::amino::fcl::CollisionObject *obj = new ::amino::fcl::CollisionObject( cl_geom->ptr );
     obj->setUserData( (void*) ((intptr_t) frame_id) );
     cx->manager->registerObject(obj);
     cx->objects->push_back( obj );
@@ -272,8 +274,8 @@ aa_rx_cl_create( const struct aa_rx_sg *scene_graph )
 
     struct aa_rx_cl *cl = new aa_rx_cl;
     cl->sg = scene_graph;
-    cl->objects = new std::vector<fcl::CollisionObject*>;
-    cl->manager = new fcl::DynamicAABBTreeCollisionManager();
+    cl->objects = new ::std::vector<::amino::fcl::CollisionObject*>;
+    cl->manager = new ::amino::fcl::DynamicAABBTreeCollisionManager();
 
     cl->allowed = aa_rx_cl_set_create(scene_graph);
     aa_rx_sg_cl_set_copy(scene_graph, cl->allowed);
@@ -288,7 +290,7 @@ aa_rx_cl_create( const struct aa_rx_sg *scene_graph )
 void
 aa_rx_cl_destroy( struct aa_rx_cl *cl )
 {
-    for( fcl::CollisionObject *o : *cl->objects ) {
+    for( ::amino::fcl::CollisionObject *o : *cl->objects ) {
         delete o;
     }
 
@@ -334,8 +336,8 @@ struct cl_check_data {
 };
 
 static bool
-cl_check_callback( ::fcl::CollisionObject *o1,
-                   ::fcl::CollisionObject *o2,
+cl_check_callback( ::amino::fcl::CollisionObject *o1,
+                   ::amino::fcl::CollisionObject *o2,
                    void *data_ )
 {
     struct cl_check_data *data = (struct cl_check_data*)data_;
@@ -355,9 +357,9 @@ cl_check_callback( ::fcl::CollisionObject *o1,
     }
 
 
-    fcl::CollisionRequest request;
-    fcl::CollisionResult result;
-    fcl::collide(o1, o2, request, result);
+    ::amino::fcl::CollisionRequest request;
+    ::amino::fcl::CollisionResult result;
+    ::fcl::collide(o1, o2, request, result);
 
     if(!request.enable_cost && (result.isCollision()) && (result.numContacts() >= request.num_max_contacts)) {
         //printf("collide: %s x %s\n", name1, name2 );
@@ -388,7 +390,7 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
          itr != cl->objects->end();
          itr++ )
     {
-        fcl::CollisionObject *obj = *itr;
+        ::amino::fcl::CollisionObject *obj = *itr;
         aa_rx_frame_id id = (intptr_t) obj->getUserData();
         const double *TF_obj = TF+id*ldTF;
 

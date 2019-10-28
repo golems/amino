@@ -614,6 +614,7 @@ TESTS += fcl_test
 noinst_PROGRAMS += fcl_test
 fcl_test_SOURCES = src/test/aa_test_fcl.cpp
 fcl_test_CFLAGS = $(FCL_CFLAGS)
+fcl_test_CXXFLAGS = $(FCL_CFLAGS)
 fcl_test_LDADD = libamino.la libamino-collision.la $(FCL_LIBS)
 
 TESTS += cl_test
