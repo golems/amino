@@ -676,6 +676,18 @@ endif
 
 
 
+if HAVE_EIGEN
+
+noinst_PROGRAMS += eigen_compat
+eigen_compat_SOURCES = src/test/eigen_compat.cpp
+eigen_compat_LDADD = libamino.la libtestutil.la $(EIGEN_LIBS)
+eigen_compat_CFLAGS = $(EIGEN_CFLAGS)
+eigen_compat_CXXFLAGS = $(EIGEN_CFLAGS)
+
+TESTS += eigen_compat
+
+endif # HAVE_EIGEN
+
 
 # noinst_PROGRAMS += test_vec
 # test_vec_SOURCES = src/test/test_vec.c

@@ -419,6 +419,15 @@ AS_IF([test "x$HAVE_SDL2" = xyes -a "x$HAVE_GL" = xyes],
 AC_SUBST([AMINO_GL])
 AM_CONDITIONAL([AMINO_GL], [test "x$AMINO_GL" = xyes])
 
+## Eigen3 ###
+PKG_CHECK_MODULES([EIGEN],
+                  [eigen3],
+                  [HAVE_EIGEN=yes],
+                  [HAVE_EIGEN=no])
+AC_SUBST([EIGEN_CFLAGS])
+AC_SUBST([EIGEN_LIBS])
+AM_CONDITIONAL([HAVE_EIGEN], [test "x$HAVE_EIGEN" = xyes])
+
 ## FCL ##
 AC_ARG_WITH([fcl],
             [AS_HELP_STRING([--without-fcl], [Disable support for the Flexible Collision Library (FCL)])],
