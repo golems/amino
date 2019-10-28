@@ -60,7 +60,7 @@ def mark_points(cl_dist, sg, i, j, color):
     print("%s" % point_i)
     print("%s" % point_j)
     sg.add_frame_fixed(
-        i,
+        "",
         i + "/closest-point/" + j,
         tf=QuatTrans((1, point_i)),
         geom=Geom.sphere({
@@ -68,7 +68,7 @@ def mark_points(cl_dist, sg, i, j, color):
         }, .07))
 
     sg.add_frame_fixed(
-        j,
+        "",
         j + "/closest-point/" + i,
         tf=QuatTrans((1, point_j)),
         geom=Geom.sphere({

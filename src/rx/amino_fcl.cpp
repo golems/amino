@@ -613,18 +613,18 @@ static void s_normalize_ids( aa_rx_frame_id *id1, aa_rx_frame_id *id2 )
     }
 }
 
-static void
-s_correct_cylinder_dist(::amino::fcl::CollisionObject *obj,
-                        double *point )
-{
-    struct aa_rx_geom *geom = (struct aa_rx_geom*)obj->collisionGeometry()->getUserData();
-    enum aa_rx_geom_shape shape_type;
-    void *shape_ = aa_rx_geom_shape( geom, &shape_type);
-    if( AA_RX_CYLINDER == shape_type ) {
-        struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
-        point[2] += shape->height/2;
-    }
-}
+// static void
+// s_correct_cylinder_dist(::amino::fcl::CollisionObject *obj,
+//                         double *point )
+// {
+//     struct aa_rx_geom *geom = (struct aa_rx_geom*)obj->collisionGeometry()->getUserData();
+//     enum aa_rx_geom_shape shape_type;
+//     void *shape_ = aa_rx_geom_shape( geom, &shape_type);
+//     if( AA_RX_CYLINDER == shape_type ) {
+//         struct aa_rx_shape_cylinder *shape = (struct aa_rx_shape_cylinder *)  shape_;
+//         point[2] += shape->height/2;
+//     }
+// }
 
 // TODO: negative distances are always -1 (-ntd, 2019-08-28), why?
 static bool
@@ -674,8 +674,9 @@ cl_dist_callback( ::amino::fcl::CollisionObject *o1,
             ent->point1[i] = result.nearest_points[1][i];
         }
 
-        s_correct_cylinder_dist(o1, ent->point0);
-        s_correct_cylinder_dist(o2, ent->point1);
+        // as of FCL 0.6, closest points are in world coords
+        //s_correct_cylinder_dist(o1, ent->point0);
+        //s_correct_cylinder_dist(o2, ent->point1);
 
     }
 
