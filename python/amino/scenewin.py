@@ -138,6 +138,14 @@ class SceneWin(object):
         """Returns True if the window is still running."""
         return bool(LIBAMINOGL.aa_rx_win_is_running(self._ptr))
 
+    def lock(self):
+        """Lock the window"""
+        LIBAMINOGL.aa_rx_win_lock(self._ptr)
+
+    def unlock(self):
+        """Lock the window"""
+        LIBAMINOGL.aa_rx_win_unlock(self._ptr)
+
 
 LIBAMINOGL.aa_gl_init.argtypes = []
 
@@ -162,3 +170,6 @@ LIBAMINOGL.aa_rx_win_set_sg.argtypes = [
 
 LIBAMINOGL.aa_rx_win_is_running.argtypes = [ctypes.POINTER(RxWin)]
 LIBAMINOGL.aa_rx_win_is_running.restype = ctypes.c_int
+
+LIBAMINOGL.aa_rx_win_lock.argtypes = [ctypes.POINTER(RxWin)]
+LIBAMINOGL.aa_rx_win_unlock.argtypes = [ctypes.POINTER(RxWin)]

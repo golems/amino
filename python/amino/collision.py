@@ -35,8 +35,9 @@
 """Collision checking"""
 
 import ctypes
+from amino.tf import Vec3
 from amino.scenegraph import RxSg
-from amino.kinematics import SceneFK
+from amino.kinematics import SceneFK, RxFK
 
 LIBAMINOCL = ctypes.CDLL("libamino-collision.so")
 
@@ -176,6 +177,14 @@ class SceneCollision(object):
                                       scene_fk._data_ld(), cl_set_ptr)
         return bool(r)
 
+    def collision_set(self):
+        """Creates a SceneCollisionSet."""
+        return SceneCollisionSet(self.scenegraph)
+
+    def collision_dist(self):
+        """Creates a SceneCollisionDist."""
+        return SceneCollisionDist(self)
+
 
 LIBAMINOCL.aa_rx_cl_create.argtypes = [ctypes.POINTER(RxSg)]
 LIBAMINOCL.aa_rx_cl_create.restype = ctypes.POINTER(RxCl)
@@ -198,3 +207,100 @@ LIBAMINOCL.aa_rx_cl_check.argtypes = [
 LIBAMINOCL.aa_rx_cl_check.restypes = ctypes.c_int
 
 LIBAMINOCL.aa_rx_sg_cl_init.argtypes = [ctypes.POINTER(RxSg)]
+
+
+class RxClDist(ctypes.Structure):
+    """Opaque type for struct aa_rx_cl_dist."""
+    pass
+
+
+LIBAMINOCL.aa_rx_cl_dist_create.argtypes = [ctypes.POINTER(RxCl)]
+LIBAMINOCL.aa_rx_cl_dist_create.restype = ctypes.POINTER(RxClDist)
+
+LIBAMINOCL.aa_rx_cl_dist_destroy.argtypes = [ctypes.POINTER(RxClDist)]
+
+LIBAMINOCL.aa_rx_cl_dist_check.argtypes = [
+    ctypes.POINTER(RxClDist), ctypes.POINTER(RxFK)
+]
+LIBAMINOCL.aa_rx_cl_dist_check.restype = ctypes.c_int
+
+LIBAMINOCL.aa_rx_cl_dist_get_dist.argtypes = [
+    ctypes.POINTER(RxClDist), ctypes.c_int, ctypes.c_int
+]
+LIBAMINOCL.aa_rx_cl_dist_get_dist.restype = ctypes.c_double
+
+LIBAMINOCL.aa_rx_cl_dist_get_points.argtypes = [
+    ctypes.POINTER(RxClDist), ctypes.c_int, ctypes.c_int,
+    ctypes.POINTER(Vec3),
+    ctypes.POINTER(Vec3)
+]
+LIBAMINOCL.aa_rx_cl_dist_get_points.restype = ctypes.c_double
+
+
+class SceneCollisionDist(object):
+    """Context object for separation distances."""
+
+    class DistDesc():
+        """Descriptor for distance access."""
+        __slots__ = ["_cl_dist"]
+
+        def __init__(self, cl_dist):
+            self._cl_dist = cl_dist
+
+        def __getitem__(self, key):
+            """Returns the separation distance for the frames.
+
+            Args:
+                key: a pair of frame names or ids
+            """
+            (i, j) = key
+            i = self._cl_dist._cl.scenegraph.ensure_frame_id_actual(i)
+            j = self._cl_dist._cl.scenegraph.ensure_frame_id_actual(j)
+            return LIBAMINOCL.aa_rx_cl_dist_get_dist(self._cl_dist._ptr, i, j)
+
+    class PointsDesc():
+        """Descriptor for point access."""
+        __slots__ = ["_cl_dist"]
+
+        def __init__(self, cl_dist):
+            self._cl_dist = cl_dist
+
+        def __getitem__(self, key):
+            """Returns a tuple (distance, point0, point1) for the frames.
+
+            Args:
+                key: a pair of frame names or ids
+            """
+            (i, j) = key
+            i = self._cl_dist._cl.scenegraph.ensure_frame_id_actual(i)
+            j = self._cl_dist._cl.scenegraph.ensure_frame_id_actual(j)
+            p_i = Vec3()
+            p_j = Vec3()
+            dist = LIBAMINOCL.aa_rx_cl_dist_get_points(self._cl_dist._ptr, i,
+                                                       j, p_i, p_j)
+            return (dist, p_i, p_j)
+
+    __slots__ = ["_ptr", "_cl", "_dist", "_points"]
+
+    def __init__(self, cl):
+        self._cl = cl
+        self._ptr = LIBAMINOCL.aa_rx_cl_dist_create(cl._ptr)
+        self._dist = self.DistDesc(self)
+        self._points = self.PointsDesc(self)
+
+    def __del__(self):
+        LIBAMINOCL.aa_rx_cl_dist_destroy(self._ptr)
+
+    def check(self, scene_fk):
+        """Checks for collision distances from the given forward kinematics."""
+        LIBAMINOCL.aa_rx_cl_dist_check(self._ptr, scene_fk._ptr)
+
+    @property
+    def dist(self):
+        """The DistDesc descriptor."""
+        return self._dist
+
+    @property
+    def points(self):
+        """The PointsDesc descriptor."""
+        return self._points

@@ -70,6 +70,8 @@ typedef ::fcl::CollisionResult<fcl_scalar> CollisionResult;
 typedef ::fcl::BroadPhaseCollisionManager<fcl_scalar> BroadPhaseCollisionManager;
 typedef ::fcl::DynamicAABBTreeCollisionManager<fcl_scalar> DynamicAABBTreeCollisionManager;
 
+typedef ::fcl::DistanceRequest<fcl_scalar> DistanceRequest;
+typedef ::fcl::DistanceResult<fcl_scalar> DistanceResult;
 
 
 

@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_COLLISION_H
 #define AMINO_RX_SCENE_COLLISION_H
 
+#include "scene_fk.h"
+
 /**
  * @file scene_collision.h
  * @brief Collision checking
@@ -172,6 +174,19 @@ aa_rx_cl_check( struct aa_rx_cl *cl,
                 struct aa_rx_cl_set *cl_set );
 
 /**
+ * Detect collisions.
+ *
+ * If cl_set is non-NULL, it will be filled in with all detected collisions.
+ * If cl_set is NULL, collision checking may short-circuit after the first collision is detected.
+ *
+ * @returns 0 if no collisions are detected and non-zero if any collisions are detected.
+ */
+AA_API int
+aa_rx_cl_check_fk( struct aa_rx_cl *cl,
+                   struct aa_rx_fk *fk,
+                   struct aa_rx_cl_set *cl_set );
+
+/**
  * Allow all collisions at configuration q.
  */
 AA_API void
@@ -188,5 +203,38 @@ aa_rx_sg_cl_set_copy(const struct aa_rx_sg* sg, struct aa_rx_cl_set * cl_set);
  */
 AA_API void
 aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, size_t n_q, const double* q, struct aa_rx_cl_set* cl_set);
+
+
+/*--------------------*/
+/* Collision Distance */
+/*--------------------*/
+
+
+/**
+ * Opaque type for a collision distances.
+ *
+ */
+struct aa_rx_cl_dist;
+
+
+AA_API struct aa_rx_cl_dist *
+aa_rx_cl_dist_create( const struct aa_rx_cl * );
+
+AA_API void
+aa_rx_cl_dist_destroy( struct aa_rx_cl_dist* dist );
+
+AA_API int
+aa_rx_cl_dist_check( struct aa_rx_cl_dist *cl_dist,
+                     const struct aa_rx_fk *fk );
+
+AA_API double
+aa_rx_cl_dist_get_dist( const struct aa_rx_cl_dist *cl_dist,
+                        aa_rx_frame_id id0, aa_rx_frame_id id1 );
+
+AA_API double
+aa_rx_cl_dist_get_points( const struct aa_rx_cl_dist *cl_dist,
+                          aa_rx_frame_id id0, aa_rx_frame_id id1,
+                          double point0[3], double point1[3] );
+
 
 #endif /*AMINO_RX_SCENE_COLLISION_H*/
