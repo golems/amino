@@ -660,7 +660,7 @@ class SubSceneGraph(object):
     @property
     def end_effector_id(self):
         """Returns the frame id of the end-effector."""
-        return libamino.aa_rx_sg_sub_frame_ee(self._ptr)
+        return libamino.aa_rx_sg_sub_frame_ees(self._ptr)[0]
 
     def config_vector(self, config, vector=None):
         """Convert config to a vector."""
@@ -713,8 +713,8 @@ libamino.aa_rx_sg_chain_create.argtypes = [
 ]
 libamino.aa_rx_sg_chain_create.restype = ctypes.POINTER(RxSgSub)
 
-libamino.aa_rx_sg_sub_frame_ee.argtypes = [ctypes.POINTER(RxSgSub)]
-libamino.aa_rx_sg_sub_frame_ee.restype = ctypes.c_int
+libamino.aa_rx_sg_sub_frame_ees.argtypes = [ctypes.POINTER(RxSgSub)]
+libamino.aa_rx_sg_sub_frame_ees.restype = ctypes.POINTER(ctypes.c_int)
 
-libamino.aa_rx_sg_sub_frame_ee.argtypes = [ctypes.POINTER(RxSgSub)]
-libamino.aa_rx_sg_sub_frame_ee.restype = ctypes.c_int
+# libamino.aa_rx_sg_sub_frame_ee.argtypes = [ctypes.POINTER(RxSgSub)]
+# libamino.aa_rx_sg_sub_frame_ee.restype = ctypes.c_int

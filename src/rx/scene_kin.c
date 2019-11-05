@@ -313,6 +313,48 @@ aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
     return ssg;
 }
 
+AA_API size_t
+aa_rx_sg_multiple_chain_frame_count(const struct aa_rx_sg *sg,
+				    aa_rx_frame_id root, size_t n_tips,
+				    aa_rx_frame_id* tips)
+{
+    size_t ret=0;
+    for(size_t i=0; i< n_tips; i++){
+	ret+=aa_rx_sg_chain_frame_count(sg, root, tips[i]);
+    }
+    return ret;
+}
+
+
+AA_API struct aa_rx_sg_sub *
+aa_rx_sg_multiple_chain_create( const struct aa_rx_sg *sg,
+				aa_rx_frame_id root, size_t n_tips,
+				aa_rx_frame_id* tips)
+{
+    struct aa_rx_sg_sub *ssg = AA_NEW( struct aa_rx_sg_sub );
+    ssg->scenegraph = sg;
+    size_t tmp = aa_rx_sg_multiple_chain_frame_count( sg, root, n_tips, tips);
+    aa_rx_frame_id* tmp_arr = AA_NEW_AR(aa_rx_frame_id, tmp);
+
+    /* aa_rx_sg_multiple_chain_frame_count gives an overestimation of
+       frames. So remake the array with the proper number of frames */
+    ssg->frame_count = aa_rx_sg_chain_multiple_frames( sg, root, n_tips,
+						       tips, tmp, tmp_arr);
+    ssg->frames = AA_MEM_DUP(aa_rx_frame_id, tmp_arr, ssg->frame_count);
+
+
+    ssg->config_count = aa_rx_sg_chain_config_count( sg,
+						     ssg->frame_count,
+						     ssg->frames );
+    ssg->configs = AA_NEW_AR(aa_rx_config_id, ssg->config_count );
+    aa_rx_sg_chain_configs( sg, ssg->frame_count, ssg->frames,
+                            ssg->config_count, ssg->configs );
+
+    return ssg;
+}
+
+
+
 AA_API void
 aa_rx_sg_sub_jac_twist_fill2( const struct aa_rx_sg_sub *ssg,
                               const struct aa_rx_fk *fk,

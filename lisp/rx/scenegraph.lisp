@@ -1021,14 +1021,14 @@ Throws an error if scene graph is invalid."
                                   (default-configuration 0d0)
                                   (tf-absolute-map (make-string-hash-table)))
   "Find the relative TF from PARENT to CHILD"
-  (let ((g-tf-parent(scene-graph-tf-absolute scene-graph parent
-                                             :configuration-map configuration-map
-                                             :tf-absolute-map tf-absolute-map
-                                             :default-configuration default-configuration))
-        (g-tf-child (scene-graph-tf-absolute scene-graph child
-                                             :configuration-map configuration-map
-                                             :tf-absolute-map tf-absolute-map
-                                             :default-configuration default-configuration)))
+  (let ((g-tf-parent (scene-graph-tf-absolute scene-graph parent
+                                               :configuration-map configuration-map
+                                               :tf-absolute-map tf-absolute-map
+                                               :default-configuration default-configuration))
+         (g-tf-child (scene-graph-tf-absolute scene-graph child
+                                              :configuration-map configuration-map
+                                              :tf-absolute-map tf-absolute-map
+                                              :default-configuration default-configuration)))
     (tf-mul (tf-inverse g-tf-parent)
             g-tf-child)))
 

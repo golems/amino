@@ -81,6 +81,26 @@ AA_API void
 aa_rx_sg_chain_configs( const struct aa_rx_sg *sg,
                         size_t n_frames, const aa_rx_frame_id *chain_frames,
                         size_t n_configs, aa_rx_config_id *chain_configs );
+
+/**
+ * Get a quick overestimate of the number of joint frames from root to
+ * multiple tips.
+ */
+AA_API size_t
+aa_rx_sg_multiple_chain_frame_count(const struct aa_rx_sg *sg,
+				    aa_rx_frame_id root, size_t n_tips,
+				    aa_rx_frame_id* tips);
+
+/**
+ * Fill in joint frame ids from the root to multiple tips. Frame ids
+ * are numerically ordered.
+ */
+
+AA_API size_t aa_rx_sg_chain_multiple_frames(const struct aa_rx_sg *sg,
+					     aa_rx_frame_id root, size_t n_tips,
+					     aa_rx_frame_id* tips, size_t n_frames,
+					     aa_rx_frame_id *chain_frames);
+
 /**
  * Compute the Jacobian for a chain
  */

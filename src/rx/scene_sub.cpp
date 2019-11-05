@@ -42,6 +42,7 @@
 #include "amino/rx/scene_ik_internal.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_sub.h"
+#include <set>
 
 
 // AA_API void
@@ -97,4 +98,41 @@ aa_rx_fk_sub( struct aa_rx_fk *fk,
         aa_rx_fk_set_rel(fk,i_frame,E_rel);
     }
 
+}
+
+AA_API size_t
+aa_rx_sg_chain_multiple_frames( const struct aa_rx_sg *sg,
+				aa_rx_frame_id root, size_t n_tips,
+				aa_rx_frame_id* tips, size_t n_frames,
+				aa_rx_frame_id *chain_frames)
+{
+
+    std::set<aa_rx_frame_id> frames;
+
+    for(size_t i=0; i < n_tips; i ++){
+	aa_rx_frame_id tip = tips[i];
+	while( tip !=root && tip != AA_RX_FRAME_ROOT ){
+	    if (frames.find(tip) == frames.end()) break;
+	    enum aa_rx_frame_type ft = aa_rx_sg_frame_type( sg, tip );
+	    switch(ft) {
+	    case AA_RX_FRAME_FIXED:
+		/* break; */
+	    case AA_RX_FRAME_REVOLUTE:
+	    case AA_RX_FRAME_PRISMATIC:
+		frames.insert(tip);
+		break;
+	    }
+	    tip = aa_rx_sg_frame_parent(sg, tip);
+	}
+    }
+
+    size_t a=0;
+    std::set<aa_rx_frame_id>::iterator it = frames.begin();
+
+    while( it != frames.end()){
+	chain_frames[a] = *it;
+	a++;
+	it++;
+    }
+    return a;
 }
