@@ -70,6 +70,7 @@ amino*.tar.gz
 /test-driver
 /test-suite.log
 /testcpp
+/obj_test
 /org_golems_amino_Lib.h
 *.class
 *.jar
