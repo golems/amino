@@ -661,17 +661,48 @@ cl_dist_callback( ::amino::fcl::CollisionObject *o1,
     ::amino::fcl::DistanceResult result;
     ::fcl::distance(o1, o2, request, result);
 
+    double min_dist = result.min_distance;
+    double p0[3];
+    double p1[3];
+
+    for( size_t i = 0; i < 3; i ++){
+	p0[i]= result.nearest_points[0][i];
+	p1[i]= result.nearest_points[1][i];
+    }
+
+    if( min_dist <= 0 ) {
+	data->in_collision = 1;
+
+	// If we're in collision lets figure out where we are colliding
+	::amino::fcl::CollisionRequest colRequest(1, true);
+	::amino::fcl::CollisionResult colResult;
+	::fcl::collide(o1, o2, colRequest, colResult);
+
+	size_t numContacts = colResult.numContacts();
+	for( size_t i = 0; i < numContacts; i++ ){
+
+	    ::amino::fcl::Contact contact = colResult.getContact(i);
+
+	    if( i == 0 || min_dist > contact.penetration_depth ) {
+		min_dist = contact.penetration_depth;
+
+		for( size_t j = 0; i < 3; i++){
+		    p0[j] = contact.pos[j];
+		    p1[j] = contact.normal[j]*min_dist+p0[j];
+		}
+		min_dist = -min_dist;
+	    }
+	}
+    }
+
     /* Frames may have multiple collision objects.
      * Take the minimum. */
-    if( ent->dist > result.min_distance ) {
-        ent->dist = result.min_distance;
-        if( ent->dist <= 0 ) {
-            data->in_collision = 1;
-        }
+    if( ent->dist > min_dist ) {
+        ent->dist = min_dist;
 
         for( size_t i = 0; i < 3; i ++ ) {
-            ent->point0[i] = result.nearest_points[0][i];
-            ent->point1[i] = result.nearest_points[1][i];
+            ent->point0[i] = p0[i];
+            ent->point1[i] = p1[i];
         }
 
         // as of FCL 0.6, closest points are in world coords
@@ -686,6 +717,31 @@ cl_dist_callback( ::amino::fcl::CollisionObject *o1,
     // printf("%s x %s: %f\n", name1, name2, ent->dist );
     return false;
 }
+
+AA_API double
+aa_rx_cl_dist_get_min_dist(const struct aa_rx_cl_dist *cl_dist,
+			   aa_rx_frame_id id0, double* dist_arr)
+{
+    double min_dist=DBL_MAX;
+    size_t frames = aa_rx_sg_frame_count(cl_dist->cl->sg);
+
+    for ( aa_rx_frame_id id1 = 0; id1 < (aa_rx_frame_id) frames; id1++ ){
+	if(id0 == id1) continue;
+	double tmp_dist = aa_rx_cl_dist_get_dist(cl_dist, id0, id1);
+	if (tmp_dist < min_dist){
+	    min_dist = tmp_dist;
+	    if ( dist_arr ){
+		double p0[3], p1[3];
+		aa_rx_cl_dist_get_points(cl_dist, id0, id1, p0, p1);
+		for( size_t j = 0; j< 3; j++){
+		    dist_arr[j] = p1[j]-p0[j];
+		}
+	    }
+	}
+    }
+    return min_dist;
+}
+
 
 AA_API double
 aa_rx_cl_dist_get_dist( const struct aa_rx_cl_dist *cl_dist,

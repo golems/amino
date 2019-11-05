@@ -67,6 +67,7 @@ typedef ::fcl::Cylinder<fcl_scalar> Cylinder;
 
 typedef ::fcl::CollisionRequest<fcl_scalar> CollisionRequest;
 typedef ::fcl::CollisionResult<fcl_scalar> CollisionResult;
+typedef ::fcl::Contact<fcl_scalar> Contact;
 typedef ::fcl::BroadPhaseCollisionManager<fcl_scalar> BroadPhaseCollisionManager;
 typedef ::fcl::DynamicAABBTreeCollisionManager<fcl_scalar> DynamicAABBTreeCollisionManager;
 
