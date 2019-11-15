@@ -38,9 +38,11 @@
 #ifndef AMINO_RX_SCENE_GEOM_INTERNAL_H
 #define AMINO_RX_SCENE_GEOM_INTERNAL_H
 
+#ifndef __cplusplus
 #ifdef HAVE_STDATOMIC_H
 #include <stdatomic.h>
-#endif
+#endif /* HAVE_STDATOMIC_H */
+#endif /*__cplusplus */
 
 #include "scene_geom.h"
 #include "amino/refcount.h"
@@ -66,7 +68,7 @@ struct aa_rx_geom {
     enum aa_rx_geom_shape type;
     struct aa_rx_cl_geom *cl_geom;
 
-    /* Set to 1 one create.
+    /* Set to 1 on create.
      * Increment on Copy
      * Decrement on Destroy
      * Free when it reaches 0
@@ -152,8 +154,9 @@ struct aa_rx_mesh {
     void *destructor_context;
 };
 
-#ifdef __cplusplus
 
-#endif /*__cplusplus */
+
+
+
 
 #endif /*AMINO_RX_SCENE_GEOM_INTERNAL_H*/

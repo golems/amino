@@ -54,6 +54,7 @@
  * options can be added while preserving API and ABI compatability.
  */
 struct aa_rx_geom_opt;
+struct aa_rx_geom;
 
 /**
  * Create a geometry option struct.
@@ -231,6 +232,7 @@ enum aa_rx_geom_shape {
     AA_RX_CONE,       ///< A cone shape
     AA_RX_GRID,       ///< A grid-lines shape
     AA_RX_TORUS,      ///< A torus shape
+    AA_RX_OCTREE,     ///< A octree shape
 };
 
 /**
@@ -456,6 +458,10 @@ AA_API struct aa_rx_geom *
 aa_rx_geom_mesh (
     struct aa_rx_geom_opt *opt,
     struct aa_rx_mesh *mesh );
+
+
+struct aa_rx_octree;
+struct aa_rx_geom_octree;
 
 /**
  * Attach geometry to the scene graph

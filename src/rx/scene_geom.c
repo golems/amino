@@ -347,12 +347,14 @@ void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
 }
 
 
+
 #define MESH_SET_THINGN( TYPE, THING, LD, N )                   \
     void aa_rx_mesh_set_ ## THING (                             \
         struct aa_rx_mesh *mesh, size_t n,                      \
         const TYPE * THING, int copy )                          \
     {                                                           \
-        if(mesh->THING##_data) free(mesh->THING##_data);        \
+        if(mesh->THING##_data) {                                \
+            free(mesh->THING##_data);}                          \
         mesh->N = n;                                            \
         if( copy ) {                                            \
             mesh->THING##_data = AA_NEW_AR(TYPE, LD*n);         \
@@ -364,12 +366,14 @@ void aa_rx_mesh_destroy( struct aa_rx_mesh * mesh )
         }                                                       \
     }
 
+
 #define MESH_SET_THING( TYPE, THING, LD )                       \
     void aa_rx_mesh_set_ ## THING (                             \
         struct aa_rx_mesh *mesh, size_t n,                      \
         const TYPE * THING, int copy )                          \
     {                                                           \
-        if(mesh->THING##_data) free(mesh->THING##_data);        \
+        if(mesh->THING##_data) {                                \
+            free(mesh->THING##_data);}                          \
         if( copy ) {                                            \
             mesh->THING##_data = AA_NEW_AR(TYPE, LD*n);         \
             AA_MEM_CPY(mesh->THING##_data, THING, LD*n);        \
@@ -427,7 +431,7 @@ void aa_rx_mesh_set_texture (
     aa_rx_mesh_set_rgba( mesh, 1, 1, rgba, 1 );
 
     // indices
-    if( mesh->uv_data ) free(mesh->uv_data);
+    /* if( mesh->uv_data ) free(mesh->uv_data); */
     mesh->uv = mesh->uv_data = AA_NEW0_AR(float, 2*mesh->n_vertices);
 }
 

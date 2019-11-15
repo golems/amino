@@ -45,6 +45,8 @@ AS_IF([test "x$with_maxima" = xyes],
       [AC_CHECK_PROGS([MAXIMA], [maxima])])
 AM_CONDITIONAL([HAVE_MAXIMA], [test "x$MAXIMA" != x])
 
+
+
 # Enable C++ 11
 m4_ifdef([AX_CXX_COMPILE_STDCXX_11],
          [AX_CXX_COMPILE_STDCXX_11],
@@ -537,6 +539,27 @@ AC_SUBST([FCL_CFLAGS])
 AC_SUBST([FCL_LIBS])
 AC_SUBST([HAVE_FCL])
 AM_CONDITIONAL([HAVE_FCL], [test "x$HAVE_FCL" = xyes])
+
+## OCTOMAP ##
+AC_LANG([C++])
+AC_ARG_WITH([octomap],
+            [AS_HELP_STRING([--without-octomap], [Disable support for Octrees])],
+            [],
+            [with_octomap="auto"])
+
+HAVE_OCTOMAP=disabled
+AS_IF([test "x$with_octomap" != xno], [
+  PKG_CHECK_MODULES([OCTOMAP],
+                    [octomap],
+                    [HAVE_OCTOMAP=yes],
+                    [HAVE_OCTOMAP=no])
+
+ AC_SUBST([OCTOMAP_CFLAGS])
+ AC_SUBST([OCTOMAP_LIBS])
+ AC_SUBST([OCTOMAP_IO])
+
+ AM_CONDITIONAL([HAVE_OCTOMAP], [test "x$HAVE_OCTOMAP" = xyes])
+])
 
 
 ## OMPL ##

@@ -1,4 +1,4 @@
-/* -*- mode: C; c-basic-offset: 4; -*- */
+/* -*- mode: C++; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
@@ -35,6 +35,7 @@
  *
  */
 
+
 #ifndef AMINO_RX_SCENE_GL_INTERNAL_H
 #define AMINO_RX_SCENE_GL_INTERNAL_H
 
@@ -42,98 +43,4 @@
 
 
 
-struct aa_gl_globals {
-
-    /* GL Data */
-    double world_E_cam[7];
-    double world_E_camhome[7];
-
-    double fovy;
-    double aspect;
-    double znear;
-    double zfar;
-
-    GLfloat cam_M_world[16];
-    GLfloat perspective[16];
-
-    union {
-        struct {
-            GLfloat world_v_cam[3];
-            GLfloat ambient[3];
-            union {
-                GLfloat light_position[3];
-                GLfloat world_v_light[3];
-            };
-            GLfloat light_color[3];
-        };
-        GLfloat vec3_data[12];
-    };
-
-    GLfloat light_power;
-
-    /* UI data */
-    int mouse[2];
-    double scroll_ratio;
-    double angle_ratio;
-    double fps;
-
-    aa_bits *frame_mask;
-    size_t frame_mask_size;
-
-    /* Flags */
-    unsigned show_visual : 1;
-    unsigned show_collision : 1;
-};
-
-struct aa_gl_buffers {
-    GLuint values;
-    GLint  values_size;
-
-    /* GLuint colors; */
-    /* GLint  colors_size; */
-
-    GLuint indices;
-    GLint  indices_size;
-
-    GLuint normals;
-    GLint  normals_size;
-
-    GLuint tex2d;
-    GLuint uv;
-
-    GLsizei count;
-
-    GLfloat specular[3];
-
-    unsigned has_indices : 1;
-    /* unsigned has_colors : 1; */
-    unsigned has_values : 1;
-    unsigned has_normals : 1;
-    unsigned has_tex2d : 1;
-    unsigned has_uv : 1;
-
-    GLenum mode;
-
-    struct aa_gl_buffers *next;
-};
-
-struct aa_rx_geom_opt;
-
-/**
- * Draw a transform frame frame
- */
-AA_API void aa_gl_draw_tf (
-    const double *world_E_model,
-    const struct aa_rx_geom_opt *opt,
-    const struct aa_gl_buffers *buffers);
-
-
-
-AA_API void
-init_octree ( struct aa_rx_geom_octree *geom );
-
-AA_API void tri_mesh (
-    struct aa_rx_geom *geom,
-    struct aa_rx_mesh *mesh);
-
-#endif /*AMINO_RX_SCENE_GL_INTERNAL_H*/
+#endif /*AMINO_RX_SCENE_GEOM_INTERNAL_H*/

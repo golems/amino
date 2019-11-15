@@ -44,14 +44,16 @@
 
 #include <pthread.h>
 
+#include "amino/rx/scene_geom.h"
+#include "amino/rx/scene_geom_internal.h"
+
 #include "amino/rx/rxtype.h"
 #include "amino/rx/rxtype_internal.h"
 #include "amino/rx/scenegraph.h"
 #include "amino/rx/scenegraph_internal.h"
 #include "amino/rx/scene_gl.h"
 #include "amino/rx/scene_gl_internal.h"
-#include "amino/rx/scene_geom.h"
-#include "amino/rx/scene_geom_internal.h"
+
 
 #include "amino/getset.h"
 
@@ -732,7 +734,7 @@ static void bind_mesh (
 }
 
 
-static void tri_mesh (
+AA_API void tri_mesh (
     struct aa_rx_geom *geom,
     struct aa_rx_mesh *mesh
     )
@@ -1487,6 +1489,9 @@ AA_API void aa_geom_gl_buffers_init (
         init_torus((struct aa_rx_geom_torus *)geom);
         break;
     }
+    case AA_RX_OCTREE:
+        init_octree((struct aa_rx_geom_octree *)geom);
+        break;
     default:
         fprintf(stderr, "Unknown shape type: %d\n", geom->type );
         break;

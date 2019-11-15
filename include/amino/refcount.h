@@ -83,9 +83,10 @@ aa_mem_ref_dec_atomic( AA_ATOMIC unsigned *count );
 #endif /* __STDC_VERSION__ >= 201112L */
 
 #else
-
-/* TODO: C++ Atomic refcounts */
-
+//TODO: better c++ atomics
+#define AA_ATOMIC
+#define aa_mem_ref_inc aa_mem_ref_inc_mutex
+#define aa_mem_ref_dec aa_mem_ref_dec_mutex
 #endif
 
 

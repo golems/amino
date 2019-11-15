@@ -54,9 +54,9 @@ noinst_HEADERS = \
              include/amino/rx/scenegraph_internal.h \
              include/amino/rx/scene_geom_internal.h \
              include/amino/rx/scene_collision_internal.h \
-             include/amino/rx/scene_gl_internal.h \
-             include/amino/rx/scene_sdl_internal.h \
              include/amino/rx/rxtype_internal.h \
+	     include/amino/rx/octree_geom.hpp   \
+	     include/amino/rx/scene_gl_internal.h \
              include/amino/rx/scene_fcl.h \
              include/amino/rx/ompl/scene_ompl_internal.h \
              include/amino_internal.h
@@ -139,14 +139,13 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/rxerr.h        \
 	include/amino/rx/scenegraph.h   \
 	include/amino/rx/scene_geom.h   \
-	include/amino/rx/scene_gl.h     \
 	include/amino/rx/scene_sub.h    \
 	include/amino/rx/scene_fk.h    \
 	include/amino/rx/scene_ik.h    \
 	include/amino/rx/scene_dyn.h    \
+	include/amino/rx/scene_gl.h \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_planning.h \
-	include/amino/rx/scene_sdl.h    \
 	include/amino/rx/scene_win.h    \
 	include/amino/rx/scene_plugin.h \
 	include/amino/rx/mp_seq.h \
@@ -234,6 +233,10 @@ libamino_la_SOURCES =                  \
 	src/wavefront/mtl.c            \
 	src/wavefront/wf_obj.c         \
 	src/wavefront/wf_mtl.c
+
+if HAVE_OCTOMAP
+libamino_la_SOURCES += src/rx/sg_octree.cpp
+endif # HAVE_OCTOMAP
 
 
 libamino_la_LIBADD =
@@ -326,6 +329,11 @@ libamino_la_SOURCES += euler.c
 # do nothing, euler.c in included in src/mac/euler_f2c.c
 
 endif
+
+if HAVE_OCTOMAP
+libamino_la_SOURCES += src/rx/octree_geom.cpp
+libamino_la_LIBADD += $(OCTOMAP_LIBS)
+endif # HAVE_OCTOMAP
 
 ###############
 ## WAVEFRONT ##
@@ -489,6 +497,10 @@ if AMINO_GL
 # OpenGL support
 lib_LTLIBRARIES += libamino-gl.la
 libamino_gl_la_SOURCES = src/amino_gl.c
+
+if HAVE_OCTOMAP
+libamino_gl_la_SOURCES += src/octree_gl.cpp
+endif # HAVE_OCTOMAP
 
 libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
 libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
@@ -688,6 +700,17 @@ eigen_compat_CXXFLAGS = $(EIGEN_CFLAGS)
 TESTS += eigen_compat
 
 endif # HAVE_EIGEN
+
+if HAVE_OCTOMAP
+noinst_PROGRAMS += octomap_test
+octomap_test_SOURCES = src/test/octomap_test.cpp
+octomap_test_LDADD = libamino.la libamino-gl.la $(OCTOMAP_LIBS) $(GL_LIBS) $(SDL2_LIBS) $(GLEW_LIBS)
+octomap_test_CFLAGS = $(OCTOMAP_CFLAGS) $(SDL2_CFLAGS) $(GL_CFLAGS)
+octomap_test_CXXFLAGS = $(OCTOMAP_CFLAGS) $(SDL2_CFLAGS) $(GL_CFLAGS)
+
+TESTS += octomap_test
+
+endif # HAVE_OCTOMAP
 
 
 # noinst_PROGRAMS += test_vec

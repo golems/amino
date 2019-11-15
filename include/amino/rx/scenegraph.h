@@ -665,4 +665,12 @@ aa_rx_sg_alloc_tf ( const struct aa_rx_sg *sg, struct aa_mem_region *region );
 AA_API double *
 aa_rx_sg_alloc_config ( const struct aa_rx_sg *sg, struct aa_mem_region *region );
 
+
+AA_API void
+aa_rx_sg_add_octree(
+    struct aa_rx_sg *scene_graph,
+    const char *parent,
+    struct aa_rx_octree* ocTree, struct aa_rx_geom_opt* opt);
+
+
 #endif /*AMINO_SCENEGRAPH_H*/

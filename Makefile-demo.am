@@ -118,15 +118,15 @@ demo_urdf_baxter_baxter_simple_SOURCES = demo/urdf/baxter/baxter-simple.c
 demo_urdf_baxter_baxter_simple_CFLAGS = $(DEMO_CFLAGS)
 demo_urdf_baxter_baxter_simple_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
 
-noinst_PROGRAMS += demo/urdf/baxter/baxter-ik
-demo_urdf_baxter_baxter_ik_SOURCES = demo/urdf/baxter/baxter-ik.c
-demo_urdf_baxter_baxter_ik_CFLAGS = $(DEMO_CFLAGS)
-demo_urdf_baxter_baxter_ik_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+# noinst_PROGRAMS += demo/urdf/baxter/baxter-ik
+# demo_urdf_baxter_baxter_ik_SOURCES = demo/urdf/baxter/baxter-ik.c
+# demo_urdf_baxter_baxter_ik_CFLAGS = $(DEMO_CFLAGS)
+# demo_urdf_baxter_baxter_ik_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
 
-noinst_PROGRAMS += demo/urdf/baxter/baxter-ik-path
-demo_urdf_baxter_baxter_ik_path_SOURCES = demo/urdf/baxter/baxter-ik-path.c
-demo_urdf_baxter_baxter_ik_path_CFLAGS = $(DEMO_CFLAGS)
-demo_urdf_baxter_baxter_ik_path_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
+# noinst_PROGRAMS += demo/urdf/baxter/baxter-ik-path
+# demo_urdf_baxter_baxter_ik_path_SOURCES = demo/urdf/baxter/baxter-ik-path.c
+# demo_urdf_baxter_baxter_ik_path_CFLAGS = $(DEMO_CFLAGS)
+# demo_urdf_baxter_baxter_ik_path_LDADD = demo/urdf/baxter/libbaxter_demo.la $(DEMO_LIBS) demo/urdf/baxter/libbaxter.la
 
 noinst_PROGRAMS += demo/urdf/baxter/baxter-wksp
 demo_urdf_baxter_baxter_wksp_SOURCES = demo/urdf/baxter/baxter-wksp.c
