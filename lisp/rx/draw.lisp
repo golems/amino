@@ -129,6 +129,8 @@
                                                       width
                                                       end-arrow
                                                       start-arrow
+                                                      (start-translation (identity-vec3))
+                                                      (end-translation (identity-vec3))
                                                       (end-arrow-start-width (* 2 width))
                                                       (end-arrow-end-width 0d0)
                                                       (end-arrow-length width)
@@ -137,13 +139,21 @@
                                                       (start-arrow-length width)
                                                       configuration-map)
   "Draw an arrow given a start and end point."
-  (let* ((v (tf-translation (scene-graph-tf-relative scene-graph tail tip
-                                                     :configuration-map configuration-map))))
+  (let* ((tf-start (scene-graph-tf-absolute scene-graph tail
+                                            :configuration-map configuration-map))
+         (tf-end  (scene-graph-tf-absolute scene-graph tip
+                                           :configuration-map configuration-map))
+         (tf-rel (tf-mul (tf-inverse (tf-mul tf-start
+                                             (tf* nil start-translation)))
+                         (tf-mul tf-end
+                                 (tf* nil end-translation))))
+         (v (tf-translation tf-rel)))
     (item-arrow-axis tail name
                      :options options
                      :axis (vec3-normalize v)
                      :length (vec-norm v)
                      :width width
+                     :translation  start-translation
                      :end-arrow end-arrow
                      :start-arrow start-arrow
                      :end-arrow-start-width end-arrow-start-width
@@ -285,7 +295,9 @@
   "Draw principal axis markers for frame PARENT."
   (flet ((helper (subname axis color)
            (item-arrow-axis parent (draw-subframe name subname)
-                            :options (merge-draw-options (draw-options :color color)
+                            :options (merge-draw-options (draw-options :color color
+                                                                       :no-shadow t)
+
                                                          options)
                             :axis axis
                             :length length

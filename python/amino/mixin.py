@@ -29,51 +29,62 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
-
 # Object must provide .ssd(other), .nrm2(), .__setitem__()
+"""Helper mixins."""
+
 
 class SSDEqMixin(object):
-    def __eq__(self,other):
-        return (0 == self.ssd(other))
-    def __ne__(self,other):
-        return (0 != self.ssd(other))
+    """Equality test mixin using sum-square-differences."""
 
-    def isclose(self, b, rel_tol=1e-09, abs_tol=0.0):
+    def __eq__(self, other):
+        return self.ssd(other) == 0
+
+    def __ne__(self, other):
+        return self.ssd(other) != 0
+
+    def isclose(self, other, rel_tol=1e-09, abs_tol=0.0):
+        """Returns true if object is close to other."""
         a = self
+        b = other
         na = a.nrm2()
         nb = b.nrm2()
         d = a.ssd(b)
         return d <= max(rel_tol * max(na, nb), abs_tol)
+
 
 class CopyEltsMixin(object):
-    def _copy_elts(self,v):
+    """Copy Elements mixin."""
+
+    def copy_from(self, src):
+        """Copy elements from src to self"""
         n = len(self)
-        if( n != len(v) ):
+        if n != len(src):
             raise IndexError()
-        for i in range(0,n):
-            self[i] = v[i]
+        for i in range(0, n):
+            self[i] = src[i]
         return self
 
-class VecMixin(object):
-    def __eq__(self,other):
-        return (0 == self.ssd(other))
-    def __ne__(self,other):
-        return (0 != self.ssd(other))
-
-    def isclose(self, b, rel_tol=1e-09, abs_tol=0.0):
-        a = self
-        na = a.nrm2()
-        nb = b.nrm2()
-        d = a.ssd(b)
-        return d <= max(rel_tol * max(na, nb), abs_tol)
-
-    def _copy_elts(self,v):
+    def copy_to(self, dst):
+        """Copy elements from self to dst"""
         n = len(self)
-        if( n != len(v) ):
+        if n != len(dst):
             raise IndexError()
-        for i in range(0,n):
-            self[i] = v[i]
+        for i in range(0, n):
+            dst[i] = self[i]
         return self
 
-    def __radd__(self,other):
+
+class DivCompatMixin:
+    def __div__(self, other):
+        return self.__truediv__(other)
+
+    def __idiv__(self, other):
+        """Divide self by a scalar"""
+        return self.__itruediv__(other)
+
+
+class VecMixin(CopyEltsMixin, SSDEqMixin, DivCompatMixin):
+    """Mixin for vector-like objects."""
+
+    def __radd__(self, other):
         return self + other

@@ -196,6 +196,7 @@ s_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
                         aa_isfinite(lo) ? lo : -DBL_MAX,
                         aa_isfinite(hi) ? hi : DBL_MAX );
     }
+    return 0;
 }
 
 static int

@@ -32,11 +32,19 @@
 ##
 ## @file __init__.py Package init file
 ##
+"""Amino Library Bindings"""
 
 import ctypes
 
-from lib import libamino
-from tf import Vec3, Quat, XAngle, YAngle, ZAngle, AxAng, RotMat, TfMat, DualQuat, QuatTrans, EulerRPY
-from mat import DVec, DMat
-from scenegraph import GeomOpt, Geom, SceneGraph, SubSceneGraph
-from scenewin import SceneWin
+from amino.lib import libamino
+from amino.tf import Vec3, \
+    XAngle, YAngle, ZAngle, EulerRPY, EulerZYX, AxAng, Quat, RotMat, \
+    TfMat, DualQuat, QuatTrans, \
+    TfVel, Twist
+from amino.mat import DVec, DMat
+from amino.scenegraph import GeomOpt, Geom, SceneGraph, SubSceneGraph
+from amino.scenewin import SceneWin
+
+from amino.kinematics import SceneFK, SceneDK, SceneIK
+
+from amino.collision import SceneCollisionSet, SceneCollision

@@ -56,28 +56,27 @@
                (:file "util" :depends-on ("package" "libdir"))
                ;; TYPE
                (:file "basic-type" :depends-on ("package"))
+               (:file "basic-ops" :depends-on ("basic-type"))
                (:file "sparse" :depends-on ("package"))
                ;; FFI
                (cffi-grovel:grovel-file "grovel" :depends-on ("package"))
                (cffi-grovel:grovel-file "tf-grovel" :depends-on ("package"))
                (:file "ffi" :depends-on ("grovel" "basic-type"))
                (:file "foreign" :depends-on ("package"))
-               (:file "blas" :depends-on ("foreign" "ffi"))
                (:file "libc" :depends-on ("foreign"))
 
                ;; Matrices
                (cffi-grovel:grovel-file "mat/mat-grovel" :depends-on ("package"))
                (:file "mat/mat-macro" :depends-on ("ffi" "mat/mat-grovel"))
-               (:file "mat/mat-lib" :depends-on ("foreign" "mat/mat-macro"))
+               (:file "mat/mat-lib" :depends-on ("foreign" "mat/mat-macro" "basic-ops"))
                (:file "mat/mat-init" :depends-on ("mat/mat-lib"))
+               (:file "mat/mat-blas" :depends-on ("mat/mat-lib" "basic-ops"))
+               (:file "mat/mat-la" :depends-on ("mat/mat-lib" "basic-ops"))
 
-               ;; Foreign LA
-               (:file "amino-la" :depends-on ("foreign"))
                ;; LA
-               (:file "basic-ops" :depends-on ("basic-type"))
                (:file "op" :depends-on ("package"))
                (:file "generic" :depends-on ("op" "tf-type"))
-               (:file "blas-generic" :depends-on ("generic" "blas"))
+               (:file "blas-generic" :depends-on ("generic" "mat/mat-blas"))
                (:file "mem-type" :depends-on ("foreign"))
                (:file "mem" :depends-on ("mem-type"))
                (:file "ct-type" :depends-on ("mem" "tf-type"))

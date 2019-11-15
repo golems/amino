@@ -1,0 +1,111 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\renewcommand{\xyaxes}[4] {%
+  \draw[axis,->,thick,Accentcolor] (0,0) -- (#2,0) node[below right] {#3};%
+  \draw[axis,->,thick,Accentcolor] (0,0) -- (0,#2) node[above left] {#4};%
+  %\draw[fill=metallic,metallic] (0,0) circle (.25em);
+  \draw[Accentcolor] (0,0)  node[below left] {$#1$};
+
+  \node[fill=Accentcolor,
+  Accentcolor,
+  draw=Accentcolor,
+  circle,
+  inner sep=0,
+  minimum
+  width=.5em] (#1) {};
+
+  %\draw (0,0) circle[metallic] (.25em) node[below left] {#1};
+}
+
+\begin{document}
+
+
+\begin{tikzpicture}[scale=1,font=\Large,
+  body/.style={
+    thick,
+    fill={bgfillcolor}
+  },
+  rbody/.style={
+    body,
+    %opacity=.5,
+    dashed
+  },
+  pt/.style={
+    fill=black,
+    circle,
+    draw=black,
+    inner sep=.125em
+  },
+  lbl/.style={
+    node distance=1em
+  },
+  arr/.style={
+    <->,ultra thick,>=stealth
+  },
+  lvec/.style={
+    thin,Accentcolor,->,>=stealth
+  }
+  ]
+
+  \begin{scope}
+
+    \draw[body] (0,0) rectangle (2,5);
+
+    \node[pt] at (.5,.5) (a) {};
+
+    \node[pt] at (1.5,4.5) (b) {};
+
+    \node[lbl,below right of=a] {a};
+    \node[lbl,above left of=b] {b};
+
+    %\draw[arr] (a) edge node[above,sloped] {$|ab|$} (b);
+
+    \node[coordinate] at (2,2.5) (s) {};
+
+    \xyaxes{f_0}{1.}{$\unitvec{x}_0$}{$\unitvec{y}_0$}
+
+    \draw (0,0) edge[lvec] (a);
+    \draw (0,0) edge[lvec] (b);
+
+  \end{scope}
+
+
+
+  \begin{scope}[shift={(7,2)},rotate=-30,opacity=.5]
+
+    \draw[rbody] (0,0) rectangle (2,5);
+
+    \node[pt] at (.5,.5) (a) {};
+
+    \node[pt] at (1.5,4.5) (b) {};
+
+
+    \node[lbl,below right of=a] {a};
+    \node[lbl,above left of=b] {b};
+
+    %\draw[arr] (a) edge node[above,sloped,rotate=-30] {$|ab|$} (b);
+
+    \node[coordinate] at (0,2.5) (e) {};
+    \draw (0,0) edge[lvec] (a);
+    \draw (0,0) edge[lvec] (b);
+
+    \xyaxes{f_1}{1.}{$\unitvec{x}_1$}{$\unitvec{y}_1$}
+
+  \end{scope}
+
+
+  \draw[accentcolor] (s) edge[out=0,in=150,->,ultra thick,draw=accentcolor]
+  node[above,sloped] {Euclidean Tf.} (e);
+
+\end{tikzpicture}
+
+
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

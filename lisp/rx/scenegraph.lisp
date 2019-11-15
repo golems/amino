@@ -157,7 +157,7 @@ Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
   (visual t)
   c-geom)
 
-(defun %scene-geometry (shape options)
+(defun %scene-geometry (shape options &optional (c-geom))
   (make-scene-geometry :shape shape
                        :options options
                        :type (let ((type (draw-option options :type)))
@@ -166,24 +166,23 @@ Values in NEW-OPTIONS supersede values in BASE-OPTIONS."
                                  (tree-set type)
                                  (rope (tree-set #'rope-compare-fast type))))
                        :collision (draw-option options :collision)
-                       :visual (draw-option options :visual)))
+                       :visual (draw-option options :visual)
+                       :c-geom c-geom))
 
 (defun %rx-scene-geometry (rx-geom options)
-  (make-scene-geometry :shape (rx-geom-shape rx-geom)
-                       :c-geom rx-geom
-                       :options options
-                       :type (let ((type (draw-option options :type)))
-                               (etypecase type
-                                 (list (apply #'tree-set #'rope-compare-fast type))
-                                 (tree-set type)
-                                 (rope (tree-set #'rope-compare-fast type))))
-                       :collision (draw-option options :collision)
-                       :visual (draw-option options :visual)))
+  (%scene-geometry (rx-geom-shape rx-geom) options rx-geom))
 
 (defun modify-scene-geometry (geom options)
-  (%rx-scene-geometry (aa-rx-geom-modify-opt (scene-geometry-c-geom geom)
-                                             (alist-rx-geom-opt options))
-                      options))
+  ;(print geom)
+  (let ((c-geom (aa-rx-geom-modify-opt (scene-geometry-c-geom geom)
+                                       (alist-rx-geom-opt options)))
+        (shape (scene-geometry-shape geom)))
+    (cond
+      ((amino-ffi::foreign-container-p shape)
+       (%rx-scene-geometry c-geom options))
+      ((scene-mesh-p shape)
+       (%scene-geometry shape options c-geom))
+      (t (assert nil)))))
 
 
 
@@ -447,7 +446,7 @@ DIMESIONS: length 3 vector or sequence giving x, y, and z dimensions."
           value)
      (etypecase value
        (number
-        (make-joint-limit :min (- value) :max (+ value)))
+        (make-joint-limit :min (coerce (- value) 'double-float) :max (coerce (+ value) 'double-float)))
        (joint-limit value)))
     ;; bad args
     (t
@@ -655,9 +654,28 @@ create (partial) copies without modifying or destroying the original."
                                  ;; now new config
                                  (scene-graph-configs scene-graph))))
 
+(defun %clean-allowed-collisions (frame-name collision-set)
+  (fold-tree-set (lambda (new-set x)
+                   (if (or (sycamore:rope= (car x) frame-name)
+                           (sycamore:rope= (cdr x) frame-name))
+                       new-set
+                       (tree-set-insert new-set x)))
+                 (make-collision-set)
+                 collision-set))
+
+(defun scene-graph-clean-frame (scene-graph frame-name)
+  "Fully remove a frame from the scene."
+  ;; TODO: remove configs
+  (make-scene-graph :frames (tree-set-remove (scene-graph-frames scene-graph)
+                                             frame-name)
+                    :files (scene-graph-files scene-graph)
+                    :allowed-collisions (%clean-allowed-collisions frame-name
+                                                                   (scene-graph-allowed-collisions
+                                                                    scene-graph))
+                    :configs (scene-graph-configs scene-graph)))
+
 (defun scene-graph-remove-frame (scene-graph frame-name)
-  "Remove a frame from the scene."
-  ;; TODO: remove allowed collisions and configs
+  "Remove a frame from the scene. It still stays in the allowed-collision set."
   (make-scene-graph :frames (tree-set-remove (scene-graph-frames scene-graph)
                                              frame-name)
                     :files (scene-graph-files scene-graph)
@@ -874,13 +892,13 @@ Throws an error if scene graph is invalid."
         ;; draw-options
         (when draw-options
           ;(print (scene-frame-geometry frame))
-          (print (map 'list
-                      (lambda (g)
-                        (modify-scene-geometry
-                         g
-                         (merge-draw-options draw-options
-                                             (scene-geometry-options g))))
-                      (scene-frame-geometry frame)))
+          ;; (print (map 'list
+          ;;             (lambda (g)
+          ;;               (modify-scene-geometry
+          ;;                g
+          ;;                (merge-draw-options draw-options
+          ;;                                    (scene-geometry-options g))))
+          ;;             (scene-frame-geometry frame)))
           (setf (scene-frame-geometry frame)
                 (map 'list
                      (lambda (g)

@@ -1,0 +1,82 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+
+\begin{tikzpicture}[scale=1,font=\Large,
+  body/.style={
+    thick,
+    fill={bgfillcolor}
+  },
+  rbody/.style={
+    body,
+    %opacity=.5,
+    dashed
+  },
+  pt/.style={
+    fill=black,
+    circle,
+    draw=black,
+    inner sep=.125em
+  },
+  lbl/.style={
+    node distance=1em
+  },
+  arr/.style={
+    <->,ultra thick,>=stealth
+  }
+  ]
+
+  \begin{scope}
+
+    \draw[body] (0,0) rectangle (2,5);
+
+    \node[pt] at (.5,.5) (a) {};
+
+    \node[pt] at (1.5,4.5) (b) {};
+
+    \node[lbl,below right of=a] {a};
+    \node[lbl,above left of=b] {b};
+
+    \draw[arr] (a) edge node[above,sloped] {$|ab|$} (b);
+
+    \node[coordinate] at (2,2.5) (s) {};
+
+  \end{scope}
+
+
+
+  \begin{scope}[shift={(7,2)},rotate=-30,opacity=.5]
+
+    \draw[rbody] (0,0) rectangle (2,5);
+
+    \node[pt] at (.5,.5) (a) {};
+
+    \node[pt] at (1.5,4.5) (b) {};
+
+
+    \node[lbl,below right of=a] {a};
+    \node[lbl,above left of=b] {b};
+
+    \draw[arr] (a) edge node[above,sloped,rotate=-30] {$|ab|$} (b);
+
+    \node[coordinate] at (0,2.5) (e) {};
+
+  \end{scope}
+
+
+  \draw[Accentcolor] (s) edge[out=0,in=150,->,ultra thick,draw=Accentcolor]
+  node[above,sloped] {rotate \& translate} (e);
+
+\end{tikzpicture}
+
+
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

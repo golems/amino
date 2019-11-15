@@ -443,6 +443,234 @@ struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
     return segs;
 }
 
+/**
+ * Constant acceleration joint velocity segment.
+ */
+struct aa_ct_seg_ddq {
+    size_t n_q;   ///< Number of configurations
+
+    double *q0;   ///< Waypoint position
+    double *dq0;  ///< Starting velocity
+    double *ddq;  ///< Acceleration
+
+    double t0;   ///< Start time
+    double t1;   ///< Final time
+};
+
+/**
+ * Get the context for the neighboring segments.
+ *
+ * @param seg Segment to grab neighbors of
+ * @param p   Previous segment context
+ * @param c   Current segment context
+ * @param n   Next segment context
+ */
+void
+aa_ct_tj_ddq_nbrs( struct aa_ct_seg *seg, struct aa_ct_seg_ddq **p,
+                   struct aa_ct_seg_ddq **c, struct aa_ct_seg_ddq **n )
+{
+    *c = (struct aa_ct_seg_ddq *) seg->cx;
+    *n = (seg->next) ? (struct aa_ct_seg_ddq *) seg->next->cx : NULL;
+    *p = (seg->prev) ? (struct aa_ct_seg_ddq *) seg->prev->cx : NULL;
+}
+
+static int aa_ct_seg_ddq_eval( struct aa_ct_seg *seg,
+                               struct aa_ct_state *state, double t )
+{
+    struct aa_ct_seg_ddq *cx = (struct aa_ct_seg_ddq *)seg->cx;
+    if( t >= cx->t0 && t <= cx->t1 ) {
+        size_t n = AA_MIN( cx->n_q, state->n_q );
+        double tt = t - cx->t0;
+        double q, dq, ddq, q0, dq0;
+        for( size_t i = 0; i < n; i ++ ) {
+            ddq = cx->ddq[i];
+            dq  = cx->dq0[i];
+            q   =  cx->q0[i];
+
+            state->dq[i] = dq - tt * ddq;
+            state->q[i] = q + tt * dq - tt * tt * ddq/2;
+        }
+        return AA_CT_SEG_IN;
+    } else {
+        return AA_CT_SEG_OUT;
+    }
+}
+
+
+/**
+ * trapazoidal velocity segment.
+ */
+
+void
+aa_ct_seg_trap_new( struct aa_mem_region *reg,
+                    double t0, struct aa_ct_state *state0,
+                    struct aa_ct_state *state1,
+                    struct aa_ct_limit *limits,
+                    struct aa_ct_seg **segs )
+{
+
+    /* Compute segment time */
+    double dt = 0;
+    double ta = 0;
+    size_t n_q = AA_MIN(state0->n_q, state1->n_q);
+    double dqmax, ddqmax, dti, q0, q1;
+    double sign;
+
+
+    /* We make a lot of assumtions here to make the math easy. Current assumtions:
+       abs(limits->max->ddq) == abs(limits->min->ddq)
+       state0->dq = 0;
+       state1->dq = 0; */
+    for( size_t i = 0; i < n_q; i ++ ) {
+        q1 = state1->q[i];
+        q0 = state0->q[i];
+
+        if(q1 >= q0){
+            sign = 1;
+            dqmax  = limits->max->dq[i];
+            ddqmax = limits->max->ddq[i];
+
+        }else{
+            sign = -1;
+            dqmax  = limits->min->dq[i];
+            ddqmax = limits->min->ddq[i];
+        }
+
+        double tai = sqrt((q1-q0)/ddqmax);
+
+        if(tai*ddqmax*sign > dqmax*sign){
+            //To do a triangle we went too fast, need to do a trapazoid
+            tai = dqmax/ddqmax;
+            double tb = ((q1-q0) - dqmax*tai)/dqmax;
+            dti = tb+2*tai;
+        }else{
+            dti = 2*tai;
+        }
+
+        dt = AA_MAX(dt, dti);
+        ta = AA_MAX(ta, tai);
+    }
+
+    /* Allocate */
+    /* Accelearation segment */
+    struct aa_ct_seg_ddq *a_cx = AA_MEM_REGION_NEW(reg,struct aa_ct_seg_ddq);
+    AA_MEM_ZERO(a_cx,1);
+    a_cx->n_q = n_q;
+    a_cx->q0  = AA_MEM_REGION_NEW_N( reg, double, n_q );
+    a_cx->dq0 = AA_MEM_REGION_NEW_N( reg, double, n_q );
+    a_cx->ddq = AA_MEM_REGION_NEW_N( reg, double, n_q );
+
+
+    AA_MEM_CPY(a_cx->q0, state0->q, n_q);
+    AA_MEM_ZERO(a_cx->dq0, n_q);
+    AA_MEM_ZERO(a_cx->ddq, n_q);
+
+    a_cx->t0 = t0;
+    a_cx->t1 = t0 + ta;
+
+    struct aa_ct_seg *a_seg = AA_MEM_REGION_NEW(reg,struct aa_ct_seg);
+    AA_MEM_ZERO(a_seg,1);
+    a_seg->eval = aa_ct_seg_ddq_eval;
+    a_seg->cx = a_cx;
+    a_seg->type = AA_CT_ACCL_SEG;
+
+    /* Constant Velocity segment */
+    struct aa_ct_seg_dq *c_cx = AA_MEM_REGION_NEW(reg,struct aa_ct_seg_dq);
+    AA_MEM_ZERO(c_cx,1);
+    c_cx->n_q = n_q;
+    c_cx->q0 = AA_MEM_REGION_NEW_N( reg, double, n_q );
+    c_cx->dq = AA_MEM_REGION_NEW_N( reg, double, n_q );
+
+    c_cx->t0 = t0 + ta;
+    c_cx->t1 = t0 + dt - ta;
+
+    struct aa_ct_seg *c_seg = AA_MEM_REGION_NEW(reg,struct aa_ct_seg);
+    AA_MEM_ZERO(c_seg,1);
+    c_seg->eval = aa_ct_seg_dq_eval;
+    c_seg->cx = c_cx;
+    c_seg->type = AA_CT_LIN_SEG;
+
+    /* Deccelearation segment */
+    struct aa_ct_seg_ddq *d_cx = AA_MEM_REGION_NEW(reg,struct aa_ct_seg_ddq);
+    AA_MEM_ZERO(d_cx,1);
+    d_cx->n_q = n_q;
+    d_cx->q0  = AA_MEM_REGION_NEW_N( reg, double, n_q );
+    d_cx->dq0 = AA_MEM_REGION_NEW_N( reg, double, n_q );
+    d_cx->ddq = AA_MEM_REGION_NEW_N( reg, double, n_q );
+
+    d_cx->t0 = t0 + dt - ta;
+    d_cx->t1 = t0 + dt;
+
+    struct aa_ct_seg *d_seg = AA_MEM_REGION_NEW(reg,struct aa_ct_seg);
+    AA_MEM_ZERO(d_seg,1);
+    d_seg->eval = aa_ct_seg_ddq_eval;
+    d_seg->cx = d_cx;
+    d_seg->type = AA_CT_ACCL_SEG;
+
+
+    segs[0] = a_seg;
+    segs[1] = c_seg;
+    segs[2] = d_seg;
+
+    /* Compute blend times and velocities now that we know the segment time */
+    for( size_t i = 0; i < n_q; i ++ ) {
+        q1 = state1->q[i];
+        q0 = state0->q[i];
+
+        double q_diff = (q1-q0);
+        double denom = ta * ta + ta * ( dt - 2 * ta );
+
+        double ddq = q_diff/denom;
+
+        a_cx->ddq[i] = ddq;
+
+
+        c_cx->dq[i] = ddq * ta;
+        c_cx->q0[i] = a_cx->q0[i] + ddq * ta * ta / 2;
+
+        d_cx->q0[i] = c_cx->q0[i] + c_cx->dq[i] * (dt - 2 * ta);
+        d_cx->dq0[i] = c_cx->dq[i];
+        d_cx->ddq[i] = -ddq;
+    }
+}
+
+
+struct aa_ct_seg_list *aa_ct_tjq_trap_generate( struct aa_mem_region *reg,
+                                                struct aa_ct_pt_list *list,
+                                                struct aa_ct_limit *limits )
+{
+    struct aa_ct_seg_list *segs = new(reg) aa_ct_seg_list(reg);
+
+    auto itr0 = list->list.begin();
+    auto itr1 = list->list.begin();
+    itr1++;
+
+    segs->n_q = (*itr0)->state.n_q;
+    segs->duration = 0;
+
+    for( ; itr1 !=list->list.end(); itr0++, itr1++){
+
+        if(segs->n_q != (*itr1)->state.n_q){
+            fprintf(stderr,
+                    "WARNING: mistmactched confiuration count during trajectory generation.\n");
+        }
+        struct aa_ct_seg **seg_arr = AA_NEW_AR(aa_ct_seg*, 3);
+
+        aa_ct_seg_trap_new( reg, segs->duration,
+                            &(*itr0)->state, &(*itr1)->state,
+                            limits, seg_arr);
+
+        aa_ct_seg_list_add(segs, seg_arr[0]);
+        aa_ct_seg_list_add(segs, seg_arr[1]);
+        aa_ct_seg_list_add(segs, seg_arr[2]);
+
+        struct aa_ct_seg_ddq *cx = (struct aa_ct_seg_ddq*)seg_arr[2]->cx;
+        segs->duration = cx->t1;
+    }
+
+    return segs;
+}
+
 
 /**
  * Parabolic blend trajectory segment context.

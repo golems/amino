@@ -53,7 +53,6 @@ typedef int (*aa_ct_seg_eval_fun)(struct aa_ct_seg *seg,
 /**
  * Trajectory segment.
  */
-struct aa_ct_seg;
 struct aa_ct_seg {
     int type; ///< Type label for disambiguation
     int (*eval)(struct aa_ct_seg *seg,

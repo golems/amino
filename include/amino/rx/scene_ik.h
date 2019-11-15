@@ -332,6 +332,12 @@ AA_API void
 aa_rx_ik_set_restart_time( struct aa_rx_ik_cx *context, double t );
 
 /**
+ * Get the maximum time limit for IK restarts.
+ */
+AA_API double
+aa_rx_ik_get_restart_time( struct aa_rx_ik_cx *context );
+
+/**
  * Set the frame to solve for.
  */
 AA_API void

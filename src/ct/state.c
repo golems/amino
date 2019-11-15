@@ -53,6 +53,10 @@ aa_ct_state_alloc(struct aa_mem_region *reg, size_t n_q, size_t n_tf )
     s->dq = AA_MEM_REGION_NEW_N(reg, double, s->n_q);
     s->ddq = AA_MEM_REGION_NEW_N(reg, double, s->n_q);
 
+    AA_MEM_ZERO(s->q, n_q);
+    AA_MEM_ZERO(s->dq, n_q);
+    AA_MEM_ZERO(s->ddq, n_q);
+
     s->eff = AA_MEM_REGION_NEW_N(reg, double, s->n_q);
 
     s->X = AA_MEM_REGION_NEW_N(reg, double, 7);

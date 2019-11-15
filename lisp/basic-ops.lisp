@@ -192,49 +192,6 @@
   "Return the W element of the vector."
   (vecref vector +w+))
 
-(defun row-matrix (&rest rows)
-  "Create a matrix from the given rows."
-  (let ((m (length rows))
-        (n (length (car rows))))
-    (let ((matrix (make-matrix m n)))
-      (loop
-         with type = (matrix-type matrix)
-         for row in rows
-         for i from 0
-         for j = -1
-         do (progn
-              (map nil (lambda (x)
-                         (setf (matref matrix i (incf j))
-                               (coerce x type)))
-                   row)))
-      matrix)))
-
-(defun col-matrix (&rest cols)
-  "Create a matrix from the given columns."
-  (let ((n (length cols))
-        (m (length (car cols))))
-    (let ((matrix (make-matrix m n)))
-      (loop
-         for col in cols
-         for j from 0
-         do (loop
-               for x in col
-               for i from 0
-               do (setf (matref matrix i j)
-                        (coerce x 'double-float))))
-      matrix)))
-
-(defun matrix-copy (matrix &optional
-                    (copy (make-matrix (matrix-rows matrix)
-                                       (matrix-cols matrix))))
-  "Create a copy of MATRIX."
-  (let ((m (matrix-rows matrix))
-        (n (matrix-cols matrix)))
-    (dotimes (j n)
-      (dotimes (i m)
-        (setf (matref copy i j)
-              (matref matrix i j))))
-    copy))
 
 (declaim (inline matrix-block))
 (defun matrix-block (matrix i j m n)
@@ -450,15 +407,6 @@ N: cols in the block."
 (defun make-col-vector (n)
   (make-matrix n 1))
 
-(defun row-vector (&rest args)
-  (declare (dynamic-extent args))
-  (row-matrix args))
-
-(defun col-vector (&rest args)
-  (declare (dynamic-extent args))
-  (col-matrix args))
-
-
 
 (defun wrap-col-vector (column)
   (declare (type (simple-array double-float (*)) column))
@@ -484,3 +432,7 @@ Will wrap simple-vectors in a descriptor struct."
                                         :cols 1)))
               ;; (declare (dynamic-extent ,desc))
               (,body-fun ,desc))))))))
+
+(defun check-vec-length (a b)
+  (check-matrix-dimensions (vec-length a)
+                           (vec-length b)))

@@ -1,0 +1,86 @@
+\documentclass[]{standalone}
+
+\usepackage{rotfig}
+
+\begin{document}
+
+
+\begin{tikzpicture}[scale=1,font=\Large,
+  eq/.style = {
+    %fancynode,
+    fill=bgfillcolor,
+    draw=primarycolor,
+    rounded corners=.5em,
+    font=\Large
+  },
+  bracket/.style = {
+    decorate,
+    decoration={brace,amplitude=8pt,raise=4pt},
+    yshift=0pt,
+    thick,
+    color=Accentcolor
+  },
+  lbl/.style={
+    align=center
+  }
+  ]
+  \node[eq] at (3,1) (quat)
+  {
+    $x \ielt + y \jelt + z \kelt + w$
+  };
+  \node[eq] at (-3,1) (dual)
+  {
+    $r + d \dualelt$
+  };
+
+  \draw[bracket]
+  ($(quat.north west)+(0em,0em)$)
+  -- node[lbl,above,yshift=1em] {Quaternion}
+  ($(quat.north east)-(0em,0em)$);
+
+  \draw[bracket]
+  ($(dual.north west)+(0em,0em)$)
+  -- node[lbl,above,yshift=1em] {Dual\\Number}
+  ($(dual.north east)-(0em,0em)$);
+
+  \node[eq,align=left] at (0,-2) (duqu)
+  % \left(r_x\ielt + r_y \jelt + r_z \kelt + r_w\right) +
+  % \left(d_x\ielt + d_y \jelt + d_z \kelt + d_w\right)\dualelt
+  {
+    $
+    \phantom{=}
+    \left(r_x + d_x\dualelt\right) \ielt
+    + \left(r_y + d_y\dualelt\right) \jelt
+    + \left(r_z + d_z\dualelt\right) \kelt
+    + \left(r_w + d_w\dualelt\right)
+    $\\[1em]
+    $
+    =
+    \underbrace{
+      \left(\quatelts{r_x}{r_y}{r_z}{r_w}\right)
+    }_{\textrm{Real Part}}
+    +
+    \underbrace{
+      \left(\quatelts{d_x}{d_y}{d_z}{d_w}\right)\dualelt
+    }_{\textrm{Dual Part}}
+    $
+  };
+
+  \draw[bracket]
+  ($(duqu.north east)+(0em,0em)$)
+  -- node[lbl,right,xshift=1em] {Dual\\Quaternion}
+  ($(duqu.south east)-(0em,0em)$);
+
+  \draw[thick,>=stealth]
+  (quat) edge[->] (duqu)
+  (dual) edge[->] (duqu)
+  ;
+
+\end{tikzpicture}
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

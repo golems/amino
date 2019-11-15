@@ -53,10 +53,11 @@
     (declare (ignore frame))
     (let ((shape (scene-geometry-shape geometry)))
       (when (and (scene-mesh-p shape)
-                 (not (scene-mesh-povray-file shape)))
-
+                 (or reload
+                     (not (scene-mesh-povray-file shape))))
         (multiple-value-bind (geom-name inc-file)
             (mesh-povray (scene-mesh-data shape)
+                         (scene-geometry-options geometry)
                          :reload reload
                          :directory directory)
           (declare (ignore geom-name))

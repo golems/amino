@@ -191,7 +191,12 @@ amino*.tar.gz
 /python/test/tftest.sh
 /python/test/tftest.sh.log
 /python/test/tftest.sh.trs
-python/build
+/python/test/py_tutorial_test.sh
+/python/test/py_tutorial_test.sh.log
+/python/test/py_tutorial_test.sh.trs
+/python/build
+/python/dist
+/python/amino.egg-info
 /demo/tutorial/CMakeCache.txt
 /demo/tutorial/Makefile
 /demo/tutorial/Makefile.not
@@ -205,3 +210,10 @@ python/build
 /doc/md/tutorial/fig/localframe.fdb_latexmk
 /doc/md/tutorial/fig/localframe.fls
 /demo/urdf/baxter/baxter-test
+/demo/tutorial/plugin/*/CMakeCache.txt
+/demo/tutorial/plugin/*/Makefile
+/demo/tutorial/plugin/*/*.c
+/demo/tutorial/plugin/*/*.c.h
+/demo/tutorial/plugin/*/*.cmake
+/pylint.report
+/python/test/pylint.sh

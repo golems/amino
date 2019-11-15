@@ -106,6 +106,15 @@ AA_API void
 aa_rx_fk_get_abs_qutr(const struct aa_rx_fk *fk, aa_rx_frame_id id, double E[7]);
 
 /**
+ * Copy a relative TF out of fk.
+ */
+AA_API void
+aa_rx_fk_get_rel_qutr(const struct aa_rx_fk *fk,
+                      aa_rx_frame_id parent, aa_rx_frame_id child,
+                      double E[7]);
+
+
+/**
  * Update relative transform in the FK.
  */
 AA_API void

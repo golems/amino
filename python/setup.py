@@ -31,16 +31,15 @@
 #   THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 #   SUCH DAMAGE.
 
-
 from distutils.core import setup
 
-setup(name='amino',
-      version='0.0',
-      description='Amino Library',
-      author='Neil T. Dantam',
-      author_email='ndantam@mines.edu',
-      url='http://amino.dyalab.org',
-      license='BSD',
-      packages=['amino'],
-      package_dir={'amino': 'amino'}
-     )
+setup(
+    name='amino',
+    version='0.0',
+    description='Amino Library',
+    author='Neil T. Dantam',
+    author_email='ndantam@mines.edu',
+    url='http://amino.dyalab.org',
+    license='BSD',
+    packages=['amino'],
+    package_dir={'amino': 'amino'})

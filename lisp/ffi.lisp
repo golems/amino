@@ -185,17 +185,16 @@ Note that destructor must operate on the raw pointer type.
        (with-foreign-object (,pointer :double ,length)
          ;; Maybe copy in
          ,@(ecase intent
-                  ((:input :inout)
-                   `((fill-pointer-from-list ,pointer ,list)))
-                  (:output nil))
+             ((:input :inout)
+              `((fill-pointer-from-list ,pointer ,list)))
+             (:output nil))
          ;; Body
-         ,@body
-         ;; Maybe copy out
-         ,@(ecase intent
-                  (:input nil)
-                  ((:output :inout)
-                   `((fill-list-from-pointer ,value ,pointer)
-                     ,value)))))))
+         (prog1 (progn ,@body)
+           ;; Maybe copy out
+           ,@(ecase intent
+               (:input nil)
+               ((:output :inout)
+                `((fill-list-from-pointer ,value ,pointer)))))))))
 
 (defmacro with-foreign-vector ((pointer increment length) vector intent &body body)
   "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY.
@@ -205,41 +204,37 @@ INTENT: One of (or :input :output :inout). When value
         BODY.
 "
   (with-gensyms (ptr-fun array-offset-fun array-fun value data offset stride rows columns)
-    (let ((maybe-value (ecase intent
-                         (:input nil)
-                         ((:output :inout) (list value)))))
-      `(labels ((,ptr-fun (,@maybe-value ,pointer ,increment ,length) ,@body ,@maybe-value )
-                (,array-offset-fun (,@maybe-value ,data ,offset ,increment ,length)
-                  (with-pointer-to-vector-data (,pointer ,data)
-                    (,ptr-fun ,@maybe-value
-                              (mem-aptr ,pointer :double ,offset)
-                              ,increment ,length)))
-                (,array-fun (,@maybe-value ,data)
-                  (with-pointer-to-vector-data (,pointer ,data)
-                    (,ptr-fun ,@maybe-value ,pointer 1 (length ,data)))))
-         (let ((,value ,vector))
-           (etypecase ,value
-             (matrix
-              (let ((,data (%matrix-data ,value))
-                    (,offset (%matrix-offset ,value))
-                    (,stride (%matrix-stride ,value))
-                    (,rows (%matrix-rows ,value))
-                    (,columns (%matrix-cols ,value)))
-                (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
-                (cond ((= 1 ,columns) ; row vector
-                       (,array-offset-fun ,@maybe-value ,data ,offset 1 ,rows))
-                      ((= 1 ,rows)    ; column vector
-                       (,array-offset-fun ,@maybe-value ,data ,offset ,stride ,columns))
-                      ((= ,stride ,rows) ; non-blocked matrix
-                       (,array-offset-fun ,@maybe-value ,data ,offset 1 (* ,rows ,columns)))
-                      (t (matrix-storage-error "Matrix ~A is not a vector" ',vector)))))
-             ((simple-array double-float (*))
-              (,array-fun ,@maybe-value ,value))
-             (real-array
-              (,array-fun ,@maybe-value (real-array-data ,value)))
-             (list
-              (with-foreign-list (,pointer ,length) ,value ,intent
-                (,ptr-fun ,@maybe-value ,pointer 1 ,length)))))))))
+    `(labels ((,ptr-fun (,pointer ,increment ,length) ,@body)
+              (,array-offset-fun (,data ,offset ,increment ,length)
+                (with-pointer-to-vector-data (,pointer ,data)
+                  (,ptr-fun (mem-aptr ,pointer :double ,offset)
+                            ,increment ,length)))
+              (,array-fun (,data)
+                (with-pointer-to-vector-data (,pointer ,data)
+                  (,ptr-fun ,pointer 1 (length ,data)))))
+       (let ((,value ,vector))
+         (etypecase ,value
+           (matrix
+            (let ((,data (%matrix-data ,value))
+                  (,offset (%matrix-offset ,value))
+                  (,stride (%matrix-stride ,value))
+                  (,rows (%matrix-rows ,value))
+                  (,columns (%matrix-cols ,value)))
+              (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
+              (cond ((= 1 ,columns) ; row vector
+                     (,array-offset-fun ,data ,offset 1 ,rows))
+                    ((= 1 ,rows)    ; column vector
+                     (,array-offset-fun ,data ,offset ,stride ,columns))
+                    ((= ,stride ,rows) ; non-blocked matrix
+                     (,array-offset-fun ,data ,offset 1 (* ,rows ,columns)))
+                    (t (matrix-storage-error "Matrix ~A is not a vector" ',vector)))))
+           ((simple-array double-float (*))
+            (,array-fun ,value))
+           (real-array
+            (,array-fun (real-array-data ,value)))
+           (list
+            (with-foreign-list (,pointer ,length) ,value ,intent
+              (,ptr-fun ,pointer 1 ,length))))))))
 
 (defmacro with-foreign-simple-vector ((pointer length) vector intent &body body)
   "Bind POINTER and LENGTH to corresponding values of VECTOR, then evaluate BODY.
@@ -274,36 +269,34 @@ INTENT: One of (or :input :output :inout). When value
 
 (defmacro with-foreign-matrix ((pointer stride rows columns) matrix intent
                                &body body)
-"Evaluate BODY with matrix pointer and counts bound to POINTER, STRIDE, ROWS, and COLUNMS.
+  "Evaluate BODY with matrix pointer and counts bound to POINTER, STRIDE, ROWS, and COLUMNS.
 
 INTENT: One of (or :input :output :inout). When value
         is (or :output :inout), return the vector after evaluating
         BODY.
 "
+  (declare (ignore intent))
   (with-gensyms (ptr-fun vector-fun value data offset)
-    (let ((maybe-value (ecase intent
-                         (:input nil)
-                         ((:output :inout) (list value)))))
-    `(labels ((,ptr-fun (,@maybe-value ,pointer ,stride ,rows ,columns) ,@body ,@maybe-value)
-              (,vector-fun (,@maybe-value ,data)
+    `(labels ((,ptr-fun (,pointer ,stride ,rows ,columns) ,@body)
+              (,vector-fun (,data)
                 (with-pointer-to-vector-data (,pointer ,data)
-                  (,ptr-fun ,@maybe-value ,pointer (length ,data) (length ,data) 1))))
-     (let ((,value ,matrix))
-       (etypecase ,value
-         (matrix
-          (let ((,data (%matrix-data ,value))
-                (,offset (%matrix-offset ,value))
-                (,stride (%matrix-stride ,value))
-                (,rows (%matrix-rows ,value))
-                (,columns (%matrix-cols ,value)))
-            (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
-            (with-pointer-to-vector-data (,pointer ,data)
-              (,ptr-fun ,@maybe-value (mem-aptr ,pointer :double ,offset)
-                        ,stride ,rows ,columns))))
-         ((simple-array double-float (*))
-          (,vector-fun ,@maybe-value ,value))
-         (real-array
-          (,vector-fun ,@maybe-value (real-array-data ,value)))))))))
+                  (,ptr-fun ,pointer (length ,data) (length ,data) 1))))
+       (let ((,value ,matrix))
+         (etypecase ,value
+           (matrix
+            (let ((,data (%matrix-data ,value))
+                  (,offset (%matrix-offset ,value))
+                  (,stride (%matrix-stride ,value))
+                  (,rows (%matrix-rows ,value))
+                  (,columns (%matrix-cols ,value)))
+              (check-matrix-bounds ,data ,offset ,stride ,rows ,columns)
+              (with-pointer-to-vector-data (,pointer ,data)
+                (,ptr-fun (mem-aptr ,pointer :double ,offset)
+                          ,stride ,rows ,columns))))
+           ((simple-array double-float (*))
+            (,vector-fun ,value))
+           (real-array
+            (,vector-fun (real-array-data ,value))))))))
 
 ;;; Foreign Binding ;;;
 

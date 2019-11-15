@@ -15,11 +15,18 @@ Rotation {#tutorial_rot}
 \newcommand{\dotprod}{\boldsymbol{\cdot}}
 \f]
 
-Complex Numbers {#tutorial_rot_c}
+This tutorial covers three-dimensional (3D) rotations.  We begin by
+relating complex numbers and two-dimensional (planar) rotation.  Then,
+we extend to 3D rotations represented using *quaternions*, a 3D
+analogue to the complex numbers.  Finally, we discuss matrix
+representations for rotation.
+
+Complex Numbers {#tutorial_rot_complex}
 ===============
 
-Complex numbers offer a way to represent planar (2D) rotations.  The
-imaginary unit \f$\ielt\f$ is defined as a number whose square is -1:
+Complex numbers provide a representation of planar (2D) rotations.
+The imaginary unit \f$\ielt\f$ is defined as a number whose square is
+-1:
 
 
 \f[
@@ -27,10 +34,9 @@ imaginary unit \f$\ielt\f$ is defined as a number whose square is -1:
 \f]
 
 [Euler's Formula](https://en.wikipedia.org/wiki/Euler%27s_formula)
-provides the relationship between complex numbers and planar angles.
-If we expand the Taylor series for the complex exponential, we can
-rearrange the terms into the Taylor series for \f$\sin\f$ and
-\f$\cos\f$:
+relates complex numbers and planar angles.  If we expand the Taylor
+series for the complex exponential, we can rearrange the terms into
+the Taylor series for \f$\sin\f$ and \f$\cos\f$:
 
 \f[
     \begin{array}{ccl}
@@ -60,13 +66,12 @@ rearrange the terms into the Taylor series for \f$\sin\f$ and
     \end{array}
 \f]
 
-We can see Euler's formula illustrated in the complex plane:
+The complex plane illustrates Euler's formula:
 
 ![Complex Plane](cplane.svg)
 
-
 We can apply Euler's formula to rotate points in the plane by viewing
-the point in polar coordinates.
+the point in polar coordinates as radius \f$r\f$ and angle \f$\theta_1\f$:
 
 \f[
     x_1 + y_1 \ielt = r \left(\cos \theta_1 + \ielt \sin \theta_1
@@ -77,8 +82,9 @@ the point in polar coordinates.
 where \f$r = \sqrt{{x_1}^2 + {y_1}^2}\f$ and \f$\theta_1 = \tan^{-1}
 \frac{y_1}{x_1}\f$.
 
-To rotate the polar coordinate point, we need only add the rotation
-angle to the polar coordinate angle:
+To rotate the polar coordinate point, we may add the rotation angle
+\f$\theta_r\f$ to the original polar coordinate angle \f$\theta_1\f$,
+yielding the new angle \f$\theta_2\f$
 
 ![Complex Plane](eulerrot.svg)
 
@@ -97,7 +103,6 @@ to multiplication of the exponential coordinates:
     =
     re^{\theta_1\ielt} e^{\theta_r\ielt}
 \f]
-
 
 Though Euler's formula is (at the least) a "neat trick," the
 advantages of representing angles in the plane using imaginary numbers
@@ -134,9 +139,9 @@ Axis-Angle {#tutorial_rot_aa}
 ==========
 
 
-A visually-meaningful representation of 3D rotation is *Axis-Angle*
-form, given by the unit axis \f$\unitvec{u}\f$ about which we rotate
-and the angle \f$\theta\f$ by which we rotate:
+A visually-meaningful representation of 3D rotation is the
+*Axis-Angle* form, given by the unit axis \f$\unitvec{u}\f$ about
+which we rotate and the angle \f$\theta\f$ by which we rotate:
 ![Axis-Angle](axang.svg)
 
 While the axis-angle form is easy enough to visualize, it is not
@@ -180,14 +185,16 @@ Computationally, we may represent the quaternion as an array of four
 elements or as a struct with the four parts.  Either form (array or
 struct) will have the same memory layout.
 
-    double quaternion_as_array[4];
+~~~{.c}
+double quaternion_as_array[4];
 
-    struct quat {
-        double x;
-        double y;
-        double z;
-        double w;
-    };
+struct quat {
+    double x;
+    double y;
+    double z;
+    double w;
+};
+~~~
 
 Multiplication
 --------------
@@ -198,9 +205,9 @@ quaternion elements.  For example, the derivation of
 
 \f[
     \left\lgroup \ielt\jelt\kelt=-1 \right\rgroup
-    \rightarrow \left\lgroup \ielt\jelt\kelt^2=-\kelt \right\rgroup
-    \rightarrow \left\lgroup -\ielt\jelt=-\kelt \right\rgroup
-    \rightarrow \left\lgroup \ielt\jelt=\kelt \right\rgroup
+    \leadsto \left\lgroup \ielt\jelt\kelt^2=-\kelt \right\rgroup
+    \leadsto \left\lgroup -\ielt\jelt=-\kelt \right\rgroup
+    \leadsto \left\lgroup \ielt\jelt=\kelt \right\rgroup
 \f]
 
 Following a similar derivation for the other products, we obtain the
@@ -411,69 +418,166 @@ Rotation is analgous to the 2D case:
     \begin{bmatrix}
     x_1 \\ y_1 \\ z_1
     \end{bmatrix}
+    \; .
+\f]
+
+We store the rotation matrix in memory using column-major order:
+\f[
+    \begin{bmatrix}
+    r_{11} & r_{12} & r_{13} \\
+    r_{21} & r_{22} & r_{23} \\
+    r_{31} & r_{32} & r_{33} \\
+    \end{bmatrix}
+    \leadsto
+    \begin{array}{|c|c|}
+    \hline
+    r_{11} & r_{21} & r_{31} &
+    r_{12} & r_{22} & r_{32} &
+    r_{13} & r_{23} & r_{33} \\
+    \hline
+    \end{array}
+    \; .
 \f]
 
 
-Example Code {#tutorial_rot_code}
+
+Example Code {#tutorial_rot_sample_code}
 ============
 
-1. Import the package:
 
-        from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat
-        from math import pi
+@include python/t1-rotation.py
 
-2. Specify a rotation of pi/2 radians about the x axis:
 
-        ax = XAngle(pi/2)
-        print ax
+See Also {#tutorial_rot_sa}
+========
 
-3. Convert the rotation to axis-angle, quaternion, and rotation matrix
-   forms:
+## Python
 
-        Ax = AxAng(ax)
-        qx = Quat(ax)
-        Rx = RotMat(ax)
-        print Ax
-        print qx
-        print Rx
+* @ref amino.tf.XAngle
+* @ref amino.tf.YAngle
+* @ref amino.tf.ZAngle
+* @ref amino.tf.EulerRPY
+* @ref amino.tf.AxAng
+* @ref amino.tf.Quat
+* @ref amino.tf.RotMat
 
-4. Rotate a point using each of the axis-angle, quaternion, and
-   rotation matrix forms:
+## C
 
-        p = [1,2,3]
-        pa = Ax.rotate(p)
-        pq = qx.rotate(p)
-        pR = Rx.rotate(p)
-        print pa
-        print pq
-        print pR
+* @ref tf.h
 
-5. Invert the rotations:
+References {#tutorial_rot_references}
+==========
 
-        qxi = ~qx
-        Rxi = ~Rx
-        Axi = ~Ax
-        print Axi
-        print qxi
-        print Rxi
 
-6. Rotate by the inverse to get back the original point:
+* Diebel, J., 2006. [Representing attitude: Euler angles, unit
+  quaternions, and rotation vectors]
+  (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.110.5134).
 
-        print Axi.rotate(pa)
-        print qxi.rotate(pq)
-        print Rxi.rotate(pR)
+* Grassia, F.S., 1998. [Practical parameterization of rotations using
+  the exponential map]
+  (http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.132.20). Journal
+  of graphics tools, 3(3), pp.29-48.
 
-7. Specify another rotation and chain:
+* Relevant Wikipedia Entries:
+  * [Rotation formalisms in three dimensions]
+    (https://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions)
+  * [Quaternion] (https://en.wikipedia.org/wiki/Quaternion)
+  * [Quaternions and_spatial_rotation]
+    (https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation)
+  * [3D rotation group]
+    (https://en.wikipedia.org/wiki/3D_rotation_group)
+  * [Rotation Matrix] (https://en.wikipedia.org/wiki/Rotation_matrix)
+  * [Axis–angle representation]
+    (https://en.wikipedia.org/wiki/Axis–angle_representation)
 
-        ay = YAngle(pi/2)
-        qxy = qx * ay
-        Rxy = Rx * ay
-        print qxy
-        print Rxy
 
-8. Rotate by the chained forms:
 
-        pq = qxy.rotate(p)
-        pR = Rxy.rotate(p)
-        print pq
-        print pR
+
+
+
+
+<!-- <ol> -->
+<!-- <li> Import the package: -->
+
+<!-- ~~~{.py} -->
+<!-- from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat -->
+<!-- from math import pi -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Specify a rotation of pi/2 radians about the x axis: -->
+
+<!-- ~~~{.py} -->
+<!-- ax = XAngle(pi/2) -->
+<!-- print ax -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Convert the rotation to axis-angle, quaternion, and rotation -->
+<!--      matrix forms: -->
+
+<!-- ~~~{.py} -->
+<!-- Ax = AxAng(ax) -->
+<!-- qx = Quat(ax) -->
+<!-- Rx = RotMat(ax) -->
+<!-- print Ax -->
+<!-- print qx -->
+<!-- print Rx -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Rotate a point using each of the axis-angle, quaternion, and -->
+<!--      rotation matrix forms: -->
+
+<!-- ~~~{.py} -->
+<!-- p = [1,2,3] -->
+<!-- pa = Ax.rotate(p) -->
+<!-- pq = qx.rotate(p) -->
+<!-- pR = Rx.rotate(p) -->
+<!-- print pa -->
+<!-- print pq -->
+<!-- print pR -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Invert the rotations: -->
+
+<!-- ~~~{.py} -->
+<!-- qxi = ~qx -->
+<!-- Rxi = ~Rx -->
+<!-- Axi = ~Ax -->
+<!-- print Axi -->
+<!-- print qxi -->
+<!-- print Rxi -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Rotate by the inverse to get back the original point: -->
+
+<!-- ~~~{.py} -->
+<!-- print Axi.rotate(pa) -->
+<!-- print qxi.rotate(pq) -->
+<!-- print Rxi.rotate(pR) -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Specify another rotation and chain: -->
+
+<!-- ~~~{.py} -->
+<!-- ay = YAngle(pi/2) -->
+<!-- qxy = qx * ay -->
+<!-- Rxy = Rx * ay -->
+<!-- print qxy -->
+<!-- print Rxy -->
+<!-- ~~~ -->
+<!-- </li> -->
+
+<!-- <li> Rotate by the chained forms: -->
+
+<!-- ~~~{.py} -->
+<!-- pq = qxy.rotate(p) -->
+<!-- pR = Rxy.rotate(p) -->
+<!-- print pq -->
+<!-- print pR -->
+<!-- ~~~ -->
+<!-- </li> -->

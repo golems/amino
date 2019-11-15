@@ -47,6 +47,7 @@
  */
 
 #include <nlopt.h>
+#include "amino.h"
 #include "amino/diffeq.h"
 
 

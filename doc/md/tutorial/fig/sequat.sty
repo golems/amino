@@ -1,0 +1,208 @@
+\ProvidesPackage{sequat}
+
+
+% \let\vec\relax
+%\usepackage{euler}
+%\usepackage{MnSymbol}
+
+
+\newcommand{\dualelt}[0]{\boldsymbol{\varepsilon}}
+
+\newcommand{\unitvec}[1]{\boldsymbol{\hat{#1}}}
+
+\newcommand{\ielt}[0]{\unitvec{\imath}}
+\newcommand{\jelt}[0]{\unitvec{\jmath}}
+\newcommand{\kelt}[0]{\unitvec{k}}
+
+%\newcommand{\duqutuple}[2]{\ensuremath{\left\lgroup #1,\ #2 \right\rgroup}}
+%\newcommand{\quattuple}[2]{\ensuremath{\left( #1,\ #2 \right)}}
+
+\newcommand{\duqutuple}[2]{%
+  \ensuremath{%
+    \left\lgroup
+      #1 + #2\dualelt
+    \right\rgroup
+  }
+}
+
+%\newcommand{\quattuple}[2]{\ensuremath{\left( #1 + #2 \right)}}
+\newcommand{\quattuple}[2]{\begin{Bmatrix}\bigstrut#1\\\bigstrut#2\end{Bmatrix}}
+
+\newcommand{\vecelts}[3]{%
+  #1\ielt + #2 \jelt + #3 \kelt
+}
+
+\newcommand{\quatelts}[4]{%
+  \vecelts{#1}{#2}{#3} + #4
+}
+
+\newcommand{\dualelts}[2]{%
+  #1 + #2\dualelt
+}
+
+\newcommand{\duquelts}[8]{%
+  \ensuremath{
+    \dualelts
+    {\left(\quatelts{#1}{#2}{#3}{#4}\right)}
+    {\left(\quatelts{#5}{#6}{#7}{#8}\right)}
+  }
+}
+
+\newcommand{\seituple}[2]{
+  \left\lgroup\begin{matrix}
+    #1 \\ #2
+  \end{matrix}\right\rgroup
+}
+
+%\newcommand{\iduqutuple}[2]{\ensuremath{\left( #1,\ #2 \right)}}
+
+%\DeclareMathAlphabet{\mathcurs}{T1}{pzc}{m}{n}
+
+\newcommand{\normtwo}[1]{\left| #1 \right|}
+
+\renewcommand{\Re}[0]{\ensuremath{\mathbb{R}}}
+\newcommand{\Du}[0]{\ensuremath{\mathbb{D}}}
+
+\newcommand{\scos}[0]{\ensuremath{\mathcurs{c}}}
+\newcommand{\ssin}[0]{\ensuremath{{\mathcurs{s}}}}
+\newcommand{\magnitude}[1]{\normtwo{#1}}
+
+
+\newcommand{\sincos}[0]{\ensuremath{\operatorname{\mathrm{sincos}}}}
+
+\newcommand{\quat}[1]{\mathcurs{#1}}
+\newcommand{\duqu}[1]{{\mathcurs{#1}}}
+
+\newcommand{\pttf}[2]{{^{#2}\!}{#1}}
+\newcommand{\mytf}[3]{{^{#2}\!}{#1}_{#3}}
+\newcommand{\dmytf}[3]{\dot{\mytf{#1}{#2}{#3}}}
+
+\newcommand{\tf}[3]{\mytf{\duqu{#1}}{#2}{#3}}
+\newcommand{\tfmat}[3]{\mytf{\MAT{#1}}{#2\,}{#3}}
+\newcommand{\dtf}[3]{{\dmytf{\duqu{#1}}{#2}{#3}}}
+
+\newcommand{\tfS}[2]{\mytf{\duqu{S}}{#1}{#2}}
+\newcommand{\dtfS}[2]{\dmytf{\duqu{S}}{#1}{#2}}
+
+\newcommand{\tfv}[2]{\mytf{x}{#1}{#2}}
+\newcommand{\tfdv}[2]{\dmytf{x}{#1}{#2}}
+
+\newcommand{\tfq}[2]{\mytf{\quat{q}}{#1}{#2}}
+
+\newcommand{\tfquat}[2]{\mytf{\quat{h}}{#1}{#2}}
+
+\newcommand{\tftrans}[2]{\mytf{v}{#1}{#2}}
+
+\newcommand{\tfw}[2]{\mytf{\omega}{#1}{#2}}
+
+\newcommand{\dtfx}[2]{\dmytf{\chi}{#1}{#2}}
+
+
+\newcommand{\sinexpt}[2]{\ensuremath{\operatorname{{\mathrm{sin}}}^{#1}\left(#2\right)}}
+\newcommand{\atantwo}[2]{\ensuremath{\operatorname{\mathrm{atan2}}\left(#1, #2\right)}}
+\newcommand{\atan}[0]{\tan^{-1}}
+\newcommand{\asin}[1]{\sinexpt{-1}{#1}}
+\newcommand{\acos}[1]{\ensuremath{\operatorname{{\mathrm{cos}}}^{-1}\left(#1\right)}}
+
+\newcommand{\qmul}[0]{\otimes}
+\newcommand{\qconj}[1]{#1^*}
+\newcommand{\qinv}[1]{#1^{-1}}
+\newcommand{\dual}[1]{#1^*}
+\newcommand{\dualmark}[1]{\ensuremath{\tilde{#1}}}
+\newcommand{\difft}[1]{\frac{d#1}{dt}}
+
+
+\newcommand{\conf}{\phi}
+
+\newcommand{\complexsym}{\quat{c}}
+
+\newcommand{\confvec}{\boldsymbol\phi}
+\newcommand{\VEC}[1]{\mathbf{#1}}
+\newcommand{\MAT}[1]{\mathbf{#1}}
+\newcommand{\IDENT}{\MAT{I}}
+\newcommand{\jacobian}{\MAT{J}}
+
+\newcommand{\dotprod}{\boldsymbol{\cdot}}
+\newcommand{\dotproduct}{\dotprod}
+
+\newcommand{\dualconj}[1]{#1^\bullet}
+
+\newcommand{\duquconj}[1]{#1^\diamond}
+
+\newcommand{\quatsym}{\quat{h}}
+\newcommand{\sequat}[0]{{\quatsym}}
+\newcommand{\sedualquat}[0]{\quat{d}}
+\newcommand{\sevec}[0]{\vec{v}}
+\newcommand{\sequatnorm}[0]{\normtwo{{\quatsym}}}
+
+\newcommand{\sequatvec}[0]{\vec{\quatsym}_v}
+\newcommand{\sequatvecnorm}[0]{\normtwo{{\quatsym}_v}}
+\newcommand{\sequatscal}[0]{\quatsym_w}
+\newcommand{\sequatw}[0]{\quatsym_w}
+\newcommand{\sequatx}[0]{\quatsym_x}
+\newcommand{\sequaty}[0]{\quatsym_y}
+\newcommand{\sequatz}[0]{\quatsym_y}
+
+
+\newcommand{\seduqu}[0]{\quat{S}}
+
+\newcommand{\sequatdualsym}[0]{\quat{d}}
+\newcommand{\sequatdual}[0]{\sequatdualsym}
+\newcommand{\sequatdualvec}[0]{\vec{\sequatdual}_v}
+\newcommand{\sequatdualscal}[0]{\sequatdualsym_w}
+\newcommand{\sequatdualw}[0]{\sequatdualsym_w}
+\newcommand{\sequatdualx}[0]{\sequatdualsym_x}
+\newcommand{\sequatdualy}[0]{\sequatdualsym_y}
+\newcommand{\sequatdualz}[0]{\sequatdualsym_z}
+
+\newcommand{\sevecnorm}[0]{\magnitude{v}}
+
+\newcommand{\serot}[0]{\quat{h}}
+\newcommand{\setrans}[0]{\vec{v}}
+
+\newcommand{\setf}[0]{\quat{S}}
+\newcommand{\serotvel}[0]{{\omega}}
+\newcommand{\setwist}[0]{{\Omega}}
+\newcommand{\seddt}[0]{\frac{d}{dt}}
+\newcommand{\seE}[1]{\mathrm{e}^{#1}}
+
+\newcommand{\selnrsym}{\omega}
+\newcommand{\selndsym}{\nu}
+
+\newcommand{\selnr}{\vec{\selnrsym}}
+\newcommand{\selnd}{\vec{\selndsym}}
+\newcommand{\selna}{\normtwo{\selnrsym}}
+\newcommand{\selnrm}{\left[\selnrsym\right]}
+\newcommand{\selnrnorm}{\normtwo{\selnrsym}}
+
+\newcommand{\selnrskew}{\left[\selnrsym\right]}
+
+\newcommand{\serevframerot}[2]{
+  \exp\left(\frac{#1}{2}#2\right)
+}
+\newcommand{\serevframe}[3]{
+  \dualelts
+  { \serevframerot{#1}{#2} }
+  {\frac{1}{2}
+    #3
+    \qmul
+    \serevframerot{#1}{#2}
+  }
+}
+
+\newcommand{\sequangle}{\phi}
+
+
+\newcommand{\serotmat}{\MAT{R}}
+
+\newcommand{\seimplmark}[1]{\breve{#1}}
+
+\newcommand{\expv}{\seimplmark{\exp}}
+\newcommand{\lnv}{\seimplmark{\ln}}
+
+
+
+\newcommand{\SEthree}[0]{\ensuremath{{\mathcal{SE}}(3)}}
+\newcommand{\SOthree}[0]{\ensuremath{{\mathcal{SO}}(3)}}
+\newcommand{\sethree}{\ensuremath{\mathcal{se(3)}}}
+\newcommand{\sothree}{\ensuremath{\mathcal{so(3)}}}

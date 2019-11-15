@@ -1,0 +1,3 @@
+#!/bin/sh
+
+yapf3 --style=pep8 --in-place --recursive python demo/tutorial/python/
