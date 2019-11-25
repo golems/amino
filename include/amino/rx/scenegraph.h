@@ -652,6 +652,11 @@ AA_API void aa_rx_sg_allow_collision_name( struct aa_rx_sg *scene_graph,
                                            const char* frame0, const char* frame1, int allowed );
 
 
+AA_API void
+aa_rx_sg_copy_frame_geom( struct aa_rx_sg *scene_graph,
+                          const char* src_frame, const char* dst_frame );
+
+
 
 /**
  * Allocate storage for TF array from region.

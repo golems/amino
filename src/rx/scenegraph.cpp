@@ -386,7 +386,22 @@ void SceneGraph::add(SceneFrame *f)
 } /* amino */
 
 
-void
+AA_API void
+aa_rx_sg_copy_frame_geom( aa_rx_sg *scene_graph,
+                          const char* src_frame, const char* dst_frame )
+{
+    aa_rx_scene_frame *s = aa_rx_sg_find( scene_graph, src_frame );
+    aa_rx_scene_frame *d = aa_rx_sg_find( scene_graph, dst_frame );
+
+    for( auto g = s->geometry.begin(); g != s->geometry.end(); g++ ){
+        aa_rx_geom *n = aa_rx_geom_copy( *g );
+        d->geometry.push_back( n );
+    }
+
+    aa_rx_sg_dirty_geom( scene_graph );
+}
+
+AA_API void
 aa_rx_sg_add_geom( aa_rx_sg *scene_graph, const char *frame,
                    struct aa_rx_geom* geom )
 {
@@ -394,6 +409,7 @@ aa_rx_sg_add_geom( aa_rx_sg *scene_graph, const char *frame,
     aa_rx_scene_frame *f = aa_rx_sg_find(scene_graph, frame);
     f->geometry.push_back(geom);
 }
+
 
 AA_API void
 aa_rx_sg_dirty_geom( struct aa_rx_sg *scene_graph )
