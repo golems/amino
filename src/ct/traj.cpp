@@ -348,8 +348,6 @@ static int aa_ct_seg_dq_eval( struct aa_ct_seg *seg,
     double tt = t - cx->t0;
     if( t >= cx->t0 && t <= cx->t1 ) {
 
-
-
         if( state->q ) {
             for( size_t i = 0; i < n; i ++ ) {
                 state->q[i] = cx->q0[i] + tt * cx->dq[i];
@@ -361,6 +359,7 @@ static int aa_ct_seg_dq_eval( struct aa_ct_seg *seg,
 
         return AA_CT_SEG_IN;
     } else {
+        tt = cx->t1 - cx->t0;
         for( size_t i = 0; i < n; i++ ) {
             state->q[i] = cx->q0[i] + cx->dq[i] * tt;
         }
