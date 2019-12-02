@@ -344,9 +344,11 @@ static int aa_ct_seg_dq_eval( struct aa_ct_seg *seg,
                               struct aa_ct_state *state, double t)
 {
     struct aa_ct_seg_dq *cx = (struct aa_ct_seg_dq *)seg->cx;
+    size_t n = AA_MIN( cx->n_q, state->n_q );
+    double tt = t - cx->t0;
     if( t >= cx->t0 && t <= cx->t1 ) {
-        size_t n = AA_MIN( cx->n_q, state->n_q );
-        double tt = t - cx->t0;
+
+
 
         if( state->q ) {
             for( size_t i = 0; i < n; i ++ ) {
@@ -359,6 +361,9 @@ static int aa_ct_seg_dq_eval( struct aa_ct_seg *seg,
 
         return AA_CT_SEG_IN;
     } else {
+        for( size_t i = 0; i < n; i++ ) {
+            state->q[i] = cx->q0[i] + cx->dq[i] * tt;
+        }
         return AA_CT_SEG_OUT;
     }
 }
