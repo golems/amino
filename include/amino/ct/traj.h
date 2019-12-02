@@ -129,6 +129,12 @@ aa_ct_pt_list_start_state(const struct aa_ct_pt_list *list);
 const struct aa_ct_state *
 aa_ct_pt_list_final_state(const struct aa_ct_pt_list *list);
 
+/**
+ * Return the number of points in the point list.
+ */
+size_t aa_ct_pt_list_size(const struct aa_ct_pt_list *list);
+
+
 
 /**
  * Print out a list of points to a file.
