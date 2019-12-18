@@ -301,6 +301,18 @@ class SceneIK(object):
         """Sets the optimization seed to a random position."""
         libamino.aa_rx_ik_set_seed_rand(self._ptr)
 
+    def set_obj(self, fun):
+        """Sets the objective function for optimization."""
+        libamino.aa_rx_ik_parm_set_obj(self.ik_parm, fun)
+
+    def set_tol_angle(self, angle):
+        """Sets the angle error tolerance"""
+        libamino.aa_rx_ik_parm_set_tol_angle(self.ik_parm, angle)
+
+    def set_tol_trans(self, trans):
+        """Sets the translational error tolerance"""
+        libamino.aa_rx_ik_parm_set_tol_trans(self.ik_parm, trans)
+
     @property
     def restart_time(self):
         """Maximum time limit for IK restarts."""
@@ -357,5 +369,7 @@ libamino.aa_rx_ik_set_restart_time.argtypes = [
     ctypes.POINTER(RxIK), ctypes.c_double
 ]
 
+libamino.aa_rx_ik_parm_set_tol_angle.argtypes = [ctypes.POINTER(RxIKParm), ctypes.c_double]
+libamino.aa_rx_ik_parm_set_tol_trans.argtypes = [ctypes.POINTER(RxIKParm), ctypes.c_double]
 libamino.aa_rx_ik_get_restart_time.argtypes = [ctypes.POINTER(RxIK)]
 libamino.aa_rx_ik_get_restart_time.restype = ctypes.c_double

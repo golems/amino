@@ -356,6 +356,8 @@ aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id );
  * @sa aa_rx_ik_opt_err_dqln
  * @sa aa_rx_ik_opt_err_qlnpv
  * @sa aa_rx_ik_opt_err_jcenter
+ * @sa aa_rx_ik_opt_err_trans
+ * @sa aa_rx_ik_opt_err_trans_fd
  */
 typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
 
@@ -374,6 +376,8 @@ typedef double aa_rx_ik_opt_fun(void *cx, const double *q, double *dq);
  * @sa aa_rx_ik_opt_err_dqln
  * @sa aa_rx_ik_opt_err_qlnpv
  * @sa aa_rx_ik_opt_err_jcenter
+ * @sa aa_rx_ik_opt_err_trans
+ * @sa aa_rx_ik_opt_err_trans_fd
  */
 AA_API void
 aa_rx_ik_parm_set_obj( struct aa_rx_ik_parm *parm,
@@ -429,6 +433,19 @@ AA_API double
 aa_rx_ik_opt_err_dqln_fd( void *cx, const double *q, double *dq );
 
 /**
+ * IK position error (for testing only)
+ *
+ * This function uses finite difference and will be slow.
+ * It only calculates the error in position.
+ *
+ *
+ * @sa aa_rx_ik_parm_set_obj
+ * @sa aa_rx_ik_parm_set_eqct
+ */
+AA_API double
+aa_rx_ik_opt_err_trans_fd( void *cx, const double *q, double *dq );
+
+/**
  * IK workspace error.
  *
  * Logarithm of the quaternion error, plus translation error
@@ -443,6 +460,15 @@ aa_rx_ik_opt_err_dqln_fd( void *cx, const double *q, double *dq );
  */
 AA_API double
 aa_rx_ik_opt_err_qlnpv( void *cx, const double *q, double *dq );
+
+/**
+ * IK position error
+ *
+ * @sa aa_rx_ik_parm_set_obj
+ * @sa aa_rx_ik_parm_set_eqct
+ */
+AA_API double
+aa_rx_ik_opt_err_trans( void *cx, const double *q, double *dq );
 
 /**
  * IK workspace error (for testing only).
