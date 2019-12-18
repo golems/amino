@@ -255,6 +255,51 @@ aa_rx_ik_opt_err_dqln( void *vcx, double *q, double *dq ) {
     return result;
 }
 
+static double s_nlobj_qv_fd_pos_helper( void *vcx, const struct aa_dvec *x)
+{
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
+    void *ptrtop = aa_mem_region_ptr(cx->reg);
+    assert(1 == x->inc);
+
+    aa_rx_fk_sub(cx->fk, cx->ssg, x);
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
+    double *v_act = E_act + AA_TF_QUTR_V;
+
+    double *E_ref = cx->TF_ref->data;
+    double *v_ref = E_ref + AA_TF_QUTR_V;
+
+    double E_err[7];
+    double *v_err = E_err + AA_TF_QUTR_V;
+
+
+    for(size_t i = 0; i < 3; i ++ ) v_err[i] = v_act[i] - v_ref[i];
+
+    double result = aa_tf_vdot(v_err,v_err);
+
+    aa_mem_region_pop(cx->reg, ptrtop);
+    return result;
+}
+
+AA_API double
+aa_rx_ik_opt_err_trans_fd( void *vcx, const double *q, double *dq )
+{
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
+    size_t n = aa_rx_sg_sub_config_count(cx->ssg);
+
+    struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
+    double x = s_nlobj_qv_fd_pos_helper(vcx, &vq);
+
+    if( dq ) {
+        struct aa_dvec vdq = AA_DVEC_INIT(n,dq,1);
+        // TODO: make epsilon a parameter
+        double eps = 1e-6;
+        aa_de_grad_fd( s_nlobj_qv_fd_pos_helper, vcx,
+                       &vq, eps, &vdq );
+    }
+    /* fprintf(stdout, "fd error: %2.2f\n", x);  */
+    return x;
+}
+
 static double s_nlobj_qv_fd_helper( void *vcx, const struct aa_dvec *x)
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
@@ -309,6 +354,52 @@ aa_rx_ik_opt_err_qlnpv_fd( void *vcx, const double *q, double *dq )
     }
 
     return x;
+}
+
+AA_API double
+aa_rx_ik_opt_err_trans( void *vcx, const double *q, double *dq )
+{
+    struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
+    void *ptrtop = aa_mem_region_ptr(cx->reg);
+
+    size_t n = aa_rx_sg_sub_config_count(cx->ssg);
+    struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
+    aa_rx_fk_sub(cx->fk, cx->ssg, &vq );
+
+    double *E_act = aa_rx_fk_ref(cx->fk, cx->frame);
+    double *v_act = E_act + AA_TF_QUTR_V;
+
+    double *E_ref = cx->TF_ref->data;
+    double *v_ref = E_ref + AA_TF_QUTR_V;
+
+    double E_err[7];
+    double *v_err = E_err + AA_TF_QUTR_V;
+
+    // Apply a negative factor in gradient when we have to minimze the
+    // error quaternion
+
+
+    for(size_t i = 0; i < 3; i ++ ) v_err[i] = v_act[i] - v_ref[i];
+
+    double result = aa_tf_vdot(v_err,v_err);
+
+    if( dq ) {
+
+        struct aa_dvec v_dq = AA_DVEC_INIT(n,dq,1);
+
+        struct aa_dmat *Jvel = aa_rx_sg_sub_jac_vel_get(cx->ssg, cx->reg, cx->fk);
+        struct aa_dmat Jr, Jv;
+        aa_dmat_view_block(&Jv, Jvel, AA_TF_DX_V, 0, 3, Jvel->cols);
+        aa_dmat_view_block(&Jr, Jvel, AA_TF_DX_W, 0, 3, Jvel->cols);
+
+        // Translational Part
+        struct aa_dvec v_v_err = AA_DVEC_INIT(3,v_err,1);
+        aa_dmat_gemv(CblasTrans, 2, &Jv, &v_v_err, 0, &v_dq);
+    }
+
+    aa_mem_region_pop(cx->reg, ptrtop);
+    /* printf("err: %f\n", result); */
+    return result;
 }
 
 static void
