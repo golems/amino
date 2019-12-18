@@ -307,7 +307,6 @@ class SceneIK(object):
 
     def set_tol_angle(self, angle):
         """Sets the angle error tolerance"""
-        print(angle)
         libamino.aa_rx_ik_parm_set_tol_angle(self.ik_parm, angle)
 
     def set_tol_trans(self, trans):
