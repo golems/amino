@@ -225,6 +225,7 @@
                         &key
                           singleton
                           (undefined-error t)
+                          (direct t)
                           default)
   (labels ((rec (nodes path)
              (cond
@@ -249,7 +250,7 @@
                         nconc (dom-select-if n (lambda (node)
                                                  (and (dom:element-p node)
                                                       (string= (car path) (dom:tag-name node))))
-                                             :direct t))
+                                             :direct direct))
                      (cdr path))))))
     (let* ((result (rec (list node) path))
            (length (length result)))

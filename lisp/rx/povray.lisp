@@ -384,11 +384,12 @@ FACE-INDICES: List of vertex indices for each triangle, as pov-vertex
         (arg mesh))
 
       (when mesh-data
-        (let* ((textures (mesh-data-texture-properties mesh-data))
+        (let* ((textures  (if (draw-option options :override-texture)
+                              (list options)
+                              (mesh-data-texture-properties mesh-data)))
                (texture-indices (mesh-data-texture-indices mesh-data))
                (vertex-indices (mesh-data-vertex-indices mesh-data))
                (face-count (/ (length vertex-indices) 3)))
-
           (when (= (length textures) 1)
             (arg (pov-alist-texture (car textures) alpha)))
 

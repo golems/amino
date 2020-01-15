@@ -190,26 +190,37 @@
                                  :tf tf)))))
 
 
-(defun urdf-material-properties (node materials)
+(defun urdf-material-properties (node materials &optional child)
   (let* ((name (dom:get-attribute node "name"))
          (parent (if (and name (not (zerop (length name))) materials)
                      (gethash name materials)))
-         (result (if (and parent (not (eq parent self)))
-                     (urdf-material-properties parent materials)
+         (result (if (and parent (not (eq child parent)))
+                     (urdf-material-properties parent materials node)
                      *draw-options*)))
     (when-let ((rgba-text (dom-select-path node '("color" "@rgba")
                                            :singleton t :undefined-error nil)))
       (let ((elts (parse-float-sequence rgba-text)))
         (push `(:color . ,(subseq elts 0 3)) result)
         (push `(:alpha . ,(elt elts 3)) result)))
-    ;;(format t "~A: ~A~%" name result)
+    (let* ((ambient-text (dom:get-attribute node "ambient"))
+           (elts (parse-float-sequence ambient-text)))
+      (when elts
+        (push `(:ambient . ,elts) result)
+        (push `(:override-texture . t) result)))
+    (let* ((diffuse-text (dom:get-attribute node "diffuse"))
+           (elts (parse-float-sequence diffuse-text)))
+      (when elts
+        (push `(:diffuse . ,elts) result)
+        (push `(:override-texture . t) result)))
+    ;; (format t "~A: ~A~%" name result)
     result))
 
 
 (defun urdf-materials (dom)
   (let ((materials (make-hash-table :test #'equal)))
-    (dolist (node (dom-select-path dom  '("robot" "material")
-                                   :undefined-error nil))
+    (dolist (node (dom-select-path dom  '("robot"  "material")
+                                   :undefined-error nil
+                                   :direct nil))
       ;;(urdf-material-properties node nil)
       (let ((name  (dom-select-path node '("@name") :singleton t :undefined-error nil)))
         (when name
@@ -344,7 +355,6 @@
                      reload-meshes
                      (mesh-up-axis "Z")
                      (mesh-forward-axis "Y"))
-
   (let* ((dom (if (or (stringp urdf)
                       (pathnamep urdf))
                   (urdf-load urdf)

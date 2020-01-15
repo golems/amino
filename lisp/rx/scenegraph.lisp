@@ -70,7 +70,7 @@
 
 (defparameter *draw-options*
   '((:no-shadow . nil)
-    (:color . (0 0 0))
+    (:color . (0.8 0.8 0.8))
     (:specular . (0 0 0))
     (:alpha . 1d0)
     (:metallic nil)
