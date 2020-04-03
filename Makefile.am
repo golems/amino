@@ -649,7 +649,7 @@ libamino_planning_la_SOURCES = \
 	src/rx/mp/ompl_kpiece.cpp
 libamino_planning_la_CFLAGS = $(OMPL_CFLAGS)
 libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS)
-libamino_planning_la_LIBADD = $(OMPL_LIBS)
+libamino_planning_la_LIBADD = libamino.la libamino-collision.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
 
