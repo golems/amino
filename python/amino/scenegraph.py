@@ -404,6 +404,12 @@ class SceneGraph(object):
         else:
             raise Exception()
 
+    def reparent(self, name, parent, rel_tf=QuatTrans.identity()):
+        name = ensure_cstring(name)
+        parent = ensure_cstring(parent)
+        libamino.aa_rx_sg_reparent_name(self._ptr, parent, name, rel_tf)
+
+
     def load(self, filename, name, root=""):
         """Loads a scene plugin into this scene.
 
@@ -570,6 +576,9 @@ libamino.aa_rx_sg_frame_name.restype = ctypes.c_char_p
 
 libamino.aa_rx_sg_config_name.argtypes = [ctypes.POINTER(RxSg), ctypes.c_int]
 libamino.aa_rx_sg_config_name.restype = ctypes.c_char_p
+
+libamino.aa_rx_sg_reparent_name.argtypes = [ctypes.POINTER(RxSg), ctypes.c_char_p,
+                                            ctypes.c_char_p, ctypes.POINTER(QuatTrans)]
 
 libamino.aa_rx_dl_sg_at.argtypes = [
     ctypes.c_char_p, ctypes.c_char_p,
