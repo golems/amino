@@ -507,6 +507,13 @@ class Quat(ctypes.Structure, VecMixin):
         """Converts to an axis-angle and store in a"""
         libamino.aa_tf_quat2axang(self, a)
 
+    def to_eulerzyx(self):
+        """Converts to an euler zyx angle representation"""
+        ang = (ctypes.c_double * 3)()
+        libamino.aa_tf_quat2eulerzyx(self, ang)
+        x = [ang[0], ang[1], ang[2]]
+        return EulerZYX(x)
+
     def vector(self):
         """Returns the vector (xyz) part"""
         return Vec3(self.x, self.y, self.z)
@@ -1304,6 +1311,9 @@ libamino.aa_tf_eulerzyx2quat.argtypes = [
     ctypes.c_double, ctypes.c_double, ctypes.c_double,
     ctypes.POINTER(Quat)
 ]
+
+libamino.aa_tf_quat2eulerzyx.argtypes = [ctypes.POINTER(Quat),
+                                          ctypes.POINTER(ctypes.c_double)]
 
 libamino.aa_tf_quat2rotmat.argtypes = [
     ctypes.POINTER(Quat), ctypes.POINTER(RotMat)

@@ -334,9 +334,13 @@ class SceneGraph(object):
     """A scene graph."""
     __slots__ = ['_ptr']
 
-    def __init__(self):
+    def __init__(self, ptr = None):
         """Creates an empty scene."""
-        self._ptr = libamino.aa_rx_sg_create()
+        if ptr is None:
+            self._ptr = libamino.aa_rx_sg_create()
+        else:
+            self._ptr = ptr
+
 
     def __del__(self):
         libamino.aa_rx_sg_destroy(self._ptr)
@@ -378,7 +382,8 @@ class SceneGraph(object):
                             config_name=None,
                             axis=(0, 0, 1),
                             offset=0,
-                            geom=None):
+                            geom=None,
+                            limits=None):
         """Adds a new prismatic frame to the scene."""
         E = QuatTrans.ensure(tf)
         if config_name is None:
@@ -390,6 +395,13 @@ class SceneGraph(object):
                                               E.trans, config_name,
                                               Vec3.ensure(axis), offset)
         self.attach_geom(name, geom)
+
+        if limits != None:
+            libamino.aa_rx_sg_set_limit_pos(self._ptr, config_name, limits[0], limits[1])
+
+    def remove_frame(self, name):
+        """Removes a frame from the scene"""
+        libamino.aa_rx_sg_rm_frame(self._ptr, ensure_cstring(name))
 
     def attach_geom(self, name, geom):
         """Attaches geometry to the named frame."""
@@ -433,6 +445,12 @@ class SceneGraph(object):
         libamino.aa_rx_sg_init(self._ptr)
         return self
 
+    def allow_collision(self, i, j):
+        id0 = self.ensure_frame_id(i)
+        id1 = self.ensure_frame_id(j)
+        libamino.aa_rx_sg_allow_collision(self._ptr, id0, id1, 1)
+
+
     @property
     def config_count(self):
         """Number of configuration variables in the scene."""
@@ -455,11 +473,13 @@ class SceneGraph(object):
 
     def config_name(self, i):
         """Returns the config name for the id."""
-        return libamino.aa_rx_sg_config_name(self._ptr, i)
+        name = libamino.aa_rx_sg_config_name(self._ptr, i)
+        return str(name, encoding="utf-8")
 
     def frame_name(self, i):
         """Returns the frame name for the id."""
-        return libamino.aa_rx_sg_frame_name(self._ptr, i)
+        name = libamino.aa_rx_sg_frame_name(self._ptr, i)
+        return str(name, encoding="utf-8")
 
     def ensure_config_id(self, value):
         """Ensures value is a config id, converting strings if necessary.
@@ -533,6 +553,32 @@ class SceneGraph(object):
             d[self.config_name(i)] = vector[i]
         return d
 
+    def get_transforms(self, config):
+        """Get relative and absolute transforms for all frames for a given configuration.
+        Args:
+             config: an array of configration values
+
+        """
+
+        frame_ct = self.frame_count
+        tot = frame_ct * 7
+        rel_tf = (ctypes.c_double * tot)()
+        abs_tf = (ctypes.c_double * tot)()
+        config_ar = (ctypes.c_double * len(config))(*config)
+
+        libamino.aa_rx_sg_tf(self._ptr, len(config), config_ar, frame_ct, rel_tf, 7, abs_tf, 7)
+
+        ret = {}
+        for i in range(0, frame_ct):
+            ret[self.frame_name(i)] = (rel_tf[i*7:(i+1)*7], abs_tf[i*7:(i+1)*7])
+        return ret
+
+    def get_parent(self, frame):
+        """Get the name of the parent of the input frame"""
+        frame_id = self.ensure_frame_id(frame)
+        parent = libamino.aa_rx_sg_frame_parent(self._ptr, frame_id)
+        return self.ensure_frame_name(parent)
+
     def __getitem__(self, key):
         """Return a SubSceneGraph for the chain from root to tip.
 
@@ -552,6 +598,12 @@ class SceneGraph(object):
             return SubSceneGraph(self, ptr)
         else:
             raise LookupError("Could not get scene graph items")
+
+    def copy(self):
+        sg_copy = SceneGraph(libamino.aa_rx_sg_copy(self._ptr))
+        sg_copy.init()
+        return sg_copy
+
 
 
 libamino.aa_rx_sg_create.argtypes = []
@@ -580,6 +632,24 @@ libamino.aa_rx_sg_config_name.restype = ctypes.c_char_p
 libamino.aa_rx_sg_reparent_name.argtypes = [ctypes.POINTER(RxSg), ctypes.c_char_p,
                                             ctypes.c_char_p, ctypes.POINTER(QuatTrans)]
 
+libamino.aa_rx_sg_tf.argtypes = [ctypes.POINTER(RxSg), ctypes.c_size_t,
+                                 ctypes.POINTER(ctypes.c_double), ctypes.c_size_t,
+                                 ctypes.POINTER(ctypes.c_double), ctypes.c_size_t,
+                                 ctypes.POINTER(ctypes.c_double), ctypes.c_size_t]
+
+libamino.aa_rx_sg_frame_parent.argtypes = [ctypes.POINTER(RxSg), ctypes.c_int]
+libamino.aa_rx_sg_frame_parent.restype = ctypes.c_int
+
+
+libamino.aa_rx_sg_copy.argtypes = [ctypes.POINTER(RxSg)]
+libamino.aa_rx_sg_copy.restype  = ctypes.POINTER(RxSg)
+
+libamino.aa_rx_sg_allow_collision.argtypes = [ctypes.POINTER(RxSg), ctypes.c_int,
+                                              ctypes.c_int, ctypes.c_int]
+
+libamino.aa_rx_sg_set_limit_pos.argtypes = [ctypes.POINTER(RxSg), ctypes.c_char_p,
+                                            ctypes.c_double, ctypes.c_double]
+
 libamino.aa_rx_dl_sg_at.argtypes = [
     ctypes.c_char_p, ctypes.c_char_p,
     ctypes.POINTER(RxSg), ctypes.c_char_p
@@ -605,6 +675,8 @@ libamino.aa_rx_sg_add_frame_prismatic.argtypes = [
     ctypes.POINTER(Vec3), ctypes.c_char_p,
     ctypes.POINTER(Vec3), ctypes.c_double
 ]
+
+libamino.aa_rx_sg_rm_frame.argtypes = [ctypes.POINTER(RxSg), ctypes.c_char_p]
 
 libamino.aa_rx_geom_attach.argtypes = [
     ctypes.POINTER(RxSg), ctypes.c_char_p,

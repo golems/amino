@@ -142,7 +142,7 @@ class SceneCollision(object):
         """Allows collisions between frames i and j."""
         i = self.scenegraph.ensure_frame_id_actual(i)
         j = self.scenegraph.ensure_frame_id_actual(j)
-        LIBAMINOCL.aa_rx_cl_allow(self._ptr, i, j)
+        LIBAMINOCL.aa_rx_cl_allow(self._ptr, i, j, 1)
 
     def allow_set(self, collision_set):
         """Allows collisions between all frames in the collision set."""
@@ -186,6 +186,9 @@ class SceneCollision(object):
         return SceneCollisionDist(self)
 
 
+LIBAMINOCL.aa_rx_sg_cl_init.argtypes = [ctypes.POINTER(RxSg)]
+
+
 LIBAMINOCL.aa_rx_cl_create.argtypes = [ctypes.POINTER(RxSg)]
 LIBAMINOCL.aa_rx_cl_create.restype = ctypes.POINTER(RxCl)
 
@@ -206,7 +209,6 @@ LIBAMINOCL.aa_rx_cl_check.argtypes = [
 ]
 LIBAMINOCL.aa_rx_cl_check.restypes = ctypes.c_int
 
-LIBAMINOCL.aa_rx_sg_cl_init.argtypes = [ctypes.POINTER(RxSg)]
 
 
 class RxClDist(ctypes.Structure):

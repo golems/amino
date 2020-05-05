@@ -38,6 +38,7 @@
 
 import ctypes
 from amino.scenegraph import RxSgSub
+from amino.defaults import *
 
 LIBAMINOMP = ctypes.CDLL("libamino-planning.so")
 
@@ -60,18 +61,38 @@ class MotionPlan(object):
 
 
     def motion_plan(self, start, goal, timeout):
+        """Compute a motion plan.
+
+        arguments:
+
+        start - A list containing the current configuration space state
+        goal  - A lsit containing the goal configuraiton space state
+        timeout - Timout before a motion planning failure is declared
+
+        returns:
+
+        None if no motion plan is found, a list of configurations (the
+        motion plan) otherwise
+
+        """
+
         c_start = (ctypes.c_double * len(start))(*start)
         c_goal  = (ctypes.c_double * len(goal))(*goal)
         LIBAMINOMP.aa_rx_mp_set_start(self._ptr, len(start), c_start)
-        LIBAMINOMP.aa_rx_mp_set_goal(self._ptr, len(goal), c_goal)
+        if LIBAMINOMP.aa_rx_mp_set_goal(self._ptr, len(goal), c_goal) != AA_RX_OK:
+            return None
 
         LIBAMINOMP.aa_rx_mp_set_simplify(self._ptr, ctypes.c_int(1))
-        LIBAMINOMP.aa_rx_mp_set_sbl(self._ptr, ctypes.POINTER(ctypes.c_int)())
 
         n_path = ctypes.c_size_t(0)
 
         path = ctypes.POINTER(ctypes.c_double)()
-        LIBAMINOMP.aa_rx_mp_plan(self._ptr, timeout,ctypes.byref(n_path), ctypes.byref(path))
+        ret = LIBAMINOMP.aa_rx_mp_plan(self._ptr, timeout,ctypes.byref(n_path),
+                                       ctypes.byref(path))
+
+        if ret != AA_RX_OK:
+            return None
+
         py_path = []
         for i in range(0, n_path.value*len(start), len(start)):
             cord = []
