@@ -166,6 +166,12 @@ aa_ct_pt_list_final_state(const struct aa_ct_pt_list *list)
     return &list->list.back()->state;
 }
 
+size_t
+aa_ct_pt_list_size(const struct aa_ct_pt_list *list)
+{
+    return list->list.size();
+}
+
 AA_API void
 aa_ct_pt_list_dump(FILE *stream, struct aa_ct_pt_list *list)
 {
