@@ -236,7 +236,7 @@ aa_rx_mp_plan( struct aa_rx_mp *mp,
     } catch(...) {
         return AA_RX_NO_SOLUTION;
     }
-    if( pdef->hasSolution() ) {
+    if( pdef->hasExactSolution() ) {
         const ompl::base::PathPtr &path_ptr = pdef->getSolutionPath();
         ompl::geometric::PathGeometric &path = static_cast<ompl::geometric::PathGeometric&>(*path_ptr);
         path_cleanup(mp, path);
