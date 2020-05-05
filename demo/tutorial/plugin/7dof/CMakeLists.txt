@@ -14,7 +14,7 @@ pkg_search_module(AMINO_GL REQUIRED amino-gl)
 add_custom_command(
   OUTPUT 7dof-scene.c 7dof-scene.c.h
   DEPENDS 7dof.robray
-  COMMAND aarxc "7dof.robray" -o 7dof-scene.c -n "7dof"
+  COMMAND aarxc "${CMAKE_SOURCE_DIR}/7dof.robray" -o 7dof-scene.c -n "7dof"
   )
 
 # Compile plugin (shared library)
