@@ -231,10 +231,6 @@ class Geom(object):
         o = GeomOpt.ensure(opt)
         c_dimension = (ctypes.c_double * 2)(dimension[0], dimension[1])
         c_delta = (ctypes.c_double * 2)(delta[0], delta[1])
-        # c_dimension[0] = dimension[0]
-        # c_dimension[1] = dimension[1]
-        # c_delta[0] = delta[0]
-        # c_delta[1] = delta[1]
         return Geom(
             libamino.aa_rx_geom_grid(o._ptr, c_dimension, c_delta, width))
 
@@ -554,26 +550,6 @@ class SceneGraph(object):
         for i in range(0, self.config_count):
             d[self.config_name(i)] = vector[i]
         return d
-
-    def get_transforms(self, config):
-        """Get relative and absolute transforms for all frames for a given configuration.
-        Args:
-             config: an array of configration values
-
-        """
-
-        frame_ct = self.frame_count
-        tot = frame_ct * 7
-        rel_tf = (ctypes.c_double * tot)()
-        abs_tf = (ctypes.c_double * tot)()
-        config_ar = (ctypes.c_double * len(config))(*config)
-
-        libamino.aa_rx_sg_tf(self._ptr, len(config), config_ar, frame_ct, rel_tf, 7, abs_tf, 7)
-
-        ret = {}
-        for i in range(0, frame_ct):
-            ret[self.frame_name(i)] = (rel_tf[i*7:(i+1)*7], abs_tf[i*7:(i+1)*7])
-        return ret
 
     def get_parent(self, frame):
         """Get the name of the parent of the input frame"""

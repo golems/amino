@@ -54,7 +54,7 @@ class MotionPlan(object):
 
     def __init__(self, ssg):
         self._ptr = LIBAMINOMP.aa_rx_mp_create(ssg._ptr)
-       
+
 
     def __del__(self):
         LIBAMINOMP.aa_rx_mp_destroy(self._ptr)
@@ -63,17 +63,14 @@ class MotionPlan(object):
     def motion_plan(self, start, goal, timeout):
         """Compute a motion plan.
 
-        arguments:
+        Args:
+          start: A list containing the current configuration space state
+          goal: A list containing the goal configuraiton space state
+          timeout: Timout before a motion planning failure is declared
 
-        start - A list containing the current configuration space state
-        goal  - A lsit containing the goal configuraiton space state
-        timeout - Timout before a motion planning failure is declared
-
-        returns:
-
-        None if no motion plan is found, a list of configurations (the
-        motion plan) otherwise
-
+        Returns:
+          None if no motion plan is found, a list of configurations (the
+          motion plan) otherwise.
         """
 
         c_start = (ctypes.c_double * len(start))(*start)
@@ -99,9 +96,9 @@ class MotionPlan(object):
             for j in range(0, len(start)):
                 cord.append(path[i+j])
             py_path.append(cord)
-            
+
         return py_path
-       
+
 
 LIBAMINOMP.aa_rx_mp_create.argtypes = [ctypes.POINTER(RxSgSub)]
 LIBAMINOMP.aa_rx_mp_create.restype = ctypes.POINTER(RxMp)
