@@ -1,4 +1,4 @@
-#  Copyright (c) 2019, Colorado School of Mines
+#  Copyright (c) 2020, Colorado School of Mines
 #  All rights reserved.
 #
 #  Author(s): Matthew A. Schack <mschack@mines.edu>
@@ -33,11 +33,13 @@
 ## @file defaults.py defaults
 ##
 """Default return values"""
+import ctypes
+from amino.lib import libamino
 
-AA_RX_OK = 0
-AA_RX_NO_SOLUION = 1<<0
-AA_RX_NO_MP = 1<<2
-AA_RX_INVALID_FRAME = 1<<3
-AA_RX_INVALID_PARAMETER = 1<<4
-AA_RX_INVALID_STATE = 1<<5
-
+AA_RX_OK = ctypes.c_int.in_dll(libamino, "aa_rx_ok").value
+AA_RX_NO_SOLUTION = ctypes.c_int.in_dll(libamino, "aa_rx_no_solution").value
+AA_RX_NO_IK = ctypes.c_int.in_dll(libamino, "aa_rx_no_ik").value
+AA_RX_NO_MP = ctypes.c_int.in_dll(libamino, "aa_rx_no_mp").value
+AA_RX_INVALID_FRAME = ctypes.c_int.in_dll(libamino, "aa_rx_invalid_frame").value
+AA_RX_INVALID_PARAMETER = ctypes.c_int.in_dll(libamino, "aa_rx_invalid_parameter").value
+AA_RX_INVALID_STATE = ctypes.c_int.in_dll(libamino, "aa_rx_invalid_state").value

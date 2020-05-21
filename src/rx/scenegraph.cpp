@@ -2,9 +2,11 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ *               2020, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
+ *            Matthew A. Schack <mschack@mines.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -46,6 +48,11 @@
 #include <list>
 #include <set>
 
+// Constants
+AA_EXTERN const aa_rx_frame_id aa_rx_frame_root = AA_RX_FRAME_ROOT;
+AA_EXTERN const aa_rx_frame_id aa_rx_frame_none = AA_RX_FRAME_NONE;
+AA_EXTERN const aa_rx_config_id aa_rx_config_none = AA_RX_CONFIG_NONE;
+AA_EXTERN const aa_rx_config_id aa_rx_config_multi = AA_RX_CONFIG_MULTI;
 
 namespace amino {
 

@@ -1,7 +1,8 @@
-#  Copyright (c) 2019, Colorado School of Mines
+#  Copyright (c) 2020, Colorado School of Mines
 #  All rights reserved.
 #
 #  Author(s): Neil T. Dantam <ndantam@mines.edu>
+#             Matthew A. Schack <mschack@mines.edu>
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -40,9 +41,10 @@ from amino.tf import Vec3, Quat, QuatTrans
 from amino.mat import DVec, DMat
 from amino.util import ensure_cstring, is_string
 
-FRAME_ROOT = -1
-FRAME_NONE = -2
-CONFIG_NONE = -1
+FRAME_ROOT = ctypes.c_long.in_dll(libamino, "aa_rx_frame_root").value
+FRAME_NONE = ctypes.c_long.in_dll(libamino, "aa_rx_frame_none").value
+CONFIG_NONE = ctypes.c_long.in_dll(libamino, "aa_rx_config_none").value
+CONFIG_MULTI = ctypes.c_long.in_dll(libamino, "aa_rx_config_multi").value
 
 
 class RxSg(ctypes.Structure):

@@ -201,6 +201,7 @@ libamino_la_SOURCES =                  \
 	src/diffeq.c                   \
 	src/tf/conv.c                  \
 	src/mac/euler_f2c.c            \
+	src/rx/rxerr.c		       \
 	src/rx/errstr.c                \
 	src/rx/scenegraph.cpp          \
 	src/rx/sg_api.cpp              \

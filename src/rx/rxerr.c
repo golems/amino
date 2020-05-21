@@ -1,12 +1,10 @@
 /* -*- mode: C; c-basic-offset: 4; -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
- * Copyright (c) 2015, Rice University,
- *               2020, Colorado School of Mines
+ * Copyright (c) 2020, Colorado School of Mines
  * All rights reserved.
  *
- * Author(s): Neil T. Dantam <ntd@rice.edu>
- *            Matthew A. Schack <mschack@mines.edu>
+ * Author(s): Matthew A. Schack <mschack@mines.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -37,43 +35,14 @@
  *
  */
 
-#ifndef AMINO_RX_RXERR_H
-#define AMINO_RX_RXERR_H
+#include "amino.h"
+#include "amino/rx/rxerr.h"
 
-/**
- * @file rxerr.h
- * @brief Error codes and functions
- */
 
-/** OK */
-#define AA_RX_OK 0
-AA_EXTERN const int aa_rx_ok;
-
-/** No Solution */
-#define AA_RX_NO_SOLUTION  (1<<0)
-AA_EXTERN const int aa_rx_no_solution;
-
-/** No Inverse Kinematics Solution */
-#define AA_RX_NO_IK  (1<<1)
-AA_EXTERN const int aa_rx_no_ik;
-
-/** No Motion Plan */
-#define AA_RX_NO_MP  (1<<2)
-AA_EXTERN const int aa_rx_no_mp;
-
-/** Invalid frame */
-#define AA_RX_INVALID_FRAME  (1<<3)
-AA_EXTERN const int aa_rx_invalid_frame;
-
-/** Invalid Parameter */
-#define AA_RX_INVALID_PARAMETER  (1<<4)
-AA_EXTERN const int aa_rx_invalid_parameter;
-
-/** Invalid Parameter */
-#define AA_RX_INVALID_STATE  (1<<5)
-AA_EXTERN const int aa_rx_invalid_state;
-
-AA_API char *aa_rx_errstr( struct aa_mem_region *reg,
-                    int e );
-
-#endif /*AMINO_RX_RXERR_H*/
+AA_EXTERN const int aa_rx_ok = AA_RX_OK;
+AA_EXTERN const int aa_rx_no_solution = AA_RX_NO_SOLUTION;
+AA_EXTERN const int aa_rx_no_ik = AA_RX_NO_IK;
+AA_EXTERN const int aa_rx_no_mp = AA_RX_NO_MP;
+AA_EXTERN const int aa_rx_invalid_frame = AA_RX_INVALID_FRAME;
+AA_EXTERN const int aa_rx_invalid_parameter = AA_RX_INVALID_PARAMETER;
+AA_EXTERN const int aa_rx_invalid_state = AA_RX_INVALID_STATE;

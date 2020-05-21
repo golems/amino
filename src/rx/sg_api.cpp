@@ -114,10 +114,10 @@ aa_rx_sg_frame_name (
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
     switch(frame_id) {
-    case AA_RX_FRAME_ROOT: return "";
-    case AA_RX_FRAME_NONE: return "?";
-    default:
-        return scene_graph->sg->frames[(size_t)frame_id]->name.c_str();
+        case AA_RX_FRAME_ROOT: return "";
+        case AA_RX_FRAME_NONE: return "?";
+        default:
+            return scene_graph->sg->frames[(size_t)frame_id]->name.c_str();
     }
 }
 
@@ -128,12 +128,11 @@ aa_rx_sg_config_name (
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
     switch(id) {
-    case AA_RX_CONFIG_NONE: return "NONE";
-    case AA_RX_CONFIG_MULTI: return "MULTI";
-    default:
-        return scene_graph->sg->config_rmap[(size_t)id];
+        case AA_RX_CONFIG_NONE: return "NONE";
+        case AA_RX_CONFIG_MULTI: return "MULTI";
+        default:
+            return scene_graph->sg->config_rmap[(size_t)id];
     }
-
 }
 
 AA_API aa_rx_frame_id
@@ -143,11 +142,11 @@ aa_rx_sg_frame_parent (
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
     switch(frame_id) {
-    case AA_RX_FRAME_NONE:
-    case AA_RX_FRAME_ROOT:
-        return AA_RX_FRAME_NONE;
-    default:
-        return scene_graph->sg->frames[(size_t)frame_id]->parent_id;
+        case AA_RX_FRAME_NONE:
+        case AA_RX_FRAME_ROOT:
+            return AA_RX_FRAME_NONE;
+        default:
+            return scene_graph->sg->frames[(size_t)frame_id]->parent_id;
     }
 }
 

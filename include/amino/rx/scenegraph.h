@@ -2,9 +2,11 @@
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2015, Rice University
+ *               2020, Colorado School of Mines
  * All rights reserved.
  *
  * Author(s): Neil T. Dantam <ntd@rice.edu>
+ *            Matthew A. Schack <mschack@mines.edu>
  *
  *   Redistribution and use in source and binary forms, with or
  *   without modification, are permitted provided that the following
@@ -60,21 +62,25 @@ typedef signed long aa_rx_config_id;
  * Magic frame_id for the root/global/absolute frame.
  */
 #define AA_RX_FRAME_ROOT ((aa_rx_frame_id)-1)
+AA_EXTERN const aa_rx_frame_id aa_rx_frame_root;
 
 /**
  * Magic frame_id for no frame.
  */
 #define AA_RX_FRAME_NONE ((aa_rx_frame_id)-2)
+AA_EXTERN const aa_rx_frame_id aa_rx_frame_none;
 
 /**
  * Magic config_id for no configuration variable.
  */
 #define AA_RX_CONFIG_NONE ((aa_rx_config_id)-1)
+AA_EXTERN const aa_rx_config_id aa_rx_config_none;
 
 /**
  * Magic config_id for multiple configuration variables.
  */
 #define AA_RX_CONFIG_MULTI ((aa_rx_config_id)-2)
+AA_EXTERN const aa_rx_config_id aa_rx_config_multi;
 
 /**
  * Enum of frame types
