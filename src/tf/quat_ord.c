@@ -421,16 +421,16 @@ aa_tf_qexp_n( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
     const double *q_v = q + AA_TF_QUAT_V;
     double *r_v = r + AA_TF_QUAT_V;
 
-    double theta = aa_cla_dlapy3( q[AA_TF_QUAT_X],
-                                  q[AA_TF_QUAT_Y],
-                                  q[AA_TF_QUAT_Z] );
-    if( theta < DBL_EPSILON ) {
+    double phi = aa_cla_dlapy3( q[AA_TF_QUAT_X],
+                                q[AA_TF_QUAT_Y],
+                                q[AA_TF_QUAT_Z] );
+    if( phi < DBL_EPSILON ) {
         FOR_VEC(i) r_v[i] = 0;
         r[AA_TF_QUAT_W] = 1;
     } else {
-        double s = sin(theta);
-        double c = cos(theta);
-        double sc = s/theta;
+        double s = sin(phi);
+        double c = cos(phi);
+        double sc = s/phi;
 
         double ew = exp(q[AA_TF_QUAT_W]);
         r[AA_TF_QUAT_W] = ew*c;
@@ -442,19 +442,19 @@ aa_tf_qexp_n( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
 AA_API void
 aa_tf_qln( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
 {
-    double vv, vnorm, qnorm, theta, a;
+    double vv, vnorm, qnorm, phi, a;
     const double *q_v = q + AA_TF_QUAT_V;
     double q_w = q[AA_TF_QUAT_W];
 
     vv = aa_tf_vdot(q_v, q_v );
     qnorm = sqrt(vv + q_w*q_w);
-    vnorm = sqrt(vv);          /* for unit quaternions, vnorm = sin(theta) */
-    theta = atan2(vnorm, q_w); /* always positive */
+    vnorm = sqrt(vv);          /* for unit quaternions, vnorm = sin(phi) */
+    phi = atan2(vnorm, q_w); /* always positive */
 
-    if( theta < sqrt(sqrt(DBL_EPSILON)) ) {
-        a = aa_tf_invsinc_series(theta)/qnorm; /* approx. 1/qnorm */
+    if( phi < sqrt(sqrt(DBL_EPSILON)) ) {
+        a = aa_tf_invsinc_series(phi)/qnorm; /* approx. 1/qnorm */
     } else {
-        a = theta/vnorm;
+        a = phi/vnorm;
     }
 
     FOR_VEC(i) r[AA_TF_QUAT_V + i] = a*q_v[i];
