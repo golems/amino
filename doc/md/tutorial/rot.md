@@ -214,7 +214,7 @@ Following a similar derivation for the other products, we obtain the
 following relations:
 
 \f[
-    \begin{array}
+    \begin{array}{cccc}
     \ielt\jelt &=& -\jelt\ielt &=& \kelt \\
     \jelt\kelt &=& -\kelt\jelt &=& \ielt \\
     \kelt\ielt &=& -\ielt\kelt &=& \jelt
