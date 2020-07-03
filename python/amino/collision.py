@@ -210,7 +210,6 @@ LIBAMINOCL.aa_rx_cl_check.argtypes = [
 LIBAMINOCL.aa_rx_cl_check.restypes = ctypes.c_int
 
 
-
 class RxClDist(ctypes.Structure):
     """Opaque type for struct aa_rx_cl_dist."""
     pass
@@ -306,3 +305,5 @@ class SceneCollisionDist(object):
     def points(self):
         """The PointsDesc descriptor."""
         return self._points
+
+LIBAMINOCL.aa_rx_sg_cl_init.argtypes = [ctypes.POINTER(RxSg)]

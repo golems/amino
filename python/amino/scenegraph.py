@@ -231,6 +231,10 @@ class Geom(object):
         o = GeomOpt.ensure(opt)
         c_dimension = (ctypes.c_double * 2)(dimension[0], dimension[1])
         c_delta = (ctypes.c_double * 2)(delta[0], delta[1])
+        # c_dimension[0] = dimension[0]
+        # c_dimension[1] = dimension[1]
+        # c_delta[0] = delta[0]
+        # c_delta[1] = delta[1]
         return Geom(
             libamino.aa_rx_geom_grid(o._ptr, c_dimension, c_delta, width))
 
@@ -332,13 +336,11 @@ class SceneGraph(object):
     """A scene graph."""
     __slots__ = ['_ptr']
 
-    def __init__(self, ptr = None):
-        """Creates an empty scene."""
+    def __init__(self, ptr=None):
         if ptr is None:
             self._ptr = libamino.aa_rx_sg_create()
         else:
             self._ptr = ptr
-
 
     def __del__(self):
         libamino.aa_rx_sg_destroy(self._ptr)
@@ -620,7 +622,7 @@ libamino.aa_rx_sg_frame_parent.restype = ctypes.c_int
 
 
 libamino.aa_rx_sg_copy.argtypes = [ctypes.POINTER(RxSg)]
-libamino.aa_rx_sg_copy.restype  = ctypes.POINTER(RxSg)
+libamino.aa_rx_sg_copy.restype = ctypes.POINTER(RxSg)
 
 libamino.aa_rx_sg_allow_collision.argtypes = [ctypes.POINTER(RxSg), ctypes.c_int,
                                               ctypes.c_int, ctypes.c_int]
@@ -752,6 +754,7 @@ libamino.aa_rx_sg_sub_jacobian.argtypes = [
     ctypes.POINTER(ctypes.c_double), ctypes.c_size_t
 ]
 
+
 libamino.aa_rx_sg_sub_config_count.argtypes = [ctypes.POINTER(RxSgSub)]
 libamino.aa_rx_sg_sub_config_count.restype = ctypes.c_size_t
 
@@ -775,5 +778,5 @@ libamino.aa_rx_sg_chain_create.restype = ctypes.POINTER(RxSgSub)
 libamino.aa_rx_sg_sub_frame_ees.argtypes = [ctypes.POINTER(RxSgSub)]
 libamino.aa_rx_sg_sub_frame_ees.restype = ctypes.POINTER(ctypes.c_int)
 
-# libamino.aa_rx_sg_sub_frame_ee.argtypes = [ctypes.POINTER(RxSgSub)]
-# libamino.aa_rx_sg_sub_frame_ee.restype = ctypes.c_int
+libamino.aa_rx_sg_sub_frame_ee.argtypes = [ctypes.POINTER(RxSgSub)]
+libamino.aa_rx_sg_sub_frame_ee.restype = ctypes.c_int

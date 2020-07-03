@@ -533,7 +533,6 @@ class Quat(ctypes.Structure, VecMixin):
     # Do not define addition/subtraction for scalars.  The meaning is
     # non-obvious since we could either add/sub every quaternion
     # element or only the w (quaternion scalar) element.
-
     def __iadd__(self, other):
         libamino.aa_tf_qiadd(self, Quat.ensure(other))
         return self
@@ -1313,7 +1312,7 @@ libamino.aa_tf_eulerzyx2quat.argtypes = [
 ]
 
 libamino.aa_tf_quat2eulerzyx.argtypes = [ctypes.POINTER(Quat),
-                                          ctypes.POINTER(ctypes.c_double)]
+                                         ctypes.POINTER(ctypes.c_double)]
 
 libamino.aa_tf_quat2rotmat.argtypes = [
     ctypes.POINTER(Quat), ctypes.POINTER(RotMat)

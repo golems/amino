@@ -74,7 +74,7 @@ class MotionPlan(object):
         """
 
         c_start = (ctypes.c_double * len(start))(*start)
-        c_goal  = (ctypes.c_double * len(goal))(*goal)
+        c_goal = (ctypes.c_double * len(goal))(*goal)
         LIBAMINOMP.aa_rx_mp_set_start(self._ptr, len(start), c_start)
         if LIBAMINOMP.aa_rx_mp_set_goal(self._ptr, len(goal), c_goal) != AA_RX_OK:
             return None
@@ -84,7 +84,7 @@ class MotionPlan(object):
         n_path = ctypes.c_size_t(0)
 
         path = ctypes.POINTER(ctypes.c_double)()
-        ret = LIBAMINOMP.aa_rx_mp_plan(self._ptr, timeout,ctypes.byref(n_path),
+        ret = LIBAMINOMP.aa_rx_mp_plan(self._ptr, timeout, ctypes.byref(n_path),
                                        ctypes.byref(path))
 
         if ret != AA_RX_OK:

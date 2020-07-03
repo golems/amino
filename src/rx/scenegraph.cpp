@@ -418,6 +418,7 @@ aa_rx_sg_add_geom( aa_rx_sg *scene_graph, const char *frame,
 }
 
 
+
 AA_API void
 aa_rx_sg_dirty_geom( struct aa_rx_sg *scene_graph )
 {

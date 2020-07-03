@@ -51,8 +51,9 @@ extern "C" {
 #define AA_CT_SEG_IN   1
 #define AA_CT_SEG_OUT  0
 
-#define AA_CT_LIN_SEG  1
-#define AA_CT_PB_SEG   2
+#define AA_CT_LIN_SEG   1
+#define AA_CT_PB_SEG    2
+#define AA_CT_ACCL_SEG  3
 
 /**
  * Waypoint. For use in aa_ct_pt_list.
@@ -206,6 +207,19 @@ struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
                                              struct aa_ct_pt_list *list,
                                              struct aa_ct_limit *limits);
 
+/**
+ * Generate a trapezoidal blend trajectory from a point list.
+ *
+ * @param reg Region to allocate from
+ * @param list Point list to build segment list from
+ * @param limits State structure with dq and ddq kinematic limits
+ *
+ * @return An allocated segment list describing a trapezoidal blend trajectory.
+ */
+struct aa_ct_seg_list *aa_ct_tjq_trap_generate(struct aa_mem_region *reg,
+                                               struct aa_ct_pt_list *list,
+                                               struct aa_ct_limit *limits);
+
 
 /**
  * Generate a linear trajectory from a point list.
@@ -214,7 +228,7 @@ struct aa_ct_seg_list *aa_ct_tjq_pb_generate(struct aa_mem_region *reg,
  * @param list Point list to build segment list from
  * @param limits State structure with dq and ddq kinematic limits
  *
- * @return An allocated segment list describing a parabolic blend trajectory.
+ * @return An allocated segment list describing a linear trajectory.
  */
 struct aa_ct_seg_list *aa_ct_tjq_lin_generate(struct aa_mem_region *reg,
                                               struct aa_ct_pt_list *list,
