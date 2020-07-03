@@ -461,6 +461,27 @@ aa_tf_qln( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 4] )
     r[AA_TF_QUAT_W] = log(qnorm);
 }
 
+AA_API void
+aa_tf_qulnv( const double q[AA_RESTRICT 4], double v[AA_RESTRICT 3] )
+{
+    /* qnorm = 1 */
+    double vv, vnorm, phi, a;
+    const double *q_v = q + AA_TF_QUAT_V;
+    double q_w = q[AA_TF_QUAT_W];
+
+    vv = aa_tf_vdot(q_v, q_v);
+    vnorm = sqrt(vv);        /* for unit quaternions, vnorm = sin(phi) */
+    phi = atan2(vnorm, q_w); /* always positive */
+
+    if( phi < sqrt(sqrt(DBL_EPSILON)) ) {
+        a = aa_tf_invsinc_series(phi); /* approx. 1/qnorm */
+    } else {
+        a = phi/vnorm;
+    }
+
+    FOR_VEC(i) v[i] = a*q_v[i];
+}
+
 
 
 AA_API void

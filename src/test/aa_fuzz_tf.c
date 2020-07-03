@@ -368,6 +368,17 @@ static void quat(double E[2][7]) {
         aveq("log-exp", 4, q1, q1e, .00001 );
     }
 
+    // Log and Unit Log
+    {
+        // Assuming we have a unit quaternion for this test
+        double qln[4], qlnv[4];
+        aa_tf_qln(q1, qln);
+        aa_tf_qulnv(q1, qlnv);
+        aveq("log-ulogv", 3, qln, qlnv, 1e-12 );
+        qlnv[4] = 0;
+        aveq("log-ulogv", 4, qln, qlnv, 1e-12 );
+    }
+
     // diff
     double w[3]={0}, dq[4], wdq[3];
     aa_vrand( 3, w );

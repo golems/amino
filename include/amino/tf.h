@@ -1052,6 +1052,10 @@ AA_API void aa_tf_qexp( const double q[AA_RESTRICT 4],
 AA_API void aa_tf_qln( const double q[AA_RESTRICT 4],
                        double r[AA_RESTRICT 4] );
 
+/** Unit quaternion natural log */
+AA_API void aa_tf_qulnv( const double q[AA_RESTRICT 4],
+                         double v[AA_RESTRICT 3] );
+
 /** Derivative of the Unit Quaternion Logarithm.
  *
  * \param q A unit quaternion

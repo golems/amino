@@ -436,12 +436,12 @@ aa_rx_ik_opt_err_qlnpv( void *vcx, const double *q, double *dq )
         for( size_t i = 0; i < 4; i ++ ) E_err[i] *= -1;
     }
 
-    double q_ln[4];
-    aa_tf_qln(E_err, q_ln);
+    double q_lnv[3];
+    aa_tf_qulnv(E_err, q_lnv);
 
     for(size_t i = 0; i < 3; i ++ ) v_err[i] = v_act[i] - v_ref[i];
 
-    double result = ( aa_tf_qdot(q_ln,q_ln) +
+    double result = ( aa_tf_vdot(q_lnv,q_lnv)
                       + aa_tf_vdot(v_err,v_err) );
 
     if( dq ) {
@@ -459,20 +459,21 @@ aa_rx_ik_opt_err_qlnpv( void *vcx, const double *q, double *dq )
 
         // Rotational Part
         if( needs_min ) {
-            for( size_t i = 0; i < 4; i ++ ) q_ln[i] *= -1;
+            for( size_t i = 0; i < 3; i ++ ) q_lnv[i] *= -1;
         }
 
         double a[4], b[4], dJ[4*4];
         struct aa_dvec va = AA_DVEC_INIT(4,a,1);
         struct aa_dvec vb = AA_DVEC_INIT(4,b,1);
-        struct aa_dvec vln = AA_DVEC_INIT(4,q_ln,1);
         struct aa_dmat vJ_4x4 = AA_DMAT_INIT(4,4,dJ,4);
         struct aa_dmat *J_4x4 = &vJ_4x4;
 
         {
+            struct aa_dvec vln = AA_DVEC_INIT(3,q_lnv,1);
             struct aa_dmat *J_ln = J_4x4;
-            aa_tf_qln_jac(q_err,J_ln);
-            aa_dmat_gemv(CblasTrans, 1, J_ln, &vln, 0, &va);
+            aa_tf_qln_jac(q_err,J_ln); // TODO: omit a row for unit quat
+            struct aa_dmat J_lnb = AA_DMAT_INIT(3,4,dJ,4);
+            aa_dmat_gemv(CblasTrans, 1, &J_lnb, &vln, 0, &va);
         }
 
         q_rmul_helper( q_ref, &va, &vb );
