@@ -702,17 +702,6 @@ TESTS += eigen_compat
 
 endif # HAVE_EIGEN
 
-if HAVE_OCTOMAP
-noinst_PROGRAMS += octomap_test
-octomap_test_SOURCES = src/test/octomap_test.cpp
-octomap_test_LDADD = libamino.la libamino-gl.la $(OCTOMAP_LIBS) $(GL_LIBS) $(SDL2_LIBS) $(GLEW_LIBS)
-octomap_test_CFLAGS = $(OCTOMAP_CFLAGS) $(SDL2_CFLAGS) $(GL_CFLAGS)
-octomap_test_CXXFLAGS = $(OCTOMAP_CFLAGS) $(SDL2_CFLAGS) $(GL_CFLAGS)
-
-TESTS += octomap_test
-
-endif # HAVE_OCTOMAP
-
 
 # noinst_PROGRAMS += test_vec
 # test_vec_SOURCES = src/test/test_vec.c

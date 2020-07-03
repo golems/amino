@@ -51,6 +51,7 @@ aa_rx_sg_sub_destroy( struct aa_rx_sg_sub *ssg )
 {
     if( ssg->frames ) free( ssg->frames );
     if( ssg->configs ) free( ssg->configs );
+    if( ssg->ees ) free( ssg->ees );
 
     free(ssg);
 }
@@ -101,9 +102,21 @@ aa_rx_sg_sub_frame( const struct aa_rx_sg_sub *sg_sub, size_t i )
 AA_API aa_rx_frame_id
 aa_rx_sg_sub_frame_ee( const struct aa_rx_sg_sub *sg_sub )
 {
-    // Only handling chains for now
-    return aa_rx_sg_sub_frame(sg_sub, aa_rx_sg_sub_frame_count(sg_sub) - 1 );
+    return sg_sub->ees[0];
 }
+
+AA_API size_t
+aa_rx_sg_sub_frame_ee_count( const struct aa_rx_sg_sub *sg_sub)
+{
+    return sg_sub->ee_count;
+}
+
+AA_API aa_rx_frame_id*
+aa_rx_sg_sub_frame_ees( const struct aa_rx_sg_sub *sg_sub )
+{
+    return sg_sub->ees;
+}
+
 
 AA_API aa_rx_config_id*
 aa_rx_sg_sub_configs( const struct aa_rx_sg_sub *sg_sub )
@@ -310,17 +323,22 @@ aa_rx_sg_chain_create( const struct aa_rx_sg *sg,
     aa_rx_sg_chain_configs( sg, ssg->frame_count, ssg->frames,
                             ssg->config_count, ssg->configs );
 
+    aa_rx_frame_id *ees = AA_NEW_AR(aa_rx_frame_id, 1);
+    ees[0] = tip;
+    ssg->ees = ees;
+    ssg->ee_count = 1;
+
     return ssg;
 }
 
 AA_API size_t
 aa_rx_sg_multiple_chain_frame_count(const struct aa_rx_sg *sg,
-				    aa_rx_frame_id root, size_t n_tips,
-				    aa_rx_frame_id* tips)
+                                    aa_rx_frame_id root, size_t n_tips,
+                                    aa_rx_frame_id* tips)
 {
     size_t ret=0;
     for(size_t i=0; i< n_tips; i++){
-	ret+=aa_rx_sg_chain_frame_count(sg, root, tips[i]);
+        ret+=aa_rx_sg_chain_frame_count(sg, root, tips[i]);
     }
     return ret;
 }
@@ -328,8 +346,8 @@ aa_rx_sg_multiple_chain_frame_count(const struct aa_rx_sg *sg,
 
 AA_API struct aa_rx_sg_sub *
 aa_rx_sg_multiple_chain_create( const struct aa_rx_sg *sg,
-				aa_rx_frame_id root, size_t n_tips,
-				aa_rx_frame_id* tips)
+                                aa_rx_frame_id root, size_t n_tips,
+                                aa_rx_frame_id* tips)
 {
     struct aa_rx_sg_sub *ssg = AA_NEW( struct aa_rx_sg_sub );
     ssg->scenegraph = sg;
@@ -339,13 +357,13 @@ aa_rx_sg_multiple_chain_create( const struct aa_rx_sg *sg,
     /* aa_rx_sg_multiple_chain_frame_count gives an overestimation of
        frames. So remake the array with the proper number of frames */
     ssg->frame_count = aa_rx_sg_chain_multiple_frames( sg, root, n_tips,
-						       tips, tmp, tmp_arr);
+                                                       tips, tmp, tmp_arr);
     ssg->frames = AA_MEM_DUP(aa_rx_frame_id, tmp_arr, ssg->frame_count);
 
 
     ssg->config_count = aa_rx_sg_chain_config_count( sg,
-						     ssg->frame_count,
-						     ssg->frames );
+                                                     ssg->frame_count,
+                                                     ssg->frames );
     ssg->configs = AA_NEW_AR(aa_rx_config_id, ssg->config_count );
     aa_rx_sg_chain_configs( sg, ssg->frame_count, ssg->frames,
                             ssg->config_count, ssg->configs );

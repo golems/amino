@@ -106,13 +106,25 @@ aa_rx_sg_sub_config( const struct aa_rx_sg_sub *sg_sub, size_t i );
 AA_API aa_rx_frame_id
 aa_rx_sg_sub_frame( const struct aa_rx_sg_sub *sg_sub, size_t i );
 
-
 /**
- * Return the end-effector frame id, if any
+ * Return the end-effector frame id, if any.
+ *
+ * If multiple end-effectors, return the initial.
  */
 AA_API aa_rx_frame_id
 aa_rx_sg_sub_frame_ee( const struct aa_rx_sg_sub *sg_sub );
 
+/**
+ * Return the number of end effector frames, if any.
+ */
+AA_API size_t
+aa_rx_sg_sub_frame_ee_count( const struct aa_rx_sg_sub *sg_sub);
+
+/**
+ * Return an array of end effector frames, if any.
+ */
+AA_API aa_rx_frame_id*
+aa_rx_sg_sub_frame_ees( const struct aa_rx_sg_sub *sg_sub );
 
 /**
  * Return the array of full scenegraph config ids contained in the sub-scenegraph.

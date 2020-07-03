@@ -63,6 +63,14 @@ static int
 s_ik_nlopt( struct kin_solve_cx *cx,
             struct aa_dvec *q );
 
+
+static void s_set_frames( struct aa_rx_ik_cx *cx, size_t n_frames, aa_rx_frame_id *frames )
+{
+    if(cx->frames) free(cx->frames);
+    cx->n_frames = n_frames;
+    cx->frames = AA_MEM_DUP(aa_rx_frame_id, frames, n_frames);
+}
+
 AA_API struct aa_rx_ik_cx *
 aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ik_parm *opts )
 {
@@ -70,12 +78,14 @@ aa_rx_ik_cx_create(const struct aa_rx_sg_sub *ssg, const struct aa_rx_ik_parm *o
     cx->ssg = ssg;
     cx->opts = opts;
 
-
-    cx->frame = ( AA_RX_FRAME_NONE == opts->frame )
-        /* default to last frame in chain */
-        ? aa_rx_sg_sub_frame_ee(ssg)
-        /* use specified frame */
-        : opts->frame;
+    cx->frames = NULL;
+    if ( AA_RX_FRAME_NONE == opts->frame ) {
+        s_set_frames(cx,
+                     aa_rx_sg_sub_frame_ee_count(ssg),
+                     aa_rx_sg_sub_frame_ees(ssg) );
+    } else {
+        s_set_frames(cx, 1, &opts->frame);
+    }
 
     cx->q_start = aa_dvec_malloc( aa_rx_sg_sub_all_config_count(ssg) );
     aa_dvec_zero(cx->q_start);
@@ -157,7 +167,7 @@ aa_rx_ik_set_frame_name( struct aa_rx_ik_cx *context, const char *name )
 AA_API void
 aa_rx_ik_set_frame_id( struct aa_rx_ik_cx *context, aa_rx_frame_id id )
 {
-    context->frame = id;
+    s_set_frames(context, 1, &id);
 }
 
 AA_API void
@@ -185,7 +195,8 @@ s_kin_solve_cx_alloc( const struct aa_rx_ik_cx *ik_cx,
     cx->ssg = ik_cx->ssg;
     cx->opts = ik_cx->opts;
 
-    cx->frame = ik_cx->frame;
+    // TODO: multiple frames in solver
+    cx->frame = ik_cx->frames[0];
 
     cx->iteration = 0;
 
@@ -387,7 +398,7 @@ aa_rx_ik_check( const struct aa_rx_ik_cx *cx,
 
     struct aa_rx_fk *fk = aa_rx_fk_alloc(aa_rx_sg_sub_sg(cx->ssg), reg);
     aa_rx_fk_sub(fk, cx->ssg, q_sub);
-    double *E_act = aa_rx_fk_ref(fk, cx->frame);
+    double *E_act = aa_rx_fk_ref(fk, cx->frames[0]); // TODO: fix for multiple EEs
 
     int r = s_check(cx,TF, E_act);
     aa_mem_region_pop(reg, ptrtop);
