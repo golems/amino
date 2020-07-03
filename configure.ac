@@ -439,7 +439,7 @@ AC_ARG_WITH([fcl],
 HAVE_FCL=disabled
 AS_IF([test "x$with_fcl" != xno], [
   PKG_CHECK_MODULES([FCL],
-                    [fcl],
+                    [fcl >= 0.6.0],
                     [HAVE_FCL=yes],
                     [HAVE_FCL=no])
 ])
