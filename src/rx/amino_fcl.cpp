@@ -626,7 +626,6 @@ static void s_normalize_ids( aa_rx_frame_id *id1, aa_rx_frame_id *id2 )
 //     }
 // }
 
-// TODO: negative distances are always -1 (-ntd, 2019-08-28), why?
 static bool
 cl_dist_callback( ::amino::fcl::CollisionObject *o1,
                   ::amino::fcl::CollisionObject *o2,
@@ -666,33 +665,34 @@ cl_dist_callback( ::amino::fcl::CollisionObject *o1,
     double p1[3];
 
     for( size_t i = 0; i < 3; i ++){
-	p0[i]= result.nearest_points[0][i];
-	p1[i]= result.nearest_points[1][i];
+        p0[i]= result.nearest_points[0][i];
+        p1[i]= result.nearest_points[1][i];
     }
 
     if( min_dist <= 0 ) {
-	data->in_collision = 1;
+        min_dist = 0;
+        data->in_collision = 1;
 
-	// If we're in collision lets figure out where we are colliding
-	::amino::fcl::CollisionRequest colRequest(1, true);
-	::amino::fcl::CollisionResult colResult;
-	::fcl::collide(o1, o2, colRequest, colResult);
+        // If we're in collision lets figure out where we are colliding
+        ::amino::fcl::CollisionRequest colRequest(1, true);
+        ::amino::fcl::CollisionResult colResult;
+        ::fcl::collide(o1, o2, colRequest, colResult);
 
-	size_t numContacts = colResult.numContacts();
-	for( size_t i = 0; i < numContacts; i++ ){
+        size_t numContacts = colResult.numContacts();
+        for( size_t i = 0; i < numContacts; i++ ){
 
-	    ::amino::fcl::Contact contact = colResult.getContact(i);
+            ::amino::fcl::Contact contact = colResult.getContact(i);
 
-	    if( i == 0 || min_dist > contact.penetration_depth ) {
-		min_dist = contact.penetration_depth;
+            if( min_dist < contact.penetration_depth ) {
+                min_dist = contact.penetration_depth;
 
-		for( size_t j = 0; i < 3; i++){
-		    p0[j] = contact.pos[j];
-		    p1[j] = contact.normal[j]*min_dist+p0[j];
-		}
-		min_dist = -min_dist;
-	    }
-	}
+                for( size_t j = 0; j < 3; j++){
+                    p0[j] = contact.pos[j];
+                    p1[j] = contact.normal[j]*min_dist+p0[j];
+                }
+            }
+        }
+        min_dist = -min_dist;
     }
 
     /* Frames may have multiple collision objects.
@@ -710,34 +710,35 @@ cl_dist_callback( ::amino::fcl::CollisionObject *o1,
         //s_correct_cylinder_dist(o2, ent->point1);
 
     }
-
-    // const struct aa_rx_sg *sg = data->cl->sg;
-    // const char *name1 = aa_rx_sg_frame_name(sg,id1);
-    // const char *name2 = aa_rx_sg_frame_name(sg,id2);
-    // printf("%s x %s: %f\n", name1, name2, ent->dist );
     return false;
 }
 
 AA_API double
 aa_rx_cl_dist_get_min_dist(const struct aa_rx_cl_dist *cl_dist,
-			   aa_rx_frame_id id0, double* dist_arr)
+                           aa_rx_frame_id id0, aa_rx_frame_id *id1, double* point_arr)
 {
     double min_dist=DBL_MAX;
     size_t frames = aa_rx_sg_frame_count(cl_dist->cl->sg);
+    const struct aa_rx_sg* sg = cl_dist->cl->sg;
 
-    for ( aa_rx_frame_id id1 = 0; id1 < (aa_rx_frame_id) frames; id1++ ){
-	if(id0 == id1) continue;
-	double tmp_dist = aa_rx_cl_dist_get_dist(cl_dist, id0, id1);
-	if (tmp_dist < min_dist){
-	    min_dist = tmp_dist;
-	    if ( dist_arr ){
-		double p0[3], p1[3];
-		aa_rx_cl_dist_get_points(cl_dist, id0, id1, p0, p1);
-		for( size_t j = 0; j< 3; j++){
-		    dist_arr[j] = p1[j]-p0[j];
-		}
-	    }
-	}
+    for ( aa_rx_frame_id tmp_id = 0; tmp_id < (aa_rx_frame_id) frames; tmp_id++ ){
+        if(id0 == tmp_id) continue;
+        double tmp_dist = aa_rx_cl_dist_get_dist(cl_dist, id0, tmp_id);
+        if (tmp_dist < min_dist){
+            min_dist = tmp_dist;
+            if ( point_arr ){
+                double p0[3], p1[3];
+                aa_rx_cl_dist_get_points(cl_dist, id0, tmp_id, p0, p1);
+                for( size_t j = 0; j<3; j++){
+                    point_arr[j] = p0[j];
+                    point_arr[j+3] = p1[j];
+                }
+            }
+
+            if ( id1 ){
+                *id1 = tmp_id;
+            }
+        }
     }
     return min_dist;
 }

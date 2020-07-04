@@ -55,8 +55,8 @@ noinst_HEADERS = \
              include/amino/rx/scene_geom_internal.h \
              include/amino/rx/scene_collision_internal.h \
              include/amino/rx/rxtype_internal.h \
-	     include/amino/rx/octree_geom.hpp   \
 	     include/amino/rx/scene_gl_internal.h \
+	     include/amino/rx/scene_sdl_internal.h \
              include/amino/rx/scene_fcl.h \
              include/amino/rx/ompl/scene_ompl_internal.h \
              include/amino_internal.h
@@ -129,6 +129,7 @@ pkginclude_HEADERS = 	                \
 	include/amino/heap.h            \
 	include/amino/mangle.h          \
 	include/amino/getset.h          \
+	include/amino/eigen_compat.hpp  \
 	include/amino/def.F90           \
 	include/amino/undef.F90
 
@@ -144,6 +145,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_ik.h    \
 	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/scene_gl.h \
+	include/amino/rx/scene_sdl.h \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_planning.h \
 	include/amino/rx/scene_win.h    \
@@ -152,7 +154,8 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/spnav_button.h \
 	include/amino/rx/rx_ct.h \
 	include/amino/rx/scene_wk.h \
-	include/amino/rx/wavefront.h
+	include/amino/rx/wavefront.h\
+	include/amino/rx/octree_geom.hpp
 
 rxomplincludedir = $(rxincludedir)/ompl
 rxomplinclude_HEADERS = \
@@ -234,11 +237,6 @@ libamino_la_SOURCES =                  \
 	src/wavefront/mtl.c            \
 	src/wavefront/wf_obj.c         \
 	src/wavefront/wf_mtl.c
-
-if HAVE_OCTOMAP
-libamino_la_SOURCES += src/rx/sg_octree.cpp
-endif # HAVE_OCTOMAP
-
 
 libamino_la_LIBADD =
 
@@ -332,7 +330,7 @@ libamino_la_SOURCES += euler.c
 endif
 
 if HAVE_OCTOMAP
-libamino_la_SOURCES += src/rx/octree_geom.cpp
+libamino_la_SOURCES += src/rx/octree_geom.cpp  src/rx/sg_octree.cpp
 libamino_la_LIBADD += $(OCTOMAP_LIBS)
 endif # HAVE_OCTOMAP
 
@@ -432,6 +430,9 @@ EXTRA_DIST += \
 	python/amino/scenewin.py \
 	python/amino/lib.py \
 	python/amino/collision.py \
+	python/amino/motionPlanning.py \
+	python/amino/motionPlanning.py \
+	python/amino/defaults.py \
 	python/amino/__init__.py
 
 

@@ -7,6 +7,6 @@ fi
 for DOCKERFILE in $@; do
     NAME="amino-${DOCKERFILE}-install"
     docker rm "$NAME" || true
-    docker run --security-opt seccomp=unconfined --name="$NAME" "amino:$DOCKERFILE-dep" /bin/sh -c "cd /root/amino && autoreconf -i && ./configure --enable-demo-baxter && make -k -j $JOBS V=1 distcheck && make install" && \
+    docker run --security-opt seccomp=unconfined --name="$NAME" "amino:$DOCKERFILE-dep" /bin/sh -c "cd /root/amino && autoreconf -i && ./configure --enable-demo-baxter && make -k -j $JOBS V=1 distcheck && make install" && ldconfig && \
         docker commit "$NAME" "amino:${DOCKERFILE}-install"
 done

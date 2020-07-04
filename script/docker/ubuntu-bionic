@@ -1,30 +1,42 @@
 FROM ubuntu:bionic
 
-COPY ./script/install /root/amino/script/install
 RUN apt-get -y update && \
     apt-get install -y  build-essential gfortran f2c \
             autoconf automake libtool autoconf-archive autotools-dev \
             maxima libblas-dev liblapack-dev \
             libsdl2-dev \
-            libompl-dev libfcl-dev \
+            libboost-filesystem-dev \
+            libboost-program-options-dev \
+            libboost-python-dev \
+            libboost-serialization-dev \
+            libboost-system-dev \
+            libboost-test-dev \
             doxygen groff \
             sbcl \
             python3 \
             flex povray ffmpeg \
             coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev \
-            wget git
+            wget git cmake libccd-dev
+
+COPY ./script/install /root/amino/script/install
 
 RUN cd && /root/amino/script/install/install-quicklisp.sh
 
 RUN /root/amino/script/install/install-blender.sh
 
+RUN cd && /root/amino/script/install/install-sbpl.sh
+
+RUN cd && /root/amino/script/install/install-fcl.sh
+
+RUN cd && /root/amino/script/install/install-ompl.sh
+
+RUN cd && /root/amino/script/install/install-octomap.sh
+
 RUN cd && git clone https://github.com/RethinkRobotics/baxter_common
 
 ENV ROS_PACKAGE_PATH=/root/baxter_common
 
-
 COPY . /root/amino
-
 
 # Local Variables:
 # mode: dockerfile

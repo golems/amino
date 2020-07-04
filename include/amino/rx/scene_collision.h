@@ -229,7 +229,7 @@ aa_rx_cl_dist_check( struct aa_rx_cl_dist *cl_dist,
 
 AA_API double
 aa_rx_cl_dist_get_min_dist(const struct aa_rx_cl_dist *cl_dist,
-			   aa_rx_frame_id id0, double* dist);
+                           aa_rx_frame_id id0, aa_rx_frame_id *id1, double* points);
 
 AA_API double
 aa_rx_cl_dist_get_dist( const struct aa_rx_cl_dist *cl_dist,

@@ -9,7 +9,7 @@ import os
 
 
 scene_plugin = (
-    "%s/Git/amino-research/demo/tutorial/plugin/urdf/build/libbaxter-model.so" % os.environ['HOME'])
+    "%s/git/amino/demo/tutorial/plugin/urdf/libbaxter-model.so" % os.environ['HOME'])
 scene_name = "baxter"
 
 
@@ -35,11 +35,11 @@ mp = MotionPlan(ssg)
 
 start = [0 for _ in range(0, 15)]
 goal = [.05 * pi,
-        -.25 * pi, 
-        0, 
-        .25*pi, 
-        0, 
-        .25*pi, 
+        -.25 * pi,
+        0,
+        .25*pi,
+        0,
+        .25*pi,
         0 ]
 path = mp.motion_plan(start, goal, 5)
 
