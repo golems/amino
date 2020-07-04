@@ -52,10 +52,10 @@
 
 #define ALLOC_GEOM(TYPE, var, type_value, geom_opt )            \
     TYPE *var = AA_NEW0(TYPE);                                  \
-    AA_MEM_CPY(&g->base.opt, geom_opt, 1);                      \
-    var->base.type = type_value;                                \
-    var->base.gl_buffers = NULL;                                \
-    var->base.refcount = 1;
+    AA_MEM_CPY(&g->base->opt, geom_opt, 1);                      \
+    var->base->type = type_value;                                \
+    var->base->gl_buffers = NULL;                                \
+    var->base->refcount = 1;
 
 
 struct aa_rx_geom *
@@ -66,7 +66,7 @@ aa_rx_geom_octree (
   ALLOC_GEOM( struct aa_rx_geom_octree, g,
               AA_RX_OCTREE, opt);
   g->shape = octree;
-  return &g->base;
+  return g->base;
 }
 
 AA_API struct aa_rx_octree* aa_rx_geom_read_octree_from_file( const char* file)

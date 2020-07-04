@@ -1027,6 +1027,7 @@ AC_MSG_NOTICE([Use LP_SOLVE:      $HAVE_LPSOLVE])
 AC_MSG_NOTICE([Use CLP:           $HAVE_CLP])
 AC_MSG_NOTICE([Use GLPK:          $HAVE_GLPK])
 AC_MSG_NOTICE([Use CGAL:          $HAVE_CGAL])
+AC_MSG_NOTICE([Use OCTOMAP:       $HAVE_OCTOMAP])
 AC_MSG_NOTICE([Build Demos:       $enable_demos])
 AC_MSG_NOTICE([URDF Demos:        $ENABLED_DEMOS])
 

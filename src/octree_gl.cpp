@@ -40,6 +40,7 @@
 
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/scene_geom_internal.h"
+#include "amino/rx/scene_gl_octree.h"
 #include "amino/rx/octree_geom.hpp"
 
 #include "amino/rx/rxtype.h"
@@ -176,9 +177,9 @@ void init_octree ( struct aa_rx_geom_octree *geom )
     fprintf(stderr,"set indicies\n");
 
 
-    aa_rx_mesh_set_texture(mesh, &geom->base.opt);
+    aa_rx_mesh_set_texture(mesh, &geom->base->opt);
     fprintf(stderr,"set texture\n");
-    tri_mesh( &geom->base, mesh );
+    tri_mesh( geom->base, mesh );
     aa_rx_mesh_destroy(mesh);
 
 }

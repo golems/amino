@@ -332,6 +332,10 @@ endif
 if HAVE_OCTOMAP
 libamino_la_SOURCES += src/rx/octree_geom.cpp  src/rx/sg_octree.cpp
 libamino_la_LIBADD += $(OCTOMAP_LIBS)
+noinst_PROGRAMS += octomap_test
+octomap_test_SOURCES = src/test/octomap_test.cpp
+octomap_test_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+octomap_test_LDADD = libamino.la libamino-gl.la $(OCTOMAP_LIBS) $(GL_LIBS) $(SDL2_LIBS)
 endif # HAVE_OCTOMAP
 
 ###############

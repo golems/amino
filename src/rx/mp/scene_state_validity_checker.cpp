@@ -74,8 +74,11 @@ bool sgStateValidityChecker::isValid(const ompl::base::State *state) const
     // check collision
     {
         std::lock_guard<std::mutex> lock(mutex);
-        double *TF_abs = space->get_tf_abs(state, this->q_all);
-        is_collision = aa_rx_cl_check( cl, n_f, TF_abs, 7, this->collisions );
+
+        const sgSpaceInformation::StateType* state_ = state->as<sgSpaceInformation::StateType>();
+        double *TF_abs = space->get_tf_abs(state, state_->values);
+        is_collision = aa_rx_cl_check( this->cl, n_f, TF_abs, 7, this->collisions );
+
         space->region_pop(TF_abs);
     }
 
