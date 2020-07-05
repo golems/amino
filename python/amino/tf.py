@@ -36,7 +36,7 @@
 
 import ctypes
 from amino.lib import libamino
-from amino.mixin import VecMixin, CopyEltsMixin
+from amino.mixin import VecMixin, CopyEltsMixin, MatMixin
 from amino.mat import DVec, is_scalar
 from amino.util import ensure
 
@@ -87,12 +87,11 @@ class Vec3(ctypes.Structure, VecMixin):
     def __getitem__(self, key):
         if key == 0:
             return self.x
-        elif key == 1:
+        if key == 1:
             return self.y
-        elif key == 2:
+        if key == 2:
             return self.z
-        else:
-            raise IndexError(key)
+        raise IndexError(key)
 
     def __setitem__(self, key, item):
         if key == 0:
@@ -667,7 +666,7 @@ class Quat(ctypes.Structure, VecMixin):
         return 'Quat(%f, %f, %f, %f)' % (self.x, self.y, self.z, self.w)
 
 
-class RotMat(ctypes.Structure):
+class RotMat(ctypes.Structure, MatMixin):
     """Class for rotation matrices"""
     _fields_ = [("cx", Vec3), ("cy", Vec3), ("cz", Vec3)]
 
@@ -743,12 +742,11 @@ class RotMat(ctypes.Structure):
         i, j = key
         if j == 0:
             return self.cx[i]
-        elif j == 1:
+        if j == 1:
             return self.cy[i]
-        elif j == 2:
+        if j == 2:
             return self.cz[i]
-        else:
-            raise IndexError(key)
+        raise IndexError(key)
 
     def __setitem__(self, key, item):
         i, j = key
@@ -760,6 +758,16 @@ class RotMat(ctypes.Structure):
             self.cz[i] = item
         else:
             raise IndexError(key)
+
+    @property
+    def rows(self):
+        """Number of rows."""
+        return 3;
+
+    @property
+    def cols(self):
+        """Number of columns."""
+        return 3;
 
     @staticmethod
     def row_matrix(args):
@@ -788,29 +796,16 @@ class RotMat(ctypes.Structure):
         return A
 
     def __str__(self):
-        s = "RotMat.row_matrix(["
-        for i in range(0, 3):
-            if i == 0:
-                s += "["
-            else:
-                s += ",\n                   ["
-            for j in range(0, 3):
-                if j == 0:
-                    s += "%f" % self[i, j]
-                else:
-                    s += ", %f" % self[i, j]
-            s += "]"
-        s += "])"
-        return s
+        return self._str_helper("RotMat.row_matrix")
 
     def isclose(self, other, tol=1e-9):
         """Returns True if self is within tol rotation angle to other."""
         other = RotMat.ensure(other)
         v = (self * ~other).ln().nrm2()
-        return True if v <= tol else False
+        return v <= tol
 
 
-class TfMat(ctypes.Structure):
+class TfMat(ctypes.Structure, MatMixin):
     """Class for transformation matrices"""
     _fields_ = [("R", RotMat), ("v", Vec3)]
 
@@ -910,21 +905,7 @@ class TfMat(ctypes.Structure):
         return A
 
     def __str__(self):
-        s = "TfMat.row_matrix(["
-        for i in range(0, 3):
-            if i == 0:
-                s += "["
-            else:
-                s += ",\n                  ["
-            for j in range(0, 4):
-                if j == 0:
-                    s += "%f" % self[i, j]
-                else:
-                    s += ", %f" % self[i, j]
-            s += "]"
-        s += "])"
-        # Omit the bottom, constant row
-        return s
+        return self._str_helper("TfMat.row_matrix", 3, 3)
 
     def __len__(self):
         return 12

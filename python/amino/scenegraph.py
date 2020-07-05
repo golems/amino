@@ -49,25 +49,17 @@ CONFIG_MULTI = ctypes.c_long.in_dll(libamino, "aa_rx_config_multi").value
 
 class RxSg(ctypes.Structure):
     """Opaque type for scenegraph pointer."""
-    pass
-
 
 class RxSgSub(ctypes.Structure):
     """Opaque type for sub-scenegraph pointer."""
-    pass
-
 
 class RxGeom(ctypes.Structure):
     """Opaque type for geometry pointer."""
-    pass
-
 
 class RxGeomOpt(ctypes.Structure):
     """Opaque type for geometry opts pointer."""
-    pass
 
-
-class GeomOpt(object):
+class GeomOpt:
     """Geometry options object.
 
        Attributes:
@@ -184,7 +176,7 @@ class GeomOpt(object):
             raise Exception()
 
 
-class Geom(object):
+class Geom:
     """A geometry object."""
 
     __slots__ = ['_ptr']
@@ -332,7 +324,7 @@ libamino.aa_rx_geom_torus.argtypes = [
 libamino.aa_rx_geom_torus.restype = ctypes.POINTER(RxGeom)
 
 
-class SceneGraph(object):
+class SceneGraph:
     """A scene graph."""
     __slots__ = ['_ptr']
 
@@ -416,10 +408,11 @@ class SceneGraph(object):
         else:
             raise Exception()
 
-    def reparent(self, name, parent, rel_tf=QuatTrans.identity()):
-        name = ensure_cstring(name)
-        parent = ensure_cstring(parent)
-        libamino.aa_rx_sg_reparent_name(self._ptr, parent, name, rel_tf)
+    def reparent(self, new_parent, frame, rel_tf=QuatTrans.identity()):
+        """Change the parent of frame in the scenegraph."""
+        frame = ensure_cstring(frame)
+        new_parent = ensure_cstring(new_parent)
+        libamino.aa_rx_sg_reparent_name(self._ptr, new_parent, frame, rel_tf)
 
 
     def load(self, filename, name, root=""):
@@ -445,10 +438,11 @@ class SceneGraph(object):
         libamino.aa_rx_sg_init(self._ptr)
         return self
 
-    def allow_collision(self, i, j):
+    def allow_collision(self, i, j, allowed=1):
+        """Set allowed collisions between frames id0 and id1."""
         id0 = self.ensure_frame_id(i)
         id1 = self.ensure_frame_id(j)
-        libamino.aa_rx_sg_allow_collision(self._ptr, id0, id1, 1)
+        libamino.aa_rx_sg_allow_collision(self._ptr, id0, id1, allowed)
 
 
     @property
@@ -489,10 +483,9 @@ class SceneGraph(object):
         """
         if is_string(value):
             return self.config_id(value)
-        elif value >= self.config_count:
+        if value >= self.config_count:
             raise IndexError("Invalid config id: %d" % value)
-        else:
-            return value
+        return value
 
     def ensure_frame_id(self, value):
         """Ensures value is a frame id, converting strings if necessary.
@@ -502,10 +495,9 @@ class SceneGraph(object):
         """
         if is_string(value):
             return self.frame_id(value)
-        elif value >= self.frame_count:
+        if value >= self.frame_count:
             raise IndexError("Invalid frame id: %d" % value)
-        else:
-            return value
+        return value
 
     def ensure_frame_id_actual(self, value):
         """Ensures value is a frame id, converting strings if necessary.
@@ -576,10 +568,11 @@ class SceneGraph(object):
             tip = self.ensure_frame_id(key.stop)
             ptr = libamino.aa_rx_sg_chain_create(self._ptr, root, tip)
             return SubSceneGraph(self, ptr)
-        else:
-            raise LookupError("Could not get scene graph items")
+
+        raise LookupError("Could not get scene graph items")
 
     def copy(self):
+        """Create a copy of the scenegraph"""
         sg_copy = SceneGraph(libamino.aa_rx_sg_copy(self._ptr))
         sg_copy.init()
         return sg_copy
@@ -670,7 +663,7 @@ libamino.aa_rx_sg_fill_tf_abs.argtypes = [
 ]
 
 
-class SubSceneGraph(object):
+class SubSceneGraph:
     """A subset of a scene graph"""
 
     __slots__ = ['_ptr', 'scenegraph']

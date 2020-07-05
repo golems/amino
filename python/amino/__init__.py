@@ -49,4 +49,4 @@ from amino.kinematics import SceneFK, SceneDK, SceneIK
 
 from amino.collision import SceneCollisionSet, SceneCollision
 
-from amino.motionPlanning import MotionPlan
+from amino.motionplanning import MotionPlan

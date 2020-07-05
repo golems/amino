@@ -47,10 +47,8 @@ from amino.scenegraph import RxSg, RxSgSub
 
 class RxFK(ctypes.Structure):
     """Opaque type for fk result pointer"""
-    pass
 
-
-class SceneFK(object):
+class SceneFK:
     """Forward Kinematics."""
     __slots__ = ['_ptr', '_q', 'scenegraph']
 
@@ -136,10 +134,8 @@ libamino.aa_rx_fk_cnt.restype = ctypes.c_size_t
 
 class RxWkOpts(ctypes.Structure):
     """Opaque type for workspace options result pointer"""
-    pass
 
-
-class SceneDK(object):
+class SceneDK:
     """Differential Kinematics"""
     __slots__ = [
         "opts",
@@ -256,15 +252,11 @@ libamino.aa_rx_wk_dx_pos.argtypes = [
 
 class RxIK(ctypes.Structure):
     """Opaque type for inverse kinematics context"""
-    pass
-
 
 class RxIKParm(ctypes.Structure):
     """Opaque type for inverse kinematics parameters"""
-    pass
 
-
-class SceneIK(object):
+class SceneIK:
     """Inverse Kinematics"""
     __slots__ = ["_ptr", "ik_parm", "ssg", "_tf_ref"]
 

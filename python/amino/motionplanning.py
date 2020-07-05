@@ -44,8 +44,6 @@ LIBAMINOMP = ctypes.CDLL("libamino-planning.so")
 
 class RxMp(ctypes.Structure):
     """Opaque type for struct aa_rx_mp"""
-    pass
-
 
 class MotionPlan(object):
     """Context object for motion planning."""

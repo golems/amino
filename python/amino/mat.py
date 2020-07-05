@@ -37,7 +37,7 @@
 import ctypes
 
 from amino.lib import libamino
-from amino.mixin import VecMixin, SSDEqMixin, DivCompatMixin
+from amino.mixin import VecMixin, SSDEqMixin, DivCompatMixin, MatMixin
 from amino.util import ensure, is_int, is_scalar
 
 CBLAS_NO_TRANS = 111
@@ -132,9 +132,9 @@ class DVec(ctypes.Structure, VecMixin):
         x -- a vector
         beta -- a scalar
         """
-        if A._rows != len(self):
+        if A.rows != len(self):
             raise IndexError()
-        if A._cols != len(x):
+        if A.cols != len(x):
             raise IndexError()
         libamino.aa_dmat_gemv(trans, alpha, A, x, beta, self)
         return self
@@ -181,12 +181,11 @@ class DVec(ctypes.Structure, VecMixin):
         """Add a scalar or vector to self"""
         if isinstance(other, DVec):
             return self.axpy(1, other)
-        elif isinstance(other, list):
+        if isinstance(other, list):
             return self.axpy(1, DVec(other))
-        elif is_scalar(other):
+        if is_scalar(other):
             return self.increment(other)
-        else:
-            raise Exception('Invalid argument')
+        raise Exception('Invalid argument')
 
     def __add__(self, other):
         """Add a scalar or vector to self"""
@@ -202,30 +201,27 @@ class DVec(ctypes.Structure, VecMixin):
             return self.axpy(-1, other)
         if isinstance(other, list):
             return self.axpy(-1, DVec(other))
-        elif is_scalar(other):
+        if is_scalar(other):
             return self.increment(-other)
-        else:
-            raise Exception('Invalid argument')
+        raise Exception('Invalid argument')
 
     def __sub__(self, other):
         """Subtract a scalar or vector from self"""
         if isinstance(other, DVec):
             return DVec(self).axpy(-1, other)
-        elif isinstance(other, list):
+        if isinstance(other, list):
             return self.__sub__(DVec(other))
-        elif is_scalar(other):
+        if is_scalar(other):
             return DVec(self).increment(-other)
-        else:
-            raise Exception('Invalid argument')
+        raise Exception('Invalid argument')
 
     def __rsub__(self, other):
         """Subtract a self from a scalar or vector"""
         if is_scalar(other):
             return self.__neg__().increment(other)
-        elif isinstance(other, list):
+        if isinstance(other, list):
             return DVec(other).axpy(-1, self)
-        else:
-            raise Exception('Invalid argument')
+        raise Exception('Invalid argument')
 
     def __imul__(self, other):
         """Multiply self by a scalar"""
@@ -265,7 +261,7 @@ class DVec(ctypes.Structure, VecMixin):
         return s
 
 
-class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin):
+class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin, MatMixin):
     """Matrix of double floats."""
     _fields_ = [("_rows", ctypes.c_size_t), ("_cols", ctypes.c_size_t),
                 ("_data", ctypes.POINTER(ctypes.c_double)),
@@ -390,7 +386,7 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin):
             beta: scale factor for self
         """
         C = self
-        if (A._rows != C._rows or A._cols != B._rows or B._cols != C._cols):
+        if (A.rows != C.rows or A.cols != B.rows or B.cols != C.cols):
             raise IndexError()
         libamino.aa_dmat_gemm(transA, transB, alpha, A, B, beta, C)
         return C
@@ -474,8 +470,7 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin):
     def __rmul__(self, other):
         if is_scalar(other):
             return DMat(self).__imul__(other)
-        else:
-            raise TypeError('Cannot multiply matrix with %s' % type(other))
+        raise TypeError('Cannot multiply matrix with %s' % type(other))
 
     def __itruediv__(self, other):
         """Divide self by a scalar"""
@@ -492,20 +487,17 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin):
         if isinstance(other, DMat):
             libamino.aa_dmat_axpy(1, other, self)
             return self
-        else:
-            raise TypeError('Cannot increment matrix with %s' % type(other))
+        raise TypeError('Cannot increment matrix with %s' % type(other))
 
     def __add__(self, other):
         if is_scalar(other) or isinstance(other, DMat):
             return DMat(self).__iadd__(other)
-        else:
-            raise TypeError('Cannot add matrix add %s' % type(other))
+        raise TypeError('Cannot add matrix add %s' % type(other))
 
     def __radd__(self, other):
         if is_scalar(other):
             return DMat(self).__iadd__(other)
-        else:
-            raise TypeError('Cannot add matrix add %s' % type(other))
+        raise TypeError('Cannot add matrix add %s' % type(other))
 
     def __isub__(self, other):
         if is_scalar(other):
@@ -514,38 +506,20 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin):
         if isinstance(other, DMat):
             libamino.aa_dmat_axpy(-1, other, self)
             return self
-        else:
-            raise TypeError('Cannot increment matrix with %s' % type(other))
+        raise TypeError('Cannot increment matrix with %s' % type(other))
 
     def __sub__(self, other):
         if is_scalar(other) or isinstance(other, DMat):
             return DMat(self).__isub__(other)
-        else:
-            raise TypeError('Cannot subtract matrix with %s' % type(other))
+        raise TypeError('Cannot subtract matrix with %s' % type(other))
 
     def __rsub__(self, other):
         if is_scalar(other):
             return self.__neg__().__iadd__(other)
-        else:
-            raise TypeError('Cannot subtract matrix with %s' % type(other))
+        raise TypeError('Cannot subtract matrix with %s' % type(other))
 
     def __str__(self):
-        m = self._rows
-        n = self._cols
-        s = "DMat.row_matrix("
-        for i in range(0, m):
-            if i == 0:
-                s += "["
-            else:
-                s += ",\n                ["
-            for j in range(0, n):
-                if j == 0:
-                    s += "%f" % self[i, j]
-                else:
-                    s += ", %f" % self[i, j]
-            s += "]"
-        s += ")"
-        return s
+        return self._str_helper("TfMat.row_matrix")
 
 
 #---------------#

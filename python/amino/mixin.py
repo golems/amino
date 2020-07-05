@@ -33,7 +33,7 @@
 """Helper mixins."""
 
 
-class SSDEqMixin(object):
+class SSDEqMixin:
     """Equality test mixin using sum-square-differences."""
 
     def __eq__(self, other):
@@ -52,7 +52,7 @@ class SSDEqMixin(object):
         return d <= max(rel_tol * max(na, nb), abs_tol)
 
 
-class CopyEltsMixin(object):
+class CopyEltsMixin:
     """Copy Elements mixin."""
 
     def copy_from(self, src):
@@ -75,6 +75,7 @@ class CopyEltsMixin(object):
 
 
 class DivCompatMixin:
+    """Mixin for compatibility division operator."""
     def __div__(self, other):
         return self.__truediv__(other)
 
@@ -88,3 +89,28 @@ class VecMixin(CopyEltsMixin, SSDEqMixin, DivCompatMixin):
 
     def __radd__(self, other):
         return self + other
+
+
+class MatMixin:
+    """Mixin for matrix-like objects."""
+    def _str_helper(self, name, m=None, n=None):
+        if m is None:
+            m = self.rows
+        if n is None:
+            n = self.cols
+        s = "%s([" % name
+        spaces = " "*len(s)
+        newrow = ",\n%s[" % spaces
+        for i in range(0, m):
+            if i == 0:
+                s += "["
+            else:
+                s += newrow
+            for j in range(0, n):
+                if j == 0:
+                    s += "%f" % self[i, j]
+                else:
+                    s += ", %f" % self[i, j]
+            s += "]"
+        s += "])"
+        return s

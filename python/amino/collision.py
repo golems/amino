@@ -44,10 +44,8 @@ LIBAMINOCL = ctypes.CDLL("libamino-collision.so")
 
 class RxClSet(ctypes.Structure):
     """Opaque type for struct aa_rx_cl_set."""
-    pass
 
-
-class SceneCollisionSet(object):
+class SceneCollisionSet:
     """Set of frame pairs indicating collision between frames."""
 
     __slots__ = ["_ptr", "scenegraph"]
@@ -122,10 +120,8 @@ LIBAMINOCL.aa_rx_cl_set_fill.argtypes = [
 
 class RxCl(ctypes.Structure):
     """Opaque type for struct aa_rx_cl."""
-    pass
 
-
-class SceneCollision(object):
+class SceneCollision:
     """Context object for collision detection."""
 
     __slots__ = ["_ptr", "scenegraph"]
@@ -212,7 +208,6 @@ LIBAMINOCL.aa_rx_cl_check.restypes = ctypes.c_int
 
 class RxClDist(ctypes.Structure):
     """Opaque type for struct aa_rx_cl_dist."""
-    pass
 
 
 LIBAMINOCL.aa_rx_cl_dist_create.argtypes = [ctypes.POINTER(RxCl)]
@@ -238,7 +233,7 @@ LIBAMINOCL.aa_rx_cl_dist_get_points.argtypes = [
 LIBAMINOCL.aa_rx_cl_dist_get_points.restype = ctypes.c_double
 
 
-class SceneCollisionDist(object):
+class SceneCollisionDist:
     """Context object for separation distances."""
 
     class DistDesc():

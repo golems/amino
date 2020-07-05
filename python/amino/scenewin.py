@@ -45,10 +45,8 @@ LIBAMINOGL = ctypes.CDLL("libamino-gl.so")
 
 class RxWin(ctypes.Structure):
     """Opaque type for scene window"""
-    pass
 
-
-class SceneWin(object):
+class SceneWin:
     """Scene Viewer Window."""
     __slots__ = ['_ptr', '_scenegraph', '_q']
 
