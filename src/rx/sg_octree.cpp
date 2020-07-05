@@ -44,41 +44,34 @@
 #include "amino/rx/scene_geom.h"
 #include "amino/rx/octree_geom.hpp"
 #include "amino/mat_internal.h"
+#include "amino/mem.hpp"
 
 AA_API void aa_rx_sg_add_octree(
     struct aa_rx_sg *scene_graph,
-    const char *parent,
+    const char *parent, const char *name,
     struct aa_rx_octree* ocTree, struct aa_rx_geom_opt* opt)
 {
     size_t x=0;
-    size_t len = 8;
-    size_t base = 10;
-    double q[4] ={0,0,0,1};
 
     octomap::OcTree* tree = ocTree->otree;
     for(octomap::OcTree::leaf_iterator it = tree->begin_leafs(),
             end=tree->end_leafs(); it!= end; ++it)
     {
         if (it->getOccupancy() > 0.5){
-            char name[len];
-            sprintf(name, "octree%ld",x);
+            amino::RegionScope rs;
+            char *sub_name = aa_mem_region_printf(rs.reg(), "%s/%ld", name, x++);
 
             double v[3] = { it.getX(), it.getY(), it.getZ() };
 
-            aa_rx_sg_add_frame_fixed(scene_graph, parent, name, q,v);
+            aa_rx_sg_add_frame_fixed(scene_graph, parent, sub_name,
+                                     aa_tf_quat_ident, v);
 
-            x++;
-            if (x % base==0) {
-                len++;
-                base *=10;
-
-            }
             if ( opt ){
                 double s_len = cbrt(it.getSize());
                 static const double dimension[3] = {s_len, s_len, s_len};
                 struct aa_rx_geom* geom = aa_rx_geom_box(opt, dimension);
 
-                aa_rx_geom_attach(scene_graph, name, geom);
+                aa_rx_geom_attach(scene_graph, sub_name, geom);
 
             }
         }

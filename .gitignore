@@ -219,3 +219,4 @@ amino*.tar.gz
 /pylint.report
 /python/test/pylint.sh
 /eigen_compat
+/octomap_test
