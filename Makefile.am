@@ -145,6 +145,7 @@ rxinclude_HEADERS = 	                \
 	include/amino/rx/scene_ik.h    \
 	include/amino/rx/scene_dyn.h    \
 	include/amino/rx/scene_gl.h \
+	include/amino/rx/scene_gl_octree.h \
 	include/amino/rx/scene_sdl.h \
 	include/amino/rx/scene_collision.h \
 	include/amino/rx/scene_planning.h \
@@ -434,8 +435,7 @@ EXTRA_DIST += \
 	python/amino/scenewin.py \
 	python/amino/lib.py \
 	python/amino/collision.py \
-	python/amino/motionPlanning.py \
-	python/amino/motionPlanning.py \
+	python/amino/motionplanning.py \
 	python/amino/defaults.py \
 	python/amino/__init__.py
 
