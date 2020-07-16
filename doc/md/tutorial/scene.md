@@ -216,7 +216,7 @@ make
 <li>Use the following code to load the scene file and display in the
 viewer:
 
-@include tutorial/python/t3.2-scenefile.py
+@include python/t3.2-scenefile.py
 </li>
 
 </li>
