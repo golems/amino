@@ -103,4 +103,7 @@
    :motion-plan-endpoint-map
    :motion-plan-endpoint-array
 
+   ;; scenegraph parsing
+   :load-moveit-scene
+
    ))

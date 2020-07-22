@@ -79,7 +79,7 @@
                (:file "rx/lexer" :depends-on ("rx/util"))
                (:file "rx/inex" :depends-on ("rx/util"))
                (:file "rx/scenefile/curly" :depends-on ("rx/scenegraph" "rx/mesh" "rx/lexer" "rx/inex"))
-               ;(:file "rx/scenefile/moveit" :depends-on ("rx/scenegraph" "rx/mesh"))
+               (:file "rx/scenefile/moveit" :depends-on ("rx/scenegraph" "rx/mesh"))
                (:file "rx/scenefile/scenefile"
                       :depends-on ("rx/scenefile/urdf" "rx/scenefile/curly"))
                (:file "rx/animate" :depends-on ("rx/scenegraph" "rx/povray"))

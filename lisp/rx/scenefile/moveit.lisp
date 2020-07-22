@@ -140,7 +140,7 @@
                                                   (vec3 translation))
                                          :geometry (scene-geometry-box (draw-options-default :color (subseq rgba 0 3)
                                                                                              :alpha (elt rgba 3))
-                                                                       (scene-box size))))))
+                                                                        size)))))
                  (parse-mesh (name)
                    (destructuring-bind (vertex-count face-count)
                        (int-line)
