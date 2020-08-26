@@ -74,16 +74,14 @@ static void s_scal()
 {
     RegionScope rs;
 
-    double A[2] = {1, 2};
-    DVec Av(2,A);
-
-    DVec *Bv = DVec::alloc( rs.reg(), 2 );
+    const DVec A(rs, {1,2});
+    DVec B(rs,2);
 
     {
-        *Bv = Av;
-        assert(2 == Bv->len());
-        assert(2 == Av.len());
-        aveq( "DVec =", Bv->len(), Bv->data(), A, 0);
+        B = A;
+        assert(2 == B.len());
+        assert(2 == A.len());
+        aveq( "DVec =", B.len(), B.data(), A.data(), 0);
 
 
     }
@@ -94,51 +92,51 @@ static void s_scal()
         double A2[2] = {2, 4};
         double A4[2] = {4, 8};
 
-        *Bv = Av;
-        aveq( "DVec = ", Bv->len(), Bv->data(), A, 0);
-        *Bv *= 2;
-        aveq( "DVec *= double", Bv->len(), Bv->data(), A2, 0);
+        B = A;
+        aveq( "Dec = ", B.len(), B.data(), A.data(), 0);
+        B *= 2;
+        aveq( "Dec *= double", B.len(), B.data(), A2, 0);
 
-        *Bv = 2*Av;
-        aveq( "DVec = dscal 0", Bv->len(), Bv->data(), A2, 0);
+        B = 2*A;
+        aveq( "Dec = dscal 0", B.len(), B.data(), A2, 0);
 
-        *Bv = (2*Av)*2;
-        aveq( "DVec = dscal 1", Bv->len(), Bv->data(), A4, 0);
+        B = (2*A)*2;
+        aveq( "Dec = dscal 1", B.len(), B.data(), A4, 0);
 
-        *Bv = 2*(Av*2);
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = 2*(A*2);
+        aveq( "DVec = dscal 2", B.len(), B.data(), A4, 0);
 
-        *Bv = 2*(Av+Av);
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = 2*(A+A);
+        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
 
-        *Bv = (Av+Av)*2;
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = (A+A)*2;
+        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
 
-        *Bv = 2*(Av+Av);
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = 2*(A+A);
+        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
 
-        *Bv = 2*Av+(Av+Av);
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = 2*A+(A+A);
+        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
 
-        *Bv = (Av+Av)+2*Av;
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = (A+A)+2*A;
+        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
 
-        *Bv = Av+2*Av+Av;
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = A+2*A+A;
+        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
 
-        *Bv = Av*2 + 2*Av;
-        aveq( "DVec = dscal 2", Bv->len(), Bv->data(), A4, 0);
+        B = A*2 + 2*A;
+        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
 
         {
             struct aa_dvec Avv;
-            aa_dvec_view(&Avv, 2,A,1);
+            aa_dvec_view(&Avv, 2,A.data(),1);
 
-            *Bv = 2*Avv;
-            aveq( "DVec *= double", Bv->len(), Bv->data(), A2, 0);
+            B = 2*Avv;
+            aveq( "Dec *= double", B.len(), B.data(), A2, 0);
 
             //*Bv += 2*Avv;
             //aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
-    }
+        }
     }
 
 }
@@ -147,32 +145,30 @@ static void s_scal()
 static void s_axpy()
 {
     RegionScope rs;
+    DVec A(rs, {1,2});
 
-    double A[2] = {1, 2};
-    DVec Av(2,A);
-
-    DVec *Bv = DVec::alloc( rs.reg(), 2 );
+    DVec B(rs, 2);
 
     {
         double R[] = {2,4};
-        *Bv = Av + Av;
-        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
+        B = A + A;
+        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
     }
 
     {
         double R[] = {3,6};
-        *Bv = (Av + Av) + Av;
-        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
+        B = (A + A) + A;
+        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
 
-        *Bv = Av + (Av + Av);
-        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
+        B = A + (A + A);
+        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
 
 
-        *Bv = 2*Av + Av;
-        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
+        B = 2*A + A;
+        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
 
-        *Bv = Av + 2*Av;
-        aveq( "DVec  axpy", Bv->len(), Bv->data(), R, 0);
+        B = A + 2*A;
+        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
     }
 
 }
@@ -181,14 +177,11 @@ static void s_axpy()
 static void s_mscal()
 {
     {
-        double d[] = {1,2, 3,4};
-        double dp[] = {1,2, 3,4};
-        double d2[] = {2,4, 6,8};
-        double d4[] = {4,8, 12,16};
-        DMat A(2,2,d,2);
-        DMat Ap(2,2,dp,2);
-        DMat A2(2,2,d2,2);
-        DMat A4(2,2,d4,2);
+        RegionScope rs;
+        DMat &A = *DMat::col_mat(rs, {{1,2}, {3,4}});
+        DMat &Ap = *DMat::col_mat(rs, {{1,2}, {3,4}});
+        DMat &A2 = *DMat::col_mat(rs, {{2,4}, {6,8}});
+        DMat &A4 = *DMat::col_mat(rs, {{4,8}, {12,16}});
 
         A *= 2;
         admeq( "dmat_scal-0", A, A2, 1e-6 );
@@ -247,10 +240,10 @@ static void s_transpose()
     double Xd[3*2 + 1] = { 1,2,3, 4,5,6, 7};
 
     {
-        double Yd[3*2] = {0};
+        RegionScope rs;
         double Rd[] = {1,4, 2,5, 3,6};
         DMat X(3,2,Xd,3);
-        DMat Y(2,3,Yd,2);
+        DMat Y(rs,2,3);
         DMat R(2,3,Rd,2);
         Y = X.transpose();
         admeq( "dmat_trans-0", Y, R, 1e-6 );
@@ -267,11 +260,10 @@ static void s_transpose()
     }
 
     {
-        double Yd[2*2] = {0};
-        double Rd[] = {1,4, 2,5};
+        RegionScope rs;
         DMat X(2,2,Xd,3);
-        DMat Y(2,2,Yd,2);
-        DMat R(2,2,Rd,2);
+        DMat Y(rs,2,2);
+        DMat &R = *DMat::col_mat(rs, {{1,4}, {2,5}});
         Y = X.transpose();
         admeq( "dmat_trans-1", Y, R, 1e-6 );
     }
@@ -280,13 +272,12 @@ static void s_transpose()
 
 static void s_inv()
 {
+    RegionScope rs;
 
     double Ad[] = {1,3,0, 2,4,0 };
-    double Abd[4];
-    double Aid[] = {-2, 1.5, 1, -.5};
     DMat A(2,2,Ad,3);
-    DMat Ab(2,2,Abd,2);
-    DMat Ai(2,2,Aid,2);
+    DMat Ab(rs,2,2);
+    DMat &Ai = *DMat::col_mat(rs, {{-2,1.5}, {1,-.5}});
 
     Ab = A.inverse();
     admeq( "dmat_inv", Ab, Ai, 1e-6 );
@@ -297,24 +288,17 @@ static void s_inv()
 
 static void s_gemv()
 {
-    double Ad[] = {1,2, 3,4};
-    double xd[] = {1,2};
-    double yd1[] = {7,10};
-    double yd2[] = {14,20};
-    double yd4[] = {28,40};
-    double yds[2] = {0,0};
+    RegionScope rs;
 
-    double ydt1[] = {5,11};
-    double ydt2[] = {10,22};
 
-    DMat A(2,2,Ad);
-    DVec x(2,xd);
-    DVec y1(2,yd1);
-    DVec y2(2,yd2);
-    DVec y4(2,yd4);
-    DVec yt1(2,ydt1);
-    DVec yt2(2,ydt2);
-    DVec ys(2,yds);
+    DMat &A = *DMat::col_mat(rs, {{1,2}, {3,4}});
+    DVec x(rs, {1,2});
+    DVec y1(rs, {7,10});
+    DVec y2(rs, {14,20});
+    DVec y4(rs, {28,40});
+    DVec yt1(rs, {5,11} );
+    DVec yt2(rs, {10,22});
+    DVec ys(rs, {0,0});
 
     ys = A*x;
     adveq( "gemv 0", ys, y1, 1e-6 );
@@ -346,26 +330,18 @@ static void s_gemv()
 }
 
 static void s_gemv2() {
-    double Ad[] = {1,2, 3,4};
-    double xd[] = {1,2};
-    double yd[] = {3,9};
+    RegionScope rs;
 
-    double yyd[2] = {};
+    DMat &A = *DMat::col_mat(rs, {{1,2}, {3,4}});
 
-    double rd[2] = {10,19};
-    double rd2[2] = {13,28};
-    double rd3[2] = {17,29};
-    double rd4[4] = {20,38};
+    DVec x(rs, {1,2});
+    DVec y(rs, {3,9});
+    DVec yy(rs, 2);
+    DVec r(rs, {10,19});
 
-    DMat A(2,2,Ad);
-    DVec x(2,xd);
-    DVec y(2,yd);
-    DVec yy(2,yyd);
-    DVec r(2,rd);
-
-    DVec r2(2,rd2);
-    DVec r3(2,rd3);
-    DVec r4(2,rd4);
+    DVec r2(rs, {13,28});
+    DVec r3(rs, {17,29});
+    DVec r4(rs, {20,38});
 
     yy = A*x + y;
     adveq( "gemv2 0", yy, r, 1e-6 );
@@ -461,8 +437,9 @@ static void s_gemm() {
     }
 
     {
-        DMat &ABt2 = * DMat::alloc_local(2,2);
-        DMat &ABt4 = * DMat::alloc_local(2,2);
+        RegionScope rs;
+        DMat ABt2(rs, 2, 2);
+        DMat ABt4(rs, 2, 2);
         ABt2 = 2*ABt;
         ABt4 = 4*ABt;
 
@@ -489,8 +466,9 @@ static void s_gemm() {
     }
 
     {
-        DMat &AtBt2 = * DMat::alloc_local(2,2);
-        DMat &AtBt4 = * DMat::alloc_local(2,2);
+        RegionScope rs;
+        DMat AtBt2(rs, 2, 2);
+        DMat AtBt4(rs, 2, 2);
         AtBt2 = 2*AtBt;
         AtBt4 = 4*AtBt;
 
@@ -520,19 +498,15 @@ static void s_gemm() {
 
 static void s_gemm2()
 {
-    double Ad[] = {1,2, 3,4};
-    double Bd[] = {11,13, 17,23};
-    double Cd[] = {5,6, 7,8};
-    double Dd[] = {50,60, 70,80};
-    DMat A(2,2,Ad);
-    DMat B(2,2,Bd);
-    DMat C(2,2,Cd);
-    DMat D(2,2,Dd);
+    RegionScope rs;
+    DMat &A = *DMat::col_mat(rs, {{1,2}, {3,4}});
+    DMat &B = *DMat::col_mat(rs, {{11,13}, {17,23}});
+    DMat &C = *DMat::col_mat(rs, {{5,6}, {7,8}});
+    DMat &D = *DMat::col_mat(rs, {{50,60}, {70,80}});
 
-    double ABpCd[] = {55, 80, 93, 134};
-    DMat ABpC(2,2,ABpCd);
+    DMat &ABpC = *DMat::col_mat(rs, {{55, 80}, {93, 134}});
 
-    DMat &R = *DMat::alloc_local(2,2);
+    DMat R(rs, 2, 2);
 
     R = A*B + C;
     admeq("gemm 2 0", R, ABpC, 1e-6);
@@ -553,8 +527,7 @@ static void s_gemm2()
     }
 
     {
-        double ABp2Ctd[] = {60,88, 98, 142};
-        DMat ABp2Ct(2,2,ABp2Ctd);
+        DMat &ABp2Ct = *DMat::col_mat(rs, {{60,88}, {98, 142}});
         R = A*B + 2*C.t();
         admeq("gemm 2e 2", R, ABp2Ct, 1e-6);
 
@@ -563,7 +536,7 @@ static void s_gemm2()
     }
 
     {
-        DMat &E = *DMat::alloc_local(2,2);
+        DMat E(rs, 2, 2);
         E = 2*ABpC;
 
         R = 2*A*B + 2*C; //+ C*2;
@@ -579,18 +552,12 @@ static void s_gemm2()
 
 static void s_slice()
 {
-    double Ad[] = {1,2, 3,4};
-
-    double r0d[] = {1,3};
-    double r1d[] = {2,4};
-    double c0d[] = {1,2};
-    double c1d[] = {3,4};
-
-    DMat A(2,2,Ad);
-    DVec vr0(2,r0d);
-    DVec vr1(2,r1d);
-    DVec vc0(2,c0d);
-    DVec vc1(2,c1d);
+    RegionScope rs;
+    DMat &A = *DMat::col_mat(rs, {{1,2}, {3,4}});
+    DVec vr0(rs, {1,3});
+    DVec vr1(rs, {2,4});
+    DVec vc0(rs, {1,2});
+    DVec vc1(rs, {3,4});
 
     DVec rc0 = A.col_vec(0);
     adveq("slice", rc0, vc0, 0);
@@ -606,8 +573,88 @@ static void s_slice()
 
 }
 
+static void s_block()
+{
+
+    {
+        RegionScope rs;
+        DMat &A = *DMat::col_mat(rs, {{1,2,3}, {4,5,6}});
+        assert(3 == A.rows());
+        assert(2 == A.cols());
+        afeq( 1, A(0,0), 0);
+        afeq( 2, A(1,0), 0);
+        afeq( 3, A(2,0), 0);
+
+        afeq( 4, A(0,1), 0);
+        afeq( 5, A(1,1), 0);
+        afeq( 6, A(2,1), 0);
+
+        DMat &Ar = *DMat::col_mat(rs, {{1,4}, {2,5}, {3,6}});
+        DMat At(rs, 2, 3);
+        At = A.transpose();
+        admeq("block", At, Ar, 0);
+
+        DMat &B = *DMat::row_mat(rs, {{1,4}, {2,5}, {3,6}});
+        assert(3 == B.rows());
+        assert(2 == B.cols());
+
+        afeq( 1, B(0,0), 0);
+        afeq( 2, B(1,0), 0);
+        afeq( 3, B(2,0), 0);
+
+        afeq( 4, B(0,1), 0);
+        afeq( 5, B(1,1), 0);
+        afeq( 6, B(2,1), 0);
+
+        DMat &Br = *DMat::row_mat(rs, {{1,2,3}, {4,5,6}});
+        DMat Bt(rs, 2, 3);
+        Bt = B.transpose();
+        admeq("block", Bt, Br, 0);
+
+        admeq("block", A, B, 0);
+        admeq("block", At, Bt, 0);
+
+    }
+
+    {
+        RegionScope rs;
+        DMat &A = *DMat::col_mat(rs, {{1,2,3}, {4,5,6}});
+        DMat &B = *DMat::col_mat(rs, {{1,2}, {4,5}});
+        admeq("block", A.block(0,0, 2, 2), B, 0);
+    }
+
+    {
+        RegionScope rs;
+        DMat &A = *DMat::row_mat(rs,
+                                 {{1,2,3},
+                                  {4,5,6},
+                                  {7,8,9}});
+        DMat &B = *DMat::row_mat(rs, {{2,3}, {5,6}});
+        admeq("block", A.block(0,1, 2, 3), B, 0);
+
+        DMat &C = *DMat::col_mat(rs, {{4,7}, {5,8}});
+        admeq("block", A.block(1,0, 3, 2), C, 0);
+    }
+}
+
+void s_init() {
+    RegionScope rs;
+    DVec &A = *DVec::init(rs, {1,2});
+    DVec &B = *DVec::init(rs, A);
+
+    afeq(A[0], 1, 0);
+    afeq(A[1], 2, 0);
+
+    afeq(A[0], B[0], 0);
+    afeq(A[1], B[1], 0);
+}
+
 int main(void)
 {
+
+    s_init();
+
+    s_block();
 
     s_scal();
     s_axpy();
@@ -622,6 +669,7 @@ int main(void)
     s_gemm2();
 
     s_slice();
+
 
     printf("MATPP: OK\n");
     return 0;

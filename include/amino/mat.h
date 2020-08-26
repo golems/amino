@@ -117,12 +117,9 @@ aa_la_set_err( aa_la_err_fun *fun );
  * @param inc  Increment between sucessive elements
  */
 static inline struct aa_dvec
-AA_DVEC_INIT( size_t len, double *data, size_t inc )
+AA_DVEC_INIT( aa_la_size len, double *data, aa_la_size inc )
 {
-    struct aa_dvec vec;
-    vec.len = len;
-    vec.data = data;
-    vec.inc = inc;
+    struct aa_dvec vec = {len, data, inc};
     return vec;
 }
 
@@ -134,8 +131,23 @@ AA_DVEC_INIT( size_t len, double *data, size_t inc )
  * @param data Pointer to vector data
  * @param inc  Increment between sucessive elements
  */
+static inline void
+AA_DVEC_VIEW(struct aa_dvec *vec, aa_la_size len, double *data, aa_la_size inc)
+{
+    *vec = AA_DVEC_INIT(len,data,inc);
+}
+
+/**
+ * Fill in a vector descriptor.
+ *
+ * @param vec  Pointer to descriptor
+ * @param len  Number of elements in vector
+ * @param data Pointer to vector data
+ * @param inc  Increment between sucessive elements
+ */
 AA_API void
-aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
+aa_dvec_view( struct aa_dvec *vec, aa_la_size len, double *data, aa_la_size inc );
+
 
 /**
  * Fill in a matrix descriptor.
@@ -147,7 +159,7 @@ aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc );
  * @param ld    Leading dimension of matrix
  */
 AA_API void
-aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_t ld );
+aa_dmat_view( struct aa_dmat *mat, aa_la_size rows, aa_la_size cols, double *data, aa_la_size ld );
 
 /**
  * View a block of a matrix.
@@ -155,17 +167,17 @@ aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols, double *data, size_
 AA_API void
 aa_dmat_view_block( struct aa_dmat *dst,
                     const struct aa_dmat *src,
-                    size_t row_start, size_t col_start,
-                    size_t rows, size_t cols );
+                    aa_la_size row_start, aa_la_size col_start,
+                    aa_la_size rows, aa_la_size cols );
 
 /**
  * View a slice of a vector.
  */
 AA_API void
 aa_dvec_slice( const struct aa_dvec *src,
-               size_t start,
-               size_t stop,
-               size_t step,
+               aa_la_size start,
+               aa_la_size stop,
+               aa_la_size step,
                struct aa_dvec *dst );
 
 
@@ -174,21 +186,21 @@ aa_dvec_slice( const struct aa_dvec *src,
  */
 AA_API void
 aa_dmat_block( const struct aa_dmat *src,
-               size_t row_start, size_t col_start,
-               size_t row_end, size_t col_end,
+               aa_la_size row_start, aa_la_size col_start,
+               aa_la_size row_end, aa_la_size col_end,
                struct aa_dmat *dst );
 
 /**
  * View a row of a matrix as a vector.
  */
 AA_API void
-aa_dmat_row_vec( const struct aa_dmat *src, size_t row, struct aa_dvec *dst );
+aa_dmat_row_vec( const struct aa_dmat *src, aa_la_size row, struct aa_dvec *dst );
 
 /**
  * View a column of a matrix as a vector.
  */
 AA_API void
-aa_dmat_col_vec( const struct aa_dmat *src, size_t col, struct aa_dvec *dst );
+aa_dmat_col_vec( const struct aa_dmat *src, aa_la_size col, struct aa_dvec *dst );
 
 /**
  * View the diagonal of a matrix as a vector.
@@ -206,7 +218,7 @@ aa_dmat_diag_vec( const struct aa_dmat *src, struct aa_dvec *dst );
  * @param ld    Leading dimension of matrix
  */
 static inline struct aa_dmat
-AA_DMAT_INIT( size_t rows, size_t cols, double *data, size_t ld )
+AA_DMAT_INIT( aa_la_size rows, aa_la_size cols, double *data, aa_la_size ld )
 {
     struct aa_dmat mat;
     mat.rows = rows;
@@ -214,6 +226,21 @@ AA_DMAT_INIT( size_t rows, size_t cols, double *data, size_t ld )
     mat.data = data;
     mat.ld = ld;
     return mat;
+}
+
+/**
+ * Fill in a matrix descriptor.
+ *
+ * @param mat   Pointer to descriptor
+ * @param rows  Number of rows in matrix
+ * @param cols  Number of colums in matrix
+ * @param data  Pointer to vector data
+ * @param ld    Leading dimension of matrix
+ */
+static inline void
+AA_DMAT_VIEW(struct aa_dmat *mat, aa_la_size rows, aa_la_size cols, double *data, aa_la_size ld)
+{
+    *mat = AA_DMAT_INIT(rows,cols,data,ld);
 }
 
 
@@ -226,7 +253,7 @@ AA_DMAT_INIT( size_t rows, size_t cols, double *data, size_t ld )
  * When finished, pop the descriptor.
  */
 AA_API struct aa_dvec *
-aa_dvec_alloc( struct aa_mem_region *reg, size_t len );
+aa_dvec_alloc( struct aa_mem_region *reg, aa_la_size len );
 
 
 /**
@@ -238,6 +265,14 @@ AA_API struct aa_dvec *
 aa_dvec_dup( struct aa_mem_region *reg, const struct aa_dvec *src);
 
 /**
+ * Duplicate vector in the heap.
+ *
+ * When finished, free the descriptor.
+ */
+AA_API struct aa_dvec *
+aa_dvec_mdup(const struct aa_dvec *src);
+
+/**
  * Duplicate matrix out of region
  *
  * When finished, pop the descriptor.
@@ -246,12 +281,20 @@ AA_API struct aa_dmat *
 aa_dmat_dup( struct aa_mem_region *reg, const struct aa_dmat *src);
 
 /**
+ * Duplicate matrix in the heap
+ *
+ * When finished, free the descriptor.
+ */
+AA_API struct aa_dmat *
+aa_dmat_mdup(const struct aa_dmat *src);
+
+/**
  * Region-allocate a matrix.
  *
  * When finished, pop the descriptor.
  */
 AA_API struct aa_dmat *
-aa_dmat_alloc( struct aa_mem_region *reg, size_t rows, size_t cols );
+aa_dmat_alloc( struct aa_mem_region *reg, aa_la_size rows, aa_la_size cols );
 
 /**
  * Heap-allocate a vector.
@@ -260,7 +303,7 @@ aa_dmat_alloc( struct aa_mem_region *reg, size_t rows, size_t cols );
  * When finished, call free() on the descriptor.
  */
 AA_API struct aa_dvec *
-aa_dvec_malloc( size_t len );
+aa_dvec_malloc( aa_la_size len );
 
 /**
  * Heap-allocate a matrix.
@@ -269,7 +312,7 @@ aa_dvec_malloc( size_t len );
  * When finished, call free() on the descriptor.
  */
 AA_API struct aa_dmat *
-aa_dmat_malloc( size_t rows, size_t cols );
+aa_dmat_malloc( aa_la_size rows, aa_la_size cols );
 
 /**
  * Zero a vector.

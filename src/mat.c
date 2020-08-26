@@ -96,7 +96,7 @@ aa_la_fail_size( size_t a, size_t b )
 AA_API void
 aa_dvec_view( struct aa_dvec *vec, size_t len, double *data, size_t inc )
 {
-    *vec = AA_DVEC_INIT(len,data,inc);
+    AA_DVEC_VIEW(vec, len, data, inc);
 }
 
 
@@ -144,7 +144,7 @@ AA_API void
 aa_dmat_view( struct aa_dmat *mat, size_t rows, size_t cols,
               double *data, size_t ld )
 {
-    *mat = AA_DMAT_INIT(rows,cols,data,ld);
+    AA_DMAT_VIEW(mat, rows, cols, data, ld);
 }
 
 AA_API void
@@ -220,10 +220,27 @@ aa_dvec_dup( struct aa_mem_region *reg, const struct aa_dvec *src)
     return dst;
 }
 
+AA_API struct aa_dvec *
+aa_dvec_mdup( const struct aa_dvec *src)
+{
+    struct aa_dvec *dst = aa_dvec_malloc(src->len);
+    aa_dvec_copy(src,dst);
+    return dst;
+}
+
 AA_API struct aa_dmat *
 aa_dmat_dup( struct aa_mem_region *reg, const struct aa_dmat *src)
 {
     struct aa_dmat *dst = aa_dmat_alloc(reg,src->rows,src->cols);
+    aa_dmat_copy(src,dst);
+    return dst;
+}
+
+
+AA_API struct aa_dmat *
+aa_dmat_mdup( const struct aa_dmat *src)
+{
+    struct aa_dmat *dst = aa_dmat_malloc(src->rows,src->cols);
     aa_dmat_copy(src,dst);
     return dst;
 }

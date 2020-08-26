@@ -94,10 +94,13 @@ class RegionScope {
         aa_mem_region_pop(reg_,ptr_);
     }
 
-    struct aa_mem_region *reg() {return reg_;}
+    operator aa_mem_region*() const { return reg(); }
+
+    struct aa_mem_region *reg() const {return reg_;}
+
 private:
-    struct aa_mem_region *reg_;
-    void *ptr_;
+    struct aa_mem_region * const reg_;
+    void * const ptr_;
 };
 
 
@@ -160,7 +163,7 @@ public :
     RegionAllocator& operator=(const RegionAllocator<U>&) { return *this; }
 
 
-    inline void construct(pointer p, const T& t) { new(p) T(t); }
+    inline void construct(pointer p, const T& t) { new(static_cast<void*>(p)) T(t); }
     inline void destroy(pointer p) { p->~T(); }
 
     inline bool operator==(RegionAllocator const& a) { return region == a.region; }
