@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from amino import SceneGraph, SceneWin, SceneCollision, MotionPlan
 from math import pi
