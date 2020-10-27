@@ -6,10 +6,7 @@ from amino import SceneGraph, SceneCollision, MotionPlan
 
 
 # Compute Motion Plan
-
-
-scene_plugin = (
-    "%s/git/amino/demo/tutorial/plugin/urdf/libbaxter-model.so" % os.environ['HOME'])
+scene_plugin = ("{}/../plugin/urdf/libbaxter-model.so".format(os.path.dirname(__file__)))
 scene_name = "baxter"
 
 

@@ -14,9 +14,7 @@ import os
 from amino import SceneWin, SceneGraph, SceneFK, SceneCollision,  Geom
 
 # Scene Parameters
-# Change scene_plugin based on your directory structure
-scene_plugin = (
-    "%s/git/amino/demo/tutorial/plugin/7dof/libscene.so" % os.environ['HOME'])
+scene_plugin = ("{}/../plugin/7dof/libscene.so".format(os.path.dirname(__file__)))
 scene_name = "7dof"
 
 # We will mark the closest points in the scene with colored spheres.

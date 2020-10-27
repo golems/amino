@@ -9,9 +9,7 @@ import os
 from amino import SceneWin, SceneGraph, Geom
 
 # Scene Parameters
-# Change scene_plugin based on your directory structure
-scene_plugin = ("%s/git/amino/demo/tutorial/plugin/urdf/libbaxter-model.so" %
-                os.environ['HOME'])
+scene_plugin = ("{}/../plugin/urdf/libbaxter-model.so".format(os.path.dirname(__file__)))
 scene_name = "baxter"
 
 # Create an (empty) scene graph
