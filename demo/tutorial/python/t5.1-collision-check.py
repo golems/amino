@@ -5,10 +5,10 @@
 #
 # Collision Checking
 
-from amino import SceneWin, SceneGraph, SceneFK, SceneCollisionSet, SceneCollision
-from math import pi, cos, sin
+from math import pi, sin
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph, SceneFK, SceneCollisionSet, SceneCollision
 
 # Scene Parameters
 # Change scene_plugin based on your directory structure

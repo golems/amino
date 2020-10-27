@@ -5,10 +5,10 @@
 #
 # Compute Forward Kinematics
 
-from amino import SceneWin, SceneGraph, SceneFK
 from math import pi, cos
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph, SceneFK
 
 # Scene Parameters
 # Change scene_plugin based on your directory structure

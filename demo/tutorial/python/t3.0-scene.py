@@ -6,7 +6,7 @@
 # Create a scene with a grid and three boxes.  Display the scene in
 # the viewer window.
 
-from amino import SceneWin, SceneGraph, Geom, QuatTrans, GeomOpt
+from amino import SceneWin, SceneGraph, Geom, QuatTrans
 
 # Create a window
 win = SceneWin(start=False)

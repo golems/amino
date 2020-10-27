@@ -5,9 +5,9 @@
 #
 # Procedural construction of a robot scene.
 
-from amino import SceneWin, SceneGraph, Geom, GeomOpt, QuatTrans, Vec3, YAngle, XAngle
 from math import pi, cos
 from time import sleep
+from amino import SceneWin, SceneGraph, Geom, GeomOpt, Vec3, YAngle, XAngle
 
 
 def draw_robot(sg, parent):

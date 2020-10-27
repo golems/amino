@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from amino import SceneGraph, SceneWin, SceneCollision, MotionPlan
 from math import pi
 import os
+from amino import SceneGraph, SceneCollision, MotionPlan
 
 
 # Compute Motion Plan

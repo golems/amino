@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from amino import DVec, DMat
+from amino import DMat
 
 
 def h1(name):

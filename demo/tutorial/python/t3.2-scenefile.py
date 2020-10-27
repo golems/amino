@@ -5,10 +5,10 @@
 #
 # Load a compiled scene plugin
 
-from amino import SceneWin, SceneGraph
 from math import pi, cos
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph
 
 # Scene Parameters
 # Change scene_plugin based on your directory structure

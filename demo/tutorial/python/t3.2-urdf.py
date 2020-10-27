@@ -5,10 +5,8 @@
 #
 # Loading a compiled scene plugin
 
-from amino import SceneWin, SceneGraph, Geom, GeomOpt, QuatTrans, Vec3, YAngle, XAngle
-from math import pi, cos
-from time import sleep
 import os
+from amino import SceneWin, SceneGraph, Geom
 
 # Scene Parameters
 # Change scene_plugin based on your directory structure

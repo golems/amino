@@ -7,10 +7,10 @@
 #
 # Slide the end-effector forward and backward in the X-direction
 
-from amino import SceneWin, SceneGraph, SceneIK, QuatTrans, YAngle
 from math import pi
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph, SceneIK, YAngle
 
 # Scene Parameters
 # Change scene_plugin based on your directory structure

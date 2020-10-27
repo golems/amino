@@ -8,10 +8,10 @@
 # Check collision distances and mark the closest points in the scene
 # viewer window.
 
-from amino import SceneWin, SceneGraph, SceneFK, SceneCollisionSet, SceneCollision, QuatTrans, Geom
-from math import pi, cos, sin
+from math import pi, sin
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph, SceneFK, SceneCollision,  Geom
 
 # Scene Parameters
 # Change scene_plugin based on your directory structure

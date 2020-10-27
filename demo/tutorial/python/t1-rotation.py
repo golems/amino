@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from amino import Vec3, XAngle, YAngle, ZAngle, AxAng, EulerRPY, Quat, RotMat
 from math import pi
+from amino import Vec3, XAngle, YAngle, AxAng, Quat, RotMat
 
 
 def h1(name):
