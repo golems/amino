@@ -40,4 +40,4 @@ goal = [.05 * pi,
         0 ]
 path = mp.motion_plan(start, goal, 5)
 
-[print(x) for x in path]
+_ = [print(x) for x in path]
