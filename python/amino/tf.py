@@ -515,7 +515,7 @@ class Quat(ctypes.Structure, VecMixin):
 
     def vector(self):
         """Returns the vector (xyz) part"""
-        return Vec3(self.x, self.y, self.z)
+        return Vec3([self.x, self.y, self.z])
 
     def scalar(self):
         """Returns the scalar (w) part"""
