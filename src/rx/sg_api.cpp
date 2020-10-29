@@ -771,9 +771,13 @@ AA_API  struct aa_rx_sg *  aa_rx_sg_copy( const struct aa_rx_sg * orig){
 
     // set limits
     for( auto &pair : orig->sg->limits_map ) {
-        aa_rx_config_limits * nl = new aa_rx_config_limits();
-        *nl = *pair.second;
-        dest->sg->limits_map[pair.first] = nl;
+        if ( pair.second ) {
+            aa_rx_config_limits * nl = new aa_rx_config_limits();
+            *nl = *pair.second;
+            dest->sg->limits_map[pair.first] = nl;
+        }else{
+            dest->sg->limits_map[pair.first] = NULL;
+        }
     }
 
     // set geometries
