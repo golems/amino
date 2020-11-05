@@ -340,6 +340,9 @@ class EulerZYX(ctypes.Structure):
     def z(self, value):
         self._z = value
 
+    def __str__(self):
+        return 'EulerZYX(%f, %f, %f)' % (self.z, self.y, self.x)
+
 
 class EulerRPY(EulerZYX):
     """Roll-Pitch-Yaw Euler angles"""
@@ -379,7 +382,7 @@ class EulerRPY(EulerZYX):
         self._z = value
 
     def __str__(self):
-        return 'EulerRPY((%f, %f, %f))' % (self.r, self.p, self.y)
+        return 'EulerRPY(%f, %f, %f)' % (self.r, self.p, self.y)
 
 
 class AxAng(ctypes.Structure):
