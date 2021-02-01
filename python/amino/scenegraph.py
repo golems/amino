@@ -471,7 +471,14 @@ class SceneGraph:
         return str(name, encoding="utf-8")
 
     def frame_name(self, i):
-        """Returns the frame name for the id."""
+        """Returns the frame name for the id.
+
+        Raises:
+            IndexError: value is out of range.
+        """
+        if i >= self.frame_count or i < -2:
+            raise IndexError("Invalid frame id: %d" % i)
+
         name = libamino.aa_rx_sg_frame_name(self._ptr, i)
         return str(name, encoding="utf-8")
 
@@ -513,27 +520,49 @@ class SceneGraph:
 
         Raises:
             IndexError: value is out range.
+            ValueError: frame name is invalid.
         """
         if is_string(value):
-            return self.frame_id(value)
-        if value >= self.frame_count:
+            id = self.frame_id(value)
+            if id == -2:
+                raise ValueError("Invalid frame name: %s" % value)
+            return id
+
+        if value >= self.frame_count or value <= -2:
             raise IndexError("Invalid frame id: %d" % value)
         return value
 
     def ensure_frame_id_actual(self, value):
         """Ensures value is a frame id, converting strings if necessary.
 
+        The difference between this function and ensure_frame_id() is that
+        this function throws errors if given reserved frame ids, which are
+        indices -1 and -2.
+
         Raises:
             IndexError: value is out range.
         """
         r = self.ensure_frame_id(value)
         if r < 0:
-            raise IndexError("Not an actual frame")
+            raise IndexError("Invalid frame id: %d" % value)
         return r
 
     def ensure_frame_name(self, value):
-        """Ensures value is a string frame name, converting int ids if necessary."""
-        return value if is_string(value) else self.frame_name(value)
+        """Ensures value is a string frame name, converting int ids if necessary.
+
+        Raises:
+            IndexError: value is out of range.
+            ValueError: frame name is invalid.
+        """
+        if is_string(value):
+            id = self.frame_id(value)
+            if id == -2:
+                raise ValueError("Invalid frame name: %s" % value)
+            return value
+
+        if value >= self.frame_count or value <= -2:
+            raise IndexError("Invalid frame id: %d" % value)
+        return self.frame_name(value)
 
     def config_vector(self, config, vector=None):
         """Create or convert to a configuration vector.
