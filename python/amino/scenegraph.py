@@ -406,7 +406,7 @@ class SceneGraph:
             for elt in geom:
                 self.attach_geom(name, elt)
         else:
-            raise Exception()
+            raise Exception("Invalid Geom config provided.")
 
     def reparent(self, new_parent, frame, rel_tf=QuatTrans.identity()):
         """Change the parent of frame in the scenegraph."""
