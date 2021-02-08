@@ -116,6 +116,10 @@ aa_rx_sg_frame_name (
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
+    if(frame_id >= (int) aa_rx_sg_frame_count(scene_graph) || frame_id < -2){
+        throw std::out_of_range("Out of range. Invalid frame id: " + std::to_string(frame_id));
+    }
+
     switch(frame_id) {
         case AA_RX_FRAME_ROOT: return "";
         case AA_RX_FRAME_NONE: return "?";
