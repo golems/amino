@@ -480,12 +480,33 @@ class SceneGraph:
 
         Raises:
             IndexError: value is out range.
+            ValueError: config name is invalid.
         """
         if is_string(value):
+            if self.config_id(value) == -1:
+                raise ValueError("Invalid config name: %s" % value)
             return self.config_id(value)
-        if value >= self.config_count:
+
+        if value >= self.config_count or value < -2:
             raise IndexError("Invalid config id: %d" % value)
         return value
+
+    def ensure_config_name(self, value):
+        """Ensures value is a string config name, converting int ids if necessary.
+
+        Raises:
+            IndexError: value is out of range.
+            ValueError: config name is invalid.
+        """
+        if is_string(value):
+            id = self.config_id(value)
+            if id == -1:
+                raise ValueError("Invalid config name: %s" % value)
+            return value
+
+        if value >= self.config_count or value < -2:
+            raise IndexError("Invalid frame id: %d" % value)
+        return self.frame_name(value)
 
     def ensure_frame_id(self, value):
         """Ensures value is a frame id, converting strings if necessary.
