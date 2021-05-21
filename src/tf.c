@@ -286,6 +286,7 @@ void aa_tf_rotmat2quat( const double R[restrict 9],
     }
 
     aa_tf_qnormalize(q);
+    aa_tf_qminimize(q);
 }
 
 /* void aa_tf_rotvec2quat( const double rotvec[restrict 3], */
