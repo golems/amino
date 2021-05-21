@@ -1,15 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from amino import SceneGraph, SceneWin, SceneCollision, MotionPlan
 from math import pi
 import os
+from amino import SceneGraph, SceneCollision, MotionPlan
 
 
 # Compute Motion Plan
-
-
-scene_plugin = (
-    "%s/git/amino/demo/tutorial/plugin/urdf/libbaxter-model.so" % os.environ['HOME'])
+scene_plugin = ("{}/../plugin/urdf/libbaxter-model.so".format(os.path.dirname(__file__)))
 scene_name = "baxter"
 
 
@@ -43,4 +40,4 @@ goal = [.05 * pi,
         0 ]
 path = mp.motion_plan(start, goal, 5)
 
-[print(x) for x in path]
+_ = [print(x) for x in path]

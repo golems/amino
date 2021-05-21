@@ -1,19 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # File: t4.1-fk.py
 # =======================
 #
 # Compute Forward Kinematics
 
-from amino import SceneWin, SceneGraph, SceneFK
 from math import pi, cos
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph, SceneFK
 
 # Scene Parameters
-# Change scene_plugin based on your directory structure
-scene_plugin = (
-    "%s/git/amino/demo/tutorial/plugin/7dof/libscene.so" % os.environ['HOME'])
+scene_plugin = ("{}/../plugin/7dof/libscene.so".format(os.path.dirname(__file__)))
 scene_name = "7dof"
 
 # Create an (empty) scene graph

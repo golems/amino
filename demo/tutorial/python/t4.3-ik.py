@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # File: t4.3-ik.py
 # =======================
@@ -7,15 +7,13 @@
 #
 # Slide the end-effector forward and backward in the X-direction
 
-from amino import SceneWin, SceneGraph, SceneIK, QuatTrans, YAngle
 from math import pi
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph, SceneIK, YAngle
 
 # Scene Parameters
-# Change scene_plugin based on your directory structure
-scene_plugin = (
-    "%s/git/amino/demo/tutorial/plugin/7dof/libscene.so" % os.environ['HOME'])
+scene_plugin = ("{}/../plugin/7dof/libscene.so".format(os.path.dirname(__file__)))
 scene_name = "7dof"
 
 # Create an (empty) scene graph

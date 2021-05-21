@@ -1,19 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # File: t3.2-scenefile.py
 # =======================
 #
 # Load a compiled scene plugin
 
-from amino import SceneWin, SceneGraph
 from math import pi, cos
 from time import sleep
 import os
+from amino import SceneWin, SceneGraph
 
 # Scene Parameters
-# Change scene_plugin based on your directory structure
-scene_plugin = ("%s/git/amino/demo/tutorial/plugin/scenefile/libscene.so" %
-                os.environ['HOME'])
+scene_plugin = ("{}/../plugin/scenefile/libscene.so".format(os.path.dirname(__file__)))
 scene_name = "example"
 
 # Create an (empty) scene graph

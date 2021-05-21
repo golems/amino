@@ -1,19 +1,15 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # File: t3.2-urdf.py
 # ===================
 #
 # Loading a compiled scene plugin
 
-from amino import SceneWin, SceneGraph, Geom, GeomOpt, QuatTrans, Vec3, YAngle, XAngle
-from math import pi, cos
-from time import sleep
 import os
+from amino import SceneWin, SceneGraph, Geom
 
 # Scene Parameters
-# Change scene_plugin based on your directory structure
-scene_plugin = ("%s/git/amino/demo/tutorial/plugin/urdf/libbaxter-model.so" %
-                os.environ['HOME'])
+scene_plugin = ("{}/../plugin/urdf/libbaxter-model.so".format(os.path.dirname(__file__)))
 scene_name = "baxter"
 
 # Create an (empty) scene graph
