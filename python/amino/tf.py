@@ -116,8 +116,8 @@ class Vec3(ctypes.Structure, VecMixin):
     def __len__(self):
         return 3
 
-    def __str__(self):
-        return 'Vec3(%f, %f, %f)' % (self.x, self.y, self.z)
+    def __repr__(self):
+        return 'Vec3((%f, %f, %f))' % (self.x, self.y, self.z)
 
     def __iadd__(self, other):
         if isinstance(other, Vec3):
@@ -234,7 +234,7 @@ class XAngle(ctypes.Structure):
         e.y = 0
         e.z = 0
 
-    def __str__(self):
+    def __repr__(self):
         return 'XAngle(%f)' % (self.value)
 
 
@@ -260,7 +260,7 @@ class YAngle(ctypes.Structure):
         e.y = self.value
         e.z = 0
 
-    def __str__(self):
+    def __repr__(self):
         return 'YAngle(%f)' % (self.value)
 
 
@@ -286,7 +286,7 @@ class ZAngle(ctypes.Structure):
         e.y = 0
         e.z = self.value
 
-    def __str__(self):
+    def __repr__(self):
         return 'ZAngle(%f)' % (self.value)
 
 
@@ -340,6 +340,9 @@ class EulerZYX(ctypes.Structure):
     def z(self, value):
         self._z = value
 
+    def __repr__(self):
+        return 'EulerZYX((%f, %f, %f))' % (self.z, self.y, self.x)
+
 
 class EulerRPY(EulerZYX):
     """Roll-Pitch-Yaw Euler angles"""
@@ -378,7 +381,7 @@ class EulerRPY(EulerZYX):
     def y(self, value):
         self._z = value
 
-    def __str__(self):
+    def __repr__(self):
         return 'EulerRPY((%f, %f, %f))' % (self.r, self.p, self.y)
 
 
@@ -399,7 +402,7 @@ class AxAng(ctypes.Structure):
 
     def conv_from(self, src):
         """Converts src into an AxAng."""
-        if isinstance(src, list):
+        if isinstance(src, (tuple, list)):
             if len(src) != 4:
                 raise IndexError()
             libamino.aa_tf_axang_make(src[0], src[1], src[2], src[3], self)
@@ -437,10 +440,10 @@ class AxAng(ctypes.Structure):
         libamino.aa_tf_axang_rot(self, Vec3.ensure(p), q)
         return q
 
-    def __str__(self):
+    def __repr__(self):
         axis = self.axis
         angle = self.angle
-        return 'AxAng(%f, %f, %f, %f)' % (axis.x, axis.y, axis.z, angle)
+        return 'AxAng((%f, %f, %f, %f))' % (axis.x, axis.y, axis.z, angle)
 
 
 class Quat(ctypes.Structure, VecMixin):
@@ -662,8 +665,8 @@ class Quat(ctypes.Structure, VecMixin):
         libamino.aa_tf_qrot(self, Vec3.ensure(p), q)
         return q
 
-    def __str__(self):
-        return 'Quat(%f, %f, %f, %f)' % (self.x, self.y, self.z, self.w)
+    def __repr__(self):
+        return 'Quat((%f, %f, %f, %f))' % (self.x, self.y, self.z, self.w)
 
 
 class RotMat(ctypes.Structure, MatMixin):
@@ -795,7 +798,7 @@ class RotMat(ctypes.Structure, MatMixin):
                 A[i, j] = args[j][i]
         return A
 
-    def __str__(self):
+    def __repr__(self):
         return self._str_helper("RotMat.row_matrix")
 
     def isclose(self, other, tol=1e-9):
@@ -904,8 +907,8 @@ class TfMat(ctypes.Structure, MatMixin):
 
         return A
 
-    def __str__(self):
-        return self._str_helper("TfMat.row_matrix", 3, 3)
+    def __repr__(self):
+        return self._str_helper("TfMat.row_matrix", 3, 4)
 
     def __len__(self):
         return 12
@@ -982,8 +985,8 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
         libamino.aa_tf_duqu_tf(self, Vec3.ensure(p), q)
         return q
 
-    def __str__(self):
-        return 'DualQuat(%s, %s)' % (self.real, self.dual)
+    def __repr__(self):
+        return 'DualQuat((%s, %s))' % (self.rotation, self.translation)
 
     def __getitem__(self, key):
         if key == 0:
@@ -1025,6 +1028,10 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
             self.dual.w = item
         else:
             raise IndexError(key)
+
+    def __len__(self):
+        return 8
+
 
     @property
     def rotation(self):
@@ -1109,8 +1116,8 @@ class QuatTrans(ctypes.Structure, CopyEltsMixin):
         libamino.aa_tf_qutr_tf(self, Vec3.ensure(p), q)
         return q
 
-    def __str__(self):
-        return 'QuatTrans(%s, %s)' % (self.quat, self.trans)
+    def __repr__(self):
+        return 'QuatTrans((%s, %s))' % (self.quat, self.trans)
 
     def __getitem__(self, key):
         if key == 0:
