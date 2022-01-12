@@ -106,7 +106,7 @@ transpose( const struct aa_dmat *A, struct aa_dmat *B )
 }
 
 static inline void
-gemv( CBLAS_TRANSPOSE trans,
+gemv( AA_CBLAS_TRANSPOSE trans,
       double alpha, const struct aa_dmat *A,
       const struct aa_dvec *x,
       double beta, struct aa_dvec *y )
@@ -116,7 +116,7 @@ gemv( CBLAS_TRANSPOSE trans,
 }
 
 static inline void
-gemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
+gemm( AA_CBLAS_TRANSPOSE transA, AA_CBLAS_TRANSPOSE transB,
       double alpha, const struct aa_dmat *A,
       const struct aa_dmat *B,
       double beta, struct aa_dmat *C )
@@ -204,11 +204,11 @@ public:
 class DVecExpMV1 : public DVecExp< DVecExpMV1 > {
 public:
     double const alpha;
-    CBLAS_TRANSPOSE const trans;
+    AA_CBLAS_TRANSPOSE const trans;
     struct aa_dmat const &A;
     struct aa_dvec const &x;
 
-    DVecExpMV1( CBLAS_TRANSPOSE trans_,
+    DVecExpMV1( AA_CBLAS_TRANSPOSE trans_,
                 double alpha_, const struct aa_dmat &A_,
                 const struct aa_dvec &x_ ) :
         trans(trans_),
@@ -226,13 +226,13 @@ template <typename E>
 class DVecExpMV2 : public DVecExp< DVecExpMV2<E> > {
 public:
     double const alpha;
-    CBLAS_TRANSPOSE const trans;
+    AA_CBLAS_TRANSPOSE const trans;
     struct aa_dmat const &A;
     struct aa_dvec const &x;
     double const beta;
     E const &y;
 
-    DVecExpMV2( CBLAS_TRANSPOSE trans_,
+    DVecExpMV2( AA_CBLAS_TRANSPOSE trans_,
                 double alpha_, const struct aa_dmat &A_,
                 const struct aa_dvec &x_,
                 double beta_,
@@ -269,12 +269,12 @@ public:
 class DMatExpMM1 : public DMatExp< DMatExpMM1 > {
 public:
     double const alpha;
-    CBLAS_TRANSPOSE const transA;
-    CBLAS_TRANSPOSE const transB;
+    AA_CBLAS_TRANSPOSE const transA;
+    AA_CBLAS_TRANSPOSE const transB;
     struct aa_dmat const &A;
     struct aa_dmat const &B;
 
-    DMatExpMM1( CBLAS_TRANSPOSE transA_, CBLAS_TRANSPOSE transB_,
+    DMatExpMM1( AA_CBLAS_TRANSPOSE transA_, AA_CBLAS_TRANSPOSE transB_,
                 double alpha_,
                 const struct aa_dmat &A_,
                 const struct aa_dmat &B_ ) :
@@ -294,14 +294,14 @@ template <typename E>
 class DMatExpMM2 : public DMatExp< DMatExpMM2<E> > {
 public:
     double const alpha;
-    CBLAS_TRANSPOSE const transA;
-    CBLAS_TRANSPOSE const transB;
+    AA_CBLAS_TRANSPOSE const transA;
+    AA_CBLAS_TRANSPOSE const transB;
     struct aa_dmat const &A;
     struct aa_dmat const &B;
     double beta;
     E const &C;
 
-    DMatExpMM2( CBLAS_TRANSPOSE transA_, CBLAS_TRANSPOSE transB_,
+    DMatExpMM2( AA_CBLAS_TRANSPOSE transA_, AA_CBLAS_TRANSPOSE transB_,
                 double alpha_,
                 const struct aa_dmat &A_,
                 const struct aa_dmat &B_,

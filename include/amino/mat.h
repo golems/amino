@@ -366,7 +366,7 @@ aa_dvec_nrm2( const struct aa_dvec *x );
  * \f[ \mathbf{y} \leftarrow \alpha \mathbf{A}^{\rm op} \mathbf{x} + \beta \mathbf{y}  \f]
  */
 AA_API void
-aa_dmat_gemv( CBLAS_TRANSPOSE trans,
+aa_dmat_gemv( AA_CBLAS_TRANSPOSE trans,
               double alpha, const struct aa_dmat *A,
               const struct aa_dvec *x,
               double beta, struct aa_dvec *y );
@@ -381,7 +381,7 @@ aa_dmat_gemv( CBLAS_TRANSPOSE trans,
  * \f[ \mathbf{y} \leftarrow \alpha \mathbf{A}^{\rm opA} \mathbf{B}^\rm{opB} + \beta \mathbf{C}  \f]
  */
 AA_API void
-aa_dmat_gemm( CBLAS_TRANSPOSE transA, CBLAS_TRANSPOSE transB,
+aa_dmat_gemm( AA_CBLAS_TRANSPOSE transA, AA_CBLAS_TRANSPOSE transB,
               double alpha, const struct aa_dmat *A,
               const struct aa_dmat *B,
               double beta, struct aa_dmat *C );

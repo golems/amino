@@ -1,2 +1,3 @@
 @INCLUDE_CBLAS_H@
 #define AA_CBLAS_ORDER @aa_cblas_order_type@
+#define AA_CBLAS_TRANSPOSE @aa_cblas_transpose_type@

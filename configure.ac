@@ -135,6 +135,28 @@ AC_TRY_COMPILE([$INCLUDE_CBLAS_H
 AC_SUBST([aa_cblas_order_type])
 
 
+AC_MSG_CHECKING([CBLAS_TRANSPOSE])
+AC_TRY_COMPILE([$INCLUDE_CBLAS_H
+               ],
+               [CBLAS_TRANSPOSE test_var;],
+               [AC_MSG_RESULT([yes])
+                aa_cblas_transpose_type=CBLAS_TRANSPOSE],
+               [AC_MSG_RESULT([no])])
+
+AS_IF([test x = "x$aa_cblas_transpose_type"],
+[
+AC_MSG_CHECKING([enum CBLAS_TRANSPOSE])
+AC_TRY_COMPILE([$INCLUDE_CBLAS_H
+               ],
+               [enum CBLAS_TRANSPOSE test_var;],
+               [AC_MSG_RESULT([yes])
+                aa_cblas_transpose_type="enum CBLAS_TRANSPOSE"],
+               [AC_MSG_RESULT([no])])
+])
+AC_SUBST([aa_cblas_transpose_type])
+
+
+
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
          [AC_DEFUN([APPEND_CFLAG],
                    [AX_CHECK_COMPILE_FLAG([$1], [CFLAGS="$1 $CFLAGS"])])
