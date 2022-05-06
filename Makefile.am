@@ -567,11 +567,11 @@ noinst_PROGRAMS += sg_test
 sg_test_SOURCES = src/test/sg_test.c
 sg_test_LDADD = libamino.la libtestutil.la
 
-TESTS += ct_traj
-noinst_PROGRAMS += ct_traj
-ct_traj_SOURCES = src/test/ct_traj.c
-ct_traj_LDADD = libamino.la libtestutil.la
-ct_traj_LDFLAGS = -no-install
+# TESTS += ct_traj
+# noinst_PROGRAMS += ct_traj
+# ct_traj_SOURCES = src/test/ct_traj.c
+# ct_traj_LDADD = libamino.la libtestutil.la
+# ct_traj_LDFLAGS = -no-install
 
 
 TESTS += mat_test
