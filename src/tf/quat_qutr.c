@@ -168,33 +168,33 @@ void aa_tf_qv_expv( const double w[3],  const double dv[3],
                     double q[4], double v[3] )
 {
     double phi2 = aa_tf_vdot(w,w);
-    double sc, c, k, sc2, csc;
+    double m_r, two_m_r, c, m_d, c_two_m_r;
     if( phi2 < sqrt(DBL_EPSILON) ) {
-        sc = aa_tf_sinc_series2(phi2);
+        m_r = aa_tf_sinc_series2(phi2);
         c = aa_tf_cos_series2(phi2);
-        sc2 = 2*sc;
-        csc = c*sc2;
-        k = aa_horner3( phi2, 4.0/3, -4.0/15, 8.0/315 );
+        two_m_r = 2*m_r;
+        c_two_m_r = c*two_m_r;
+        m_d = aa_horner3( phi2, 4.0/3, -4.0/15, 8.0/315 );
     } else {
         double phi = sqrt(phi2);
         double s = sin(phi);
         c = cos(phi);
-        sc = s/phi;
-        sc2 = 2*sc;
-        csc = c*sc2;
-        k = (2-csc)/phi2;
+        m_r = s/phi;
+        two_m_r = 2*m_r;
+        c_two_m_r = c*two_m_r;
+        m_d = (2-c_two_m_r)/phi2;
     }
 
     // real
     q[AA_TF_QUAT_W] = c;
-    FOR_VEC(i) q[AA_TF_QUAT_V + i] = sc*w[i];
+    FOR_VEC(i) q[AA_TF_QUAT_V + i] = m_r*w[i];
 
     // dual
     const double *q_v = q + AA_TF_QUAT_V;
-    double gammak = aa_tf_vdot(w,dv) * k;
+    double gamma_m_d = aa_tf_vdot(w,dv) * m_d;
     double cr[3];
     aa_tf_cross(q_v, dv, cr);
-    FOR_VEC(i) v[i] =  csc*dv[i] + gammak*w[i] + sc2*cr[i];
+    FOR_VEC(i) v[i] =  two_m_r*cr[i] + c_two_m_r*dv[i] + gamma_m_d*w[i];
 }
 
 
@@ -208,7 +208,7 @@ void aa_tf_qutr_expv
 void aa_tf_qv_lnv
 ( const double q[4], const double v[4], double w[3], double dv[3] )
 {
-    double isc, cisc, k;
+    double isc, m_r, m_d;
     const double *q_v = q + AA_TF_QUAT_V;
     double v2 = aa_tf_vdot(q_v, q_v);
     double s = sqrt(v2);
@@ -218,24 +218,24 @@ void aa_tf_qv_lnv
 
     if( phi < sqrt(DBL_EPSILON) ) {
         isc = aa_tf_invsinc_series2(phi2);
-        k = aa_horner3( phi2, 1.0/3, 1.0/45, 2.0/945 );
-        cisc = 1 - k * phi2;
+        m_d = aa_horner3( phi2, 1.0/3, 1.0/45, 2.0/945 );
+        m_r = 1 - m_d * phi2;
     } else {
         isc = phi/s;
-        cisc = c*isc;
-        k = (1 - cisc)/phi2;
+        m_r = c*isc;
+        m_d = (1 - m_r)/phi2;
     }
 
     /* Real */
     FOR_VEC(i) w[i] = isc * q_v[i];
 
     /* Dual  */
-    double v_2[3], cr[3];
+    double v_2[3];
     FOR_VEC(i) v_2[i] = v[i]/2;
-    double a = k*aa_tf_vdot(v_2,w);
-    aa_tf_cross(v_2, w, cr);
+    double a = m_d*aa_tf_vdot(v_2,w);
+    aa_tf_cross(v_2, w, dv);
 
-    FOR_VEC(i) dv[i] =  cr[i] + cisc*v_2[i] + a*w[i];
+    FOR_VEC(i) dv[i] +=  m_r*v_2[i] + a*w[i];
 }
 
 void aa_tf_qutr_lnv

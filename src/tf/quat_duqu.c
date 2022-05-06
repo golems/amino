@@ -325,30 +325,31 @@ dual_mul( double ar, double ad, double br, double bd, double *cr, double *cd )
 AA_API void
 aa_tf_duqu_exp( const double S[AA_RESTRICT 8], double eS[AA_RESTRICT 8] )
 {
-    double nr, c, vv, vd, ar, ad, er, ed;
+    double phi, c, vv, gamma, k_r, k_d, er, ed;
 
+    /* vv = phi^2 */
     vv = aa_tf_vdot( S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_REAL_XYZ );
 
     if( vv < DBL_EPSILON ) {
-        ar = aa_tf_sinc_series2(vv);
+        k_r = aa_tf_sinc_series2(vv);
         c = aa_tf_cos_series2(vv);
         /* Taylor series for cos(nr)/nr**2 - sin(nr)/nr**3 */
-        ad = aa_horner3( vv, -1.0/3.0, 1.0/30.0, -1.0/840.0 );
+        k_d = aa_horner3( vv, -1.0/3.0, 1.0/30.0, -1.0/840.0 );
     } else {
-        nr = sqrt(vv);
-        ar = sin(nr)/nr;
-        c = cos(nr);
-        ad = (c-ar)/vv;
+        phi = sqrt(vv);
+        k_r = sin(phi)/phi;
+        c = cos(phi);
+        k_d = (c-k_r)/vv;
     }
 
-    vd = aa_tf_vdot( S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_DUAL_XYZ );
-    ad *= vd;
+    gamma = aa_tf_vdot( S+AA_TF_DUQU_REAL_XYZ, S+AA_TF_DUQU_DUAL_XYZ );
+    k_d *= gamma;
 
-    FOR_VEC(i) eS[AA_TF_DUQU_REAL_XYZ+i] = ar*S[AA_TF_DUQU_REAL_XYZ+i];
+    FOR_VEC(i) eS[AA_TF_DUQU_REAL_XYZ+i] = k_r*S[AA_TF_DUQU_REAL_XYZ+i];
     eS[AA_TF_DUQU_REAL_W] = c;
 
-    FOR_VEC(i) eS[AA_TF_DUQU_DUAL_XYZ+i] = ar*S[AA_TF_DUQU_DUAL_XYZ+i] + ad*S[AA_TF_DUQU_REAL_XYZ+i];
-    eS[AA_TF_DUQU_DUAL_W] = -ar*vd;
+    FOR_VEC(i) eS[AA_TF_DUQU_DUAL_XYZ+i] = k_r*S[AA_TF_DUQU_DUAL_XYZ+i] + k_d*S[AA_TF_DUQU_REAL_XYZ+i];
+    eS[AA_TF_DUQU_DUAL_W] = -k_r*gamma;
 
     if( 0 < fabs(S[AA_TF_DUQU_REAL_W]) ||  0 < fabs(S[AA_TF_DUQU_DUAL_W]) ) {
         /* dual number exponential */
@@ -378,30 +379,26 @@ aa_tf_duqu_ln( const double S[AA_RESTRICT 8], double lnS[AA_RESTRICT 8] )
     lnS[AA_TF_DUQU_DUAL_W] = (gamma + S[AA_TF_DUQU_REAL_W]*S[AA_TF_DUQU_DUAL_W]) / mr2;
 
     /* Vector part */
-    /* ! Dual number computation */
-    /* ! call aa_tf_duqu_vnorm( d, nv%r, nv%d ) */
-    /* ! a = atan2( nv, dh(W_INDEX) ) / nv */
 
     /* expanded dual computation */
     double nr = sqrt(vv);                   /* nr is positive */
-    double theta = atan2( nr, S[AA_TF_DUQU_REAL_W] ); /* theta is always positive */
+    double phi = atan2( nr, S[AA_TF_DUQU_REAL_W] ); /* phi is always positive */
 
     /* Try to avoid small number division */
-    double kappa, zeta;
-    if( theta < DBL_EPSILON )  {
-        /* ad = 1/mr * 1d0/sin(x)**2 * ( cos(x) - x/sin(x) ) */
-        kappa = aa_horner3( theta*theta, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / mr;
-        zeta = aa_tf_invsinc_series2(theta*theta)/(mr2*mr);
+    double k_r, zeta;
+    if( phi < DBL_EPSILON )  {
+        k_r = aa_tf_invsinc_series2(phi*phi)/mr;
+        zeta = aa_horner3( phi*phi, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / (mr2*mr);
     } else {
-        kappa = theta/nr;
-        zeta = (S[AA_TF_DUQU_REAL_W]/mr2 - kappa) / vv;
+        k_r = phi/nr;
+        zeta = (S[AA_TF_DUQU_REAL_W]/mr2 - k_r) / vv;
     }
-    double ad = gamma*zeta - S[AA_TF_DUQU_DUAL_W] / mr2;
+    double k_d = gamma*zeta - S[AA_TF_DUQU_DUAL_W] / mr2;
     FOR_VEC(i)
-        lnS[AA_TF_DUQU_REAL_XYZ+i] = kappa * S[AA_TF_DUQU_REAL_XYZ+i];
+        lnS[AA_TF_DUQU_REAL_XYZ+i] = k_r * S[AA_TF_DUQU_REAL_XYZ+i];
     FOR_VEC(i)
-        lnS[AA_TF_DUQU_DUAL_XYZ+i] = (ad * S[AA_TF_DUQU_REAL_XYZ+i]
-                                      + kappa * S[AA_TF_DUQU_DUAL_XYZ+i]);
+        lnS[AA_TF_DUQU_DUAL_XYZ+i] = (k_d * S[AA_TF_DUQU_REAL_XYZ+i]
+                                      + k_r * S[AA_TF_DUQU_DUAL_XYZ+i]);
 }
 
 

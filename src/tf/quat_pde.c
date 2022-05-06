@@ -45,20 +45,20 @@ static void fill_uplo( struct aa_dmat *J )
 }
 
 static void qln_jac(const double *q, double qq,
-                    double zeta, double kappa,
+                    double zeta, double eta,
                     struct aa_dmat *J )
 {
     double kv[3];
     for( int i = 0; i < 3; i ++ ) kv[i] = q[i]*zeta;
 
-    AA_DMAT_REF(J,0,0) = q[0]*kv[0] + kappa;
+    AA_DMAT_REF(J,0,0) = q[0]*kv[0] + eta;
     AA_DMAT_REF(J,1,0) = q[0]*kv[1];
     AA_DMAT_REF(J,2,0) = q[0]*kv[2];
 
-    AA_DMAT_REF(J,1,1) = q[1]*kv[1] + kappa;
+    AA_DMAT_REF(J,1,1) = q[1]*kv[1] + eta;
     AA_DMAT_REF(J,2,1) = q[1]*kv[2];
 
-    AA_DMAT_REF(J,2,2) = q[2]*kv[2] + kappa;
+    AA_DMAT_REF(J,2,2) = q[2]*kv[2] + eta;
 
     for(size_t i = 0; i < 4; i ++ ) {
         AA_DMAT_REF(J,3,i) = q[i] /qq;
@@ -81,16 +81,16 @@ aa_tf_qln_jac(const double q[4], struct aa_dmat *J )
     double q3 = qq*q_norm;
     double theta = atan2(v_norm,w);
 
-    double zeta, kappa;
+    double eta, zeta;
     if( theta < DBL_EPSILON )  {
+        eta = aa_tf_invsinc_series2(theta*theta)/q_norm;
         zeta = aa_horner3( theta*theta, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / q3;
-        kappa = aa_tf_invsinc_series2(theta*theta)/q_norm;
     } else {
-        kappa = theta / v_norm;
-        zeta = w / (qq*vv)  - kappa / vv ;
+        eta = theta / v_norm;
+        zeta = (w/qq - eta) / vv ;
     }
 
-    qln_jac(q,qq,zeta,kappa,J);
+    qln_jac(q,qq,zeta,eta,J);
 
 }
 
@@ -131,21 +131,21 @@ aa_tf_duqu_ln_jac(const double S[8], struct aa_dmat *J )
     double q4 = qq*qq;
     double theta = atan2(v_norm,w);
 
-    double zeta, kappa, mu;
+    double zeta, eta, mu;
     if( theta < DBL_EPSILON )  {
         double q3 = qq*q_norm;
         double q5 = q4*q_norm;
-        kappa = aa_tf_invsinc_series2(theta*theta)/q_norm;
+        eta = aa_tf_invsinc_series2(theta*theta)/q_norm;
         zeta = aa_horner3( theta*theta, -2.0/3.0, -1.0/5.0, -17.0/420.0 ) / q3;
         mu = aa_horner3( theta*theta, 8./5., 4./7., 1./7.)/q5;
     } else {
-        kappa = theta / v_norm;
-        zeta = w / (qq*vv)  - kappa / vv ;
+        eta = theta / v_norm;
+        zeta = (w/qq - eta) / vv ;
         mu = (-2*w/q4 -3*zeta)/vv;
     }
 
     aa_dmat_view_block(&J_rr, J, AA_TF_DUQU_REAL, AA_TF_DUQU_REAL, 4, 4);
-    qln_jac(q,qq,zeta,kappa,&J_rr);
+    qln_jac(q,qq,zeta,eta,&J_rr);
     aa_dmat_view_block(&J_dd, J, AA_TF_DUQU_DUAL, AA_TF_DUQU_DUAL, 4, 4);
     aa_dmat_copy(&J_rr,&J_dd);
 
