@@ -91,6 +91,9 @@
 (cffi:defcfun aa-rx-mp-get-collisions :pointer
   (mp rx-mp-t))
 
+(cffi:defcfun aa-rx-mp-get-allowed :pointer
+  (mp rx-mp-t))
+
 (defun motion-planner (sub-scene-graph)
   (let ((mp (aa-rx-mp-create sub-scene-graph)))
     (setf (rx-mp-sub-scene-graph mp)
@@ -110,9 +113,9 @@
   (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
          (n-all (sub-scene-graph-all-config-count ssg))
          (q-start (make-vec n-all)))
-      (sub-scene-graph-all-config-vector ssg start q-start)
-      (with-foreign-simple-vector (pointer length) q-start :input
-        (aa-rx-mp-set-start motion-planner length pointer))))
+    (sub-scene-graph-all-config-vector ssg start q-start)
+    (with-foreign-simple-vector (pointer length) q-start :input
+      (aa-rx-mp-set-start motion-planner length pointer))))
 
 (defun motion-planner-set-joint-goal (motion-planner joint-goal)
   (let* ((ssg (rx-mp-sub-scene-graph motion-planner))
@@ -251,21 +254,29 @@
     (make-motion-plan :sub-scene-graph sub-scene-graph
                       :path (amino::matrix-data path))))
 
-(defun motion-planner-collisions (planner)
-  "Return set of collisions encountered during planning"
-  (let* ((ptr (aa-rx-mp-get-collisions planner))
-         (m-sg (motion-planner-mutable-scene-graph planner))
+
+(defun %motion-planner-collision-set (planner cl-set-ptr)
+  "Return an alist of frames in the collision set."
+  (when (cffi:null-pointer-p cl-set-ptr)
+    (error "No collision data for motion planner"))
+  (let* ((m-sg (motion-planner-mutable-scene-graph planner))
          (n-frame (mutable-scene-graph-frame-count m-sg))
          (result nil))
-    (when (cffi:null-pointer-p ptr)
-      (error "No collision data for motion planner"))
     (dotimes (i n-frame)
       (dotimes (j i)
-        (when (aa-rx-cl-set-get-ptr ptr i j)
+        (when (aa-rx-cl-set-get-ptr cl-set-ptr i j)
           (push (cons (mutable-scene-graph-frame-name m-sg i)
                       (mutable-scene-graph-frame-name m-sg j))
                 result))))
     result))
+
+(defun motion-planner-collisions (planner)
+  "Return set of collisions encountered during planning."
+  (%motion-planner-collision-set planner (aa-rx-mp-get-collisions planner)))
+
+(defun motion-planner-allowed-collisions (planner)
+  "Return set allowed collisions for the planner."
+  (%motion-planner-collision-set planner (aa-rx-mp-get-allowed planner)))
 
 (defun motion-plan (sub-scene-graph start-map
                     &key
