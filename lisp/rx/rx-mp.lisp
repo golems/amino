@@ -311,7 +311,11 @@
     (multiple-value-bind (result n-path path-ptr)
         (cffi:with-foreign-object (plan-length 'amino-ffi:size-t)
           (cffi:with-foreign-object (plan-ptr :pointer)
-            (let ((result (aa-rx-mp-plan planner timeout plan-length plan-ptr)))
+            (let ((result
+                    (sb-int:with-float-traps-masked
+                        (:divide-by-zero :overflow :underflow :invalid :inexact)
+                      (aa-rx-mp-plan planner timeout plan-length plan-ptr))))
+
               (values result
                       (cffi:mem-ref plan-length 'amino-ffi:size-t)
                       (cffi:mem-ref plan-ptr :pointer)))))
