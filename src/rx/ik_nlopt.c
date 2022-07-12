@@ -255,7 +255,7 @@ aa_rx_ik_opt_err_dqln( void *vcx, double *q, double *dq ) {
     return result;
 }
 
-static double s_nlobj_qv_fd_pos_helper( void *vcx, const struct aa_dvec *x)
+static double s_nlobj_trans_fd_helper( void *vcx, const struct aa_dvec *x)
 {
     struct kin_solve_cx *cx = (struct kin_solve_cx*)vcx;
     void *ptrtop = aa_mem_region_ptr(cx->reg);
@@ -287,13 +287,13 @@ aa_rx_ik_opt_err_trans_fd( void *vcx, const double *q, double *dq )
     size_t n = aa_rx_sg_sub_config_count(cx->ssg);
 
     struct aa_dvec vq = AA_DVEC_INIT(n,(double*)q,1);
-    double x = s_nlobj_qv_fd_pos_helper(vcx, &vq);
+    double x = s_nlobj_trans_fd_helper(vcx, &vq);
 
     if( dq ) {
         struct aa_dvec vdq = AA_DVEC_INIT(n,dq,1);
         // TODO: make epsilon a parameter
         double eps = 1e-6;
-        aa_de_grad_fd( s_nlobj_qv_fd_pos_helper, vcx,
+        aa_de_grad_fd( s_nlobj_trans_fd_helper, vcx,
                        &vq, eps, &vdq );
     }
     /* fprintf(stdout, "fd error: %2.2f\n", x);  */
@@ -375,10 +375,8 @@ aa_rx_ik_opt_err_trans( void *vcx, const double *q, double *dq )
     double E_err[7];
     double *v_err = E_err + AA_TF_QUTR_V;
 
-    // Apply a negative factor in gradient when we have to minimze the
+    // Apply a negative factor in gradient when we have to minimize the
     // error quaternion
-
-
     for(size_t i = 0; i < 3; i ++ ) v_err[i] = v_act[i] - v_ref[i];
 
     double result = aa_tf_vdot(v_err,v_err);
