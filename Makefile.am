@@ -335,7 +335,7 @@ libamino_la_SOURCES += src/rx/octree_geom.cpp  src/rx/sg_octree.cpp
 libamino_la_LIBADD += $(OCTOMAP_LIBS)
 noinst_PROGRAMS += octomap_test
 octomap_test_SOURCES = src/test/octomap_test.cpp
-octomap_test_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+octomap_test_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS) $(AM_CXXFLAGS)
 octomap_test_LDADD = libamino.la libamino-gl.la $(OCTOMAP_LIBS) $(GL_LIBS) $(SDL2_LIBS)
 endif # HAVE_OCTOMAP
 
@@ -508,8 +508,8 @@ if HAVE_OCTOMAP
 libamino_gl_la_SOURCES += src/octree_gl.cpp
 endif # HAVE_OCTOMAP
 
-libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
-libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+libamino_gl_la_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
+libamino_gl_la_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS) $(AM_CXXFLAGS)
 libamino_gl_la_LIBADD = $(GL_LIBS) $(SDL2_LIBS) libamino.la
 
 
@@ -523,7 +523,7 @@ libamino_gl_la_SOURCES += \
 
 noinst_PROGRAMS += sdl_test
 sdl_test_SOURCES = src/rx/sdl_test.c
-sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+sdl_test_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 sdl_test_LDADD = libamino.la $(SDL2_LIBS)
 
 sdl_test_LDADD += libamino-gl.la $(GL_LIBS)
@@ -531,7 +531,7 @@ sdl_test_LDADD += libamino-gl.la $(GL_LIBS)
 bin_PROGRAMS += aarx-view
 
 aarx_view_SOURCES = src/rx/aarx-view.c
-aarx_view_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS)
+aarx_view_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
 aarx_view_LDADD = libamino-gl.la libamino.la $(SDL2_LIBS)
 
 
@@ -623,16 +623,16 @@ libamino_collision_la_SOURCES = \
 	src/rx/amino_fcl.cpp \
 	src/rx/collision_set.cpp
 
-libamino_collision_la_CFLAGS = $(FCL_CFLAGS)
-libamino_collision_la_CXXFLAGS = $(FCL_CFLAGS)
+libamino_collision_la_CFLAGS = $(FCL_CFLAGS) $(AM_CFLAGS)
+libamino_collision_la_CXXFLAGS = $(FCL_CFLAGS) $(AM_CXXFLAGS)
 libamino_collision_la_LIBADD = libamino.la $(FCL_LIBS)
 
 
 TESTS += fcl_test
 noinst_PROGRAMS += fcl_test
 fcl_test_SOURCES = src/test/aa_test_fcl.cpp
-fcl_test_CFLAGS = $(FCL_CFLAGS)
-fcl_test_CXXFLAGS = $(FCL_CFLAGS)
+fcl_test_CFLAGS = $(FCL_CFLAGS) $(AM_CFLAGS)
+fcl_test_CXXFLAGS = $(FCL_CFLAGS) $(AM_CXXFLAGS)
 fcl_test_LDADD = libamino.la libamino-collision.la $(FCL_LIBS)
 
 TESTS += cl_test
@@ -653,8 +653,8 @@ libamino_planning_la_SOURCES = \
 	src/rx/mp/ompl_rrt.cpp \
 	src/rx/mp/ompl_sbl.cpp \
 	src/rx/mp/ompl_kpiece.cpp
-libamino_planning_la_CFLAGS = $(OMPL_CFLAGS)
-libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS)
+libamino_planning_la_CFLAGS = $(OMPL_CFLAGS) $(AM_CFLAGS) $(OMPL_CFLAGS_APPEND)
+libamino_planning_la_CXXFLAGS = $(OMPL_CFLAGS) $(AM_CXXFLAGS) $(OMPL_CFLAGS_APPEND)
 libamino_planning_la_LIBADD = libamino.la libamino-collision.la $(OMPL_LIBS)
 
 endif # HAVE_OMPL
@@ -700,8 +700,8 @@ if HAVE_EIGEN
 noinst_PROGRAMS += eigen_compat
 eigen_compat_SOURCES = src/test/eigen_compat.cpp
 eigen_compat_LDADD = libamino.la libtestutil.la $(EIGEN_LIBS)
-eigen_compat_CFLAGS = $(EIGEN_CFLAGS)
-eigen_compat_CXXFLAGS = $(EIGEN_CFLAGS)
+eigen_compat_CFLAGS = $(EIGEN_CFLAGS) $(AM_CFLAGS) $(EIGEN_CFLAGS_APPEND)
+eigen_compat_CXXFLAGS = $(EIGEN_CFLAGS) $(AM_CXXFLAGS) $(EIGEN_CFLAGS_APPEND)
 
 TESTS += eigen_compat
 

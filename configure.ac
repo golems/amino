@@ -156,30 +156,32 @@ AC_TRY_COMPILE([$INCLUDE_CBLAS_H
 AC_SUBST([aa_cblas_transpose_type])
 
 
-
 m4_ifdef([AX_CHECK_COMPILE_FLAG],
-         [AC_DEFUN([APPEND_CFLAG],
-                   [AX_CHECK_COMPILE_FLAG([$1], [CFLAGS="$1 $CFLAGS"])])
-          AC_DEFUN([APPEND_CXXFLAG],
-                   [AX_CHECK_COMPILE_FLAG([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
-          AC_DEFUN([APPEND_FCFLAG],
-                   [AX_CHECK_COMPILE_FLAG([$1], [FCFLAGS="$1 $FCFLAGS"])])])
+         [AC_DEFUN([CHECK_COMPILE_FLAG],
+                   [AX_CHECK_COMPILE_FLAG([$1],[$2],[$3])])])
+m4_ifdef([AX_CHECK_COMPILER_FLAG],
+         [AC_DEFUN([CHECK_COMPILE_FLAG],
+                   [AX_CHECK_COMPILER_FLAG([$1],[$2],[$3])])])
 
-m4_ifdef([AX_CHECK_COMPILER_FLAGS],
-         [AC_DEFUN([APPEND_CFLAG],
-                   [AX_CHECK_COMPILER_FLAGS([$1], [CFLAGS="$1 $CFLAGS"])])
-          AC_DEFUN([APPEND_CXXFLAG],
-                   [AX_CHECK_COMPILER_FLAGS([$1], [CXXFLAGS="$1 $CXXFLAGS"])])
-          AC_DEFUN([APPEND_FCFLAG],
-                   [AX_CHECK_COMPILER_FLAGS([$1], [FCFLAGS="$1 $FCFLAGS"])])])
+m4_ifdef([CHECK_COMPILE_FLAG], [],
+         [AC_MSG_WARN([Unable to test compiler flags])
+          AC_DEFUN([CHECK_COMPILE_FLAG],
+                   [$3])])
 
-m4_ifdef([APPEND_FCFLAG],[],
-         [AC_DEFUN([APPEND_FCFLAG],[])])
-m4_ifdef([APPEND_CFLAG],[],
-         [AC_DEFUN([APPEND_CFLAG],[])])
-m4_ifdef([APPEND_CXXFLAG],[],
-         [AC_DEFUN([APPEND_CXXFLAG],[])])
+AC_DEFUN([APPEND_CFLAG],
+          [CHECK_COMPILE_FLAG([$1], [AM_CFLAGS="$1 $AM_CFLAGS"])])
+AC_DEFUN([APPEND_CXXFLAG],
+         [CHECK_COMPILE_FLAG([$1], [AM_CXXFLAGS="$1 $AM_CXXFLAGS"])])
+AC_DEFUN([APPEND_FCFLAG],
+         [CHECK_COMPILE_FLAG([$1], [AM_FCFLAGS="$1 $AM_FCFLAGS"])])
 
+
+dnl m4_ifdef([APPEND_FCFLAG],[],
+dnl          [AC_DEFUN([APPEND_FCFLAG],[])])
+dnl m4_ifdef([APPEND_CFLAG],[],
+dnl          [AC_DEFUN([APPEND_CFLAG],[])])
+dnl m4_ifdef([APPEND_CXXFLAG],[],
+dnl          [AC_DEFUN([APPEND_CXXFLAG],[])])
 
 
 # Fortran Checks
@@ -268,7 +270,7 @@ dnl Check if FLAG is supported, and if so, add it
 
 
 
-
+# Check for C flags
 AC_LANG([C])
 APPEND_CFLAG([-Wextra])
 APPEND_CFLAG([-Wconversion])
@@ -278,6 +280,7 @@ APPEND_CFLAG([-Wshadow])
 APPEND_CFLAG([-Wwrite-strings])
 APPEND_CFLAG([-Wc++-compat])
 
+# Check for C++ flags
 AC_LANG([C++])
 APPEND_CXXFLAG([-Wextra])
 APPEND_CXXFLAG([-Wconversion])
@@ -285,6 +288,9 @@ APPEND_CXXFLAG([-Wpointer-arith])
 APPEND_CXXFLAG([-Wfloat-equal])
 APPEND_CXXFLAG([-Wshadow])
 APPEND_CXXFLAG([-Wwrite-strings])
+CHECK_COMPILE_FLAG([-Wno-conversion],
+                   [HAVE_WNO_CONVERSION=yes],
+                   [HAVE_WNO_CONVERSION=no])
 
 AC_ARG_ENABLE([debug],
         AS_HELP_STRING([--enable-debug], [Build for debugging]))
@@ -450,6 +456,11 @@ PKG_CHECK_MODULES([EIGEN],
                   [HAVE_EIGEN=no])
 AC_SUBST([EIGEN_CFLAGS])
 AC_SUBST([EIGEN_LIBS])
+
+AS_IF([test "x$HAVE_EIGEN" = xyes -a "x$HAVE_WNO_CONVERSION" = xyes],
+      [EIGEN_CFLAGS_APPEND="$EIGEN_CFLAGS_APPEND -Wno-conversion"])
+AC_SUBST([EIGEN_CFLAGS_APPEND])
+
 AM_CONDITIONAL([HAVE_EIGEN], [test "x$HAVE_EIGEN" = xyes])
 
 ## FCL ##
@@ -610,6 +621,11 @@ AS_IF([test "x$HAVE_OMPL" = xyes -a "x$HAVE_FCL" != xyes],
         [AC_MSG_WARN([OMPL support requires FCL, disabling])
          HAVE_OMPL=disabled])
 ])
+
+# check CFLAGS for OMPL
+AS_IF([test "x$HAVE_OMPL" = xyes -a "x$HAVE_WNO_CONVERSION" = xyes],
+      [OMPL_CFLAGS_APPEND="$OMPL_CFLAGS_APPEND -Wno-conversion"])
+AC_SUBST([OMPL_CFLAGS_APPEND])
 
 # check for OMPL type templates
 AS_IF([test "x$HAVE_OMPL" = xyes],
@@ -1008,6 +1024,10 @@ CONFIG_SCRIPT([python/test/py_tutorial_test.sh])
 CONFIG_SCRIPT([python/test/pylint.sh])
 
 CONFIG_SCRIPT([aarxc])
+
+AC_SUBST([AM_CFLAGS])
+AC_SUBST([AM_CXXFLAGS])
+AC_SUBST([AM_FCFLAGS])
 
 AC_OUTPUT
 
