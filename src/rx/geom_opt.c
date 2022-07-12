@@ -68,13 +68,12 @@ aa_rx_geom_opt_destroy(struct aa_rx_geom_opt* opt)
     free(opt);
 }
 
-AA_DEF_BOOL_SETTER( aa_rx_geom_opt, no_shadow );
-AA_DEF_BOOL_SETTER( aa_rx_geom_opt, visual );
-AA_DEF_BOOL_SETTER( aa_rx_geom_opt, collision );
+AA_DEF_BOOL_SETTER(aa_rx_geom_opt, no_shadow)
+AA_DEF_BOOL_SETTER(aa_rx_geom_opt, visual)
+AA_DEF_BOOL_SETTER(aa_rx_geom_opt, collision)
 
-
-AA_DEF_VEC3_SETTER( aa_rx_geom_opt, color );
-AA_DEF_VEC3_SETTER( aa_rx_geom_opt, specular );
+AA_DEF_VEC3_SETTER(aa_rx_geom_opt, color)
+AA_DEF_VEC3_SETTER(aa_rx_geom_opt, specular)
 
 void
 aa_rx_geom_opt_set_alpha (

@@ -263,7 +263,7 @@ static inline void aa_endconv_st_be( void *dst, void *src, size_t len ) {
             y |= v;                                             \
         }                                                       \
         return y;                                               \
-    };
+    }
 
 
 // definer macros for aa_endconv_h_to_{l,b}e functions
@@ -276,7 +276,7 @@ static inline void aa_endconv_st_be( void *dst, void *src, size_t len ) {
 #define AA_ENDCONV_MAKE_H_TO_BE( type, suffix )                 \
     static inline type aa_endconv_h_to_be_##suffix( type v ) {  \
         return aa_endconv_reverse_##suffix( v );                \
-    };
+    }
 
 /// Make host to little-endian conversion function
 #define AA_ENDCONV_MAKE_LE_TO_H( type, suffix )                         \
@@ -285,21 +285,21 @@ static inline void aa_endconv_st_be( void *dst, void *src, size_t len ) {
 #define AA_ENDCONV_MAKE_BE_TO_H( type, suffix )                 \
     static inline type aa_endconv_be_to_h_##suffix( type v ) {  \
         return aa_endconv_reverse_##suffix( v );                \
-    };
+    }
 
 #elif __BYTE_ORDER == __BIG_ENDIAN
 
 #define AA_ENDCONV_MAKE_H_TO_LE( type, suffix )                 \
     static inline type aa_endconv_h_to_le_##suffix( type v ) {  \
         return aa_endconv_reverse_##suffix( v );                \
-    };
+    }
 #define AA_ENDCONV_MAKE_H_TO_BE( type, suffix )                         \
     static inline type aa_endconv_h_to_le_##suffix( type v ) {  return v; }
 
 #define AA_ENDCONV_MAKE_LE_TO_H( type, suffix )                 \
     static inline type aa_endconv_le_to_h_##suffix( type v ) {  \
         return aa_endconv_reverse_##suffix( v );                \
-    };
+    }
 #define AA_ENDCONV_MAKE_BE_TO_H( type, suffix )                         \
     static inline type aa_endconv_be_to_h_##suffix( type v ) {  return v; }
 
@@ -331,38 +331,37 @@ static inline void aa_endconv_st_be( void *dst, void *src, size_t len ) {
 
 
 /// define functions for 16-bit signed int
-AA_ENDCONV_MAKE_LDST_DEF( int16_t,  i16 );
+AA_ENDCONV_MAKE_LDST_DEF(int16_t, i16)
 /// define functions for 16-bit signed int
-AA_ENDCONV_MAKE_CONV_DEF( int16_t,  i16 );
+AA_ENDCONV_MAKE_CONV_DEF(int16_t, i16)
 /// define functions for 16-bit unsigned int
-AA_ENDCONV_MAKE_LDST_DEF( uint16_t, u16 );
+AA_ENDCONV_MAKE_LDST_DEF(uint16_t, u16)
 /// define functions for 16-bit unsigned int
-AA_ENDCONV_MAKE_CONV_DEF( uint16_t, u16 );
+AA_ENDCONV_MAKE_CONV_DEF(uint16_t, u16)
 
 /// define functions for 32-bit signed int
-AA_ENDCONV_MAKE_LDST_DEF( int32_t,  i32 );
+AA_ENDCONV_MAKE_LDST_DEF(int32_t, i32)
 /// define functions for 32-bit signed int
-AA_ENDCONV_MAKE_CONV_DEF( int32_t,  i32 );
+AA_ENDCONV_MAKE_CONV_DEF(int32_t, i32)
 
 /// define functions for 32-bit unsigned int
-AA_ENDCONV_MAKE_LDST_DEF( uint32_t, u32 );
+AA_ENDCONV_MAKE_LDST_DEF(uint32_t, u32)
 /// define functions for 32-bit unsigned int
-AA_ENDCONV_MAKE_CONV_DEF( uint32_t, u32 );
+AA_ENDCONV_MAKE_CONV_DEF(uint32_t, u32)
 
 /// define functions for 64-bit signed int
-AA_ENDCONV_MAKE_LDST_DEF( int64_t,  i64 );
+AA_ENDCONV_MAKE_LDST_DEF(int64_t, i64)
 /// define functions for 64-bit signed int
-AA_ENDCONV_MAKE_CONV_DEF( int64_t,  i64 );
+AA_ENDCONV_MAKE_CONV_DEF(int64_t, i64)
 
 /// define functions for 64-bit unsigned int
-AA_ENDCONV_MAKE_LDST_DEF( uint64_t, u64 );
+AA_ENDCONV_MAKE_LDST_DEF(uint64_t, u64)
 /// define functions for 64-bit unsigned int
-AA_ENDCONV_MAKE_CONV_DEF( uint64_t, u64 );
+AA_ENDCONV_MAKE_CONV_DEF(uint64_t, u64)
 
 /// define functions for 64-bit floating point
-AA_ENDCONV_MAKE_LDST_DEF( double,   d );
+AA_ENDCONV_MAKE_LDST_DEF(double, d)
 /// define functions for 32-bit floating point
-AA_ENDCONV_MAKE_LDST_DEF( float,    s );
-
+AA_ENDCONV_MAKE_LDST_DEF(float, s)
 
 #endif

@@ -257,7 +257,7 @@ AA_API void aa_rx_sg_tf
             AA_MEM_CPY(E_abs, E_rel, 7);
         } else {
             assert( f->parent_id < (ssize_t)i_frame );
-            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
+            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);
             aa_tf_qutr_mul(E_abs_parent, E_rel, E_abs);
         }
     }
@@ -331,7 +331,7 @@ AA_API void aa_rx_sg_tfmat
             AA_MEM_CPY(E_abs, E_rel, 12);
         } else {
             assert( f->parent_id < (ssize_t)i_frame );
-            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
+            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);
             aa_tf_tfmat_mul(E_abs_parent, E_rel, E_abs);
         }
     }
@@ -368,7 +368,7 @@ AA_API void aa_rx_sg_duqu
             AA_MEM_CPY(E_abs, E_rel, 8);
         } else {
             assert( f->parent_id < (ssize_t)i_frame );
-            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
+            double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);
             aa_tf_duqu_mul(E_abs_parent, E_rel, E_abs);
         }
     }
@@ -438,7 +438,7 @@ AA_API void aa_rx_sg_tf_update
                 AA_MEM_CPY(E_abs, E_rel, 7);
             } else {
                 assert( f->parent_id < (ssize_t)i_frame );
-                double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);;
+                double *E_abs_parent = TF_abs + (ld_abs * (size_t)f->parent_id);
                 aa_tf_qutr_mul(E_abs_parent, E_rel, E_abs);
             }
             updated[i_frame] = 1;

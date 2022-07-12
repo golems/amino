@@ -93,13 +93,13 @@ aa_rx_wf_mtl_get_material( const struct aa_rx_wf_mtl * mtl, size_t i)
     ( const struct aa_rx_wf_material * material )                       \
     {                                                                   \
         return material->has_ ## THING;                                 \
-    }                                                                   \
+    }
 
-#define DEF_FIELD(TYPE,THING)                                   \
-    DEF_HAS(THING)                                              \
-    AA_DEF_GETTER( aa_rx_wf_material, TYPE, THING );
+#define DEF_FIELD(TYPE, THING) \
+    DEF_HAS(THING)             \
+    AA_DEF_GETTER(aa_rx_wf_material, TYPE, THING)
 
-AA_DEF_GETTER( aa_rx_wf_material, const char*, name );
+AA_DEF_GETTER(aa_rx_wf_material, const char *, name)
 DEF_FIELD(const double *, specular)
 DEF_FIELD(const double *, ambient)
 DEF_FIELD(const double *, emission)

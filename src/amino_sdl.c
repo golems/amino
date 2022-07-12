@@ -351,6 +351,7 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
             //case SDLK_DOWN: world_E_model[AA_TF_QUTR_TZ] -= .1; break;
 
         case SDLK_KP_2: sign = -1;
+            AA_FALLTHROUGH;
         case SDLK_KP_8:
             if( ctrl ) {
                 cam_E_camp[AA_TF_QUTR_TY] += sign*globals->scroll_ratio;
@@ -362,6 +363,7 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
             update_tf = 1;
             break;
         case SDLK_KP_4: sign = -1;
+            AA_FALLTHROUGH;
         case SDLK_KP_6:
             if( ctrl ) {
                 cam_E_camp[AA_TF_QUTR_TX] += sign*globals->scroll_ratio;
@@ -374,6 +376,7 @@ void aa_sdl_scroll_event( struct aa_gl_globals * globals,
             break;
 
         case SDLK_KP_MINUS: sign = -1;
+            AA_FALLTHROUGH;
         case SDLK_KP_PLUS:
             cam_E_camp[AA_TF_QUTR_TZ] -= sign*globals->scroll_ratio;
             update_tf = 1;

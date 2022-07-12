@@ -50,7 +50,7 @@ struct aa_rx_sg_sub
     aa_rx_frame_id *configs;
 
     size_t ee_count;
-    const aa_rx_frame_id *ees;
+    aa_rx_frame_id *ees;
 };
 
 

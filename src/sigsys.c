@@ -761,7 +761,7 @@ aa_ode_path( enum aa_ode_integrator integrator,
     *n_points = cx.cnt;
     *path = AA_MEM_REGION_NEW_N(region, double, n*(*n_points));
 
-    int i = 0;
+    size_t i = 0;
     for( struct aa_mem_cons *c = cx.list->head; c; c = c->next ) {
         assert( i < cx.cnt);
         double *p = (*path) + i*n;

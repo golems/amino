@@ -102,6 +102,14 @@
 /// deprecated thing
 #define AA_DEPRECATED  __attribute__ ((deprecated))
 
+
+#if __has_attribute(__fallthrough__)
+#define AA_FALLTHROUGH __attribute__((__fallthrough__))
+#else
+#define AA_FALLTHROUGH do {} while (0)  /* fallthrough */
+#endif
+
+
 /// (int) 1e9
 #define AA_IBILLION 1000000000
 /// (int) 1e6

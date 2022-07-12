@@ -38,6 +38,8 @@
 #ifndef AMINO_RX_SCENE_GEOM_H
 #define AMINO_RX_SCENE_GEOM_H
 
+#include "rxtype.h"
+
 /**
  * @file scene_geom.h
  * @brief Geometric objects (shapes and meshes)
@@ -46,15 +48,6 @@
 /*-----------*/
 /*- Options -*/
 /*-----------*/
-
-/**
- * Opaque structure for geometry options.
- *
- * All options are set through accessor functions so that future
- * options can be added while preserving API and ABI compatability.
- */
-struct aa_rx_geom_opt;
-struct aa_rx_geom;
 
 /**
  * Create a geometry option struct.
@@ -458,10 +451,6 @@ AA_API struct aa_rx_geom *
 aa_rx_geom_mesh (
     struct aa_rx_geom_opt *opt,
     struct aa_rx_mesh *mesh );
-
-
-struct aa_rx_octree;
-struct aa_rx_geom_octree;
 
 /**
  * Attach geometry to the scene graph

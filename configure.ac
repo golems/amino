@@ -27,15 +27,6 @@ AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AM_PATH_LISPDIR
 
-# Check for Lex/Flex
-AC_ARG_WITH([lex],
-            AS_HELP_STRING([--without-lex], [Do not run lex/flex]),
-            [],
-            [with_lex=yes])
-AS_IF([test "x$with_lex" != xyes],
-      [AM_PROG_LEX])
-AM_CONDITIONAL([HAVE_LEX], [test "x$LEX" != x -a "x$with_lex" = xyes])
-
 # Check for Maxima
 AC_ARG_WITH([maxima],
             AS_HELP_STRING([--without-maxima], [Do not run maxima]),
@@ -273,16 +264,24 @@ dnl Check if FLAG is supported, and if so, add it
 # Check for C flags
 AC_LANG([C])
 APPEND_CFLAG([-Wextra])
+dnl APPEND_CFLAG([-Wpedantic])
 APPEND_CFLAG([-Wconversion])
 APPEND_CFLAG([-Wpointer-arith])
 APPEND_CFLAG([-Wfloat-equal])
 APPEND_CFLAG([-Wshadow])
 APPEND_CFLAG([-Wwrite-strings])
 APPEND_CFLAG([-Wc++-compat])
+CHECK_COMPILE_FLAG([-Wno-unused-function],
+                   [HAVE_WNO_UNUSED_FUNCTION=yes],
+                   [HAVE_WNO_UNUSED_FUNCTION=no])
+CHECK_COMPILE_FLAG([-Wno-deprecated-declarations],
+                   [HAVE_WNO_NO_DEPRECATED_DECLARATIONS_C=yes],
+                   [HAVE_WNO_NO_DEPRECATED_DECLARATIONS_C=no])
 
 # Check for C++ flags
 AC_LANG([C++])
 APPEND_CXXFLAG([-Wextra])
+dnl APPEND_CXXFLAG([-Wpedantic])
 APPEND_CXXFLAG([-Wconversion])
 APPEND_CXXFLAG([-Wpointer-arith])
 APPEND_CXXFLAG([-Wfloat-equal])
@@ -291,6 +290,9 @@ APPEND_CXXFLAG([-Wwrite-strings])
 CHECK_COMPILE_FLAG([-Wno-conversion],
                    [HAVE_WNO_CONVERSION=yes],
                    [HAVE_WNO_CONVERSION=no])
+CHECK_COMPILE_FLAG([-Wno-deprecated-declarations],
+                   [HAVE_WNO_NO_DEPRECATED_DECLARATIONS_CXX=yes],
+                   [HAVE_WNO_NO_DEPRECATED_DECLARATIONS_CXX=no])
 
 AC_ARG_ENABLE([debug],
         AS_HELP_STRING([--enable-debug], [Build for debugging]))
@@ -308,6 +310,15 @@ AS_IF([test "x$enable_debug" = "xyes"],[
     AC_LANG([C++])
     APPEND_CXXFLAG([-g])
 ])
+
+
+AS_IF([test "x$HAVE_WNO_NO_DEPRECATED_DECLARATIONS_C" = xyes],
+      [TEST_CFLAGS_APPEND="$TEST_CFLAGS_APPEND -Wno-deprecated-declarations"])
+AC_SUBST([TEST_CFLAGS_APPEND])
+
+AS_IF([test "x$HAVE_WNO_NO_DEPRECATED_DECLARATIONS_CXX" = xyes],
+      [TEST_CXXFLAGS_APPEND="$TEST_CXXFLAGS_APPEND -Wno-deprecated-declarations"])
+AC_SUBST([TEST_CXXFLAGS_APPEND])
 
 
 ## Java ##
@@ -363,6 +374,26 @@ AC_LANG([C])
 #######################
 ## OPTIONAL PACKAGES ##
 #######################
+
+
+## Lex/Flex ##
+AC_ARG_WITH([lex],
+            AS_HELP_STRING([--without-lex], [Do not run lex/flex]),
+            [],
+            [with_lex=yes])
+AS_IF([test "x$with_lex" != xyes],
+      [AM_PROG_LEX])
+
+AS_IF([test "x$LEX" != x -a "x$with_lex" = xyes],
+      [HAVE_LEX=yes],
+      [HAVE_LEX=no])
+
+AM_CONDITIONAL([HAVE_LEX], [test "x$HAVE_LEX" = xyes])
+
+AS_IF([test "x$HAVE_WNO_UNUSED_FUNCTION" = xyes],
+      [LEX_CFLAGS_APPEND="$LEX_CFLAGS_APPEND -Wno-unused-function"])
+AC_SUBST([LEX_CFLAGS_APPEND])
+
 
 ## Blender ##
 

@@ -51,7 +51,7 @@
 /**
  * Function type to solve a general-matrix linear program.
  */
-typedef int aa_opt_lp_solver (
+typedef int aa_opt_lp_solver_fun (
     size_t m, size_t n,
     const double *A, size_t ldA,
     const double *b_lower, const double *b_upper,

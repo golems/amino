@@ -576,8 +576,14 @@ static inline void *aa_mem_dup( const void *src, size_t size )
  */
 #define AA_MEM_ZERO(dst, n_elem)  (memset((dst),0,(n_elem)*sizeof(*(dst))))
 
-/// make a floating point array literal
-#define AA_FAR(...) ((double[]){__VA_ARGS__})
+AA_DEPRECATED static inline double *
+aa_far_deprecated(double *x) { return x; }
+
+/** make a floating point array literal
+ *
+ * Deprecated due to C++ incompatibility.
+ */
+#define AA_FAR(...) (aa_far_deprecated(((double[]){__VA_ARGS__})))
 
 /// copy n double floats from src to dst
 static inline void aa_fcpy( double *dst, const double *src, size_t n ) AA_DEPRECATED;
@@ -787,11 +793,11 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
         vec->data = (element_type*)malloc(max*sizeof(*vec->data));      \
         vec->max = max;                                                 \
         vec->size = (size_t)0;                                          \
-    };                                                                  \
+    }                                                                  \
     static inline void vector_type ## _push                             \
     ( vector_type *vec, element_type value ) {                          \
         AA_VECTOR_PUSH(vec->max, vec->size, vec->data, value);          \
-    };
+    }
 
 
 

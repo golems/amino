@@ -64,7 +64,7 @@ s_ik_nlopt( struct kin_solve_cx *cx,
             struct aa_dvec *q );
 
 
-static void s_set_frames( struct aa_rx_ik_cx *cx, size_t n_frames, aa_rx_frame_id *frames )
+static void s_set_frames( struct aa_rx_ik_cx *cx, size_t n_frames, const aa_rx_frame_id *frames )
 {
     if(cx->frames) free(cx->frames);
     cx->n_frames = n_frames;

@@ -55,8 +55,6 @@
 
 %{
 
-#pragma GCC diagnostic warning "-w"
-
 #include <stdio.h>
 
 #include "amino.h"
@@ -254,7 +252,7 @@ aa_rx_wf_mtl_parse(const char *filename)
     struct wf_mtl_extra e;
     e.mtl = aa_rx_wf_mtl_create();
     e.mtl->filename = strdup(filename);
-    aa_rx_wf_set_extra(&e, scanner);
+    aa_rx_wf_mtl_set_extra(&e, scanner);
 
     int r = aa_rx_wf_mtl_lex(scanner);
 

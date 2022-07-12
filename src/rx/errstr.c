@@ -50,7 +50,7 @@ char *aa_rx_errstr( struct aa_mem_region *reg,
 {
     size_t n = 0;
     const char *strs[sizeof(e) * 8 + 1];
-    strs[0] = "OK";;
+    strs[0] = "OK";
     strs[1] = NULL;
 
     for( size_t i = 0; i < sizeof(errstrs) / sizeof(*errstrs); i ++ ) {

@@ -1760,6 +1760,11 @@ AA_API void aa_tf_duqu_exp( const double d[AA_RESTRICT 8], double e[AA_RESTRICT 
 /** Dual quaternion natural logarithm */
 AA_API void aa_tf_duqu_ln( const double d[AA_RESTRICT 8], double e[AA_RESTRICT 8] );
 
+/** Unit dual quaternion natural logarithm.
+ *
+ * Result is a pure dual quaterion. */
+AA_API void aa_tf_duqu_lnv(const double S[AA_RESTRICT 8], double w[AA_RESTRICT 6]);
+
 /** Dual quaternion norm */
 AA_API void aa_tf_duqu_norm( const double d[AA_RESTRICT 8], double *nreal, double *ndual );
 

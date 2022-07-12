@@ -119,5 +119,5 @@
  */
 #endif
 
-#define AA_FDEC( rettype, prefix, name, ... )                           \
-    AA_API rettype AA_NAME( prefix, name ) ( __VA_ARGS__ );
+#define AA_FDEC(rettype, prefix, name, ...) \
+    AA_API rettype AA_NAME(prefix, name)(__VA_ARGS__)

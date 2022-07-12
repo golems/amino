@@ -105,7 +105,7 @@ aa_rx_wk_dx2dq( const struct aa_rx_sg_sub *ssg,
 }
 
 AA_API int
-aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_dx2dq_np( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
                    const struct aa_rx_fk *fk,
                    const struct aa_dvec *dx, const struct aa_dvec *dq_r,
@@ -141,7 +141,7 @@ aa_rx_wk_dx2dq_np( const const struct aa_rx_sg_sub *ssg,
 }
 
 AA_API void
-aa_rx_wk_dqcenter( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_dqcenter( const struct aa_rx_sg_sub *ssg,
                    const struct aa_rx_wk_opts * opts,
                    const struct aa_dvec *q,
                    struct aa_dvec *dq_r )

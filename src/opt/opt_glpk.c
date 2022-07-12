@@ -198,7 +198,7 @@ s_set_bnd( struct aa_opt_cx *cx, size_t n,
     int ni = (int) n;
     for( int j = 0; j < ni; j ++ ) {
         double l=x_lower[j], u=x_upper[j];
-        int type = bounds_type(l,u);;
+        int type = bounds_type(l,u);
         glp_set_col_bnds(lp, j+1, type, l, u);
     }
     return 0;
@@ -212,7 +212,7 @@ s_set_cstr_bnd( struct aa_opt_cx *cx, size_t m,
     int mi = (int) m;
     for( int i = 0; i < mi; i ++ ) {
         double l=b_lower[i], u=b_upper[i];
-        int type = bounds_type(l,u);;
+        int type = bounds_type(l,u);
         glp_set_row_bnds(lp, i+1, type, l, u);
     }
     return 0;

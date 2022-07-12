@@ -229,7 +229,7 @@ AA_API void *aa_mem_region_dup( aa_mem_region_t *region, const void *p, size_t s
 
 AA_API char *aa_mem_region_strdup( aa_mem_region_t *region, const char *str )
 {
-    return aa_mem_region_dup( region, str, 1+strlen(str) );
+    return (char*)aa_mem_region_dup( region, str, 1+strlen(str) );
 }
 
 AA_API size_t aa_mem_region_chunk_count( aa_mem_region_t *region ) {

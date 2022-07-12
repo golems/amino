@@ -69,6 +69,20 @@ struct aa_rx_sg;
 struct aa_rx_geom;
 
 /**
+ * @struct aa_rx_geom_opt
+ * Opaque structure for geometry options.
+ *
+ * All options are set through accessor functions so that future
+ * options can be added while preserving API and ABI compatability.
+ */
+struct aa_rx_geom_opt;
+
+struct aa_rx_octree;
+
+struct aa_rx_geom_octree;
+
+
+/**
  * Container for collision info
  */
 struct aa_rx_cl_geom;
@@ -112,6 +126,6 @@ typedef int (*aa_sdl_win_display_fun)(
     struct aa_sdl_display_params *params);
 
 
-struct aa_rx_fk;;
+struct aa_rx_fk;
 
 #endif /*AMINO_RX_RXTYPE_H*/

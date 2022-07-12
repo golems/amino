@@ -57,7 +57,7 @@
 
 #include "amino/getset.h"
 
-AA_VECTOR_DEF(GLfloat, glfloat_vec);
+AA_VECTOR_DEF(GLfloat, glfloat_vec)
 
 static void glfloat_vec_push_all( glfloat_vec *dst, const double *src, size_t size )
 {
@@ -66,7 +66,7 @@ static void glfloat_vec_push_all( glfloat_vec *dst, const double *src, size_t si
     }
 }
 
-AA_VECTOR_DEF(unsigned, u_vec);
+AA_VECTOR_DEF(unsigned, u_vec)
 
 static void u_vec_push_all( u_vec *dst, const unsigned *src, size_t size )
 {
@@ -278,7 +278,7 @@ static GLint aa_gl_id_position;
 static GLint aa_gl_id_normal;
 static GLint aa_gl_id_matrix_model;
 static GLint aa_gl_id_matrix_camera;
-static GLint aa_gl_id_camera_world;;
+static GLint aa_gl_id_camera_world;
 static GLint aa_gl_id_light_position;
 static GLint aa_gl_id_ambient;
 static GLint aa_gl_id_light_color;
@@ -790,7 +790,7 @@ AA_API void aa_geom_gl_buffers_init_grid (
     size_t isize = 2 * n_vert * sizeof(GLfloat);
     unsigned *indices = (unsigned*)aa_mem_region_local_alloc(isize);
     size_t vsize = 3 * n_vert * sizeof(GLfloat);
-    GLfloat *values = (GLfloat*)aa_mem_region_local_alloc(vsize);;
+    GLfloat *values = (GLfloat*)aa_mem_region_local_alloc(vsize);
 
     static const double a[2] = {1,-1};
     size_t idx = 0;
@@ -1622,13 +1622,13 @@ aa_gl_globals_set_aspect(
                            globals->perspective);
 }
 
-AA_DEF_FLOAT3_SETTER( aa_gl_globals, light_position );
-AA_DEF_FLOAT3_SETTER( aa_gl_globals, light_color );
-AA_DEF_FLOAT3_SETTER( aa_gl_globals, ambient );
+AA_DEF_FLOAT3_SETTER(aa_gl_globals, light_position)
+AA_DEF_FLOAT3_SETTER(aa_gl_globals, light_color)
+AA_DEF_FLOAT3_SETTER(aa_gl_globals, ambient)
 
-AA_DEF_FLOAT_SETTER( aa_gl_globals, light_power );
-AA_DEF_BOOL_SETTER( aa_gl_globals, show_visual );
-AA_DEF_BOOL_SETTER( aa_gl_globals, show_collision );
+AA_DEF_FLOAT_SETTER(aa_gl_globals, light_power)
+AA_DEF_BOOL_SETTER(aa_gl_globals, show_visual)
+AA_DEF_BOOL_SETTER(aa_gl_globals, show_collision)
 
 struct sg_render_cx {
     const struct aa_rx_sg *sg;

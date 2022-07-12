@@ -69,7 +69,7 @@ AA_API void AA_NAME(la,transpose)
 AA_FDEC(AA_TYPE, la, ssd,
         size_t n,
         const AA_TYPE *x, size_t incx,
-        const AA_TYPE *y, size_t incy )
+        const AA_TYPE *y, size_t incy );
 
 /** Linear interpolation of vectors
  *
@@ -365,7 +365,7 @@ static inline size_t AA_NAME(la,maxloc)
  */
 AA_FDEC(AA_TYPE, la, angle,
         size_t n, const AA_TYPE *x, size_t incx,
-        const AA_TYPE *y, size_t incy)
+        const AA_TYPE *y, size_t incy);
 
 
 

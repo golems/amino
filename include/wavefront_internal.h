@@ -59,7 +59,7 @@ struct wf_extra {
 
 
 #define WF_FACE(thing) yyextra->face.thing
-#define SET_WF_FACE(thing) WF_FACE(thing) = atol(yytext)-1
+#define SET_WF_FACE(thing) WF_FACE(thing) = (int32_t)atol(yytext)-1
 #define SKIP_WF_FACE(thing) WF_FACE(thing) = AA_RX_WF_OBJ_FACE_NONE
 
 /**

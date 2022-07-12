@@ -135,13 +135,13 @@ int main(int argc, char *argv[])
     if( print_config || print_frame ) {
 
         if( print_config ) {
-            for( aa_rx_config_id i = 0; i < aa_rx_sg_config_count(scenegraph); i ++ ) {
-                printf("config[%d]: %s\n", i, aa_rx_sg_config_name(scenegraph, i));
+            for (aa_rx_config_id i = 0; i < (int)aa_rx_sg_config_count(scenegraph); i++) {
+                printf("config[%ld]: %s\n", i, aa_rx_sg_config_name(scenegraph, i));
             }
         }
         if( print_frame ) {
-            for( aa_rx_frame_id i = 0; i < aa_rx_sg_frame_count(scenegraph); i ++ ) {
-                printf("frame[%d]: %s\n", i, aa_rx_sg_frame_name(scenegraph, i));
+            for (aa_rx_frame_id i = 0; i < (int)aa_rx_sg_frame_count(scenegraph); i++) {
+                printf("frame[%ld]: %s\n", i, aa_rx_sg_frame_name(scenegraph, i));
             }
         }
         exit(EXIT_SUCCESS);

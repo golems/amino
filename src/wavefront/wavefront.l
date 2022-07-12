@@ -53,8 +53,6 @@
 
 %{
 
-#pragma GCC diagnostic warning "-w"
-
 #include <stdio.h>
 
 #include "amino.h"
@@ -235,7 +233,7 @@ START {MAYBE_BLANKS}
 
 <FV0>{INT}"/" {
     /* Vertex 0 */
-    yyextra->face.v[0] = atol(yytext)-1;
+    yyextra->face.v[0] = (int32_t)atol(yytext)-1;
     SET_WF_FACE(v[0]);
     BEGIN(FT0);
 }

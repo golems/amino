@@ -64,7 +64,7 @@ AA_API size_t aa_fmaxloc( size_t n, double *v ) {
     return aa_la_d_maxloc( n, v, 1 );
 }
 
-AA_API double aa_frand_init()
+AA_API void aa_frand_init()
 {
     time_t seed = time(NULL);
     srand((unsigned int)seed); // might break in 2038

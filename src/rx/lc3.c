@@ -214,7 +214,7 @@ lc3_constraints (
 
 
 AA_API  struct aa_rx_wk_lc3_cx *
-aa_rx_wk_lc3_create ( const const struct aa_rx_sg_sub *ssg,
+aa_rx_wk_lc3_create ( const struct aa_rx_sg_sub *ssg,
                       const struct aa_rx_wk_opts * opts )
 {
     struct aa_mem_region *reg =  aa_mem_region_local_get();

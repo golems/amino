@@ -330,7 +330,7 @@ AA_API struct aa_opt_cx* aa_opt_lpsolve_gmcreate (
     if( NULL == lp ) goto ERROR;
     set_verbose(lp, 1);
 
-    struct opt_cx *cx =  cx_finish(&vtab, lp);
+    struct aa_opt_cx *cx =  cx_finish(&vtab, lp);
 
     set_add_rowmode(lp, FALSE);
     set_maxim(lp);

@@ -1199,6 +1199,6 @@ static inline struct aa_tf_vec3 operator*(const struct aa_tf_rotmat &r,
     return q;
 }
 
-};  // namespace amino
+}  // namespace amino
 
 #endif  // AA_MEM_HPP

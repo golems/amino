@@ -1176,13 +1176,15 @@ void mem() {
         double x[6] = {1,2,3,4,5,6};
         assert( 6*sizeof(double) == sizeof(x) );
         AA_MEM_ZERO(x,6);
-        aveq( "zero_ar", 6, x, AA_FAR(0,0,0,0,0,0), 0 );
+        double x_e[] = {0,0,0,0,0,0};
+        aveq( "zero_ar", 6, x, x_e, 0 );
     }
     // set_ar
     {
         double x[3] = {0};
         AA_SET_AR(x,1.5);
-        aveq( "set_ar", 3, x, AA_FAR(1.5,1.5,1.5), 0 );
+        double x_e[] = {1.5,1.5,1.5};
+        aveq( "set_ar", 3, x, x_e, 0 );
     }
 }
 
@@ -1255,24 +1257,28 @@ void rotmat() {
         double R[9];
         double Rr[9];
 
+        double aa_x[] = {1,0,0,M_PI_2};
+        double aa_y[] = {0,1,0,M_PI_2};
+        double aa_z[] = {0,0,1,M_PI_2};
+
         aa_tf_xangle2rotmat( M_PI_2, R );
-        aa_tf_axang2rotmat( AA_FAR(1,0,0,M_PI_2), Rr );
+        aa_tf_axang2rotmat( aa_x, Rr );
         assert( aa_tf_isrotmat(R) );
         aveq( "tf_xangle2rotmat", 9, R, R_x90, .001 );
         aveq( "tf_axang2rotmat", 9, R, Rr, .001 );
 
         aa_tf_yangle2rotmat( M_PI_2, R );
-        aa_tf_axang2rotmat( AA_FAR(0,1,0,M_PI_2), Rr );
+        aa_tf_axang2rotmat( aa_y, Rr );
         assert( aa_tf_isrotmat(R) );
         aveq( "tf_yangle2rotmat", 9, R, R_y90, .001);
         aveq( "tf_yangle2rotmat", 9, R, Rr, .001);
 
         aa_tf_zangle2rotmat( M_PI_2, R );
+        aa_tf_axang2rotmat( aa_z, Rr );
         assert( aa_tf_isrotmat(R) );
         aveq( "tf_zangle2rotmat", 9, R, R_z90, .001);
-        aa_tf_axang2rotmat( AA_FAR(0,0,1,M_PI_2), Rr );
+        aveq( "tf_zangle2rotmat", 9, R, Rr, .001);
     }
-
 }
 
 
@@ -1282,10 +1288,11 @@ void tf() {
         double T[12] = {0,1,0,  -1,0,0,  0,0,1, 1,2,3};
         double p0[3] = {3, 5, 7};
         double p1[3];
+        double p1_e[] = {-4,5,10};
         aa_tf_12(T, p0, p1);
-        aveq( "tf_12", 3, p1, AA_FAR(-4,5,10), .001 );
+        aveq( "tf_12", 3, p1, p1_e, .001 );
         aa_tf_93(T, T+9, p0, p1);
-        aveq( "tf_93", 3, p1, AA_FAR(-4,5,10), .001 );
+        aveq( "tf_93", 3, p1, p1_e, .001 );
     }
     {
         double T[12] = {0,1,0,  -1,0,0,  0,0,1, 0,0,0};
@@ -1318,18 +1325,18 @@ void tf() {
         aa_tf_12chain(T1, T2, T );
         double p0[3] = { 10, 1, 4 };
         double p1[3];
+        double p1_e[] = {-4,17,1};
         aa_tf_12( T, p0, p1 );
-        aveq( "tf_12chain", 3, p1, AA_FAR(-4,17,1), .001 );
+        aveq( "tf_12chain", 3, p1, p1_e, .001 );
     }
     // rel
     {
         double T1[12] = {0,1,0,  -1,0,0,  0,0,1, 1,2,3};
         double T2[12] = {1,0,0,  0,1,0,  0,0,-1, 5,4,2};
         double Trel[12];
+        double Trel_e[] =  {0,-1,0,  1,0,0,  0,0,-1,  2,-4,-1};
         aa_tf_12rel( T1, T2, Trel );
-        aveq( "tf_12rel", 12, Trel,
-              AA_FAR( 0,-1,0,  1,0,0,  0,0,-1,  2, -4, -1 ),
-              .001 );
+        aveq( "tf_12rel", 12, Trel, Trel_e, .001 );
     }
 }
 
@@ -1397,7 +1404,9 @@ void tffuzz() {
 
 void kin() {
     double ta[2], tb[2];
-    assert( 0 == aa_kin_planar2_ik_theta2( AA_FAR(1, 2), AA_FAR(2.2, 2), ta, tb ) );
+    double x[] = {1,2};
+    double y[] = {2.2,2};
+    assert( 0 == aa_kin_planar2_ik_theta2( x, y, ta, tb ) );
 }
 
 
@@ -1453,19 +1462,23 @@ void validate() {
     assert( 0 != aa_valid_f( 1.2, 0.9, 1.1 ) );
 
     //aa_valid_v
-    assert( 0 == aa_valid_v( AA_FAR(1,2,3), 3,
-                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
-    assert( 0 > aa_valid_v( AA_FAR(1,2,3,4), 4,
-                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
-    assert( 0 > aa_valid_v( AA_FAR(1,2), 2,
-                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
-    assert( 2 == aa_valid_v( AA_FAR(1,2,3), 3,
-                             AA_FAR(0,3,2), AA_FAR(2,3,4), 3 ) );
-    assert( 2 == aa_valid_v( AA_FAR(1,2,3), 3,
-                             AA_FAR(0,1,2), AA_FAR(2,1,4), 3 ) );
-    assert( 3 == aa_valid_v( AA_FAR(1,2,0), 3,
-                             AA_FAR(0,1,2), AA_FAR(2,3,4), 3 ) );
-    //aa_valid_vunit
+    double v_12[] = {1,2,3};
+    double v_123[] = {1,2,3};
+    double v_120[] = {1,2,0};
+    double v_012[] = {0,1,2};
+    double v_234[] = {2,3,4};
+    double v_032[] = {0,3,2};
+    double v_1234[] = {1,2,3,4};
+    double v_214[] = {2,1,4};
+
+    assert(0 == aa_valid_v(v_123,  3, v_012, v_234, 3));
+    assert(0 > aa_valid_v (v_1234, 4, v_012, v_234, 3));
+    assert(0 > aa_valid_v (v_12,   2, v_012, v_234, 3));
+    assert(2 == aa_valid_v(v_123,  3, v_032, v_234, 3));
+    assert(2 == aa_valid_v(v_123,  3, v_012, v_214, 3));
+    assert(3 == aa_valid_v(v_120,  3, v_012, v_234, 3));
+
+    // aa_valid_vunit
     {
         double a[] = {1,2,3};
         double b[] = {1,2,3};
@@ -1537,15 +1550,19 @@ void sigsys() {
 
         double x1[2];
 
-        aa_lsim_dstep( 2, 1,
-                       A,B,
-                       x0, u, x1  );
-        aveq( "lsim_dstep", 2, x1, (double[]){22,28}, 0 );
+        {
+            double x1p[] = {22,28};
+            aa_lsim_dstep( 2, 1,
+                           A,B,
+                           x0, u, x1  );
+            aveq( "lsim_dstep", 2, x1, x1p, 0 );
+        }
 
         aa_lsim_estep( 2, 1, .01,
                        A,B,
                        x0, u, x1  );
-        aveq( "lsim_estep", 2, x1, (double[]){1.22,2.28}, 0.001 );
+        double x1_e[] = {1.22,2.28};
+        aveq( "lsim_estep", 2, x1, x1_e, 0.001 );
     }
     // rk1
     {
@@ -1556,19 +1573,21 @@ void sigsys() {
 
         aa_odestep_euler( 2, .1, dx, x0, x1 );
 
-        aveq( "odestep_rk1", 2, x1, (double[]){x0[0]+dt*dx[0], x0[1]+dt*dx[1]}, 0.001 );
+        double x1_e[] = {x0[0]+dt*dx[0], x0[1]+dt*dx[1]};
+        aveq( "odestep_rk1", 2, x1, x1_e, 0.001 );
     }
 
     // aa_sys_affine
     {
         double x[] = {1,2};
         double dx[2];
-        aa_sys_affine_t sys = { .n = 2,
-                                .A = (double[]){1,2,3,4},
-                                .D = (double[]){5,6}
-        };
+
+        double A[] = {1,2,3,4};
+        double D[] = {5,6};
+        aa_sys_affine_t sys = { .n = 2, .A = A, .D = D };
         aa_sys_affine( &sys, 0, x, dx );
-        aveq( "sys_affine", 2, dx, (double[]){12,16}, 0 );
+        double dx_e[] = {12,16};
+        aveq( "sys_affine", 2, dx, dx_e, 0 );
     }
     // rk2/4/23/45
     {
@@ -1576,20 +1595,20 @@ void sigsys() {
         double x1[2];
         double x4[2];
         double x5[2];
-        aa_sys_affine_t sys = { .n = 2,
-                                .A = (double[]){1,2,3,4},
-                                .D = (double[]){5,6}
-        };
+        double A[] = {1,2,3,4};
+        double D[] = {5,6};
+        aa_sys_affine_t sys = {.n = 2, .A = A, .D = D};
 
+        double x1_e[] = {1.123055, 2.16448};
         // rk2
         aa_odestep_rk2( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
                         x0, x1 );
-        aveq( "odestep_rk2", 2, x1, (double[]){1.123055,2.16448}, .001 );
+        aveq( "odestep_rk2", 2, x1, x1_e, .001 );
 
         // rk4
         aa_odestep_rk4( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
                         x0, x1 );
-        aveq( "odestep_rk4", 2, x1, (double[]){1.123055,2.16448}, .001 );
+        aveq( "odestep_rk4", 2, x1, x1_e, .001 );
 
         // rkf45
         {
@@ -1599,8 +1618,8 @@ void sigsys() {
             memcpy(k[0],dx0,sizeof(dx0));
             aa_odestep_rkf45( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
                               x0, k[0], x4, x5 );
-            aveq( "odestep_rkf45", 2, x4, (double[]){1.123055,2.16448}, .001 );
-            aveq( "odestep_rkf45", 2, x5, (double[]){1.123055,2.16448}, .001 );
+            aveq( "odestep_rkf45", 2, x4, x1_e, .001 );
+            aveq( "odestep_rkf45", 2, x5, x1_e, .001 );
         }
 
         // rkck45
@@ -1612,8 +1631,8 @@ void sigsys() {
             aa_odestep_rkck45( 2, (aa_sys_fun*)aa_sys_affine, &sys, 0, .01,
                                x0, k[0], x4, x5 );
             aveq( "odestep_rkck45", 2, dx0, k[0], 0 );
-            aveq( "odestep_rkck45", 2, x4, (double[]){1.123055,2.16448}, .001 );
-            aveq( "odestep_rkck45", 2, x5, (double[]){1.123055,2.16448}, .001 );
+            aveq( "odestep_rkck45", 2, x4, x1_e, .001 );
+            aveq( "odestep_rkck45", 2, x5, x1_e, .001 );
         }
 
         // dorpri45
@@ -1627,10 +1646,8 @@ void sigsys() {
             aa_sys_affine( &sys, 0, x4, dx4 );
             aveq( "odestep_dorpri45-1", 2, dx0, k[0], 0 );
             aveq( "odestep_dorpri45-2", 2, dx4, k[5], 0 );
-            aveq( "odestep_dorpri45-3", 2, x4,
-                  (double[]){1.123055,2.16448}, .001 );
-            aveq( "odestep_dorpri45-4", 2, x5,
-                  (double[]){1.123055,2.16448}, .001 );
+            aveq("odestep_dorpri45-3", 2, x4, x1_e, .001);
+            aveq("odestep_dorpri45-4", 2, x5, x1_e, .001);
         }
 
         // rkbs23
@@ -1644,10 +1661,8 @@ void sigsys() {
             aa_sys_affine( &sys, 0, x2, dx2 );
             aveq( "odestep_rkbs23", 2, dx0, k[0], 0 );
             aveq( "odestep_rkbs23", 2, dx2, k[3], 0 );
-            aveq( "odestep_rkbs23",
-                  2, x2, (double[]){1.123055,2.16448}, .001 );
-            aveq( "odestep_rkbs23",
-                  2, x3, (double[]){1.123055,2.16448}, .001 );
+            aveq("odestep_rkbs23", 2, x2, x1_e, .001);
+            aveq("odestep_rkbs23", 2, x3, x1_e, .001);
         }
     }
 
@@ -1733,18 +1748,22 @@ void stat() {
         aveq( "stat_vmean_cov", 3*3, E, E_r, .001);
 
         aa_la_inv(3, E);
-        afeq( 24.75, aa_stat_mahalanobis( 3, (double[]){0,0,0}, mu, E ),
+        double v0[] = {0,0,0};
+        afeq( 24.75, aa_stat_mahalanobis( 3, v0, mu, E ),
               .001 );
     }
 }
 
 
 void ang() {
-    afeq( 0, aa_stat_circ_mean(3, (double[]){M_PI/2, 0, 3*M_PI/2}), .001 );
-    afeq( M_PI, aa_stat_circ_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2}), .001 );
-    afeq( M_PI,
-          aa_stat_circ_mean(3, (double[]){M_PI/2, M_PI, 3*M_PI/2 + 2*M_PI}),
-          .001 );
+    double x[] = {M_PI/2, 0, 3*M_PI/2};
+    afeq(0, aa_stat_circ_mean(3, x), .001);
+
+    double y[] = {M_PI/2, M_PI, 3*M_PI/2};
+    afeq(M_PI, aa_stat_circ_mean(3, y), .001);
+
+    double z[] = {M_PI/2, M_PI, 3*M_PI/2 + 2*M_PI};
+    afeq(M_PI, aa_stat_circ_mean(3, z), .001);
 }
 
 void plane() {

@@ -234,8 +234,6 @@ libamino_la_SOURCES =                  \
 	src/sigsys.c                   \
 	src/heap.c                     \
 	src/cv.c                       \
-	src/wavefront/wavefront.c      \
-	src/wavefront/mtl.c            \
 	src/wavefront/wf_obj.c         \
 	src/wavefront/wf_mtl.c
 
@@ -350,6 +348,14 @@ src/wavefront/wavefront.c: src/wavefront/wavefront.l
 
 src/wavefront/mtl.c: src/wavefront/mtl.l
 	$(LEX) -t $(top_srcdir)/src/wavefront/mtl.l > src/wavefront/mtl.c
+
+noinst_LTLIBRARIES += libamino_lex.la
+
+libamino_lex_la_SOURCES = src/wavefront/wavefront.c src/wavefront/mtl.c
+libamino_lex_la_CFLAGS = $(AM_CFLAGS) $(LEX_CFLAGS_APPEND)
+libamino_lex_la_CXXFLAGS = $(AM_CXXFLAGS) $(LEX_CFLAGS_APPEND)
+
+libamino_la_LIBADD += libamino_lex.la
 
 ###########
 ## EMACS ##
@@ -551,6 +557,7 @@ TESTS += aa_test
 noinst_PROGRAMS += aa_test
 aa_test_SOURCES = src/test/aa_test.c
 aa_test_LDADD = libamino.la libtestutil.la
+aa_test_CFLAGS = $(AM_CFLAGS) $(TEST_CFLAGS_APPEND)
 
 TESTS += q_test
 noinst_PROGRAMS += q_test
