@@ -1,54 +1,14 @@
 language: cpp
+os: linux
+dist: xenial
+services: docker
 
-matrix:
+jobs:
   include:
-    - os: linux
-      sudo: required
-      services:
-        - docker
-      env: DOCKERFILE="debian-stretch" JOBS=4
-    - os: linux
-      sudo: required
-      services:
-        - docker
-      env: DOCKERFILE="ubuntu-xenial" JOBS=4
-    - os: linux
-      sudo: required
-      services:
-        - docker
-      env: DOCKERFILE="ubuntu-bionic" JOBS=4
-
-  # allow_failures:
-  #   - env: DOCKERFILE="debian-sid" JOBS=4
-
-    # - os: linux
-    #   sudo: required
-    #   services:
-    #     - docker
-    #   env: DOCKERFILE="debian-sid" JOBS=4
-
-    # - os: linux
-    #   sudo: required
-    #   services:
-    #     - docker
-    #   env: DOCKERFILE="debian-jessie" JOBS=4
-    # - os: linux
-    #   sudo: required
-    #   services:
-    #     - docker
-    #   env: DOCKERFILE="ubuntu-trusty" JOBS=4
-    # - os: osx
-    #   compiler: clang
-    #   env: CPPFLAGS=-I/usr/local/opt/openblas/include JOBS=2
-    #   cache:
-    #     directories:
-    #       - /usr/local
-
-    # - os: linux
-    #   dist: trusty
-    #   sudo: required
-    #   compiler: gcc
-    #   env: JOBS=4
+    - env: DOCKERFILE="debian-bullseye"
+    - env: DOCKERFILE="ubuntu-jammy"
+      dist: focal # Need a newer docker host for Jammy guest
+    - env: DOCKERFILE="ubuntu-focal"
 
 install:
   - if [ -n "$DOCKERFILE" ]; then
@@ -70,9 +30,63 @@ script:
       make check;
     fi
 
-notifications:
-  slack:
-    secure: UsjxGKXWmNW+6nt0ZDwU3MOEFXf69Paj8gYUpTB/DLrgC9d7LtzvYYmSDitc6XFMVB3RjodhIcD3+Kayz8+SFu/fsRBPqwT19B7e0ThmGY/DHr1xN8A3s/OmHAK+Pybvj3DEUDHhoiqUzKftlxHpUhRXJyxBo9r+CYb+XDnJfQs=
+branches:
+  only:
+    - master
+    - main
+    - /^feature\/.*/
+    - /^bugfix\/.*/
+
+
+## PRIOR CONFIGS
+#
+# jobs:
+#   include:
+#     - os: linux
+#       sudo: required
+#       services:
+#         - docker
+#       env: DOCKERFILE="debian-stretch" JOBS=4
+#     - os: linux
+#       sudo: required
+#       services:
+#         - docker
+#       env: DOCKERFILE="ubuntu-xenial" JOBS=4
+#     - os: linux
+#       sudo: required
+#       services:
+#         - docker
+#       env: DOCKERFILE="ubuntu-bionic" JOBS=4
+#     - os: linux
+#       sudo: required
+#       services:
+#         - docker
+#       env: DOCKERFILE="debian-sid" JOBS=4
+#     - os: linux
+#       sudo: required
+#       services:
+#         - docker
+#       env: DOCKERFILE="debian-jessie" JOBS=4
+#     - os: linux
+#       sudo: required
+#       services:
+#         - docker
+#       env: DOCKERFILE="ubuntu-trusty" JOBS=4
+#     - os: osx
+#       compiler: clang
+#       env: CPPFLAGS=-I/usr/local/opt/openblas/include JOBS=2
+#       cache:
+#         directories:
+#           - /usr/local
+#     - os: linux
+#       dist: trusty
+#       sudo: required
+#       compiler: gcc
+#       env: JOBS=4
+
+# notifications:
+#   slack:
+#     secure: UsjxGKXWmNW+6nt0ZDwU3MOEFXf69Paj8gYUpTB/DLrgC9d7LtzvYYmSDitc6XFMVB3RjodhIcD3+Kayz8+SFu/fsRBPqwT19B7e0ThmGY/DHr1xN8A3s/OmHAK+Pybvj3DEUDHhoiqUzKftlxHpUhRXJyxBo9r+CYb+XDnJfQs=
 
 #cache:
   #apt: true
@@ -82,7 +96,6 @@ notifications:
 #before_install:
   #- sudo docker pull ubuntu:xenial
   #- docker ps -a
-
 
 # addons:
 #   apt:

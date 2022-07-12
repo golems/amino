@@ -746,6 +746,10 @@ int main() {
 ])
 
 
+# Workaround bug in ompl.pc
+# https://github.com/ompl/ompl/pull/886
+OMPL_LIBS=$(echo $OMPL_LIBS | sed -e 's/-L_link_dirs-NOTFOUND//')
+
 AC_SUBST([OMPL_CFLAGS])
 AC_SUBST([OMPL_LIBS])
 AC_SUBST([HAVE_OMPL])
