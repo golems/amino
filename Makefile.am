@@ -923,6 +923,10 @@ doc/manual:
 endif
 
 
+cicheck:
+	./script/docker-build.sh debian-bullseye
+	./script/docker-make.sh debian-bullseye
+
 
 
 EXTRA_DIST += doc/manual
