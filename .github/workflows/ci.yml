@@ -1,0 +1,28 @@
+name: Amino CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - feature/**
+      - bugfix/**
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dockerfile: [debian-bullseye, ubuntu-focal, ubuntu-jammy]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Create container
+        run: ./script/docker-build.sh ${{ matrix.dockerfile }}
+      - name: Run tests
+        run: ./script/docker-make.sh ${{ matrix.dockerfile }}
