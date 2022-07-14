@@ -85,6 +85,57 @@ void aveq( const char * name,
     }
 }
 
+AA_API void arveq( const char * name, const double *a, const double *b, double tol )
+{
+    double a_angle = aa_tf_vnorm(a);
+    double b_angle = aa_tf_vnorm(b);
+    double a_angle_norm = aa_ang_norm_pi(a_angle);
+    double b_angle_norm = aa_ang_norm_pi(b_angle);
+    double rel_angle_norm = aa_ang_norm_pi(a_angle_norm - b_angle_norm);
+    double a_axis[3], b_axis[3], ma_axis[3];
+    for (int i = 0; i < 3; i++) {
+        a_axis[i] = a[i] / a_angle;
+        ma_axis[i] = -a_axis[i];
+        b_axis[i] = b[i] / b_angle;
+    }
+
+    /* printf("a_angle: %f\n", a_angle); */
+    /* printf("b_angle: %f\n", b_angle); */
+    /* printf("a_angle_norm: %f\n", a_angle_norm); */
+    /* printf("b_angle_norm: %f\n", b_angle_norm); */
+    /* printf("a_angle_norm: %f\n", a_angle_norm); */
+    /* printf("rel_angle_norm: %f\n", rel_angle_norm); */
+
+    /* fprintf(stderr, "a-axis: "); */
+    /* aa_dump_vec(stderr, a_axis, 3); */
+    /* fprintf(stderr, "b-axis: "); */
+    /* aa_dump_vec(stderr, b_axis, 3); */
+
+    /* Check angle */
+    if (fabs(rel_angle_norm) > tol) goto FAIL;
+
+    /* Skip ill-defined axis on small angles */
+    if (fabs(a_angle_norm) < tol || fabs(b_angle_norm) < tol) return;
+
+    /* check axis */
+    if (aa_veq(3, a_axis, b_axis, tol)) return;
+
+    /* Check negative axis near pi */
+    if (fabs(fabs(a_angle_norm) - M_PI) < tol ||
+        fabs(fabs(b_angle_norm) - M_PI) < tol) {
+        if (aa_veq(3, ma_axis, b_axis, tol)) return;
+        // else fail
+    }
+
+FAIL:
+    fprintf(stderr, "FAILED: %s\n", name);
+    fprintf(stderr, "a: ");
+    aa_dump_vec(stderr, a, 3);
+    fprintf(stderr, "b: ");
+    aa_dump_vec(stderr, b, 3);
+    abort();
+}
+
 void aneq( double a, double b, double tol ) {
     assert( !aa_feq(a,b,tol) );
 }
@@ -137,4 +188,22 @@ void aa_test_ulimit( void ) {
         }
 
     }
+}
+
+AA_API void aa_test_args(int argc, char *argv[])
+{
+    time_t seed;
+    if (argc > 1) {
+        char *endptr = NULL, *strseed = argv[1];
+        seed = strtol(strseed, &endptr, 10);
+        if (endptr == strseed || *endptr != '\0') {
+            fprintf(stderr, "Invalid seed: `%s'\n", strseed);
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        seed = time(NULL);
+    }
+
+    printf("seed: %ld\n", seed);
+    srand((unsigned int)seed); // might break in 2038
 }

@@ -83,6 +83,58 @@ static void rotmat( void ) {
     assert(aa_tf_isrotmat(R0));
 }
 
+
+static void rotmat_lnv_test(const double e[3]) {
+    // Rotation
+    {
+        double ee[9], rln[3], qe[4], eln[3];
+        aa_tf_rotmat_expv(e, ee);
+
+        aa_tf_rotmat2quat(ee, qe);
+        aa_tf_quat2rotvec(qe, eln);
+        aa_tf_rotmat_lnv(ee, rln);
+
+        /* fprintf(stderr, "R:\n"); */
+        /* aa_dump_mat(stderr, ee, 3, 3); */
+        /* fprintf(stderr, "\n"); */
+
+        /* fprintf(stderr, "e: "); */
+        /* aa_dump_vec(stderr, e, 3); */
+        /* fprintf(stderr, "eln: "); */
+        /* aa_dump_vec(stderr, eln, 3); */
+        /* fprintf(stderr, "rln: "); */
+        /* aa_dump_vec(stderr, rln, 3); */
+
+        /* assert(aa_tf_isrotmat(ee)); */
+        arveq("rotmat_expv", e, eln, 1e-4);
+        arveq("rotmat_lnv", e, rln, 1e-4);
+    }
+}
+
+static void rotmat_lnv()
+{
+    {
+        /* The rotation angle is very close to pi */
+        double e[3] = {1.808519650250, 0.065124237394, 2.567988211640};
+        rotmat_lnv_test(e);
+    }
+
+    {
+        /* The rotation angle is pi */
+        double u[3] = {0.575671, 0.020730, 0.817418};
+        aa_tf_vnormalize(u);
+        double e[3] = {M_PI * u[0], M_PI * u[1], M_PI * u[2]};
+        rotmat_lnv_test(e);
+    }
+    {
+        /* The rotation angle is -pi */
+        double u[3] = {0.575671, 0.020730, 0.817418};
+        aa_tf_vnormalize(u);
+        double  e[3] = {-M_PI * u[0], -M_PI * u[1], -M_PI * u[2]};
+        rotmat_lnv_test(e);
+    }
+}
+
 int main() {
     srand((unsigned int)time(NULL)); // might break in 2038
     aa_test_ulimit();
@@ -90,4 +142,5 @@ int main() {
     rotmat_axang();
     slerp();
     rotmat();
+    rotmat_lnv();
 }

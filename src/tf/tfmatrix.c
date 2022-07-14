@@ -286,24 +286,117 @@ aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double 
      * Add: 4
      * Other: sqrt, atan2
      */
+
     *c = (RREF(R,0,0) + RREF(R,1,1) + RREF(R,2,2) - 1) / 2;
-    *s = sqrt( 1 - (*c)*(*c) );
+
+    /* Less stable */
+    /* *s = sqrt( 1 - (*c)*(*c) ); */
+
+    /* More Stable */
+    {
+        double u[3];
+        u[0] = RREF(R, 2, 1) - RREF(R, 1, 2);
+        u[1] = RREF(R, 0, 2) - RREF(R, 2, 0);
+        u[2] = RREF(R, 1, 0) - RREF(R, 0, 1);
+        *s = sqrt(dot3(u, u)) / 2;
+    }
+
     *theta = atan2(*s, *c);
 }
 
-AA_API void
-aa_tf_rotmat_lnv( const double R[AA_RESTRICT 9], double v[AA_RESTRICT 3] )
+AA_API void aa_tf_rotmat_lnv(const double R[AA_RESTRICT 9],
+                             double lnv[AA_RESTRICT 3])
 {
-    double isinc, c, s, theta;
-    aa_tf_rotmat_angle( R, &c, &s, &theta );
-    double theta2 = theta*theta;
-    if( theta2*theta2 < DBL_EPSILON ) {
-        isinc = aa_tf_invsinc_series2( theta2 );
+    double x =  RREF(R,0,0);
+    double y =  RREF(R,1,1);
+    double z =  RREF(R,2,2);
+    double trace = x+y+z;
+
+    double c = (trace-1)/2;
+
+    if (c < -1 + AA_TF_EPSILON) {
+        /* Singularity near [+/-] M_PI, when the rotation matrix is nearly
+         * symmetric.
+         *
+         * Quaternion construction avoids this singularity at pi. */
+
+        double q[4];
+        double *q_v = q + AA_TF_QUAT_V;
+        double *q_w = &q[AA_TF_QUAT_W];
+        size_t u = (x < y) ?
+            ( (y < z) ? 2 : 1 ) :
+            ( (x < z) ? 2 : 0 );
+        size_t v = (u + 1) % 3;
+        size_t w = (u + 2) % 3;
+        double r = sqrt( 1 + RREF(R,u,u) -
+                         RREF(R,v,v) -
+                         RREF(R,w,w) );
+        q_v[u] = r / 2;
+        double t = 0.5 / r;
+        *q_w = (RREF(R,w,v) - RREF(R,v,w)) * t;
+        q_v[v] = (RREF(R,u,v) + RREF(R,v,u)) * t;
+        q_v[w] = (RREF(R,w,u) + RREF(R,u,w)) * t;
+        aa_tf_qminimize(q);  // q_w might be negative
+
+        double qs = sqrt(dot3(q_v, q_v));
+        double qtheta = atan2(qs, *q_w);
+
+        double a;
+        if (qtheta < sqrt(sqrt(DBL_EPSILON))) {
+            a = 2 * aa_tf_invsinc_series(qtheta);
+        } else {
+            a = 2 * qtheta / qs;
+        }
+
+        FOR_VEC(i) lnv[i] = a * q_v[i];
+
     } else {
-        isinc = theta/s;
+        /* Not robust near theta=pi, but OK elsewhere */
+
+        double u[3];
+        u[0] = RREF(R, 2, 1) - RREF(R, 1, 2);
+        u[1] = RREF(R, 0, 2) - RREF(R, 2, 0);
+        u[2] = RREF(R, 1, 0) - RREF(R, 0, 1);
+
+        double s = sqrt(dot3(u, u)) / 2;
+        double theta = atan2(s, c);
+        double theta2 = theta*theta;
+
+        double isinc;
+        if (theta2 * theta2 < DBL_EPSILON) {
+            isinc = aa_tf_invsinc_series2(theta2);
+        } else {
+            isinc = theta/s;
+        }
+
+        FOR_VEC(i) lnv[i] = isinc/2 *  u[i];
     }
-    aa_tf_unskewsym_scal( isinc/2, R, v );
 }
+
+void aa_tf_rotmat2rotvec(const double R[restrict 9], double v[restrict 3])
+{
+    aa_tf_rotmat_lnv(R, v);
+
+    /* Numerically Unstable */
+
+    /* rv[0] = 0.5 * (AA_MATREF(R,3,2,1) - AA_MATREF(R,3,1,2)); */
+    /* rv[1] = 0.5 * (AA_MATREF(R,3,0,2) - AA_MATREF(R,3,2,0)); */
+    /* rv[2] = 0.5 * (AA_MATREF(R,3,1,0) - AA_MATREF(R,3,0,1)); */
+
+    /* double s = aa_la_norm( 3, rv ); */
+    /* double c = (aa_la_trace(3,R) - 1) / 2 ; */
+
+    /* aa_la_scal( 3, ( (s > AA_TF_EPSILON) ? atan2(s,c)/s : 1 ), rv ); */
+}
+
+void aa_tf_rotmat2axang(const double R[restrict 9], double ra[restrict 4])
+{
+    double v[3];
+    aa_tf_rotmat2rotvec(R,v);
+    aa_tf_rotvec2axang(v,ra);
+}
+
+
 
 AA_API void
 aa_tf_rotmat_vel2diff( const double R[AA_RESTRICT 9],

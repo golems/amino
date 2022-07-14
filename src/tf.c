@@ -264,7 +264,7 @@ void aa_tf_rotmat2quat( const double R[restrict 9],
     double trace = x+y+z;
     if( trace > 0 ) {
         double r = sqrt(trace + 1);
-        q[3] = r / 2;
+        q[3] = r / 2;  // always positive
         double s = 0.5 / r;
         q[0] = (AA_MATREF(R,3,2,1) - AA_MATREF(R,3,1,2))*s;
         q[1] = (AA_MATREF(R,3,0,2) - AA_MATREF(R,3,2,0))*s;
@@ -283,10 +283,10 @@ void aa_tf_rotmat2quat( const double R[restrict 9],
         q[3] = (AA_MATREF(R,3,w,v) - AA_MATREF(R,3,v,w)) * s;
         q[v] = (AA_MATREF(R,3,u,v) + AA_MATREF(R,3,v,u)) * s;
         q[w] = (AA_MATREF(R,3,w,u) + AA_MATREF(R,3,u,w)) * s;
+        aa_tf_qminimize(q);  // q_w might be negative
     }
 
     aa_tf_qnormalize(q);
-    aa_tf_qminimize(q);
 }
 
 /* void aa_tf_rotvec2quat( const double rotvec[restrict 3], */
@@ -337,31 +337,6 @@ int aa_tf_isrotmat( const double R[restrict 9] ) {
         aa_feq( d, 1, .0001 );
 }
 
-
-void aa_tf_rotmat2axang( const double R[restrict 9],
-                         double ra[restrict 4] ) {
-    double q[4];
-    aa_tf_rotmat2quat( R, q );
-    aa_tf_quat2axang(q,ra);
-}
-
-void aa_tf_rotmat2rotvec( const double R[restrict 9],
-                          double rv[restrict 3] ) {
-
-    /* Numerically Unstable */
-    /* rv[0] = 0.5 * (AA_MATREF(R,3,2,1) - AA_MATREF(R,3,1,2)); */
-    /* rv[1] = 0.5 * (AA_MATREF(R,3,0,2) - AA_MATREF(R,3,2,0)); */
-    /* rv[2] = 0.5 * (AA_MATREF(R,3,1,0) - AA_MATREF(R,3,0,1)); */
-
-    /* double s = aa_la_norm( 3, rv ); */
-    /* double c = (aa_la_trace(3,R) - 1) / 2 ; */
-
-    /* aa_la_scal( 3, ( (s > AA_TF_EPSILON) ? atan2(s,c)/s : 1 ), rv ); */
-
-    double q[4];
-    aa_tf_rotmat2quat( R, q );
-    aa_tf_quat2rotvec(q,rv);
-}
 
 void aa_tf_v9mul( double R[AA_RESTRICT 9], const double R1[AA_RESTRICT 9], const double R2[AA_RESTRICT 9], ... ) {
     va_list argp;

@@ -1197,11 +1197,9 @@ void dq_pde( const double *S )
     }
 }
 
-int main( void ) {
+int main( int argc, char *argv[] ) {
     // init
-    time_t seed = time(NULL);
-    printf("seed: %ld\n", seed);
-    srand((unsigned int)seed); // might break in 2038
+    aa_test_args(argc, argv);
     aa_test_ulimit();
 
     for( size_t i = 0; i < 1000; i++ ) {

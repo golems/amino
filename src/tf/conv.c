@@ -236,25 +236,36 @@ void aa_tf_quat2eulerzyx( const double q[restrict 4],
 AA_API void
 aa_tf_quat2rotvec( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 3] )
 {
-    double qmin[4], qrv[4];
-    aa_tf_qminimize2( q, qmin );
-    aa_tf_qln(qmin, qrv);
-    FOR_VEC(i) r[i] = 2 * qrv[AA_TF_QUAT_V + i];
+    /* double qmin[4], qrv[4]; */
+    /* aa_tf_qminimize2( q, qmin ); */
+    /* aa_tf_qln(qmin, qrv); */
+    /* FOR_VEC(i) r[i] = 2 * qrv[AA_TF_QUAT_V + i]; */
+
+    const double *q_v = q + AA_TF_QUAT_V;
+    double q_w = q[AA_TF_QUAT_W] >= 0 ? q[AA_TF_QUAT_W] : -q[AA_TF_QUAT_W];
+
+    double qs = sqrt(dot3(q_v, q_v));
+    double qtheta = atan2(qs,q_w);
+
+    double a;
+    if (qtheta < sqrt(sqrt(DBL_EPSILON))) {
+        a = 2*aa_tf_invsinc_series(qtheta);
+    } else {
+        a = 2*qtheta/qs;
+    }
+
+    if( q[AA_TF_QUAT_W] <= 0 ) a = -a;
+
+    FOR_VEC(i) r[i] = a*q_v[i];
 }
+
 AA_API void
 aa_tf_quat2axang( const double q[AA_RESTRICT 4], double a[AA_RESTRICT 4] )
 {
     double rv[3];
     aa_tf_quat2rotvec( q, rv );
-    a[3] = sqrt( rv[0]*rv[0]+rv[1]*rv[1]+rv[2]*rv[2] );
-    if( 0 < fabs(a[3]) ) {
-        FOR_VEC(i) a[i] = rv[i] / a[3];
-    } else {
-        FOR_VEC(i) a[i] = 0;
-    }
-
+    aa_tf_rotvec2axang(rv, a);
 }
-
 
 void aa_tf_qv2duqu( const double q[4], const double v[3], double S[8] )
 {

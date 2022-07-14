@@ -59,10 +59,16 @@ AA_API void aafeq( const char *name, double a, double b, double tol ) ;
 
 /** A fuzzy equals over two vectors. */
 AA_API void aveq( const char * name, size_t n, const double *a, const double *b, double tol ) ;
+
+/** A fuzzy equals over two rotation vectors. */
+AA_API void arveq( const char * name, const double *a, const double *b, double tol );
+
 AA_API void aneq( double a, double b, double tol ) ;
 
 /* Set limits*/
 AA_API void aa_test_ulimit( void );
 
+/* Set random seed */
+AA_API void aa_test_args(int argc, char *argv[]);
 
 #endif
