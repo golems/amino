@@ -179,6 +179,29 @@ static void rotmat_lnv()
     }
 }
 
+static void rotvec_axang_exp()
+{
+    double rv[3] = {0.000067, 0.000029, -0.000023};
+    double R[9], q[4], aa[4], Raa[9];
+
+    aa_tf_rotvec2rotmat(rv, R);
+    aa_tf_rotvec2quat(rv, q);
+    aa_tf_rotvec2axang(rv, aa);
+    aa_tf_axang2rotmat(aa, Raa);
+
+    double ln_R[3], ln_q[3], ln_aa[3], ln_Raa[3];
+
+    aa_tf_quat2rotvec(q, ln_q);
+    aa_tf_rotmat2rotvec(R, ln_R);
+    aa_tf_axang2rotvec(aa, ln_aa);
+    aa_tf_rotmat2rotvec(Raa, ln_Raa);
+
+    aveq("rotvev_axang_exp-ln_q", 3, rv, ln_q, 1e-6 );
+    aveq("rotvev_axang_exp-ln_R", 3, rv, ln_R, 1e-6 );
+    aveq("rotvev_axang_exp-ln_aa", 3, rv, ln_aa, 1e-6 );
+    aveq("rotvev_axang_exp-ln_Raa", 3, rv, ln_Raa, 1e-6 );
+}
+
 int main() {
     srand((unsigned int)time(NULL)); // might break in 2038
     aa_test_ulimit();
@@ -187,4 +210,5 @@ int main() {
     slerp();
     rotmat();
     rotmat_lnv();
+    rotvec_axang_exp();
 }

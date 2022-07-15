@@ -277,6 +277,23 @@ aa_tf_rotmat_expv( const double rv[AA_RESTRICT 4], double E[9] )
     aa_tf_skewsym_scal2( sc, cc, rv, E );
 }
 
+AA_API void aa_tf_rotvec2rotmat(const double rv[AA_RESTRICT 3], double R[9])
+{
+    aa_tf_rotmat_expv(rv, R);
+}
+
+/* void aa_tf_axang2rotmat( const double ra[restrict 4], */
+/*                          double R[restrict 9] ) { */
+/*     double quat[4]; */
+/*     aa_tf_axang2quat(ra,quat); */
+/*     aa_tf_quat2rotmat(quat,R); */
+/* } */
+
+AA_API void aa_tf_axang2rotmat(const double aa[AA_RESTRICT 4], double R[9])
+{
+    aa_tf_rotmat_exp_aa(aa, R);
+}
+
 AA_API void
 aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double *theta )
 {

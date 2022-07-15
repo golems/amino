@@ -259,12 +259,23 @@ aa_tf_quat2rotvec( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 3] )
     FOR_VEC(i) r[i] = a*q_v[i];
 }
 
-AA_API void
-aa_tf_quat2axang( const double q[AA_RESTRICT 4], double a[AA_RESTRICT 4] )
+AA_API void aa_tf_quat2axang(const double q[AA_RESTRICT 4],
+                             double aa[AA_RESTRICT 4])
 {
-    double rv[3];
-    aa_tf_quat2rotvec( q, rv );
-    aa_tf_rotvec2axang(rv, a);
+    const double *q_v = q + AA_TF_QUAT_V;
+    double q_w = q[AA_TF_QUAT_W] >= 0 ? q[AA_TF_QUAT_W] : -q[AA_TF_QUAT_W];
+
+    double qs = sqrt(dot3(q_v, q_v));
+    double qtheta = atan2(qs,q_w);
+
+    aa[3] = qtheta * 2;
+    double n = aa_tf_vnorm(q_v);
+    if (n > 0) {
+        if (q[AA_TF_QUAT_W] < 0) n = -n;
+        FOR_VEC(i) aa[i] = q_v[i] / n;
+    } else {
+        FOR_VEC(i) aa[i] = 0;
+    }
 }
 
 void aa_tf_qv2duqu( const double q[4], const double v[3], double S[8] )

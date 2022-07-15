@@ -223,22 +223,23 @@ void aa_tf_rotvec_near( const double rv[restrict 3],
 
 void aa_tf_axang2rotvec( const double axang[restrict 4],
                          double rotvec[restrict 3] ) {
-    aa_la_smul( 3, axang[3], axang, rotvec );
+    FOR_VEC(i) rotvec[i] = axang[3]*axang[i];
+    //aa_la_smul( 3, axang[3], axang, rotvec );
 }
 
 void aa_tf_rotvec2axang( const double rotvec[restrict 3],
-                         double axang[restrict 4] ) {
-    axang[3] = aa_la_norm(3,rotvec);
-    if( aa_feq( axang[3], 0, AA_TF_EPSILON ) ) {
-        AA_MEM_ZERO( axang, 3 );
+                         double axang[restrict 4] )
+{
+    double a2 = dot3(rotvec,rotvec);
+    if (a2 < AA_TF_EPSILON * AA_TF_EPSILON) {
+        /* Singularity around small angles. */
+        double q[4];
+        aa_tf_rotvec2quat(rotvec, q);
+        aa_tf_quat2axang(q, axang);
     } else {
-        aa_la_smul( 3, 1.0 / axang[3] , rotvec, axang );
+        axang[3] = sqrt(a2);
+        FOR_VEC(i) axang[i] = rotvec[i] / axang[3];
     }
-    /* aa_la_smul( 3,  */
-    /*             ( aa_feq( axang[3], 0, AA_TF_EPSILON ) /\* ident check *\/ ?  */
-    /*               0 : */
-    /*               1.0 / axang[3] ), */
-    /*             rotvec, axang ); */
 }
 
 /* void aa_tf_axang2quat( const double axang[restrict 4], */
@@ -377,13 +378,6 @@ void aa_tf_v12chain( double T[AA_RESTRICT 12], const double T1[AA_RESTRICT 12], 
 
     AA_MEM_CPY( T, Tp, 12 );
     va_end(argp);
-}
-
-void aa_tf_axang2rotmat( const double ra[restrict 4],
-                         double R[restrict 9] ) {
-    double quat[4];
-    aa_tf_axang2quat(ra,quat);
-    aa_tf_quat2rotmat(quat,R);
 }
 
 AA_API void aa_tf_axang2rotmat2( const double axis[AA_RESTRICT 3],
