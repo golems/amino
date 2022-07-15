@@ -85,11 +85,14 @@ static void rotmat( void ) {
 
 
 static void rotmat_lnv_test(const double e[3]) {
+    /* fprintf(stderr, "--\n"); */
+
     // Rotation
     {
-        double ee[9], rln[3], qe[4], eln[3];
+        double ee[9], q[4], rln[3], qe[4], eln[3];
         aa_tf_rotmat_expv(e, ee);
-
+        aa_tf_rotvec2quat(e, q);
+        aa_tf_qminimize(q);
         aa_tf_rotmat2quat(ee, qe);
         aa_tf_quat2rotvec(qe, eln);
         aa_tf_rotmat_lnv(ee, rln);
@@ -106,8 +109,49 @@ static void rotmat_lnv_test(const double e[3]) {
         /* aa_dump_vec(stderr, rln, 3); */
 
         /* assert(aa_tf_isrotmat(ee)); */
+        aveq("quat_exp", 4, q, qe, 1e-4);
         arveq("rotmat_expv", e, eln, 1e-4);
         arveq("rotmat_lnv", e, rln, 1e-4);
+    }
+
+    // Transformation
+    {
+        double v[6], ve[6];
+        double T[12], E[7], ET[7], Tln[6],  Eln[6], T2[12];
+        AA_MEM_CPY(v + 3, e, 3);
+        v[0] = 1;
+        v[1] = 2;
+        v[2] = 3;
+        for (int i = 0; i < 6; i++) ve[i] = v[i]/2;
+
+        /* fprintf(stderr, "v:  "); */
+        /* aa_dump_vec(stderr, v, 6); */
+
+        aa_tf_tfmat_expv(v, T);
+        aa_tf_qutr_expv(ve, E);
+        aa_tf_tfmat2qutr(T, ET);
+
+
+        /* fprintf(stderr, "E:  "); */
+        /* aa_dump_vec(stderr, E, 7); */
+        /* fprintf(stderr, "ET: "); */
+        /* aa_dump_vec(stderr, ET, 7); */
+
+        /* We don't recover the original log, but it does produce the same
+         * matrix */
+        aa_tf_tfmat_lnv(T, Tln);
+        aa_tf_tfmat_expv(Tln, T2);
+
+        aa_tf_qutr_lnv(E, Eln);
+        for (int i = 0; i < 6; i++) Eln[i] *= 2;
+
+
+
+        aa_tf_qminimize(ET);
+        aa_tf_qminimize(E);
+        aveq("tfmat/qutr_expv", 7, E, ET, 1e-3);
+        aveq("qutr_lnv", 6, v, Eln, 1e-3);
+        aveq("tfmat_lnv", 12, T, T2, 1e-3);
     }
 }
 

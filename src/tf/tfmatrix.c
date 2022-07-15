@@ -304,6 +304,29 @@ aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double 
     *theta = atan2(*s, *c);
 }
 
+static void rotmat_q(const double R[AA_RESTRICT 9], double q[AA_RESTRICT 4])
+{
+    double x =  RREF(R,0,0);
+    double y =  RREF(R,1,1);
+    double z =  RREF(R,2,2);
+    double *q_v = q + AA_TF_QUAT_V;
+    double *q_w = &q[AA_TF_QUAT_W];
+        size_t u = (x < y) ?
+            ( (y < z) ? 2 : 1 ) :
+            ( (x < z) ? 2 : 0 );
+        size_t v = (u + 1) % 3;
+        size_t w = (u + 2) % 3;
+        double r = sqrt( 1 + RREF(R,u,u) -
+                         RREF(R,v,v) -
+                         RREF(R,w,w) );
+        q_v[u] = r / 2;
+        double t = 0.5 / r;
+        *q_w = (RREF(R,w,v) - RREF(R,v,w)) * t;
+        q_v[v] = (RREF(R,u,v) + RREF(R,v,u)) * t;
+        q_v[w] = (RREF(R,w,u) + RREF(R,u,w)) * t;
+        aa_tf_qminimize(q);  // q_w might be negative
+}
+
 AA_API void aa_tf_rotmat_lnv(const double R[AA_RESTRICT 9],
                              double lnv[AA_RESTRICT 3])
 {
@@ -323,20 +346,7 @@ AA_API void aa_tf_rotmat_lnv(const double R[AA_RESTRICT 9],
         double q[4];
         double *q_v = q + AA_TF_QUAT_V;
         double *q_w = &q[AA_TF_QUAT_W];
-        size_t u = (x < y) ?
-            ( (y < z) ? 2 : 1 ) :
-            ( (x < z) ? 2 : 0 );
-        size_t v = (u + 1) % 3;
-        size_t w = (u + 2) % 3;
-        double r = sqrt( 1 + RREF(R,u,u) -
-                         RREF(R,v,v) -
-                         RREF(R,w,w) );
-        q_v[u] = r / 2;
-        double t = 0.5 / r;
-        *q_w = (RREF(R,w,v) - RREF(R,v,w)) * t;
-        q_v[v] = (RREF(R,u,v) + RREF(R,v,u)) * t;
-        q_v[w] = (RREF(R,w,u) + RREF(R,u,w)) * t;
-        aa_tf_qminimize(q);  // q_w might be negative
+        rotmat_q(R, q);
 
         double qs = sqrt(dot3(q_v, q_v));
         double qtheta = atan2(qs, *q_w);
@@ -686,9 +696,75 @@ aa_tf_tfmat_expv( const double v[AA_RESTRICT 6],
 
 AA_API void
 aa_tf_tfmat_lnv( const double T[AA_RESTRICT 12],
-                 double v[AA_RESTRICT 6] )
+                 double lnv[AA_RESTRICT 6] )
 {
-    /* Operations:
+    const double *R = T, *v = T + 9;
+    double *w = lnv+3, *dv = lnv;
+
+    double x = RREF(R, 0, 0);
+    double y = RREF(R, 1, 1);
+    double z = RREF(R, 2, 2);
+    double trace = x + y + z;
+
+    double c = (trace-1)/2;
+
+    if (c < -1 + AA_TF_EPSILON) {
+        /* Singulrity near [+/-] M_PI.
+         * Use a dual quaternion-based method */
+
+        double q[4];
+        rotmat_q(R, q);
+
+        /* quaterion-vector logarithm */
+        const double *q_v = q + AA_TF_QUAT_V;
+        double v2 = aa_tf_vdot(q_v, q_v);
+        double qs = sqrt(v2);
+        double qc = q[AA_TF_QUAT_W];
+        double phi = atan2(qs,qc);
+        double phi2 = phi*phi;
+
+        double isc = 2*phi/qs;
+        double m_r = qc*isc;
+        double m_d = (2 - m_r)/phi2/4;
+
+        /* Real */
+        FOR_VEC(i) w[i] = isc * q_v[i];
+
+        /* Dual  */
+        double v_2[3];
+        FOR_VEC(i) v_2[i] = v[i]/2;
+
+        double a = m_d*aa_tf_vdot(v_2,w);
+        aa_tf_cross(v_2, w, dv);
+        FOR_VEC(i) dv[i] +=  m_r*v_2[i] + a*w[i];
+
+    } else {
+        /* Numerically unstable at theta=pi */
+        double u[3];
+        u[0] = RREF(R, 2, 1) - RREF(R, 1, 2);
+        u[1] = RREF(R, 0, 2) - RREF(R, 2, 0);
+        u[2] = RREF(R, 1, 0) - RREF(R, 0, 1);
+
+        double s = sqrt(dot3(u, u)) / 2;
+        double theta = atan2(s, c);
+        double theta2 = theta*theta;
+        double a,b;
+        if( theta2 < DBL_EPSILON ) {
+            a = aa_tf_invsinc_series2(theta2);
+            b = aa_horner3( theta2, 1./12, 1./720, 1./30240 );
+        } else {
+            a = theta/s;
+            b = (2*s - theta*(1+c)) / (2*theta2*s);
+        }
+
+        FOR_VEC(i) w[i] = a / 2 * u[i];
+
+        double K[9];
+        aa_tf_skewsym_scal2(-.5, b, w, K);
+        aa_tf_9(K, T + 9, dv);
+    }
+
+    /* Operations (old version):
      * -----------
      * (self) Mul: 5
      * (self) Add: 4
@@ -701,20 +777,6 @@ aa_tf_tfmat_lnv( const double T[AA_RESTRICT 12],
      * (total) Add: 32
      * (total) other: sqrt, atant2
      */
-    double c,s,theta, a,b;
-    aa_tf_rotmat_angle( T, &c, &s, &theta );
-    double theta2 = theta*theta;
-    if( theta2 < DBL_EPSILON ) {
-        a = aa_tf_invsinc_series2(theta2);
-        b = aa_horner3( theta2, 1./12, 1./720, 1./30240 );
-    } else {
-        a = theta/s;
-        b = (2*s - theta*(1+c)) / (2*theta2*s);
-    }
-    double K[9];
-    aa_tf_unskewsym_scal( a/2, T, v+3 );
-    aa_tf_skewsym_scal2( -.5, b, v+3, K );
-    aa_tf_9( K, T+9, v );
 }
 
 
