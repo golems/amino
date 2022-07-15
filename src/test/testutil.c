@@ -1,4 +1,4 @@
-/* -*- mode: C; c-basic-offset: 4 -*- */
+//* -*- mode: C; c-basic-offset: 4 -*- */
 /* ex: set shiftwidth=4 tabstop=4 expandtab: */
 /*
  * Copyright (c) 2010-2012, Georgia Tech Research Corporation
@@ -206,4 +206,58 @@ AA_API void aa_test_args(int argc, char *argv[])
 
     printf("seed: %ld\n", seed);
     srand((unsigned int)seed); // might break in 2038
+}
+
+
+AA_API void aa_test_randv(double min, double max, size_t n, double *p)
+{
+    double range = max - min;
+    aa_vrand(n, p);
+    for(size_t i = 0; i < n; i ++ ) {
+        p[i] = min + p[i]*range;
+    }
+}
+
+AA_API void aa_test_quat_cmp(const char *name, const double *q1,
+                             const double *q2, double tol)
+{
+    double r[4];
+    aa_tf_qrel(q1, q2, r);
+    aa_tf_qminimize(r);
+    if (aa_tf_qangle(r) > tol) goto FAIL;
+
+    return;
+
+FAIL:
+    fprintf(stderr, "FAILED: %s\n", name);
+    fprintf(stderr, "a: ");
+    aa_dump_vec(stderr, q1, 4);
+    fprintf(stderr, "b: ");
+    aa_dump_vec(stderr, q2, 4);
+    fprintf(stderr, "r: ");
+    aa_dump_vec(stderr, r, 4);
+    abort();
+}
+
+AA_API void aa_test_qutr_cmp(const char *name, const double *E1,
+                             const double *E2, double tol)
+{
+    double r[4];
+    aa_tf_qrel(E1, E2, r);
+    aa_tf_qminimize(r);
+    if (aa_tf_qangle(r) > tol) goto FAIL;
+
+    if (aa_tf_vssd(E1 + 4, E2 + 4) > tol) goto FAIL;
+
+    return;
+
+FAIL:
+    fprintf(stderr, "FAILED: %s\n", name);
+    fprintf(stderr, "a: ");
+    aa_dump_vec(stderr, E1, 7);
+    fprintf(stderr, "b: ");
+    aa_dump_vec(stderr, E2, 7);
+    fprintf(stderr, "r: ");
+    aa_dump_vec(stderr, r, 4);
+    abort();
 }

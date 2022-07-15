@@ -613,6 +613,11 @@ noinst_PROGRAMS += aa_fuzz_tf
 aa_fuzz_tf_SOURCES = src/test/aa_fuzz_tf.c
 aa_fuzz_tf_LDADD = libamino.la libtestutil.la
 
+TESTS += aa_fuzz_euler
+noinst_PROGRAMS += aa_fuzz_euler
+aa_fuzz_euler_SOURCES = src/test/aa_fuzz_euler.c
+aa_fuzz_euler_LDADD = libamino.la libtestutil.la
+
 TESTS += testcpp
 noinst_PROGRAMS += testcpp
 testcpp_SOURCES = src/test/testcpp.cpp

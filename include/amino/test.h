@@ -71,4 +71,13 @@ AA_API void aa_test_ulimit( void );
 /* Set random seed */
 AA_API void aa_test_args(int argc, char *argv[]);
 
+
+AA_API void aa_test_randv(double min, double max, size_t n, double *p);
+
+AA_API void aa_test_quat_cmp(const char *name, const double *q1,
+                             const double *q2, double tol);
+
+AA_API void aa_test_qutr_cmp(const char *name, const double *E1,
+                             const double *E2, double tol);
+
 #endif

@@ -58,90 +58,169 @@ static void rand_dh( double dh[4] ) {
     dh[3] = aa_frand_minmax(-M_PI, M_PI);
 }
 
-static void rand_tf( double _E[7], double S[8],  double T[12] ) {
-    double tmp[7];
-    double *E = _E ? _E : tmp;
 
-    /* Convert */
-    aa_tf_qutr_rand( E );
-    aa_tf_qutr2duqu( E, S );
-    aa_tf_qutr2tfmat( E, T );
 
-    /* Check Conversion */
-    double E_min[7];
-    AA_MEM_CPY(E_min, E, 7 );
-    aa_tf_qminimize( E_min );
+static void rand_point(double p[3])
+{
+    aa_test_randv(-1,1,3,p);
+}
 
-    {
-        double Es[7], Et[7];
-        aa_tf_tfmat2qutr( T, Et );
-        aa_tf_duqu2qutr( S, Es );
-        aa_tf_qminimize( Es );
-        aa_tf_qminimize( Et );
-        aveq( "qutr<->duqu", 7, E_min, Es, 1e-5 );
-        aveq( "qutr<->tfmat", 7, E_min, Et, 1e-5 );
+static void rand_axis(double axis[3])
+{
+    rand_point(axis);
+    aa_tf_vnormalize(axis);
+}
+
+static void tf_fill_aa(const double aa[4], const double v[3], double rv[3],
+                       double E[7], double S[8], double T[12])
+{
+    aa_tf_axang2rotvec(aa, rv);
+
+    aa_tf_axang2quat(aa, E);
+    AA_MEM_CPY(E + 4, v, 3);
+    aa_tf_qminimize(E);
+
+    aa_tf_qutr2duqu(E, S);
+    aa_tf_qutr2tfmat(E, T);
+
+
+}
+
+static void rand_tf_aa(double aa[4], double rv[3], double E[7], double S[8],
+                       double T[12])
+{
+    rand_axis(aa);
+    aa[3] = aa_frand_minmax(-.99 * M_PI, .99 * M_PI);
+
+    double v[3];
+    rand_point(v);
+
+    tf_fill_aa(aa, v, rv, E, S, T);
+}
+
+
+static void rand_tf_q(double aa[4], double rv[3], double E[7], double S[8],
+                       double T[12])
+{
+    aa_tf_qutr_rand(E);
+    aa_tf_quat2axang(E, aa);
+    aa_tf_quat2rotvec(E, rv);
+    aa_tf_qutr2duqu(E, S);
+    aa_tf_qutr2tfmat(E, T);
+}
+
+static void rand_tf_sing(double aa[4], double rv[3], double E[7], double S[8],
+                         double T[12])
+{
+    static const double thetas[] = {
+        0,
+        1e-9, -1e-9,
+        1e-6, -1e-6,
+        -1e-3, 1e-3,
+        (M_PI - 1e-3),
+        (M_PI - 1e-6),
+        (M_PI - 1e-9),
+        M_PI, -M_PI
+    };
+    double theta = thetas[(size_t)rand() % (sizeof(thetas) / sizeof(thetas[0]))];
+    aa[3] = theta;
+    rand_axis(aa);
+
+    double v[3];
+    rand_point(v);
+
+    tf_fill_aa(aa, v, rv, E, S, T);
+}
+
+static void rand_tf(double aa[4], double rv[3], double E[7], double S[8],
+                    double T[12])
+{
+    switch (rand() % 3) {
+    case 0:
+        rand_tf_aa(aa, rv, E, S, T);
+        break;
+    case 2:
+        rand_tf_q(aa, rv, E, S, T);
+        break;
+    case 1:
+        rand_tf_sing(aa, rv, E, S, T);
+        break;
+    default:
+        abort();
+        exit(EXIT_FAILURE);
+    }
+
+    {  // check equivalence of conversion
+
+        double Eq[7], Es[7], Et[7], qrv[4], aaq[4], qaaq[4];
+        aa_tf_rotvec2quat(rv, qrv);
+        aa_tf_quat2axang(E, aaq);
+        aa_tf_axang2quat(aaq, qaaq);
+        aa_tf_tfmat2qutr(T, Et);
+        aa_tf_duqu2qutr(S, Es);
+
+        aa_tf_qminimize2(E, Eq);
+        AA_MEM_CPY(Eq + 4, E + 4, 3);
+        aa_tf_qminimize(Es);
+        aa_tf_qminimize(Et);
+        aa_tf_qminimize(qrv);
+        aa_tf_qminimize(qaaq);
+
+        /* fprintf(stderr, "aa:  "); */
+        /* aa_dump_vec(stderr, aa, 4); */
+        /* fprintf(stderr, "aaq: "); */
+        /* aa_dump_vec(stderr, aaq, 4); */
+
+        aa_test_quat_cmp("aa<->q", Eq, qaaq, 1e-5);
+        aa_test_quat_cmp("rv<->q", Eq, qrv, 1e-5);
+        aa_test_qutr_cmp("qutr<->duqu", Eq, Es, 1e-5);
+        aa_test_qutr_cmp("qutr<->tfmat", Eq, Et, 1e-5);
     }
 }
 
-static void rotvec(double *q) {
-    double e[3], R[9], vr[3];
 
-    aa_tf_quat2rotmat(q, R);
-    assert( aa_tf_isrotmat(R) );
-    aa_tf_quat2rotvec(q, e);
+static void rotvec(const double e[3], const double q[4], const double R[9])
+{
+    {
+        double vr[3];
+        aa_tf_rotmat2rotvec(R, vr);
+        aveq("rotmat2rotvec", 3, e, vr, 1e-6 );
+    }
 
-    aa_tf_rotmat2rotvec(R, vr);
-
-    aveq("rotvec", 3, e, vr, .001 );
+    {
+        double qr[3];
+        aa_tf_quat2rotvec(q, qr);
+        aveq("rotmat2rotvec", 3, e, qr, 1e-6 );
+    }
 
     {
         double ee[9], eln[3], qe[4], rln[3];
         aa_tf_rotmat_expv( e, ee );
         aa_tf_rotmat_lnv( ee, rln );
-        aveq("rotmat_lnv", 3, e, rln, 1e-6 );
+        arveq("rotmat_lnv", e, rln, 1e-6 );
         aa_tf_rotmat2quat( ee, qe );
         aa_tf_quat2rotvec( qe, eln );
-        aveq("rotmat_expv", 3, e, eln, 1e-6 );
+        arveq("rotmat_expv", e, eln, 1e-6 );
     }
     {
         double aa[4], ee[9], eln[3], qe[4];
         aa_tf_rotvec2axang(e, aa);
+
+        /* printf("aa: "); */
+        /* aa_dump_vec(stdout, aa, 4); */
+
+        /* printf("rv: "); */
+        /* aa_dump_vec(stdout, e, 3); */
+
         aa_tf_rotmat_exp_aa( aa, ee );
         aa_tf_rotmat2quat( ee, qe );
         aa_tf_quat2rotvec( qe, eln );
-        aveq("rotmat_exp_aa", 3, e, eln, 1e-6 );
-    }
-
-    {
-        double Rtmp[9];
-        aa_tf_rotmat_xy( R+0, R+3, Rtmp );
-        aveq( "rotmat_xy", 9, R, Rtmp, 1e-6 );
-
-        aa_tf_rotmat_yz( R+3, R+6, Rtmp );
-        aveq( "rotmat_yz", 9, R, Rtmp, 1e-6 );
-
-        aa_tf_rotmat_zx( R+6, R+0, Rtmp );
-        aveq( "rotmat_zx", 9, R, Rtmp, 1e-6 );
+        arveq("rotmat_exp_aa", e, eln, 1e-6);
     }
 }
 
-typedef void (*fun_type)(double,double,double, double*b);
 
-static void euler_helper( const double e[4], fun_type e2r, fun_type e2q ) {
-    double R[9],  q[4];
-    e2r(e[0], e[1], e[2], R);
-    aa_tf_isrotmat(R) ;
-
-    e2q(e[0], e[1], e[2], q);
-
-    double vq[3], vr[3];
-    aa_tf_quat2rotvec(q, vq);
-    aa_tf_rotmat2rotvec(R, vr);
-
-    aveq("euler-vecs", 3, vq, vr, .001 );
-}
-
-static void eulerzyx(const double *q)
+static void eulerzyx(const double q[4], const double R[4])
 {
     double qm[4], e_q[3], e_R[3];
 
@@ -152,16 +231,15 @@ static void eulerzyx(const double *q)
         double q_e[4];
         aa_tf_eulerzyx2quat( e_q[0], e_q[1], e_q[2], q_e );
         aa_tf_qminimize( q_e );
-        aveq("quat->euler->quat", 4, qm, q_e, .001 );
+        aa_test_quat_cmp("quat->euler->quat", qm, q_e, .001 );
     }
 
     {
-        double R[9], q_e[4];
-        aa_tf_quat2rotmat(q, R);
+        double q_e[4];
         aa_tf_rotmat2eulerzyx(R,e_R);
         aa_tf_eulerzyx2quat( e_R[0], e_R[1], e_R[2], q_e );
         aa_tf_qminimize( q_e );
-        aveq("quat->euler->quat/rotmat->euler->quat", 4, qm, q_e, .001 );
+        aa_test_quat_cmp("quat->euler->quat/rotmat->euler->quat", qm, q_e, .001 );
 
         aveq("quat->euler/rotmat->quat", 3, e_q, e_R, .001 );
     }
@@ -170,46 +248,6 @@ static void eulerzyx(const double *q)
 
 }
 
-static void euler(const double *e) {
-
-    euler_helper( e, &aa_tf_eulerxyz2rotmat, &aa_tf_eulerxyz2quat );
-    euler_helper( e, &aa_tf_eulerxzy2rotmat, &aa_tf_eulerxzy2quat );
-
-    euler_helper( e, &aa_tf_euleryxz2rotmat, &aa_tf_euleryxz2quat );
-    euler_helper( e, &aa_tf_euleryzx2rotmat, &aa_tf_euleryzx2quat );
-
-    euler_helper( e, &aa_tf_eulerzxy2rotmat, &aa_tf_eulerzxy2quat );
-    euler_helper( e, &aa_tf_eulerzyx2rotmat, &aa_tf_eulerzyx2quat );
-
-
-    euler_helper( e, &aa_tf_eulerxyx2rotmat, &aa_tf_eulerxyx2quat );
-    euler_helper( e, &aa_tf_eulerxzx2rotmat, &aa_tf_eulerxzx2quat );
-
-    euler_helper( e, &aa_tf_euleryxy2rotmat, &aa_tf_euleryxy2quat );
-    euler_helper( e, &aa_tf_euleryzy2rotmat, &aa_tf_euleryzy2quat );
-
-    euler_helper( e, &aa_tf_eulerzxz2rotmat, &aa_tf_eulerzxz2quat );
-    euler_helper( e, &aa_tf_eulerzyz2rotmat, &aa_tf_eulerzyz2quat );
-
-}
-
-static void euler1(const double *a) {
-    double g = a[0];
-    double Rx[9], Ry[9], Rz[9];
-    double eRx[9], eRy[9], eRz[9];
-
-    aa_tf_xangle2rotmat( g, Rx );
-    aa_tf_yangle2rotmat( g, Ry );
-    aa_tf_zangle2rotmat( g, Rz );
-
-    aa_tf_eulerzyx2rotmat(g, 0, 0, eRz);
-    aa_tf_eulerzyx2rotmat(0, g, 0, eRy);
-    aa_tf_eulerzyx2rotmat(0, 0, g, eRx);
-
-    aveq("euler-x", 9, Rx, eRx, .001 );
-    aveq("euler-y", 9, Ry, eRy, .001 );
-    aveq("euler-z", 9, Rz, eRz, .001 );
-}
 
 
 static void chain(double E[2][7],
@@ -261,12 +299,9 @@ static void chain(double E[2][7],
     }
 }
 
-
-static void quat(double E[2][7]) {
-    double u;
-    double *q1 = E[0];
-    double *q2 = E[0];
-    u = aa_frand();
+static void quat(const double q1[4], const double q2[4], const double R1[4],
+                 const double R2[4], const double w[3], double u)
+{
 
     {
         double qg[4], qa[4];
@@ -302,20 +337,31 @@ static void quat(double E[2][7]) {
 
     // average
     {
-        double qq[8], p[4], s[4];
-        AA_MEM_CPY( qq, q1, 4 );
-        AA_MEM_CPY( qq+4, q2, 4 );
-        double w[2] = {.5,.5};
-        aa_tf_quat_davenport( 2, w, qq, 4, p );
-        aa_tf_qslerp( .5, q1, q2, s );
-        aa_tf_qminimize( p );
-        aa_tf_qminimize( s );
-        aveq("davenport-2", 4, p, s, 1e-4 );
+        double p1 = aa_tf_qangle(q1);
+        double p2 = aa_tf_qangle(q2);
+        /* fprintf(stderr, "p1: %f\n", p1); */
+        /* fprintf(stderr, "p2: %f\n", p2); */
+        /* fprintf(stderr, "q1: \n"); */
+        /* aa_dump_vec(stderr, q1, 4); */
+        /* fprintf(stderr, "q1: \n"); */
+        /* aa_dump_vec(stderr, q2, 4) */;
+
+        if ((p1 < .49 * M_PI && p1 > .01 * M_PI) ||
+            (p2 < .49 * M_PI && p2 > .01 * M_PI)) {
+            // TODO: robustify near 0/pi?
+            double qq[8], p[4], s[4];
+            AA_MEM_CPY( qq, q1, 4 );
+            AA_MEM_CPY( qq+4, q2, 4 );
+            double weight[2] = {.5,.5};
+            aa_tf_quat_davenport( 2, weight, qq, 4, p );
+            aa_tf_qslerp( .5, q1, q2, s );
+            aa_tf_qminimize( p );
+            aa_tf_qminimize( s );
+            aveq("davenport-2", 4, p, s, 1e-4 );
+        }
     }
 
-    double R1[9], R2[9], Rr[9], qr[4], qrr[4];
-    aa_tf_quat2rotmat(q1, R1);
-    aa_tf_quat2rotmat(q2, R2);
+    double Rr[9], qr[4], qrr[4];
     aa_tf_9rel( R1, R2, Rr );
     aa_tf_qrel( q1, q2, qr );
     aa_tf_rotmat2quat( Rr, qrr );
@@ -369,8 +415,7 @@ static void quat(double E[2][7]) {
     }
 
     // diff
-    double w[3]={0}, dq[4], wdq[3];
-    aa_vrand( 3, w );
+    double  dq[4], wdq[3];
     aa_tf_qvel2diff( q1, w, dq );
     aa_tf_qdiff2vel( q1, dq, wdq );
     aveq("qveldiff", 3, w, wdq, .000001);
@@ -402,127 +447,110 @@ static void quat(double E[2][7]) {
         aa_tf_qminimize( qR );
         aveq("rotmat_svel", 4, qn_vexp, qR, 1e-4 );
     }
+}
 
+static void vecs2quat(const double v0[3], const double v1[3])
+{
     // vectors
+    // const double *v0 = E[0] + AA_TF_QUTR_T;
+    // const double *v1 = E[1] + AA_TF_QUTR_T;
+    double q[4], vp[3];
+
+    // identify case
+    aa_tf_vecs2quat(v0, v0, q);
+    aveq("vecs2quat-ident", 4, q, aa_tf_quat_ident, 1e-6);
+
+    // regular case
+    aa_tf_vecs2quat(v0, v1, q);
+    aa_tf_qrot(q, v0, vp);
+
+    // normalize result
     {
-        double *v0 = E[0] + AA_TF_QUTR_T;
-        double *v1 = E[1] + AA_TF_QUTR_T;
-        double q[4], vp[3];
-
-        // identify case
-        aa_tf_vecs2quat( v0, v0, q);
-        aveq( "vecs2quat-ident", 4, q, aa_tf_quat_ident, 1e-6 );
-
-        // regular case
-        aa_tf_vecs2quat( v0, v1, q);
-        aa_tf_qrot(q,v0,vp);
-
-        // normalize result
-        {
-            double n0 = sqrt(v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2] );
-            double n1 = sqrt(v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2] );
-            double vp1[3];
-            for( size_t i = 0; i < 3; i ++ ) {
-                vp1[i] = n0*v1[i] / n1;
-            }
-
-            aveq("vecs2quat", 3, vp, vp1, 1e-6 );
-        }
-        // inverted case
-        double v0n[3] = {-v0[0], -v0[1], -v0[2]};
-        aa_tf_vecs2quat( v0, v0n, q);
-        aa_tf_qrot(q,v0,vp);
-        {
-            double n0 = sqrt(v0[0]*v0[0] + v0[1]*v0[1] + v0[2]*v0[2] );
-            double n1 = sqrt(v0n[0]*v0n[0] + v0n[1]*v0n[1] + v0n[2]*v0n[2] );
-            double vp1[3];
-            for( size_t i = 0; i < 3; i ++ ) {
-                vp1[i] = n0*v0n[i] / n1;
-            }
-
-            aveq("vecs2quat-degenerate", 3, vp, vp1, 1e-6 );
+        double n0 = sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
+        double n1 = sqrt(v1[0] * v1[0] + v1[1] * v1[1] + v1[2] * v1[2]);
+        double vp1[3];
+        for (size_t i = 0; i < 3; i++) {
+            vp1[i] = n0 * v1[i] / n1;
         }
 
+        aveq("vecs2quat", 3, vp, vp1, 1e-6);
+    }
+    // inverted case
+    double v0n[3] = {-v0[0], -v0[1], -v0[2]};
+    aa_tf_vecs2quat(v0, v0n, q);
+    aa_tf_qrot(q, v0, vp);
+    {
+        double n0 = sqrt(v0[0] * v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
+        double n1 = sqrt(v0n[0] * v0n[0] + v0n[1] * v0n[1] + v0n[2] * v0n[2]);
+        double vp1[3];
+        for (size_t i = 0; i < 3; i++) {
+            vp1[i] = n0 * v0n[i] / n1;
+        }
 
+        aveq("vecs2quat-degenerate", 3, vp, vp1, 1e-6);
     }
 }
 
 
-static void duqu() {
+static void duqu_gen(const double A[8], const double B[8]) {
+    // mul
+    {
+        double A_L[8*8], B_R[8*8];
+        double C[8], Cl[8], Cr[8];
+        aa_tf_duqu_mul(A,B,C);
 
-    // random tf
-    aa_tf_tfmat_t T;
-    aa_tf_duqu_t H;
-    double E[7];
+        aa_tf_duqu_matrix_l(A, A_L, 8);
+        cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
+                     1.0, A_L, 8,
+                     B, 1,
+                     0, Cl, 1 );
+
+        aveq( "duqu-mul-L", 8, C, Cl, 1e-6 );
+
+        aa_tf_duqu_matrix_r(B, B_R, 8);
+        cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
+                     1.0, B_R, 8,
+                     A, 1,
+                     0, Cr, 1 );
+        aveq( "duqu-mul-R", 8, C, Cr, 1e-6 );
+    }
+    // add / sub
+    {
+        double Ca[8], Cs[8], mB[8];
+
+        for( size_t i = 0; i < 8; i ++ ) mB[i] = -B[i];
+        aa_tf_duqu_add(A,B,Ca);
+        aa_tf_duqu_sub(A,mB,Cs);
+        aveq( "duqu-add-sub", 8, Ca, Cs, 1e-6 );
+
+        double Cra[4], Crs[4];
+        double Cda[4], Cds[4];
+        aa_tf_duqu_sub(A,B,Cs);
+        aa_tf_qadd(A+AA_TF_DUQU_REAL, B+AA_TF_DUQU_REAL,Cra);
+        aa_tf_qadd(A+AA_TF_DUQU_DUAL, B+AA_TF_DUQU_DUAL,Cda);
+        aa_tf_qsub(A+AA_TF_DUQU_REAL, B+AA_TF_DUQU_REAL,Crs);
+        aa_tf_qsub(A+AA_TF_DUQU_DUAL, B+AA_TF_DUQU_DUAL,Cds);
+
+        aveq( "duqu-qadd-real", 4, Cra, Ca+AA_TF_DUQU_REAL, 1e-6);
+        aveq( "duqu-qadd-dual", 4, Cda, Ca+AA_TF_DUQU_DUAL, 1e-6);
+
+        aveq( "duqu-qsub-real", 4, Crs, Cs+AA_TF_DUQU_REAL, 1e-6);
+        aveq( "duqu-qsub-dual", 4, Cds, Cs+AA_TF_DUQU_DUAL, 1e-6);
+    }
+
+}
+
+static void duqu(const double E[7], const double S_[8], const double T_[12],
+                 const double p0[3], const double dx[6])
+{
     double S_ident[8] = AA_TF_DUQU_IDENT_INITIALIZER;
     double Q_ident[4] = AA_TF_QUAT_IDENT_INITIALIZER;
     double v_ident[3] = {0};
-    double p0[3];
-    rand_tf( E, H.data, T.data );
-    aa_vrand( 3, p0 );
 
-    {
-        double A[8], B[8];
-        aa_vrand(8,A);
-        aa_vrand(8,B);
-        // mul
-        {
-            double A_L[8*8], B_R[8*8];
-            double C[8], Cl[8], Cr[8];
-            aa_tf_duqu_mul(A,B,C);
-
-            aa_tf_duqu_matrix_l(A, A_L, 8);
-            cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
-                         1.0, A_L, 8,
-                         B, 1,
-                         0, Cl, 1 );
-
-            aveq( "duqu-mul-L", 8, C, Cl, 1e-6 );
-
-            aa_tf_duqu_matrix_r(B, B_R, 8);
-            cblas_dgemv( CblasColMajor, CblasNoTrans, 8, 8,
-                         1.0, B_R, 8,
-                         A, 1,
-                         0, Cr, 1 );
-            aveq( "duqu-mul-R", 8, C, Cr, 1e-6 );
-        }
-        // add / sub
-        {
-            double Ca[8], Cs[8], mB[8];
-
-            for( size_t i = 0; i < 8; i ++ ) mB[i] = -B[i];
-            aa_tf_duqu_add(A,B,Ca);
-            aa_tf_duqu_sub(A,mB,Cs);
-            aveq( "duqu-add-sub", 8, Ca, Cs, 1e-6 );
-
-            double Cra[4], Crs[4];
-            double Cda[4], Cds[4];
-            aa_tf_duqu_sub(A,B,Cs);
-            aa_tf_qadd(A+AA_TF_DUQU_REAL, B+AA_TF_DUQU_REAL,Cra);
-            aa_tf_qadd(A+AA_TF_DUQU_DUAL, B+AA_TF_DUQU_DUAL,Cda);
-            aa_tf_qsub(A+AA_TF_DUQU_REAL, B+AA_TF_DUQU_REAL,Crs);
-            aa_tf_qsub(A+AA_TF_DUQU_DUAL, B+AA_TF_DUQU_DUAL,Cds);
-
-            aveq( "duqu-qadd-real", 4, Cra, Ca+AA_TF_DUQU_REAL, 1e-6);
-            aveq( "duqu-qadd-dual", 4, Cda, Ca+AA_TF_DUQU_DUAL, 1e-6);
-
-            aveq( "duqu-qsub-real", 4, Crs, Cs+AA_TF_DUQU_REAL, 1e-6);
-            aveq( "duqu-qsub-dual", 4, Cds, Cs+AA_TF_DUQU_DUAL, 1e-6);
-        }
-    }
-
-    //double q[4], v[3], p0[3];
-    //aa_vrand( 3, v );
-    //aa_tf_qurand( q );
-    //AA_MEM_SET( v, 0, 3 );
-
-    // tfmat
-    //aa_tf_quat2rotmat(q, T.R);
-    //AA_MEM_CPY( &T.t.x, v, 3 );
-
-    // dual quat
-    //aa_tf_qv2duqu( q, v, H.data );
-    //aa_tf_qv2duqu( aa_tf_quat_ident, v, H_tran.data );
+    aa_tf_tfmat_t T;
+    aa_tf_duqu_t H;
+    AA_MEM_CPY(H.data, S_, 8);
+    AA_MEM_CPY(T.data, T_, 12);
 
     // check trans
     double hv[3];
@@ -571,8 +599,7 @@ static void duqu() {
 
     // derivative
     {
-        double dx[6], dd[8], dq[4];
-        aa_vrand(6, dx);
+        double dd[8], dq[4];
         double dt = aa_frand() / 100;
         aa_tf_duqu_vel2diff( H.data, dx, dd );
         aa_tf_qvel2diff( H.real.data, dx+3, dq );
@@ -650,19 +677,15 @@ static void duqu() {
     }
 }
 
-
-void rel_q() {
-    // random transforms
-    double q0[4], qrel[4], q1[4];
-    aa_vrand(4,q0);
-    aa_vrand(4,q1);
-    aa_tf_qnormalize(q0);
-    aa_tf_qnormalize(q1);
+static void rel_q(const double q0[4], const double q1[4], const double dx0[3])
+{
+    // Relative
+    double qrel[4];
     aa_tf_qcmul(q0, q1, qrel );
 
     // random velocity, point 0
-    double dx0[3]={0}, dq0[4];
-    aa_vrand(3,dx0);
+    double dq0[4];
+    //aa_vrand(3,dx0);
     aa_tf_qvel2diff( q0, dx0, dq0 );
 
     // computed velocity, point 1
@@ -683,29 +706,19 @@ void rel_q() {
     aveq("relq", 4, qrel, qrel_1, .000001);
 }
 
-void rel_d() {
-    // random transforms
-    double q0[4], v0[3], q1[4], v1[4];
-    aa_vrand(4,q0);
-    aa_vrand(4,q1);
-    aa_tf_qnormalize(q0);
-    aa_tf_qnormalize(q1);
-    aa_vrand(3,v0);
-    aa_vrand(3,v1);
-
+static void rel_d(const double d0[8], const double d1[8], const double dx0[6])
+{
     // dual quat transforms
-    double d0[8], drel[8], d1[8], d1p[8];
-    aa_tf_qv2duqu(q0,v0, d0);
-    aa_tf_qv2duqu(q1,v1, d1);
+    double drel[8], d1p[8];
+
     // d0 * drel = d1
     // drel = conj(d0) * d1
     aa_tf_duqu_cmul( d0, d1, drel );
     aa_tf_duqu_mul( d0, drel, d1p );
     aveq("duqu-relmul", 8, d1, d1p, .001 );
 
-    // random velocity
-    double dx0[6], dd0[8];
-    aa_vrand(6,dx0);
+    // velocity
+    double dd0[8];
     aa_tf_duqu_vel2diff(d0, dx0, dd0);
 
     // second velocity
@@ -737,7 +750,6 @@ void rel_d() {
     aveq("rel_d", 8, drel, drel_1t, 1e-6);
 }
 
-
 static void slerp() {
     double q[4], qy[4], u, du;
     double dq1[4], dq2[4], dqy[4];
@@ -752,67 +764,29 @@ static void slerp() {
 }
 
 
-static void theta2quat() {
-    double theta = (aa_frand() - 0.5) * 2 * M_PI;
-    double qx[4], qy[4], qz[4];
-    double Rx[9], Ry[9], Rz[9];
-    double qRx[4], qRy[4], qRz[4];
-    double ax[4], ay[4], az[4];
-    double qax[4], qay[4], qaz[4];
-
-    aa_tf_xangle2rotmat( theta, Rx );
-    aa_tf_yangle2rotmat( theta, Ry );
-    aa_tf_zangle2rotmat( theta, Rz );
-
-    aa_tf_xangle2quat( theta, qx );
-    aa_tf_yangle2quat( theta, qy );
-    aa_tf_zangle2quat( theta, qz );
-
-    aa_tf_xangle2axang( theta, ax );
-    aa_tf_yangle2axang( theta, ay );
-    aa_tf_zangle2axang( theta, az );
-
-    aa_tf_rotmat2quat( Rx, qRx );
-    aa_tf_rotmat2quat( Ry, qRy );
-    aa_tf_rotmat2quat( Rz, qRz );
-
-    aa_tf_axang2quat( ax, qax );
-    aa_tf_axang2quat( ay, qay );
-    aa_tf_axang2quat( az, qaz );
-
-    aa_tf_qminimize( qx );
-    aa_tf_qminimize( qRx );
-    aa_tf_qminimize( qy );
-    aa_tf_qminimize( qRy );
-    aa_tf_qminimize( qz );
-    aa_tf_qminimize( qRz );
-
-    aveq("xangle2quat", 4, qx, qRx, 1e-6 );
-    aveq("yangle2quat", 4, qy, qRy, 1e-6 );
-    aveq("xangle2quat", 4, qz, qRz, 1e-6 );
-
-    aveq("xangle2quat", 4, qx, qax, 1e-6 );
-    aveq("yangle2quat", 4, qy, qay, 1e-6 );
-    aveq("xangle2quat", 4, qz, qaz, 1e-6 );
-}
-
-
-static void rotmat(double *q) {
-    //double q[4], R[9], w[3], dR[9], dRw[3];
-    //aa_tf_qurand( q );
-    double R[9], w[3], dR[9], dRw[3];
-    aa_vrand( 3, w );
-    aa_tf_quat2rotmat(q, R);
+static void rotmat(const double R[9], const double w[3])
+{
+    double dR[9], dRw[3];
     aa_tf_rotmat_vel2diff( R, w, dR );
     aa_tf_rotmat_diff2vel( R, dR, dRw );
     aveq("rotmat-vel", 3, w, dRw, 1e-6 );
 
 
+    {
+        double Rtmp[9];
+        aa_tf_rotmat_xy( R+0, R+3, Rtmp );
+        aveq( "rotmat_xy", 9, R, Rtmp, 1e-6 );
+
+        aa_tf_rotmat_yz( R+3, R+6, Rtmp );
+        aveq( "rotmat_yz", 9, R, Rtmp, 1e-6 );
+
+        aa_tf_rotmat_zx( R+6, R+0, Rtmp );
+        aveq( "rotmat_zx", 9, R, Rtmp, 1e-6 );
+    }
 }
 
-static void tfmat() {
-    double v[6], evR[9], ev[12], lneR[3], lne[6];
-    aa_vrand( 6, v );
+static void tfmat_exp_ln(const double v[6]) {
+    double evR[9], ev[12], lneR[3], lne[6];
 
     aa_tf_tfmat_expv( v, ev );
     aa_tf_rotmat_expv( v+3, evR );
@@ -975,11 +949,10 @@ static void integrate(const double *E, const double *S, const double *T,
 
 }
 
-void qvmul(void)  {
-    double q[4], v[4], r1[4], r2[4];
-    aa_vrand( 3, v );
+static void qvmul(const double q[4], const double v_[3])  {
+    double v[4], r1[4], r2[4];
+    AA_MEM_CPY(v, v_, 3);
     v[3] = 0;
-    aa_vrand( 4, q );
 
     aa_tf_qmul_qv( q, v, r1);
     aa_tf_qmul(  q, v, r2);
@@ -990,17 +963,19 @@ void qvmul(void)  {
     aveq( "qmul_v", 4, r1, r2, 1e-7 );
 }
 
-
-void tf_conj(double E[2][7],
-             double S[2][8] )
+static void tf_conj1(const double E[7], const double S[8])
 {
     double S2[8], SE[7], E2[8];
 
-    aa_tf_duqu_conj(S[0], S2);
-    aa_tf_qutr_conj(E[0], E2);
+    aa_tf_duqu_conj(S, S2);
+    aa_tf_qutr_conj(E, E2);
     aa_tf_duqu2qutr(S2, SE);
     aveq( "duqu/qutr conj", 7, E2, SE, 1e-7 );
+}
 
+static void tf_conj(const double E[2][7], const double S[2][8])
+{
+    double S2[8], SE[7], E2[8];
 
     aa_tf_duqu_mul(S[0], S[1], S2);
     aa_tf_qutr_mul(E[0], E[1], E2);
@@ -1018,12 +993,12 @@ void tf_conj(double E[2][7],
     aveq( "duqu/qutr cmul", 7, E2, SE, 1e-7 );
 }
 
-static void qdiff(double E[2][7], double dx[2][6] )
+static void qdiff(const double E[2][7], const double dx[2][6] )
 {
-    double *q0 = E[0];
-    double *q1 = E[1];
-    double *w0 = dx[0]+3;
-    double *w1 = dx[1]+3;
+    const double *q0 = E[0];
+    const double *q1 = E[1];
+    const double *w0 = dx[0]+3;
+    const double *w1 = dx[1]+3;
 
     // Velocity and Quaternion Derivatives
     double dq0[4], dq1[4];
@@ -1039,6 +1014,9 @@ static void qdiff(double E[2][7], double dx[2][6] )
 
     // Log and Exponential Derivatives
     {
+
+        double pp = aa_tf_qangle(q0);
+
         double u[3], du[3], duj[3];
         double e[4], de[4], dej[4];
         aa_tf_qln( q0, u );
@@ -1046,8 +1024,11 @@ static void qdiff(double E[2][7], double dx[2][6] )
         aveq( "qln/exp", 4, q0, e, 1e-7 );
 
         aa_tf_qduln( q0, dq0, du );
-        aa_tf_qdulnj( q0, dq0, duj );
-        aveq( "dln/dlnj", 3, du, duj, 1e-7 );
+        if (pp > AA_TF_EPSILON) {
+            // Jacobian isn't robust at 0
+            aa_tf_qdulnj( q0, dq0, duj );
+            aveq( "dln/dlnj", 3, du, duj, 1e-7 );
+        }
 
         aa_tf_qdpexp( u, du, de );
         aa_tf_qdpexpj( u, du, dej );
@@ -1062,7 +1043,7 @@ static void qdiff(double E[2][7], double dx[2][6] )
 
 }
 
-void normalize(const double *Rp, const double *qp) {
+static void normalize(const double *Rp, const double *qp) {
     double R[9], q[4], Rq[4];
     AA_MEM_CPY(R, Rp, 9);
     AA_MEM_CPY(q, qp, 4);
@@ -1074,25 +1055,23 @@ void normalize(const double *Rp, const double *qp) {
     aa_tf_qminimize(q);
     aa_tf_qminimize(Rq);
 
-    aveq( "normalize", 4, q, Rq, 1e-7 );
+    aa_test_quat_cmp( "normalize", q, Rq, 1e-7 );
 }
 
-void rotate(double q[4], double R[9], double p[3] )
+static void rotate(const double q[4], const double aa[4], const double R[9],
+                   const double p[3])
 {
-    double aa[4];
-    aa_tf_quat2axang(q, aa);
-
     double pq[3], Rq[3], aq[3];
     aa_tf_qrot(q,p,pq);
     aa_tf_rotmat_rot(R,p,Rq);
     aa_tf_axang_rot(aa,p,aq);
 
     aveq( "rotate quat-rotmat", 3, pq, Rq, 1e-9 );
+    aveq( "rotate rotmat-axang",  3, Rq, aq, 1e-9 );
     aveq( "rotate quat-axang",  3, pq, aq, 1e-9 );
 }
 
-
-void cross(double a[3], double b[3] )
+static void cross(double a[3], double b[3])
 {
     double c[3], Mr[9], d[3];
     struct aa_dmat M;
@@ -1108,7 +1087,7 @@ void cross(double a[3], double b[3] )
     aveq( "cross-right",  3, c, d, 1e-9 );
 }
 
-void dhparam()
+static void dhparam()
 {
     double dh[4];
     rand_dh(dh);
@@ -1149,14 +1128,14 @@ void dhparam()
 
 typedef void (raw_vector_field_fun)(const double*,double*);
 
-void pde_j_helper( void *cx, const struct aa_dvec *x, struct aa_dvec *y)
+static void pde_j_helper( void *cx, const struct aa_dvec *x, struct aa_dvec *y)
 {
     void (*f)(const double*,double*) = (raw_vector_field_fun*)cx;
     f(x->data, y->data);
 
 }
 
-void q_pde( const double *q )
+static void q_pde( const double *q )
 {
     double dJfd[4*4], dJ[4*4];
     struct aa_dmat Jfd = AA_DMAT_INIT(4,4,dJfd,4);
@@ -1171,7 +1150,7 @@ void q_pde( const double *q )
     aveq( "qln_jac / fd ", 4*4, dJfd, dJ, 1e-3 );
 }
 
-void dq_pde( const double *S )
+static void dq_pde( const double *S )
 {
     double dJfd[8*8], dJ[8*8];
     struct aa_dmat Jfd = AA_DMAT_INIT(8,8,dJfd,8);
@@ -1197,52 +1176,120 @@ void dq_pde( const double *S )
     }
 }
 
-int main( int argc, char *argv[] ) {
+static void test_rotations(const double q[4], const double aa[4],
+                           const double rv[3], const double R[9],
+                           const double p[3])
+{
+    rotate(q, aa, R, p);
+    rotvec(rv, q, R);
+    normalize(R, q);
+
+    eulerzyx(q, R);
+
+    rotmat(R, p);
+}
+
+static void test_rotations2(const double q1[4], const double q2[4],
+                            const double R1[9], const double R2[9],
+                            const double p1[3], const double p2[3])
+{
+    quat(q1, q2, R1, R2, p1, p2[0]);
+
+    rel_q(q1, q2, p1);
+}
+
+static void test_tf(const double E[7], const double S[8], const double T[12],
+                    const double p[3], const double dx[6])
+{
+    duqu(E, S, T, p, dx);
+    tf_conj1(E,S);
+
+    tfmat_inv(T);
+}
+
+static void test_tf2(double E[2][7], double S[2][8], double T[2][12],
+                     const double dx[2][6],
+                     const double p[2][3])
+{
+    for (size_t j = 0; j < 2; j++) {
+        test_tf(E[j], S[j], T[j], p[j], dx[j]);
+
+        integrate(E[j], S[j], T[j], dx[0], dx[1]);
+    }
+    chain(E, S, T);
+    tf_conj(E, S);
+
+    qdiff(E, dx);
+
+    rel_d(S[0], S[1], dx[0]);
+}
+
+int main(int argc, char *argv[])
+{
     // init
     aa_test_args(argc, argv);
     aa_test_ulimit();
 
+    // TODO: also generate random rotation via quaternions
+    // TODO: also generation rotations and random axes near singularities
+
+    /* Not at singularities */
     for( size_t i = 0; i < 1000; i++ ) {
         /* Random Data */
         static const size_t k=2;
-        double E[2][7], S[2][8], T[2][12], dx[2][6];
-        for( size_t j = 0; j < k; j ++ ) {
-            rand_tf(E[j], S[j], T[j]);
+        double aa[2][4], rv[2][3], E[2][7], S[2][8], T[2][12], dx[2][6];
+        double p[2][3];
+
+        for (size_t j = 0; j < k; j++) {
+            rand_tf(aa[j], rv[j], E[j], S[j], T[j]);
+            rand_point(p[j]);
             aa_vrand(6,dx[j]);
             for( size_t l = 0; l < 6; l++ ) {
                 dx[j][l] -= 0.5;
             }
         }
-        //printf("%d\n",i);
-        /* Run Tests */
-        rotate(E[0], T[0], dx[0] );
-        rotvec(E[0]);
-        euler(dx[0]);
-        euler1(dx[0]);
-        eulerzyx(E[0]);
-        chain(E,S,T);
-        quat(E);
-        duqu();
-        rel_q();
-        rel_d();
-        slerp();
-        theta2quat();
-        rotmat(E[0]);
-        tfmat();
-        tfmat_inv(T[0]);
-        mzlook(dx[0]+0, dx[0]+3, dx[1]+0);
-        integrate(E[0], S[0], T[0], dx[0], dx[1]);
-        tf_conj(E, S);
-        qdiff(E,dx);
-        normalize(T[0], E[0] );
-        cross( E[0]+AA_TF_QUTR_T, E[1]+AA_TF_QUTR_T );
 
-        dhparam();
+        /* Run Tests */
+        for (size_t j = 0; j < k; j++) {
+            test_rotations(E[j], aa[j], rv[j], T[j], p[j]);
+        }
+
+        test_tf2(E, S, T, dx, p);
+
+        test_rotations2(E[0], E[1], T[0], T[1], p[0], p[1]);
+
+        vecs2quat(p[0], p[1]);
+
+        mzlook(dx[0]+0, dx[0]+3, dx[1]+0);
+
+        cross(p[0], p[1]);
 
         q_pde( E[0]+AA_TF_QUTR_Q );
         dq_pde( S[0] );
     }
 
+    // log and exp
+    for( size_t i = 0; i < 1000; i++ ) {
+        double v[6];
+        aa_test_randv(-1, 1, 6, v); // TODO: range and near singularities
+        tfmat_exp_ln(v);
+    }
+
+    // general quaternions
+    for( size_t i = 0; i < 1000; i++ ) {
+        double A[8], B[8];
+        aa_test_randv(-1, 1, 8, A);
+        aa_test_randv(-1, 1, 8, B);
+        duqu_gen(A, B);
+
+        qvmul(A, A+4);
+    }
+
+    // misc
+    for( size_t i = 0; i < 1000; i++ ) {
+        slerp();
+        dhparam();
+    }
 
     return 0;
 }
