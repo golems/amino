@@ -476,7 +476,7 @@ class SceneGraph:
         Raises:
             IndexError: value is out of range.
         """
-        if i >= self.frame_count or i < -2:
+        if i >= self.frame_count or i < FRAME_NONE:
             raise IndexError("Invalid frame id: %d" % i)
 
         name = libamino.aa_rx_sg_frame_name(self._ptr, i)
@@ -524,20 +524,20 @@ class SceneGraph:
         """
         if is_string(value):
             id = self.frame_id(value)
-            if id == -2:
+            if id == FRAME_NONE:
                 raise ValueError("Invalid frame name: %s" % value)
             return id
 
-        if value >= self.frame_count or value <= -2:
+        if value >= self.frame_count or value <= FRAME_NONE:
             raise IndexError("Invalid frame id: %d" % value)
         return value
 
     def ensure_frame_id_actual(self, value):
         """Ensures value is a frame id, converting strings if necessary.
 
-        The difference between this function and ensure_frame_id() is that
-        this function throws errors if given reserved frame ids, which are
-        indices -1 and -2.
+        The difference between this function and ensure_frame_id() is
+        that this function throws errors if given reserved frame ids,
+        FRAME_ROOT and FRAME_NONE.
 
         Raises:
             IndexError: value is out range.
@@ -556,11 +556,11 @@ class SceneGraph:
         """
         if is_string(value):
             id = self.frame_id(value)
-            if id == -2:
+            if id == FRAME_NONE:
                 raise ValueError("Invalid frame name: %s" % value)
             return value
 
-        if value >= self.frame_count or value <= -2:
+        if value >= self.frame_count or value <= FRAME_NONE:
             raise IndexError("Invalid frame id: %d" % value)
         return self.frame_name(value)
 
