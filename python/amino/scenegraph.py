@@ -471,7 +471,14 @@ class SceneGraph:
         return str(name, encoding="utf-8")
 
     def frame_name(self, i):
-        """Returns the frame name for the id."""
+        """Returns the frame name for the id.
+
+        Raises:
+            IndexError: value is out of range.
+        """
+        if i >= self.frame_count or i < -2:
+            raise IndexError("Invalid frame id: %d" % i)
+
         name = libamino.aa_rx_sg_frame_name(self._ptr, i)
         return str(name, encoding="utf-8")
 
