@@ -78,19 +78,16 @@ static void tf_fill_aa(const double aa[4], const double v[3], double rv[3],
 
     aa_tf_axang2quat(aa, E);
     AA_MEM_CPY(E + 4, v, 3);
-    aa_tf_qminimize(E);
 
     aa_tf_qutr2duqu(E, S);
     aa_tf_qutr2tfmat(E, T);
-
-
 }
 
 static void rand_tf_aa(double aa[4], double rv[3], double E[7], double S[8],
                        double T[12])
 {
     rand_axis(aa);
-    aa[3] = aa_frand_minmax(-.99 * M_PI, .99 * M_PI);
+    aa[3] = aa_frand_minmax(-1.99 * M_PI, 1.99 * M_PI);
 
     double v[3];
     rand_point(v);
@@ -120,7 +117,8 @@ static void rand_tf_sing(double aa[4], double rv[3], double E[7], double S[8],
         (M_PI - 1e-3),
         (M_PI - 1e-6),
         (M_PI - 1e-9),
-        M_PI, -M_PI
+        M_PI, -M_PI,
+        M_PI+1e-9, -M_PI-1e-9,
     };
     double theta = thetas[(size_t)rand() % (sizeof(thetas) / sizeof(thetas[0]))];
     aa[3] = theta;
@@ -139,10 +137,10 @@ static void rand_tf(double aa[4], double rv[3], double E[7], double S[8],
     case 0:
         rand_tf_aa(aa, rv, E, S, T);
         break;
-    case 2:
+    case 1:
         rand_tf_q(aa, rv, E, S, T);
         break;
-    case 1:
+    case 2:
         rand_tf_sing(aa, rv, E, S, T);
         break;
     default:
@@ -150,7 +148,23 @@ static void rand_tf(double aa[4], double rv[3], double E[7], double S[8],
         exit(EXIT_FAILURE);
     }
 
-    {  // check equivalence of conversion
+    // Check Validity
+    aa_test_isrotmat("isrotmat", T, 1e-9);
+    test_feq("q norm", aa_tf_qnorm(E), 1, 1e-9);
+
+    // Check Equivalences
+    {  // check equivalence of conversion to matrices
+        double Rq[9], Raa[9], Rrv[7];
+        aa_tf_quat2rotmat(E, Rq);
+        aa_tf_axang2rotmat(aa, Raa);
+        aa_tf_rotvec2rotmat(rv, Rrv);
+
+        aa_test_rotmat_cmp("q->R", T, Rq, 1e-8);
+        aa_test_rotmat_cmp("rv->R", T, Rrv, 1e-8);
+        //aa_test_rotmat_cmp("aa->R", T, Raa, 1e-9);
+    }
+
+    {  // check equivalence of conversion to quaternions
 
         double Eq[7], Es[7], Et[7], qrv[4], aaq[4], qaaq[4];
         aa_tf_rotvec2quat(rv, qrv);
@@ -171,51 +185,71 @@ static void rand_tf(double aa[4], double rv[3], double E[7], double S[8],
         /* fprintf(stderr, "aaq: "); */
         /* aa_dump_vec(stderr, aaq, 4); */
 
-        aa_test_quat_cmp("aa<->q", Eq, qaaq, 1e-5);
-        aa_test_quat_cmp("rv<->q", Eq, qrv, 1e-5);
-        aa_test_qutr_cmp("qutr<->duqu", Eq, Es, 1e-5);
-        aa_test_qutr_cmp("qutr<->tfmat", Eq, Et, 1e-5);
+        aa_test_quat_cmp("aa<->q", Eq, qaaq, 1e-6);
+        aa_test_quat_cmp("rv<->q", Eq, qrv, 1e-6);
+        aa_test_qutr_cmp("qutr<->duqu", Eq, Es, 1e-6);
+        aa_test_qutr_cmp("qutr<->tfmat", Eq, Et, 1e-6);
     }
 }
 
-
-static void rotvec(const double e[3], const double q[4], const double R[9])
+static void rotvec(const double e[3], const double aa[4], const double q[4],
+                   const double R[9])
 {
-    {
-        double vr[3];
-        aa_tf_rotmat2rotvec(R, vr);
-        aveq("rotmat2rotvec", 3, e, vr, 1e-6 );
+    {  // Angles
+
+        /* Axis-angle angle might be negative (if axis is "flipped"), but we
+         * cannot recover the negative angle from the other representations. */
+        double aa_theta = fabs(aa[3]);
+        double rv_theta = aa_tf_vnorm(e);
+        double s_aa = sin(aa_theta), c_aa = cos(aa_theta);
+        double s_rv = sin(rv_theta), c_rv = cos(rv_theta);
+        aafeq("theta-aa", aa_theta, rv_theta, 1e-9);
+        aafeq("s-aa", s_aa, s_rv, 1e-9);
+        aafeq("c-aa", c_aa, c_rv, 1e-9);
+
+        /* qangle is in the range [0,pi], which corresponds to rotations of
+         * [0, 2*pi].  */
+        double q_theta = aa_tf_qangle(q) * 2;
+        double q_theta_rv = rv_theta;
+        aafeq("qangle-rv", q_theta_rv, q_theta, 1e-9);
+
+        /* rotation matrix angle is in the range [0,pi]; sin() is always
+         * positive.
+         */
+        double n_theta = aa_theta;
+        double s_n = fabs(sin(n_theta)), c_n = cos(n_theta);
+        double s_r, c_r;
+        aa_tf_rotmat_sincos(R, &s_r, &c_r);
+        aafeq("c-R", c_n, c_r, 1e-9);
+        aafeq("s-R", s_n, s_r, 1e-9);
     }
 
     {
         double qr[3];
         aa_tf_quat2rotvec(q, qr);
-        aveq("rotmat2rotvec", 3, e, qr, 1e-6 );
+        arveq("quat2rotvec", e, qr, 1e-6);
     }
 
     {
-        double ee[9], eln[3], qe[4], rln[3];
+        double vr[3];
+        aa_tf_rotmat2rotvec(R, vr);
+        aa_test_rotvec_cmp_pi("rotmat2rotvec", e, vr, 1e-6 );
+    }
+
+
+    {
+        double ee[9], rln[3];
         aa_tf_rotmat_expv( e, ee );
+        aa_test_rotmat_cmp("rotmat_expv", R, ee, 1e-8);
+
         aa_tf_rotmat_lnv( ee, rln );
-        arveq("rotmat_lnv", e, rln, 1e-6 );
-        aa_tf_rotmat2quat( ee, qe );
-        aa_tf_quat2rotvec( qe, eln );
-        arveq("rotmat_expv", e, eln, 1e-6 );
+        aa_test_rotvec_cmp_pi("rotmat_lnv", e, rln, 1e-6 );
     }
+
     {
-        double aa[4], ee[9], eln[3], qe[4];
-        aa_tf_rotvec2axang(e, aa);
-
-        /* printf("aa: "); */
-        /* aa_dump_vec(stdout, aa, 4); */
-
-        /* printf("rv: "); */
-        /* aa_dump_vec(stdout, e, 3); */
-
-        aa_tf_rotmat_exp_aa( aa, ee );
-        aa_tf_rotmat2quat( ee, qe );
-        aa_tf_quat2rotvec( qe, eln );
-        arveq("rotmat_exp_aa", e, eln, 1e-6);
+        double ee[9];
+        aa_tf_rotmat_exp_aa(aa, ee);
+        aa_test_rotmat_cmp("rotmat_exp_aa", ee, R, 1e-9 );
     }
 }
 
@@ -1181,7 +1215,7 @@ static void test_rotations(const double q[4], const double aa[4],
                            const double p[3])
 {
     rotate(q, aa, R, p);
-    rotvec(rv, q, R);
+    rotvec(rv, aa, q, R);
     normalize(R, q);
 
     eulerzyx(q, R);

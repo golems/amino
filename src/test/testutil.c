@@ -42,6 +42,8 @@
 
 #include "amino.h"
 #include "amino/test.h"
+#include "amino/tf.h"
+#include "amino_internal.h"
 #include <sys/resource.h>
 
 
@@ -75,6 +77,7 @@ void aafeq( const char * name, double a, double b, double tol ) {
 
 void aveq( const char * name,
                   size_t n, const double *a, const double *b, double tol ) {
+
     if( !aa_veq(n, a, b, tol) ) {
         fprintf( stderr, "FAILED: %s\n",name);
         fprintf( stderr, "a: ");
@@ -129,6 +132,69 @@ AA_API void arveq( const char * name, const double *a, const double *b, double t
 
 FAIL:
     fprintf(stderr, "FAILED: %s\n", name);
+    fprintf(stderr, "a: ");
+    aa_dump_vec(stderr, a, 3);
+    fprintf(stderr, "b: ");
+    aa_dump_vec(stderr, b, 3);
+    abort();
+}
+
+
+AA_API void aa_test_rotvec_cmp_pi(const char *name, const double *a,
+                                  const double *b, double tol)
+{
+    double a_norm[3], b_norm[3];
+    // Normalize
+    {
+        double a_angle = aa_tf_vnorm(a);
+        double b_angle = aa_tf_vnorm(b);
+        double a_angle_norm = aa_ang_norm_pi(a_angle);
+        double b_angle_norm = aa_ang_norm_pi(b_angle);
+
+        if (a_angle > M_PI) {
+            FOR_VEC(i) a_norm[i] = a[i] * a_angle_norm / a_angle;
+            a = a_norm;
+        }
+
+        if (b_angle > M_PI) {
+            FOR_VEC(i) b_norm[i] = b[i] * b_angle_norm / b_angle;
+            b = b_norm;
+        }
+    }
+
+    double a_angle = aa_tf_vnorm(a);
+    double b_angle = aa_tf_vnorm(b);
+
+
+    /* fprintf(stderr, "an: "); */
+    /* aa_dump_vec(stderr, a, 3); */
+    /* fprintf(stderr, "bn: "); */
+    /* aa_dump_vec(stderr, b, 3); */
+
+
+    /* printf("a_angle: %f\n", a_angle); */
+    /* printf("b_angle: %f\n", b_angle); */
+
+    /* fprintf(stderr, "a-axis: "); */
+    /* aa_dump_vec(stderr, a_axis, 3); */
+    /* fprintf(stderr, "b-axis: "); */
+    /* aa_dump_vec(stderr, b_axis, 3); */
+
+
+    /* check norm eq */
+    if (aa_veq(3, a, b, tol)) return;
+
+    /* Check negative near pi */
+    if (fabs(fabs(a_angle) - M_PI) < tol ||
+        fabs(fabs(b_angle) - M_PI) < tol) {
+        double ma[3];
+        FOR_VEC(i) ma[i] = -a[i];
+        if (aa_veq(3, ma, b, tol)) return;
+        // else fail
+    }
+
+// FAIL
+    fprintf(stderr, "FAILED aa_test_rotvec_cmp_pi: %s\n", name);
     fprintf(stderr, "a: ");
     aa_dump_vec(stderr, a, 3);
     fprintf(stderr, "b: ");
@@ -259,5 +325,66 @@ FAIL:
     aa_dump_vec(stderr, E2, 7);
     fprintf(stderr, "r: ");
     aa_dump_vec(stderr, r, 4);
+    abort();
+}
+
+
+AA_API void aa_test_rotmat_cmp(const char *name, const double *R1,
+                               const double *R2, double tol)
+{
+    // Rotation matrices are unique for a given rotation
+    aveq(name, 9, R1, R2, tol);
+}
+
+AA_API void aa_test_isrotmat(const char *name, const double *R, double tol)
+{
+    static const double I[9] = AA_TF_ROTMAT_IDENT_INITIALIZER;
+    double Rt[9], RRt[9];
+    aa_tf_rotmat_inv2(R, Rt);
+
+    // Angles between columns and rows
+    if (aa_tf_vdot(R, R + 3)      > tol ||
+        aa_tf_vdot(R, R + 6)      > tol  ||
+        aa_tf_vdot(R + 3, R + 6 ) > tol ||
+        aa_tf_vdot(Rt, Rt + 3)    > tol ||
+        aa_tf_vdot(Rt, Rt + 6)    > tol ||
+        aa_tf_vdot(Rt + 3, Rt + 6) > tol) {
+        fprintf(stderr, "Not orth\n");
+        goto FAIL;
+    }
+
+    // Unit Columns and Rows
+    if (fabs(aa_tf_vnorm(R) - 1)      > tol ||
+        fabs(aa_tf_vnorm(R + 3) - 1 ) > tol ||
+        fabs(aa_tf_vnorm(R + 6) - 1 ) > tol ||
+        fabs(aa_tf_vnorm(Rt) - 1)     > tol ||
+        fabs(aa_tf_vnorm(Rt + 3) - 1) > tol ||
+        fabs(aa_tf_vnorm(Rt + 6) - 1) > tol) {
+        fprintf(stderr, "Not normal\n");
+        goto FAIL;
+    }
+
+    // Determinant
+    {
+        double d = aa_la_det3x3(R);
+        if (d < 1 - tol || d > 1 + tol) {
+            fprintf(stderr, "det: %f\n", d);
+            goto FAIL;
+        }
+    }
+
+    // Chain
+    aa_tf_rotmat_mul(R, Rt, RRt);
+    if (aa_la_ssd(9, RRt, I) > tol) {
+        fprintf(stderr, "inverse test failed\n");
+        goto FAIL;
+    }
+
+    return;
+
+FAIL:
+    fprintf(stderr, "FAILED: %s\n", name);
+    aa_dump_vec(stderr, R, 9);
+
     abort();
 }

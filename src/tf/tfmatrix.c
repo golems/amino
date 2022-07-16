@@ -266,6 +266,7 @@ aa_tf_rotmat_expv( const double rv[AA_RESTRICT 4], double E[9] )
     double theta2 = dot3(rv,rv);
     double theta = sqrt(theta2);
     double sc,cc;
+
     if( theta2*theta2 < DBL_EPSILON ) {
         sc = aa_tf_sinc_series2(theta2);
         cc = theta * aa_horner3( theta2, 1./2, -1./24, 1./720 );
@@ -294,16 +295,10 @@ AA_API void aa_tf_axang2rotmat(const double aa[AA_RESTRICT 4], double R[9])
     aa_tf_rotmat_exp_aa(aa, R);
 }
 
-AA_API void
-aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double *theta )
-{
-    /* Operations:
-     * -----------
-     * Mul: 2
-     * Add: 4
-     * Other: sqrt, atan2
-     */
 
+AA_API void aa_tf_rotmat_sincos(const double R[AA_RESTRICT 9],
+                                double *s, double *c)
+{
     *c = (RREF(R,0,0) + RREF(R,1,1) + RREF(R,2,2) - 1) / 2;
 
     /* Less stable */
@@ -317,6 +312,19 @@ aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double 
         u[2] = RREF(R, 1, 0) - RREF(R, 0, 1);
         *s = sqrt(dot3(u, u)) / 2;
     }
+}
+
+AA_API void
+aa_tf_rotmat_angle( const double R[AA_RESTRICT 9], double *c, double *s, double *theta )
+{
+    /* Operations:
+     * -----------
+     * Mul: 2
+     * Add: 4
+     * Other: sqrt, atan2
+     */
+
+    aa_tf_rotmat_sincos(R, s, c);
 
     *theta = atan2(*s, *c);
 }
@@ -341,7 +349,6 @@ static void rotmat_q(const double R[AA_RESTRICT 9], double q[AA_RESTRICT 4])
         *q_w = (RREF(R,w,v) - RREF(R,v,w)) * t;
         q_v[v] = (RREF(R,u,v) + RREF(R,v,u)) * t;
         q_v[w] = (RREF(R,w,u) + RREF(R,u,w)) * t;
-        aa_tf_qminimize(q);  // q_w might be negative
 }
 
 AA_API void aa_tf_rotmat_lnv(const double R[AA_RESTRICT 9],

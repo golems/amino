@@ -52,18 +52,14 @@
 
 typedef void (*fun_type)(double,double,double, double*b);
 
-static void euler_helper( const double e[4], fun_type e2r, fun_type e2q ) {
-    double R[9],  q[4];
+static void euler_helper( const double e[3], fun_type e2r, fun_type e2q ) {
+    double R[9], q[4], Rq[9];
     e2r(e[0], e[1], e[2], R);
-    aa_tf_isrotmat(R) ;
-
     e2q(e[0], e[1], e[2], q);
+    aa_tf_quat2rotmat(q, Rq);
 
-    double vq[3], vr[3];
-    aa_tf_quat2rotvec(q, vq);
-    aa_tf_rotmat2rotvec(R, vr);
-
-    aveq("euler-vecs", 3, vq, vr, .001 );
+    aa_test_isrotmat("euler->is-rotmat ", R, 1e-9);
+    aa_test_rotmat_cmp("euler rotmat<->quat", R, Rq, 1e-9);
 }
 
 static void euler(const double *e) {

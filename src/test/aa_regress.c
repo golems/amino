@@ -196,10 +196,11 @@ static void rotvec_axang_exp()
     aa_tf_axang2rotvec(aa, ln_aa);
     aa_tf_rotmat2rotvec(Raa, ln_Raa);
 
-    aveq("rotvev_axang_exp-ln_q", 3, rv, ln_q, 1e-6 );
-    aveq("rotvev_axang_exp-ln_R", 3, rv, ln_R, 1e-6 );
-    aveq("rotvev_axang_exp-ln_aa", 3, rv, ln_aa, 1e-6 );
-    aveq("rotvev_axang_exp-ln_Raa", 3, rv, ln_Raa, 1e-6 );
+    aveq("rotvec_axang_exp-ln_q", 3, rv, ln_q, 1e-9);
+    aveq("rotvec_axang_exp-ln_q", 3, rv, ln_q, 1e-9);
+    aveq("rotvec_axang_exp-ln_R", 3, rv, ln_R, 1e-9);
+    aveq("rotvec_axang_exp-ln_aa", 3, rv, ln_aa, 1e-9);
+    aveq("rotvec_axang_exp-ln_Raa", 3, rv, ln_Raa, 1e-9);
 }
 
 int main() {

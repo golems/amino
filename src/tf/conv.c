@@ -199,7 +199,6 @@ AA_API void
 aa_tf_axang2quat2( const double axis[AA_RESTRICT 3], double angle,
                    double _q[AA_RESTRICT 4] )
 {
-
     aa_tf_quat_t *q = (aa_tf_quat_t *)_q;
     angle /= 2;
     double s = sin(angle);
@@ -236,25 +235,19 @@ void aa_tf_quat2eulerzyx( const double q[restrict 4],
 AA_API void
 aa_tf_quat2rotvec( const double q[AA_RESTRICT 4], double r[AA_RESTRICT 3] )
 {
-    /* double qmin[4], qrv[4]; */
-    /* aa_tf_qminimize2( q, qmin ); */
-    /* aa_tf_qln(qmin, qrv); */
-    /* FOR_VEC(i) r[i] = 2 * qrv[AA_TF_QUAT_V + i]; */
-
     const double *q_v = q + AA_TF_QUAT_V;
-    double q_w = q[AA_TF_QUAT_W] >= 0 ? q[AA_TF_QUAT_W] : -q[AA_TF_QUAT_W];
 
+    /* Allow negative q_w, producing rotation magnitude greater than pi. */
     double qs = sqrt(dot3(q_v, q_v));
-    double qtheta = atan2(qs,q_w);
+    double qc = q[AA_TF_QUAT_W];
+    double theta = atan2(qs,qc);
 
     double a;
-    if (qtheta < sqrt(sqrt(DBL_EPSILON))) {
-        a = 2*aa_tf_invsinc_series(qtheta);
+    if (theta < sqrt(sqrt(DBL_EPSILON))) {
+        a = 2*aa_tf_invsinc_series(theta);
     } else {
-        a = 2*qtheta/qs;
+        a = 2*theta/qs;
     }
-
-    if( q[AA_TF_QUAT_W] <= 0 ) a = -a;
 
     FOR_VEC(i) r[i] = a*q_v[i];
 }
@@ -263,15 +256,15 @@ AA_API void aa_tf_quat2axang(const double q[AA_RESTRICT 4],
                              double aa[AA_RESTRICT 4])
 {
     const double *q_v = q + AA_TF_QUAT_V;
-    double q_w = q[AA_TF_QUAT_W] >= 0 ? q[AA_TF_QUAT_W] : -q[AA_TF_QUAT_W];
 
+    /* Allow negative q_w, producing rotation magnitude greater than pi. */
     double qs = sqrt(dot3(q_v, q_v));
-    double qtheta = atan2(qs,q_w);
+    double qc = q[AA_TF_QUAT_W];
+    double theta = 2*atan2(qs,qc);
 
-    aa[3] = qtheta * 2;
+    aa[3] = theta;
     double n = aa_tf_vnorm(q_v);
     if (n > 0) {
-        if (q[AA_TF_QUAT_W] < 0) n = -n;
         FOR_VEC(i) aa[i] = q_v[i] / n;
     } else {
         FOR_VEC(i) aa[i] = 0;

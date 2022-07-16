@@ -1574,6 +1574,10 @@ AA_API void aa_tf_rotmat2axang( const double R[AA_RESTRICT 9],
 AA_API void aa_tf_rotmat2rotvec( const double R[AA_RESTRICT 9],
                                  double rv[AA_RESTRICT 3] );
 
+/// extract sin and cosine of a rotation matrix
+AA_API void aa_tf_rotmat_sincos(const double R[AA_RESTRICT 9],
+                                double *s, double *c);
+
 /// convert axis angle to rotation matrix
 AA_API void aa_tf_axang2rotmat( const double ra[AA_RESTRICT 4],
                                 double R[AA_RESTRICT 9] );

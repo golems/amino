@@ -80,4 +80,16 @@ AA_API void aa_test_quat_cmp(const char *name, const double *q1,
 AA_API void aa_test_qutr_cmp(const char *name, const double *E1,
                              const double *E2, double tol);
 
+
+AA_API void aa_test_rotmat_cmp(const char *name, const double *R1,
+                               const double *R2, double tol);
+
+AA_API void aa_test_isrotmat(const char *name, const double *R, double tol);
+
+/*
+ * Compare two rotation vectors up to angle interval [0,pi]
+ */
+AA_API void aa_test_rotvec_cmp_pi(const char *name, const double *a,
+                                  const double *b, double tol);
+
 #endif
