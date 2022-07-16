@@ -95,7 +95,7 @@ AA_API aa_rx_config_id aa_rx_sg_config_id(
     if(scene_graph->sg->config_map.count(config_name)){
         return scene_graph->sg->config_map[config_name];
     }
-    return -1;
+    return AA_RX_CONFIG_NONE;
 }
 
 AA_API aa_rx_frame_id aa_rx_sg_frame_id (
@@ -130,15 +130,14 @@ aa_rx_sg_config_name (
 {
     aa_rx_sg_ensure_clean_frames( scene_graph );
 
-    if(id < -2 || id >= (aa_rx_config_id) aa_rx_sg_frame_count( scene_graph )){
-        throw std::out_of_range("Out of range. Invalid config id: " +
-        std::to_string(id));
-    }
-
     switch(id) {
         case AA_RX_CONFIG_NONE: return "NONE";
         case AA_RX_CONFIG_MULTI: return "MULTI";
         default:
+            if (id < 0 ||
+                id >= (aa_rx_config_id)aa_rx_sg_frame_count(scene_graph)) {
+                return "NONE";
+            }
             return scene_graph->sg->config_rmap[(size_t)id];
     }
 }

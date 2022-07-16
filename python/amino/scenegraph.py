@@ -483,11 +483,11 @@ class SceneGraph:
             ValueError: config name is invalid.
         """
         if is_string(value):
-            if self.config_id(value) == -1:
+            if self.config_id(value) == CONFIG_NONE:
                 raise ValueError("Invalid config name: %s" % value)
             return self.config_id(value)
 
-        if value >= self.config_count or value < -2:
+        if value >= self.config_count or value < 0:
             raise IndexError("Invalid config id: %d" % value)
         return value
 
@@ -500,12 +500,12 @@ class SceneGraph:
         """
         if is_string(value):
             id = self.config_id(value)
-            if id == -1:
+            if id == CONFIG_NONE:
                 raise ValueError("Invalid config name: %s" % value)
             return value
 
-        if value >= self.config_count or value < -2:
-            raise IndexError("Invalid frame id: %d" % value)
+        if value >= self.config_count or value < 0:
+            raise IndexError("Invalid config id: %d" % value)
         return self.frame_name(value)
 
     def ensure_frame_id(self, value):
