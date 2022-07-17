@@ -388,6 +388,24 @@ AA_API int AA_NAME(la,lls)
   const AA_TYPE *b, size_t ldb,
   AA_TYPE *x, size_t ldx );
 
+/** QR Decomposition of A.
+ *
+ * \f[ A =  Q R \f]
+ *
+ * \param m rows
+ * \param n columns
+ * \param A \f$A \in \Re^m \times \Re^n\f$, column major
+ * \param lda leading dimension of A
+ * \param Q \f$Q \in \Re^m \times \Re^n\f$, column major
+ * \param ldq leading dimension of Q
+ * \param R \f$R \in \Re^m \times \Re^n\f$, column major
+ * \param ldq leading dimension of R
+ */
+AA_API int AA_NAME(la,qr)
+(size_t m, size_t n, const AA_TYPE *A, size_t lda,
+ AA_TYPE *Q, size_t ldq,
+ AA_TYPE *R, size_t ldr);
+
 
 /** Singular Value Decomposition of A.
  *
