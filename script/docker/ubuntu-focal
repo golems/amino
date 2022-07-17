@@ -1,6 +1,6 @@
 FROM ubuntu:focal
 
-ENV PKGS="build-essential gfortran f2c autoconf automake libtool autoconf-archive autotools-dev maxima libblas-dev liblapack-dev libsdl2-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-serialization-dev libboost-system-dev libboost-test-dev doxygen groff sbcl python3 flex povray ffmpeg coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev wget git cmake libccd-dev libompl-dev liboctomap-dev blender "
+ENV PKGS="build-essential gfortran f2c autoconf automake libtool autoconf-archive autotools-dev maxima libblas-dev liblapack-dev libsdl2-dev libboost-filesystem-dev libboost-program-options-dev libboost-python-dev libboost-serialization-dev libboost-system-dev libboost-test-dev doxygen groff sbcl python3 flex povray ffmpeg coinor-libclp-dev libglpk-dev liblpsolve55-dev libnlopt-dev wget git cmake libccd-dev libompl-dev liboctomap-dev blender valgrind"
 
 RUN DEBIAN_FRONTEND="noninteractive" \
     apt-get -y update && apt-get install -y -d $PKGS

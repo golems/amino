@@ -37,6 +37,9 @@ AS_IF([test "x$with_maxima" = xyes],
       [AC_CHECK_PROGS([MAXIMA], [maxima])])
 AM_CONDITIONAL([HAVE_MAXIMA], [test "x$MAXIMA" != x])
 
+# Used for testing
+AC_CHECK_PROGS([VALGRIND], [valgrind])
+AM_CONDITIONAL([HAVE_VALGRIND], [test "x$VALGRIND" != x])
 
 
 # Enable C++ 11

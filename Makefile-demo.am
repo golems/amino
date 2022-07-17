@@ -14,10 +14,6 @@ DEMO_CFLAGS =  $(SDL2_CFLAGS) $(GL_CFLAGS)
 
 PLANNING_LIBS = libamino-planning.la libamino-collision.la
 
-# call aarxc with paths set to look in the build and source trees
-AARXC_DEP = aarx.core $(top_srcdir)/share/aarxc
-AARXC = $(top_builddir)/aarxc
-
 ###############
 ## SIMPLE RX ##
 ###############

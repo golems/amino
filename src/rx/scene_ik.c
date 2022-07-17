@@ -110,6 +110,7 @@ aa_rx_ik_cx_destroy( struct aa_rx_ik_cx *cx )
     free(cx->q_start);
     free(cx->q_seed);
     free(cx->TF);
+    free(cx->frames);
     free(cx);
 }
 

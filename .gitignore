@@ -220,3 +220,8 @@ amino*.tar.gz
 /python/test/pylint.sh
 /eigen_compat
 /octomap_test
+/test_ik
+/src/test/rx/test_ik_mem.sh.log
+/src/test/rx/test_ik_mem.sh.trs
+/src/test/rx/7dof.c
+/src/test/rx/7dof.c.h

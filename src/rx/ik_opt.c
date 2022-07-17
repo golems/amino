@@ -93,6 +93,7 @@ aa_rx_ik_parm_destroy( struct aa_rx_ik_parm *opts)
 {
     if( opts->dq_dt_data ) free( opts->dq_dt_data );
     if( opts->q_ref_data ) free( opts->q_ref_data );
+    free(opts);
 }
 
 AA_DEF_SETTER( aa_rx_ik_parm, enum aa_rx_ik_algo, ik_algo )

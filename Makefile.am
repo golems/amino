@@ -20,6 +20,9 @@ ACLOCAL_AMFLAGS = -I m4
 
 AM_DISTCHECK_CONFIGURE_FLAGS=--without-lex --without-maxima
 
+# call aarxc with paths set to look in the build and source trees
+AARXC_DEP = aarx.core $(top_srcdir)/share/aarxc
+AARXC = $(top_builddir)/aarxc
 
 EXTRA_DIST += \
 	src/la_impl.c                       \
@@ -620,6 +623,47 @@ noinst_PROGRAMS += la_ctest
 la_ctest_SOURCES = src/test/la_ctest.c
 la_ctest_LDADD = libamino.la libtestutil.la
 
+if HAVE_COMMON_LISP
+
+noinst_LTLIBRARIES += libtestscenes.la
+libtestscenes_la_SOURCES =
+nodist_libtestscenes_la_SOURCES =
+
+src/test/rx/7dof.c.h src/test/rx/7dof.c: demo/tutorial/plugin/7dof/7dof.robray aarx.core
+	$(MKDIR_P) src/test/rx
+	$(AARXC) $(top_srcdir)/demo/tutorial/plugin/7dof/7dof.robray \
+		-n 7dof \
+		-o src/test/rx/7dof.c
+
+CLEAN_LOCAL_FILES += src/test/rx/7dof.c.h src/test/rx/7dof.c
+
+nodist_libtestscenes_la_SOURCES += src/test/rx/7dof.c
+
+# IK Test
+TESTS += test_ik
+noinst_PROGRAMS += test_ik
+test_ik_SOURCES = src/test/rx/test_ik.cpp
+test_ik_LDADD = libtestutil.la libtestscenes.la
+src/test/rx/test_ik-test_ik.$(OBJEXT):  src/test/rx/7dof.c.h
+
+
+if AMINO_GL
+test_ik_LDADD += libamino-gl.la $(SDL2_LIBS)
+test_ik_CFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS) $(AM_CFLAGS)
+test_ik_CXXFLAGS = $(SDL2_CFLAGS) $(GL_CFLAGS) $(AM_CXXFLAGS)
+endif
+
+test_ik_LDADD += libamino.la
+
+
+EXTRA_DIST += src/test/test-mem.sh
+EXTRA_DIST += src/test/rx/test_ik_mem.sh
+if HAVE_VALGRIND
+TESTS += src/test/rx/test_ik_mem.sh
+endif
+
+
+endif #HAVE_COMMON_LISP
 
 
 if HAVE_FCL

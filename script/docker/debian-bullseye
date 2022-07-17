@@ -23,6 +23,7 @@ RUN /root/amino/script/install/apt-retry.sh \
         wget git cmake libccd-dev \
         libompl-dev libfcl-dev liboctomap-dev \
         blender \
+        valgrind \
         ;
 
 RUN cd && /root/amino/script/install/install-quicklisp.sh
