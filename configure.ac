@@ -9,7 +9,7 @@ includedir=${includedir}/amino-$HEADER_VERSION
 AC_SUBST([includedir])
 AC_SUBST([HEADER_VERSION])
 
-AM_INIT_AUTOMAKE([subdir-objects])
+AM_INIT_AUTOMAKE([subdir-objects -Wall -Wno-portability])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CONFIG_SRCDIR([include/amino.h])
@@ -24,6 +24,7 @@ AC_PROG_CXX
 AC_PROG_FC
 AC_PROG_F77
 AM_PROG_CC_C_O
+AM_PROG_AR
 AC_PROG_LIBTOOL
 AM_PATH_LISPDIR
 
