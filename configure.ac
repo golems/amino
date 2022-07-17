@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ([2.65])
 
-AC_INIT([amino], [1.0-beta2], [ntd@rice.edu])
+AC_INIT([amino], [1.0-beta2], [ndantam@mines.edu])
 
 HEADER_VERSION=1.0
 includedir=${includedir}/amino-$HEADER_VERSION

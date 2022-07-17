@@ -43,3 +43,28 @@ DOCUMENTATION
 
 * [Manual](http://amino.golems.org), and `./doc/manual/`
 * Examples `./demos/`
+
+PUBLICATIONS
+============
+* N. T. Dantam (2021), [Robust and efficient forward, differential,
+  and inverse kinematics using dual
+  quaternions](https://doi.org/10.1177%2F0278364920931948), The
+  International Journal of Robotics Research, 40(10--11),
+  pp. 1087--1105.
+* N. T. Dantam (2020). [Practical Exponential Coordinates Using
+  Implicit Dual
+  Quaternions](http://dx.doi.org/10.1007/978-3-030-44051-0_37). In:
+  Morales, M., Tapia, L., Sánchez-Ante, G., Hutchinson, S. (eds)
+  Algorithmic Foundations of Robotics XIII. WAFR 2018. Springer
+  Proceedings in Advanced Robotics, vol 14. Springer, Cham.
+* Z. K. Kingston, N. T. Dantam and L. E. Kavraki, [Kinematically
+  constrained workspace control via linear
+  optimization](http://dx.doi.org/10.1109/HUMANOIDS.2015.7363455),
+  2015 IEEE-RAS 15th International Conference on Humanoid Robots
+  (Humanoids), 2015, pp. 758-764
+
+PRESENTATIONS
+=============
+
+* N. T. Dantam. [University of Washington Robotics
+  Colloquium](https://youtu.be/0zDaZ6JVQkk?t=31m01s). 2019.
