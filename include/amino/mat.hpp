@@ -372,7 +372,7 @@ public:
 
     DVec(struct aa_mem_region *reg, const ::std::initializer_list<double> x) {
         AA_DVEC_VIEW(this, x.size(), new(reg) double[x.size()], 1);
-        ::std::copy(x.begin(), x.end(), this->data());
+        ::std::copy(x.begin(), x.end(), this->data);
     }
 
     DVec(aa_dvec *v) : aa_dvec(*v) { }
@@ -461,21 +461,21 @@ public:
     }
 
     // Accessors
-    size_type   len()  const { return aa_dvec::len; }
     size_type   size()  const { return aa_dvec::len; }
-    double * data() const { return aa_dvec::data; }
-    size_type   inc()  const { return aa_dvec::inc; }
+    // size_type   len()  const { return aa_dvec::len; }
+    // double * data() const { return aa_dvec::data; }
+    // size_type   inc()  const { return aa_dvec::inc; }
 
     void eval( struct aa_dvec &target ) const {
         la::copy( this, &target );
     }
 
     const double &operator[](size_type i) const {
-        return data()[i*inc()];
+        return data[i*inc];
     }
 
     double &operator[](size_type i) {
-        return data()[i*inc()];
+        return data[i*inc];
     }
 
     template <typename E>
@@ -703,7 +703,7 @@ public:
 
         for( auto & col : y->col_container() )
         {
-            ::std::copy(it->begin(), it->end(), col.data());
+            ::std::copy(it->begin(), it->end(), col.data);
             it++;
         }
 
@@ -737,11 +737,10 @@ public:
 
 
     // Accessors
-
-    size_type rows() const { return aa_dmat::rows; }
-    size_type cols() const { return aa_dmat::cols; }
-    double * data() const { return aa_dmat::data; }
-    size_type ld()   const { return aa_dmat::ld; }
+    // size_type rows() const { return aa_dmat::rows; }
+    // size_type cols() const { return aa_dmat::cols; }
+    // double * data() const { return aa_dmat::data; }
+    // size_type ld()   const { return aa_dmat::ld; }
 
     static DVec row_vec(struct aa_dmat *A, size_type j) {
         aa_dvec v;

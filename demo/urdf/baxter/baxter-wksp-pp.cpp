@@ -86,7 +86,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
 
     DVec &q_subset = *DVec::alloc(reg,n_c);
     aa_rx_sg_config_get( scenegraph, m, n_c,
-                         aa_rx_sg_sub_configs(cx->ssg), cx->q.data(), q_subset.data() );
+                         aa_rx_sg_sub_configs(cx->ssg), cx->q.data, q_subset.data);
 
     struct aa_rx_fk *fk = cx->fk;
     aa_rx_fk_all(fk,&cx->q);
@@ -103,7 +103,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     dx_r = 0.0;
     {
         aa_rx_config_id id = aa_rx_sg_sub_frame_ee(cx->ssg) ;
-        double *E_act = DMat::col_vec(TF_abs,(size_t)id).data();
+        double *E_act = DMat::col_vec(TF_abs,(size_t)id).data;
 
         double z_pos = sin(t*2*M_PI) / (4*M_PI);
         double z_vel = cos( t*2*M_PI ) / 2; // derivative of position
@@ -168,7 +168,7 @@ int display( struct aa_rx_win *win, void *cx_, struct aa_sdl_display_params *par
     q_subset += dt*dq_subset;
     aa_rx_sg_config_set( scenegraph, m, n_c,
                          aa_rx_sg_sub_configs(cx->ssg),
-                         q_subset.data(), cx->q.data() );
+                         q_subset.data, cx->q.data);
 
     aa_sdl_display_params_set_update(params);
 
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
                     0 // w2
     };
     aa_rx_sg_config_set( scenegraph, n_q, 7,
-                         ids, q1, cx.q.data() );
+                         ids, q1, cx.q.data);
 
     // initial end-effector config
     {

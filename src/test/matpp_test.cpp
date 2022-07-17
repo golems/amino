@@ -79,9 +79,9 @@ static void s_scal()
 
     {
         B = A;
-        assert(2 == B.len());
-        assert(2 == A.len());
-        aveq( "DVec =", B.len(), B.data(), A.data(), 0);
+        assert(2 == B.len);
+        assert(2 == A.len);
+        aveq( "DVec =", B.len, B.data, A.data, 0);
 
 
     }
@@ -93,46 +93,46 @@ static void s_scal()
         double A4[2] = {4, 8};
 
         B = A;
-        aveq( "Dec = ", B.len(), B.data(), A.data(), 0);
+        aveq( "Dec = ", B.len, B.data, A.data, 0);
         B *= 2;
-        aveq( "Dec *= double", B.len(), B.data(), A2, 0);
+        aveq( "Dec *= double", B.len, B.data, A2, 0);
 
         B = 2*A;
-        aveq( "Dec = dscal 0", B.len(), B.data(), A2, 0);
+        aveq( "Dec = dscal 0", B.len, B.data, A2, 0);
 
         B = (2*A)*2;
-        aveq( "Dec = dscal 1", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 1", B.len, B.data, A4, 0);
 
         B = 2*(A*2);
-        aveq( "DVec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "DVec = dscal 2", B.len, B.data, A4, 0);
 
         B = 2*(A+A);
-        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 2", B.len, B.data, A4, 0);
 
         B = (A+A)*2;
-        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 2", B.len, B.data, A4, 0);
 
         B = 2*(A+A);
-        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 2", B.len, B.data, A4, 0);
 
         B = 2*A+(A+A);
-        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 2", B.len, B.data, A4, 0);
 
         B = (A+A)+2*A;
-        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 2", B.len, B.data, A4, 0);
 
         B = A+2*A+A;
-        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 2", B.len, B.data, A4, 0);
 
         B = A*2 + 2*A;
-        aveq( "Dec = dscal 2", B.len(), B.data(), A4, 0);
+        aveq( "Dec = dscal 2", B.len, B.data, A4, 0);
 
         {
             struct aa_dvec Avv;
-            aa_dvec_view(&Avv, 2,A.data(),1);
+            aa_dvec_view(&Avv, 2,A.data,1);
 
             B = 2*Avv;
-            aveq( "Dec *= double", B.len(), B.data(), A2, 0);
+            aveq( "Dec *= double", B.len, B.data, A2, 0);
 
             //*Bv += 2*Avv;
             //aveq( "DVec = dscal 2", Bv->len, Bv->data, A4, 0);
@@ -152,23 +152,23 @@ static void s_axpy()
     {
         double R[] = {2,4};
         B = A + A;
-        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
+        aveq( "DVec  axpy", B.len, B.data, R, 0);
     }
 
     {
         double R[] = {3,6};
         B = (A + A) + A;
-        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
+        aveq( "DVec  axpy", B.len, B.data, R, 0);
 
         B = A + (A + A);
-        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
+        aveq( "DVec  axpy", B.len, B.data, R, 0);
 
 
         B = 2*A + A;
-        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
+        aveq( "DVec  axpy", B.len, B.data, R, 0);
 
         B = A + 2*A;
-        aveq( "DVec  axpy", B.len(), B.data(), R, 0);
+        aveq( "DVec  axpy", B.len, B.data, R, 0);
     }
 
 }
@@ -579,8 +579,8 @@ static void s_block()
     {
         RegionScope rs;
         DMat &A = *DMat::col_mat(rs, {{1,2,3}, {4,5,6}});
-        assert(3 == A.rows());
-        assert(2 == A.cols());
+        assert(3 == A.rows);
+        assert(2 == A.cols);
         afeq( 1, A(0,0), 0);
         afeq( 2, A(1,0), 0);
         afeq( 3, A(2,0), 0);
@@ -595,8 +595,8 @@ static void s_block()
         admeq("block", At, Ar, 0);
 
         DMat &B = *DMat::row_mat(rs, {{1,4}, {2,5}, {3,6}});
-        assert(3 == B.rows());
-        assert(2 == B.cols());
+        assert(3 == B.rows);
+        assert(2 == B.cols);
 
         afeq( 1, B(0,0), 0);
         afeq( 2, B(1,0), 0);
