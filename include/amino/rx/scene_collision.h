@@ -216,25 +216,30 @@ aa_rx_sg_get_collision(const struct aa_rx_sg* scene_graph, size_t n_q, const dou
  */
 struct aa_rx_cl_dist;
 
-
+/** Create a collision distance context */
 AA_API struct aa_rx_cl_dist *
 aa_rx_cl_dist_create( const struct aa_rx_cl * );
 
+/** Destroy a collision distance context */
 AA_API void
 aa_rx_cl_dist_destroy( struct aa_rx_cl_dist* dist );
 
+/** Run a collision distance check. */
 AA_API int
 aa_rx_cl_dist_check( struct aa_rx_cl_dist *cl_dist,
                      const struct aa_rx_fk *fk );
 
+/** Get the minimum separation distance */
 AA_API double
 aa_rx_cl_dist_get_min_dist(const struct aa_rx_cl_dist *cl_dist,
                            aa_rx_frame_id id0, aa_rx_frame_id *id1, double* points);
 
+/** Get the separation distance between specified frames. */
 AA_API double
 aa_rx_cl_dist_get_dist( const struct aa_rx_cl_dist *cl_dist,
                         aa_rx_frame_id id0, aa_rx_frame_id id1 );
 
+/** Get the closest points between specified frames. */
 AA_API double
 aa_rx_cl_dist_get_points( const struct aa_rx_cl_dist *cl_dist,
                           aa_rx_frame_id id0, aa_rx_frame_id id1,

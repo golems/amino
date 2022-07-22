@@ -50,7 +50,7 @@
 
 
 /**
- * @dir   amino
+ * @dir   include/amino
  * @brief Amino include files
  */
 
@@ -104,8 +104,10 @@
 
 
 #if __has_attribute(__fallthrough__)
+/// Explicit fallthrough of switch cases
 #define AA_FALLTHROUGH __attribute__((__fallthrough__))
 #else
+/// Explicit fallthrough of switch cases
 #define AA_FALLTHROUGH do {} while (0)  /* fallthrough */
 #endif
 

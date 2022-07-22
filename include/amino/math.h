@@ -233,8 +233,6 @@ AA_API double aa_stat_std( size_t n, const double *x);
  *  \param[out] psigma standard deviation
  *  \param zmin exclude all outliers below zmin standard deviations
  *  \param zmax exclude all outliers above zmax standard deviations
- *  \param zmin exclude all outliers below zmin standard deviations
- *  \param zmax exclude all outliers above zmax standard deviations
  *  \param max_iterations maximum number of iterations
  */
 AA_API size_t aa_stat_excluded_mean_std( size_t n, const double *x,
@@ -920,6 +918,11 @@ AA_API void aa_odestep_euler( size_t n, double dt,
                               double *AA_RESTRICT x1 );
 
 
+/** Euler / Runge-Kutta-1 integration.
+ *
+ * \f[ x_1 \leftarrow dt*dx + x_0 \f]
+ *
+ */
 AA_API void aa_odestep_rk1( size_t n, aa_sys_fun sys, const void *cx,
                             double t0, double dt,
                             const double *AA_RESTRICT x0, double *AA_RESTRICT x1 );

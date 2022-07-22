@@ -58,6 +58,7 @@
 /* You're probably on a horrible MacOSX machine.  Get some real POSIX
  * support already! */
 
+/** Set the clock to something if we don't have CLOCK_MONOTONIC */
 #define AA_CLOCK 0
 
 #endif

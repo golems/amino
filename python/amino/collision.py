@@ -39,6 +39,7 @@ from amino.tf import Vec3
 from amino.scenegraph import RxSg
 from amino.kinematics import SceneFK, RxFK
 
+## Amino Collision library
 LIBAMINOCL = ctypes.CDLL("libamino-collision.so")
 
 

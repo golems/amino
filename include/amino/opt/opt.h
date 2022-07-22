@@ -61,6 +61,9 @@ enum aa_opt_rel_type {
 
 
 
+/**
+ * Available lp solver backends.
+ */
 enum aa_opt_lp_solver {
     AA_OPT_LP_SOLVER_DEFAULT,  ///< A sane default
     AA_OPT_LP_SOLVER_LPSOLVE,  ///< LPSolve

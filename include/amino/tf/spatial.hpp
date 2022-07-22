@@ -228,11 +228,17 @@ struct Quat : aa_tf_quat {
      */
     Quat(const ZAngle &p) : aa_tf_quat(from_zangle(p.value)) {}
 
+    /**
+     * Rotate a vector by this quaternion
+     */
     void rotate(const aa_tf_vec3 *p, aa_tf_vec3 *q) const
     {
         aa_tf_qrot(this->data, p->data, q->data);
     }
 
+    /**
+     * Rotate a vector by this quaternion
+     */
     aa_tf_vec3 rotate(const aa_tf_vec3 &p) const
     {
         aa_tf_vec3 q;
@@ -976,16 +982,25 @@ struct QuatTran : aa_tf_qv {
         return qv;
     }
 
+    /**
+     * Transform a vector.
+     */
     void transform(const double a[3], double b[3]) const
     {
         aa_tf_qutr_tf(this->data, a, b);
     }
 
+    /**
+     * Transform a vector.
+     */
     void transform(const aa_tf_vec3 *a, aa_tf_vec3 *b) const
     {
         this->transform(a->data, b->data);
     }
 
+    /**
+     * Transform a vector.
+     */
     aa_tf_vec3 transform(const aa_tf_vec3 &a) const
     {
         aa_tf_vec3 b;
@@ -1084,16 +1099,25 @@ struct TfMat : aa_tf_tfmat {
         return T;
     }
 
+    /**
+     * Transform a vector.
+     */
     void transform(const double a[3], double b[3]) const
     {
         aa_tf_tfmat_tf(this->data, a, b);
     }
 
+    /**
+     * Transform a vector.
+     */
     void transform(const aa_tf_vec3 *a, aa_tf_vec3 *b) const
     {
         this->transform(a->data, b->data);
     }
 
+    /**
+     * Transform a vector.
+     */
     aa_tf_vec3 transform(const aa_tf_vec3 &a) const
     {
         aa_tf_vec3 b;

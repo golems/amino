@@ -40,6 +40,7 @@
 
 namespace amino {
 
+/** Convert an amino quaternion to an Eigen quaternion */
 template <typename T>
 void conv(const aa_tf_quat *src, ::Eigen::Quaternion<T> *dst)
 {
@@ -49,6 +50,7 @@ void conv(const aa_tf_quat *src, ::Eigen::Quaternion<T> *dst)
     dst->w() = src->w;
 }
 
+/** Convert an amino vector to an Eigen translation */
 template <typename T>
 void conv(const aa_tf_vec3 *src, ::Eigen::Translation<T, 3> *dst)
 {
@@ -57,6 +59,7 @@ void conv(const aa_tf_vec3 *src, ::Eigen::Translation<T, 3> *dst)
     dst->z() = src->z;
 }
 
+/** Convert an amino vector to an Eigen column vector */
 template <typename T>
 void conv(const aa_tf_vec3 *src, ::Eigen::Matrix<T, 3, 1> *dst)
 {
@@ -65,6 +68,7 @@ void conv(const aa_tf_vec3 *src, ::Eigen::Matrix<T, 3, 1> *dst)
     dst->z() = src->z;
 }
 
+/** Convert an amino rotation matrix to an Eigen matrix */
 template <typename T>
 void conv(const aa_tf_rotmat *src, ::Eigen::Matrix<T, 3, 3> *dst)
 {
@@ -75,6 +79,7 @@ void conv(const aa_tf_rotmat *src, ::Eigen::Matrix<T, 3, 3> *dst)
     }
 }
 
+/** Convert an amino transformation matrix to an Eigen Isometry */
 template <typename T>
 void conv(const aa_tf_tfmat *src,
           ::Eigen::Transform<T, 3, ::Eigen::Isometry> *dst)
@@ -86,6 +91,7 @@ void conv(const aa_tf_tfmat *src,
     }
 }
 
+/** Convert an amino transformation matrix to an Eigen Affine */
 template <typename T>
 void conv(const aa_tf_tfmat *src,
           ::Eigen::Transform<T, 3, ::Eigen::Affine> *dst)
@@ -97,6 +103,7 @@ void conv(const aa_tf_tfmat *src,
     }
 }
 
+/** Convert an amino quaternion-translation to an Eigen Affine */
 template <typename T>
 void conv(const aa_tf_qv *src, ::Eigen::Transform<T, 3, ::Eigen::Affine> *dst)
 {
@@ -105,6 +112,7 @@ void conv(const aa_tf_qv *src, ::Eigen::Transform<T, 3, ::Eigen::Affine> *dst)
     ::amino::conv(&tmp, dst);
 }
 
+/** Convert an amino quaternion-translation to an Eigen Isometry */
 template <typename T>
 void conv(const aa_tf_qv *src, ::Eigen::Transform<T, 3, ::Eigen::Isometry> *dst)
 {

@@ -102,6 +102,7 @@ static inline void aa_free_if_valid( void *ptr ) {
  * a power of 2.  Evaluates arguments multiple times. */
 #define AA_ALIGN2( val, align ) (((val) + (align) - 1) & ~(align-1))
 
+/** Free ptr if non-NULL */
 static inline void aa_checked_free( void * ptr )
 {
     if( ptr ) free(ptr);
@@ -576,6 +577,7 @@ static inline void *aa_mem_dup( const void *src, size_t size )
  */
 #define AA_MEM_ZERO(dst, n_elem)  (memset((dst),0,(n_elem)*sizeof(*(dst))))
 
+/** Helper for AA_FAR to warn deprecation.  */
 AA_DEPRECATED static inline double *
 aa_far_deprecated(double *x) { return x; }
 
@@ -768,12 +770,12 @@ static inline void aa_memswap( void *AA_RESTRICT a, void *AA_RESTRICT b, size_t 
  * @param max Maximum number of elements ptr can hold.  May be
  * evaluated multiple times.
  *
- * @param fill Number of elements to store in vector. May be evaluated
+ * @param size Number of elements in the vector. May be evaluated
  * multiple times.
  *
  * @param ptr Base pointer of the vector.  May be evaluated multiple times.
  *
- * @param value Value to append
+ * @param value The value to append
  */
 #define AA_VECTOR_PUSH( max, size, ptr, value )                 \
     if( (size) >= (max) ) {                                     \

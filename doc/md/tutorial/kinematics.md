@@ -1200,7 +1200,7 @@ Example Code
 @include python/t4.3-ik.py
 
 
-See Also {#tutorial_scene_sa}
+See Also {#tutorial_kin_sa}
 ========
 
 ## Python

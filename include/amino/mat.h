@@ -52,6 +52,9 @@
  *
  */
 
+/**
+ * Type for sizes of vectors and matrices.
+ */
 typedef size_t aa_la_size;
 
 /**
@@ -74,6 +77,11 @@ struct aa_dmat {
 };
 
 
+/** Return an element of a dvec.
+ *
+ * @param v an aa_dvec
+ * @param i the index of the element in v to return
+ */
 #define AA_DVEC_REF(v,i) ((v)->data[(i) * (v)->inc])
 
 /**
@@ -86,13 +94,21 @@ struct aa_dmat {
 #define AA_DMAT_REF(M,i,j) (((M)->data)[(M)->ld*(j) + (i)])
 
 
-
+/**
+ * Callback type for linear algebra errors.
+ */
 typedef void
 (aa_la_err_fun)( const char *message );
 
+/**
+ * Default handler function for linear algebra errors.
+ */
 AA_API void
 aa_la_err( const char *message );
 
+/**
+ * Set the handler function for linear algebra errors.
+ */
 AA_API void
 aa_la_set_err( aa_la_err_fun *fun );
 
@@ -243,7 +259,9 @@ AA_DMAT_VIEW(struct aa_dmat *mat, aa_la_size rows, aa_la_size cols, double *data
     *mat = AA_DMAT_INIT(rows,cols,data,ld);
 }
 
-
+/**
+ * Set VEC to a descriptor for the diagonal vector of MAT.
+ */
 #define AA_MAT_DIAG(VEC,MAT)                                    \
     aa_dvec_view((VEC), (MAT)->cols, (MAT)->data, 1+(MAT)->ld);
 
@@ -438,7 +456,7 @@ aa_dmat_gemm( AA_CBLAS_TRANSPOSE transA, AA_CBLAS_TRANSPOSE transB,
  * Copies all or part of a two-dimensional matrix A to another
  * matrix B.
  *
- *  @param[in] UPLO
+ *  @param[in] uplo
  *          Specifies the part of the matrix A to be copied to B.
  *          - = 'U':      Upper triangular part
  *          - = 'L':      Lower triangular part

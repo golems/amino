@@ -47,30 +47,37 @@
 
 /** OK */
 #define AA_RX_OK 0
+/** Synonym for AA_RX_OK */
 AA_EXTERN const int aa_rx_ok;
 
 /** No Solution */
 #define AA_RX_NO_SOLUTION  (1<<0)
+/** Synonym for AA_RX_NO_SOLUTION */
 AA_EXTERN const int aa_rx_no_solution;
 
 /** No Inverse Kinematics Solution */
 #define AA_RX_NO_IK  (1<<1)
+/** Synonym for AA_RX_NO_IK */
 AA_EXTERN const int aa_rx_no_ik;
 
 /** No Motion Plan */
 #define AA_RX_NO_MP  (1<<2)
+/** Synonym for AA_RX_NO_MP */
 AA_EXTERN const int aa_rx_no_mp;
 
 /** Invalid frame */
 #define AA_RX_INVALID_FRAME  (1<<3)
+/** Synonym for AA_RX_INVALID_FRAME */
 AA_EXTERN const int aa_rx_invalid_frame;
 
 /** Invalid Parameter */
 #define AA_RX_INVALID_PARAMETER  (1<<4)
+/** Synonym for AA_RX_INVALID_PARAMETER */
 AA_EXTERN const int aa_rx_invalid_parameter;
 
-/** Invalid Parameter */
+/** Invalid State */
 #define AA_RX_INVALID_STATE  (1<<5)
+/** Synonym for AA_RX_INVALID_STATE */
 AA_EXTERN const int aa_rx_invalid_state;
 
 AA_API char *aa_rx_errstr( struct aa_mem_region *reg,

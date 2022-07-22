@@ -1045,13 +1045,32 @@ AA_API void aa_tf_qsdiff( const double q0[AA_RESTRICT 4],
                           double dt,
                           double q1[AA_RESTRICT 4] );
 
-
+/** Runge-kutta integration of unit quaternion from velocity and acceleration.
+ *
+ * This is a test function.
+ *
+ * @param q0 Initial rotation quaternion
+ * @param v angular velocity
+ * @param a angular acceleration
+ * @param dt Time step
+ * @param q1 Final rotation quaternion
+ *
+ * @sa aa_tf_qsacc
+ */
 AA_API void aa_tf_qsacc_rk( const double q0[AA_RESTRICT 4],
                             const double v[AA_RESTRICT 3],
                             const double a[AA_RESTRICT 3],
                             double dt,
                             double q1[AA_RESTRICT 4] );
 
+/** Integrate unit quaternion from velocity and acceleration.
+ *
+ * @param q0 Initial rotation quaternion
+ * @param v angular velocity
+ * @param a angular acceleration
+ * @param dt Time step
+ * @param q1 Final rotation quaternion
+ **/
 AA_API void aa_tf_qsacc( const double q0[AA_RESTRICT 4],
                          const double v[AA_RESTRICT 3],
                          const double a[AA_RESTRICT 3],
@@ -1657,9 +1676,9 @@ AA_API void aa_tf_duqu_sdiff( const double d0[AA_RESTRICT 8], const double dd[AA
  *   \mathbf{J}_S \dot{\phi}
  * \f]
  *
- * @param The pose as a dual quaternion
- * @param The velocity Jacobian
- * @param The dual quaternion derivative Jacobian
+ * @param S The pose as a dual quaternion
+ * @param Jvel The velocity Jacobian
+ * @param Js The dual quaternion derivative Jacobian
  */
 AA_API void
 aa_tf_duqu_jac_vel2diff(const double S[8], const struct aa_dmat *Jvel,
@@ -1712,29 +1731,36 @@ aa_tf_pure2duqu( const double v[AA_RESTRICT 6],
  *  - Distal: Murray, Li, & Sastry
  */
 
-
+/** Convert proximal DH parameters to transformation matrix */
 AA_API void
 aa_tf_dhprox2tfmat( double alpha, double a, double d, double phi,
                     double T[AA_RESTRICT 12]);
+/** Convert proximal DH parameters to dual quaternion */
 AA_API void
 aa_tf_dhprox2duqu( double alpha, double a, double d, double phi,
                    double S[AA_RESTRICT 8]);
+/** Convert proximal DH parameters to quaternion-translation */
 AA_API void
 aa_tf_dhprox2qutr( double alpha, double a, double d, double phi,
                    double E[AA_RESTRICT 7]);
+/** Convert proximal DH parameters to quaternion-translation */
 AA_API void
 aa_tf_dhprox2qv( double alpha, double a, double d, double phi,
                  double q[AA_RESTRICT 4], double v[3]);
 
+/** Convert distal DH parameters to transformation matrix */
 AA_API void
 aa_tf_dhdist2tfmat( double alpha, double a, double d, double phi,
                     double T[AA_RESTRICT 12]);
+/** Convert distal DH parameters to dual quaternion */
 AA_API void
 aa_tf_dhdist2duqu( double alpha, double a, double d, double phi,
                    double S[AA_RESTRICT 8]);
+/** Convert distal DH parameters to quaternion-translation */
 AA_API void
 aa_tf_dhdist2qutr( double alpha, double a, double d, double phi,
                    double E[AA_RESTRICT 7]);
+/** Convert distal DH parameters to quaternion-translation */
 AA_API void
 aa_tf_dhdist2qv( double alpha, double a, double d, double phi,
                  double q[AA_RESTRICT 4], double v[3]);

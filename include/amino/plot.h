@@ -60,6 +60,7 @@ typedef struct aa_plot_opts {
  * \param m rows in Y
  * \param n columns in Y, length of t
  * \param t \f$ t \in \Re^n \f$ vector of times for x-axis
+ * \param inct increment of t
  * \param Y \f$ Y \in \Re^m\times\Re^n \f$ Matrix of y-axis values.
  *  Each column is a data point, rows are the indepedent series.
  * \param opts plot options

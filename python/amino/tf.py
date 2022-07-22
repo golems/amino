@@ -1203,10 +1203,12 @@ class TfVec(ctypes.Structure):
 
     @translational.setter
     def translational(self, x):
+        """Set the translational part from x"""
         self.trans.copy_from(x)
 
     @rotational.setter
     def rotational(self, x):
+        """Set the rotational part from x"""
         self.rot.copy_from(x)
 
     def copy_from(self, src):

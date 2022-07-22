@@ -36,10 +36,17 @@
 import ctypes
 from amino.lib import libamino
 
+## Status code for OK
 AA_RX_OK = ctypes.c_int.in_dll(libamino, "aa_rx_ok").value
+## Status code for No Solution
 AA_RX_NO_SOLUTION = ctypes.c_int.in_dll(libamino, "aa_rx_no_solution").value
+## Status code for No Inverse Kinematics Solution
 AA_RX_NO_IK = ctypes.c_int.in_dll(libamino, "aa_rx_no_ik").value
+## Status code for No Motion Plan
 AA_RX_NO_MP = ctypes.c_int.in_dll(libamino, "aa_rx_no_mp").value
+## Status code for Invalid frame
 AA_RX_INVALID_FRAME = ctypes.c_int.in_dll(libamino, "aa_rx_invalid_frame").value
+## Status code for Invalid Parameter
 AA_RX_INVALID_PARAMETER = ctypes.c_int.in_dll(libamino, "aa_rx_invalid_parameter").value
+## Status code for Invalid State
 AA_RX_INVALID_STATE = ctypes.c_int.in_dll(libamino, "aa_rx_invalid_state").value

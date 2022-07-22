@@ -464,6 +464,7 @@ struct qutr {
    double translation[3];
 };
 ~~~
+
 =======
 We can chain the transforms from a to b and from b to c, giving a
 single transform from a to consider.  Consider transforming a point in

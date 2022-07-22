@@ -30,7 +30,7 @@
 #   SUCH DAMAGE.
 
 ##
-## @file motion-planning.py Motion Planning
+## @file motionplanning.py Motion Planning
 ##
 """Motion Planning"""
 

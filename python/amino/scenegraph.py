@@ -41,9 +41,16 @@ from amino.tf import Vec3, Quat, QuatTrans
 from amino.mat import DVec, DMat
 from amino.util import ensure_cstring, is_string
 
+## Constant for the root frame id
 FRAME_ROOT = ctypes.c_long.in_dll(libamino, "aa_rx_frame_root").value
+
+## Constant for the no / invalid frame id
 FRAME_NONE = ctypes.c_long.in_dll(libamino, "aa_rx_frame_none").value
+
+## Constant for the no / invalid config id
 CONFIG_NONE = ctypes.c_long.in_dll(libamino, "aa_rx_config_none").value
+
+## Constant id for multiple configuraiton variables
 CONFIG_MULTI = ctypes.c_long.in_dll(libamino, "aa_rx_config_multi").value
 
 

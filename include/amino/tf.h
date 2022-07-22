@@ -52,6 +52,12 @@
  * @file tf.h
  *
  * Include this file for low-level operations for SE(3) orientations and transformations.
+ *
+ * @sa tf/type.h
+ * @sa tf/planar.h
+ * @sa tf/spatial.h
+ * @sa tf/planar.hpp
+ * @sa tf/spatial.hpp
  */
 
 #include <float.h>

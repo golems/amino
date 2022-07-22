@@ -279,15 +279,15 @@ Grammar {#scenefile_grammar}
 Terminals {#scenefile_terminals}
 ---------
 
-| Description           | Terminal Symbol | Examples            | Regular Expression |
-|-----------------------|-----------------|---------------------|--------------------|
-| Identifier            |            <ID> | foo, foo_bar, bif42 | [a-zA-Z][a-zA-Z0-9_\\-] |
-| Integer               |           <INT> | 1, 42               |-?[0-9]+ |
-| Floating Point Number |         <FLOAT> | 3.14159, 1e-2       | -?[0-9]+((\\\.[0-9]*)?([eds]-?[0-9]+)? |
-| Binary Operator       |         <BINOP> | +, -, \*, /         | [\\+\\-\\*/] |
-| String                |        <STRING> | "Hello World!"      | \\"[^\"]*\\" |
-| Line Comment          |  <LINE_COMMENT> |  // foo, # foo      | (#\|//).*$ |
-| Block Comment         | <BLOCK_COMMENT> | /* foo */           | /\\*.*\\*/ |
+| Description           | Terminal Symbol       | Examples            | Regular Expression                     |
+|-----------------------|-----------------------|---------------------|----------------------------------------|
+| Identifier            | &lt;ID&gt;            | foo, foo_bar, bif42 | [a-zA-Z][a-zA-Z0-9_\\-]                |
+| Integer               | &lt;INT&gt;           | 1, 42               | -?[0-9]+                               |
+| Floating Point Number | &lt;FLOAT&gt;         | 3.14159, 1e-2       | -?[0-9]+((\\\.[0-9]*)?([eds]-?[0-9]+)? |
+| Binary Operator       | &lt;BINOP&gt;         | +, -, \*, /         | [\\+\\-\\*/]                           |
+| String                | &lt;STRING&gt;        | "Hello World!"      | \\"[^\"]*\\"                           |
+| Line Comment          | &lt;LINE_COMMENT&gt;  | // foo, # foo       | (#\|//).*$                             |
+| Block Comment         | &lt;BLOCK_COMMENT&gt; | /* foo */           | /\\*.*\\*/                             |
 
 Editor Support {#scenefile_editor}
 --------------

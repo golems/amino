@@ -824,6 +824,7 @@ clean-local: $(CLEAN_LOCAL)
                 org.golems.amino.jar        \
                 org_golems_amino_Lib.h      \
                 org/golems/amino/Lib.class  \
+                doc/md/acknowledgments.md   \
                 doc/md/copying.md
 
 distclean-local:
@@ -932,7 +933,7 @@ if HAVE_DOXYGEN
 
 
 
-doxygen: doc/md/copying.md doc/md/mainpage.md lisp-rx.md lisp-amino.md
+doxygen: doc/md/copying.md doc/md/acknowledgements.md  doc/md/mainpage.md lisp-rx.md lisp-amino.md
 	$(DOXYGEN)
 
 doc/manual: doxygen
