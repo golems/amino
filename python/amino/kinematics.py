@@ -188,8 +188,8 @@ class SceneDK:
     @ref_config_all.setter
     def ref_config_all(self, value):
         """Reference configuration."""
-        sg = self.ssg.scenegraph
-        self._config_ref = sg.copy_config(value)
+        scenegraph = self.ssg.scenegraph
+        self._config_ref = scenegraph.copy_config(value)
 
     def solve_vel(self, dq=None):
         """Solve for velocity.

@@ -63,12 +63,12 @@ class DVec(ctypes.Structure, VecMixin):
         If arg is an int -- Create a DVec of that size
         """
         if arg is None:
-            super(DVec, self).__init__(0, None, 0)
+            super().__init__(0, None, 0)
         elif is_int(arg):
-            super(DVec, self).__init__(arg, DVec._alloc(arg), 1)
+            super().__init__(arg, DVec._alloc(arg), 1)
         else:
-            s = len(arg)
-            super(DVec, self).__init__(s, DVec._alloc(s), 1)
+            n = len(arg)
+            super().__init__(n, DVec._alloc(n), 1)
             self.copy_from(arg)
 
     @staticmethod
@@ -82,24 +82,22 @@ class DVec(ctypes.Structure, VecMixin):
 
     def copy_from(self, src):
         """Copies the contents of thing into self"""
-        ls = len(self)
-        if ls != len(src):
+        if len(self) != len(src):
             raise IndexError()
-        elif isinstance(src, DVec):
+        if isinstance(src, DVec):
             libamino.aa_dvec_copy(src, self)
         else:
-            super(DVec, self).copy_from(src)
+            super().copy_from(src)
         return src
 
     def copy_to(self, dst):
         """Copies self to thing."""
-        ls = len(self)
-        if ls != len(dst):
+        if len(self) != len(dst):
             raise IndexError()
-        elif isinstance(dst, DVec):
+        if isinstance(dst, DVec):
             libamino.aa_dvec_copy(self, dst)
         else:
-            super(DVec, self).copy_to(dst)
+            super().copy_to(dst)
         return dst
 
     def axpy(self, alpha, x):
@@ -156,17 +154,15 @@ class DVec(ctypes.Structure, VecMixin):
             x = DVec()
             libamino.aa_dvec_slice(self, start, stop, step, x)
             return x
-        elif key >= 0 and key < len(self):
-            return self._data[key * self._inc]
-        else:
+        if key < 0 or key >= len(self):
             raise IndexError(key)
+        return self._data[key * self._inc]
 
     def __setitem__(self, key, item):
         """Set an item of self"""
-        if key >= 0 and key < len(self):
-            self._data[key * self._inc] = item
-        else:
+        if key < 0 or key >= len(self):
             raise IndexError(key)
+        self._data[key * self._inc] = item
 
     def __len__(self):
         """Number of elements in self"""
@@ -249,16 +245,16 @@ class DVec(ctypes.Structure, VecMixin):
         return DVec(self).__itruediv__(other)
 
     def __str__(self):
-        s = "DVec(["
+        string = "DVec(["
         i = 0
         n = len(self)
         while i < n - 1:
-            s += "%f, " % self._data[self._inc * i]
+            string += "%f, " % self._data[self._inc * i]
             i = i + 1
         if i < n:
-            s += "%f" % self._data[self._inc * i]
-        s += "])"
-        return s
+            string += "%f" % self._data[self._inc * i]
+        string += "])"
+        return string
 
 
 class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin, MatMixin):
@@ -274,23 +270,23 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin, MatMixin):
     def __init__(self, arg=None):
         """Constructs a matrix."""
         if arg is None:
-            super(DMat, self).__init__(0, 0, None, 0)
+            super().__init__(0, 0, None, 0)
         elif isinstance(arg, tuple):
             rows, cols = arg
             data = DMat._alloc(rows, cols)
-            super(DMat, self).__init__(rows, cols, data, rows)
+            super().__init__(rows, cols, data, rows)
         elif isinstance(arg, DMat):
             rows = arg.rows
             cols = arg.cols
             data = DMat._alloc(arg.rows, arg.cols)
-            super(DMat, self).__init__(rows, cols, data, rows)
+            super().__init__(rows, cols, data, rows)
             self.copy_from(arg)
         else:
             raise Exception('Invalid argument')
 
     def copy_from(self, src):
         """Copies elements from src into self"""
-        if self._rows != src._rows or self._cols != src._cols:
+        if self.rows != src.rows or self.cols != src.cols:
             raise IndexError()
         if isinstance(src, DMat):
             libamino.aa_dmat_copy(src, self)
@@ -431,9 +427,8 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin, MatMixin):
             M = DMat()
             libamino.aa_dmat_block(self, i.start, j.start, i.stop, j.stop, M)
             return M
-        else:
-            self._check_index(i, j)
-            return self._data[i + j * self._ld]
+        self._check_index(i, j)
+        return self._data[i + j * self._ld]
 
     def __setitem__(self, key, item):
         i, j = key
@@ -441,11 +436,10 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin, MatMixin):
         self._data[i + j * self._ld] = item
 
     def __imul__(self, other):
-        if is_scalar(other):
-            libamino.aa_dmat_scal(self, other)
-            return self
-        else:
-            raise TypeError('Cannot cale matrix with %s' % type(other))
+        if not is_scalar(other):
+            raise TypeError('Cannot scale matrix with %s' % type(other))
+        libamino.aa_dmat_scal(self, other)
+        return self
 
     def __neg__(self):
         """Negate self"""
@@ -454,18 +448,17 @@ class DMat(ctypes.Structure, SSDEqMixin, DivCompatMixin, MatMixin):
     def __mul__(self, other):
         if is_scalar(other):
             return DMat(self).__imul__(other)
-        elif isinstance(other, DVec):
+        if isinstance(other, DVec):
             y = DVec(self._rows)
             y.gemv(CBLAS_NO_TRANS, 1, self, other, 0)
             return y
-        elif isinstance(other, list):
+        if isinstance(other, list):
             return self * DVec(other)
-        elif isinstance(other, DMat):
+        if isinstance(other, DMat):
             A, B = self, other
             C = DMat((A._rows, B._cols))
             return C.gemm(CBLAS_NO_TRANS, CBLAS_NO_TRANS, 1, A, B, 1)
-        else:
-            raise TypeError('Cannot multiply matrix with %s' % type(other))
+        raise TypeError('Cannot multiply matrix with %s' % type(other))
 
     def __rmul__(self, other):
         if is_scalar(other):

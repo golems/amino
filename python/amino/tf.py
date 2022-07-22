@@ -50,13 +50,13 @@ class Vec3(ctypes.Structure, VecMixin):
     def __init__(self, arg=None):
         """Constructs a Vec3 object
 
-        * If arg is None, the object is unitialized.
+        * If arg is None, the object is a zero vector.
         * If arg is a list, the list elements are copied to the object.
         """
         if arg is None:
-            super(Vec3, self).__init__(0, 0, 0)
+            super().__init__(0, 0, 0)
         elif len(arg) == 3:
-            super(Vec3, self).__init__(arg[0], arg[1], arg[2])
+            super().__init__(arg[0], arg[1], arg[2])
         else:
             raise IndexError()
 
@@ -297,11 +297,11 @@ class EulerZYX(ctypes.Structure):
 
     def __init__(self, arg=None):
         if arg is None:
-            super(EulerZYX, self).__init__(0, 0, 0)
+            super().__init__(0, 0, 0)
         elif isinstance(arg, (list, tuple)):
             if len(arg) != 3:
                 raise IndexError()
-            super(EulerZYX, self).__init__(arg[0], arg[1], arg[2])
+            super().__init__(arg[0], arg[1], arg[2])
         else:
             arg.to_eulerzyx(self)
 
@@ -352,7 +352,7 @@ class EulerRPY(EulerZYX):
             if len(arg) != 3:
                 raise IndexError()
             arg = (arg[2], arg[1], arg[0])
-        super(EulerRPY, self).__init__(arg)
+        super().__init__(arg)
 
     @property
     def r(self):
@@ -390,6 +390,7 @@ class AxAng(ctypes.Structure):
     _fields_ = [("axis", Vec3), ("angle", ctypes.c_double)]
 
     def __init__(self, arg=None):
+        super().__init__(Vec3(), 0)
         if arg is None:
             self.set_identity()
         else:
@@ -466,6 +467,7 @@ class Quat(ctypes.Structure, VecMixin):
           and the scalar (w) is zero
         * Else arg is converted to a Quat
         """
+        super().__init__()
         if arg is None:
             self.set_identity()
         else:
@@ -611,14 +613,13 @@ class Quat(ctypes.Structure, VecMixin):
     def __getitem__(self, key):
         if key == 0:
             return self.x
-        elif key == 1:
+        if key == 1:
             return self.y
-        elif key == 2:
+        if key == 2:
             return self.z
-        elif key == 3:
+        if key == 3:
             return self.w
-        else:
-            raise IndexError(key)
+        raise IndexError(key)
 
     def __setitem__(self, key, item):
         if key == 0:
@@ -680,6 +681,7 @@ class RotMat(ctypes.Structure, MatMixin):
         * If arg is 1, the object is the identity rotation matrix.
         * Else arg is converted to a rotation matrix.
         """
+        super().__init__()
         if arg is None:
             self.set_identity()
         else:
@@ -765,12 +767,12 @@ class RotMat(ctypes.Structure, MatMixin):
     @property
     def rows(self):
         """Number of rows."""
-        return 3;
+        return 3
 
     @property
     def cols(self):
         """Number of columns."""
-        return 3;
+        return 3
 
     @staticmethod
     def row_matrix(args):
@@ -813,6 +815,7 @@ class TfMat(ctypes.Structure, MatMixin):
     _fields_ = [("R", RotMat), ("v", Vec3)]
 
     def __init__(self, arg=None):
+        super().__init__()
         if arg is None:
             self.set_identity()
         else:
@@ -872,10 +875,9 @@ class TfMat(ctypes.Structure, MatMixin):
         i, j = key
         if j < 3:
             return self.R[key]
-        elif j == 3:
+        if j == 3:
             return self.v[i]
-        else:
-            raise IndexError(key)
+        raise IndexError(key)
 
     def __setitem__(self, key, item):
         i, j = key
@@ -919,6 +921,7 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
     _fields_ = [("real", Quat), ("dual", Quat)]
 
     def __init__(self, arg=None):
+        super().__init__()
         if arg is None:
             self.set_identity()
         else:
@@ -974,10 +977,11 @@ class DualQuat(ctypes.Structure, CopyEltsMixin):
 
     def norm_parts(self):
         """Real and dual parts 2-norm (Euclidean)"""
-        r = ctypes.c_double()
-        d = ctypes.c_double()
-        libamino.aa_tf_duqu_norm(self, ctypes.byref(r), ctypes.byref(d))
-        return (r.value, d.value)
+        real_norm = ctypes.c_double()
+        dual_norm = ctypes.c_double()
+        libamino.aa_tf_duqu_norm(self, ctypes.byref(real_norm),
+                                 ctypes.byref(dual_norm))
+        return (real_norm.value, dual_norm.value)
 
     def transform(self, p):
         """Transform point p"""
@@ -1063,6 +1067,7 @@ class QuatTrans(ctypes.Structure, CopyEltsMixin):
     _fields_ = [("quat", Quat), ("trans", Vec3)]
 
     def __init__(self, arg=None):
+        super().__init__()
         if arg is None:
             self.set_identity()
         else:
@@ -1228,22 +1233,19 @@ class TfVec(ctypes.Structure):
     def __getitem__(self, key):
         if key < 0:
             raise IndexError(key)
-        elif key < 3:
+        if key < 3:
             return self._first()[key]
-        elif key < 6:
+        if key < 6:
             return self._second()[key - 3]
-        else:
-            raise IndexError(key)
+        raise IndexError(key)
 
     def __setitem__(self, key, item):
-        if key < 0:
+        if key < 0 or key >= 6:
             raise IndexError(key)
-        elif key < 3:
+        if key < 3:
             self._first()[key] = item
-        elif key < 6:
-            self._second()[key - 3] = item
         else:
-            raise IndexError(key)
+            self._second()[key - 3] = item
 
     def to_dvec(self, vec=DVec(6)):
         """Copies self to a vec."""
@@ -1258,15 +1260,9 @@ class TfVec(ctypes.Structure):
 class TfVel(TfVec):
     """A rotational and translational velocity."""
 
-    def __init__(self):
-        pass
-
 
 class Twist(TfVec):
     """A twist velocity."""
-
-    def __init__(self):
-        pass
 
 
 #---------------#

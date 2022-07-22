@@ -447,8 +447,6 @@ endif # HAVE_PYTHON
 EXTRA_DIST += \
 	python/setup.py \
 	python/amino/util.py \
-	python/amino/util2.py \
-	python/amino/util3.py \
 	python/amino/mat.py \
 	python/amino/tf.py \
 	python/amino/kinematics.py \

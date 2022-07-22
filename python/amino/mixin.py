@@ -46,10 +46,10 @@ class SSDEqMixin:
         """Returns true if object is close to other."""
         a = self
         b = other
-        na = a.nrm2()
-        nb = b.nrm2()
-        d = a.ssd(b)
-        return d <= max(rel_tol * max(na, nb), abs_tol)
+        n_a = a.nrm2()
+        n_b = b.nrm2()
+        ssd = a.ssd(b)
+        return ssd <= max(rel_tol * max(n_a, n_b), abs_tol)
 
 
 class CopyEltsMixin:
@@ -98,19 +98,19 @@ class MatMixin:
             m = self.rows
         if n is None:
             n = self.cols
-        s = "%s([" % name
-        spaces = " "*len(s)
+        string = "%s([" % name
+        spaces = " "*len(string)
         newrow = ",\n%s[" % spaces
         for i in range(0, m):
             if i == 0:
-                s += "["
+                string += "["
             else:
-                s += newrow
+                string += newrow
             for j in range(0, n):
                 if j == 0:
-                    s += "%f" % self[i, j]
+                    string += "%f" % self[i, j]
                 else:
-                    s += ", %f" % self[i, j]
-            s += "]"
-        s += "])"
-        return s
+                    string += ", %f" % self[i, j]
+            string += "]"
+        string += "])"
+        return string

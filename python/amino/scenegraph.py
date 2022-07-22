@@ -175,12 +175,11 @@ class GeomOpt:
         """Ensures thing is a GeomOpt, converting dicts if necessary."""
         if isinstance(thing, GeomOpt):
             return thing
-        elif isinstance(thing, dict):
+        if isinstance(thing, dict):
             return GeomOpt(thing)
-        elif thing is None:
+        if thing is None:
             return GeomOpt()
-        else:
-            raise Exception()
+        raise Exception()
 
 
 class Geom:
@@ -194,40 +193,40 @@ class Geom:
     @staticmethod
     def box(opt, dimension):
         """Creates a box geometry object."""
-        o = GeomOpt.ensure(opt)
-        return Geom(libamino.aa_rx_geom_box(o._ptr, Vec3.ensure(dimension)))
+        ensured_opt = GeomOpt.ensure(opt)
+        return Geom(libamino.aa_rx_geom_box(ensured_opt._ptr, Vec3.ensure(dimension)))
 
     @staticmethod
     def sphere(opt, radius):
         """Creates a sphere geometry object."""
-        o = GeomOpt.ensure(opt)
-        return Geom(libamino.aa_rx_geom_sphere(o._ptr, radius))
+        ensured_opt = GeomOpt.ensure(opt)
+        return Geom(libamino.aa_rx_geom_sphere(ensured_opt._ptr, radius))
 
     @staticmethod
     def cylinder(opt, height, radius):
         """Creates a cylinder geometry object."""
-        o = GeomOpt.ensure(opt)
-        return Geom(libamino.aa_rx_geom_cylinder(o._ptr, height, radius))
+        ensured_opt = GeomOpt.ensure(opt)
+        return Geom(libamino.aa_rx_geom_cylinder(ensured_opt._ptr, height, radius))
 
     @staticmethod
     def cone(opt, height, start_radius, end_radius):
         """Creates a cone geometry object."""
-        o = GeomOpt.ensure(opt)
+        ensured_opt = GeomOpt.ensure(opt)
         return Geom(
-            libamino.aa_rx_geom_cone(o._ptr, height, start_radius, end_radius))
+            libamino.aa_rx_geom_cone(ensured_opt._ptr, height, start_radius, end_radius))
 
     @staticmethod
     def torus(opt, angle, major_radius, minor_radius):
         """Creates a torus geometry object."""
-        o = GeomOpt.ensure(opt)
+        ensured_opt = GeomOpt.ensure(opt)
         return Geom(
-            libamino.aa_rx_geom_torus(o._ptr, angle, major_radius,
+            libamino.aa_rx_geom_torus(ensured_opt._ptr, angle, major_radius,
                                       minor_radius))
 
     @staticmethod
     def grid(opt, dimension, delta, width):
         """Creates a grid geometry object."""
-        o = GeomOpt.ensure(opt)
+        ensured_opt = GeomOpt.ensure(opt)
         c_dimension = (ctypes.c_double * 2)(dimension[0], dimension[1])
         c_delta = (ctypes.c_double * 2)(delta[0], delta[1])
         # c_dimension[0] = dimension[0]
@@ -235,7 +234,7 @@ class Geom:
         # c_delta[0] = delta[0]
         # c_delta[1] = delta[1]
         return Geom(
-            libamino.aa_rx_geom_grid(o._ptr, c_dimension, c_delta, width))
+            libamino.aa_rx_geom_grid(ensured_opt._ptr, c_dimension, c_delta, width))
 
 
 libamino.aa_rx_geom_opt_create.argtypes = []
@@ -395,7 +394,7 @@ class SceneGraph:
                                               Vec3.ensure(axis), offset)
         self.attach_geom(name, geom)
 
-        if limits != None:
+        if limits is not None:
             libamino.aa_rx_sg_set_limit_pos(self._ptr, config_name, limits[0], limits[1])
 
     def remove_frame(self, name):
@@ -407,7 +406,7 @@ class SceneGraph:
         name = ensure_cstring(name)
         if geom is None:
             return
-        elif isinstance(geom, Geom):
+        if isinstance(geom, Geom):
             libamino.aa_rx_geom_attach(self._ptr, name, geom._ptr)
         elif isinstance(geom, (list, tuple)):
             for elt in geom:
@@ -513,8 +512,8 @@ class SceneGraph:
             ValueError: config name is invalid.
         """
         if is_string(value):
-            id = self.config_id(value)
-            if id == CONFIG_NONE:
+            conf_id = self.config_id(value)
+            if conf_id == CONFIG_NONE:
                 raise ValueError("Invalid config name: %s" % value)
             return value
 
@@ -530,10 +529,10 @@ class SceneGraph:
             ValueError: frame name is invalid.
         """
         if is_string(value):
-            id = self.frame_id(value)
-            if id == FRAME_NONE:
+            frame_id = self.frame_id(value)
+            if frame_id == FRAME_NONE:
                 raise ValueError("Invalid frame name: %s" % value)
-            return id
+            return frame_id
 
         if value >= self.frame_count or value <= FRAME_NONE:
             raise IndexError("Invalid frame id: %d" % value)
@@ -562,8 +561,8 @@ class SceneGraph:
             ValueError: frame name is invalid.
         """
         if is_string(value):
-            id = self.frame_id(value)
-            if id == FRAME_NONE:
+            frame_id = self.frame_id(value)
+            if frame_id == FRAME_NONE:
                 raise ValueError("Invalid frame name: %s" % value)
             return value
 
@@ -585,11 +584,10 @@ class SceneGraph:
             for key in config:
                 vector[self.config_id(key)] = config[key]
             return vector
-        elif vector is None:
+        if vector is None:
             return DVec.ensure(config)
-        else:
-            vector.copy_from(config)
-            return vector
+        vector.copy_from(config)
+        return vector
 
     def copy_config(self, config):
         """Copy configuration as a vector."""
@@ -597,10 +595,10 @@ class SceneGraph:
 
     def config_dict(self, vector):
         """Convert vector to a dict."""
-        d = {}
+        dictionary = {}
         for i in range(0, self.config_count):
-            d[self.config_name(i)] = vector[i]
-        return d
+            dictionary[self.config_name(i)] = vector[i]
+        return dictionary
 
     def get_parent(self, frame):
         """Get the name of the parent of the input frame"""
@@ -778,9 +776,8 @@ class SubSceneGraph:
         # TODO: convert dictionary
         if vector is None:
             return DVec.ensure(config)
-        else:
-            vector.copy_from(config)
-            return vector
+        vector.copy_from(config)
+        return vector
 
     # @staticmethod
     # def chain(scenegraph, root, tip):
