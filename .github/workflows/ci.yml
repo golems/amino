@@ -7,6 +7,7 @@ on:
       - main
       - feature/**
       - bugfix/**
+      - stage/**
   pull_request:
     branches:
       - master
