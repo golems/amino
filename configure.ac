@@ -952,8 +952,9 @@ AS_IF([test "x$with_python" != xno], [
 
 AM_CONDITIONAL([HAVE_PYTHON], [test "x$PYTHON" != "x" -a "x$PYTHON" != "x:"])
 
-AC_CHECK_PROGS([PYLINT],[pylint3])
+AC_CHECK_PROGS([PYLINT],[pylint3 pylint])
 AM_CONDITIONAL([HAVE_PYLINT], [test "x$PYLINT" != x])
+AC_SUBST([PYLINT])
 
 ###########
 ## Demos ##

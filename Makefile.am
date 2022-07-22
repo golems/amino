@@ -434,6 +434,9 @@ clean-python:
 pylint.report:
 	./python/test/pylint.sh > pylint.report
 
+pylint:
+	./python/test/pylint.sh
+
 if HAVE_PYLINT
 TESTS += python/test/pylint.sh
 endif # HAVE_PYLINT

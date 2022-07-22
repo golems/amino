@@ -230,3 +230,5 @@ core
 /ar-lib
 /aa_fuzz_euler
 /test_tfp
+/python/test/pylint.sh.log
+/python/test/pylint.sh.trs

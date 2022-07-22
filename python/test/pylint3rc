@@ -219,15 +219,13 @@ class-attribute-naming-style=any
 # Naming style matching correct class names.
 class-naming-style=PascalCase
 
-# Regular expression matching correct class names. Overrides class-naming-
-# style.
+# Regular expression matching correct class names. Overrides class-naming-style.
 #class-rgx=
 
 # Naming style matching correct constant names.
 const-naming-style=UPPER_CASE
 
-# Regular expression matching correct constant names. Overrides const-naming-
-# style.
+# Regular expression matching correct constant names. Overrides const-naming-style.
 #const-rgx=
 
 # Minimum line length for functions/classes that require docstrings, shorter
@@ -237,8 +235,7 @@ docstring-min-length=-1
 # Naming style matching correct function names.
 function-naming-style=snake_case
 
-# Regular expression matching correct function names. Overrides function-
-# naming-style.
+# Regular expression matching correct function names. Overrides function-naming-style.
 #function-rgx=
 
 # Good variable names which should always be accepted, separated by a comma.
@@ -262,15 +259,13 @@ inlinevar-naming-style=any
 # Naming style matching correct method names.
 method-naming-style=snake_case
 
-# Regular expression matching correct method names. Overrides method-naming-
-# style.
+# Regular expression matching correct method names. Overrides method-naming-style.
 #method-rgx=
 
 # Naming style matching correct module names.
 module-naming-style=snake_case
 
-# Regular expression matching correct module names. Overrides module-naming-
-# style.
+# Regular expression matching correct module names. Overrides module-naming-style.
 #module-rgx=
 
 # Colon-delimited sets of names that determine each other's naming style when
@@ -371,7 +366,7 @@ min-similarity-lines=4
 max-spelling-suggestions=4
 
 # Spelling dictionary name. Available dictionaries: none. To make it working
-# install python-enchant package..
+# install python-enchant package.
 spelling-dict=
 
 # List of comma separated words that should not be checked.

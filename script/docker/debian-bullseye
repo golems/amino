@@ -24,6 +24,7 @@ RUN /root/amino/script/install/apt-retry.sh \
         libompl-dev libfcl-dev liboctomap-dev \
         blender \
         valgrind \
+        pylint \
         ;
 
 RUN cd && /root/amino/script/install/install-quicklisp.sh
