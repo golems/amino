@@ -782,6 +782,7 @@ WARN_LOGFILE           =
 
 INPUT                  = @top_srcdir@/include \
                          @top_srcdir@/include/amino \
+                         @top_srcdir@/include/amino/tf \
                          @top_srcdir@/include/amino/rx \
                          @top_srcdir@/include/amino/opt \
                          @top_srcdir@/include/amino/ct \

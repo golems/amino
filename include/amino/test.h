@@ -43,6 +43,7 @@
 #ifndef AMINO_TEST_H
 #define AMINO_TEST_H
 
+#include "tf/type.h"
 
 AA_API void test( const char *name, int check ) ;
 /** Test fuzzy equals. */
@@ -84,6 +85,9 @@ AA_API void aa_test_qutr_cmp(const char *name, const double *E1,
 AA_API void aa_test_rotmat_cmp(const char *name, const double *R1,
                                const double *R2, double tol);
 
+AA_API void aa_test_tfmat_cmp(const char *name, const double *T1,
+                              const double *T2, double tol);
+
 AA_API void aa_test_isrotmat(const char *name, const double *R, double tol);
 
 /*
@@ -91,5 +95,20 @@ AA_API void aa_test_isrotmat(const char *name, const double *R, double tol);
  */
 AA_API void aa_test_rotvec_cmp_pi(const char *name, const double *a,
                                   const double *b, double tol);
+
+AA_API void aa_test_cmplx_cmp(const char *name, const aa_tf_cmplx v1,
+                             const aa_tf_cmplx v2, double tol);
+
+AA_API void aa_test_vec2_cmp(const char *name, const aa_tf_vec2 v1,
+                             const aa_tf_vec2 v2, double tol);
+
+AA_API void aa_test_cotr_cmp(const char *name, const double *E1,
+                             const double *E2, double tol);
+
+AA_API void aa_test_rotmatp_cmp(const char *name, const double *T1,
+                                const double *T2, double tol);
+
+AA_API void aa_test_tfmatp_cmp(const char *name, const double *T1,
+                               const double *T2, double tol);
 
 #endif

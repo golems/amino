@@ -138,6 +138,15 @@ pkginclude_HEADERS = 	                \
 
 rxincludedir = $(pkgincludedir)/rx
 
+tfincludedir = $(pkgincludedir)/tf
+
+tfinclude_HEADERS = \
+	include/amino/tf/spatial.h \
+	include/amino/tf/spatial.hpp \
+	include/amino/tf/planar.h \
+	include/amino/tf/planar.hpp \
+	include/amino/tf/type.h
+
 rxinclude_HEADERS = 	                \
 	include/amino/rx/rxtype.h       \
 	include/amino/rx/rxerr.h        \
@@ -205,6 +214,7 @@ libamino_la_SOURCES =                  \
 	src/tf.c                       \
 	src/tf/tfmatrix.c              \
 	src/tf/quat.c                  \
+	src/tf/tfp.c                   \
 	src/diffeq.c                   \
 	src/tf/conv.c                  \
 	src/mac/euler_f2c.c            \
@@ -670,6 +680,11 @@ endif
 
 endif #HAVE_COMMON_LISP
 
+
+TESTS += test_tfp
+noinst_PROGRAMS += test_tfp
+test_tfp_SOURCES = src/test/test_tfp.cpp
+test_tfp_LDADD = libtestutil.la libamino.la
 
 if HAVE_FCL
 

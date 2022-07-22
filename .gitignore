@@ -22,6 +22,7 @@ amino*.tar.gz
 /depcomp
 /autom4te.cache
 /Makefile.in
+core
 .libs
 *.la
 *.lo
@@ -225,3 +226,7 @@ amino*.tar.gz
 /src/test/rx/test_ik_mem.sh.trs
 /src/test/rx/7dof.c
 /src/test/rx/7dof.c.h
+/test_tf2
+/ar-lib
+/aa_fuzz_euler
+/test_tfp

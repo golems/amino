@@ -40,11 +40,13 @@
  *
  */
 
+#include <sys/resource.h>
+#include <complex.h>
+
 #include "amino.h"
 #include "amino/test.h"
 #include "amino/tf.h"
 #include "amino_internal.h"
-#include <sys/resource.h>
 
 
 void test( const char *name, int check ) {
@@ -336,9 +338,34 @@ AA_API void aa_test_rotmat_cmp(const char *name, const double *R1,
     aveq(name, 9, R1, R2, tol);
 }
 
+AA_API void aa_test_tfmat_cmp(const char *name, const double *T1,
+                              const double *T2, double tol)
+{
+    aveq(name, 12, T1, T2, tol);
+}
+
+AA_API void aa_test_cotr_cmp(const char *name, const double *E1,
+                             const double *E2, double tol)
+{
+    aveq(name, 4, E1, E2, tol);
+}
+
+AA_API void aa_test_tfmatp_cmp(const char *name, const double *T1,
+                              const double *T2, double tol)
+{
+    aveq(name, 6, T1, T2, tol);
+}
+
+AA_API void aa_test_rotmatp_cmp(const char *name, const double *T1,
+                                const double *T2, double tol)
+{
+    aveq(name, 4, T1, T2, tol);
+}
+
+
 AA_API void aa_test_isrotmat(const char *name, const double *R, double tol)
 {
-    static const double I[9] = AA_TF_ROTMAT_IDENT_INITIALIZER;
+    static const double RI[9] = AA_TF_ROTMAT_IDENT_INITIALIZER;
     double Rt[9], RRt[9];
     aa_tf_rotmat_inv2(R, Rt);
 
@@ -375,7 +402,7 @@ AA_API void aa_test_isrotmat(const char *name, const double *R, double tol)
 
     // Chain
     aa_tf_rotmat_mul(R, Rt, RRt);
-    if (aa_la_ssd(9, RRt, I) > tol) {
+    if (aa_la_ssd(9, RRt, RI) > tol) {
         fprintf(stderr, "inverse test failed\n");
         goto FAIL;
     }
@@ -387,4 +414,26 @@ FAIL:
     aa_dump_vec(stderr, R, 9);
 
     abort();
+}
+
+
+
+AA_API void aa_test_cmplx_cmp(const char *name, const aa_tf_cmplx a,
+                             const aa_tf_cmplx b, double tol)
+{
+    double e = cabs(a - b);
+    if (e > tol) {
+        fprintf(stderr, "FAILED: %s\n", name);
+        fprintf(stderr, "a: %f\t + %fi\n", AA_TF_CMPLX_REAL(a),
+                AA_TF_CMPLX_IMAG(a));
+        fprintf(stderr, "b: %f\t + %fi\n", AA_TF_CMPLX_REAL(b),
+                AA_TF_CMPLX_IMAG(b));
+        abort();
+    }
+}
+
+AA_API void aa_test_vec2_cmp(const char *name, const aa_tf_vec2 v1,
+                             const aa_tf_vec2 v2, double tol)
+{
+    return aa_test_cmplx_cmp(name, v1, v2, tol);
 }
